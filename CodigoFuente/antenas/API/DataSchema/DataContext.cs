@@ -13,7 +13,7 @@ namespace API.DataSchema
             //ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
-        public DbSet<EJ_Usuario> EJ_Usuarios { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Antenas> Antenas { get; set; }
         public DbSet<Apoderados> Apoderados { get; set; }
         public DbSet<ApoderadoXPrestador> ApoderadoXPrestador { get; set; } 
@@ -29,7 +29,7 @@ namespace API.DataSchema
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfiguration(new EJ_UsuarioConfiguration());
+            modelBuilder.ApplyConfiguration(new UsuarioConfiguration());
             modelBuilder.ApplyConfiguration(new TipoAntenasConfiguration());
             base.OnModelCreating(modelBuilder);
         }

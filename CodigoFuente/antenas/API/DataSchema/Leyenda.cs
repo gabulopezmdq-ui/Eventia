@@ -20,10 +20,6 @@ namespace API.DataSchema
 		public int IdLeyenda { get; set; }
 		public string Nombre { get; set; }
 
-		public Leyenda()
-		{
-
-		}
 
 	}
 }

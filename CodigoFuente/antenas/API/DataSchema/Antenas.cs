@@ -34,10 +34,6 @@ namespace API.DataSchema
 		public string TipoMimetizado { get; set; }
 
 
-		public Antenas()
-		{
-
-		}
 
 
 	}

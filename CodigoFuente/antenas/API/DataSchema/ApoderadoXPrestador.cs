@@ -23,11 +23,5 @@ namespace API.DataSchema
 		public int IdUsuario { get; set; }
 		public DateTime Fecha { get; set; }
 
-		public ApoderadoXPrestador()
-		{
-
-		}
-
-
 	}
 }
