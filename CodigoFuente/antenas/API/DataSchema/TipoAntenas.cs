@@ -1,0 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace API.DataSchema { 
+public class TipoAntenas {
+
+	public int IdTipoAntena {  get; set; }
+	public string Nombre { get; set; }
+
+    }
+}
