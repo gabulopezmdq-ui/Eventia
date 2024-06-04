@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Compartida\configurador\DEPLOY\deploy_seba</_PublishTargetUrl>
+    <History>True|2023-10-20T11:57:01.4394396Z;True|2023-10-20T08:56:21.9464641-03:00;True|2023-10-20T08:44:27.1000876-03:00;True|2023-10-19T15:45:01.7815771-03:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>
