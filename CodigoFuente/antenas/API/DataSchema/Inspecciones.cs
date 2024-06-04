@@ -15,6 +15,10 @@ using System.IO;
 namespace API.DataSchema { 
 public class Inspecciones {
 
+    public int IdInspeccion { get; set; }
+    public int IdAntena { get; set; }
+	public int IdLeyenda { get; set; }
+	public int IdUsuario { get; set; }
 	public string AlambradoPerimetral { get; set; }
 	public string AnilloTierra { get; set; }
 	public string BalizaFlash { get; set; }
@@ -32,63 +36,58 @@ public class Inspecciones {
 	public string CanalPilar { get; set; }
 	public string ConexionBarra { get; set; }
 	public string ConexionChasis { get; set; }
-	private char ConexionEstAnillo;
-	private char ConexionTierra;
-	private char Desmalezado;
-	private char DesplaFisuras;
-	private char ErosionTerreno;
-	private char EscaleraGuarda;
-	private char EstadoFotocelula;
-	private char EstadoGral;
-	private char EstanqueCañerias;
-	private char EstrTransicion;
-	private DateTime Fecha;
-	private char GrasaAntiox;
-	private char Grietas;
-	private int IdAntena;
-	private int IdInspeccion;
-	private int IdLeyenda;
-	private int IdUsuario;
-	private char IluminacionBanquina;
-	private char LucesBaliza;
-	private char Mastil;
-	private char ObjetosExtraños;
-	private string Observaciones;
-	private char ObstruccionesCaños;
-	private char PedestalConcreto;
-	private char PernosFijaEstructura;
-	private char PernosFijaGabinetes;
-	private char PernosFijaPedestales;
-	private char PernosFijaPerfil;
-	private char PernosViga;
-	private char PilarMedicion;
-	private char PinturaBaliza;
-	private char PinturaBanquina;
-	private char PlataformasInspeccion;
-	private char PortoAcceso;
-	private char ProteccionTermo;
-	private char PuertaBanquina;
-	private char PuntaCaptora;
-	private char PuntosHumedad;
-	private string Razon;
-	private char RoturaPedestales;
-	private char SalvaCaidas;
-	private char SimboloRiesgoElec;
-	private char SoporteBalizas;
-	private char SoportesBandejas;
-	private char SoportesCañerias;
-	private char SoportesFijaciones;
-	private char TableroBaliza;
-	private char TableroEmergencia;
-	private char TableroGralCA;
-	private char TableroPrincipal;
-	private char UCLA;
-	private char UnionesTramos;
-	private char Verticalidad;
-	private char VigaEquipos;
-	private char Visibilidad;
-	public Usuario m_Usuario;
-	public Leyenda m_Leyenda;
+	public string ConexionEstAnillo { get; set; }
+	public string ConexionTierra { get; set; }
+	public string Desmalezado { get; set; }
+	public string DesplaFisuras { get; set; }
+	public string ErosionTerreno { get; set; }
+	public string EscaleraGuarda { get; set; }
+	public string EstadoFotocelula { get; set; }
+	public string EstadoGral { get; set; }
+	public string EstanqueCañerias { get; set; }
+	public string EstrTransicion { get; set; }
+	public DateTime Fecha { get; set; }
+	public string GrasaAntiox { get; set; }
+	public string Grietas { get; set; }
+	public string IluminacionBanquina { get; set; }
+	public string LucesBaliza { get; set; }
+	public string Mastil { get; set; }
+	public string ObjetosExtraños { get; set; }
+	public string Observaciones { get; set; }
+	public string ObstruccionesCaños { get; set; }
+	public string PedestalConcreto { get; set; }
+	public string PernosFijaEstructura { get; set; }
+	public string PernosFijaGabinetes { get; set; }
+	public string PernosFijaPedestales { get; set; }
+	public string PernosFijaPerfil { get; set; }
+	public string PernosViga { get; set; }
+	public string PilarMedicion { get; set; }
+	public string PinturaBaliza { get; set; }
+	public string PinturaBanquina { get; set; }
+	public string PlataformasInspeccion { get; set; }
+	public string PortoAcceso { get; set; }
+	public string ProteccionTermo { get; set; }
+	public string PuertaBanquina { get; set; }
+	public string PuntaCaptora { get; set; }
+	public string PuntosHumedad { get; set; }
+	public string Razon { get; set; }
+	public string RoturaPedestales { get; set; }
+	public string SalvaCaidas { get; set; }
+	public string SimboloRiesgoElec { get; set; }
+	public string SoporteBalizas { get; set; }
+	public string SoportesBandejas { get; set; }
+	public string SoportesCañerias { get; set; }
+	public string SoportesFijaciones { get; set; }
+	public string TableroBaliza { get; set; }
+	public string TableroEmergencia { get; set; }
+	public string TableroGralCA { get; set; }
+	public string TableroPrincipal { get; set; }
+	public string UCLA { get; set; }
+	public string UnionesTramos { get; set; }
+	public string Verticalidad { get; set; }
+	public string VigaEquipos { get; set; }
+	public string Visibilidad { get; set; }
+	
 
     }
 
