@@ -22,9 +22,6 @@ namespace API.DataSchema
 		public string Apelllido { get; set; }
 		public int NroDoc { get; set; }
 
-		public Apoderados()
-		{
-
 		}
 
 

@@ -62,10 +62,5 @@ namespace API.DataSchema
 		public string TasaSigem { get; set; }
 		public string UnifiliarGral { get; set; }
 
-		public Expediente()
-		{
-
-		}
-
 	}
 }

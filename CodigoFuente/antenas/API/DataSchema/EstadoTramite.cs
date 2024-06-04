@@ -20,10 +20,6 @@ namespace API.DataSchema
 		public int IdEstado { get; set; }
 		public string Estado { get; set; }
 
-		public EstadoTramite()
-		{
-
-		}
 
 
 	}
