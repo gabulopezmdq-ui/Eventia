@@ -1,0 +1,37 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
+namespace API.DataSchema
+{
+    public class DataContext : DbContext
+    {
+        public DataContext(DbContextOptions options) : base(options)
+        {
+
+            //this.ChangeTracker.LazyLoadingEnabled = false;
+            //this.Configuration.LazyLoadingEnabled = false;
+            //ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+        }
+
+        public DbSet<EJ_Usuario> EJ_Usuarios { get; set; }
+        public DbSet<Antenas> Antenas { get; set; }
+        public DbSet<Apoderados> Apoderados { get; set; }
+        public DbSet<ApoderadoXPrestador> ApoderadoXPrestador { get; set; } 
+        public DbSet<EstadoTramite> EstadoTramites { get; set; }
+        public DbSet<Expediente> Expedientes { get; set; }
+        public DbSet<Inspecciones> Inspecciones { get; set; }
+        public DbSet<Leyenda> Leyendas { get; set; }
+        public DbSet<Prestadores> Prestadores { get; set; }
+        public DbSet<TipoAntenas> TipoAntenas { get; set; }
+
+
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfiguration(new EJ_UsuarioConfiguration());
+            modelBuilder.ApplyConfiguration(new TipoAntenasConfiguration());
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+}
