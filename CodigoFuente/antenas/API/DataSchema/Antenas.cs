@@ -33,10 +33,10 @@ namespace API.DataSchema
 		public string TipoMimetizado { get; set; }
 		public virtual TipoAntenas? TipoAntenas { get; set; }
 		public virtual Expedientes? Expediente { get; set; }
-		public virtual ICollection<Expedientes>? Expedientes { get; set; }
+        
 		public virtual Prestadores? Prestador { get; set; }
-		public virtual ICollection<Prestadores>? Prestadores { get; set; }
-		public virtual ICollection<Inspecciones>? Inspecciones { get; set; } = new List<Inspecciones>();
+        
+        public virtual ICollection<Inspecciones>? Inspecciones { get; set; } = new List<Inspecciones>();
 
 
 

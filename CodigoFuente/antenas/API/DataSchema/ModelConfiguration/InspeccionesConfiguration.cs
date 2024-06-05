@@ -17,15 +17,6 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder
-                .HasMany(e => e.Leyendas)
-                .WithMany(e => e.Inspecciones);
-
-            builder
-                .Navigation(e => e.Leyendas)
-                .AutoInclude(true)
-                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
-
-            builder
                 .HasOne(e => e.Antena)
                 .WithMany(e => e.Inspecciones)
                 .HasForeignKey(e => e.Antena)

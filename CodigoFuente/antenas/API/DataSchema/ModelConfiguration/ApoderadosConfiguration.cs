@@ -11,6 +11,10 @@ namespace API.DataSchema.ModelConfiguration
                 .HasKey(k => k.IdApoderado);
 
             builder
+                .HasMany(e => e.Prestador)
+                .WithMany(e => e.Apoderados);
+
+            builder
                 .Property(k => k.IdApoderado)
                 .ValueGeneratedOnAdd()
                 .IsRequired(true);

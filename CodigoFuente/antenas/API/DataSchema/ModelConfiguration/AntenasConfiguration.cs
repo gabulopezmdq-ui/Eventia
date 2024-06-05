@@ -40,11 +40,21 @@ namespace API.DataSchema.ModelConfiguration
             builder
                 .HasOne(e => e.Expediente)
                 .WithOne(e => e.Antenas)
-                .HasForeignKey<Antenas>(e => e.IdExpediente)
+                .HasForeignKey<Expedientes>(e => e.IdExpediente)
                 .IsRequired(true);
 
             builder
                 .Navigation(e => e.Expediente)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+            builder
+               .HasMany(e => e.Inspecciones)
+               .WithOne(e => e.Antena)
+               .HasForeignKey(e => e.IdInspeccion)
+               .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Prestador)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 

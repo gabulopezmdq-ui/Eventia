@@ -17,11 +17,9 @@ namespace API.DataSchema
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Antenas> Antenas { get; set; }
         public DbSet<Apoderados> Apoderados { get; set; }
-        public DbSet<ApoderadoXPrestador> ApoderadoXPrestador { get; set; } 
         public DbSet<EstadoTramite> EstadoTramites { get; set; }
         public DbSet<Expedientes> Expedientes { get; set; }
         public DbSet<Inspecciones> Inspecciones { get; set; }
-        public DbSet<Leyenda> Leyendas { get; set; }
         public DbSet<Prestadores> Prestadores { get; set; }
         public DbSet<TipoAntenas> TipoAntenas { get; set; }
 
@@ -33,9 +31,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new UsuarioConfiguration());
             modelBuilder.ApplyConfiguration(new TipoAntenasConfiguration());
             modelBuilder.ApplyConfiguration(new AntenasConfiguration());
-            modelBuilder.ApplyConfiguration(new LeyendaConfiguration());
             modelBuilder.ApplyConfiguration(new ApoderadosConfiguration());
-            modelBuilder.ApplyConfiguration(new ApoderadoXPrestadorConfiguration());
             modelBuilder.ApplyConfiguration(new EstadoTramiteConfiguration());
             modelBuilder.ApplyConfiguration(new PrestadoresConfiguration());
             modelBuilder.ApplyConfiguration(new InspeccionesConfiguration());

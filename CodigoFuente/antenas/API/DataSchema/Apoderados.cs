@@ -21,11 +21,6 @@ namespace API.DataSchema
 		public string Nombre { get; set; }
 		public string Apelllido { get; set; }
 		public int NroDoc { get; set; }
-		public virtual Prestadores? Prestador { get; set; }
-		public virtual ICollection<ApoderadoXPrestador>? ApoderadoXPrestadores { get; set; } = new List <ApoderadoXPrestador>();
-
-		}
-
-
+		public virtual ICollection<Prestadores>? Prestador { get; set; } = new List<Prestadores>();
 	}
 }
