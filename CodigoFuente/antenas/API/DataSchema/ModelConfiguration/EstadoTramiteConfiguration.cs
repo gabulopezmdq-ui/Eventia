@@ -10,6 +10,12 @@ namespace API.DataSchema.ModelConfiguration
             builder
                 .HasKey(k => k.IdEstado);
 
+
+            builder
+                .HasMany(p => p.Expedientes)
+                .WithOne(e => e.EstadoTramite)
+                .HasForeignKey(e => e.IdExpediente);
+
             builder
                 .Property(k => k.IdEstado)
                 .ValueGeneratedOnAdd()
@@ -18,6 +24,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
                 .Property(p => p.Estado)
                 .IsRequired(true);
+
         }
     }
 }

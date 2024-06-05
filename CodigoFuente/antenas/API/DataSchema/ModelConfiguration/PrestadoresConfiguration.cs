@@ -16,10 +16,8 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder
-                .HasMany(e=> e.Apoderados)
-                .WithOne(e => e.Prestador)
-                .HasForeignKey(e => e.IdApoderado)
-                .IsRequired(true);
+                .HasMany(e => e.Apoderados)
+                .WithMany(e => e.Prestador);
 
             builder
                 .Navigation(e => e.Apoderados)

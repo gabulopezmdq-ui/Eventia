@@ -16,13 +16,19 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder
-                .HasMany(p => p.Leyenda)
-                .WithMany(e => e.Expedientes);
+                .HasOne(p => p.Antenas)
+                .WithOne(e => e.Expediente)
+                .HasForeignKey<Antenas>(e => e.IdAntena);
 
             builder
-                .Navigation(e => e.Leyenda)
+                .Navigation(e => e.Antenas)
                 .AutoInclude(true)
                 .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+            
+            builder
+                .Navigation(e => e.Antenas)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder
                 .Property(p => p.AcometidaEnergia)

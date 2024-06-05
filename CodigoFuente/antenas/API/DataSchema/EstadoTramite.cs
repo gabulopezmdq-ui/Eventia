@@ -19,8 +19,7 @@ namespace API.DataSchema
 
 		public int IdEstado { get; set; }
 		public string Estado { get; set; }
+        public virtual ICollection<Expedientes>? Expedientes { get; set; } = new List<Expedientes>(); // Collection navigation containing dependents
 
-
-
-	}
+    }
 }

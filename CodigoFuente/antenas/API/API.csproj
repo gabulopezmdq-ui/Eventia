@@ -37,6 +37,7 @@
     <Compile Remove="Controllers\TipoEquipamientoController.cs" />
     <Compile Remove="Controllers\TipoObraController.cs" />
     <Compile Remove="Controllers\VelocidadController .cs" />
+    <Compile Remove="DataSchema\ApoderadoXPrestador.cs" />
     <Compile Remove="DataSchema\EV_Administracion.cs" />
     <Compile Remove="DataSchema\EV_Conservadora.cs" />
     <Compile Remove="DataSchema\EV_Maquina.cs" />
@@ -47,6 +48,8 @@
     <Compile Remove="DataSchema\EV_TipoEquipamiento.cs" />
     <Compile Remove="DataSchema\EV_TipoObra.cs" />
     <Compile Remove="DataSchema\EV_Velocidades.cs" />
+    <Compile Remove="DataSchema\Leyendas.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\ApoderadoXPrestadorConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_AdministracionConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_ConservadoraConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_MaquinaConfiguration.cs" />
@@ -57,6 +60,7 @@
     <Compile Remove="DataSchema\ModelConfiguration\EV_TipoEquipamientoConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_TipoObraConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_VelocidadesConfiguration.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\LeyendaConfiguration.cs" />
     <Compile Remove="Migrations\20231017174800_sexta.cs" />
     <Compile Remove="Migrations\20231017174800_sexta.Designer.cs" />
     <Compile Remove="Migrations\20231018121730_septima.cs" />
