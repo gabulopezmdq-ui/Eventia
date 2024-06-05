@@ -23,5 +23,10 @@ namespace API.DataSchema
 		public int IdUsuario { get; set; }
 		public DateTime Fecha { get; set; }
 
+		public virtual ICollection<Apoderados>? Apoderados { get; set; } = new List<Apoderados>();
+		public virtual ICollection<Prestadores>? Prestadores { get; set; } = new List<Prestadores>();
+		
+		public virtual ICollection<Usuario>? Usuarios { get; set; } = new List<Usuario>();
+
 	}
 }

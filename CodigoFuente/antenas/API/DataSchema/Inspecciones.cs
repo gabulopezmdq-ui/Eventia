@@ -87,7 +87,8 @@ public class Inspecciones {
 	public string Verticalidad { get; set; }
 	public string VigaEquipos { get; set; }
 	public string Visibilidad { get; set; }
-	
+	public virtual ICollection<Leyendas>? Leyendas { get; set; } = new List<Leyendas>();
+	public virtual Antenas? Antena { get; set; };
 
     }
 

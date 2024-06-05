@@ -11,20 +11,42 @@ namespace API.DataSchema.ModelConfiguration
                 .HasKey(k => k.IdAntena);
 
             builder
-                .Property(p => p.IdTipoAntena)
+                .Property(p => p.IdAntena)
                 .ValueGeneratedOnAdd()
                 .IsRequired(true);
 
             builder
-                .Property(p => p.IdPrestador)
+                .HasOne(e => e.TipoAntenas)
+                .WithMany(e => e.Antenas)
+                .HasForeignKey(e => e.IdTipoAntena)
                 .IsRequired(true);
 
             builder
-                .Property(p => p.IdEstado)
+                .Navigation(e => e.TipoAntenas)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder
+                .HasOne(e => e.Prestador)
+                .WithMany(e => e.Antenas)
+                .HasForeignKey(e => e.IdPrestador)
                 .IsRequired(true);
 
-            builder.Property(p => p.IdExpediente)
+            builder
+                .Navigation(e => e.Prestador)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder
+                .HasOne(e => e.Expediente)
+                .WithOne(e => e.Antenas)
+                .HasForeignKey<Antenas>(e => e.IdExpediente)
                 .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Expediente)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder
                 .Property(p => p.AlturaSoporte)

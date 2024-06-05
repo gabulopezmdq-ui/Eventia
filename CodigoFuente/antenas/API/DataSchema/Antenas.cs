@@ -18,10 +18,9 @@ namespace API.DataSchema
 	{
 
 		public int IdAntena { get; set; }
-		public int IdTipoAntena { get; set; }
-		public int IdPrestador { get; set; }
-		public int IdEstado { get; set; }
-		public int IdExpediente { get; set; }
+		public int? IdTipoAntena { get; set; }
+		public int? IdPrestador { get; set; }
+		public int? IdExpediente { get; set; }
 		public float AlturaSoporte { get; set; }
 		public float AlturaTotal { get; set; }
 		public string CellId { get; set; }
@@ -32,7 +31,12 @@ namespace API.DataSchema
 		public string Observaciones { get; set; }
 		public string SalaEquipos { get; set; }
 		public string TipoMimetizado { get; set; }
-
+		public virtual TipoAntenas? TipoAntenas { get; set; }
+		public virtual Expedientes? Expediente { get; set; }
+		public virtual ICollection<Expedientes>? Expedientes { get; set; }
+		public virtual Prestadores? Prestador { get; set; }
+		public virtual ICollection<Prestadores>? Prestadores { get; set; }
+		public virtual ICollection<Inspecciones>? Inspecciones { get; set; } = new List<Inspecciones>();
 
 
 

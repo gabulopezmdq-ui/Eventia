@@ -3,12 +3,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class LeyendaConfiguration:IEntityTypeConfiguration<Leyenda>
+    public class LeyendaConfiguration:IEntityTypeConfiguration<Leyendas>
     {
-        public void Configure(EntityTypeBuilder<Leyenda> builder)
+        public void Configure(EntityTypeBuilder<Leyendas> builder)
         {
             builder
                 .HasKey(k => k.IdLeyenda);
+
+            builder
+                .Property(k => k.IdLeyenda)
+                .ValueGeneratedOnAdd()
+                .IsRequired(true);
 
             builder
                 .Property(p => p.Nombre)

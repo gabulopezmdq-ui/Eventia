@@ -9,7 +9,12 @@ namespace API.DataSchema
         {
             builder
                .HasKey(k => k.IdTipoAntena);
-            
+
+            builder
+                .Property(k => k.IdTipoAntena)
+                .ValueGeneratedOnAdd()
+                .IsRequired(true);
+
             builder
                 .Property(p => p.Nombre)
                 .IsRequired(true);

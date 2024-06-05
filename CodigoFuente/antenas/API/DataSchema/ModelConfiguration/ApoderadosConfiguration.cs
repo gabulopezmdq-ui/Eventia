@@ -9,12 +9,20 @@ namespace API.DataSchema.ModelConfiguration
         {
             builder
                 .HasKey(k => k.IdApoderado);
+
+            builder
+                .Property(k => k.IdApoderado)
+                .ValueGeneratedOnAdd()
+                .IsRequired(true);
+
             builder
                 .Property(p => p.Nombre)
                 .IsRequired(true);
+
             builder
                 .Property(p => p.Apelllido)
                 .IsRequired(true);
+
             builder
                 .Property(p => p.NroDoc)
                 .IsRequired(true);

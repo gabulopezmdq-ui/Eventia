@@ -14,11 +14,12 @@ using System.IO;
 
 namespace API.DataSchema
 {
-	public class Expediente
+	public class Expedientes
 	{
 
 		public int IdExpediente { get; set; }
 		public int IdLeyenda { get; set; }
+		public int? IdAntena { get; set; }
 		public string AcometidaEnergia { get; set; }
 		public string ActaAsamblea { get; set; }
 		public string AEnacom { get; set; }
@@ -61,6 +62,8 @@ namespace API.DataSchema
 		public string TasaAnual { get; set; }
 		public string TasaSigem { get; set; }
 		public string UnifiliarGral { get; set; }
+		public virtual Antenas? Antenas { get; set; }
+		public virtual ICollection<Leyendas> Leyenda { get; set; } = new List<Leyendas>();
 
 	}
 }
