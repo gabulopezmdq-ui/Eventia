@@ -11,8 +11,21 @@ namespace API.DataSchema.ModelConfiguration
                 .HasKey(k => k.IdPrestador);
 
             builder
-                .Property(p => p.IdApoderado)
+                .Property(k => k.IdPrestador)
+                .ValueGeneratedOnAdd()
                 .IsRequired(true);
+
+            builder
+                .HasMany(e=> e.Apoderados)
+                .WithOne(e => e.Prestador)
+                .HasForeignKey(e => e.IdApoderado)
+                .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Apoderados)
+                .AutoInclude(true)
+                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+
 
             builder
                 .Property(p => p.Cuit)

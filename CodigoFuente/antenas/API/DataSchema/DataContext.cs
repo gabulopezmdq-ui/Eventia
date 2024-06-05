@@ -19,7 +19,7 @@ namespace API.DataSchema
         public DbSet<Apoderados> Apoderados { get; set; }
         public DbSet<ApoderadoXPrestador> ApoderadoXPrestador { get; set; } 
         public DbSet<EstadoTramite> EstadoTramites { get; set; }
-        public DbSet<Expediente> Expedientes { get; set; }
+        public DbSet<Expedientes> Expedientes { get; set; }
         public DbSet<Inspecciones> Inspecciones { get; set; }
         public DbSet<Leyenda> Leyendas { get; set; }
         public DbSet<Prestadores> Prestadores { get; set; }

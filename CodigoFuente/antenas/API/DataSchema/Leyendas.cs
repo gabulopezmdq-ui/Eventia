@@ -14,11 +14,13 @@ using System.IO;
 
 namespace API.DataSchema
 {
-	public class Leyenda
+	public class Leyendas
 	{
 
 		public int IdLeyenda { get; set; }
 		public string Nombre { get; set; }
+		public virtual ICollection<Expedientes> Expedientes { get;set; } = new List<Expedientes>();
+		public virtual ICollection<Inspecciones> Inspecciones { get;set; } = new List<Inspecciones>();
 
 
 	}

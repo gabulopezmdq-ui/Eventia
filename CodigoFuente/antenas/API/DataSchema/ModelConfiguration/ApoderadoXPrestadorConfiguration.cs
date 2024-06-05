@@ -7,19 +7,40 @@ namespace API.DataSchema.ModelConfiguration
     {
         public void Configure(EntityTypeBuilder<ApoderadoXPrestador>builder)
         {
-            builder.HasKey(k => k.IdApoderadoXprestador);
+            builder
+                .HasKey(k => k.IdApoderadoXprestador);
 
             builder
-                .Property(p => p.IdApoderado)
+                .Property(k => k.IdApoderadoXprestador)
+                .ValueGeneratedOnAdd()
                 .IsRequired(true);
 
             builder
-                .Property(p => p.IdPrestador)
-                .IsRequired(true);
+                .HasMany(e => e.Apoderados)
+                .WithMany(e => e.ApoderadoXPrestadores);
 
             builder
-                .Property(p => p.IdUsuario)
-                .IsRequired(true);
+                .Navigation(e => e.Apoderados)
+                .AutoInclude(true)
+                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+
+            builder
+                .HasMany(e => e.Prestadores)
+                .WithMany(e => e.ApoderadoXPrestadores);
+
+            builder
+                .Navigation(e => e.Prestadores)
+                .AutoInclude(true)
+                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+
+            builder
+                .HasMany(e => e.Usuarios)
+                .WithMany(e => e.ApoderadoXPrestadores);
+
+            builder
+                .Navigation(e => e.Usuarios)
+                .AutoInclude(true)
+                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
 
             builder
                 .Property(p => p.Fecha)

@@ -8,6 +8,7 @@ public class TipoAntenas {
 
 	public int IdTipoAntena {  get; set; }
 	public string Nombre { get; set; }
+	public virtual ICollection<Antenas>? Antenas { get; set; } = new List<Antenas>();
 
     }
 }

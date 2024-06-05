@@ -7,6 +7,35 @@ namespace API.DataSchema.ModelConfiguration
     {
         public void Configure(EntityTypeBuilder<Inspecciones> builder)
         {
+
+            builder
+                .HasKey(k => k.IdInspeccion);
+
+            builder
+                .Property(k => k.IdInspeccion)
+                .ValueGeneratedOnAdd()
+                .IsRequired(true);
+
+            builder
+                .HasMany(e => e.Leyendas)
+                .WithMany(e => e.Inspecciones);
+
+            builder
+                .Navigation(e => e.Leyendas)
+                .AutoInclude(true)
+                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+
+            builder
+                .HasOne(e => e.Antena)
+                .WithMany(e => e.Inspecciones)
+                .HasForeignKey(e => e.Antena)
+                .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Antena)
+                .AutoInclude(true)
+                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+
             builder
                 .Property(p => p.AlambradoPerimetral)
                 .IsRequired(true);

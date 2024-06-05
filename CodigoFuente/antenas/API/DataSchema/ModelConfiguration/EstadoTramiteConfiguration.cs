@@ -11,6 +11,11 @@ namespace API.DataSchema.ModelConfiguration
                 .HasKey(k => k.IdEstado);
 
             builder
+                .Property(k => k.IdEstado)
+                .ValueGeneratedOnAdd()
+                .IsRequired(true);
+
+            builder
                 .Property(p => p.Estado)
                 .IsRequired(true);
         }

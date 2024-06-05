@@ -21,5 +21,9 @@ public class Prestadores {
 		public string Direccion { get; set; }
 		public string RazonSocial { get; set; }
 
-	} 
+		public virtual ICollection<Antenas>? Antenas { get; set; } = new List<Antenas>();
+		public virtual ICollection<Apoderados>? Apoderados { get; set;} = new List<Apoderados>();
+        public virtual ICollection<ApoderadoXPrestador>? ApoderadoXPrestadores { get; set; } = new List<ApoderadoXPrestador>();
+
+    } 
 }

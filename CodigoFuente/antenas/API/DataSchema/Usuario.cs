@@ -11,5 +11,7 @@ namespace API.DataSchema
         public string Nombre { get; set; }
         public string Email { get; set; }
         public bool? Activo { get; set; }
+
+        public virtual ICollection<ApoderadoXPrestador>? ApoderadoXPrestadores { get; set; } = new List<ApoderadoXPrestador>();
     }
 }
