@@ -14,7 +14,7 @@ using System.IO;
 
 namespace API.DataSchema
 {
-	public class Antenas
+	public class ANT_Antenas
 	{
 
 		public int IdAntena { get; set; }
@@ -31,12 +31,12 @@ namespace API.DataSchema
 		public string Observaciones { get; set; }
 		public string SalaEquipos { get; set; }
 		public string TipoMimetizado { get; set; }
-		public virtual TipoAntenas? TipoAntenas { get; set; }
-		public virtual Expedientes? Expediente { get; set; }
+		public virtual ANT_TipoAntenas? TipoAntenas { get; set; }
+		public virtual ANT_Expedientes? Expediente { get; set; }
         
-		public virtual Prestadores? Prestador { get; set; }
+		public virtual ANT_Prestadores? Prestador { get; set; }
         
-        public virtual ICollection<Inspecciones>? Inspecciones { get; set; } = new List<Inspecciones>();
+        public virtual ICollection<ANT_Inspecciones>? Inspecciones { get; set; } = new List<ANT_Inspecciones>();
 
 
 

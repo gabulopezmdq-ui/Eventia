@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class EstadoTramiteConfiguration:IEntityTypeConfiguration<EstadoTramite>
+    public class EstadoTramiteConfiguration:IEntityTypeConfiguration<ANT_EstadoTramite>
     {
-        public void Configure(EntityTypeBuilder<EstadoTramite> builder)
+        public void Configure(EntityTypeBuilder<ANT_EstadoTramite> builder)
         {
             builder
                 .HasKey(k => k.IdEstado);

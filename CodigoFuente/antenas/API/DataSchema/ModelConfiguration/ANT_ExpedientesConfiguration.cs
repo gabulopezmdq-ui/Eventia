@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class ExpedientesConfiguration :IEntityTypeConfiguration<Expedientes>
+    public class ANT_ExpedientesConfiguration :IEntityTypeConfiguration<ANT_Expedientes>
     {
-        public void Configure(EntityTypeBuilder<Expedientes> builder)
+        public void Configure(EntityTypeBuilder<ANT_Expedientes> builder)
         {
             builder
                 .HasKey(k => k.IdExpediente);
@@ -18,7 +18,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
                 .HasOne(p => p.Antenas)
                 .WithOne(e => e.Expediente)
-                .HasForeignKey<Antenas>(e => e.IdAntena);
+                .HasForeignKey<ANT_Antenas>(e => e.IdAntena);
 
             builder
                 .Navigation(e => e.Antenas)

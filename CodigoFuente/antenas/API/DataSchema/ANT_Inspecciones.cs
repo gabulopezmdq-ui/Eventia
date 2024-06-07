@@ -13,7 +13,7 @@ using System.IO;
 
 
 namespace API.DataSchema { 
-public class Inspecciones {
+public class ANT_Inspecciones {
 
     public int IdInspeccion { get; set; }
     public int IdAntena { get; set; }
@@ -87,7 +87,7 @@ public class Inspecciones {
 	public string Verticalidad { get; set; }
 	public string VigaEquipos { get; set; }
 	public string Visibilidad { get; set; }
-	public virtual Antenas? Antena { get; set; }
+	public virtual ANT_Antenas? Antena { get; set; }
 
     }
 

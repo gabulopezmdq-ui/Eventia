@@ -8494,28 +8494,25 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\sebastianperez\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {},
-    "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\": {}
+    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "projectName": "CoreServices.Test",
-      "projectPath": "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
-      "packagesPath": "C:\\Users\\sebastianperez\\.nuget\\packages\\",
-      "outputPath": "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
+      "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
+      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
-        "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\"
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\sebastianperez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -8528,8 +8525,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
-              "projectPath": "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\API\\API.csproj"
+            "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj"
             }
           }
         }
@@ -8581,7 +8578,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
       }
     }
   }

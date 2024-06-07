@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class ApoderadosConfiguration:IEntityTypeConfiguration<Apoderados>
+    public class ANT_ApoderadosConfiguration:IEntityTypeConfiguration<ANT_Apoderados>
     {
-        public void Configure(EntityTypeBuilder<Apoderados> builder) 
+        public void Configure(EntityTypeBuilder<ANT_Apoderados> builder) 
         {
             builder
                 .HasKey(k => k.IdApoderado);

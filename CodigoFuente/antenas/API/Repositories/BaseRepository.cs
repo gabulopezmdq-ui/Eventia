@@ -43,7 +43,7 @@ namespace API.Repositories
         {
             return await _context.FindAsync<T>(id);
         }
-
+        
         public virtual async Task<T> Find(int id)
         {
             var keyName = _context.Model.FindEntityType(typeof(T)).FindPrimaryKey().Properties

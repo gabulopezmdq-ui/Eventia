@@ -15,7 +15,7 @@ namespace API.DataSchema
         }
 
         public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<Antenas> Antenas { get; set; }
+        public DbSet<ANT_Antenas> Antenas { get; set; }
         public DbSet<Apoderados> Apoderados { get; set; }
         public DbSet<EstadoTramite> EstadoTramites { get; set; }
         public DbSet<Expedientes> Expedientes { get; set; }
