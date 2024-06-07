@@ -17,34 +17,34 @@ namespace API.Controllers
     public class UsuariosController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly ICRUDService<Usuario> _serviceGenerico;
+        private readonly ICRUDService<ANT_Usuario> _serviceGenerico;
 
-        public UsuariosController(DataContext context, ILogger<Usuario> logger, ICRUDService<Usuario> serviceGenerico)
+        public UsuariosController(DataContext context, ILogger<ANT_Usuario> logger, ICRUDService<ANT_Usuario> serviceGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
         }
         
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<Usuario>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<ANT_Usuario>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<Usuario>> Get(int Id)
+        public async Task<ActionResult<ANT_Usuario>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
         [HttpGet("GetByName")]
-        public async Task<ActionResult<Usuario>> Get(string Name)
+        public async Task<ActionResult<ANT_Usuario>> Get(string Name)
         {
             return Ok(await _serviceGenerico.GetByParam(u => u.Nombre == Name));
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] Usuario usuario)
+        public async Task<ActionResult> Post([FromForm] ANT_Usuario usuario)
         {
             await _serviceGenerico.Add(usuario);
             return Ok(usuario);
@@ -58,7 +58,7 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<Usuario>> Update([FromBody] Usuario usuario)
+        public async Task<ActionResult<ANT_Usuario>> Update([FromBody] ANT_Usuario usuario)
         {
             await _serviceGenerico.Update(usuario);
             return Ok(usuario);

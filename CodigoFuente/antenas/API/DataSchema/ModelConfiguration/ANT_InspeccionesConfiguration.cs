@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class InspeccionesConfiguration:IEntityTypeConfiguration<Inspecciones>
+    public class ANT_InspeccionesConfiguration:IEntityTypeConfiguration<ANT_Inspecciones>
     {
-        public void Configure(EntityTypeBuilder<Inspecciones> builder)
+        public void Configure(EntityTypeBuilder<ANT_Inspecciones> builder)
         {
 
             builder

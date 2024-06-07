@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema
 {
-    public class TipoAntenasConfiguration : IEntityTypeConfiguration<TipoAntenas>
+    public class ANT_TipoAntenasConfiguration : IEntityTypeConfiguration<ANT_TipoAntenas>
     {
-        public void Configure(EntityTypeBuilder<TipoAntenas> builder) 
+        public void Configure(EntityTypeBuilder<ANT_TipoAntenas> builder) 
         {
             builder
                .HasKey(k => k.IdTipoAntena);

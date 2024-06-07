@@ -14,12 +14,12 @@ using System.IO;
 
 namespace API.DataSchema
 {
-	public class EstadoTramite
+	public class ANT_EstadoTramite
 	{
 
 		public int IdEstado { get; set; }
 		public string Estado { get; set; }
-        public virtual ICollection<Expedientes>? Expedientes { get; set; } = new List<Expedientes>(); // Collection navigation containing dependents
+        public virtual ICollection<ANT_Expedientes>? Expedientes { get; set; } = new List<ANT_Expedientes>(); // Collection navigation containing dependents
 
     }
 }

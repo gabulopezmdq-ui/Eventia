@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema
 {
-    public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
+    public class ANT_UsuarioConfiguration : IEntityTypeConfiguration<ANT_Usuario>
     {
-        public void Configure(EntityTypeBuilder<Usuario> builder) 
+        public void Configure(EntityTypeBuilder<ANT_Usuario> builder) 
         {
             builder
                .HasKey(k => k.IdUsuario);

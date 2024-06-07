@@ -62,7 +62,7 @@ namespace API.DataSchema
 		public string TasaAnual { get; set; }
 		public string TasaSigem { get; set; }
 		public string UnifiliarGral { get; set; }
-		public virtual Antenas? Antenas { get; set; }
+		public virtual ANT_Antenas? Antenas { get; set; }
 		public virtual EstadoTramite? EstadoTramite { get;}
 
 	}
