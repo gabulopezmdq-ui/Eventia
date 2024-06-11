@@ -13,7 +13,7 @@ using SQLitePCL;
 
 namespace API.Repositories
 {
-    public class ANT_AntenasRepository : BaseRepository<ANT_Antenas>, IANT_AntenaRepository
+    public class ANT_AntenasRepository : BaseRepository<ANT_Antenas>, IANT_AntenasRepository
     {
 
         private readonly DataContext _context;
@@ -46,13 +46,11 @@ namespace API.Repositories
 
         public Task AddInspec(int idAntena, int idInspeccion)
         {
-            //_context.EV_ConservadoraEV_RepTecnico.Remove(idCons, idRepTec);//algo asi seria creo que primero hay que hacer el find del objeto
             ANT_Antenas antena = new ANT_Antenas();
             antena = _context.Antenas.Find(idAntena);
             ANT_Inspecciones inspeccion = new ANT_Inspecciones();
             inspeccion = _context.Inspecciones.Find(idInspeccion);
             antena.Inspecciones.Add(inspeccion);
-            //repTecnico.EV_Conservadora.Add(conservadora);
             _context.SaveChanges();
             return Task.CompletedTask;
         }

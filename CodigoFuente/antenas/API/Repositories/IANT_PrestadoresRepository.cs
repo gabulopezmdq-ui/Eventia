@@ -13,11 +13,11 @@ using IdentityModel;
 
 namespace API.Repositories
 {
-    public interface IANT_AntenaRepository : IRepository<ANT_Antenas>
+    public interface IANT_PrestadoresRepository : IRepository<ANT_Prestadores>
     {
-        Task<ANT_Antenas> Find(int id);
-        Task<IEnumerable<ANT_Inspecciones>> GetInspec(int idAntena);
-        Task AddInspec(int idAntena, int idInspeccion);
-        Task DeleteInspeccion(int idAntena, int idInspeccion);
+        Task<ANT_Prestadores> Find(int id);
+        Task<IEnumerable<ANT_Apoderados>> GetApoderado(int idPrestador);
+        Task AddApoderado(int idPrestador, int idApoderado);
+        Task DeleteApoderado(int idPrestador, int idApoderado);
     }
 }
