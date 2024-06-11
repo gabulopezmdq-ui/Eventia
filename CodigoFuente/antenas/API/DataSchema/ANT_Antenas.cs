@@ -33,7 +33,6 @@ namespace API.DataSchema
 		public string TipoMimetizado { get; set; }
 		public virtual ANT_TipoAntenas? TipoAntenas { get; set; }
 		public virtual ANT_Expedientes? Expediente { get; set; }
-        
 		public virtual ANT_Prestadores? Prestador { get; set; }
         
         public virtual ICollection<ANT_Inspecciones>? Inspecciones { get; set; } = new List<ANT_Inspecciones>();

@@ -14,7 +14,7 @@ using System.IO;
 
 namespace API.DataSchema
 {
-	public class Expedientes
+	public class ANT_Expedientes
 	{
 
 		public int IdExpediente { get; set; }
@@ -63,7 +63,7 @@ namespace API.DataSchema
 		public string TasaSigem { get; set; }
 		public string UnifiliarGral { get; set; }
 		public virtual ANT_Antenas? Antenas { get; set; }
-		public virtual EstadoTramite? EstadoTramite { get;}
+		public virtual ANT_EstadoTramite? EstadoTramite { get;}
 
 	}
 }

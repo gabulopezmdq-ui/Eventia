@@ -13,7 +13,7 @@ using System.IO;
 
 
 namespace API.DataSchema { 
-public class Prestadores {
+public class ANT_Prestadores {
 
 		public int IdPrestador { get; set; }
 		public int IdApoderado { get; set; }
@@ -22,7 +22,7 @@ public class Prestadores {
 		public string RazonSocial { get; set; }
 
 		public virtual ICollection<ANT_Antenas>? Antenas { get; set; } = new List<ANT_Antenas>();
-		public virtual ICollection<Apoderados>? Apoderados { get; set;} = new List<Apoderados>();
+		public virtual ICollection<ANT_Apoderados>? Apoderados { get; set;} = new List<ANT_Apoderados>();
 
     } 
 }

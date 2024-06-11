@@ -16,25 +16,25 @@ namespace API.DataSchema
 
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<ANT_Antenas> Antenas { get; set; }
-        public DbSet<Apoderados> Apoderados { get; set; }
-        public DbSet<EstadoTramite> EstadoTramites { get; set; }
-        public DbSet<Expedientes> Expedientes { get; set; }
-        public DbSet<Inspecciones> Inspecciones { get; set; }
-        public DbSet<Prestadores> Prestadores { get; set; }
-        public DbSet<TipoAntenas> TipoAntenas { get; set; }
+        public DbSet<ANT_Apoderados> Apoderados { get; set; }
+        public DbSet<ANT_EstadoTramite> EstadoTramites { get; set; }
+        public DbSet<ANT_Expedientes> Expedientes { get; set; }
+        public DbSet<ANT_Inspecciones> Inspecciones { get; set; }
+        public DbSet<ANT_Prestadores> Prestadores { get; set; }
+        public DbSet<ANT_TipoAntenas> TipoAntenas { get; set; }
 
 
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfiguration(new UsuarioConfiguration());
-            modelBuilder.ApplyConfiguration(new TipoAntenasConfiguration());
-            modelBuilder.ApplyConfiguration(new AntenasConfiguration());
-            modelBuilder.ApplyConfiguration(new ApoderadosConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_UsuarioConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_TipoAntenasConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_AntenasConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_ApoderadosConfiguration());
             modelBuilder.ApplyConfiguration(new EstadoTramiteConfiguration());
             modelBuilder.ApplyConfiguration(new PrestadoresConfiguration());
-            modelBuilder.ApplyConfiguration(new InspeccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_InspeccionesConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }

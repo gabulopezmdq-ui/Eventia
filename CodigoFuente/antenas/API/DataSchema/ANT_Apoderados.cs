@@ -14,13 +14,13 @@ using System.IO;
 
 namespace API.DataSchema
 {
-	public class Apoderados
+	public class ANT_Apoderados
 	{
 
 		public int IdApoderado { get; set; }
 		public string Nombre { get; set; }
 		public string Apelllido { get; set; }
 		public int NroDoc { get; set; }
-		public virtual ICollection<Prestadores>? Prestador { get; set; } = new List<Prestadores>();
+		public virtual ICollection<ANT_Prestadores>? Prestador { get; set; } = new List<ANT_Prestadores>();
 	}
 }
