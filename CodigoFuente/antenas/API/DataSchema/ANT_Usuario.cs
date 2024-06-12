@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace API.DataSchema
 {
-    public class Usuario
+    public class ANT_Usuario
     {
         public virtual int IdUsuario { get; set; }
         public string Nombre { get; set; }

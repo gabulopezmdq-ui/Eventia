@@ -3238,25 +3238,28 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\sebastianperez\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {},
+    "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+      "projectUniqueName": "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\API\\API.csproj",
       "projectName": "API",
-      "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
-      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-      "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\obj\\",
+      "projectPath": "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+      "packagesPath": "C:\\Users\\sebastianperez\\.nuget\\packages\\",
+      "outputPath": "C:\\DesarrolloGIT\\antenas\\CodigoFuente\\antenas\\API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+        "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\"
       ],
       "configFilePaths": [
-        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\sebastianperez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
@@ -3369,7 +3372,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
       }
     }
   }
