@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class PrestadoresConfiguration :IEntityTypeConfiguration<Prestadores>
+    public class ANT_PrestadoresConfiguration :IEntityTypeConfiguration<ANT_Prestadores>
     {
-        public void Configure(EntityTypeBuilder<Prestadores> builder)
+        public void Configure(EntityTypeBuilder<ANT_Prestadores> builder)
         {
             builder
                 .HasKey(k => k.IdPrestador);

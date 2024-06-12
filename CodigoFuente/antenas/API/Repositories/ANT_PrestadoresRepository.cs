@@ -24,7 +24,7 @@ namespace API.Repositories
 
         public override async Task<ANT_Prestadores> Find(int id)
         {
-            ANT_Prestadores prestador = await _context.Prestadores
+            ANT_Prestadores prestador = await _context.ANT_Prestadores
                 .Include(x => x.RazonSocial)
                 .Include(x => x.Cuit)
                 .Include(x => x.Apoderados)
@@ -41,16 +41,16 @@ namespace API.Repositories
         {
             IEnumerable<ANT_Apoderados> apoderados = new List<ANT_Apoderados>();
             ANT_Prestadores prestador = new ANT_Prestadores();
-            prestador = await _context.Prestadores.FindAsync(idPrestador);
+            prestador = await _context.ANT_Prestadores.FindAsync(idPrestador);
             return prestador.Apoderados;
         }
 
         public Task AddApoderado(int idPrestador, int idApoderado)
         {
             ANT_Prestadores prestador = new ANT_Prestadores();
-            prestador = _context.Prestadores.Find(idPrestador);
+            prestador = _context.ANT_Prestadores.Find(idPrestador);
             ANT_Apoderados apoderado = new ANT_Apoderados();
-            apoderado = _context.Apoderados.Find(idApoderado);
+            apoderado = _context.ANT_Apoderados.Find(idApoderado);
             prestador.Apoderados.Add(apoderado);
             _context.SaveChanges();
             return Task.CompletedTask;
@@ -68,9 +68,9 @@ namespace API.Repositories
 
                 //_context.EV_ConservadoraEV_RepTecnico.Remove(idCons, idRepTec);//algo asi seria creo que primero hay que hacer el find del objeto
                 ANT_Prestadores prestador = new ANT_Prestadores();
-                prestador = _context.Prestadores.Find(idPrestador);
+                prestador = _context.ANT_Prestadores.Find(idPrestador);
                 ANT_Apoderados apoderado = new ANT_Apoderados();
-                apoderado = _context.Apoderados.Find(idApoderado);
+                apoderado = _context.ANT_Apoderados.Find(idApoderado);
                 if (prestador != null && apoderado != null)
                 {
                     prestador.Apoderados.Remove(apoderado);

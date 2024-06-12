@@ -24,7 +24,7 @@ namespace API.Repositories
 
         public override async Task<ANT_Inspecciones> Find(int id)
         {
-            ANT_Inspecciones inspeccion = await _context.Inspecciones
+            ANT_Inspecciones inspeccion = await _context.ANT_Inspecciones
                 .Include(x => x.Antena)
                     .ThenInclude(a => a.CellId)
                 .IgnoreAutoIncludes()
@@ -37,7 +37,7 @@ namespace API.Repositories
         {
             IEnumerable<ANT_Antenas> antena = new List<ANT_Antenas>();
             ANT_Inspecciones inspeccion = new ANT_Inspecciones();
-            inspeccion = await _context.Inspecciones.FindAsync(idInspeccion);
+            inspeccion = await _context.ANT_Inspecciones.FindAsync(idInspeccion);
             return new List<ANT_Antenas> { inspeccion.Antena };
         }
 

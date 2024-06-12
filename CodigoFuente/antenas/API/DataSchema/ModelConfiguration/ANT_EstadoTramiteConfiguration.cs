@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class EstadoTramiteConfiguration:IEntityTypeConfiguration<ANT_EstadoTramite>
+    public class ANT_EstadoTramiteConfiguration:IEntityTypeConfiguration<ANT_EstadoTramite>
     {
         public void Configure(EntityTypeBuilder<ANT_EstadoTramite> builder)
         {

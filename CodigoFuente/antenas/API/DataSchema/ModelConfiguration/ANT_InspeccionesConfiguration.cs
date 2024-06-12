@@ -19,7 +19,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
                 .HasOne(e => e.Antena)
                 .WithMany(e => e.Inspecciones)
-                .HasForeignKey(e => e.Antena)
+                .HasForeignKey(e => e.IdAntena)
                 .IsRequired(true);
 
             builder

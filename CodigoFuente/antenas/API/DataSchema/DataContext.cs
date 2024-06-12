@@ -14,14 +14,14 @@ namespace API.DataSchema
             //ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
-        public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<ANT_Antenas> Antenas { get; set; }
-        public DbSet<ANT_Apoderados> Apoderados { get; set; }
-        public DbSet<ANT_EstadoTramite> EstadoTramites { get; set; }
-        public DbSet<ANT_Expedientes> Expedientes { get; set; }
-        public DbSet<ANT_Inspecciones> Inspecciones { get; set; }
-        public DbSet<ANT_Prestadores> Prestadores { get; set; }
-        public DbSet<ANT_TipoAntenas> TipoAntenas { get; set; }
+        public DbSet<ANT_Usuario> ANT_Usuarios { get; set; }
+        public DbSet<ANT_Antenas> ANT_Antenas { get; set; }
+        public DbSet<ANT_Apoderados> ANT_Apoderados { get; set; }
+        public DbSet<ANT_EstadoTramite> ANT_EstadoTramites { get; set; }
+        public DbSet<ANT_Expedientes> ANT_Expedientes { get; set; }
+        public DbSet<ANT_Inspecciones> ANT_Inspecciones { get; set; }
+        public DbSet<ANT_Prestadores> ANT_Prestadores { get; set; }
+        public DbSet<ANT_TipoAntenas> ANT_TipoAntenas { get; set; }
 
 
 
@@ -29,11 +29,12 @@ namespace API.DataSchema
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new ANT_UsuarioConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_ExpedientesConfiguration());
             modelBuilder.ApplyConfiguration(new ANT_TipoAntenasConfiguration());
             modelBuilder.ApplyConfiguration(new ANT_AntenasConfiguration());
             modelBuilder.ApplyConfiguration(new ANT_ApoderadosConfiguration());
-            modelBuilder.ApplyConfiguration(new EstadoTramiteConfiguration());
-            modelBuilder.ApplyConfiguration(new PrestadoresConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_EstadoTramiteConfiguration());
+            modelBuilder.ApplyConfiguration(new ANT_PrestadoresConfiguration());
             modelBuilder.ApplyConfiguration(new ANT_InspeccionesConfiguration());
             base.OnModelCreating(modelBuilder);
         }

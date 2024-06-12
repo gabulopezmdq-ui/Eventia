@@ -36,6 +36,7 @@
     <Compile Remove="Controllers\SeguroController.cs" />
     <Compile Remove="Controllers\TipoEquipamientoController.cs" />
     <Compile Remove="Controllers\TipoObraController.cs" />
+    <Compile Remove="Controllers\UsuariosController.cs" />
     <Compile Remove="Controllers\VelocidadController .cs" />
     <Compile Remove="DataSchema\ApoderadoXPrestador.cs" />
     <Compile Remove="DataSchema\EV_Administracion.cs" />

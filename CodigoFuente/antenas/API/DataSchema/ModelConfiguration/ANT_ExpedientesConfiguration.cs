@@ -8,7 +8,7 @@ namespace API.DataSchema.ModelConfiguration
         public void Configure(EntityTypeBuilder<ANT_Expedientes> builder)
         {
             builder
-                .HasKey(k => k.IdExpediente);
+                .HasKey(x => x.IdExpediente);
 
             builder
                 .Property(p => p.IdExpediente)

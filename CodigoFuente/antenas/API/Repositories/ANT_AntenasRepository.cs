@@ -24,7 +24,7 @@ namespace API.Repositories
 
         public override async Task<ANT_Antenas> Find(int id)
         {
-            ANT_Antenas antena = await _context.Antenas
+            ANT_Antenas antena = await _context.ANT_Antenas
                 .Include(x => x.TipoAntenas)
                 .Include(x => x.CellId)
                 .Include(x => x.CodigoSitio)
@@ -40,16 +40,16 @@ namespace API.Repositories
         {
             IEnumerable<ANT_Inspecciones> inspecciones = new List<ANT_Inspecciones>();
             ANT_Antenas antena = new ANT_Antenas();
-            antena = await _context.Antenas.FindAsync(idAntena);
+            antena = await _context.ANT_Antenas.FindAsync(idAntena);
             return antena.Inspecciones;
         }
 
         public Task AddInspec(int idAntena, int idInspeccion)
         {
             ANT_Antenas antena = new ANT_Antenas();
-            antena = _context.Antenas.Find(idAntena);
+            antena = _context.ANT_Antenas.Find(idAntena);
             ANT_Inspecciones inspeccion = new ANT_Inspecciones();
-            inspeccion = _context.Inspecciones.Find(idInspeccion);
+            inspeccion = _context.ANT_Inspecciones.Find(idInspeccion);
             antena.Inspecciones.Add(inspeccion);
             _context.SaveChanges();
             return Task.CompletedTask;
@@ -67,9 +67,9 @@ namespace API.Repositories
 
                 //_context.EV_ConservadoraEV_RepTecnico.Remove(idCons, idRepTec);//algo asi seria creo que primero hay que hacer el find del objeto
                 ANT_Antenas antena = new ANT_Antenas();
-                antena = _context.Antenas.Find(idAntena);
+                antena = _context.ANT_Antenas.Find(idAntena);
                 ANT_Inspecciones inspeccion = new ANT_Inspecciones();
-                inspeccion = _context.Inspecciones.Find(idInspeccion);
+                inspeccion = _context.ANT_Inspecciones.Find(idInspeccion);
                 if (antena != null && inspeccion != null)
                 {
                     antena.Inspecciones.Remove(inspeccion);
