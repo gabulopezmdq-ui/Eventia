@@ -3,7 +3,9 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -35,6 +37,39 @@ namespace API.Controllers
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
+
+
+        [HttpGet("GetByCellId")]
+        public async Task<ActionResult<IEnumerable<ANT_Inspecciones>>> GetByCelldId(string? cellId)
+        {
+            if(string.IsNullOrEmpty(cellId)) 
+            {
+                return BadRequest("CellId no puede ser Null ni estar vacío");
+            }
+
+            var inspecciones = await _serviceGenerico.GetByParam(a => a.Antena != null && a.Antena.CellId== cellId);
+            
+            if(inspecciones == null || !inspecciones.Any())
+            {
+                return NotFound("No se han encontrado Inspecciones con ese CellId");
+            }
+
+            return Ok(inspecciones);
+        }
+
+
+        //[HttpGet("GetByName")]
+        //public async Task<ActionResult<ANT_Inspecciones>> Get(string Nombre)
+        //{
+        //    return Ok(await _serviceGenerico.GetByParam(a => a.IdUsuario == Name));
+        //}
+
+        [HttpGet("GetByFecha")]
+        public async Task<ActionResult<IEnumerable<ANT_Inspecciones>>> GetByFecha(DateTime Fecha)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.Fecha == Fecha));
+        }
+
 
         [HttpPost]
         public async Task<ActionResult> Post([FromForm] ANT_Inspecciones inspeccion)

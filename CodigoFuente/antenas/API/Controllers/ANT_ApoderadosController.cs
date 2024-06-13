@@ -3,6 +3,7 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -34,6 +35,30 @@ namespace API.Controllers
         public async Task<ActionResult<ANT_EstadoTramite>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
+        }
+
+        [HttpGet("GetByName")]
+        public async Task<ActionResult<ANT_Apoderados>> Get(string? Nombre)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.Nombre == Nombre));
+        }
+
+        [HttpGet("GetByApellido")]
+        public async Task<ActionResult<ANT_Apoderados>> Get(string? Apellido)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.Nombre == Apellido));
+        }
+
+        [HttpGet("GetByNroDoc")]
+        public async Task<ActionResult<ANT_Apoderados>> Get(int? NroDoc)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.NroDoc == NroDoc));
+        }
+
+        [HttpGet("GetByPrestador")]
+        public async Task<ActionResult<ANT_Prestadores>> Get(ICollection<ANT_Prestadores> Prestador)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.Prestador == Prestador));
         }
 
         [HttpPost]

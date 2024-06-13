@@ -14,37 +14,31 @@ namespace API.Controllers
     //[Authorize(Roles = "Admin")]
     [AllowAnonymous]
     [Route("[controller]")]
-    public class ANT_AntenasController : ControllerBase
+    public class ANT_TipoAntenasController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly ICRUDService<ANT_Antenas> _serviceGenerico;
+        private readonly ICRUDService<ANT_TipoAntenas> _serviceGenerico;
 
-        public ANT_AntenasController(DataContext context, ILogger<ANT_Antenas> logger, ICRUDService<ANT_Antenas> serviceGenerico)
+        public ANT_TipoAntenasController(DataContext context, ILogger<ANT_TipoAntenas> logger, ICRUDService<ANT_TipoAntenas> serviceGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
         }
         
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<ANT_Antenas>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<ANT_TipoAntenas>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<ANT_Antenas>> Get(int Id)
+        public async Task<ActionResult<ANT_TipoAntenas>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
-        [HttpGet("GetByExpediente")]
-        public async Task<ActionResult<ANT_Antenas>> Get(int? Expediente)
-        {
-            return Ok(await _serviceGenerico.GetByParam(a => a.IdExpediente == Expediente));
-        }
-
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_Antenas antena)
+        public async Task<ActionResult> Post([FromForm] ANT_TipoAntenas antena)
         {
             await _serviceGenerico.Add(antena);
             return Ok(antena);
@@ -58,10 +52,10 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<ANT_Antenas>> Update([FromBody] ANT_Antenas antena)
+        public async Task<ActionResult<ANT_TipoAntenas>> Update([FromBody] ANT_TipoAntenas tipoAntena)
         {
-            await _serviceGenerico.Update(antena);
-            return Ok(antena);
+            await _serviceGenerico.Update(tipoAntena);
+            return Ok(tipoAntena);
         }
 
     }
