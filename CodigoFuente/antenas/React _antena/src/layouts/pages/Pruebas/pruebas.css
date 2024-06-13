@@ -1,0 +1,73 @@
+.modal-content {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .Contenido{
+    width: 60% !important;
+  }
+  .cuerpoModal{
+    padding: 15px;
+    background-color: rgb(241, 241, 241);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+  .tituloModal{
+    background: radial-gradient(circle, rgb(49, 49, 49) 0%, rgb(63, 63, 63) 100%);
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      padding: 15px;
+      color:white;
+      font-size: 18px;
+  }
+  .tituloModalMQ{
+    background: radial-gradient(circle, rgb(47, 49, 48) 0%, rgb(63, 63, 63) 100%);
+    border-radius: 10px;
+      padding: 15px;
+      color:white;
+      font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tituloModal p{
+    color:white;;
+}
+
+.cuerpoModal p b{
+  color: rgb(0, 0, 0);
+}
+.cuerpoModal p{
+  color: rgb(114, 114, 114);
+}
+
+.contenidoCard{
+  padding: 15px;
+  font-size: 1rem;
+}
+
+.card{
+  margin-top: 1rem;
+}
+.flex{
+display: flex;
+flex-direction: column;
+}
+
+.inputDate{
+  height: 100% !important;
+  border-bottom: 1px solid #d2d6da;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  margin-top: 7px;
+}
+.texto{
+  font-family: "Roboto","Helvetica","Arial",sans-serif;
+  color:#868ba3 !important;
+  font-weight: 400 !important;
+}
+
