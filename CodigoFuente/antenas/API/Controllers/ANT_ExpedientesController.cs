@@ -36,6 +36,13 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
+        [HttpGet("GetByEstado")]
+
+        public async Task<ActionResult<ANT_Expedientes>> Get(string? Estado)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.EstadoTramite.Estado == Estado));
+        }
+
         [HttpPost]
         public async Task<ActionResult> Post([FromForm] ANT_Expedientes expediente)
         {

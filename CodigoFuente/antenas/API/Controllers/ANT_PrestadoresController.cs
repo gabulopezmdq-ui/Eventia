@@ -36,6 +36,20 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
+        [HttpGet("GetByNombre")]
+
+        public async Task<ActionResult<ANT_Prestadores>> Get(string? Nombre)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.RazonSocial == Nombre));
+        }
+
+        [HttpGet("GetByCuit")]
+
+        public async Task<ActionResult<ANT_Prestadores>> Get(int? Cuit)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.Cuit == Cuit));
+        }
+
         [HttpPost]
         public async Task<ActionResult> Post([FromForm] ANT_Prestadores prestador)
         {
