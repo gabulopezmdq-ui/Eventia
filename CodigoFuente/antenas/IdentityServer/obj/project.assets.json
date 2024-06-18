@@ -4638,23 +4638,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\lramirez\\.nuget\\packages\\": {},
+    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
-      "projectPath": "C:\\Desarollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-      "packagesPath": "C:\\Users\\lramirez\\.nuget\\packages\\",
-      "outputPath": "C:\\Desarollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+      "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\lramirez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4663,7 +4663,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "c:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -4676,11 +4675,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -4741,6 +4735,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.NETCore.App.Host.win-x64",
+            "version": "[3.1.32, 3.1.32]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -4749,7 +4749,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "c:\\Program Files\\dotnet\\sdk\\8.0.204\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
       }
     }
   }
