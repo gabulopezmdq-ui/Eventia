@@ -44,7 +44,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByApellido")]
-        public async Task<ActionResult<ANT_Apoderados>> Get(string? Apellido)
+        public async Task<ActionResult<ANT_Apoderados>> GetByApellido(string? Apellido)
         {
             return Ok(await _serviceGenerico.GetByParam(a => a.Nombre == Apellido));
         }
