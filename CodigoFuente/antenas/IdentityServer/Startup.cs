@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-using IdentityServer4;
 using IdentityServer.Data;
 using IdentityServer.Models;
 using Microsoft.AspNetCore.Builder;
@@ -17,7 +16,6 @@ using IdentityServer4.Services;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Logging;
-using System.Net;
 
 namespace IdentityServer
 {
@@ -138,6 +136,13 @@ namespace IdentityServer
                 endpoints.MapDefaultControllerRoute()
                             .RequireAuthorization("ApiScope"); ;
             });
+
+            //public void ConfigureServices(IServiceCollection services)
+            //{
+
+            //    services.AddScoped<IDateConversionService>, DateConversionService();
+
+            //} 
 
             SeedData.EnsureSeedData(Configuration.GetConnectionString("DefaultConnection"));
         }

@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "KN3A3sKPQKvQbVVju9ZEn9iPgsnOBpSdPiE2tABKgVjDUNVdRINNYirVBA3Fj8oH9//m/QBhxFzQFk6Pmt00YA==",
-  "success": true,
+  "dgSpecHash": "r5IfX+NZr2/vT3IsB7+o74XqI3AS4OyrQo/Ov2yRGrL5nBY9zSLr0ptYDZEzO3VYfNMt+/m9b17KoZTwBIhvGw==",
+  "success": false,
   "projectFilePath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gcassulo\\.nuget\\packages\\identitymodel\\4.3.0\\identitymodel.4.3.0.nupkg.sha512",
@@ -107,5 +107,15 @@
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.threading.timer\\4.0.1\\system.threading.timer.4.0.1.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\3.1.32\\microsoft.netcore.app.host.win-x64.3.1.32.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1201",
+      "level": "Error",
+      "message": "El proyecto API no es compatible con netcoreapp3.1 (.NETCoreApp,Version=v3.1). El proyecto API admite: net7.0 (.NETCoreApp,Version=v7.0)",
+      "libraryId": "API",
+      "targetGraphs": [
+        ".NETCoreApp,Version=v3.1"
+      ]
+    }
+  ]
 }

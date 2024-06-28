@@ -3,7 +3,9 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -11,7 +13,7 @@ namespace API.Controllers
     [ApiController]
     //[Authorize(Roles ="Admin")]
     [AllowAnonymous]
-    [Route("Controller")]
+    [Route("[controller]")]
     public class ANT_ExpedientesController : ControllerBase
     {
         private readonly DataContext _context;
@@ -44,8 +46,8 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_Expedientes expediente)
-        {
+        public async Task<ActionResult> Post([FromBody] ANT_Expedientes expediente)
+        { 
             await _serviceGenerico.Add(expediente);
             return Ok(expediente);
         }
@@ -62,6 +64,12 @@ namespace API.Controllers
         {
             await _serviceGenerico.Update(expediente);
             return Ok(expediente);
+        }
+
+        public DateTime ConvertStringToDate(string date)
+        {
+            // Aquí deberías implementar la lógica para convertir una cadena de fecha en DateTime
+            return DateTime.ParseExact(date, "dd-MM-yyyy", CultureInfo.InvariantCulture);
         }
     }
 }

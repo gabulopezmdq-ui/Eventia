@@ -30,7 +30,7 @@ namespace API.Repositories
                 .Include(x => x.Apoderados)
                     .ThenInclude(a => a.Nombre)
                 .Include(x => x.Apoderados)
-                    .ThenInclude(a => a.Apelllido)
+                    .ThenInclude(a => a.Apellido)
                 .IgnoreAutoIncludes()
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.IdPrestador == id);

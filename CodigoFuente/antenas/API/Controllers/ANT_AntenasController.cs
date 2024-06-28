@@ -44,7 +44,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_Antenas antena)
+        public async Task<ActionResult> Post([FromBody] ANT_Antenas antena)
         {
             await _serviceGenerico.Add(antena);
             return Ok(antena);

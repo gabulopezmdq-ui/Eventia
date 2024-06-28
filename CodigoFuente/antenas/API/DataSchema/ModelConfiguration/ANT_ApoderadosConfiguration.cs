@@ -24,7 +24,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder
-                .Property(p => p.Apelllido)
+                .Property(p => p.Apellido)
                 .IsRequired(true);
 
             builder

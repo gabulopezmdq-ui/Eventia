@@ -3,6 +3,7 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace API.Controllers
     [ApiController]
     //[Authorize(Roles ="Admin")]
     [AllowAnonymous]
-    [Route("Controller")]
+    [Route("[controller]")]
     public class ANT_PrestadoresController :ControllerBase
     {
         private readonly DataContext _context;
@@ -51,7 +52,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_Prestadores prestador)
+        public async Task<ActionResult> Post([FromBody] ANT_Prestadores prestador)
         {
             await _serviceGenerico.Add(prestador);
             return Ok(prestador);

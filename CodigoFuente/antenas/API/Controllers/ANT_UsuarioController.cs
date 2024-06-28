@@ -37,7 +37,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_Usuario usuario)
+        public async Task<ActionResult> Post([FromBody] ANT_Usuario usuario)
         {
             await _serviceGenerico.Add(usuario);
             return Ok(usuario);
