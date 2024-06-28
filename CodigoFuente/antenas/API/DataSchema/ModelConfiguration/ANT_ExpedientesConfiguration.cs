@@ -8,10 +8,10 @@ namespace API.DataSchema.ModelConfiguration
         public void Configure(EntityTypeBuilder<ANT_Expedientes> builder)
         {
             builder
-                .HasKey(x => x.IdExpediente);
+               .HasKey(k => k.IdExpediente);
 
             builder
-                .Property(p => p.IdExpediente)
+                .Property(k => k.IdExpediente)
                 .ValueGeneratedOnAdd()
                 .IsRequired(true);
 
@@ -90,6 +90,7 @@ namespace API.DataSchema.ModelConfiguration
                 .Property(p => p.FactAmbienteBA)
                 .IsRequired(true);
 
+            //cambiar fechas a TRUE 
             builder
                 .Property(p => p.FechaEmision)
                 .IsRequired(true);

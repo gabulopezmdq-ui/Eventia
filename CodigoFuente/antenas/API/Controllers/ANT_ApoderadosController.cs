@@ -3,16 +3,19 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+
 
 namespace API.Controllers
 {
     [ApiController]
     //[Authorize(Roles ="Admin")]
     [AllowAnonymous]
-    [Route("Controller")]
+    [Route("[controller]")]
+
     public class ANT_ApoderadosController :ControllerBase
     {
         private readonly DataContext _context;
@@ -62,7 +65,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_Apoderados apoderado)
+        public async Task<ActionResult> Post([FromBody] ANT_Apoderados apoderado)
         {
             await _serviceGenerico.Add(apoderado);
             return Ok(apoderado);

@@ -1653,6 +1653,16 @@
             "related": ".xml"
           }
         }
+      },
+      "API/1.0.0": {
+        "type": "project",
+        "framework": "Unsupported,Version=v0.0",
+        "compile": {
+          "bin/placeholder/API.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/API.dll": {}
+        }
       }
     }
   },
@@ -4621,10 +4631,16 @@
         "system.threading.timer.4.0.1.nupkg.sha512",
         "system.threading.timer.nuspec"
       ]
+    },
+    "API/1.0.0": {
+      "type": "project",
+      "path": "../API/API.csproj",
+      "msbuildProject": "../API/API.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v3.1": [
+      "API >= 1.0.0",
       "IdentityServer4.AccessTokenValidation >= 3.0.1",
       "IdentityServer4.AspNetIdentity >= 4.0.0",
       "Microsoft.AspNetCore.Authentication.Google >= 3.1.5",
@@ -4668,7 +4684,11 @@
       "frameworks": {
         "netcoreapp3.1": {
           "targetAlias": "netcoreapp3.1",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
@@ -4752,5 +4772,16 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1201",
+      "level": "Error",
+      "message": "El proyecto API no es compatible con netcoreapp3.1 (.NETCoreApp,Version=v3.1). El proyecto API admite: net7.0 (.NETCoreApp,Version=v7.0)",
+      "libraryId": "API",
+      "targetGraphs": [
+        ".NETCoreApp,Version=v3.1"
+      ]
+    }
+  ]
 }

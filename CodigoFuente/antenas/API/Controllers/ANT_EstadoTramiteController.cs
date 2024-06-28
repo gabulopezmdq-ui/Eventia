@@ -11,7 +11,7 @@ namespace API.Controllers
     [ApiController]
     //[Authorize(Roles ="Admin")]
     [AllowAnonymous]
-    [Route("Controller")]
+    [Route("[controller]")]
     public class ANT_EstadoTramiteController : ControllerBase
     {
         private readonly DataContext _context;
@@ -37,7 +37,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_EstadoTramite estado)
+        public async Task<ActionResult> Post([FromBody] ANT_EstadoTramite estado)
         {
             await _serviceGenerico.Add(estado);
             return Ok(estado);

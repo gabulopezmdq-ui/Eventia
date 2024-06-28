@@ -13,7 +13,7 @@ namespace API.Controllers
     [ApiController]
     //[Authorize(Roles ="Admin")]
     [AllowAnonymous]
-    [Route("Controller")]
+    [Route("[controller]")]
     public class ANT_InspeccionesController : ControllerBase
     {
         private readonly DataContext _context;
@@ -72,7 +72,7 @@ namespace API.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromForm] ANT_Inspecciones inspeccion)
+        public async Task<ActionResult> Post([FromBody] ANT_Inspecciones inspeccion)
         {
             await _serviceGenerico.Add(inspeccion);
             return Ok(inspeccion);

@@ -19,7 +19,7 @@ namespace API.DataSchema
 
 		public int IdApoderado { get; set; }
 		public string Nombre { get; set; }
-		public string Apelllido { get; set; }
+		public string Apellido { get; set; }
 		public int NroDoc { get; set; }
 		public virtual ICollection<ANT_Prestadores>? Prestador { get; set; } = new List<ANT_Prestadores>();
 	}
