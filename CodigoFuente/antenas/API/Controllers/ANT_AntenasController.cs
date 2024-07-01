@@ -1,4 +1,5 @@
 ﻿using  API.DataSchema;
+using API.Repositories;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,10 +38,28 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
+        [HttpGet("GetByCellId")]
+
+        public async Task<ActionResult<ANT_Antenas>> GetByCellId(string? cellId)
+        {
+            return Ok(await _serviceGenerico.GetByParam(a => a.CellId == cellId));
+        }
+
         [HttpGet("GetByExpediente")]
         public async Task<ActionResult<ANT_Antenas>> Get(int? Expediente)
         {
             return Ok(await _serviceGenerico.GetByParam(a => a.IdExpediente == Expediente));
+        }
+
+        [HttpGet("GetByPrestador")]
+        public async Task<IActionResult> GetAntenasByPrestador(string Prestador)
+        {
+            var antenas = await _serviceGenerico.GetByParam(a => a.Prestador.RazonSocial.Contains(Prestador));
+            if (antenas == null || !antenas.Any())
+            {
+                return NotFound();
+            }
+            return Ok(antenas);
         }
 
         [HttpPost]
