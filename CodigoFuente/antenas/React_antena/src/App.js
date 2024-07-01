@@ -24,6 +24,8 @@ import EstadoTramite from "layouts/pages/Pruebas/EstadoTramite";
 import EstadoInspeccion from "layouts/pages/Pruebas/EstadoInspeccion";
 import Usuario from "layouts/pages/Pruebas/Usuario";
 import TipoAntena from "layouts/pages/Pruebas/TipoAntena/TipoAntena";
+import AltaEmpresa from "layouts/pages/Pruebas/Empresa/AltaEmpresa";
+import AltaApoderado from "layouts/pages/Pruebas/ApoderadoLegal/AltaApoderado";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -139,6 +141,14 @@ export default function App() {
     {
       path: "/InspeccionFE/Nuevo",
       component: AltaInspeccion,
+    },
+    {
+      path: "/EmpresaFE/Nuevo",
+      component: AltaEmpresa,
+    },
+    {
+      path: "/ApoderadoLegalFE/Nuevo",
+      component: AltaApoderado,
     },
     //-----------------------------Rutas de Listado-----------------------------------------
     {
