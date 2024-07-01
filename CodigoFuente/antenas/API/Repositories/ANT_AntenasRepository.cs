@@ -26,6 +26,7 @@ namespace API.Repositories
         {
             ANT_Antenas antena = await _context.ANT_Antenas
         .Include(x => x.TipoAntenas)
+        .Include(x => x.IdExpediente)
         .Include(x => x.Prestador)
             .ThenInclude(y => y.RazonSocial)
         .IgnoreAutoIncludes()
@@ -34,6 +35,15 @@ namespace API.Repositories
             return antena;
         }
 
+        public async Task<IEnumerable<ANT_Antenas>> GetByPrestador(string prestador)
+        {
+            return await _context.ANT_Antenas
+                .Include(a => a.TipoAntenas)
+                .Include(a => a.Prestador)
+                .Include(a => a.IdExpediente)
+                .Where(a => a.Prestador.RazonSocial.Contains(prestador))
+                .ToListAsync();
+        }
         public async Task<IEnumerable<ANT_Inspecciones>> GetInspec (int idAntena)
         {
             IEnumerable<ANT_Inspecciones> inspecciones = new List<ANT_Inspecciones>();

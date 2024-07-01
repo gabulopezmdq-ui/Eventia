@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {}
+    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\API.csproj": {}
   },
   "projects": {
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\API.csproj",
         "projectName": "API",
-        "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\API.csproj",
         "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-        "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\obj\\",
+        "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
