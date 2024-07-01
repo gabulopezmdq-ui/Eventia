@@ -25,14 +25,12 @@ namespace API.Repositories
         public override async Task<ANT_Antenas> Find(int id)
         {
             ANT_Antenas antena = await _context.ANT_Antenas
-                .Include(x => x.TipoAntenas)
-                .Include(x => x.CellId)
-                .Include(x => x.CodigoSitio)
-                .Include(x => x.Prestador)
-                    .ThenInclude(y => y.RazonSocial)
-                .IgnoreAutoIncludes()
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.IdAntena == id);
+        .Include(x => x.TipoAntenas)
+        .Include(x => x.Prestador)
+            .ThenInclude(y => y.RazonSocial)
+        .IgnoreAutoIncludes()
+        .AsNoTracking()
+        .FirstOrDefaultAsync(e => e.IdAntena == id);
             return antena;
         }
 
