@@ -40,28 +40,33 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
-        [HttpGet("GetByName")]
+        [HttpGet("GetByNombre")]
         public async Task<ActionResult<ANT_Apoderados>> Get(string? Nombre)
         {
             return Ok(await _serviceGenerico.GetByParam(a => a.Nombre == Nombre));
         }
 
+        [HttpGet("GetByPrestador")]
+        public async Task<IActionResult> GetByPrestador(string prestador)
+        {
+            var apoderados = await _serviceGenerico.GetByParam(a => a.Prestador.Any(p => p.RazonSocial.Contains(prestador)));
+            if (!apoderados.Any())
+            {
+                return NotFound();
+            }
+            return Ok(apoderados);
+        }
+
         [HttpGet("GetByApellido")]
         public async Task<ActionResult<ANT_Apoderados>> GetByApellido(string? Apellido)
         {
-            return Ok(await _serviceGenerico.GetByParam(a => a.Nombre == Apellido));
+            return Ok(await _serviceGenerico.GetByParam(a => a.Apellido == Apellido));
         }
 
         [HttpGet("GetByNroDoc")]
         public async Task<ActionResult<ANT_Apoderados>> Get(int? NroDoc)
         {
             return Ok(await _serviceGenerico.GetByParam(a => a.NroDoc == NroDoc));
-        }
-
-        [HttpGet("GetByPrestador")]
-        public async Task<ActionResult<ANT_Prestadores>> Get(ICollection<ANT_Prestadores> Prestador)
-        {
-            return Ok(await _serviceGenerico.GetByParam(a => a.Prestador == Prestador));
         }
 
         [HttpPost]
