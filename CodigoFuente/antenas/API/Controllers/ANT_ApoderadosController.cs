@@ -47,8 +47,9 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByPrestador")]
-        public async Task<IActionResult> GetByPrestador(string prestador)
+        public async Task<IActionResult> GetByPrestador(string? prestador)
         {
+
             var apoderados = await _serviceGenerico.GetByParam(a => a.Prestador.Any(p => p.RazonSocial.Contains(prestador)));
             if (!apoderados.Any())
             {
