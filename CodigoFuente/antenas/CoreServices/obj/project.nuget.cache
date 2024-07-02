@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "2sAxA7ZjVmsiT+R/msz1k31zIRfWedwdSlifmSFLEznc3gbf+K9iO2BxgMW4qOkPw/RlHoEXVsWMhurMnLl7Ug==",
+  "dgSpecHash": "UnwFz6kPdAVnjN2G0/p/3MEOOL7Cjy+wKinYMGzmlaNVZ5eHMkQr4IqfIe7fSGFiFaCexdFl8yCaE6DJzFWqvA==",
   "success": true,
-  "projectFilePath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
+  "projectFilePath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gcassulo\\.nuget\\packages\\bogus\\34.0.2\\bogus.34.0.2.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
