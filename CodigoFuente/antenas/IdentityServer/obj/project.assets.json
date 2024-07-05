@@ -33,9 +33,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
-      "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
       "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
       "projectStyle": "PackageReference",
@@ -58,8 +58,8 @@
         "netcoreapp3.1": {
           "targetAlias": "netcoreapp3.1",
           "projectReferences": {
-            "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
-              "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj"
+            "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj"
             }
           }
         }
