@@ -25,11 +25,7 @@ function Usuario() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "Usuario/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "Usuario/getall")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {

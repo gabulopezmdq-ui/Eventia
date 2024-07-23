@@ -30,11 +30,12 @@ function Formulario({ steps, apiUrl, productId }) {
   const handleBack = () => setActiveStep(activeStep - 1);
   useEffect(() => {
     if (productId) {
+      console.log(productId);
       axios
         .get(`${apiUrl}/getbyid?id=${productId}`, {
-          headers: {
+          /*headers: {
             Authorization: `Bearer ${token}`, // Envía el token en los headers
-          },
+          },*/
         })
         .then((response) => {
           setFormData(response.data);
@@ -91,9 +92,9 @@ function Formulario({ steps, apiUrl, productId }) {
     if (productId) {
       axios
         .put(`${apiUrl}/`, formData, {
-          headers: {
+          /*headers: {
             Authorization: `Bearer ${token}`,
-          },
+          },*/
         })
         .then((response) => {
           navigate(-1);
@@ -116,9 +117,9 @@ function Formulario({ steps, apiUrl, productId }) {
     } else {
       axios
         .post(apiUrl, formData, {
-          headers: {
+          /*headers: {
             Authorization: `Bearer ${token}`,
-          },
+          },*/
         })
         .then((response) => {
           navigate(-1);
