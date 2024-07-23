@@ -24,11 +24,17 @@ namespace API.DataSchema.ModelConfiguration
                 .Navigation(e => e.Antenas)
                 .AutoInclude(true)
                 .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
-            
+
             builder
                 .Navigation(e => e.Antenas)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder
+                   .HasOne(e => e.EstadoTramite)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdEstadoTramite)
+                   .IsRequired(true);
 
             builder
                 .Property(p => p.AcometidaEnergia)

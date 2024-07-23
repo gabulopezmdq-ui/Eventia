@@ -17,7 +17,6 @@ public class ANT_Inspecciones {
 
     public int IdInspeccion { get; set; }
     public int IdAntena { get; set; }
-	public int IdLeyenda { get; set; }
 	public int IdUsuario { get; set; }
 	public string AlambradoPerimetral { get; set; }
 	public string AnilloTierra { get; set; }

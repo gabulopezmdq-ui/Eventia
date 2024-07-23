@@ -53,7 +53,13 @@ namespace API.Repositories
             _context.SaveChanges();
             return Task.CompletedTask;
         }
-
+        public async Task<IEnumerable<ANT_EstadoTramite>> GetEstado(int idEstado)
+        {
+            IEnumerable<ANT_EstadoTramite> estado = new List<ANT_EstadoTramite>();
+            ANT_Expedientes expediente = new ANT_Expedientes();
+            expediente = await _context.ANT_Expedientes.FindAsync(idEstado);
+            return new List<ANT_EstadoTramite> { expediente.EstadoTramite };
+        }
         public Task DeleteAntena(int idExpediente, int idAntena)
         {
 

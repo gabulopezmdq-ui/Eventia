@@ -19,6 +19,7 @@ namespace API.DataSchema
 
 		public int IdExpediente { get; set; }
         public int? IdAntena { get; set; }
+		public int? IdEstadoTramite { get; set; }
 		public string AcometidaEnergia { get; set; }
 		public string ActaAsamblea { get; set; }
 		public string AEnacom { get; set; }
