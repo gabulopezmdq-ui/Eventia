@@ -46,6 +46,7 @@ namespace API.DataSchema.ModelConfiguration
                 .Navigation(e => e.Expediente)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
+
             builder
                .HasMany(e => e.Inspecciones)
                .WithOne(e => e.Antena)

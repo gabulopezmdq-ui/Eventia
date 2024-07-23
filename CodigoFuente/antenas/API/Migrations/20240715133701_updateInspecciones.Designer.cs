@@ -3,6 +3,7 @@ using System;
 using API.DataSchema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240715133701_updateInspecciones")]
+    partial class updateInspecciones
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,10 +218,6 @@ namespace API.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("IdAntena")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("IdEstadoTramite")
-                        .IsRequired()
                         .HasColumnType("integer");
 
                     b.Property<string>("ImpactoAmbiental")
@@ -454,6 +453,9 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("IdAntena")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IdLeyenda")
                         .HasColumnType("integer");
 
                     b.Property<int>("IdUsuario")
