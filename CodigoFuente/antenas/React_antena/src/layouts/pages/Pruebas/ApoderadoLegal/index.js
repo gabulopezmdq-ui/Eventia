@@ -25,11 +25,7 @@ function ApoderadoLegal() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "ApoderadoLegal/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "ANT_Apoderados/getall")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
@@ -64,13 +60,13 @@ function ApoderadoLegal() {
     return fecha.toLocaleDateString("es-ES", options);
   };
 
-  const handleNuevoTipo = () => {
-    navigate("/ApoderadoLegalFE/Nuevo");
+  const handleNuevoApoderado = () => {
+    navigate("/ApoderadoFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idApoderadoLegal) {
-      const productId = rowData.idApoderadoLegal;
-      const url = `/ApoderadoLegalFE/${productId}`;
+    if (rowData && rowData.idApoderado) {
+      const productId = rowData.idApoderado;
+      const url = `/ApoderadoFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -83,7 +79,7 @@ function ApoderadoLegal() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        <MDButton variant="gradient" color="success" onClick={handleNuevoApoderado}>
           Agregar
         </MDButton>
         {errorAlert.show && (
@@ -105,12 +101,9 @@ function ApoderadoLegal() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "Juan Pedro" },
-                  {
-                    Header: "Apellido",
-                    accessor: (rowData) => `${rowData.eV_Calle?.nombre} ${rowData.altura}`,
-                  },
-                  { Header: "Numero dni", accessor: "expediente" },
+                  { Header: "Nombre", accessor: "nombre" },
+                  { Header: "Apellido", accessor: "apellido" },
+                  { Header: "Numero dni", accessor: "nroDoc" },
                   /*{
                     Header: "Telefono",
                     accessor: "telefono",

@@ -25,11 +25,7 @@ function EstadoTramite() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "EstadoTramite/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "ANT_EstadoTramite/getall")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
@@ -64,12 +60,12 @@ function EstadoTramite() {
     return fecha.toLocaleDateString("es-ES", options);
   };
 
-  const handleNuevoTipo = () => {
+  const handleNuevoEstadoTramite = () => {
     navigate("/EstadoTramiteFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idEstadoTramite) {
-      const productId = rowData.idEstadoTramite;
+    if (rowData && rowData.idEstado) {
+      const productId = rowData.idEstado;
       const url = `/EstadoTramiteFE/${productId}`;
       navigate(url);
     } else {
@@ -83,7 +79,7 @@ function EstadoTramite() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        <MDButton variant="gradient" color="success" onClick={handleNuevoEstadoTramite}>
           Agregar
         </MDButton>
         {errorAlert.show && (
@@ -105,7 +101,8 @@ function EstadoTramite() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Estado del tramite", accessor: "Juan Pedro" },
+                  { Header: "ID", accessor: "idEstado" },
+                  { Header: "Estado del tramite", accessor: "estado" },
                   /*{
                     Header: "Telefono",
                     accessor: "telefono",

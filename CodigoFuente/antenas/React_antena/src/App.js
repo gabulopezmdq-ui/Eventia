@@ -21,11 +21,20 @@ import AltaInspeccion from "layouts/pages/Pruebas/Inspeccion/AltaInspeccion";
 import ApoderadoLegal from "layouts/pages/Pruebas/ApoderadoLegal";
 import Seguro from "layouts/pages/Pruebas/Seguro";
 import EstadoTramite from "layouts/pages/Pruebas/EstadoTramite";
-import EstadoInspeccion from "layouts/pages/Pruebas/EstadoInspeccion";
 import Usuario from "layouts/pages/Pruebas/Usuario";
-import TipoAntena from "layouts/pages/Pruebas/TipoAntena/TipoAntena";
+import TipoAntena from "layouts/pages/Pruebas/TipoAntena/Index";
 import AltaEmpresa from "layouts/pages/Pruebas/Empresa/AltaEmpresa";
 import AltaApoderado from "layouts/pages/Pruebas/ApoderadoLegal/AltaApoderado";
+import Expediente from "layouts/pages/Pruebas/Expediente";
+import EmpresaVer from "layouts/pages/Pruebas/Empresa/EmpresaVer";
+import InspeccionVer from "layouts/pages/Pruebas/Inspeccion/InspeccionVer";
+import ExpedienteVer from "layouts/pages/Pruebas/Expediente/ExpedienteVer";
+import AltaTipoAntena from "layouts/pages/Pruebas/TipoAntena/AltaTipoAntena";
+import AltaEstadoTramite from "layouts/pages/Pruebas/EstadoTramite/AltaEstadoTramite";
+import AltaExpediente from "layouts/pages/Pruebas/Expediente/AltaExpediente";
+import ApoderadoVer from "layouts/pages/Pruebas/ApoderadoLegal/ApoderadoVer";
+import EstadoTramiteVer from "layouts/pages/Pruebas/EstadoTramite/EstadoTramiteVer";
+import TipoAntenaVer from "layouts/pages/Pruebas/TipoAntena/TipoAntenaVer";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -147,20 +156,32 @@ export default function App() {
       component: AltaEmpresa,
     },
     {
-      path: "/ApoderadoLegalFE/Nuevo",
+      path: "/ApoderadoFE/Nuevo",
       component: AltaApoderado,
+    },
+    {
+      path: "/TipoAntenaFE/Nuevo",
+      component: AltaTipoAntena,
+    },
+    {
+      path: "/EstadoTramiteFE/Nuevo",
+      component: AltaEstadoTramite,
+    },
+    {
+      path: "/ExpedienteFE/Nuevo",
+      component: AltaExpediente,
     },
     //-----------------------------Rutas de Listado-----------------------------------------
     {
-      path: "/AntenaFE",
+      path: "/AntenaFE/",
       component: Antena,
     },
     {
-      path: "/EmpresaFE",
+      path: "/EmpresaFE/",
       component: Empresa,
     },
     {
-      path: "/ApoderadoLegalFE",
+      path: "/ApoderadoLegalFE/",
       component: ApoderadoLegal,
     },
     {
@@ -176,10 +197,6 @@ export default function App() {
       component: EstadoTramite,
     },
     {
-      path: "/EstadoInspeccionFE",
-      component: EstadoInspeccion,
-    },
-    {
       path: "/UsuarioFE",
       component: Usuario,
     },
@@ -187,10 +204,63 @@ export default function App() {
       path: "/TipoAntenaFE",
       component: TipoAntena,
     },
-    //-----------------------------Rutas de Edicion-----------------------------------------
+    {
+      path: "/ExpedienteFE",
+      component: Expediente,
+    },
+    //-----------------------------Rutas de Vermas ?? ----------------------------------------
     {
       path: "/AntenaFE/:id",
       component: AntenaVer,
+    },
+    {
+      path: "/EmpresaFE/:id",
+      component: EmpresaVer,
+    },
+    {
+      path: "/InspeccionFE/:id",
+      component: InspeccionVer,
+    },
+    {
+      path: "/ExpedienteFE/:id",
+      component: ExpedienteVer,
+    },
+    {
+      path: "/ApoderadoFE/:id",
+      component: ApoderadoVer,
+    },
+    {
+      path: "/EstadoTramiteFE/:id",
+      component: EstadoTramiteVer,
+    },
+    {
+      path: "/TipoAntenaFE/:id",
+      component: TipoAntenaVer,
+    },
+    //-----------------------------Rutas de Editar ?? ----------------------------------------
+    {
+      path: "/AntenaFE/Edit/:id",
+      component: AltaAntena,
+    },
+    {
+      path: "/EmpresaFE/Edit/:id",
+      component: AltaEmpresa,
+    },
+    {
+      path: "/TipoAntenaFE/Edit/:id",
+      component: AltaTipoAntena,
+    },
+    {
+      path: "/ApoderadoFE/Edit/:id",
+      component: AltaApoderado,
+    },
+    {
+      path: "/EstadoTramiteFE/Edit/:id",
+      component: AltaEstadoTramite,
+    },
+    {
+      path: "/ExpedienteFE/Edit/:id",
+      component: AltaExpediente,
     },
   ];
 
