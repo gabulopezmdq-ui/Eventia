@@ -3244,11 +3244,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\API.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
       "projectName": "API",
-      "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\API.csproj",
+      "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
       "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-      "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\obj\\",
+      "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3275,11 +3275,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -3366,24 +3361,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[7.0.20, 7.0.20]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[7.0.20, 7.0.20]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[7.0.20, 7.0.20]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[7.0.20, 7.0.20]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -3392,7 +3369,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
       }
     }
   }
