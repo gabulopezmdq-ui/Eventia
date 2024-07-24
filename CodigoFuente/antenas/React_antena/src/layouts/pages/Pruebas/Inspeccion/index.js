@@ -25,11 +25,7 @@ function Inspeccion() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "Inspeccion/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "ANT_Inspecciones/getall")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
@@ -105,12 +101,9 @@ function Inspeccion() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Inspector", accessor: "Juan Pedro" },
-                  {
-                    Header: "Dirección",
-                    accessor: (rowData) => `${rowData.eV_Calle?.nombre} ${rowData.altura}`,
-                  },
-                  { Header: "Razon social", accessor: "expediente" },
+                  { Header: "Inspector", accessor: "antena.tipoAntenas.nombre" },
+                  { Header: "Dirección", accessor: "antena.prestador.direccion" },
+                  { Header: "Razon social", accessor: "antena.prestador.razonSocial" },
                   /*{
                     Header: "Telefono",
                     accessor: "telefono",

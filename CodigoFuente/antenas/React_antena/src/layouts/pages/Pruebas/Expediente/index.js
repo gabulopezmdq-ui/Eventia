@@ -17,7 +17,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
-function TipoAntena() {
+function Expediente() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -25,11 +25,7 @@ function TipoAntena() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "TipoAntena/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "ANT_Expedientes/getall")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
@@ -64,13 +60,13 @@ function TipoAntena() {
     return fecha.toLocaleDateString("es-ES", options);
   };
 
-  const handleNuevoTipo = () => {
-    navigate("/TipoAntenaFE/Nuevo");
+  const handleNuevoExpediente = () => {
+    navigate("/ExpedienteFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idTipoAntena) {
-      const productId = rowData.idTipoAntena;
-      const url = `/TipoAntenaFE/${productId}`;
+    if (rowData && rowData.idExpediente) {
+      const productId = rowData.idExpediente;
+      const url = `/ExpedienteFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -83,7 +79,7 @@ function TipoAntena() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        <MDButton variant="gradient" color="success" onClick={handleNuevoExpediente}>
           Agregar
         </MDButton>
         {errorAlert.show && (
@@ -105,7 +101,8 @@ function TipoAntena() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Tipo de antena", accessor: "Juan Pedro" },
+                  { Header: "Expediente", accessor: "idExpediente" },
+                  { Header: "antenas", accessor: "antenas.tipoAntenas.nombre" },
                   /*{
                     Header: "Telefono",
                     accessor: "telefono",
@@ -138,11 +135,11 @@ function TipoAntena() {
   );
 }
 
-TipoAntena.propTypes = {
+Expediente.propTypes = {
   row: PropTypes.object, // Add this line for 'row' prop
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default TipoAntena;
+export default Expediente;

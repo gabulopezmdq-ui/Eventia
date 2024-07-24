@@ -25,11 +25,7 @@ function Empresa() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "Empresa/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "ANT_Prestadores/getall")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
@@ -64,12 +60,12 @@ function Empresa() {
     return fecha.toLocaleDateString("es-ES", options);
   };
 
-  const handleNuevoTipo = () => {
+  const handleNuevoEmpresa = () => {
     navigate("/EmpresaFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idEmpresa) {
-      const productId = rowData.idEmpresa;
+    if (rowData && rowData.idPrestador) {
+      const productId = rowData.idPrestador;
       const url = `/EmpresaFE/${productId}`;
       navigate(url);
     } else {
@@ -83,7 +79,7 @@ function Empresa() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        <MDButton variant="gradient" color="success" onClick={handleNuevoEmpresa}>
           Agregar
         </MDButton>
         {errorAlert.show && (
@@ -105,11 +101,8 @@ function Empresa() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Razon social", accessor: "Juan Pedro" },
-                  {
-                    Header: "Dirección",
-                    accessor: (rowData) => `${rowData.eV_Calle?.nombre} ${rowData.altura}`,
-                  },
+                  { Header: "Razon social", accessor: "razonSocial" },
+                  { Header: "CUIT", accessor: "cuit" },
                   /*{
                     Header: "Telefono",
                     accessor: "telefono",

@@ -17,7 +17,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
-function EstadoInspeccion() {
+function TipoAntena() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -25,11 +25,7 @@ function EstadoInspeccion() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "EstadoInspeccion/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "ANT_TipoAntenas/getall")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
@@ -64,13 +60,13 @@ function EstadoInspeccion() {
     return fecha.toLocaleDateString("es-ES", options);
   };
 
-  const handleNuevoTipo = () => {
-    navigate("/EstadoInspeccionFE/Nuevo");
+  const handleNuevoTipoAntena = () => {
+    navigate("/TipoAntenaFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idEstadoInspeccion) {
-      const productId = rowData.idEstadoInspeccion;
-      const url = `/EstadoInspeccionFE/${productId}`;
+    if (rowData && rowData.idTipoAntena) {
+      const productId = rowData.idTipoAntena;
+      const url = `/TipoAntenaFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -83,7 +79,7 @@ function EstadoInspeccion() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        <MDButton variant="gradient" color="success" onClick={handleNuevoTipoAntena}>
           Agregar
         </MDButton>
         {errorAlert.show && (
@@ -105,7 +101,7 @@ function EstadoInspeccion() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Estado de la inspeccion", accessor: "Juan Pedro" },
+                  { Header: "Tipo de antena", accessor: "nombre" },
                   /*{
                     Header: "Telefono",
                     accessor: "telefono",
@@ -138,11 +134,11 @@ function EstadoInspeccion() {
   );
 }
 
-EstadoInspeccion.propTypes = {
+TipoAntena.propTypes = {
   row: PropTypes.object, // Add this line for 'row' prop
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default EstadoInspeccion;
+export default TipoAntena;

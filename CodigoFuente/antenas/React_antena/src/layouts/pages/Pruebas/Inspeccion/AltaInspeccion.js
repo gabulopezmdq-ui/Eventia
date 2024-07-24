@@ -22,23 +22,18 @@ function AltaInspeccion() {
           type: "select",
           label: "Dirección",
           name: "idCalle",
-          apiUrl: process.env.REACT_APP_API_URL + "calle/GetAll",
-          valueField: "idCalle",
-          optionField: "nombre",
+          apiUrl: process.env.REACT_APP_API_URL + "balizaFlash/GetAll",
+          valueField: "balizaFlash",
+          optionField: "balizaFlash",
         },
         {
           type: "select",
           label: "Representante tecnico",
           name: "idCalle",
-          apiUrl: process.env.REACT_APP_API_URL + "calle/GetAll",
+          apiUrl: process.env.REACT_APP_API_URL + "antena.balizaFlash/GetAll",
           valueField: "idCalle",
           optionField: "nombre",
         },
-      ],
-    },
-    {
-      label: "Ubicación y tipo de estructura",
-      fields: [
         { type: "text", label: "Nombre del sitio", name: "nombre del sitio", required: true },
         { type: "number", label: "Código del sitio", name: "codigo del sitio " },
         { type: "tetx", label: "Dirección", name: "direccion" },
@@ -56,11 +51,6 @@ function AltaInspeccion() {
           valueField: "idCalle",
           optionField: "nombre",
         },
-      ],
-    },
-    {
-      label: "Otro mas",
-      fields: [
         { type: "text", label: "Altura soporte", name: "altura soporte", required: true },
         { type: "number", label: "Altura total", name: "altura total " },
         { type: "tetx", label: "Tipo de sala de equipo", name: "tipo de sala de equipo" },
@@ -77,6 +67,7 @@ function AltaInspeccion() {
         { type: "checkbox", label: "Habilitado", name: "habilitado" },
       ],
     },
+    /*-----------------------------------------------------------------------------*/
     {
       label: "Inspección visual",
       fields: [
@@ -121,11 +112,6 @@ function AltaInspeccion() {
           optionField: "nombre",
         },
         { type: "checkbox", label: "Habilitado", name: "habilitado" },
-      ],
-    },
-    {
-      label: "Elementos de ascenso",
-      fields: [
         {
           type: "select",
           label: "Escalera de ascenso con guarda hombre",
@@ -206,11 +192,6 @@ function AltaInspeccion() {
           valueField: "idCalle",
           optionField: "nombre",
         },
-      ],
-    },
-    {
-      label: "Soporte antena",
-      fields: [
         {
           type: "select",
           label: "Verticalidad y torsión ( aplica a todos los tipos de estructuras)",
@@ -269,6 +250,7 @@ function AltaInspeccion() {
         },
       ],
     },
+    /*---------------------------------------------------------------------------------------------*/
     {
       label: "Banquina de equipos",
       fields: [
@@ -368,11 +350,6 @@ function AltaInspeccion() {
           valueField: "idCalle",
           optionField: "nombre",
         },
-      ],
-    },
-    {
-      label: "Balizamiento",
-      fields: [
         {
           type: "select",
           label: "Luces para balizamiento nocturno",
@@ -455,6 +432,7 @@ function AltaInspeccion() {
         },
       ],
     },
+    /*---------------------------------------------------------------------------------*/
     {
       label: "Equipos Shelter",
       fields: [
@@ -522,11 +500,6 @@ function AltaInspeccion() {
           valueField: "idCalle",
           optionField: "nombre",
         },
-      ],
-    },
-    {
-      label: "Puesta a tierra",
-      fields: [
         {
           type: "select",
           label: "Cámara de inspección y jabalinas (Limpieza, rótulo de puesta a tierra)",
@@ -599,11 +572,6 @@ function AltaInspeccion() {
           valueField: "idCalle",
           optionField: "nombre",
         },
-      ],
-    },
-    {
-      label: "Componentes pararrayos",
-      fields: [
         {
           type: "select",
           label: "Punta captora",
@@ -640,7 +608,7 @@ function AltaInspeccion() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `conservadora`;
+  const apiUrl = process.env.REACT_APP_API_URL + `ANT_Inspecciones`;
 
   return (
     <DashboardLayout>

@@ -25,11 +25,7 @@ function Antena() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "Antena/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
-      })
+      .get(process.env.REACT_APP_API_URL + "ANT_Antenas/GetAll")
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
@@ -64,7 +60,7 @@ function Antena() {
     return fecha.toLocaleDateString("es-ES", options);
   };
 
-  const handleNuevoTipo = () => {
+  const handleNuevoAntena = () => {
     navigate("/AntenaFE/Nuevo");
   };
   const handleVer = (rowData) => {
@@ -83,7 +79,7 @@ function Antena() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        <MDButton variant="gradient" color="success" onClick={handleNuevoAntena}>
           Agregar
         </MDButton>
         {errorAlert.show && (
@@ -105,17 +101,9 @@ function Antena() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "Juan Pedro" },
-                  {
-                    Header: "Dirección",
-                    accessor: (rowData) => `${rowData.eV_Calle?.nombre} ${rowData.altura}`,
-                  },
-                  { Header: "Expediente", accessor: "expediente" },
-                  /*{
-                    Header: "Telefono",
-                    accessor: "telefono",
-                    Cell: ({ value }) => displayValue(value),
-                  },*/
+                  { Header: "Nombre de la antena", accessor: (row) => row.tipoAntenas.nombre },
+                  { Header: "Direccion", accessor: "direccion" },
+                  { Header: "idAntena", accessor: "idAntena" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",

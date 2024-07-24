@@ -9,27 +9,22 @@ import Formulario from "components/Formulario";
 
 function AltaEmpresa() {
   const { id } = useParams();
+  let labelTitulo = "Alta Empresa";
+  if (id) {
+    labelTitulo = "Editar Empresa";
+  }
   const steps = [
     {
       label: "Info General",
       fields: [
-        { type: "date", label: "Fecha de inspección", name: "fecha", required: true },
-        { type: "number", label: "Expediente", name: "expediente" },
-        { type: "text", label: "Inspector", name: "inspector" },
-        { type: "text", label: "Departamento", name: "departamento" },
-      ],
-    },
-    {
-      label: "Ubicación y tipo de estructura",
-      fields: [
-        { type: "text", label: "Nombre del sitio", name: "nombre del sitio", required: true },
-        { type: "number", label: "Código del sitio", name: "codigo del sitio " },
-        { type: "tetx", label: "Dirección", name: "direccion" },
+        { type: "text", label: "RazonSocial", name: "razonSocial" },
+        { type: "number", label: "cuit", name: "cuit" },
+        { type: "text", label: "Direccion", name: "direccion" },
       ],
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `conservadora`;
+  const apiUrl = process.env.REACT_APP_API_URL + `ANT_Prestadores`;
 
   return (
     <DashboardLayout>
