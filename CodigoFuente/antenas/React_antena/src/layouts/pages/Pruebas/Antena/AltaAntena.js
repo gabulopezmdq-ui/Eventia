@@ -9,27 +9,29 @@ import Formulario from "components/Formulario";
 
 function AltaAntena() {
   const { id } = useParams();
+  let labelTitulo = "Alta Antena";
+  if (id) {
+    labelTitulo = "Editar Antena";
+  }
   const steps = [
     {
       label: "Info General",
       fields: [
-        { type: "date", label: "Fecha de inspección", name: "fecha", required: true },
-        { type: "number", label: "Expediente", name: "expediente" },
-        { type: "text", label: "Inspector", name: "inspector" },
-        { type: "text", label: "Departamento", name: "departamento" },
-      ],
-    },
-    {
-      label: "Ubicación y tipo de estructura",
-      fields: [
-        { type: "text", label: "Nombre del sitio", name: "nombre del sitio", required: true },
-        { type: "number", label: "Código del sitio", name: "codigo del sitio " },
-        { type: "tetx", label: "Dirección", name: "direccion" },
+        { type: "number", label: "Altura soporte", name: "alturaSoporte" },
+        { type: "number", label: "Altura Total", name: "alturaTotal" },
+        { type: "number", label: "Celular", name: "cellId" },
+        { type: "number", label: "Codigo Sitio", name: "codigoSitio" },
+        { type: "text", label: "Declarada", name: "declarada" },
+        { type: "text", label: "Direccion", name: "direccion" },
+        { type: "text", label: "Emplazamiento", name: "emplazamiento" },
+        { type: "text", label: "Observaciones", name: "observaciones" },
+        { type: "text", label: "Sala Equipos", name: "salaEquipos" },
+        { type: "text", label: "tipo Mimetizado", name: "tipoMimetizado" },
       ],
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `conservadora`;
+  const apiUrl = process.env.REACT_APP_API_URL + `ANT_Antenas`;
 
   return (
     <DashboardLayout>

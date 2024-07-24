@@ -7,7 +7,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import Formulario from "components/Formulario";
 
-function AltaApoderado() {
+function AltaEstadoTramite() {
   const { id } = useParams();
   let labelTitulo = "Alta Empresa";
   if (id) {
@@ -17,22 +17,16 @@ function AltaApoderado() {
     {
       label: "Info General",
       fields: [
-        { type: "text", label: "Nombre", name: "nombre" },
-        { type: "text", label: "Apellido", name: "apellido" },
-        { type: "number", label: "DNI", name: "nroDoc" },
+        {
+          type: "text",
+          label: "Estado",
+          name: "estado",
+        },
       ],
     },
-    /*{
-      label: "Ubicación y tipo de estructura",
-      fields: [
-        { type: "text", label: "Nombre del sitio", name: "nombre del sitio", required: true },
-        { type: "number", label: "Código del sitio", name: "codigo del sitio " },
-        { type: "tetx", label: "Dirección", name: "direccion" },
-      ],
-    },*/
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `ANT_Apoderados`;
+  const apiUrl = process.env.REACT_APP_API_URL + `ANT_EstadoTramite`;
 
   return (
     <DashboardLayout>
@@ -49,4 +43,4 @@ function AltaApoderado() {
   );
 }
 
-export default AltaApoderado;
+export default AltaEstadoTramite;

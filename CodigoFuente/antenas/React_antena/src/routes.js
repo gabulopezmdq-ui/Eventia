@@ -4,9 +4,9 @@ import Empresa from "layouts/pages/Pruebas/Empresa/index";
 import Inspeccion from "layouts/pages/Pruebas/Inspeccion";
 import Seguro from "layouts/pages/Pruebas/Seguro";
 import EstadoTramite from "layouts/pages/Pruebas/EstadoTramite";
-import EstadoInspeccion from "layouts/pages/Pruebas/EstadoInspeccion";
 import Usuario from "layouts/pages/Pruebas/Usuario";
-import TipoAntena from "layouts/pages/Pruebas/TipoAntena/TipoAntena";
+import TipoAntena from "layouts/pages/Pruebas/TipoAntena/Index";
+import Expediente from "layouts/pages/Pruebas/Expediente";
 
 const routes = [
   {
@@ -98,12 +98,6 @@ const routes = [
         component: <EstadoTramite />,
       },
       {
-        name: "Estado Inspeccion",
-        key: "EstadoInspeccion",
-        route: "/EstadoInspeccionFE",
-        component: <EstadoInspeccion />,
-      },
-      {
         name: "Usuario",
         key: "Usuario",
         route: "/UsuarioFE",
@@ -114,6 +108,12 @@ const routes = [
         key: "TipoAntena",
         route: "/TipoAntenaFE",
         component: <TipoAntena />,
+      },
+      {
+        name: "Expediente",
+        key: "Expediente",
+        route: "/ExpedienteFE",
+        component: <Expediente />,
       },
     ],
   },
