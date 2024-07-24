@@ -14,7 +14,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
                 .HasMany(p => p.Expedientes)
                 .WithOne(e => e.EstadoTramite)
-                .HasForeignKey(e => e.IdExpediente);
+                .HasForeignKey(e => e.IdEstadoTramite);
 
             builder
                 .Property(k => k.IdEstado)
