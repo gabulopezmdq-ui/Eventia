@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Reflection.Metadata;
 using System;
 using SQLitePCL;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Repositories
 {
@@ -17,67 +18,67 @@ namespace API.Repositories
     {
 
         private readonly DataContext _context;
+
         public ANT_ExpedientesRepository(DataContext context) : base(context)
         {
             _context = context;
         }
-
         public override async Task<ANT_Expedientes> Find(int id)
         {
-            ANT_Expedientes expediente = await _context.ANT_Expedientes
-                .Include(x => x.NroExpediente)
-                .Include(x => x.Antenas)
-                    .ThenInclude(a => a.CellId)
-                .IgnoreAutoIncludes()
+            return await _context.ANT_Expedientes
+                .Include(e => e.EstadoTramite)
+                .ThenInclude( t => t.Estado)
+                .Include(e => e.Antenas)
+                .ThenInclude(a => a.TipoAntenas)
+                .Include(e => e.Antenas)
+                .ThenInclude(a => a.Prestador)
+                .ThenInclude(p => p.Apoderados)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.IdExpediente == id);
-            return expediente;
         }
 
-        public async Task<IEnumerable<ANT_Antenas>> GetAntena (int idAntena)
+
+        public async Task<IEnumerable<ANT_Antenas>> GetAntena(int idAntena)
         {
             IEnumerable<ANT_Antenas> antena = new List<ANT_Antenas>();
-            ANT_Expedientes expediente = new ANT_Expedientes();
-            expediente = await _context.ANT_Expedientes.FindAsync(idAntena);
+            ANT_Expedientes expediente = await _context.ANT_Expedientes
+                .Include(e => e.Antenas)
+                .FirstOrDefaultAsync(e => e.IdExpediente == idAntena);
             return new List<ANT_Antenas> { expediente.Antenas };
         }
 
         public Task AddAntena(int idExpediente, int idAntena)
         {
-            ANT_Expedientes expediente = new ANT_Expedientes();
-            expediente = _context.ANT_Expedientes.Find(idExpediente);
-            ANT_Antenas antena = new ANT_Antenas();
-            antena = _context.ANT_Antenas.Find(idAntena);
+            ANT_Expedientes expediente = _context.ANT_Expedientes.Find(idExpediente);
+            ANT_Antenas antena = _context.ANT_Antenas.Find(idAntena);
             expediente.Antenas = antena;
             antena.Expediente = expediente;
             _context.SaveChanges();
             return Task.CompletedTask;
         }
+
         public async Task<IEnumerable<ANT_EstadoTramite>> GetEstado(int idEstado)
         {
-            IEnumerable<ANT_EstadoTramite> estado = new List<ANT_EstadoTramite>();
-            ANT_Expedientes expediente = new ANT_Expedientes();
-            expediente = await _context.ANT_Expedientes.FindAsync(idEstado);
+            ANT_Expedientes expediente = await _context.ANT_Expedientes
+                .Include(e => e.EstadoTramite)
+                .FirstOrDefaultAsync(e => e.IdExpediente == idEstado);
             return new List<ANT_EstadoTramite> { expediente.EstadoTramite };
         }
+
         public Task DeleteAntena(int idExpediente, int idAntena)
         {
-
             using var transaction = _context.Database.BeginTransaction();
 
             try
             {
-                ANT_Expedientes expediente = new ANT_Expedientes();
-                expediente = _context.ANT_Expedientes.Find(idExpediente);
-                ANT_Antenas antena = new ANT_Antenas();
-                antena = _context.ANT_Antenas.Find(idAntena);
+                ANT_Expedientes expediente = _context.ANT_Expedientes.Find(idExpediente);
+                ANT_Antenas antena = _context.ANT_Antenas.Find(idAntena);
                 if (expediente != null && antena != null)
                 {
                     expediente.Antenas = null;
                     antena.Expediente = null;
                     _context.SaveChanges();
                 }
-
             }
             catch (Exception)
             {

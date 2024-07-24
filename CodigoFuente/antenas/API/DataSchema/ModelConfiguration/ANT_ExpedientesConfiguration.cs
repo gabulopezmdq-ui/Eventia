@@ -31,10 +31,9 @@ namespace API.DataSchema.ModelConfiguration
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder
-                   .HasOne(e => e.EstadoTramite)
-                   .WithMany()
-                   .HasForeignKey(e => e.IdEstadoTramite)
-                   .IsRequired(true);
+            .HasOne(e =>  e.EstadoTramite)
+            .WithMany(a => a.Expedientes)
+            .HasForeignKey(e => e.IdEstadoTramite);
 
             builder
                 .Property(p => p.AcometidaEnergia)

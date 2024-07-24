@@ -2,6 +2,7 @@
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,6 @@ namespace API.Controllers
             _serviceGenerico = serviceGenerico;
         }
 
-
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<ANT_Expedientes>>> Get()
         {
@@ -44,6 +44,16 @@ namespace API.Controllers
         {
             return Ok(await _serviceGenerico.GetByParam(a => a.EstadoTramite.Estado == Estado));
         }
+
+        //[HttpGet("TestGetExpediente")]
+
+        //public async Task<IActionResult> TestGetExpediente(int id)
+        //{
+        //    var expediente = await _context.ANT_Expedientes
+        //        .Include(e => e.EstadoTramite)
+        //        .FirstOrDefaultAsync(e => e.IdExpediente == id);
+        //    return Ok(expediente);
+        //}
 
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] ANT_Expedientes expediente)
