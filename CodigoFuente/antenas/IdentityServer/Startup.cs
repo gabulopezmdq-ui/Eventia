@@ -44,6 +44,7 @@ namespace IdentityServer
                         //.AllowAnyOrigin()
                         .AllowCredentials();
                 });
+
             });
 
            // services.AddControllersWithViews(o => o.SslPort = 5001);

@@ -29,13 +29,13 @@ namespace API.Controllers
 
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<ANT_EstadoTramite>>> Get()
+        public async Task<ActionResult<IEnumerable<ANT_EstadoTramites>>> Get()
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<ANT_EstadoTramite>> Get(int Id)
+        public async Task<ActionResult<ANT_EstadoTramites>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }

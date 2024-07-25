@@ -3,6 +3,7 @@ using System;
 using API.DataSchema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240724183348_ModifyDatetime")]
+    partial class ModifyDatetime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,19 +128,19 @@ namespace API.Migrations
                     b.ToTable("ANT_Apoderados");
                 });
 
-            modelBuilder.Entity("API.DataSchema.ANT_EstadoTramites", b =>
+            modelBuilder.Entity("API.DataSchema.ANT_EstadoTramite", b =>
                 {
-                    b.Property<int>("IdEstadoTramite")
+                    b.Property<int>("IdEstado")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdEstadoTramite"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdEstado"));
 
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("IdEstadoTramite");
+                    b.HasKey("IdEstado");
 
                     b.ToTable("ANT_EstadoTramites");
                 });
@@ -215,6 +218,9 @@ namespace API.Migrations
                     b.Property<DateTime?>("FechaTasaA")
                         .IsRequired()
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<int?>("IdAntena")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("IdEstadoTramite")
                         .HasColumnType("integer");
@@ -719,15 +725,17 @@ namespace API.Migrations
 
             modelBuilder.Entity("API.DataSchema.ANT_Expedientes", b =>
                 {
-                    b.HasOne("API.DataSchema.ANT_EstadoTramites", "EstadoTramite")
+                    b.HasOne("API.DataSchema.ANT_EstadoTramite", "EstadoTramite")
                         .WithMany("Expedientes")
                         .HasForeignKey("IdEstadoTramite");
 
-                    b.HasOne("API.DataSchema.ANT_Antenas", null)
+                    b.HasOne("API.DataSchema.ANT_Antenas", "Antenas")
                         .WithOne("Expediente")
                         .HasForeignKey("API.DataSchema.ANT_Expedientes", "IdExpediente")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Antenas");
 
                     b.Navigation("EstadoTramite");
                 });
@@ -750,7 +758,7 @@ namespace API.Migrations
                     b.Navigation("Inspecciones");
                 });
 
-            modelBuilder.Entity("API.DataSchema.ANT_EstadoTramites", b =>
+            modelBuilder.Entity("API.DataSchema.ANT_EstadoTramite", b =>
                 {
                     b.Navigation("Expedientes");
                 });

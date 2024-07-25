@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {}
+    "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {}
   },
   "projects": {
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+    "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj",
         "projectName": "API",
-        "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj",
         "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-        "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\obj\\",
+        "outputPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -136,14 +136,14 @@
         }
       }
     },
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {
+    "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
         "projectName": "IdentityServer",
-        "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+        "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
         "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-        "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+        "outputPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -164,8 +164,8 @@
           "netcoreapp3.1": {
             "targetAlias": "netcoreapp3.1",
             "projectReferences": {
-              "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
-                "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj"
+              "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+                "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj"
               }
             }
           }
@@ -179,50 +179,6 @@
       "frameworks": {
         "netcoreapp3.1": {
           "targetAlias": "netcoreapp3.1",
-          "dependencies": {
-            "IdentityServer4.AccessTokenValidation": {
-              "target": "Package",
-              "version": "[3.0.1, )"
-            },
-            "IdentityServer4.AspNetIdentity": {
-              "target": "Package",
-              "version": "[4.0.0, )"
-            },
-            "Microsoft.AspNetCore.Authentication.Google": {
-              "target": "Package",
-              "version": "[3.1.5, )"
-            },
-            "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
-              "target": "Package",
-              "version": "[3.1.5, )"
-            },
-            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
-              "target": "Package",
-              "version": "[3.1.5, )"
-            },
-            "Microsoft.AspNetCore.Identity.UI": {
-              "target": "Package",
-              "version": "[3.1.5, )"
-            },
-            "Microsoft.EntityFrameworkCore.Sqlite": {
-              "target": "Package",
-              "version": "[3.1.5, )"
-            },
-            "Microsoft.EntityFrameworkCore.Tools": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[3.1.5, )"
-            },
-            "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
-              "target": "Package",
-              "version": "[1.10.9, )"
-            },
-            "Serilog.AspNetCore": {
-              "target": "Package",
-              "version": "[3.2.0, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",
@@ -234,20 +190,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[3.1.32, 3.1.32]"
-            }
-          ],
-          "frameworkReferences": {
-            "Microsoft.AspNetCore.App": {
-              "privateAssets": "none"
-            },
-            "Microsoft.NETCore.App": {
-              "privateAssets": "all"
-            }
-          },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
         }
       }

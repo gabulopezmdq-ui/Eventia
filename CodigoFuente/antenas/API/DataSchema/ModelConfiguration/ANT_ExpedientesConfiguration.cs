@@ -12,27 +12,11 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
                 .Property(k => k.IdExpediente)
-                .ValueGeneratedOnAdd()
-                .IsRequired(true);
-
-            builder
-                .HasOne(p => p.Antenas)
-                .WithOne(e => e.Expediente)
-                .HasForeignKey<ANT_Antenas>(e => e.IdAntena);
-
-            builder
-                .Navigation(e => e.Antenas)
-                .AutoInclude(true)
-                .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
-
-            builder
-                .Navigation(e => e.Antenas)
-                .AutoInclude()
-                .UsePropertyAccessMode(PropertyAccessMode.Property);
+                .ValueGeneratedOnAdd();
 
             builder
             .HasOne(e =>  e.EstadoTramite)
-            .WithMany(a => a.Expedientes)
+            .WithMany()
             .HasForeignKey(e => e.IdEstadoTramite);
 
             builder
@@ -98,11 +82,11 @@ namespace API.DataSchema.ModelConfiguration
             //cambiar fechas a TRUE 
             builder
                 .Property(p => p.FechaEmision)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder
                 .Property(p => p.FechaTasaA)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder
                 .Property(p => p.ImpactoAmbiental)

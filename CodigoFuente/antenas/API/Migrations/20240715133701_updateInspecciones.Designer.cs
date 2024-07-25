@@ -128,7 +128,7 @@ namespace API.Migrations
                     b.ToTable("ANT_Apoderados");
                 });
 
-            modelBuilder.Entity("API.DataSchema.ANT_EstadoTramite", b =>
+            modelBuilder.Entity("API.DataSchema.ANT_EstadoTramites", b =>
                 {
                     b.Property<int>("IdEstado")
                         .ValueGeneratedOnAdd()

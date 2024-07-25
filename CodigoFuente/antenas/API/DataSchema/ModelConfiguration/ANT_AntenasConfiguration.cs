@@ -38,7 +38,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
                 .HasOne(e => e.Expediente)
-                .WithOne(e => e.Antenas)
+                .WithOne()
                 .HasForeignKey<ANT_Expedientes>(e => e.IdExpediente)
                 .IsRequired(true);
 
