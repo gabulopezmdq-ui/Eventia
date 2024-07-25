@@ -16,8 +16,5 @@ namespace API.Repositories
     public interface IANT_ExpedientesRepository : IRepository<ANT_Expedientes>
     {
         Task<ANT_Expedientes> Find(int id);
-        Task<IEnumerable<ANT_Antenas>> GetAntena(int idAntena);
-        Task AddAntena(int idExpediente, int idAntena);
-        Task DeleteAntena(int idExpediente, int idAntena);
     }
 }

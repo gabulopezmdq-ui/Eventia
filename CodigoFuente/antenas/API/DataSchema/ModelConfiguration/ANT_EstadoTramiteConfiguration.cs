@@ -3,21 +3,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class ANT_EstadoTramiteConfiguration:IEntityTypeConfiguration<ANT_EstadoTramite>
+    public class ANT_EstadoTramiteConfiguration:IEntityTypeConfiguration<ANT_EstadoTramites>
     {
-        public void Configure(EntityTypeBuilder<ANT_EstadoTramite> builder)
+        public void Configure(EntityTypeBuilder<ANT_EstadoTramites> builder)
         {
             builder
-                .HasKey(k => k.IdEstado);
-
-
-            builder
-                .HasMany(p => p.Expedientes)
-                .WithOne(e => e.EstadoTramite)
-                .HasForeignKey(e => e.IdEstadoTramite);
+                .HasKey(k => k.IdEstadoTramite);
 
             builder
-                .Property(k => k.IdEstado)
+                .Property(k => k.IdEstadoTramite)
                 .ValueGeneratedOnAdd()
                 .IsRequired(true);
 
@@ -25,6 +19,10 @@ namespace API.DataSchema.ModelConfiguration
                 .Property(p => p.Estado)
                 .IsRequired(true);
 
+            builder
+            .HasMany(e => e.Expedientes)
+            .WithOne(e => e.EstadoTramite)
+            .HasForeignKey(e => e.IdEstadoTramite);
         }
     }
 }

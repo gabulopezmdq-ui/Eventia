@@ -17,7 +17,7 @@ namespace API.DataSchema
         public DbSet<ANT_Usuario> ANT_Usuarios { get; set; }
         public DbSet<ANT_Antenas> ANT_Antenas { get; set; }
         public DbSet<ANT_Apoderados> ANT_Apoderados { get; set; }
-        public DbSet<ANT_EstadoTramite> ANT_EstadoTramites { get; set; }
+        public DbSet<ANT_EstadoTramites> ANT_EstadoTramites { get; set; }
         public DbSet<ANT_Expedientes> ANT_Expedientes { get; set; }
         public DbSet<ANT_Inspecciones> ANT_Inspecciones { get; set; }
         public DbSet<ANT_Prestadores> ANT_Prestadores { get; set; }

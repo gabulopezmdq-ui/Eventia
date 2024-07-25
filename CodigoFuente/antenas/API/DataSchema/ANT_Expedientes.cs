@@ -16,9 +16,8 @@ namespace API.DataSchema
 {
 	public class ANT_Expedientes
 	{
-
+		//REVISAR COMO PASAN LAS DATETIMES DEL FRONT AL BACK
 		public int IdExpediente { get; set; }
-        public int? IdAntena { get; set; }
 		public int? IdEstadoTramite { get; set; }
 		public string AcometidaEnergia { get; set; }
 		public string ActaAsamblea { get; set; }
@@ -35,8 +34,8 @@ namespace API.DataSchema
 		public string CuadroPotencia { get; set; }
 		public string CuadroVerifConduc { get; set; }
 		public string FactAmbienteBA { get; set; }
-		public DateTime FechaEmision { get; set; }
-		public DateTime FechaTasaA { get; set; }
+		public DateTime? FechaEmision { get; set; }
+		public DateTime? FechaTasaA { get; set; }
 		public string ImpactoAmbiental { get; set; }
 		public string LayoutElectrica { get; set; }
 		public string LibreDeuda { get; set; }
@@ -62,8 +61,7 @@ namespace API.DataSchema
 		public string TasaAnual { get; set; }
 		public string TasaSigem { get; set; }
 		public string UnifiliarGral { get; set; }
-		public virtual ANT_Antenas? Antenas { get; set; }
-        public virtual ANT_EstadoTramite? EstadoTramite { get; set; }
+        public virtual ANT_EstadoTramites? EstadoTramite { get; set; }
 
     }
 }
