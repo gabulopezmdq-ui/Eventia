@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "G2imgMlRfBIJ6HRkT5oQ8tOJ0rBFYl3QXwkFQScEZ2QuJ6+4LUHoFhalfucJyy3f7bK0nk6JJOPkqNeaWSfB0A==",
+  "dgSpecHash": "P5dv0mVcUb8=",
   "success": true,
-  "projectFilePath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+  "projectFilePath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\api\\API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gcassulo\\.nuget\\packages\\bogus\\34.0.2\\bogus.34.0.2.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
@@ -71,7 +71,11 @@
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.security.cryptography.cng\\4.5.0\\system.security.cryptography.cng.4.5.0.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.security.cryptography.protecteddata\\4.4.0\\system.security.cryptography.protecteddata.4.4.0.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.text.encodings.web\\7.0.0\\system.text.encodings.web.7.0.0.nupkg.sha512",
-    "C:\\Users\\gcassulo\\.nuget\\packages\\system.text.json\\7.0.0\\system.text.json.7.0.0.nupkg.sha512"
+    "C:\\Users\\gcassulo\\.nuget\\packages\\system.text.json\\7.0.0\\system.text.json.7.0.0.nupkg.sha512",
+    "C:\\Users\\gcassulo\\.nuget\\packages\\microsoft.netcore.app.ref\\7.0.20\\microsoft.netcore.app.ref.7.0.20.nupkg.sha512",
+    "C:\\Users\\gcassulo\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\7.0.20\\microsoft.windowsdesktop.app.ref.7.0.20.nupkg.sha512",
+    "C:\\Users\\gcassulo\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\7.0.20\\microsoft.aspnetcore.app.ref.7.0.20.nupkg.sha512",
+    "C:\\Users\\gcassulo\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\7.0.20\\microsoft.netcore.app.host.win-x64.7.0.20.nupkg.sha512"
   ],
   "logs": []
 }
