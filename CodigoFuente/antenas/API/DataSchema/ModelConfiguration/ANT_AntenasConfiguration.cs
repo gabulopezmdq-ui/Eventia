@@ -39,8 +39,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
                 .HasOne(e => e.Expediente)
                 .WithOne()
-                .HasForeignKey<ANT_Expedientes>(e => e.IdExpediente)
-                .IsRequired(true);
+                .HasForeignKey<ANT_Expedientes>(e => e.IdExpediente);
 
             builder
                 .Navigation(e => e.Expediente)
