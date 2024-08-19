@@ -17,7 +17,14 @@ namespace API.DataSchema.ModelConfiguration
             builder
             .HasOne(e =>  e.EstadoTramite)
             .WithMany()
-            .HasForeignKey(e => e.IdEstadoTramite);
+            .HasForeignKey(e => e.IdEstadoTramite)
+            .IsRequired(true);
+
+            builder
+               .Navigation(e => e.EstadoTramite)
+               .AutoInclude(true)
+               .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+
 
             builder
                 .Property(p => p.AcometidaEnergia)

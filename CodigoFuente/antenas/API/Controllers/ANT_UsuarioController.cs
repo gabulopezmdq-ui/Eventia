@@ -1,6 +1,5 @@
 ﻿using API.DataSchema;
 using API.Services;
-using Castle.Core.Logging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -12,13 +11,13 @@ namespace API.Controllers
     [ApiController]
     //[Authorize(Roles ="Admin")]
     [AllowAnonymous]
-    [Route("Controller")]
-    public class ANT_UsuarioController :ControllerBase
+    [Route("ANT_Usuario")]
+    public class ANT_UsuarioController : ControllerBase
     {
         private readonly DataContext _context;
         private readonly ICRUDService<ANT_Usuario> _serviceGenerico;
 
-        public ANT_UsuarioController(DataContext context, ILogger<ANT_Usuario> logger , ICRUDService<ANT_Usuario> serviceGenerico)
+        public ANT_UsuarioController(DataContext context, ILogger<ANT_Usuario> logger, ICRUDService<ANT_Usuario> serviceGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
