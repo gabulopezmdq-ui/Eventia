@@ -21,7 +21,8 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
                 .Property(p => p.Nombre)
-                .IsRequired(true);
+                .IsRequired(true)
+                .IsFixedLength(true);
 
             builder
                 .Property(p => p.Apellido)
