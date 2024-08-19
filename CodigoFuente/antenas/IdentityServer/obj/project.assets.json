@@ -5887,10 +5887,10 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
-      "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+      "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
       "outputPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
@@ -5908,8 +5908,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
-              "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj"
+            "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj"
             }
           }
         }
@@ -5974,7 +5974,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
       }
     }
   }

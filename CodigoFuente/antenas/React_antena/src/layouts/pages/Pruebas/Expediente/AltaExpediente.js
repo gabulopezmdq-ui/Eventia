@@ -74,7 +74,15 @@ function AltaExpediente() {
         { type: "text", label: "Tasa Anual", name: "tasaAnual" },
         { type: "text", label: "Tasa Sigem", name: "tasaSigem" },
         { type: "text", label: "UnifiliarGral", name: "unifiliarGral" },
-        { type: "number", label: "Estado Tramite", name: "estadoTramite" },
+        {
+          type: "select",
+          label: "Estado Tramite",
+          name: "idEstadoTramite",
+          apiUrl: process.env.REACT_APP_API_URL + "ANT_EstadoTramite/GetAll",
+          valueField: "idEstadoTramite", // Nombre del campo del valor
+          optionField: "estado",
+          required: true,
+        },
       ],
     },
   ];

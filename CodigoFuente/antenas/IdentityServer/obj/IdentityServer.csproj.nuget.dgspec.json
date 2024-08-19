@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {}
+    "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {}
   },
   "projects": {
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+    "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj",
         "projectName": "API",
-        "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj",
-        "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-        "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\obj\\",
+        "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
+        "outputPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -136,14 +136,14 @@
         }
       }
     },
-    "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {
+    "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
         "projectName": "IdentityServer",
-        "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-        "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-        "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+        "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+        "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
+        "outputPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -160,8 +160,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
-                "projectPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\API\\API.csproj"
+              "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj": {
+                "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\API\\API.csproj"
               }
             }
           }
@@ -226,7 +226,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
         }
       }
     }

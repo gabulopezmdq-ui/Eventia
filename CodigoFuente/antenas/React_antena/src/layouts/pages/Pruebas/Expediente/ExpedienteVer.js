@@ -58,7 +58,7 @@ function ExpedienteVer() {
               <div className="contenidoCard">
                 <p>
                   <b>Estado Tramite: </b>
-                  {prestadoresData?.idEstadoTramite?.estado ?? "N/A"}
+                  {prestadoresData?.estadoTramite?.estado ?? "N/A"}
                 </p>
                 <p>
                   <b>Fecha de Emision: </b>
