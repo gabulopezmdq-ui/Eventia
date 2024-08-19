@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using rsFoodtrucks.Exceptions;
 //using rsFoodtrucks.Models;
 using System;
@@ -77,6 +79,7 @@ namespace API.Utility
                 stackTrace = exception.StackTrace;
             }
 
+
             //ServiceResponse<PagedResponse<Object>> sr = new ServiceResponse<PagedResponse<Object>>(null);
             //sr.setError(message);
             //var exceptionResult = JsonSerializer.Serialize(sr);
@@ -85,6 +88,7 @@ namespace API.Utility
             //return context.Response.WriteAsync(exceptionResult);
             var exceptionResult = JsonSerializer.Serialize(new { error = message, stackTrace, exception.InnerException });
             return context.Response.WriteAsync(exceptionResult);
+
         }
     }
 }

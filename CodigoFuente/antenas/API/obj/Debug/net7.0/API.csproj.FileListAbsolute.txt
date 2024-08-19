@@ -292,3 +292,12 @@ C:\Desarrollo\Antenas\CodigoFuente\antenas\api\obj\Debug\net7.0\API.pdb
 C:\Desarrollo\Antenas\CodigoFuente\antenas\api\obj\Debug\net7.0\API.genruntimeconfig.cache
 C:\Desarrollo\Antenas\CodigoFuente\antenas\api\obj\Debug\net7.0\ref\API.dll
 C:\Desarrollo\Antenas\CodigoFuente\antenas\api\obj\Debug\net7.0\API.csproj.Up2Date
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\freebsd\lib\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\illumos\lib\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\ios\lib\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\linux\lib\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\osx\lib\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\solaris\lib\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\tvos\lib\net7.0\System.Data.Odbc.dll
+C:\Desarrollo\Antenas\CodigoFuente\antenas\api\bin\Debug\net7.0\runtimes\win\lib\net7.0\System.Data.Odbc.dll
