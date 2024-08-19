@@ -88,10 +88,22 @@ function Formulario({ steps, apiUrl, productId }) {
       console.error("Por favor complete los campos requeridos.");
       return;
     }
+    const filteredFormData = Object.keys(formData).reduce((acc, key) => {
+      const value = formData[key];
+      const hasArrayInObject = (obj) => {
+        return Object.values(obj).some((val) => Array.isArray(val));
+      };
+      if (!Array.isArray(value) && (typeof value !== "object" || !hasArrayInObject(value))) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+    console.log(filteredFormData);
 
+    console.log(filteredFormData);
     if (productId) {
       axios
-        .put(`${apiUrl}/`, formData, {
+        .put(`${apiUrl}/`, filteredFormData, {
           /*headers: {
             Authorization: `Bearer ${token}`,
           },*/

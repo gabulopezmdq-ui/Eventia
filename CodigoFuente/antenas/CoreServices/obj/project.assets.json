@@ -8494,8 +8494,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\efrontera\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
@@ -8503,15 +8502,11 @@
       "projectUniqueName": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "projectName": "CoreServices.Test",
       "projectPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
-      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
-      "outputPath": "C:\\Desarrollo\\Antenas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
+      "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\antenas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -8578,7 +8573,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
       }
     }
   }
