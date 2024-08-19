@@ -39,8 +39,7 @@ function AntenaVer() {
 
   // Función para manejar la navegación a la página de editar antena
   const handleEditarAntena = (idAntena) => {
-    const productId = idAntena;
-    const url = `/AntenaFE/Edit/${productId}`;
+    const url = `/AntenaFE/Edit/${idAntena}`;
     console.log(url);
     navigate(url);
   };
@@ -52,7 +51,10 @@ function AntenaVer() {
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">Información</p>
+              <p className="tituloModal">
+                Información de la Antena:
+                {antenaData?.idAntena ?? "N/A"}
+              </p>
               <div className="contenidoCard">
                 <p>
                   <b>ID: </b>

@@ -38,7 +38,6 @@ function AltaTipoAntena() {
           </Grid>
         </Grid>
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }

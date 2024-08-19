@@ -40,9 +40,7 @@ function TipoAntenaVer() {
 
   // Función para manejar la navegación a la página de editar empresa
   const handleEditarEstadoTramite = (idTipoAntena) => {
-    const productId = idTipoAntena;
-    const url = `/TipoAntenaFE/Edit/${productId}`;
-    console.log(url);
+    const url = `/TipoAntenaFE/Edit/${idTipoAntena}`;
     navigate(url);
   };
 

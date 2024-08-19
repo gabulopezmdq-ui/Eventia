@@ -262,6 +262,10 @@ export default function App() {
       path: "/ExpedienteFE/Edit/:id",
       component: AltaExpediente,
     },
+    {
+      path: "/InspeccionFE/Edit/:id",
+      component: AltaInspeccion,
+    },
   ];
 
   const login = [
