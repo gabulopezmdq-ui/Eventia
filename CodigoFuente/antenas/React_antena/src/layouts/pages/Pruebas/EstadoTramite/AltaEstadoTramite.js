@@ -38,7 +38,6 @@ function AltaEstadoTramite() {
           </Grid>
         </Grid>
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }

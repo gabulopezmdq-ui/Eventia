@@ -22,18 +22,7 @@ namespace API.Repositories
             _context = context;
         }
 
-        public override async Task<ANT_Antenas> Find(int id)
-        {
-            ANT_Antenas antena = await _context.ANT_Antenas
-        .Include(x => x.TipoAntenas)
-        .Include(x => x.IdExpediente)
-        .Include(x => x.Prestador)
-            .ThenInclude(y => y.RazonSocial)
-        .IgnoreAutoIncludes()
-        .AsNoTracking()
-        .FirstOrDefaultAsync(e => e.IdAntena == id);
-            return antena;
-        }
+         
 
         public async Task<IEnumerable<ANT_Antenas>> GetByPrestador(string prestador)
         {

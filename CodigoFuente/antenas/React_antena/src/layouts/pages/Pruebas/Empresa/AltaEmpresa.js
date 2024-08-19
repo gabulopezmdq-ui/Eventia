@@ -20,6 +20,15 @@ function AltaEmpresa() {
         { type: "text", label: "RazonSocial", name: "razonSocial" },
         { type: "number", label: "cuit", name: "cuit" },
         { type: "text", label: "Direccion", name: "direccion" },
+        {
+          type: "select",
+          label: "Apoderado Legal",
+          name: "idApoderado",
+          apiUrl: process.env.REACT_APP_API_URL + "ANT_Apoderados/GetAll",
+          valueField: "idApoderado", // Nombre del campo del valor
+          optionField: "nombre",
+          required: true,
+        },
       ],
     },
   ];
@@ -36,7 +45,6 @@ function AltaEmpresa() {
           </Grid>
         </Grid>
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }

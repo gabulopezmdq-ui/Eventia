@@ -34,8 +34,8 @@ function ExpedienteVer() {
   }, [id]);
 
   // Función para manejar la navegación a la página de crear nueva inspección (o cualquier otra funcionalidad)
-  const handleNuevoexpediente = () => {
-    navigate("/ExpedienteFE/Nuevo");
+  const handleNuevoantena = () => {
+    navigate("/AntenaFE/Nuevo");
   };
 
   // Función para manejar la navegación a la página de editar empresa
@@ -51,15 +51,18 @@ function ExpedienteVer() {
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">{prestadoresData?.anac ?? "N/A"}</p>
+              <p className="tituloModal">
+                Numero de expediente:
+                {prestadoresData?.idExpediente ?? "N/A"}
+              </p>
               <div className="contenidoCard">
                 <p>
-                  <b>Expedient: </b>
-                  {prestadoresData?.idExpedient ?? "N/A"}
+                  <b>Estado Tramite: </b>
+                  {prestadoresData?.idEstadoTramite?.estado ?? "N/A"}
                 </p>
                 <p>
-                  <b>Antena: </b>
-                  {prestadoresData?.idAntena ?? "N/A"}
+                  <b>Fecha de Emision: </b>
+                  {prestadoresData?.fechaEmision ?? "N/A"}
                 </p>
                 <p>
                   <b>Acometida Energia: </b>
@@ -76,8 +79,8 @@ function ExpedienteVer() {
             </Card>
           </MDBox>
           <MDBox mt={2}>
-            <MDButton variant="gradient" color="success" onClick={handleNuevoexpediente}>
-              Agregar Expediente
+            <MDButton variant="gradient" color="success" onClick={handleNuevoantena}>
+              Agregar Antena
             </MDButton>
           </MDBox>
         </>

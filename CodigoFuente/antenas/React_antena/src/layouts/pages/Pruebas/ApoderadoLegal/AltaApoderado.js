@@ -44,7 +44,6 @@ function AltaApoderado() {
           </Grid>
         </Grid>
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }
