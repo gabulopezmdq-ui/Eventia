@@ -14,7 +14,7 @@ function InspeccionVer() {
   // Obtener el ID desde los parámetros de la URL
   const { id } = useParams();
   // Estado para almacenar los datos de la empresa
-  const [prestadoresData, setPrestadoresData] = useState(null);
+  const [inspeccionesData, setInspeccionesData] = useState(null);
   // Hook de navegación para redirigir a otras páginas
   const navigate = useNavigate();
 
@@ -25,8 +25,8 @@ function InspeccionVer() {
       .get(process.env.REACT_APP_API_URL + `ANT_Inspecciones/getbyid?id=${id}`) // Actualiza el endpoint a `ANT_Antenas`
       .then((response) => {
         // Guardar los datos recibidos en el estado
-        setPrestadoresData(response.data);
-        console.log("Respuesta by ID:", prestadoresData);
+        setInspeccionesData(response.data);
+        console.log("Respuesta by ID:", inspeccionesData);
       })
       .catch((error) => {
         console.error("Error al obtener los datos:", error);
@@ -34,49 +34,49 @@ function InspeccionVer() {
   }, [id]);
 
   // Función para manejar la navegación a la página de crear nueva inspección (o cualquier otra funcionalidad)
-  const handleNuevaInspeccion = () => {
-    navigate(`/Empresa/Nueva/${prestadoresData.idPrestador}`);
+  const handleNuevoTipo = () => {
+    navigate("/InspeccionFE/Nuevo");
   };
 
   // Función para manejar la navegación a la página de editar empresa
-  const handleEditarEmpresa = (idPrestador) => {
-    const url = `/Empresa/Edit/${idPrestador}`;
+  const handleEditarEmpresa = (idInspeccion) => {
+    const url = `/InspeccionFE/Edit/${idInspeccion}`;
     navigate(url);
   };
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      {prestadoresData && (
+      {inspeccionesData && (
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">{prestadoresData?.razonSocial ?? "N/A"}</p>
+              <p className="tituloModal">{inspeccionesData?.razonSocial ?? "N/A"}</p>
               <div className="contenidoCard">
                 <p>
                   <b>Apoderado: </b>
-                  {prestadoresData?.idAntena ?? "N/A"}
+                  {inspeccionesData?.idAntena ?? "N/A"}
                 </p>
                 <p>
                   <b>Cuit: </b>
-                  {prestadoresData?.alambradoPerimetral ?? "N/A"}
+                  {inspeccionesData?.alambradoPerimetral ?? "N/A"}
                 </p>
                 <p>
                   <b>Direccion: </b>
-                  {prestadoresData?.anilloTierra ?? "N/A"}
+                  {inspeccionesData?.anilloTierra ?? "N/A"}
                 </p>
                 <p>
                   <b>Razon Social: </b>
-                  {prestadoresData?.balizaFlash ?? "N/A"}
+                  {inspeccionesData?.balizaFlash ?? "N/A"}
                 </p>
-                <MDButton onClick={() => handleEditarEmpresa(prestadoresData?.idPrestador)}>
+                <MDButton onClick={() => handleEditarEmpresa(inspeccionesData?.idInspeccion)}>
                   Editar
                 </MDButton>
               </div>
             </Card>
           </MDBox>
           <MDBox mt={2}>
-            <MDButton variant="gradient" color="success" onClick={handleNuevaInspeccion}>
+            <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
               Agregar Inspección
             </MDButton>
           </MDBox>

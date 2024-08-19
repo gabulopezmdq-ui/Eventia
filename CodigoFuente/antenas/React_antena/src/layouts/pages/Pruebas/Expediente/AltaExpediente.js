@@ -9,9 +9,9 @@ import Formulario from "components/Formulario";
 
 function AltaExpediente() {
   const { id } = useParams();
-  let labelTitulo = "Alta Antena";
+  let labelTitulo = "Alta Expediente";
   if (id) {
-    labelTitulo = "Editar Antena";
+    labelTitulo = "Editar Expediente";
   }
   const steps = [
     {
@@ -37,8 +37,8 @@ function AltaExpediente() {
       fields: [
         { type: "text", label: "Cuadro Verif Conduc", name: "cuadroVerifConduc" },
         { type: "text", label: "Fact AmbienteBA", name: "factAmbienteBA" },
-        { type: "date", label: "Fecha Emision", name: "fechaEmision" },
-        { type: "date", label: "Fecha TasaA", name: "fechaTasaA" },
+        { type: "date", label: "Fecha Emision", name: "fechaEmision", required: true },
+        { type: "date", label: "Fecha TasaA", name: "fechaTasaA", required: true },
         { type: "text", label: "Impacto Ambiental", name: "impactoAmbiental" },
         { type: "text", label: "Layout Electrica", name: "layoutElectrica" },
         { type: "text", label: "Libre Deuda", name: "libreDeuda" },
@@ -74,21 +74,9 @@ function AltaExpediente() {
         { type: "text", label: "Tasa Anual", name: "tasaAnual" },
         { type: "text", label: "Tasa Sigem", name: "tasaSigem" },
         { type: "text", label: "UnifiliarGral", name: "unifiliarGral" },
-        /*{
-          type: "select",
-          label: "Tipo Mimetizado",
-          name: "ipoMimetizado",
-          apiUrl: process.env.REACT_APP_API_URL + "ANT_Expedientes/GetAll",
-          valueField: "tipoMimetizado", // Nombre del campo del valor
-          optionField: "nombre",
-          required: true,
-        },*/
+        { type: "number", label: "Estado Tramite", name: "estadoTramite" },
       ],
     },
-    /*{
-      label: "Ubicación y tipo de estructura",
-      fields: [{ type: "text", label: "Nombre del sitio", name: "observaciones", required: true }],
-    },*/
   ];
 
   const apiUrl = process.env.REACT_APP_API_URL + `ANT_Expedientes`;
@@ -103,7 +91,6 @@ function AltaExpediente() {
           </Grid>
         </Grid>
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }

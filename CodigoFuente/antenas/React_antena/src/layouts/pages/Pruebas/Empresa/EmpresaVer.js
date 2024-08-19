@@ -40,8 +40,7 @@ function EmpresaVer() {
 
   // Función para manejar la navegación a la página de editar empresa
   const handleEditarEmpresa = (idPrestador) => {
-    const productId = idPrestador;
-    const url = `/EmpresaFE/Edit/${productId}`;
+    const url = `/EmpresaFE/Edit/${idPrestador}`;
     console.log(url);
     navigate(url);
   };
@@ -53,7 +52,7 @@ function EmpresaVer() {
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">{prestadoresData?.razonSocial ?? "N/A"}</p>
+              <p className="tituloModal">Empresa: {prestadoresData?.razonSocial ?? "N/A"}</p>
               <div className="contenidoCard">
                 <p>
                   <b>Apoderado: </b>

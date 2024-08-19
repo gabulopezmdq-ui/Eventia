@@ -53,7 +53,7 @@ function ApoderadoVer() {
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">{apoderadosData?.razonSocial ?? "N/A"}</p>
+              <p className="tituloModal">Información del apoderado:</p>
               <div className="contenidoCard">
                 <p>
                   <b>Nombre: </b>
@@ -75,7 +75,7 @@ function ApoderadoVer() {
           </MDBox>
           <MDBox mt={2}>
             <MDButton variant="gradient" color="success" onClick={handleNuevoApoderado}>
-              Agregar Inspección
+              Agregar Apoderado
             </MDButton>
           </MDBox>
         </>

@@ -17,6 +17,33 @@ function AltaAntena() {
     {
       label: "Info General",
       fields: [
+        {
+          type: "select",
+          label: "Tipo Antena",
+          name: "idTipoAntena",
+          apiUrl: process.env.REACT_APP_API_URL + "ANT_TipoAntenas/GetAll",
+          valueField: "idTipoAntena",
+          optionField: "idTipoAntena",
+          required: true,
+        },
+        {
+          type: "select",
+          label: "Razon Social",
+          name: "idPrestador",
+          apiUrl: process.env.REACT_APP_API_URL + "ANT_Prestadores/GetAll",
+          valueField: "idPrestador", // Nombre del campo del valor
+          optionField: "razonSocial",
+          required: true,
+        },
+        {
+          type: "select",
+          label: "Número expediente",
+          name: "idExpediente",
+          apiUrl: process.env.REACT_APP_API_URL + "ANT_Expedientes/GetAll",
+          valueField: "idExpediente", // Nombre del campo del valor
+          optionField: "idExpediente",
+          required: true,
+        },
         { type: "number", label: "Altura soporte", name: "alturaSoporte" },
         { type: "number", label: "Altura Total", name: "alturaTotal" },
         { type: "number", label: "Celular", name: "cellId" },
@@ -43,7 +70,6 @@ function AltaAntena() {
           </Grid>
         </Grid>
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }

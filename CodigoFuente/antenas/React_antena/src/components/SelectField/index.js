@@ -29,9 +29,9 @@ function SelectField({ label, name, apiUrl, valueField, optionField, formData, h
     } else {
       axios
         .get(apiUrl, {
-          headers: {
+          /*headers: {
             Authorization: `Bearer ${token}`, // Envía el token en los headers
-          },
+          },*/
         })
         .then((response) => {
           setOptions(response.data);

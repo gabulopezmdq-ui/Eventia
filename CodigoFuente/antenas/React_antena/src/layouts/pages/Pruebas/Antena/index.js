@@ -101,7 +101,7 @@ function Antena() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre de la antena", accessor: (row) => row.tipoAntenas.nombre },
+                  { Header: "Tipo de la antena", accessor: (row) => row.tipoAntenas.nombre },
                   { Header: "Direccion", accessor: "direccion" },
                   { Header: "idAntena", accessor: "idAntena" },
                   {
