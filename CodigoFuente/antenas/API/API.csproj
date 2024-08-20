@@ -28,11 +28,14 @@
   <ItemGroup>
     <Compile Remove="Controllers\AccountController.cs" />
     <Compile Remove="Controllers\AdministracionController.cs" />
+    <Compile Remove="Controllers\ANT_AntenasController.cs" />
+    <Compile Remove="Controllers\ANT_ApoderadosController.cs" />
     <Compile Remove="Controllers\ANT_EstadoTramiteController.cs" />
     <Compile Remove="Controllers\ANT_ExpedientesController.cs" />
     <Compile Remove="Controllers\ANT_InspeccionesController.cs" />
     <Compile Remove="Controllers\ANT_PrestadoresController.cs" />
     <Compile Remove="Controllers\ANT_TipoAntenasController.cs" />
+    <Compile Remove="Controllers\ANT_UsuarioController.cs" />
     <Compile Remove="Controllers\ConservadoraController.cs" />
     <Compile Remove="Controllers\MaquinaController.cs" />
     <Compile Remove="Controllers\ObraController.cs" />
@@ -43,11 +46,14 @@
     <Compile Remove="Controllers\TipoObraController.cs" />
     <Compile Remove="Controllers\UsuariosController.cs" />
     <Compile Remove="Controllers\VelocidadController .cs" />
+    <Compile Remove="DataSchema\ANT_Antenas.cs" />
+    <Compile Remove="DataSchema\ANT_Apoderados.cs" />
     <Compile Remove="DataSchema\ANT_EstadoTramites.cs" />
     <Compile Remove="DataSchema\ANT_Expedientes.cs" />
     <Compile Remove="DataSchema\ANT_Inspecciones.cs" />
     <Compile Remove="DataSchema\ANT_Prestadores.cs" />
     <Compile Remove="DataSchema\ANT_TipoAntenas.cs" />
+    <Compile Remove="DataSchema\ANT_Usuario.cs" />
     <Compile Remove="DataSchema\ApoderadoXPrestador.cs" />
     <Compile Remove="DataSchema\EV_Administracion.cs" />
     <Compile Remove="DataSchema\EV_Conservadora.cs" />
@@ -60,11 +66,14 @@
     <Compile Remove="DataSchema\EV_TipoObra.cs" />
     <Compile Remove="DataSchema\EV_Velocidades.cs" />
     <Compile Remove="DataSchema\Leyendas.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\ANT_AntenasConfiguration.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\ANT_ApoderadosConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ANT_EstadoTramiteConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ANT_ExpedientesConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ANT_InspeccionesConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ANT_PrestadoresConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ANT_TipoAntenasConfiguration.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\ANT_UsuarioConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ApoderadoXPrestadorConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_AdministracionConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_ConservadoraConfiguration.cs" />
@@ -112,10 +121,11 @@
     <Compile Remove="Migrations\20231114150211_veintidos.cs" />
     <Compile Remove="Migrations\20231114150211_veintidos.Designer.cs" />
     <Compile Remove="Migrations\DataContextModelSnapshot.cs" />
+    <Compile Remove="Repositories\ANT_AntenasRepository.cs" />
+    <Compile Remove="Repositories\ANT_ApoderadosRepository.cs" />
     <Compile Remove="Repositories\ANT_ExpedientesRepository.cs" />
     <Compile Remove="Repositories\ANT_InspeccionesRepository.cs" />
     <Compile Remove="Repositories\ANT_PrestadoresRepository.cs" />
-    <Compile Remove="Repositories\BaseRepository.cs" />
     <Compile Remove="Repositories\EV_ConservadoraRepository.cs" />
     <Compile Remove="Repositories\IANT_AntenasRepository.cs" />
     <Compile Remove="Repositories\IANT_ApoderadosRepository.cs" />
@@ -138,6 +148,7 @@
     <PackageReference Include="FluentAssertions" Version="7.0.0-alpha.3" />
     <PackageReference Include="IdentityModel" Version="6.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
