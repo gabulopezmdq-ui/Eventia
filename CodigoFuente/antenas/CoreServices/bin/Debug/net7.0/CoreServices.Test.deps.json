@@ -1748,7 +1748,10 @@
           "System.Data.Odbc": "7.0.0"
         },
         "runtime": {
-          "API.dll": {}
+          "API.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       }
     }
