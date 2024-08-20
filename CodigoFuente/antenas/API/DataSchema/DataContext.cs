@@ -13,29 +13,12 @@ namespace API.DataSchema
             //this.Configuration.LazyLoadingEnabled = false;
             //ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
-
-        public DbSet<ANT_Usuario> ANT_Usuarios { get; set; }
-        public DbSet<ANT_Antenas> ANT_Antenas { get; set; }
-        public DbSet<ANT_Apoderados> ANT_Apoderados { get; set; }
-        public DbSet<ANT_EstadoTramites> ANT_EstadoTramites { get; set; }
-        public DbSet<ANT_Expedientes> ANT_Expedientes { get; set; }
-        public DbSet<ANT_Inspecciones> ANT_Inspecciones { get; set; }
-        public DbSet<ANT_Prestadores> ANT_Prestadores { get; set; }
-        public DbSet<ANT_TipoAntenas> ANT_TipoAntenas { get; set; }
-
-
-
+        
+        public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfiguration(new ANT_UsuarioConfiguration());
-            modelBuilder.ApplyConfiguration(new ANT_ExpedientesConfiguration());
-            modelBuilder.ApplyConfiguration(new ANT_TipoAntenasConfiguration());
-            modelBuilder.ApplyConfiguration(new ANT_AntenasConfiguration());
-            modelBuilder.ApplyConfiguration(new ANT_ApoderadosConfiguration());
-            modelBuilder.ApplyConfiguration(new ANT_EstadoTramiteConfiguration());
-            modelBuilder.ApplyConfiguration(new ANT_PrestadoresConfiguration());
-            modelBuilder.ApplyConfiguration(new ANT_InspeccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }
