@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     /// <inheritdoc />
-    public partial class segunda : Migration
+    public partial class primerMigracion : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -25,6 +25,24 @@ namespace API.Migrations
                 {
                     table.PrimaryKey("PK_MEC_CarRevista", x => x.IdCarRevista);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "MEC_Conceptos",
+                columns: table => new
+                {
+                    IdConcepto = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CodConcepto = table.Column<string>(type: "char(4)", fixedLength: true, nullable: false),
+                    CodConceptoMgp = table.Column<string>(type: "varchar(10)", nullable: true),
+                    Descripcion = table.Column<string>(type: "varchar(50)", nullable: false),
+                    ConAporte = table.Column<string>(type: "char(1)", fixedLength: true, nullable: false),
+                    Patronal = table.Column<string>(type: "char(1)", fixedLength: true, nullable: false),
+                    Vigente = table.Column<string>(type: "char(1)", fixedLength: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MEC_Conceptos", x => x.IdConcepto);
+                });
         }
 
         /// <inheritdoc />
@@ -32,6 +50,9 @@ namespace API.Migrations
         {
             migrationBuilder.DropTable(
                 name: "MEC_CarRevista");
+
+            migrationBuilder.DropTable(
+                name: "MEC_Conceptos");
         }
     }
 }

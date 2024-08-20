@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240820151902_segunda")]
-    partial class segunda
+    [Migration("20240820174904_primerMigracion")]
+    partial class primerMigracion
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,6 +49,48 @@ namespace API.Migrations
                     b.HasKey("IdCarRevista");
 
                     b.ToTable("MEC_CarRevista");
+                });
+
+            modelBuilder.Entity("API.DataSchema.MEC_Conceptos", b =>
+                {
+                    b.Property<int>("IdConcepto")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdConcepto"));
+
+                    b.Property<string>("CodConcepto")
+                        .IsRequired()
+                        .HasColumnType("char(4)")
+                        .IsFixedLength();
+
+                    b.Property<string>("CodConceptoMgp")
+                        .HasColumnType("varchar(10)")
+                        .IsFixedLength(false);
+
+                    b.Property<string>("ConAporte")
+                        .IsRequired()
+                        .HasColumnType("char(1)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .IsFixedLength(false);
+
+                    b.Property<string>("Patronal")
+                        .IsRequired()
+                        .HasColumnType("char(1)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Vigente")
+                        .IsRequired()
+                        .HasColumnType("char(1)")
+                        .IsFixedLength();
+
+                    b.HasKey("IdConcepto");
+
+                    b.ToTable("MEC_Conceptos");
                 });
 #pragma warning restore 612, 618
         }
