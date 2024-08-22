@@ -1,0 +1,24 @@
+﻿using System.Collections.Generic;
+
+namespace API.DataSchema
+{
+    public class MEC_POF
+    {
+        public int IdPOF { get; set; }
+        public int IdEstablecimiento { get; set; }
+        public int IdPersona { get; set; }
+        public string Secuencia { get; set; }
+        public string Barra { get; set; }
+        public int IdCategoria { get; set; }
+        public string TipoCargo { get; set; }
+        public string CantHsCargo { get; set; }
+        public string AntigAnios { get; set; }
+        public string AntigMeses { get; set; }
+        public string SinHaberes { get; set; }
+        public string Subvencionada { get; set; }
+        public string Vigente { get; set; }
+        public virtual MEC_Establecimientos? Establecimiento { get; set; }
+        public virtual MEC_Personas? Persona { get; set; }
+        public virtual MEC_TiposCategorias? Categoria { get; set; }
+    }
+}

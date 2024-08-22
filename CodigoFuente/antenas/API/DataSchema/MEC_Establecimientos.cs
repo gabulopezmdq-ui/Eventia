@@ -19,7 +19,5 @@ namespace API.DataSchema
         public string Subvencion { get; set; }
         public string Vigente { get; set; }
         public virtual MEC_TiposEstablecimientos? TipoEstablecimientos { get; set; }
-
-
     }
 }
