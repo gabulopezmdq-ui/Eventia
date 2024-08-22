@@ -11,6 +11,7 @@ namespace API.DataSchema
         public string CodPcia { get; set; }
         public string Descripcion {  get; set; }
         public string CodMgp { get; set; }
+        public string Vigente { get; set; }
 
     }
 }

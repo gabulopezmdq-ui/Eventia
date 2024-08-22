@@ -40,6 +40,8 @@ namespace API.Controllers
         [HttpGet("GetByName")]
         public async Task<ActionResult<MEC_Conceptos>> Get(string Name)
         {
+        //    var conceptos = await _serviceGenerico.GetByParam(u => u.Descripcion == Name);
+        //    var ordenar = conceptos.OrderBy( u => u.Descripcion).ToList();
             return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
         }
 
