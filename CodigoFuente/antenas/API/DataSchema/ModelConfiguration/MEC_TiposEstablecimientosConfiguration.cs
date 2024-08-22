@@ -3,26 +3,22 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class MEC_CarRevistaConfiguration : IEntityTypeConfiguration<MEC_CarRevista>
+    public class MEC_TiposEstablecimientosConfiguration : IEntityTypeConfiguration<MEC_TiposEstablecimientos>
     {
-        public void Configure(EntityTypeBuilder<MEC_CarRevista> builder)
+        public void Configure(EntityTypeBuilder<MEC_TiposEstablecimientos> builder)
         {
             builder
-                .HasKey(k => k.IdCarRevista);
+                .HasKey(k => k.IdTipoEstablecimiento);
 
             builder
-                .Property(p => p.IdCarRevista)
+                .Property(p => p.IdTipoEstablecimiento)
                 .ValueGeneratedOnAdd();
                 
 
-            builder.Property(e => e.CodPcia)
-                .HasColumnType("char(1)")
+            builder.Property(e => e.CodTipoEstablecimiento)
+                .HasColumnType("char(2)")
                 .IsFixedLength(true)
                 .IsRequired(true); // si quieres que sea NOT NULL
-
-            builder.Property(e => e.CodMgp)
-                .HasColumnType("varchar(10)")
-                .IsFixedLength(false);
 
             builder.Property(e => e.Descripcion)
                 .HasColumnType("varchar(50)")

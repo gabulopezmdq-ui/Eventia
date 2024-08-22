@@ -16,11 +16,15 @@ namespace API.DataSchema
         
         public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
+        public DbSet<MEC_Conceptos> MEC_TiposEstablecimientos { get; set; }
+        public DbSet<MEC_Conceptos> MEC_Establecimientos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TiposEstablecimientosConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_EstablecimientosConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }
