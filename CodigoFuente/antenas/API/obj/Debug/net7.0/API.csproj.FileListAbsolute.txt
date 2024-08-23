@@ -516,4 +516,4 @@ C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\staticwebass
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\scopedcss\bundle\API.styles.css
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.genruntimeconfig.cache
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\ref\API.dll
-C:\Desarrollo\mecanizadas\CodigoFuente\antenas\api\obj\Debug\net7.0\API.csproj.Up2Date
+C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.csproj.CopyComplete
