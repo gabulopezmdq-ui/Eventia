@@ -47,7 +47,6 @@ import Icon from "@mui/material/Icon";
 
 // Images
 import PersonaListados from "layouts/pages/Pruebas/Persona";
-import AltaPersona from "layouts/pages/Pruebas/Persona/AltaPersona";
 // import Velocidades from "layouts/pages/Pruebas/Velocidades";
 // import ResponsableTecnico from "layouts/pages/Pruebas/ResponsableTecnico";
 // import TipoObra from "layouts/pages/Pruebas/TipoObra/index";
@@ -72,12 +71,6 @@ const routes = [
         key: "listadoPersona",
         route: "/PersonaFE",
         component: <PersonaListados />,
-      },
-      {
-        name: "Agregar Persona",
-        key: "altaPersona",
-        route: "/PersonaFE/NuevoFE",
-        component: <AltaPersona />,
       },
     ],
   },

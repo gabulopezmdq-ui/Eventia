@@ -64,7 +64,7 @@ function Basic() {
       .then((response) => {
         sessionStorage.setItem("token", response.data.value.token); // Cambio a sessionStorage
         const decodedToken = jwt_decode(response.data.value.token);
-        navigate("/AdministracionFE");
+        navigate("/PersonaFE");
         setLoading(false);
       })
       .catch((error) => {
