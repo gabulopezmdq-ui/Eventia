@@ -1,4 +1,3 @@
-/**
 =========================================================
 * Material Dashboard 2 PRO React - v2.2.0
 =========================================================
@@ -31,10 +30,6 @@ function Formulario({
   steps,
   apiUrl,
   productId,
-  idObra,
-  includeIdRepTecnico,
-  idAdministracion,
-  idConservadora,
 }) {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
@@ -50,16 +45,11 @@ function Formulario({
 
   const handleNext = () => setActiveStep(activeStep + 1);
   const handleBack = () => setActiveStep(activeStep - 1);
-  includeIdRepTecnico = includeIdRepTecnico || false;
-  //Esto es un funcion solamente para cambiar la url de RepTecxConservadora
-  let apiGetbyId = includeIdRepTecnico
-    ? process.env.REACT_APP_API_URL + `RespTecById?idEVConsEVRespTec=${productId}`
-    : `${apiUrl}/getbyid?id=${productId}`;
 
   useEffect(() => {
     if (productId) {
       axios
-        .get(apiGetbyId, {
+        .get(`${apiUrl}/getbyid?id=${productId}`, {
           headers: {
             Authorization: `Bearer ${token}`, // Envía el token en los headers
           },
@@ -108,19 +98,7 @@ function Formulario({
       });
       return;
     }
-
-    if (idObra) {
-      formData.idObra = idObra;
-    }
-    if (idConservadora) {
-      formData.idConservadora = idConservadora;
-    }
-
-    const updatedFormData = { ...formData };
-    if (idAdministracion) {
-      updatedFormData.idAdmin = idAdministracion;
-      updatedFormData.idCons = formData.idConservadora;
-    }
+    
     if (!isFormValid) {
       // Mostrar un mensaje de error o realizar alguna acción
       alert("Por favor complete los campos");
@@ -130,29 +108,15 @@ function Formulario({
 
     // Filtrar updatedFormData para incluir solo los campos necesarios
     const filteredFormData = Object.keys(updatedFormData).reduce((acc, key) => {
-      if (!key.startsWith("eV_")) {
+      if (!key.startsWith("MEC_")) {
         acc[key] = updatedFormData[key];
       }
       return acc;
     }, {});
-    // Actualizar la URL para incluir el idRepTecnico 
-    const formatDate = (date) => {
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Los meses son 0-indexed, por lo que sumamos 1
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
-
-    const formattedFDesde = formatDate(new Date(formData.fDesde));
-    const formattedFHasta = formatDate(new Date(formData.fHasta));
-    //Esto es un funcion solamente para cambiar la url de RepTecxConservadora
-    const apiUrlWithIdRepTecnico = includeIdRepTecnico
-      ? ` ${apiUrl}?idCons=${formData.idConservadora}&idRepTec=${formData.idRepTecnico}&fDesde=${formattedFDesde}&fHasta=${formattedFHasta}&nroContrato=${formData.nroContrato}`
-      : apiUrl;
 
     if (productId) {
       axios
-        .put(apiUrlWithIdRepTecnico, filteredFormData, {
+        .put( apiUrl, filteredFormData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -177,7 +141,7 @@ function Formulario({
         });
     } else {
       axios
-        .post(apiUrlWithIdRepTecnico, filteredFormData, {
+        .post( apiUrl, filteredFormData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -289,9 +253,5 @@ Formulario.propTypes = {
   ).isRequired,
   apiUrl: PropTypes.string.isRequired,
   productId: PropTypes.number,
-  idObra: PropTypes.number,
-  idConservadora: PropTypes.number,
-  idAdministracion: PropTypes.number,
-  includeIdRepTecnico: PropTypes.bool,
 };
 export default Formulario;
