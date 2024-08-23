@@ -46,175 +46,42 @@ import MDAvatar from "components/MDAvatar";
 import Icon from "@mui/material/Icon";
 
 // Images
-import UsuarioListados from "layouts/pages/Pruebas/UsuarioListados";
-import Velocidades from "layouts/pages/Pruebas/Velocidades";
-import ResponsableTecnico from "layouts/pages/Pruebas/ResponsableTecnico";
-import TipoObra from "layouts/pages/Pruebas/TipoObra/index";
-import Seguro from "layouts/pages/Pruebas/Seguro";
-import Administracion from "layouts/pages/Pruebas/Administracion";
-import Equipamiento from "layouts/pages/Pruebas/Equipamiento/index";
-import Conservadora from "layouts/pages/Pruebas/Conservadora/index";
-import ObraTipo from "layouts/pages/Pruebas/ObraTipo";
-import ListadoMaquina from "layouts/pages/Pruebas/Maquina/ListadoMaquina";
-import Calle from "layouts/pages/Pruebas/Calle/index";
-import ObraTipoListado from "layouts/pages/Pruebas/ObraTipo/ObraTipoListado";
+import PersonaListados from "layouts/pages/Pruebas/Persona";
+import AltaPersona from "layouts/pages/Pruebas/Persona/AltaPersona";
+// import Velocidades from "layouts/pages/Pruebas/Velocidades";
+// import ResponsableTecnico from "layouts/pages/Pruebas/ResponsableTecnico";
+// import TipoObra from "layouts/pages/Pruebas/TipoObra/index";
+// import Seguro from "layouts/pages/Pruebas/Seguro";
+// import Administracion from "layouts/pages/Pruebas/Administracion";
+// import Equipamiento from "layouts/pages/Pruebas/Equipamiento/index";
+//import Conservadora from "layouts/pages/Pruebas/Conservadora/index";
+// import ObraTipo from "layouts/pages/Pruebas/ObraTipo";
+// import ListadoMaquina from "layouts/pages/Pruebas/Maquina/ListadoMaquina";
+// import Calle from "layouts/pages/Pruebas/Calle/index";
+// import ObraTipoListado from "layouts/pages/Pruebas/ObraTipo/ObraTipoListado";
 
 const routes = [
   {
     type: "collapse",
-    icon: <Icon>apartment</Icon>,
-    name: "Obra",
-    key: "obra",
+    icon: <Icon>person</Icon>,
+    name: "Persona",
+    key: "persona",
     collapse: [
       {
-        name: "Listado Obra",
-        key: "listadoObra",
-        route: "/ObraTipoFE",
-        component: <ObraTipo />,
+        name: "Listado Persona",
+        key: "listadoPersona",
+        route: "/PersonaFE",
+        component: <PersonaListados />,
       },
       {
-        name: "Exportar Listado",
-        key: "exportarListado",
-        route: "/BuscadorObra",
-        component: <ObraTipoListado />,
+        name: "Agregar Persona",
+        key: "altaPersona",
+        route: "/PersonaFE/NuevoFE",
+        component: <AltaPersona />,
       },
     ],
   },
   { type: "divider", key: "divider-0" },
-  {
-    type: "collapse",
-    icon: <Icon>villa</Icon>,
-    name: "Conservadora",
-    key: "conservadora",
-    collapse: [
-      {
-        name: "Listado Conservadora",
-        key: "listadoConservadora",
-        route: "/ConservadoraFE",
-        component: <Conservadora />,
-      },
-    ],
-  },
-  { type: "divider", key: "divider-1" },
-  {
-    type: "collapse",
-    icon: <Icon>engineering</Icon>,
-    name: "Rep. Tecnico",
-    key: "ResponsableTecnicoFE",
-    collapse: [
-      {
-        name: "Listado Rep. Tecnico",
-        key: "RepTecnico",
-        route: "/ResponsableTecnicoFE",
-        component: <ResponsableTecnico />,
-      },
-    ],
-  },
-  { type: "divider", key: "divider-2" },
-  {
-    type: "collapse",
-    icon: <Icon>group</Icon>,
-    name: "Administracion",
-    key: "Administracion",
-    collapse: [
-      {
-        name: "Listado Adm",
-        key: "Administraciones",
-        route: "/AdministracionFE",
-        component: <Administracion />,
-      },
-    ],
-  },
-  { type: "divider", key: "divider-3" },
-  {
-    type: "collapse",
-    icon: <Icon>receiptlong</Icon>,
-    name: "Listados",
-    key: "Listados",
-    collapse: [
-      {
-        name: "Listado Inspeccion",
-        key: "InspeccionesList",
-        route: "/ListadoInspeccion",
-        component: <Seguro />,
-      },
-      {
-        name: "Listado Maquinas",
-        key: "ListadoMaquina",
-        route: "/MaquinaFE",
-        component: <ListadoMaquina />,
-      },
-    ],
-  },
-  { type: "divider", key: "divider-3" },
-  {
-    type: "collapse",
-    icon: <Icon>admin_panel_settings</Icon>,
-    name: "Seguro",
-    key: "Seguro",
-    collapse: [
-      {
-        name: "Listado Seguro",
-        key: "Seguro",
-        route: "/SeguroFE",
-        component: <Seguro />,
-      },
-      {
-        name: "Listado Seguro Venc",
-        key: "SeguroVencidos",
-        route: "/SeguroFE/Vencidos",
-        component: <Seguro />,
-      },
-    ],
-  },
-  { type: "divider", key: "divider-4" },
-  {
-    type: "collapse",
-    icon: <Icon fontSize="medium">candlestick_chart</Icon>,
-    name: "Parametricas",
-    key: "Parametricas",
-    collapse: [
-      {
-        name: "Tipo de Equipamiento",
-        key: "TipoEquipamiento",
-        route: "/TipoEquipamientoFE",
-        component: <Equipamiento />,
-      },
-      {
-        name: "Velocidades",
-        key: "Velocidades",
-        route: "/VelocidadesFE",
-        component: <Velocidades />,
-      },
-      {
-        name: "Calle",
-        key: "calle",
-        route: "/CalleFE",
-        component: <Calle />,
-      },
-      {
-        name: "Tipo Obra",
-        key: "TipoObra",
-        route: "/TipoObraFE",
-        component: <TipoObra />,
-      },
-    ],
-  },
-  { type: "divider", key: "divider-5" },
-  {
-    type: "collapse",
-    icon: <MDAvatar size="sm" />,
-    name: "Usuarios",
-    key: "Usuarios",
-    collapse: [
-      {
-        name: "Listado Usuarios",
-        key: "ListUsuarios",
-        route: "/UsuariosListadosFE",
-        component: <UsuarioListados />,
-      },
-    ],
-  },
 ];
 
 export default routes;

@@ -9,9 +9,8 @@ import routes from "routes";
 import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "context";
 import jwt_decode from "jwt-decode";
 import SignInBasic from "../src/layouts/authentication/sign-in/basic/index";
-import AltaConservadora from "layouts/pages/Pruebas/Conservadora/AltaConservadora";
-import ConservadoraVer from "layouts/pages/Pruebas/Conservadora/ConservadoraVer";
-import ConservadoraListado from "layouts/pages/Pruebas/Conservadora/index";
+import PersonaListado from "layouts/pages/Pruebas/Persona/index";
+import PersonaAlta from "layouts/pages/Pruebas/Persona/AltaPersona.js";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -37,10 +36,10 @@ export default function App() {
 
   const isTokenAvailable = () => {
     const token = sessionStorage.getItem("token");
-    if (!token || isTokenExpired(token)) {
+    /*if (!token || isTokenExpired(token)) {
       sessionStorage.removeItem("token");
       return false;
-    }
+    }*/
     return true;
   };
 
@@ -126,19 +125,12 @@ export default function App() {
 
   const RoutesProtegidas = [
     {
-      path: "/ConservadoraFE/Nuevo",
-      component: AltaConservadora,
-      roles: ["admin"],
+      path: "/PersonaFE",
+      component: PersonaListado,
     },
     {
-      path: "/ConservadoraFE",
-      component: ConservadoraListado,
-      roles: ["admin", "user"],
-    },
-    {
-      path: "/ConservadoraFE/:id",
-      component: ConservadoraVer,
-      roles: ["admin", "user"],
+      path: "/PersonaFE/Nuevo",
+      component: PersonaAlta,
     },
   ];
 
