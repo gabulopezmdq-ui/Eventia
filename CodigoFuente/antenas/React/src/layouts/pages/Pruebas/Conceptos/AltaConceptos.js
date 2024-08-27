@@ -32,12 +32,21 @@ function AltaConceptos() {
     }));
   };
   //------------------------Validaciones Especificas-------------------------------------
-  function validateCodEst(value, field) {
+  function validateConcepto(value, field) {
     if (value === undefined || value === null || value === "" || field.name === undefined) {
       return null;
     }
-    if (value.length > 2) {
-      return "Los Códigos de Establecimiento no pueden tener más de 2 caracteres.";
+    if (value.length > 4) {
+      return "Los Conceptos no pueden tener más de 4 caracteres.";
+    }
+    return null;
+  }
+  function validateCodMGP(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 10) {
+      return "Los Códigos MGP no pueden tener más de 10 caracteres.";
     }
     return null;
   }
@@ -51,14 +60,14 @@ function AltaConceptos() {
           label: "Cod Concepto",
           name: "codConcepto",
           required: true,
-          customValidation: validateCodEst,
+          customValidation: validateConcepto,
         },
         {
           type: "text",
           label: "Cod Concepto MGP",
           name: "codConceptoMGP",
           required: true,
-          customValidation: validateCodEst,
+          customValidation: validateCodMGP,
         },
         {
           type: "text",
@@ -67,15 +76,27 @@ function AltaConceptos() {
           required: true,
         },
         {
-          type: "text",
+          type: "select",
           label: "Con Aporte",
           name: "conAporte",
+          customOptions: [
+            { value: "S", label: "Si" },
+            { value: "S", label: "No" },
+          ],
+          valueField: "value",
+          optionField: "label",
           required: true,
         },
         {
-          type: "text",
+          type: "select",
           label: "Patronal",
           name: "patronal",
+          customOptions: [
+            { value: "S", label: "Si" },
+            { value: "S", label: "No" },
+          ],
+          valueField: "value",
+          optionField: "label",
           required: true,
         },
         {

@@ -15,6 +15,8 @@ import ListadoCarRevista from "layouts/pages/Pruebas/CarRevista/index";
 import AltaCarRevista from "layouts/pages/Pruebas/CarRevista/AltaCarRevista";
 import AltaTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento/AltaTipoEstablecimiento";
 import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
+import AltaConceptos from "layouts/pages/Pruebas/Conceptos/AltaConceptos";
+import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -151,6 +153,14 @@ export default function App() {
     {
       path: "/TipoEstablecimientoFE/Nuevo",
       component: AltaTipoEstablecimiento,
+    },
+    {
+      path: "/ConceptosFE",
+      component: ListadoConceptos,
+    },
+    {
+      path: "/ConceptosFE/Nuevo",
+      component: AltaConceptos,
     },
   ];
 
