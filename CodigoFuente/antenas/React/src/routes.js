@@ -47,6 +47,9 @@ import Icon from "@mui/material/Icon";
 
 // Images
 import PersonaListados from "layouts/pages/Pruebas/Persona";
+import ListadoCarRevista from "layouts/pages/Pruebas/CarRevista/index";
+import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
+import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
 // import Velocidades from "layouts/pages/Pruebas/Velocidades";
 // import ResponsableTecnico from "layouts/pages/Pruebas/ResponsableTecnico";
 // import TipoObra from "layouts/pages/Pruebas/TipoObra/index";
@@ -75,6 +78,48 @@ const routes = [
     ],
   },
   { type: "divider", key: "divider-0" },
+  {
+    type: "collapse",
+    icon: <Icon>book</Icon>,
+    name: "Caracteres de Revista",
+    key: "CaracteresdeRevista",
+    collapse: [
+      {
+        name: "Listado CarRevista",
+        key: "ListadoCarRevista",
+        route: "/CarRevistaFE",
+        component: <ListadoCarRevista />,
+      },
+    ],
+  },
+  {
+    type: "collapse",
+    icon: <Icon>villa</Icon>,
+    name: "Tipos de Establecimientos",
+    key: "TipoEstablecimiento",
+    collapse: [
+      {
+        name: "Listado Tipo Establecimiento",
+        key: "ListadoTipoEstablecimiento",
+        route: "/TipoEstablecimientoFE",
+        component: <ListadoTipoEstablecimiento />,
+      },
+    ],
+  },
+  {
+    type: "collapse",
+    icon: <Icon>book</Icon>,
+    name: "Conceptos",
+    key: "Conceptos",
+    collapse: [
+      {
+        name: "Listado Conceptos",
+        key: "ListadoConceptos",
+        route: "/ConceptosFE",
+        component: <ListadoConceptos />,
+      },
+    ],
+  },
 ];
 
 export default routes;

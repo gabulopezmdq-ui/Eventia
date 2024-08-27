@@ -17,11 +17,11 @@ import MDDropzone from "components/MDDropzone";
 //Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
 //Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
 
-function AltaPersona() {
+function AltaConceptos() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta Conceptos";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar Conceptos";
   }
   const [formData, setFormData] = useState({});
 
@@ -31,22 +31,60 @@ function AltaPersona() {
       [e.target.name]: e.target.value,
     }));
   };
-
+  //------------------------Validaciones Especificas-------------------------------------
+  function validateCodEst(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 2) {
+      return "Los Códigos de Establecimiento no pueden tener más de 2 caracteres.";
+    }
+    return null;
+  }
+  //----------------------Fin Validadciones--------------------
   const steps = [
     {
       label: labelTitulo + " Paso 1",
       fields: [
-        { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
+        {
+          type: "text",
+          label: "Cod Concepto",
+          name: "codConcepto",
+          required: true,
+          customValidation: validateCodEst,
+        },
+        {
+          type: "text",
+          label: "Cod Concepto MGP",
+          name: "codConceptoMGP",
+          required: true,
+          customValidation: validateCodEst,
+        },
+        {
+          type: "text",
+          label: "Descripcion",
+          name: "descripcion",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Con Aporte",
+          name: "conAporte",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Patronal",
+          name: "patronal",
+          required: true,
+        },
         {
           type: "select",
           label: "Vigente",
           name: "vigente",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "N", label: "No" },
+            { value: "S", label: "No" },
           ],
           valueField: "value",
           optionField: "label",
@@ -56,7 +94,7 @@ function AltaPersona() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `Personas`;
+  const apiUrl = process.env.REACT_APP_API_URL + `Conceptos`;
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -71,4 +109,4 @@ function AltaPersona() {
   );
 }
 
-export default AltaPersona;
+export default AltaConceptos;

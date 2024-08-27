@@ -11,6 +11,10 @@ import jwt_decode from "jwt-decode";
 import SignInBasic from "../src/layouts/authentication/sign-in/basic/index";
 import PersonaListado from "layouts/pages/Pruebas/Persona/index";
 import PersonaAlta from "layouts/pages/Pruebas/Persona/AltaPersona.js";
+import ListadoCarRevista from "layouts/pages/Pruebas/CarRevista/index";
+import AltaCarRevista from "layouts/pages/Pruebas/CarRevista/AltaCarRevista";
+import AltaTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento/AltaTipoEstablecimiento";
+import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -132,6 +136,22 @@ export default function App() {
       path: "/PersonaFE/Nuevo",
       component: PersonaAlta,
     },
+    {
+      path: "/CarRevistaFE",
+      component: ListadoCarRevista,
+    },
+    {
+      path: "/CarRevistaFE/Nuevo",
+      component: AltaCarRevista,
+    },
+    {
+      path: "/TipoEstablecimientoFE",
+      component: ListadoTipoEstablecimiento,
+    },
+    {
+      path: "/TipoEstablecimientoFE/Nuevo",
+      component: AltaTipoEstablecimiento,
+    },
   ];
 
   const login = [
@@ -151,7 +171,7 @@ export default function App() {
       {layout === "dashboard" && (
         <Sidenav
           color={sidenavColor}
-          brandName="Elevadores"
+          brandName="Mecanizadas"
           brand="https://www.mardelplata.gob.ar/sites/all/themes/mgp/ico/favicon.ico"
           routes={filteredRoutes}
           onMouseEnter={handleOnMouseEnter}

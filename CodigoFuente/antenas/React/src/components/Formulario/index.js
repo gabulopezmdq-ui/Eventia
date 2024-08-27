@@ -263,7 +263,7 @@ function Formulario({
                   color="dark"
                   onClick={!isLastStep ? handleNext : handleSubmit} // Cambiar handleNext por handleSubmit en el botón "send"
                 >
-                  {isLastStep ? "send" : "next"}
+                  {isLastStep ? "enviar" : "siguiente"}
                 </MDButton>
               </MDBox>
             </MDBox>
