@@ -17,11 +17,11 @@ import MDDropzone from "components/MDDropzone";
 //Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
 //Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
 
-function AltaPersona() {
+function AltaCarRevista() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta CarRevista";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar CarRevista";
   }
   const [formData, setFormData] = useState({});
 
@@ -36,17 +36,16 @@ function AltaPersona() {
     {
       label: labelTitulo + " Paso 1",
       fields: [
-        { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
+        { type: "text", label: "CodPcia", name: "codPcia", required: true },
+        { type: "text", label: "Descripcion", name: "descripcion", required: true },
+        { type: "text", label: "codMGP", name: "codMgp", required: true },
         {
           type: "select",
           label: "Vigente",
           name: "vigente",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "N", label: "No" },
+            { value: "S", label: "No" },
           ],
           valueField: "value",
           optionField: "label",
@@ -56,7 +55,7 @@ function AltaPersona() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `Personas`;
+  const apiUrl = process.env.REACT_APP_API_URL + `CarRevista`;
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -71,4 +70,4 @@ function AltaPersona() {
   );
 }
 
-export default AltaPersona;
+export default AltaCarRevista;
