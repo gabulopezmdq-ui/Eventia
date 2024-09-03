@@ -516,7 +516,6 @@ C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\staticwebass
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\scopedcss\bundle\API.styles.css
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.genruntimeconfig.cache
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\ref\API.dll
-C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.csproj.CopyComplete
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\bin\Debug\net7.0\appsettings.json
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\bin\Debug\net7.0\API.staticwebassets.runtime.json
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\bin\Debug\net7.0\API.exe
@@ -625,3 +624,4 @@ C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\refint\API
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.pdb
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.genruntimeconfig.cache
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\ref\API.dll
+C:\Desarrollo\mecanizadas\CodigoFuente\antenas\api\obj\Debug\net7.0\API.csproj.Up2Date
