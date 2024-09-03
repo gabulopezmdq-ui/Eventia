@@ -21,6 +21,9 @@ namespace API.DataSchema
         public DbSet<MEC_TiposCategorias> MEC_TiposCategorias { get; set; }
         public DbSet<MEC_Conceptos> MEC_Personas { get; set; }
         public DbSet<MEC_POF> MEC_POF { get; set; }
+        public DbSet<MEC_TiposLiquidaciones> MEC_TiposLiquidaciones { get; set; }
+        public DbSet<MEC_CabeceraLiquidacion> MEC_CabeceraLiquidacion { get; set; }
+        public DbSet<MEC_TiposFunciones> MEC_TiposFunciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,6 +34,10 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_TiposCategoriasConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_PersonasConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_POFConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TiposLiquidacionesConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_CabeceraLiquidacionConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TiposFuncionesConfiguration());
+
             base.OnModelCreating(modelBuilder);
         }
     }
