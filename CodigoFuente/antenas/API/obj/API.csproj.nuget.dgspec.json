@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\api\\API.csproj": {}
+    "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {}
   },
   "projects": {
-    "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\api\\API.csproj": {
+    "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\api\\API.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
         "projectName": "API",
-        "projectPath": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\api\\API.csproj",
-        "packagesPath": "C:\\Users\\vuriarte\\.nuget\\packages\\",
-        "outputPath": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\api\\obj\\",
+        "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "packagesPath": "C:\\Users\\gabrielalopez\\.nuget\\packages\\",
+        "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\vuriarte\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\gabrielalopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -53,6 +53,10 @@
             "Bogus": {
               "target": "Package",
               "version": "[34.0.2, )"
+            },
+            "EPPlus": {
+              "target": "Package",
+              "version": "[7.3.1, )"
             },
             "FluentAssertions": {
               "target": "Package",
