@@ -80,7 +80,7 @@ builder.Services.AddHealthChecks();
 
 //Services
 
-builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
+builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
 
 //Repositories
 

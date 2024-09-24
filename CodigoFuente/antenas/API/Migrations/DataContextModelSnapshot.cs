@@ -28,8 +28,6 @@ namespace API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdCabecera"));
-
                     b.Property<string>("AnioLiquidacion")
                         .HasColumnType("char(2)")
                         .IsFixedLength();
@@ -328,6 +326,134 @@ namespace API.Migrations
                     b.ToTable("MEC_Personas");
                 });
 
+            modelBuilder.Entity("API.DataSchema.MEC_TMPMecanizadas", b =>
+                {
+                    b.Property<int>("idTMPMecanizada")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("idTMPMecanizada"));
+
+                    b.Property<string>("AnioMesAfectacion")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("CaracterRevista")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("CodigoLiquidacion")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Dependencia")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Distrito")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Documento")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<DateTime?>("FechaImportacion")
+                        .HasColumnType("DateTime")
+                        .IsFixedLength();
+
+                    b.Property<string>("Funcion")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<decimal?>("HorasDesignadas")
+                        .IsRequired()
+                        .HasColumnType("decimal")
+                        .IsFixedLength();
+
+                    b.Property<decimal>("Importe")
+                        .HasColumnType("decimal")
+                        .IsFixedLength();
+
+                    b.Property<string>("MarcaTransferido")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("MesLiquidacion")
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("NroEstab")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("OrdenPago")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("RegimenEstatutario")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("RegistroValido")
+                        .IsRequired()
+                        .HasColumnType("char(1)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Secuencia")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Signo")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("Subvencion")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("TipoCargo")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<string>("TipoOrganizacion")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .IsFixedLength();
+
+                    b.Property<int>("idCabecera")
+                        .HasColumnType("integer");
+
+                    b.HasKey("idTMPMecanizada");
+
+                    b.ToTable("MEC_TMPMecanizadas");
+                });
+
             modelBuilder.Entity("API.DataSchema.MEC_TiposCategorias", b =>
                 {
                     b.Property<int>("IdTipoCategoria")
@@ -441,6 +567,15 @@ namespace API.Migrations
                     b.ToTable("MEC_TiposLiquidaciones");
                 });
 
+            modelBuilder.Entity("API.DataSchema.MEC_CabeceraLiquidacion", b =>
+                {
+                    b.HasOne("API.DataSchema.MEC_TMPMecanizadas", null)
+                        .WithOne("Cabecera")
+                        .HasForeignKey("API.DataSchema.MEC_CabeceraLiquidacion", "IdCabecera")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("API.DataSchema.MEC_Establecimientos", b =>
                 {
                     b.HasOne("API.DataSchema.MEC_POF", null)
@@ -497,6 +632,11 @@ namespace API.Migrations
                     b.Navigation("Establecimiento");
 
                     b.Navigation("Persona");
+                });
+
+            modelBuilder.Entity("API.DataSchema.MEC_TMPMecanizadas", b =>
+                {
+                    b.Navigation("Cabecera");
                 });
 
             modelBuilder.Entity("API.DataSchema.MEC_TiposEstablecimientos", b =>
