@@ -12,6 +12,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
                 .Property(p => p.IdTipoLiquidacion)
+                .UseIdentityColumn()
                 .ValueGeneratedOnAdd();
           
             builder.Property(e => e.Descripcion)
@@ -19,7 +20,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsFixedLength(false)
                 .IsRequired(true); 
 
-            builder.Property(e => e.Vigente)
+            builder.Property(e => e.Vigente)    
                 .HasColumnType("char(1)")
                 .IsFixedLength(true)
                 .IsRequired(true); 

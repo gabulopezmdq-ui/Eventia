@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 
 namespace API.DataSchema
 {
-    public class ANT_Usuario
+    public class MEC_Usuarios
     {
         public virtual int IdUsuario { get; set; }
         public string Nombre { get; set; }
         public string Email { get; set; }
         public bool? Activo { get; set; }
+        public virtual ICollection<MEC_RolesXUsuarios> UsuariosXRoles { get; set; } = new List<MEC_RolesXUsuarios>();
     }
 }
