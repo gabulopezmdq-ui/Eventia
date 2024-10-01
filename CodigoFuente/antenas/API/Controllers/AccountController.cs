@@ -1,10 +1,12 @@
-﻿using  rsAPIElevador.DataSchema;
-using  rsAPIElevador.Services;
-using  rsAPIElevador.Utility;
+﻿using  API.DataSchema;
+using  API.Services;
+using  API.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using rsAPIElevador.DataSchema;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,19 +15,19 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace rsAPIElevador.Controllers
+namespace API.Controllers
 {
     [ApiController]
     [AllowAnonymous]
-    [Route("[controller]")]
-    public class Account : ControllerBase
+    [Route("Account")]
+    public class AccountController : ControllerBase
     {
         private readonly IConfiguration _config;
         private readonly DataContext _context;
-        private readonly ICRUDService<EJ_Usuario> _service;
+        private readonly ICRUDService<MEC_Usuarios> _service;
 
 
-        public Account(IConfiguration config, DataContext context, ICRUDService<EJ_Usuario> service)
+        public AccountController(IConfiguration config, DataContext context, ICRUDService<MEC_Usuarios> service)
         {
             _config = config;
             _context = context;
@@ -40,11 +42,12 @@ namespace rsAPIElevador.Controllers
             string user = userinfo.Usuario;
             string password = userinfo.Password;
             var usuarios = await _service.GetByParam(u => u.Nombre == user);
+            var usuario = usuarios.FirstOrDefault();
             if (usuarios.Count() > 0)
             {
                 bool isValied = new LdapManager(_config).Validate(user, password);// HABILITAR PARA VALIDAR
                 if (isValied)
-                    return Ok(BuildToken());
+                    return Ok(BuildToken(usuario.IdUsuario));
                 else
                     return BadRequest();
             }
@@ -52,13 +55,26 @@ namespace rsAPIElevador.Controllers
                 return BadRequest();
         }
 
-        private IActionResult BuildToken()
+        
+
+        private IActionResult BuildToken(int userId)
         {
-            
-            var claims = new[]
+            //guarda los datos usuario
+            var usuario = _context.MEC_Usuarios
+                        .Include(u => u.UsuariosXRoles)
+                        .ThenInclude(ur => ur.Rol)  
+                        .FirstOrDefault(u => u.IdUsuario == userId);
+
+            //guarda los roles en caso de que tenga mas de uno
+            var roles = usuario.UsuariosXRoles.Select(ur => ur.Rol?.NombreRol).Where(r => !string.IsNullOrEmpty(r)).ToList();
+
+            var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Name, usuario.Nombre),
+                new Claim("id", usuario.IdUsuario.ToString())
             };
+            claims.AddRange(roles.Select(rol => new Claim(ClaimTypes.Role, rol)));
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetValue<string>("Ldap:Key")));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
