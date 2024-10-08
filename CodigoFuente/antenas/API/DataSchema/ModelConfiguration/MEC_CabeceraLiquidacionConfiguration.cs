@@ -31,7 +31,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true); 
 
             builder.Property(e => e.AnioLiquidacion)
-                .HasColumnType("char(2)")
+                .HasColumnType("char(4)")
                 .IsFixedLength(true)
                 .IsRequired(false); 
 
@@ -47,13 +47,11 @@ namespace API.DataSchema.ModelConfiguration
             
             builder.Property(e => e.InicioLiquidacion)
                 .HasColumnType("DateTime")
-                .IsFixedLength(true)
-                .IsRequired(true);
+                .IsFixedLength(true);
             
             builder.Property(e => e.FinLiquidacion)
                 .HasColumnType("DateTime")
-                .IsFixedLength(true)
-                .IsRequired(true);
+                .IsFixedLength(true);
 
             builder.Property(e => e.Estado)
                 .HasColumnType("char(1)")
