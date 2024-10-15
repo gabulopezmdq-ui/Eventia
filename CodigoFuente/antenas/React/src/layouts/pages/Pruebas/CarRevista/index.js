@@ -56,9 +56,9 @@ function CarRevista() {
     navigate("/CarRevistaFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idPersona) {
-      const productId = rowData.idPersona;
-      const url = `/PersonaFE/${productId}`;
+    if (rowData && rowData.idCarRevista) {
+      const productId = rowData.idCarRevista;
+      const url = `/CarRevistaFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");

@@ -17,7 +17,8 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
-function Conservadora() {
+
+function POF() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -25,10 +26,10 @@ function Conservadora() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "conservadora/getall", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
+      .get(process.env.REACT_APP_API_URL + "POF/getall", {
+        //     headers: {
+        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
+        //     },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
@@ -52,25 +53,13 @@ function Conservadora() {
       });
   }, []);
 
-  const formatDate = (dateString) => {
-    const fecha = new Date(dateString);
-    const options = {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return fecha.toLocaleDateString("es-ES", options);
-  };
-
   const handleNuevoTipo = () => {
-    navigate("/ConservadoraFE/Nuevo");
+    navigate("/POFFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idConservadora) {
-      const productId = rowData.idConservadora;
-      const url = `/ConservadoraFE/${productId}`;
+    if (rowData && rowData.idTipoEstablecimiento) {
+      const productId = rowData.idTipoEstablecimiento;
+      const url = `/POFFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -105,16 +94,34 @@ function Conservadora() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "nombre" },
                   {
-                    Header: "Calle",
-                    accessor: (rowData) => `${rowData.eV_Calle?.nombre} ${rowData.altura}`,
+                    Header: "Persona",
+                    accessor: (row) => {
+                      const apellido = row.persona?.apellido || "Sin apellido";
+                      const nombre = row.persona?.nombre || "Sin nombre";
+                      return `${apellido}, ${nombre}`;
+                    },
                   },
-                  { Header: "Expediente", accessor: "expediente" },
+                  { Header: "Secuencia", accessor: "secuencia" },
+                  { Header: "Barra", accessor: "barra" },
+                  { Header: "Tipo Carga", accessor: "tipoCargo" },
+                  { Header: "Cant. Hs.", accessor: "cantHsCargo" },
+                  { Header: "Antig. Años", accessor: "antigAnios" },
+                  { Header: "Antig. Meses", accessor: "antigMeses" },
                   {
-                    Header: "Telefono",
-                    accessor: "telefono",
-                    Cell: ({ value }) => displayValue(value),
+                    Header: "Sin Haberes",
+                    accessor: "sinHaberes",
+                    Cell: ({ value }) => (value === "S" ? "SI" : "NO"),
+                  },
+                  {
+                    Header: "Subvencionada",
+                    accessor: "subvencionada",
+                    Cell: ({ value }) => (value === "S" ? "SI" : "NO"),
+                  },
+                  {
+                    Header: "Vigente",
+                    accessor: "vigente",
+                    Cell: ({ value }) => (value === "S" ? "SI" : "NO"),
                   },
                   {
                     Header: "Mas Info",
@@ -143,11 +150,11 @@ function Conservadora() {
   );
 }
 
-Conservadora.propTypes = {
+POF.propTypes = {
   row: PropTypes.object, // Add this line for 'row' prop
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default Conservadora;
+export default POF;

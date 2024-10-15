@@ -18,7 +18,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
 
-function TipoEstablecimiento() {
+function TipoFuncion() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -26,7 +26,7 @@ function TipoEstablecimiento() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "TiposEstablecimientos/getall", {
+      .get(process.env.REACT_APP_API_URL + "TiposFunciones/getall", {
         //     headers: {
         //       Authorization: `Bearer ${token}`, // Envía el token en los headers
         //     },
@@ -54,12 +54,12 @@ function TipoEstablecimiento() {
   }, []);
 
   const handleNuevoTipo = () => {
-    navigate("/TipoEstablecimientoFE/Nuevo");
+    navigate("/TipoFuncionFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idTipoEstablecimiento) {
-      const productId = rowData.idTipoEstablecimiento;
-      const url = `/TiposEstablecimientoFE/${productId}`;
+    if (rowData && rowData.idTipoFuncion) {
+      const productId = rowData.idTipoFuncion;
+      const url = `/TipoFuncionFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -94,7 +94,8 @@ function TipoEstablecimiento() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Cod Tipo Est.", accessor: "codTipoEstablecimiento" },
+                  { Header: "Cod Función.", accessor: "codFuncion" },
+                  { Header: "Cod Función MGP", accessor: "codFuncionMGP" },
                   { Header: "Descripcion", accessor: "descripcion" },
                   { Header: "Vigente", accessor: "vigente" },
                   {
@@ -124,11 +125,11 @@ function TipoEstablecimiento() {
   );
 }
 
-TipoEstablecimiento.propTypes = {
+TipoFuncion.propTypes = {
   row: PropTypes.object, // Add this line for 'row' prop
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default TipoEstablecimiento;
+export default TipoFuncion;
