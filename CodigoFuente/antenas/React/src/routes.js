@@ -50,6 +50,7 @@ import PersonaListados from "layouts/pages/Pruebas/Persona";
 import ListadoCarRevista from "layouts/pages/Pruebas/CarRevista/index";
 import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
 import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
+import POFListados from "layouts/pages/Pruebas/POF";
 // import Velocidades from "layouts/pages/Pruebas/Velocidades";
 // import ResponsableTecnico from "layouts/pages/Pruebas/ResponsableTecnico";
 // import TipoObra from "layouts/pages/Pruebas/TipoObra/index";
@@ -74,6 +75,20 @@ const routes = [
         key: "listadoPersona",
         route: "/PersonaFE",
         component: <PersonaListados />,
+      },
+    ],
+  },
+  {
+    type: "collapse",
+    icon: <Icon>person</Icon>,
+    name: "POF",
+    key: "pof",
+    collapse: [
+      {
+        name: "Listado POF",
+        key: "listadoPOF",
+        route: "/POFFE",
+        component: <POFListados />,
       },
     ],
   },

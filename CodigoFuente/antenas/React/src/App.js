@@ -13,10 +13,13 @@ import PersonaListado from "layouts/pages/Pruebas/Persona/index";
 import PersonaAlta from "layouts/pages/Pruebas/Persona/AltaPersona.js";
 import ListadoCarRevista from "layouts/pages/Pruebas/CarRevista/index";
 import AltaCarRevista from "layouts/pages/Pruebas/CarRevista/AltaCarRevista";
+import CarRevistaVer from "layouts/pages/Pruebas/CarRevista/CarRevistaVer";
 import AltaTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento/AltaTipoEstablecimiento";
 import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
 import AltaConceptos from "layouts/pages/Pruebas/Conceptos/AltaConceptos";
 import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
+import AltaPOF from "layouts/pages/Pruebas/POF/AltaPOF";
+import POFListado from "layouts/pages/Pruebas/POF";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -139,6 +142,14 @@ export default function App() {
       component: PersonaAlta,
     },
     {
+      path: "/POFFE",
+      component: POFListado,
+    },
+    {
+      path: "/POFFE/Nuevo",
+      component: AltaPOF,
+    },
+    {
       path: "/CarRevistaFE",
       component: ListadoCarRevista,
     },
@@ -161,6 +172,11 @@ export default function App() {
     {
       path: "/ConceptosFE/Nuevo",
       component: AltaConceptos,
+    },
+    //-----------------------------Rutas de Vermas ?? ----------------------------------------
+    {
+      path: "/CarRevistaFE/:id",
+      component: CarRevistaVer,
     },
   ];
 
