@@ -50,31 +50,28 @@ import PersonaListados from "layouts/pages/Pruebas/Persona";
 import ListadoCarRevista from "layouts/pages/Pruebas/CarRevista/index";
 import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
 import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
-import POFListados from "layouts/pages/Pruebas/POF";
-// import Velocidades from "layouts/pages/Pruebas/Velocidades";
-// import ResponsableTecnico from "layouts/pages/Pruebas/ResponsableTecnico";
-// import TipoObra from "layouts/pages/Pruebas/TipoObra/index";
-// import Seguro from "layouts/pages/Pruebas/Seguro";
-// import Administracion from "layouts/pages/Pruebas/Administracion";
-// import Equipamiento from "layouts/pages/Pruebas/Equipamiento/index";
-//import Conservadora from "layouts/pages/Pruebas/Conservadora/index";
-// import ObraTipo from "layouts/pages/Pruebas/ObraTipo";
-// import ListadoMaquina from "layouts/pages/Pruebas/Maquina/ListadoMaquina";
-// import Calle from "layouts/pages/Pruebas/Calle/index";
-// import ObraTipoListado from "layouts/pages/Pruebas/ObraTipo/ObraTipoListado";
+import Importar from "layouts/pages/Pruebas/Importar";
+import CabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion";
+import ImportarArchivo from "layouts/pages/Pruebas/ImportarArchivoPlano";
 
 const routes = [
   {
     type: "collapse",
     icon: <Icon>person</Icon>,
-    name: "Persona",
-    key: "persona",
+    name: "Liquidaciones",
+    key: "liquidaciones",
     collapse: [
       {
-        name: "Listado Persona",
-        key: "listadoPersona",
-        route: "/PersonaFE",
-        component: <PersonaListados />,
+        name: "Cabecera Liquidacion",
+        key: "cabeceraLiquidacion",
+        route: "/CabeceraLiquidacionFE",
+        component: <CabeceraLiquidacion />,
+      },
+      {
+        name: "Importar Archivo Plano",
+        key: "ImportarArchivoPlano",
+        route: "/ImportarArchivoPlanoFE",
+        component: <ImportarArchivo />,
       },
     ],
   },
@@ -95,43 +92,63 @@ const routes = [
   { type: "divider", key: "divider-0" },
   {
     type: "collapse",
-    icon: <Icon>book</Icon>,
-    name: "Caracteres de Revista",
-    key: "CaracteresdeRevista",
+    icon: <Icon>person</Icon>,
+    name: "POF",
+    key: "pof",
     collapse: [
       {
-        name: "Listado CarRevista",
-        key: "ListadoCarRevista",
-        route: "/CarRevistaFE",
-        component: <ListadoCarRevista />,
+        name: "Gestion de Persona",
+        key: "listadoPersona",
+        route: "/PersonaFE",
+        component: <PersonaListados />,
       },
     ],
   },
+  { type: "divider", key: "divider-1" },
   {
     type: "collapse",
-    icon: <Icon>villa</Icon>,
-    name: "Tipos de Establecimientos",
-    key: "TipoEstablecimiento",
+    icon: <Icon>person</Icon>,
+    name: "Seguridad",
+    key: "Seguridad",
     collapse: [
       {
-        name: "Listado Tipo Establecimiento",
-        key: "ListadoTipoEstablecimiento",
-        route: "/TipoEstablecimientoFE",
-        component: <ListadoTipoEstablecimiento />,
+        name: "Importar Archivo Plano",
+        key: "ImportarArchivoPlano",
+        route: "/ImportarArchivoPlanoFE",
+        component: <ImportarArchivo />,
       },
     ],
   },
+  { type: "divider", key: "divider-2" },
   {
     type: "collapse",
     icon: <Icon>book</Icon>,
-    name: "Conceptos",
-    key: "Conceptos",
+    name: "Parámetricas",
+    key: "parametricas",
     collapse: [
       {
         name: "Listado Conceptos",
         key: "ListadoConceptos",
         route: "/ConceptosFE",
         component: <ListadoConceptos />,
+      },
+      {
+        name: "Caracteres Revista",
+        key: "CarRevista",
+        route: "/CarRevistaFE",
+        component: <ListadoCarRevista />,
+      },
+      {
+        name: "Tipo Establecimiento",
+        key: "ListadoTipoEstablecimiento",
+        route: "/TipoEstablecimientoFE",
+        component: <ListadoTipoEstablecimiento />,
+      },
+      {
+        name: "Importar",
+        key: "Importar",
+        route: "/ImportarFE",
+        component: <Importar />,
       },
     ],
   },

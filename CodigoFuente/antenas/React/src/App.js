@@ -18,8 +18,7 @@ import AltaTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento/A
 import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
 import AltaConceptos from "layouts/pages/Pruebas/Conceptos/AltaConceptos";
 import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
-import AltaPOF from "layouts/pages/Pruebas/POF/AltaPOF";
-import POFListado from "layouts/pages/Pruebas/POF";
+import Importar from "layouts/pages/Pruebas/Importar";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -173,10 +172,9 @@ export default function App() {
       path: "/ConceptosFE/Nuevo",
       component: AltaConceptos,
     },
-    //-----------------------------Rutas de Vermas ?? ----------------------------------------
     {
-      path: "/CarRevistaFE/:id",
-      component: CarRevistaVer,
+      path: "/ImportarFE",
+      component: Importar,
     },
   ];
 
