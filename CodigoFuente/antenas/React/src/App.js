@@ -17,6 +17,7 @@ import AltaTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento/A
 import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimiento";
 import AltaConceptos from "layouts/pages/Pruebas/Conceptos/AltaConceptos";
 import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
+import Importar from "layouts/pages/Pruebas/Importar";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -161,6 +162,10 @@ export default function App() {
     {
       path: "/ConceptosFE/Nuevo",
       component: AltaConceptos,
+    },
+    {
+      path: "/ImportarFE",
+      component: Importar,
     },
   ];
 
