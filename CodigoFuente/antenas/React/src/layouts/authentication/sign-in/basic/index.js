@@ -50,7 +50,7 @@ function Basic() {
     setLoading(true);
     axios
       .post(
-        process.env.REACT_APP_API_URL + "account/login",
+        process.env.REACT_APP_API_URL + "Account/Login",
         { usuario, password },
         {
           headers: {
