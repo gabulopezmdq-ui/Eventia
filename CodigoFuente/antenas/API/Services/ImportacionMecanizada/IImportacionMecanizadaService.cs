@@ -11,5 +11,7 @@ namespace API.Services
     public interface IImportacionMecanizadaService<T> where T : class
     {
         Task ImportarExcel(IFormFile file, int idCabecera);
+
+        Task RevertirImportacionAsync(int idCabecera);
     }
 }

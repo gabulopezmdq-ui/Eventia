@@ -14,6 +14,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using API.Migrations;
 
 namespace API.Services
 {
@@ -136,5 +138,48 @@ namespace API.Services
 
         throw new FormatException($"El valor '{value}' no tiene un formato decimal válido.");
     }
+
+        //Revetir importación
+        public async Task<List<MEC_TMPMecanizadas>> ObtenerRegistrosPorCabeceraAsync(int idCabecera)
+        {
+            // Filtrar los registros por idCabecera y estado "I"
+            var registros = await _context.MEC_TMPMecanizadas
+                                          .Where(m => m.idCabecera == idCabecera && m.Cabecera.Estado == "I")
+                                          .ToListAsync();
+
+            return registros;
+        }
+        public async Task RevertirImportacionAsync(int idCabecera)
+        {
+            // Buscar el estado en la tabla CabeceraDeLiquidacion
+            var estadoCabecera = await _context.MEC_CabeceraLiquidacion
+                                               .Where(c => c.IdCabecera == idCabecera)
+                                               .FirstOrDefaultAsync();
+
+            // Verificar que la cabecera exista y que el estado sea "I"
+            if (estadoCabecera == null || estadoCabecera.Estado != "I")
+            {
+                throw new InvalidOperationException("No se encontraron registros con el estado 'I' para revertir.");
+            }
+
+            // Buscar y eliminar los registros si la confirmación es verdadera
+            var registros = await _context.MEC_TMPMecanizadas
+                                          .Where(m => m.idCabecera == idCabecera )
+                                          .ToListAsync();
+
+            if (!registros.Any())
+            {
+                throw new InvalidOperationException("No se encontraron registros para revertir.");
+            }
+
+            _context.MEC_TMPMecanizadas.RemoveRange(registros);
+
+            // Cambiar el estado de la cabecera de "I" a "P"
+             estadoCabecera.Estado = "P";
+
+            // Guardar los cambios
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
