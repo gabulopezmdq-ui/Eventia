@@ -53,6 +53,12 @@ import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
 import Importar from "layouts/pages/Pruebas/Importar";
 import CabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion";
 import ImportarArchivo from "layouts/pages/Pruebas/ImportarArchivoPlano";
+import GestionUsuario from "layouts/pages/Pruebas/GestionUsuarios";
+import UsuarioPorRol from "layouts/pages/Pruebas/UsuariosPorRol";
+import Establecimientos from "layouts/pages/Pruebas/Establecimientos";
+import TiposFunciones from "layouts/pages/Pruebas/TiposFunciones";
+import TipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones";
+import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
 
 const routes = [
   {
@@ -98,10 +104,16 @@ const routes = [
     key: "Seguridad",
     collapse: [
       {
-        name: "Importar Archivo Plano",
-        key: "ImportarArchivoPlano",
-        route: "/ImportarArchivoPlanoFE",
-        component: <ImportarArchivo />,
+        name: "Gestion de Usuario",
+        key: "GestionUsuarios",
+        route: "/GestionUsuariosFE",
+        component: <GestionUsuario />,
+      },
+      {
+        name: "Usuario Por Rol",
+        key: "UsuariosPorRol",
+        route: "/UsuariosPorRolFE",
+        component: <UsuarioPorRol />,
       },
     ],
   },
@@ -131,11 +143,35 @@ const routes = [
         component: <ListadoTipoEstablecimiento />,
       },
       {
+        name: "Establecimientos",
+        key: "Establecimientos",
+        route: "/EstablecimientosFE",
+        component: <Establecimientos />,
+      },
+      {
+        name: "Tipos de Funciones",
+        key: "TiposFunciones",
+        route: "/TiposFuncionesFE",
+        component: <TiposFunciones />,
+      },
+      {
+        name: "Tipo Liquidaciones",
+        key: "TipoLiquidaciones",
+        route: "/TipoLiquidacionesFE",
+        component: <TipoLiquidaciones />,
+      },
+      {
+        name: "Tipo Categorias",
+        key: "TipoCategorias",
+        route: "/TipoCategoriasFE",
+        component: <TipoCategorias />,
+      },
+      /*{
         name: "Importar",
         key: "Importar",
         route: "/ImportarFE",
         component: <Importar />,
-      },
+      },*/
     ],
   },
 ];
