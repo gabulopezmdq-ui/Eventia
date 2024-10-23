@@ -71,9 +71,9 @@ function ImportarArchivo() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        {/*<MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
           Agregar
-        </MDButton>
+        </MDButton>*/}
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>

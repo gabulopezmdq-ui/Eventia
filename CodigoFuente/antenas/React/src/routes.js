@@ -81,20 +81,6 @@ const routes = [
       },
     ],
   },
-  {
-    type: "collapse",
-    icon: <Icon>person</Icon>,
-    name: "POF",
-    key: "pof",
-    collapse: [
-      {
-        name: "Listado POF",
-        key: "listadoPOF",
-        route: "/POFFE",
-        component: <POFListados />,
-      },
-    ],
-  },
   { type: "divider", key: "divider-0" },
   {
     type: "collapse",

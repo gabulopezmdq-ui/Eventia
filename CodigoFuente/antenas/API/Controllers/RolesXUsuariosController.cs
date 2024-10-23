@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin")]
     [Route("RolesXUsuarios")]
     public class RolesXUsuariosController : ControllerBase
     {
