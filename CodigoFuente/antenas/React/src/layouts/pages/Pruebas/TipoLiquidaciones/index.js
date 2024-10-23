@@ -25,7 +25,7 @@ function TipoLiquidaciones() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "TipoLiquidacioness/getall", {
+      .get(process.env.REACT_APP_API_URL + "TiposLiquidaciones/getall", {
         //     headers: {
         //       Authorization: `Bearer ${token}`, // Envía el token en los headers
         //     },
@@ -93,10 +93,7 @@ function TipoLiquidaciones() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "nombre" },
-                  { Header: "Apellido", accessor: "apellido" },
-                  { Header: "Legajo", accessor: "legajo" },
-                  { Header: "DNI", accessor: "dni" },
+                  { Header: "Descripcion", accessor: "descripcion" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",

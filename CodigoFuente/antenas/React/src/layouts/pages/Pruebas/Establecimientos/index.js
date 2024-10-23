@@ -25,7 +25,7 @@ function Establecimientos() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "Establecimientoss/getall", {
+      .get(process.env.REACT_APP_API_URL + "Establecimientos/getall", {
         //     headers: {
         //       Authorization: `Bearer ${token}`, // Envía el token en los headers
         //     },
@@ -93,10 +93,10 @@ function Establecimientos() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "nombre" },
-                  { Header: "Apellido", accessor: "apellido" },
-                  { Header: "Legajo", accessor: "legajo" },
-                  { Header: "DNI", accessor: "dni" },
+                  { Header: "nroDiegep", accessor: "nroDiegep" },
+                  { Header: "Número Establecimiento", accessor: "nroEstablecimiento" },
+                  { Header: "Nombre Mgp", accessor: "nombreMgp" },
+                  { Header: "Nombre Pcia", accessor: "nombrePcia" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",

@@ -25,7 +25,7 @@ function TiposFunciones() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "TiposFuncioness/getall", {
+      .get(process.env.REACT_APP_API_URL + "TiposFunciones/getall", {
         //     headers: {
         //       Authorization: `Bearer ${token}`, // Envía el token en los headers
         //     },
@@ -93,10 +93,10 @@ function TiposFunciones() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "nombre" },
-                  { Header: "Apellido", accessor: "apellido" },
-                  { Header: "Legajo", accessor: "legajo" },
-                  { Header: "DNI", accessor: "dni" },
+                  { Header: "Cod Función.", accessor: "codFuncion" },
+                  { Header: "Cod Función MGP", accessor: "codFuncionMGP" },
+                  { Header: "Descripcion", accessor: "descripcion" },
+                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",

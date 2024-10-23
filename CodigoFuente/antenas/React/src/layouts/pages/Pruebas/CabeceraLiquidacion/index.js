@@ -25,7 +25,7 @@ function CabeceraLiquidacion() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacions/getall", {
+      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/getall", {
         //     headers: {
         //       Authorization: `Bearer ${token}`, // Envía el token en los headers
         //     },
@@ -93,10 +93,10 @@ function CabeceraLiquidacion() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "nombre" },
-                  { Header: "Apellido", accessor: "apellido" },
-                  { Header: "Legajo", accessor: "legajo" },
-                  { Header: "DNI", accessor: "dni" },
+                  { Header: "Mes Liquidacion", accessor: "mesLiquidacion" },
+                  { Header: "Año Liquidacion", accessor: "anioLiquidacion" },
+                  { Header: "Usuario", accessor: "usuario" },
+                  { Header: "Observaciones", accessor: "observaciones" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",
