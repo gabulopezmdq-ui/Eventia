@@ -166,14 +166,6 @@ export default function App() {
       component: GestionUsuario,
     },
     {
-      path: "/POFFE",
-      component: POFListado,
-    },
-    {
-      path: "/POFFE/Nuevo",
-      component: AltaPOF,
-    },
-    {
       path: "/CarRevistaFE",
       component: ListadoCarRevista,
     },
