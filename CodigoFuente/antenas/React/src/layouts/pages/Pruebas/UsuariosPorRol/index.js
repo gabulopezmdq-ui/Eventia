@@ -17,7 +17,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
-function TipoLiquidaciones() {
+function UsuarioPorRol() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -25,7 +25,7 @@ function TipoLiquidaciones() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "TipoLiquidacioness/getall", {
+      .get(process.env.REACT_APP_API_URL + "UsuarioPorRols/getall", {
         //     headers: {
         //       Authorization: `Bearer ${token}`, // Envía el token en los headers
         //     },
@@ -53,12 +53,12 @@ function TipoLiquidaciones() {
   }, []);
 
   const handleNuevoTipo = () => {
-    navigate("/TipoLiquidacionesFE/Nuevo");
+    navigate("/UsuarioPorRolFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idTipoLiquidaciones) {
-      const productId = rowData.idTipoLiquidaciones;
-      const url = `/TipoLiquidacionesFE/${productId}`;
+    if (rowData && rowData.idUsuarioPorRol) {
+      const productId = rowData.idUsuarioPorRol;
+      const url = `/UsuarioPorRolFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -124,11 +124,11 @@ function TipoLiquidaciones() {
   );
 }
 
-TipoLiquidaciones.propTypes = {
+UsuarioPorRol.propTypes = {
   row: PropTypes.object, // Add this line for 'row' prop
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default TipoLiquidaciones;
+export default UsuarioPorRol;

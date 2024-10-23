@@ -19,6 +19,22 @@ import ListadoTipoEstablecimiento from "layouts/pages/Pruebas/TipoEstablecimient
 import AltaConceptos from "layouts/pages/Pruebas/Conceptos/AltaConceptos";
 import ListadoConceptos from "layouts/pages/Pruebas/Conceptos";
 import Importar from "layouts/pages/Pruebas/Importar";
+import GestionUsuario from "layouts/pages/Pruebas/GestionUsuarios";
+import UsuarioPorRol from "layouts/pages/Pruebas/UsuariosPorRol";
+import CabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion";
+import ImportarArchivo from "layouts/pages/Pruebas/ImportarArchivoPlano";
+import Establecimientos from "layouts/pages/Pruebas/Establecimientos";
+import TiposFunciones from "layouts/pages/Pruebas/TiposFunciones";
+import TipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones";
+import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
+import AltaCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/AltaCabeceraLiquidacion";
+import AltaPersona from "layouts/pages/Pruebas/Persona/AltaPersona";
+import AltaGestionUsuario from "layouts/pages/Pruebas/GestionUsuarios/AltaGestionUsuario";
+import AltaUsuariosPorRol from "layouts/pages/Pruebas/UsuariosPorRol/AltaUsuariosPorRol";
+import AltaEstablecimiento from "layouts/pages/Pruebas/Establecimientos/AltaEstablecimiento";
+import AltaTiposFunciones from "layouts/pages/Pruebas/TiposFunciones/AltaTiposFunciones";
+import AltaTipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones/AltaTipoLiquidaciones";
+import AltaTipoCategorias from "layouts/pages/Pruebas/TipoCategorias/AltaTipoCategorias";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -132,13 +148,22 @@ export default function App() {
   //Coincidir roles + path(route) con routes.js para no generar conflictos
 
   const RoutesProtegidas = [
+    //----------------------------------Rutas de index
+    {
+      path: "/CabeceraLiquidacionFE",
+      component: CabeceraLiquidacion,
+    },
+    {
+      path: "/ImportarArchivoPlanoFE",
+      component: ImportarArchivo,
+    },
     {
       path: "/PersonaFE",
       component: PersonaListado,
     },
     {
-      path: "/PersonaFE/Nuevo",
-      component: PersonaAlta,
+      path: "/GestionUsuariosFE",
+      component: GestionUsuario,
     },
     {
       path: "/POFFE",
@@ -165,16 +190,87 @@ export default function App() {
       component: AltaTipoEstablecimiento,
     },
     {
+      path: "/UsuariosPorRolFE",
+      component: UsuarioPorRol,
+    },
+    {
       path: "/ConceptosFE",
       component: ListadoConceptos,
+    },
+    {
+      path: "/CarRevistaFE",
+      component: ListadoCarRevista,
+    },
+    {
+      path: "/TipoEstablecimientoFE",
+      component: ListadoTipoEstablecimiento,
+    },
+    {
+      path: "/EstablecimientosFE",
+      component: Establecimientos,
+    },
+    {
+      path: "/TiposFuncionesFE",
+      component: TiposFunciones,
+    },
+    {
+      path: "/TipoLiquidacionesFE",
+      component: TipoLiquidaciones,
+    },
+    {
+      path: "/TipoCategoriasFE",
+      component: TipoCategorias,
+    },
+    {
+      path: "/ImportarFE",
+      component: Importar,
+    },
+    //----------------------------------Rutas de Ver mas
+    //----------------------------------Rutas de Editar
+    //----------------------------------Rutas de Alta
+    {
+      path: "/CabeceraLiquidacionFE/Nuevo",
+      component: AltaCabeceraLiquidacion,
+    },
+    {
+      path: "/PersonaFE/Nuevo",
+      component: AltaPersona,
+    },
+    {
+      path: "/GestionUsuarioFE/Nuevo",
+      component: AltaGestionUsuario,
+    },
+    {
+      path: "/UsuarioPorRolFE/Nuevo",
+      component: AltaUsuariosPorRol,
     },
     {
       path: "/ConceptosFE/Nuevo",
       component: AltaConceptos,
     },
     {
-      path: "/ImportarFE",
-      component: Importar,
+      path: "/CarRevistaFE/Nuevo",
+      component: AltaCarRevista,
+    },
+    {
+      path: "/TipoEstablecimientoFE/Nuevo",
+      component: AltaTipoEstablecimiento,
+    },
+    {
+      path: "/EstablecimientosFE/Nuevo",
+      component: AltaEstablecimiento,
+    },
+    {
+      path: "/TiposFuncionesFE/Nuevo",
+      component: AltaTiposFunciones,
+    },
+    {
+      path: "/TipoLiquidacionesFE/Nuevo",
+      component: AltaTipoLiquidaciones,
+    },
+    {
+      path: "/TipoCategoriasFE/Nuevo",
+      component: AltaTipoCategorias,
     },
   ];
 
