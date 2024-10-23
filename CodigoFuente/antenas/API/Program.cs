@@ -54,15 +54,19 @@ builder.Services.AddControllers().AddJsonOptions(option =>
     JsonIgnoreCondition.WhenWritingNull;
 }); */
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-        {
-            options.Authority = builder.Configuration.GetValue<string>("REACT_APP_AUTH_SERVER_URL");
-            options.Audience = "posts-api";
-            options.RequireHttpsMetadata = false;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false
-            };
+            .AddJwtBearer(options =>
+             options.TokenValidationParameters = new TokenValidationParameters
+             {
+                ValidateIssuer = true,
+                 ValidateAudience = true,
+                 ValidateLifetime = true,
+                 ValidateIssuerSigningKey = true,
+                 ValidIssuer = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+                 ValidAudience = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+                 IssuerSigningKey = new SymmetricSecurityKey(
+                //Encoding.UTF8.GetBytes("_configuration[\"Llave_super_secreta\"]")),
+                Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Ldap:Key"))),//definida por nosotros patron al azar
+                 ClockSkew = TimeSpan.Zero
         });
 
 // adds an authorization policy to make sure the token is for scope 'api1'
