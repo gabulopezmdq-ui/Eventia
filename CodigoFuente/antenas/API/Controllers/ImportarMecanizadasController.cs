@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using Microsoft.AspNetCore.Http;
-using OfficeOpenXml;
+using ClosedXML.Excel;
 using API.DataSchema;
 using API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -23,11 +23,11 @@ namespace API.Controllers
         }
 
         [HttpPost("ImportarExcel")]
-        public async Task<IActionResult> ImportarExcel(IFormFile file)
+        public async Task<IActionResult> ImportarExcel([FromForm] IFormFile file, [FromForm] int idCabecera)
         {
             try
             {
-                await _importacionMecanizadaService.ImportarExcel(file);
+                await _importacionMecanizadaService.ImportarExcel(file, idCabecera);
                 return Ok("Importación exitosa.");
             }
             catch (Exception ex)
