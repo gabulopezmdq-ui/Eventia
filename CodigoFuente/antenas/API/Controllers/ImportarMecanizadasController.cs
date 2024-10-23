@@ -36,5 +36,18 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("RevertirExcel")]
+        public async Task<IActionResult> RevetirImportacionAsync([FromBody] int idCabecera)
+        {
+            try
+            {
+                await _importacionMecanizadaService.RevertirImportacionAsync(idCabecera);
+                return Ok("Importación eliminada");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
