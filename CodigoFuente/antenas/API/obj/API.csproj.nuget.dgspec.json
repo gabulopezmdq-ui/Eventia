@@ -48,14 +48,6 @@
               "target": "Package",
               "version": "[34.0.2, )"
             },
-            "ClosedXML": {
-              "target": "Package",
-              "version": "[0.104.1, )"
-            },
-            "EPPlus": {
-              "target": "Package",
-              "version": "[7.3.1, )"
-            },
             "FluentAssertions": {
               "target": "Package",
               "version": "[7.0.0-alpha.3, )"
@@ -90,10 +82,6 @@
               "target": "Package",
               "version": "[7.0.11, )"
             },
-            "Microsoft.EntityFrameworkCore.InMemory": {
-              "target": "Package",
-              "version": "[7.0.10, )"
-            },
             "Microsoft.EntityFrameworkCore.Proxies": {
               "target": "Package",
               "version": "[7.0.11, )"
@@ -107,10 +95,6 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[7.0.11, )"
-            },
-            "Microsoft.NET.Test.Sdk": {
-              "target": "Package",
-              "version": "[17.0.0, )"
             },
             "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
               "target": "Package",
@@ -135,16 +119,6 @@
             "System.Data.Odbc": {
               "target": "Package",
               "version": "[7.0.0, )"
-            },
-            "xunit": {
-              "target": "Package",
-              "version": "[2.4.2, )"
-            },
-            "xunit.runner.visualstudio": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[2.8.2, )"
             }
           },
           "imports": [
