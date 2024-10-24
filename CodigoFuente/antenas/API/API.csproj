@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\AccountController.cs" />
     <Compile Remove="Controllers\AdministracionController.cs" />
     <Compile Remove="Controllers\ANT_AntenasController.cs" />
     <Compile Remove="Controllers\ANT_ApoderadosController.cs" />
@@ -34,6 +35,7 @@
     <Compile Remove="Controllers\ANT_InspeccionesController.cs" />
     <Compile Remove="Controllers\ANT_PrestadoresController.cs" />
     <Compile Remove="Controllers\ANT_TipoAntenasController.cs" />
+    <Compile Remove="Controllers\ANT_UsuarioController.cs" />
     <Compile Remove="Controllers\ConservadoraController.cs" />
     <Compile Remove="Controllers\MaquinaController.cs" />
     <Compile Remove="Controllers\ObraController.cs" />
@@ -42,6 +44,7 @@
     <Compile Remove="Controllers\SeguroController.cs" />
     <Compile Remove="Controllers\TipoEquipamientoController.cs" />
     <Compile Remove="Controllers\TipoObraController.cs" />
+    <Compile Remove="Controllers\UsuariosController.cs" />
     <Compile Remove="Controllers\VelocidadController .cs" />
     <Compile Remove="DataSchema\ANT_Antenas.cs" />
     <Compile Remove="DataSchema\ANT_Apoderados.cs" />
@@ -50,6 +53,7 @@
     <Compile Remove="DataSchema\ANT_Inspecciones.cs" />
     <Compile Remove="DataSchema\ANT_Prestadores.cs" />
     <Compile Remove="DataSchema\ANT_TipoAntenas.cs" />
+    <Compile Remove="DataSchema\ANT_Usuario.cs" />
     <Compile Remove="DataSchema\ApoderadoXPrestador.cs" />
     <Compile Remove="DataSchema\EV_Administracion.cs" />
     <Compile Remove="DataSchema\EV_Conservadora.cs" />
@@ -69,6 +73,7 @@
     <Compile Remove="DataSchema\ModelConfiguration\ANT_InspeccionesConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ANT_PrestadoresConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ANT_TipoAntenasConfiguration.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\ANT_UsuarioConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\ApoderadoXPrestadorConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_AdministracionConfiguration.cs" />
     <Compile Remove="DataSchema\ModelConfiguration\EV_ConservadoraConfiguration.cs" />
@@ -140,8 +145,6 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="34.0.2" />
-    <PackageReference Include="ClosedXML" Version="0.104.1" />
-    <PackageReference Include="EPPlus" Version="7.3.1" />
     <PackageReference Include="FluentAssertions" Version="7.0.0-alpha.3" />
     <PackageReference Include="IdentityModel" Version="6.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.11" />
@@ -153,7 +156,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.11">
@@ -166,17 +168,10 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="System.Data.Odbc" Version="7.0.0" />
-    <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DataSchema\DTO\" />
     <Folder Include="DataSchema\Extensions\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
