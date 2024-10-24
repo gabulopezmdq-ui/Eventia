@@ -35,6 +35,8 @@ import AltaEstablecimiento from "layouts/pages/Pruebas/Establecimientos/AltaEsta
 import AltaTiposFunciones from "layouts/pages/Pruebas/TiposFunciones/AltaTiposFunciones";
 import AltaTipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones/AltaTipoLiquidaciones";
 import AltaTipoCategorias from "layouts/pages/Pruebas/TipoCategorias/AltaTipoCategorias";
+import VerCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/VerCabeceraLiquidacion";
+import VerGestionUsuarios from "layouts/pages/Pruebas/GestionUsuarios/VerGestionUsuarios";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -60,10 +62,10 @@ export default function App() {
 
   const isTokenAvailable = () => {
     const token = sessionStorage.getItem("token");
-    /*if (!token || isTokenExpired(token)) {
+    if (!token || isTokenExpired(token)) {
       sessionStorage.removeItem("token");
       return false;
-    }*/
+    }
     return true;
   };
 
@@ -218,7 +220,23 @@ export default function App() {
       component: Importar,
     },
     //----------------------------------Rutas de Ver mas
+    {
+      path: "/VerCabeceraLiquidacionFE/:id",
+      component: VerCabeceraLiquidacion,
+    },
+    {
+      path: "/VerGestionUsuariosFE/:id",
+      component: VerGestionUsuarios,
+    },
     //----------------------------------Rutas de Editar
+    {
+      path: "/VerCabeceraLiquidacionFe/Edit/:id",
+      component: AltaCabeceraLiquidacion,
+    },
+    {
+      path: "/VerGestionUsuariosFE/Edit/:id",
+      component: AltaGestionUsuario,
+    },
     //----------------------------------Rutas de Alta
     {
       path: "/CabeceraLiquidacionFE/Nuevo",
