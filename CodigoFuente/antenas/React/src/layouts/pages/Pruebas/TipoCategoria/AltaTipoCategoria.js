@@ -1,0 +1,100 @@
+// @mui material components
+import Grid from "@mui/material/Grid";
+
+// Material Dashboard 2 PRO React components
+import MDBox from "components/MDBox";
+import { useParams } from "react-router-dom";
+import { useState } from "react";
+
+// Material Dashboard 2 PRO React examples
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import Footer from "examples/Footer";
+import Formulario from "components/Formulario";
+import { Field } from "formik";
+import MDDropzone from "components/MDDropzone";
+
+//Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
+//Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
+
+function AltaTipoCategoria() {
+  const { id } = useParams();
+  let labelTitulo = "Alta TipoCategoria";
+  if (id) {
+    labelTitulo = "Editar TipoCategoria";
+  }
+  const [formData, setFormData] = useState({});
+
+  const handleChange = (e) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      [e.target.name]: e.target.value,
+    }));
+  };
+  //------------------------Validaciones Especificas-------------------------------------
+  function validateCodEst(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 2) {
+      return "Los Códigos de Categoria no pueden tener más de 2 caracteres.";
+    }
+    return null;
+  }
+  //----------------------Fin Validadciones--------------------
+  const steps = [
+    {
+      label: labelTitulo + " Paso 1",
+      fields: [
+        {
+          type: "text",
+          label: "Cod Tipo Cat.",
+          name: "codCategoria",
+          required: true,
+          customValidation: validateCodEst,
+        },
+        {
+          type: "text",
+          label: "Cod Categoria MGP",
+          name: "codCategoriaMGP",
+          required: true,
+          customValidation: validateCodEst,
+        },
+        {
+          type: "text",
+          label: "Descripcion",
+          name: "descripcion",
+          required: true,
+        },
+        {
+          type: "select",
+          label: "Vigente",
+          name: "vigente",
+          customOptions: [
+            { value: "S", label: "Si" },
+            { value: "S", label: "No" },
+          ],
+          valueField: "value",
+          optionField: "label",
+          required: true,
+        },
+      ],
+    },
+  ];
+
+  const apiUrl = process.env.REACT_APP_API_URL + `TiposCategorias`;
+  return (
+    <DashboardLayout>
+      <DashboardNavbar />
+      <MDBox py={3} mb={20} height="65vh">
+        <Grid container justifyContent="center" alignItems="center" sx={{ height: "100%", mt: 8 }}>
+          <Grid item xs={12} lg={10}>
+            <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
+          </Grid>
+        </Grid>
+      </MDBox>
+    </DashboardLayout>
+  );
+}
+
+export default AltaTipoCategoria;
