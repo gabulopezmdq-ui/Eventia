@@ -63,7 +63,7 @@ import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
 const routes = [
   {
     type: "collapse",
-    icon: <Icon>person</Icon>,
+    icon: <Icon>account_balance_wallet</Icon>,
     name: "Liquidaciones",
     key: "liquidaciones",
     collapse: [
@@ -99,7 +99,7 @@ const routes = [
   { type: "divider", key: "divider-1" },
   {
     type: "collapse",
-    icon: <Icon>person</Icon>,
+    icon: <Icon>security</Icon>,
     name: "Seguridad",
     key: "Seguridad",
     collapse: [

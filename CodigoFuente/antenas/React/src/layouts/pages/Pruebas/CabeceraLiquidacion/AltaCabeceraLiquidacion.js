@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaCabeceraLiquidacion() {
   const { id } = useParams();
-  let labelTitulo = "Alta CarRevista";
+  let labelTitulo = "Alta Cabecera Liquidacion";
   if (id) {
-    labelTitulo = "Editar CarRevista";
+    labelTitulo = "Editar Cabecera Liquidacion";
   }
   const [formData, setFormData] = useState({});
 
@@ -36,9 +36,22 @@ function AltaCabeceraLiquidacion() {
     {
       label: labelTitulo + " Paso 1",
       fields: [
-        { type: "text", label: "CodPcia", name: "codPcia", required: true },
-        { type: "text", label: "Descripcion", name: "descripcion", required: true },
-        { type: "text", label: "codMGP", name: "codMgp", required: true },
+        {
+          type: "select",
+          label: "Tipo de Liquidacion",
+          name: "idTipoLiquidacion",
+          apiUrl: process.env.REACT_APP_API_URL + "TiposLiquidaciones/GetAll",
+          valueField: "idTipoLiquidacion", // Nombre del campo del valor
+          optionField: "descripcion",
+          required: true,
+        },
+        { type: "text", label: "Mes Liquidacion", name: "mesLiquidacion", required: true },
+        { type: "text", label: "Año Liquidacion", name: "anioLiquidacion", required: true },
+        { type: "text", label: "Usuario", name: "usuario", required: true },
+        { type: "text", label: "Observaciones", name: "observaciones", required: true },
+        { type: "text", label: "Inicio Liquidacion", name: "inicioLiquidacion", required: true },
+        { type: "text", label: "Fin Liquidacion", name: "finLiquidacion", required: true },
+        { type: "text", label: "Estado", name: "estado", required: true },
         {
           type: "select",
           label: "Vigente",
@@ -55,7 +68,7 @@ function AltaCabeceraLiquidacion() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `CarRevista`;
+  const apiUrl = process.env.REACT_APP_API_URL + `CabeceraLiquidacion`;
   return (
     <DashboardLayout>
       <DashboardNavbar />
