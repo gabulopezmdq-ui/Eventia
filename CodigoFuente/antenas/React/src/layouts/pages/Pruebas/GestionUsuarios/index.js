@@ -56,9 +56,9 @@ function GestionUsuario() {
     navigate("/GestionUsuarioFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idGestionUsuario) {
-      const productId = rowData.idGestionUsuario;
-      const url = `/GestionUsuarioFE/${productId}`;
+    if (rowData && rowData.idUsuario) {
+      const productId = rowData.idUsuario;
+      const url = `/VerGestionUsuariosFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");

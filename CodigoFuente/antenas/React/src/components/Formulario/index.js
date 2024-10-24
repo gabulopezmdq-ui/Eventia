@@ -60,9 +60,9 @@ function Formulario({
     if (productId) {
       axios
         .get(apiGetbyId, {
-          /*headers: {
+          headers: {
             Authorization: `Bearer ${token}`, // Envía el token en los headers
-          },*/
+          },
         })
         .then((response) => {
           setFormData(response.data);
@@ -153,9 +153,9 @@ function Formulario({
     if (productId) {
       axios
         .put(apiUrlWithIdRepTecnico, filteredFormData, {
-          /*headers: {
+          headers: {
             Authorization: `Bearer ${token}`,
-          },*/
+          },
         })
         .then((response) => {
           navigate(-2);
@@ -178,9 +178,9 @@ function Formulario({
     } else {
       axios
         .post(apiUrlWithIdRepTecnico, filteredFormData, {
-          /*headers: {
+          headers: {
             Authorization: `Bearer ${token}`,
-          },*/
+          },
         })
         .then((response) => {
           navigate(-1);
