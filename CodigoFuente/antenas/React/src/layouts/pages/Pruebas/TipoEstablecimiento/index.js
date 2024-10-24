@@ -59,7 +59,7 @@ function TipoEstablecimiento() {
   const handleVer = (rowData) => {
     if (rowData && rowData.idTipoEstablecimiento) {
       const productId = rowData.idTipoEstablecimiento;
-      const url = `/TipodEstablecimientoFE/${productId}`;
+      const url = `/TiposEstablecimientoFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
