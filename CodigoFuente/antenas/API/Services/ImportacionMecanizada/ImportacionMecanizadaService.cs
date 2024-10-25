@@ -55,7 +55,11 @@ namespace API.Services
                                                              .ToListAsync();
             _context.MEC_TMPErroresTiposEstablecimientos.RemoveRange(erroresTiposEstablecimientos);
 
-      
+            var erroresMecanizada = await _context.MEC_TMPErroresMecanizadas
+                                                  .Where(e => e.IdCabecera == idCabecera)
+                                                  .ToListAsync();
+            _context.MEC_TMPErroresMecanizadas.RemoveRange(erroresMecanizada);
+
             // Guardar los cambios tras eliminar registros
             await _context.SaveChangesAsync();
 
