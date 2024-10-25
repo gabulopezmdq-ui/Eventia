@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[34.0.2, )"
             },
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.104.1, )"
+            },
             "FluentAssertions": {
               "target": "Package",
               "version": "[7.0.0-alpha.3, )"
