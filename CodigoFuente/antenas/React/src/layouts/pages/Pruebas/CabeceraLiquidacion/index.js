@@ -56,9 +56,9 @@ function CabeceraLiquidacion() {
     navigate("/CabeceraLiquidacionFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idCabeceraLiquidacion) {
-      const productId = rowData.idCabeceraLiquidacion;
-      const url = `/CabeceraLiquidacionFE/${productId}`;
+    if (rowData && rowData.idCabecera) {
+      const productId = rowData.idCabecera;
+      const url = `/VerCabeceraLiquidacionFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");

@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaGestionUsuario() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta Gestion de Usuario";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar Gestion de Usuario";
   }
   const [formData, setFormData] = useState({});
 
@@ -37,26 +37,19 @@ function AltaGestionUsuario() {
       label: labelTitulo + " Paso 1",
       fields: [
         { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
+        { type: "text", label: "Email", name: "email", required: true },
         {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
-          required: true,
+          type: "checkbox",
+          label: "Activo",
+          name: "activo",
+          checked: formData.activo,
+          onChange: handleChange,
         },
       ],
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `Personas`;
+  const apiUrl = process.env.REACT_APP_API_URL + `Usuarios`;
   return (
     <DashboardLayout>
       <DashboardNavbar />

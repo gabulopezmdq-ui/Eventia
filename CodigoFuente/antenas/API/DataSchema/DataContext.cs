@@ -16,10 +16,10 @@ namespace API.DataSchema
         
         public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
-        public DbSet<MEC_Conceptos> MEC_TiposEstablecimientos { get; set; }
-        public DbSet<MEC_Conceptos> MEC_Establecimientos { get; set; }
+        public DbSet<MEC_TiposEstablecimientos> MEC_TiposEstablecimientos { get; set; }
+        public DbSet<MEC_Establecimientos> MEC_Establecimientos { get; set; }
         public DbSet<MEC_TiposCategorias> MEC_TiposCategorias { get; set; }
-        public DbSet<MEC_Conceptos> MEC_Personas { get; set; }
+        public DbSet<MEC_Personas> MEC_Personas { get; set; }
         public DbSet<MEC_POF> MEC_POF { get; set; }
         public DbSet<MEC_TiposLiquidaciones> MEC_TiposLiquidaciones { get; set; }
         public DbSet<MEC_CabeceraLiquidacion> MEC_CabeceraLiquidacion { get; set; }

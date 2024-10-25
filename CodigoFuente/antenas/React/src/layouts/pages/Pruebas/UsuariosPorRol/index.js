@@ -25,10 +25,10 @@ function UsuarioPorRol() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "UsuarioPorRols/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+      .get(process.env.REACT_APP_API_URL + "RolesXUsuarios/getall", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
@@ -93,10 +93,8 @@ function UsuarioPorRol() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "nombre" },
-                  { Header: "Apellido", accessor: "apellido" },
-                  { Header: "Legajo", accessor: "legajo" },
-                  { Header: "DNI", accessor: "dni" },
+                  { Header: "Nombre", accessor: "usuario.nombre" },
+                  { Header: "Rol", accessor: "rol.nombreRol" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",
