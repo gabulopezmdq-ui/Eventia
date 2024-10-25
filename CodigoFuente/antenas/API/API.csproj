@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\AccountController.cs" />
     <Compile Remove="Controllers\AdministracionController.cs" />
     <Compile Remove="Controllers\ANT_AntenasController.cs" />
     <Compile Remove="Controllers\ANT_ApoderadosController.cs" />
@@ -134,6 +133,7 @@
     <Compile Remove="Repositories\IANT_PrestadoresRepository.cs" />
     <Compile Remove="Services\ICF_ProcesoxGrupoService - Copy.cs" />
     <Compile Remove="Startup.cs" />
+    <Compile Remove="Test\ImportacionMecanizadaServiceTests.cs" />
     <Compile Remove="Utility\ImageTools.cs" />
     <Compile Remove="Utility\LdapConnectionProvider.cs" />
   </ItemGroup>
@@ -145,6 +145,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="34.0.2" />
+    <PackageReference Include="ClosedXML" Version="0.104.1" />
     <PackageReference Include="FluentAssertions" Version="7.0.0-alpha.3" />
     <PackageReference Include="IdentityModel" Version="6.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.11" />
@@ -174,6 +175,7 @@
     <Folder Include="DataSchema\DTO\" />
     <Folder Include="DataSchema\Extensions\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Test\" />
   </ItemGroup>
 
 

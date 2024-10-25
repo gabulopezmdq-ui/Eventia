@@ -30,6 +30,40 @@ namespace API.Services
 
         public async Task ImportarExcel(IFormFile file, int idCabecera)
         {
+            // Primero se borran los registros de las tablas TMPErrores
+            var erroresEstablecimientos = await _context.MEC_TMPErroresEstablecimientos
+                                                        .Where(e => e.IdCabecera == idCabecera)
+                                                        .ToListAsync();
+            _context.MEC_TMPErroresEstablecimientos.RemoveRange(erroresEstablecimientos);
+
+            var erroresFuncion = await _context.MEC_TMPErroresFuncion
+                                               .Where(e => e.IdCabecera == idCabecera)
+                                               .ToListAsync();
+            _context.MEC_TMPErroresFuncion.RemoveRange(erroresFuncion);
+
+            var erroresConceptos = await _context.MEC_TMPErroresConceptos
+                                                 .Where(e => e.IdCabecera == idCabecera)
+                                                 .ToListAsync();
+            _context.MEC_TMPErroresConceptos.RemoveRange(erroresConceptos);
+
+            var erroresCarRevista = await _context.MEC_TMPErroresCarRevista
+                                                  .Where(e => e.IdCabecera == idCabecera)
+                                                  .ToListAsync();
+            _context.MEC_TMPErroresCarRevista.RemoveRange(erroresCarRevista);
+            var erroresTiposEstablecimientos = await _context.MEC_TMPErroresTiposEstablecimientos
+                                                             .Where(e => e.IdCabecera == idCabecera)
+                                                             .ToListAsync();
+            _context.MEC_TMPErroresTiposEstablecimientos.RemoveRange(erroresTiposEstablecimientos);
+
+            var erroresMecanizada = await _context.MEC_TMPErroresMecanizadas
+                                                  .Where(e => e.IdCabecera == idCabecera)
+                                                  .ToListAsync();
+            _context.MEC_TMPErroresMecanizadas.RemoveRange(erroresMecanizada);
+
+            // Guardar los cambios tras eliminar registros
+            await _context.SaveChangesAsync();
+
+            //revisa el archivo y comienza la importación
             if (file == null || file.Length == 0)
                 throw new ArgumentException("Archivo no proporcionado.");
 
