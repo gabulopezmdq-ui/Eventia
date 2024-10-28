@@ -1,0 +1,568 @@
+[33mcommit d27a42731baadd284d2d4d408f83a753240565af[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Mon Oct 28 11:00:33 2024 -0300
+
+    merge
+
+[33mcommit d79e33765199d2421857323555ac2c761b396524[m
+Merge: 6268803 355306c
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Mon Oct 28 11:00:25 2024 -0300
+
+    Merge remote-tracking branch 'origin/nestor'
+
+[33mcommit 626880373a5d6d25fe9f5e75a2cc0a5d7e769e14[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Mon Oct 28 10:59:20 2024 -0300
+
+    POF
+
+[33mcommit 355306c28b6c86295de51619083a126720f4da43[m[33m ([m[1;31morigin/nestor[m[33m)[m
+Author: efrontera <ernestorfrontera@gmail.com>
+Date:   Mon Oct 28 10:58:28 2024 -0300
+
+    pof
+
+[33mcommit 6a3eaa63f7ba32a2d9c81b1377aa2108fe9831c7[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Mon Oct 28 10:53:53 2024 -0300
+
+    POF
+
+[33mcommit e24fd48ddfa3bd749c0ff3cecbbfb0c53ec8181b[m
+Merge: d115bee fc34ed5
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Mon Oct 28 08:27:57 2024 -0300
+
+    Merge remote-tracking branch 'origin/nestor'
+
+[33mcommit d115bee285f07cd38448e2343c393517b91c53b5[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Mon Oct 28 08:25:49 2024 -0300
+
+    merge
+
+[33mcommit fc34ed54bcce08f8ef2449ce64b2703751304f5c[m[33m ([m[1;32mnestor[m[33m)[m
+Author: efrontera <ernestorfrontera@gmail.com>
+Date:   Fri Oct 25 13:44:07 2024 -0300
+
+    pof
+
+[33mcommit fe9220ce3a2856f52a6377828b930401f5797193[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 12:14:30 2024 -0300
+
+    documentacion
+
+[33mcommit 6817df1c46e01aa91ac341b4c9ee354efcf2ad77[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 11:52:42 2024 -0300
+
+    documentacion pof
+
+[33mcommit 14391fbbdbe8d68275a95d5578638b534a1f23ed[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 10:06:28 2024 -0300
+
+    documentacion
+
+[33mcommit b156ad8ab82bfe96c7cdba19cdb0b618ecaed9b6[m
+Merge: 16b8bbb 65d29b2
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 10:01:57 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit 65d29b268cdf4606459ccae85f85e9f5ae700afc[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 10:01:43 2024 -0300
+
+    push
+
+[33mcommit db8c24643582880a20272be3454acd9cfadbefd6[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 10:01:33 2024 -0300
+
+    push
+
+[33mcommit 16b8bbb52867a28c36149e98bbd9816bb614430e[m
+Merge: e500416 97a3e92
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 10:00:25 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit 97a3e92a5f72bb012fe557dfd8f19b561a392702[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:59:55 2024 -0300
+
+    documentacion
+
+[33mcommit e500416d0cc76eb6a7568546eb41518ff0e23f7f[m
+Merge: 35153cb 551b0ba
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:54:29 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit 551b0ba5928167a36397a2483a232d6fca6c4da6[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:53:44 2024 -0300
+
+    documentacion
+
+[33mcommit 35153cb8ad3351c5ab5cd4f70e05367807ef46a9[m
+Merge: af15142 9127a50
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:50:18 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit 9127a50e6adbab385bbb4103253155ab1eddc31e[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:48:53 2024 -0300
+
+    merge documentacion
+
+[33mcommit c9bead804176dd1b3da2f436bada0ddeea468313[m
+Merge: b85b0f4 69a9425
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:48:34 2024 -0300
+
+    Merge remote-tracking branch 'origin/documentacion'
+
+[33mcommit 69a9425bb06993585744954916a99b917bf98a1b[m[33m ([m[1;31morigin/documentacion[m[33m)[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:45:18 2024 -0300
+
+    documentacion
+
+[33mcommit b85b0f49e2ac14f37b1923510adae046d33dce18[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 09:43:36 2024 -0300
+
+    push
+
+[33mcommit 553047b895173bf4e3e7ab2f712c4d685f049859[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 08:50:19 2024 -0300
+
+    push
+
+[33mcommit 9d4048f32d16b21aae168859012eb3832062d893[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 08:50:08 2024 -0300
+
+    push
+
+[33mcommit 1b871fb9a9bbc91ba851ba3a1d7d720205de7d21[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Oct 25 08:45:13 2024 -0300
+
+    push
+
+[33mcommit 1e67f3e08ab00c2cd1805a3aa6b29b564bfea053[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Oct 24 15:33:39 2024 -0300
+
+    .
+
+[33mcommit baae9247ad6f0596b657663e1237f25285268c70[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 24 12:11:12 2024 -0300
+
+    merge
+
+[33mcommit ac8546178155e2cfd491fff8b584a1aef7ccf19e[m
+Merge: 679edf4 f60cb46
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 24 12:11:03 2024 -0300
+
+    Merge remote-tracking branch 'origin/nestor'
+
+[33mcommit 679edf408e276763dabc44c6003483382e89e39f[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 24 12:07:19 2024 -0300
+
+    merge
+
+[33mcommit d1a76da4f95ce535983de24ecdad5ac128e59a04[m[33m ([m[1;31morigin/correciones[m[33m, [m[1;32mcorreciones[m[33m)[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 24 12:04:06 2024 -0300
+
+    push
+
+[33mcommit 5668b6f2b48a21020f3e2ec24a9b1c2f314509fa[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 24 12:00:09 2024 -0300
+
+    correcion
+
+[33mcommit f60cb463363fa7d8080502c0866c1b111c92fc89[m
+Author: efrontera <ernestorfrontera@gmail.com>
+Date:   Thu Oct 24 11:48:23 2024 -0300
+
+    altas
+
+[33mcommit af15142c37200e01ed67eda28628ab92ea32437c[m
+Merge: 0d62370 c2b2b3e
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Oct 24 10:42:55 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit 0d623707bbc3ca367a54895fd4408014d1c099b9[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Oct 24 10:41:32 2024 -0300
+
+    documentacion
+
+[33mcommit 2761ec51f6882efb66faadaca13663cb6bb87bf5[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Oct 24 10:40:49 2024 -0300
+
+    documentacion
+
+[33mcommit c17c762022579a20fb004e8e0a12945672c397dd[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Oct 24 10:38:34 2024 -0300
+
+    documentacion
+
+[33mcommit c2b2b3e69b302576a6c27030f10d58408e16b331[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 24 09:51:58 2024 -0300
+
+    tablas tmp
+
+[33mcommit 74d071abe5ab4ad70245e320f7f0a902a493638e[m
+Merge: 8b4bd43 002d014
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 11:47:23 2024 -0300
+
+    Merge remote-tracking branch 'origin/documentacion'
+
+[33mcommit 002d014ee94b9696b81b693a96fd16d6fd11d3aa[m[33m ([m[1;32mdocumentacion[m[33m)[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Wed Oct 23 11:44:57 2024 -0300
+
+    push
+
+[33mcommit ca37797ec735e867908135e8d88443771e0f2959[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Wed Oct 23 11:33:00 2024 -0300
+
+    documentacion
+
+[33mcommit 8b4bd43ff055cc39f7cc6f7e56eda021c73ec73e[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 11:00:34 2024 -0300
+
+    merge
+
+[33mcommit 1cfd076bfb0dd0cbf8460c113e4a3439b50ad058[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 11:00:12 2024 -0300
+
+    merge
+
+[33mcommit 66a9e8f5be5bbba4474a350c3938d4eeaefa3652[m
+Merge: ce4b9e8 ed83055
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 11:00:01 2024 -0300
+
+    Merge remote-tracking branch 'origin/nestor'
+
+[33mcommit ed83055ec90d888943436dbdb8982f68da933b23[m
+Author: efrontera <ernestorfrontera@gmail.com>
+Date:   Wed Oct 23 10:57:28 2024 -0300
+
+    se agrego el menu
+
+[33mcommit ce4b9e8d9e080c89b402541bc4919c8f3fcaeae9[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 10:56:22 2024 -0300
+
+    eliminacion de registros
+
+[33mcommit 63616a30c412a304331b50d8d0e4e220bc6fd471[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 10:35:27 2024 -0300
+
+    eliminacion de registros
+
+[33mcommit 4cdef70295fc62680880681643830951da24759a[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 08:23:53 2024 -0300
+
+    merge
+
+[33mcommit 8365d2ed14c9806ad134e04ae214e2692aa863a4[m
+Merge: 2fae03b b2675b8
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 08:23:42 2024 -0300
+
+    Merge remote-tracking branch 'origin/nestor'
+
+[33mcommit 2fae03bbe584b3dffcc653cf79db8f8bd70ff495[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Oct 23 08:21:22 2024 -0300
+
+    importacion excel
+
+[33mcommit b2675b82a5453bdb2d4f91ab9a1f48ce933081ec[m
+Author: efrontera <ernestorfrontera@gmail.com>
+Date:   Wed Oct 23 08:09:21 2024 -0300
+
+     menu
+
+[33mcommit 288b64c70a33f8bb74d552811f300ac34bad04e0[m
+Merge: 21b2b85 0d71b6b
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 17 09:05:16 2024 -0300
+
+    Merge remote-tracking branch 'origin/nestor'
+
+[33mcommit 0d71b6b96fbb28e6dfcbfd167609202ea3116507[m
+Author: efrontera <ernestorfrontera@gmail.com>
+Date:   Thu Oct 17 08:46:29 2024 -0300
+
+    menu
+
+[33mcommit 21b2b85fff00e1f8d75221bec6fe43fca19e60c3[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Oct 17 08:43:58 2024 -0300
+
+    push
+
+[33mcommit 86279bcbc6af332f8b1199ef08e342974a1d0f65[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Oct 15 12:02:12 2024 -0300
+
+    front
+
+[33mcommit 2a245b5188d0c27473f23850ee758ac29d137de6[m
+Merge: ca38e1d fd373e7
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Oct 15 12:01:41 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit ca38e1dbe20ced4bee1b12931cfbad9f00c0f20e[m[33m ([m[1;32mfrontguido[m[33m)[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Oct 15 11:57:50 2024 -0300
+
+    front
+
+[33mcommit fd373e7d30bacc33b3b1625365d9a5a940d37a10[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Tue Oct 8 14:57:29 2024 -0300
+
+    CAB LIQUIDACION
+
+[33mcommit 403094665182cda431da79f77c2e84f61abcd27b[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Tue Oct 8 14:16:30 2024 -0300
+
+    ppt
+
+[33mcommit 50dd0d786225ce9e6726f897f38bf6939007b720[m
+Merge: 9f4b614 e8568d1
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Tue Oct 1 16:02:36 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit 9f4b614a3ca87f639e8e1b53fb625c5246af38c9[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Tue Oct 1 16:02:22 2024 -0300
+
+    ppt
+
+[33mcommit e8568d1076b4065564495d1345950d4f8e16960c[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Wed Sep 25 14:00:40 2024 -0300
+
+    login backend
+
+[33mcommit 14a7225a0c7a1e73e38882c7f9405d8808c2004a[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Sep 24 10:59:46 2024 -0300
+
+    correcion db
+
+[33mcommit 2ac86b39324c92ae360e22cd434338ebbbc6465b[m
+Merge: 19b1f4b 98b9a06
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Sep 24 10:59:28 2024 -0300
+
+    Merge branch 'main' of http://gitlab.mardelplata.gov.ar/net/mecanizadas
+
+[33mcommit 98b9a06587debf8b605968c4526755f596e57a1a[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Tue Sep 24 10:21:34 2024 -0300
+
+    glo
+
+[33mcommit 19b1f4b75735f96f29bb336524013499d3aa2af6[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Sep 24 09:13:44 2024 -0300
+
+    pdfs
+
+[33mcommit 8146ae726da52cd65fdd1066687f655468aca571[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Fri Sep 20 11:41:09 2024 -0300
+
+    glo
+
+[33mcommit 2a815eddbae946e5ca10d7acb16e27f4426fa73d[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Fri Sep 6 14:53:23 2024 -0300
+
+    c
+
+[33mcommit 54ea91ac828b6b58ed3b44cb14528e0c6143d5e0[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Fri Sep 6 14:51:43 2024 -0300
+
+    c
+
+[33mcommit ce559d201d144729b72c5d0f070177a013db49d4[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Fri Sep 6 14:51:16 2024 -0300
+
+    c
+
+[33mcommit d1b3dd24c946b85f7dbbfcb2134a40f843587f41[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Fri Sep 6 14:50:47 2024 -0300
+
+    c
+
+[33mcommit aa0329e54e65cfde9a236957f5acd4b64681f872[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Fri Sep 6 14:50:18 2024 -0300
+
+    c
+
+[33mcommit 5c489ae339903b23767cd01c9d1fcbfc212c47d7[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Fri Sep 6 14:49:39 2024 -0300
+
+    c
+
+[33mcommit 8cbb37de3d15823ef076e7e34ff34f9ff49f95f0[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Fri Sep 6 14:48:42 2024 -0300
+
+    requerimientos
+
+[33mcommit 25b3c3018988c69d01d9549694607a9f6843aad7[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Sep 3 09:41:41 2024 -0300
+
+    agrega tabla CabeceraLiquidacion
+
+[33mcommit d359040b263ea9d18f2b239f4d1b746acd783b7b[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Tue Sep 3 09:34:44 2024 -0300
+
+    cabecera
+
+[33mcommit afaa7b38ba22477fa450d9f0ba38fbbdc6b08b92[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Tue Sep 3 09:34:16 2024 -0300
+
+    cabecera
+
+[33mcommit 912f94a4bdf7f9799238187b1ccaeefa17c32c55[m
+Author: vuriarte <vuriarte@mardelplata.gov.ar>
+Date:   Tue Sep 3 09:28:37 2024 -0300
+
+    Cabecera
+
+[33mcommit b0afea9acf6af44f745ebf00bab687b687e1d7c0[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Aug 29 15:06:02 2024 -0300
+
+    Doc Funcional
+
+[33mcommit 5b4280eed78c664982e05c148e3f34fb7eb04601[m
+Merge: 6512997 bbdd55a
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Aug 27 12:23:02 2024 -0300
+
+    Merge remote-tracking branch 'origin/frontend'
+
+[33mcommit 6512997b9ef741f5714748d403455691cc388ddc[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Tue Aug 27 12:21:34 2024 -0300
+
+    .
+
+[33mcommit bbdd55a205c9cd77ae2299fc711320b9edc92011[m[33m ([m[1;31morigin/frontend[m[33m, [m[1;32mfrontend[m[33m)[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Aug 27 11:45:37 2024 -0300
+
+    pantallas
+
+[33mcommit d130727d4a10bf896b3c1ced5ad9d68ccf36548b[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Tue Aug 27 11:28:00 2024 -0300
+
+    pantallas
+
+[33mcommit 5a3c89104b180399c24bc1d102f6be75043793bd[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Mon Aug 26 15:25:25 2024 -0300
+
+    GLO requerimientos funcionales
+
+[33mcommit 168ce3f031ee8e64ecf3ca41d8ce7c001e4748b1[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Aug 23 14:10:01 2024 -0300
+
+    parametrica persona
+
+[33mcommit 6f413eb76cb0f35bc337b5f67d14d81419b90034[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Aug 23 11:30:39 2024 -0300
+
+    parametrica persona
+
+[33mcommit 6f55b4c58bdc4374a9329d7d18e0009f4e245f6d[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Fri Aug 23 10:06:49 2024 -0300
+
+    formulario
+
+[33mcommit c919cccf7846f0d4298dfe87389298980ebe2a4a[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Aug 22 14:18:21 2024 -0300
+
+    GLO Documentacion
+
+[33mcommit 3aa0936488e42e01925127f3758cf215bd4e9735[m
+Author: gcassulo <gcassulo@mardelplata.gob.ar>
+Date:   Thu Aug 22 12:59:53 2024 -0300
+
+    agrega plantilla react
+
+[33mcommit 629be3179741f9fc1fd7f5440c1b0c55f7b8d17c[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Aug 22 11:49:19 2024 -0300
+
+    GLO pof
+
+[33mcommit b572ec832467dbc7b90c594eb287f54c2ea66038[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Aug 22 09:46:47 2024 -0300
+
+    GLO personas2
+
+[33mcommit a84b7a1a1299edb3d1ff265e0e824e0ea3be4cb4[m
+Author: gabrielalopez <gabrielalopez@mardelplata.gob.ar>
+Date:   Thu Aug 22 08:34:04 2024 -0300
+
+    GLO parametros
