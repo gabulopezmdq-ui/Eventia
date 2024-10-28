@@ -25,6 +25,12 @@ namespace API.DataSchema
         public DbSet<MEC_CabeceraLiquidacion> MEC_CabeceraLiquidacion { get; set; }
         public DbSet<MEC_TiposFunciones> MEC_TiposFunciones { get; set; }
         public DbSet<MEC_TMPMecanizadas> MEC_TMPMecanizadas { get; set; }
+        public DbSet<MEC_TMPErroresEstablecimientos> MEC_TMPErroresEstablecimientos { get; set; }
+        public DbSet<MEC_TMPErroresFuncion> MEC_TMPErroresFuncion { get; set; }
+        public DbSet<MEC_TMPErroresConceptos> MEC_TMPErroresConceptos { get; set; }
+        public DbSet<MEC_TMPErroresCarRevista> MEC_TMPErroresCarRevista { get; set; }
+        public DbSet<MEC_TMPErroresTiposEstablecimientos> MEC_TMPErroresTiposEstablecimientos { get; set; }
+        public DbSet<MEC_TMPErroresMecanizadas> MEC_TMPErroresMecanizadas { get; set; }
         public DbSet<MEC_Usuarios> MEC_Usuarios { get; set; }
         public DbSet<MEC_Roles> MEC_Roles { get; set; }
         public DbSet<MEC_RolesXUsuarios> MEC_RolesXUsuarios { get; set; }
@@ -41,6 +47,12 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_CabeceraLiquidacionConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TiposFuncionesConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TMPMecanizadaConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TMPErroresEstablecimientosConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TMPErroresFuncionConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TMPErroresConceptosConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TMPErroresCarRevistaConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TMPErroresTipoEstablecimientoConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_TMPErroresMecanizadasConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_UsuariosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_RolesConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_RolesXUsuariosConfiguration());

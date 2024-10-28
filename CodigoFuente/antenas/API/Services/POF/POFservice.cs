@@ -161,5 +161,22 @@ namespace API.Services
             await _context.SaveChangesAsync();
             return "POF registrada correctamente.";
         }
+
+        // Servicio para registrar suplencia
+        public async Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
+            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
+            string sinHaberes, string subvencionada, string vigente)
+        {
+            // Verificar si ya existe un registro en MEC_POF para esta combinación
+            if (await _context.MEC_POF.AnyAsync(p => p.IdEstablecimiento == idEstablecimiento &&
+                                                        p.IdPersona == idPersona &&
+                                                        p.Secuencia == secuencia))
+            {
+                return "Ya existe un registro en MEC_POF para esta combinación de Establecimiento, Persona y Secuencia.";
+            }
+
+            // Si no existe, aquí podrías crear una nueva entrada para la suplencia si así lo deseas
+            return "Puede proceder a registrar la suplencia.";
+        }
     }
 }
