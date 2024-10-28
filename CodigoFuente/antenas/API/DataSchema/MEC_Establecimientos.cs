@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using API.DataSchema.Interfaz;
+using System.Collections.Generic;
 
 namespace API.DataSchema
 {
-    public class MEC_Establecimientos
+    public class MEC_Establecimientos : IRegistroUnico
     {
         public int IdEstablecimiento { get; set; }
         public string NroDiegep { get; set; }
@@ -18,6 +19,7 @@ namespace API.DataSchema
         public string Ruralidad { get; set; }
         public string Subvencion { get; set; }
         public string Vigente { get; set; }
+        public string[] UniqueProperties => new[] { "NroDiegep" }; //  CodCategoria es unico
         public virtual MEC_TiposEstablecimientos? TipoEstablecimientos { get; set; }
     }
 }

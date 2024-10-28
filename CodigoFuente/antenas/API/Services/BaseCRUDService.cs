@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using API.DataSchema.Interfaz;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -37,6 +38,11 @@ namespace API.Services
 
         public async Task Add(T genericClass)
         {
+            // Verificar si ya existe un registro similar
+            if (await IsDuplicate(genericClass))
+            {
+                throw new InvalidOperationException("El registro ya existe.");
+            }
             await _genericRepo.AddWithImage(genericClass);
         }
 
@@ -55,7 +61,40 @@ namespace API.Services
             {
                 throw e;
             }
-            
+
+        }
+
+        // Método para verificar duplicados
+        private async Task<bool> IsDuplicate(T entity)
+        {
+            if (entity is not IRegistroUnico uniqueEntity)
+            {
+                throw new InvalidOperationException("La entidad no implementa IRegistroUnico.");
+            }
+
+            foreach (var property in uniqueEntity.UniqueProperties)
+            {
+                var propertyInfo = typeof(T).GetProperty(property);
+                if (propertyInfo == null)
+                {
+                    throw new ArgumentException($"La entidad no contiene un campo '{property}'.");
+                }
+
+                // Esperar a que `GetAllAsync` complete y luego trabajar en memoria
+                var entities = (await _genericRepo.GetAllAsync()).AsEnumerable();
+
+                foreach (var existingEntity in entities)
+                {
+                    var existingValue = propertyInfo.GetValue(existingEntity);
+                    var value = propertyInfo.GetValue(entity);
+                    if (existingValue != null && existingValue.Equals(value))
+                    {
+                        return true; // Se encontró un duplicado
+                    }
+                }
+            }
+
+            return false; // No se encontró ningún duplicado
         }
     }
 }
