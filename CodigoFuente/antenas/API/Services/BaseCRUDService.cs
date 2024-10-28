@@ -1,5 +1,6 @@
 ﻿using  API.DataSchema;
 using  API.Repositories;
+using API.DataSchema.Interfaz;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -37,6 +38,10 @@ namespace API.Services
 
         public async Task Add(T genericClass)
         {
+            if (await IsDuplicate(genericClass))
+            {
+                throw new InvalidOperationException("El registro ya existe.");
+            }
             await _genericRepo.AddWithImage(genericClass);
         }
 
@@ -55,7 +60,48 @@ namespace API.Services
             {
                 throw e;
             }
-            
+
+        }
+        // Método para verificar duplicados
+        private async Task<bool> IsDuplicate(T entity)
+        {
+            if (entity is not IEntidadUnica uniqueEntity)
+            {
+                throw new InvalidOperationException("La entidad no implementa IEntidadUnica.");
+            }
+
+            var parameter = Expression.Parameter(typeof(T), "e");
+            var conditions = new List<Expression>();
+
+            foreach (var uniquePropertySet in uniqueEntity.PropUnica)
+            {
+                var innerConditions = new List<Expression>();
+
+                foreach (var property in uniquePropertySet)
+                {
+                    var propertyInfo = typeof(T).GetProperty(property);
+                    if (propertyInfo == null)
+                    {
+                        throw new ArgumentException($"La entidad no contiene un campo '{property}'.");
+                    }
+
+                    var value = propertyInfo.GetValue(entity);
+                    var propertyExpression = Expression.Property(parameter, property);
+                    var equalExpression = Expression.Equal(propertyExpression, Expression.Constant(value));
+                    innerConditions.Add(equalExpression);
+                }
+
+                // Combina las condiciones para la propiedad única actual
+                var combinedCondition = innerConditions.Aggregate((current, next) => Expression.AndAlso(current, next));
+                conditions.Add(combinedCondition);
+            }
+
+            // Combina todas las condiciones en una sola expresión
+            var finalCondition = conditions.Aggregate((current, next) => Expression.OrElse(current, next));
+            var predicate = Expression.Lambda<Func<T, bool>>(finalCondition, parameter);
+
+            // Ejecutar la consulta usando el predicado
+            return await _genericRepo.Find(predicate) != null;
         }
     }
 }
