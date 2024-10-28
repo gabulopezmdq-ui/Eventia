@@ -14,6 +14,7 @@ namespace API.Services
         Task<MEC_Personas> GetPersonaByDocumento(string nroDocumento);
         Task<MEC_Personas> AddPersona(MEC_Personas persona);
         Task<(MEC_Personas persona, string errorMessage)> ValidarPersonas(MEC_Personas persona);
-        Task<(bool Existe, MEC_POF? PofData, string Mensaje)> VerificarPofAsync(string dni, string legajo, int idEstablecimiento);
+        Task<(bool, MEC_POF?, string, object?)> VerificarPofAsync(string dni, string legajo, int idEstablecimiento);
+        Task<bool> RegistrarPersonaAsync(string dni, string legajo, string apellido, string nombre);
     }
 }
