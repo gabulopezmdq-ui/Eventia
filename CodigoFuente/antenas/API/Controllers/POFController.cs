@@ -158,6 +158,30 @@ namespace API.Controllers
         {
             // Implementa tu lógica para verificar si ya existe el registro
             return await _context.MEC_POF.AnyAsync(p => p.IdPersona == idPersona && p.IdEstablecimiento == idEstablecimiento);
-        } 
+        }
+
+        [HttpPost("RegistrarSuplencia")]
+        public async Task<IActionResult> RegistrarSuplencia([FromBody] MEC_POF POF)
+        {
+            if (POF == null)
+            {
+                return BadRequest("El cuerpo de la solicitud no puede ser nulo.");
+            }
+
+            // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
+            var mensajeValidacion = await _pofService.RegistrarSuplenciaAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia, POF.Barra, POF.IdCategoria, 
+                POF.TipoCargo, POF.CantHsCargo, POF.AntigAnios, POF.AntigMeses, POF.SinHaberes, POF.Subvencionada, POF.Vigente);
+
+            if (mensajeValidacion.StartsWith("Ya existe"))
+            {
+                return Conflict(mensajeValidacion);
+            }
+
+            // Si no existe, proceder a crear el nuevo registro
+            _context.MEC_POF.Add(POF);
+            await _context.SaveChangesAsync();
+
+            return Ok("POF registrada correctamente.");
+        }
     }
 }

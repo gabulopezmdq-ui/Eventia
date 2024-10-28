@@ -21,5 +21,8 @@ namespace API.Services
         Task<string> RegistrarPOFAsync(string dni, int idEstablecimiento, string secuencia, string barra,
             int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
             string sinHaberes, string subvencionada, string vigente);
+        Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
+            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
+            string sinHaberes, string subvencionada, string vigente);
     }
 }
