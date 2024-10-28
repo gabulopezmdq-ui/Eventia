@@ -16,12 +16,14 @@ namespace API.Controllers
     public class POFController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly POFService _pofService;
         private readonly ICRUDService<MEC_POF> _serviceGenerico;
 
-        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico)
+        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, POFService pofService)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
+            _pofService = pofService;
         }
         
         [HttpGet("GetAll")]
@@ -57,6 +59,23 @@ namespace API.Controllers
         {
             await _serviceGenerico.Add(pof);
             return Ok(pof);
+        }
+
+        [HttpPost("VerificarPOF")]
+        public async Task<IActionResult> VerificarPOF([FromBody] MEC_POF request)
+        {
+            // Llama al servicio para verificar y obtener datos de POF
+            var (existe, pofData, mensaje) = await _pofService.VerificarPofAsync(
+                request.Persona.DNI,
+                request.Persona.Legajo,
+                request.IdEstablecimiento);
+
+            if (existe)
+            {
+                return Ok(new { Existe = true, DatosPof = pofData });
+            }
+
+            return Ok(new { Existe = false, Mensaje = mensaje });
         }
 
         [HttpDelete]
