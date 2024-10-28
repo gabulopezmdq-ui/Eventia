@@ -88,11 +88,9 @@ builder.Services.AddHealthChecks();
 //Services
 
 builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
-<<<<<<< HEAD
-=======
+
 builder.Services.AddScoped<IPOFService, POFService>();
 
->>>>>>> parent of 6a3eaa6 (POF)
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 
 //Repositories
