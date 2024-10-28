@@ -177,6 +177,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DataSchema\DTO\" />
     <Folder Include="DataSchema\Extensions\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
