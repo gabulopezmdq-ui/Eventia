@@ -37,6 +37,7 @@ import AltaTipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones/AltaT
 import AltaTipoCategorias from "layouts/pages/Pruebas/TipoCategorias/AltaTipoCategorias";
 import VerCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/VerCabeceraLiquidacion";
 import VerGestionUsuarios from "layouts/pages/Pruebas/GestionUsuarios/VerGestionUsuarios";
+import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -166,6 +167,10 @@ export default function App() {
     {
       path: "/GestionUsuariosFE",
       component: GestionUsuario,
+    },
+    {
+      path: "/PlantaFuncionalFE",
+      component: PlantaFuncional,
     },
     {
       path: "/CarRevistaFE",
