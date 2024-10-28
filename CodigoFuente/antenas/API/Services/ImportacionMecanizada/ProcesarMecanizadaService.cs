@@ -50,14 +50,10 @@ namespace API.Services
                 throw new Exception("El archivo contiene errores y/o registros no encontrados en las tablas paramétricas. Debe corregir el archivo y volver a importarlo.");
 
                 // Si tienes un modelo para manejar la cabecera de estados:
-                var estadoCabecera = new MEC_CabeceraLiquidacion
-                {
-                    //IdCabecera = idCabecera,
-                    //Fecha = DateTime.UtcNow,
-                    //Usuario = "usuario", // Aquí deberías obtener el usuario actual
-                    //Estado = "P", // Pendiente de Importación
-                    //Observaciones = "Archivo contiene errores – Se deberá corregir y volver a importar"
-                };
+                var estadoCabecera = await _context.MEC_CabeceraLiquidacion
+                                               .Where(c => c.IdCabecera == idCabecera)
+                                               .FirstOrDefaultAsync();
+                estadoCabecera.Estado = "P";
 
                 await _context.MEC_CabeceraLiquidacion.AddAsync(estadoCabecera);
                 await _context.SaveChangesAsync();

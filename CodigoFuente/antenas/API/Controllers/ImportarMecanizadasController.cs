@@ -18,9 +18,9 @@ namespace API.Controllers
     {
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
 
-        private readonly ICRUDService<MEC_Personas> _serviceGenerico;
+        private readonly ICRUDService<MEC_TMPMecanizadas> _serviceGenerico;
 
-        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_Personas> serviceGenerico)
+        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico)
         {
             _importacionMecanizadaService = importacionService;
             _serviceGenerico = serviceGenerico;
@@ -55,7 +55,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get()
         {
             return Ok(_serviceGenerico.GetAll());
         }
