@@ -12,8 +12,8 @@ namespace API.DataSchema
         public int IdCategoria { get; set; }
         public string TipoCargo { get; set; }
         public string CantHsCargo { get; set; }
-        public int AntigAnios { get; set; }
-        public int AntigMeses { get; set; }
+        public string AntigAnios { get; set; }
+        public string AntigMeses { get; set; }
         public string SinHaberes { get; set; }
         public string Subvencionada { get; set; }
         public string Vigente { get; set; }
