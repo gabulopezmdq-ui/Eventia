@@ -27,7 +27,7 @@ namespace API.Repositories
         Task<T> Update(T entity);
 
         Task<IEnumerable<TResult>> GetAllDTO<TResult>(Expression<Func<T, bool>>? criterio, Expression<Func<T, TResult>>? selector, bool? orderbydescendin, int? page, int? limit, params Expression<Func<T, Object>>[]? order) where TResult : class;
-
+        Task<IEnumerable<T>> GetAllAsync();
         public int Count(Expression<Func<T, bool>> criterio);
 
     }

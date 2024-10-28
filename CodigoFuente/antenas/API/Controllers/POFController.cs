@@ -135,12 +135,12 @@ namespace API.Controllers
                 return BadRequest("El cuerpo de la solicitud no puede ser nulo.");
             }
 
-            // Verificar si la persona existe en MEC_Personas usando el DNI
-            var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.IdPersona == POF.IdPersona);
-            if (personaExistente == null)
-            {
-                return Conflict("No se encontró una persona con el ID proporcionado.");
-            }
+            //// Verificar si la persona existe en MEC_Personas usando el DNI
+            //var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.IdPersona == POF.IdPersona);
+            //if (personaExistente == null)
+            //{
+            //    return Conflict("No se encontró una persona con el ID proporcionado.");
+            //}
 
             // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
             if (await ExisteRegistroEnPOFAsync(POF.IdPersona, POF.IdEstablecimiento))
@@ -150,7 +150,7 @@ namespace API.Controllers
 
             // Si no existe, proceder a crear el nuevo registro
             _context.MEC_POF.Add(POF);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();  
             return Ok("POF registrada correctamente.");
         }
 
