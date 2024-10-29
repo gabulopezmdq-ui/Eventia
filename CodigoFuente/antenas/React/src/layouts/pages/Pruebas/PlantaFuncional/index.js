@@ -15,9 +15,9 @@ import PropTypes from "prop-types";
 // Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import DataTable from "examples/Tables/DataTable";
+import DataTablePlanta from "examples/Tables/DataTablePlanta";
 import "../../Pruebas/pruebas.css";
-function Persona() {
+function PlantaFuncional() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -25,7 +25,7 @@ function Persona() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "POF/getall", {
+      .get(process.env.REACT_APP_API_URL + "personas/getall", {
         headers: {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
@@ -53,12 +53,12 @@ function Persona() {
   }, []);
 
   const handleNuevoTipo = () => {
-    navigate("/PersonaFE/Nuevo");
+    navigate("/PlantaFuncionalFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idPersona) {
-      const productId = rowData.idPersona;
-      const url = `/PersonaFE/${productId}`;
+    if (rowData && rowData.idPlantaFuncional) {
+      const productId = rowData.idPlantaFuncional;
+      const url = `/PlantaFuncionalFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -89,7 +89,7 @@ function Persona() {
         )}
         <MDBox my={3}>
           <Card>
-            <DataTable
+            <DataTablePlanta
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
@@ -124,11 +124,11 @@ function Persona() {
   );
 }
 
-Persona.propTypes = {
+PlantaFuncional.propTypes = {
   row: PropTypes.object, // Add this line for 'row' prop
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default Persona;
+export default PlantaFuncional;

@@ -1,10 +1,10 @@
 ﻿using  API.DataSchema;
 using  API.Repositories;
-using API.DataSchema.Interfaz;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using API.DataSchema.Interfaz;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -38,6 +38,7 @@ namespace API.Services
 
         public async Task Add(T genericClass)
         {
+            // Verificar si ya existe un registro similar
             if (await IsDuplicate(genericClass))
             {
                 throw new InvalidOperationException("El registro ya existe.");
@@ -62,46 +63,38 @@ namespace API.Services
             }
 
         }
+
         // Método para verificar duplicados
         private async Task<bool> IsDuplicate(T entity)
         {
-            if (entity is not IEntidadUnica uniqueEntity)
+            if (entity is not IRegistroUnico uniqueEntity)
             {
-                throw new InvalidOperationException("La entidad no implementa IEntidadUnica.");
+                throw new InvalidOperationException("La entidad no implementa IRegistroUnico.");
             }
 
-            var parameter = Expression.Parameter(typeof(T), "e");
-            var conditions = new List<Expression>();
-
-            foreach (var uniquePropertySet in uniqueEntity.PropUnica)
+            foreach (var property in uniqueEntity.UniqueProperties)
             {
-                var innerConditions = new List<Expression>();
-
-                foreach (var property in uniquePropertySet)
+                var propertyInfo = typeof(T).GetProperty(property);
+                if (propertyInfo == null)
                 {
-                    var propertyInfo = typeof(T).GetProperty(property);
-                    if (propertyInfo == null)
-                    {
-                        throw new ArgumentException($"La entidad no contiene un campo '{property}'.");
-                    }
-
-                    var value = propertyInfo.GetValue(entity);
-                    var propertyExpression = Expression.Property(parameter, property);
-                    var equalExpression = Expression.Equal(propertyExpression, Expression.Constant(value));
-                    innerConditions.Add(equalExpression);
+                    throw new ArgumentException($"La entidad no contiene un campo '{property}'.");
                 }
 
-                // Combina las condiciones para la propiedad única actual
-                var combinedCondition = innerConditions.Aggregate((current, next) => Expression.AndAlso(current, next));
-                conditions.Add(combinedCondition);
+                // Esperar a que `GetAllAsync` complete y luego trabajar en memoria
+                var entities = (await _genericRepo.GetAllAsync()).AsEnumerable();
+
+                foreach (var existingEntity in entities)
+                {
+                    var existingValue = propertyInfo.GetValue(existingEntity);
+                    var value = propertyInfo.GetValue(entity);
+                    if (existingValue != null && existingValue.Equals(value))
+                    {
+                        return true; // Se encontró un duplicado
+                    }
+                }
             }
 
-            // Combina todas las condiciones en una sola expresión
-            var finalCondition = conditions.Aggregate((current, next) => Expression.OrElse(current, next));
-            var predicate = Expression.Lambda<Func<T, bool>>(finalCondition, parameter);
-
-            // Ejecutar la consulta usando el predicado
-            return await _genericRepo.Find(predicate) != null;
+            return false; // No se encontró ningún duplicado
         }
     }
 }
