@@ -28,40 +28,55 @@ namespace API.Services
             await ValidarCarRevistaAsync(idCabecera);
             await ValidarTipoOrgAsync(idCabecera);
 
-            // Comprobar si hay errores
-            var tieneErrores = await _context.MEC_TMPErroresEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera) ||
-                               await _context.MEC_TMPErroresFuncion.AnyAsync(e => e.IdCabecera == idCabecera) ||
-                               await _context.MEC_TMPErroresConceptos.AnyAsync(e => e.IdCabecera == idCabecera) ||
-                               await _context.MEC_TMPErroresCarRevista.AnyAsync(e => e.IdCabecera == idCabecera) ||
-                               await _context.MEC_TMPErroresTiposEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera);
+
+            // Comprobar si hay errores en las tablas de validacion
+            bool tieneErrores = await VerificarErroresAsync(idCabecera);
 
             if (tieneErrores)
             {
-                // Borrar los registros de TMPMecanizadas para la cabecera en cuestión
-                var registrosParaEliminar = await _context.MEC_TMPMecanizadas
-                    .Where(m => m.idCabecera == idCabecera)
-                    .ToListAsync();
+                // Eliminar registros en TMPMecanizadas para la cabecera
+                await EliminarRegistrosAsync(idCabecera);
 
-                _context.MEC_TMPMecanizadas.RemoveRange(registrosParaEliminar);
-                await _context.SaveChangesAsync();
+                // Cambiar el estado de la cabecera a "P"
+                await CambiarEstadoCabeceraAsync(idCabecera, "P");
 
-                // Mostrar un mensaje indicando que hay errores
-                // Aquí puedes lanzar una excepción o retornar un objeto de respuesta que contenga los errores
-               
-                // Si tienes un modelo para manejar la cabecera de estados:
-                var estadoCabecera = await _context.MEC_CabeceraLiquidacion
-                                               .Where(c => c.IdCabecera == idCabecera)
-                                               .FirstOrDefaultAsync();
-                estadoCabecera.Estado = "P";
-
-                await _context.MEC_CabeceraLiquidacion.AddAsync(estadoCabecera);
-                await _context.SaveChangesAsync();
-                throw new Exception("El archivo contiene errores y/o registros no encontrados en las tablas paramétricas. Debe corregir el archivo y volver a importarlo.");
-
+                throw new Exception("El archivo contiene errores. Debe corregir el archivo y volver a importarlo.");
             }
 
+            // Validación de registros en TMPMecanizadas
+            await ValidarMecAsync(idCabecera);
         }
 
+        private async Task<bool> VerificarErroresAsync(int idCabecera)
+        {
+            return await _context.MEC_TMPErroresEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera) ||
+                   await _context.MEC_TMPErroresFuncion.AnyAsync(e => e.IdCabecera == idCabecera) ||
+                   await _context.MEC_TMPErroresConceptos.AnyAsync(e => e.IdCabecera == idCabecera) ||
+                   await _context.MEC_TMPErroresCarRevista.AnyAsync(e => e.IdCabecera == idCabecera) ||
+                   await _context.MEC_TMPErroresTiposEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera);
+        }
+
+        private async Task EliminarRegistrosAsync(int idCabecera)
+        {
+            var registrosParaEliminar = await _context.MEC_TMPMecanizadas
+                                                      .Where(m => m.idCabecera == idCabecera)
+                                                      .ToListAsync();
+
+            _context.MEC_TMPMecanizadas.RemoveRange(registrosParaEliminar);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CambiarEstadoCabeceraAsync(int idCabecera, string estado)
+        {
+            var estadoCabecera = await _context.MEC_CabeceraLiquidacion
+                                               .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
+            if (estadoCabecera != null)
+            {
+                estadoCabecera.Estado = estado;
+                await _context.SaveChangesAsync();
+            }
+        }
         private async Task ValidarNroEstabAsync(int idCabecera)
         {
             // Obtener todos los NroEstab para la cabecera en TMPMecanizadas
@@ -193,6 +208,72 @@ namespace API.Services
                 await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(erroresTipoOrg);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        private async Task ValidarMecAsync(int idCabecera)
+        {
+            var registros = await _context.MEC_TMPMecanizadas
+                                          .Where(e => e.idCabecera == idCabecera)
+                                          .ToListAsync();
+
+            foreach (var registro in registros)
+            {
+                string idEstablecimiento = registro.NroEstab;
+
+                var persona = await _context.MEC_Personas
+                                            .Where(x => x.DNI == registro.Documento)
+                                            .FirstOrDefaultAsync();
+
+                if (persona == null)
+                {
+                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
+                    continue;
+                }
+
+                int idPersona = persona.IdPersona;
+
+                var POF = await _context.MEC_POF
+                                        .Where(p => p.IdEstablecimiento == int.Parse(idEstablecimiento) &&
+                                        p.IdPersona == idPersona &&
+                                        p.Secuencia == registro.Secuencia)
+                                        .FirstOrDefaultAsync();
+
+                if (POF == null)
+                {
+                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
+                    continue;
+                }
+
+                // Actualizar POF
+                POF.IdCategoria = _context.MEC_TiposCategorias
+                                          .Where(c => c.CodCategoria == registro.Categoria)
+                                          .Select(c => c.IdTipoCategoria)
+                                          .FirstOrDefault();
+
+                POF.TipoCargo = registro.TipoCargo[0].ToString();
+                POF.CantHsCargo = registro.TipoCargo.Substring(1);
+
+                await _context.SaveChangesAsync();
+
+                // Marcar el registro como válido
+                registro.RegistroValido = "S";
+            }
+        }
+        private async Task RegistroErrorMecAsync(int idCabecera, MEC_TMPMecanizadas registro, string documentoError, string pofError, string registroValido)
+        {
+            var error = new MEC_TMPErroresMecanizadas
+            {
+                IdCabecera = idCabecera,
+                Documento = documentoError,
+                POF = pofError,
+            };
+
+            _context.MEC_TMPErroresMecanizadas.Add(error);
+
+            // Actualizar TMP_Mecanizadas
+            registro.RegistroValido = registroValido;
+
+            await _context.SaveChangesAsync();
         }
     }
 }
