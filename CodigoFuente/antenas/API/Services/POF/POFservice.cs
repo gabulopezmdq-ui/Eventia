@@ -75,32 +75,108 @@ namespace API.Services
         //probar otro tipo de codigo
 
         // Método para verificar la existencia de la persona en MEC_POF con un DNI, Legajo y Establecimiento específicos.
-        public async Task<(bool Existe, MEC_POF? PofData, string Mensaje)> VerificarPofAsync(string dni, string legajo, int idEstablecimiento)
+        public async Task<(bool Existe, MEC_Personas? Persona, string Mensaje, object? DatosRegistroManual)> VerificarYRegistrarPersonaAsync(string nroDocumento)
         {
-            // Busca la persona en la tabla MEC_Personas con el DNI y el Legajo especificados
-            var persona = await _context.MEC_Personas
-                .FirstOrDefaultAsync(p => p.DNI == dni && p.Legajo == legajo);
+            // Verifica si la persona existe
+            var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == nroDocumento);
 
-            if (persona == null)
+            if (personaExistente != null)
             {
-                // Retorna una tupla con los valores requeridos en vez de un tipo anónimo
-                return (false, null, "La persona no está registrada.");
+                // Si la persona existe, retornamos sus datos
+                return (true, personaExistente, "Persona encontrada.", null);
             }
 
-            // Verifica si existe una entrada en MEC_POF con el idPersona y idEstablecimiento
-            var pof = await _context.MEC_POF
-                .Include(p => p.Establecimiento) // Para obtener datos del establecimiento
-                .Include(p => p.Persona)         // Para obtener datos de la persona
-                .FirstOrDefaultAsync(p =>
-                    p.IdPersona == persona.IdPersona &&
-                    p.IdEstablecimiento == idEstablecimiento);
-
-            if (pof != null)
+            // Si no existe, habilitamos campos para completar la información
+            return (false, null, "La persona no está registrada. Completa los campos requeridos.", new { HabilitarCampos = true });
+        }
+        public async Task<string> CompletarRegistroPersonaAsync(string dni, string legajo, string apellido, string nombre)
+        {
+            // Validar campos obligatorios
+            if (string.IsNullOrWhiteSpace(dni) || string.IsNullOrWhiteSpace(apellido) || string.IsNullOrWhiteSpace(nombre))
             {
-                return (true, pof, "Registro encontrado.");
+                return "Debe completar los datos obligatorios (*)";
             }
 
-            return (false, null, "La persona no está registrada en este establecimiento.");
+            // Crear un nuevo registro en MEC_Personas
+            var nuevaPersona = new MEC_Personas
+            {
+                DNI = dni,
+                Legajo = legajo,
+                Apellido = apellido,
+                Nombre = nombre
+            };
+
+            await AddPersona(nuevaPersona); // Usar el método existente para agregar la persona
+
+            return "Persona registrada correctamente.";
+        }
+
+        public async Task<bool> GuardarPersonaAsync(MEC_Personas persona)
+        {
+            _context.MEC_Personas.Add(persona);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        public async Task<bool> ExisteRegistroEnPOFAsync(int idPersona, int idEstablecimiento)
+        {
+            return await _context.MEC_POF.AnyAsync(p => p.IdPersona == idPersona && p.IdEstablecimiento == idEstablecimiento);
+        }
+
+        public async Task<string> RegistrarPOFAsync(string dni, int idEstablecimiento, string secuencia, string barra,
+            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
+            string sinHaberes, string subvencionada, string vigente)
+        {
+            // Verificar si la persona existe en MEC_Personas
+            var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == dni);
+
+            if (personaExistente == null)
+            {
+                return "No se encontró una persona con el DNI proporcionado.";
+            }
+
+            // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
+            if (await ExisteRegistroEnPOFAsync(personaExistente.IdPersona, idEstablecimiento))
+            {
+                return "Ya existe un registro en MEC_POF para esta persona y establecimiento.";
+            }
+
+            // Si no existe, proceder a crear el nuevo registro
+            var nuevaPOF = new MEC_POF
+            {
+                IdPersona = personaExistente.IdPersona,  // Guardar el IdPersona
+                IdEstablecimiento = idEstablecimiento,
+                Secuencia = secuencia,
+                Barra = barra,
+                IdCategoria = idCategoria,
+                TipoCargo = tipoCargo,
+                CantHsCargo = cantHsCargo,
+                AntigAnios = antigAnios,
+                AntigMeses = antigMeses,
+                SinHaberes = sinHaberes,
+                Subvencionada = subvencionada,
+                Vigente = vigente
+            };
+
+            _context.MEC_POF.Add(nuevaPOF);
+            await _context.SaveChangesAsync();
+            return "POF registrada correctamente.";
+        }
+
+        // Servicio para registrar suplencia
+        public async Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
+            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
+            string sinHaberes, string subvencionada, string vigente)
+        {
+            // Verificar si ya existe un registro en MEC_POF para esta combinación
+            if (await _context.MEC_POF.AnyAsync(p => p.IdEstablecimiento == idEstablecimiento &&
+                                                        p.IdPersona == idPersona &&
+                                                        p.Secuencia == secuencia))
+            {
+                return "Ya existe un registro en MEC_POF para esta combinación de Establecimiento, Persona y Secuencia.";
+            }
+
+            // Si no existe, aquí podrías crear una nueva entrada para la suplencia si así lo deseas
+            return "Puede proceder a registrar la suplencia.";
         }
     }
 }
