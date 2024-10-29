@@ -12,17 +12,21 @@ import Grid from "@mui/material/Grid";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
+
 // Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
+
 import "../../Pruebas/pruebas.css";
+
 function GestionUsuario() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [dataTableData, setDataTableData] = useState();
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "Usuarios/getall", {
@@ -52,19 +56,17 @@ function GestionUsuario() {
       });
   }, []);
 
+  // Nueva función para manejar la navegación a la página de editar
+  const handleEditarUsuario = (idUsuario) => {
+    const url = `/GestionUsuariosFE/Edit/${idUsuario}`;
+    navigate(url);
+  };
+
   const handleNuevoTipo = () => {
     navigate("/GestionUsuarioFE/Nuevo");
   };
-  const handleVer = (rowData) => {
-    if (rowData && rowData.idUsuario) {
-      const productId = rowData.idUsuario;
-      const url = `/VerGestionUsuariosFE/${productId}`;
-      navigate(url);
-    } else {
-      console.error("El objeto rowData o su propiedad 'id' no están definidos.");
-    }
-  };
-  //Funcion para que cuando el campo viene vacio muestre N/A
+
+  // Función para que cuando el campo viene vacío muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
   return (
@@ -92,19 +94,18 @@ function GestionUsuario() {
             <DataTable
               table={{
                 columns: [
-                  //{ Header: "ID", accessor: "id" },
                   { Header: "Nombre", accessor: "nombre" },
                   { Header: "Email", accessor: "email" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() => handleEditarUsuario(row.original.idUsuario)}
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },
@@ -123,9 +124,9 @@ function GestionUsuario() {
 }
 
 GestionUsuario.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
-    id: PropTypes.number,
+    idUsuario: PropTypes.number,
   }),
 };
 

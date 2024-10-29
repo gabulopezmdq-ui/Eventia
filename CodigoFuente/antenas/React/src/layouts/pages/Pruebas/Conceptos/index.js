@@ -27,9 +27,9 @@ function Conceptos() {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "Conceptos/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
@@ -58,8 +58,8 @@ function Conceptos() {
   };
   const handleVer = (rowData) => {
     if (rowData && rowData.idConcepto) {
-      const productId = rowData.idTipoEstablecimiento;
-      const url = `/ConceptosFE/${productId}`;
+      const productId = rowData.idConcepto;
+      const url = `/VerConceptoFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -95,11 +95,8 @@ function Conceptos() {
                 columns: [
                   //{ Header: "ID", accessor: "id" },
                   { Header: "Cod Concepto", accessor: "codConcepto" },
-                  { Header: "Cod Concepto MGP", accessor: "codConceptoMGP" },
+                  { Header: "Cod Concepto MGP", accessor: "codConceptoMgp" },
                   { Header: "Descripcion", accessor: "descripcion" },
-                  { Header: "Con Aporte", accessor: "codAporte" },
-                  { Header: "Patronal", accessor: "patronal" },
-                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",

@@ -38,6 +38,7 @@ import AltaTipoCategorias from "layouts/pages/Pruebas/TipoCategorias/AltaTipoCat
 import VerCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/VerCabeceraLiquidacion";
 import VerGestionUsuarios from "layouts/pages/Pruebas/GestionUsuarios/VerGestionUsuarios";
 import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
+import VerConcepto from "layouts/pages/Pruebas/Conceptos/VerConcepto";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -233,14 +234,38 @@ export default function App() {
       path: "/VerGestionUsuariosFE/:id",
       component: VerGestionUsuarios,
     },
+    {
+      path: "/VerConceptoFE/:id",
+      component: VerConcepto,
+    },
+    {
+      path: "/CarRevistaFE/:id",
+      component: CarRevistaVer,
+    },
+    {
+      path: "/TiposEstablecimientoFE/:id",
+      component: CarRevistaVer,
+    },
     //----------------------------------Rutas de Editar
     {
       path: "/VerCabeceraLiquidacionFe/Edit/:id",
       component: AltaCabeceraLiquidacion,
     },
     {
-      path: "/VerGestionUsuariosFE/Edit/:id",
+      path: "/GestionUsuariosFE/Edit/:id",
       component: AltaGestionUsuario,
+    },
+    {
+      path: "/UsuarioPorRolFE/Edit/:id",
+      component: AltaUsuariosPorRol,
+    },
+    {
+      path: "/AltaConceptosFE/Edit/:id",
+      component: AltaConceptos,
+    },
+    {
+      path: "/CarRevistaFE/Edit/:id",
+      component: AltaCarRevista,
     },
     //----------------------------------Rutas de Alta
     {
