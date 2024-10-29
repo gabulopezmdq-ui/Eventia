@@ -47,8 +47,7 @@ namespace API.Services
 
                 // Mostrar un mensaje indicando que hay errores
                 // Aquí puedes lanzar una excepción o retornar un objeto de respuesta que contenga los errores
-                throw new Exception("El archivo contiene errores y/o registros no encontrados en las tablas paramétricas. Debe corregir el archivo y volver a importarlo.");
-
+               
                 // Si tienes un modelo para manejar la cabecera de estados:
                 var estadoCabecera = await _context.MEC_CabeceraLiquidacion
                                                .Where(c => c.IdCabecera == idCabecera)
@@ -57,6 +56,8 @@ namespace API.Services
 
                 await _context.MEC_CabeceraLiquidacion.AddAsync(estadoCabecera);
                 await _context.SaveChangesAsync();
+                throw new Exception("El archivo contiene errores y/o registros no encontrados en las tablas paramétricas. Debe corregir el archivo y volver a importarlo.");
+
             }
 
         }
@@ -182,7 +183,7 @@ namespace API.Services
 
             // Insertar errores en TMP_ErroresFuncion si hay CodFuncion inválidos
             if (tipoOrgInvalidos.Any())
-            {
+            {   
                 var erroresTipoOrg = tipoOrgInvalidos.Select(cod => new MEC_TMPErroresTiposEstablecimientos
                 {
                     IdCabecera = idCabecera,
