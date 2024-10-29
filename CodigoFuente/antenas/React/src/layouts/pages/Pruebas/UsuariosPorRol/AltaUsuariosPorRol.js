@@ -36,27 +36,29 @@ function AltaUsuariosPorRol() {
     {
       label: labelTitulo + " Paso 1",
       fields: [
-        { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
         {
           type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
+          label: "Usuario",
+          name: "idUsuario",
+          apiUrl: process.env.REACT_APP_API_URL + "usuarios/GetAll",
+          valueField: "idUsuario",
+          optionField: "nombre",
+          required: true,
+        },
+        {
+          type: "select",
+          label: "Rol",
+          name: "idRol",
+          apiUrl: process.env.REACT_APP_API_URL + "Roles/GetAll",
+          valueField: "idRol",
+          optionField: "nombreRol",
           required: true,
         },
       ],
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `Personas`;
+  const apiUrl = process.env.REACT_APP_API_URL + `RolesXUsuarios`;
   return (
     <DashboardLayout>
       <DashboardNavbar />

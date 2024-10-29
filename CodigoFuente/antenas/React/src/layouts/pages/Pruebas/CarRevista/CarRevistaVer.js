@@ -57,7 +57,7 @@ function CarRevistaVer() {
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">{carRevistaData?.descripcion ?? "N/A"}</p>
+              <p className="tituloModal">{"N/A"}</p>
               <div className="contenidoCard">
                 <p>
                   <b>Cod. Provincia: </b>

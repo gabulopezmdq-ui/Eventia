@@ -65,7 +65,7 @@ function AltaConceptos() {
         {
           type: "text",
           label: "Cod Concepto MGP",
-          name: "codConceptoMGP",
+          name: "codConceptoMgp",
           required: true,
           customValidation: validateCodMGP,
         },

@@ -96,7 +96,6 @@ function CarRevista() {
                   { Header: "CodPcia", accessor: "codPcia" },
                   { Header: "Descripcion", accessor: "descripcion" },
                   { Header: "CodMGP", accessor: "codMgp" },
-                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",
