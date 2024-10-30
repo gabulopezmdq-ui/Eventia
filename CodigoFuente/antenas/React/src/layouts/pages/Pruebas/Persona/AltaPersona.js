@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaPersona() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta Gestion Persona";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar Gestion Persona";
   }
   const [formData, setFormData] = useState({});
 

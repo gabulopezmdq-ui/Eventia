@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaUsuariosPorRol() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta Usuarios por Rol";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar Usuarios por Rol";
   }
   const [formData, setFormData] = useState({});
 
