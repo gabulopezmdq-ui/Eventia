@@ -64,6 +64,10 @@ function TipoCategorias() {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
+  const handleEditarTiposCategorias = (idTipoCategoria) => {
+    const url = `/TipoCategoriasFE/Edit/${idTipoCategoria}`;
+    navigate(url);
+  };
   //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
@@ -97,15 +101,15 @@ function TipoCategorias() {
                   { Header: "Codidó CategoriaMGP", accessor: "codCategoriaMGP" },
                   { Header: "Descripcion", accessor: "descripcion" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() => handleEditarTiposCategorias(row.original.idTipoCategoria)}
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },

@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaTipoCategorias() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta Tipo Categoria";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar Tipo Categoria";
   }
   const [formData, setFormData] = useState({});
 
@@ -36,10 +36,9 @@ function AltaTipoCategorias() {
     {
       label: labelTitulo + " Paso 1",
       fields: [
-        { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
+        { type: "text", label: "CodCategoria", name: "codCategoria", required: true },
+        { type: "text", label: "CodCategoriaMGP", name: "codCategoriaMGP", required: true },
+        { type: "text", label: "Descripcion", name: "descripcion", required: true },
         {
           type: "select",
           label: "Vigente",
@@ -56,7 +55,7 @@ function AltaTipoCategorias() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `Personas`;
+  const apiUrl = process.env.REACT_APP_API_URL + `TiposCategorias`;
   return (
     <DashboardLayout>
       <DashboardNavbar />

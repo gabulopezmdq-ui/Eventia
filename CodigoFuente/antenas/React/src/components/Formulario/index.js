@@ -26,6 +26,7 @@ import MDAlert from "components/MDAlert";
 import StepLabel from "@mui/material/StepLabel";
 import MDButton from "components/MDButton";
 import Prueba from "../Formulario/components/Prueba";
+import { red } from "@mui/material/colors";
 
 function Formulario({
   steps,
@@ -50,6 +51,7 @@ function Formulario({
 
   const handleNext = () => setActiveStep(activeStep + 1);
   const handleBack = () => setActiveStep(activeStep - 1);
+  const handleCancel = () => navigate(activeStep - 1); // Cambia "/menu" a la ruta deseada
   includeIdRepTecnico = includeIdRepTecnico || false;
   //Esto es un funcion solamente para cambiar la url de RepTecxConservadora
   let apiGetbyId = includeIdRepTecnico
@@ -158,7 +160,7 @@ function Formulario({
           },
         })
         .then((response) => {
-          navigate(-2);
+          navigate(-1);
         })
         .catch((error) => {
           if (error.response && error.response.status === 400) {
@@ -207,7 +209,7 @@ function Formulario({
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: value,
+      [name]: typeof value === "string" ? value.toUpperCase() : value, // Solo aplicar toUpperCase si es un string
     }));
   };
 
@@ -255,16 +257,21 @@ function Formulario({
                   <MDBox />
                 ) : (
                   <MDButton variant="gradient" color="light" onClick={handleBack}>
-                    back
+                    Atrás
                   </MDButton>
                 )}
-                <MDButton
-                  variant="gradient"
-                  color="dark"
-                  onClick={!isLastStep ? handleNext : handleSubmit} // Cambiar handleNext por handleSubmit en el botón "send"
-                >
-                  {isLastStep ? "enviar" : "siguiente"}
-                </MDButton>
+                <MDBox display="flex" gap={2}>
+                  <MDButton variant="gradient" color="light" onClick={handleCancel}>
+                    Cancelar
+                  </MDButton>
+                  <MDButton
+                    variant="gradient"
+                    color="info"
+                    onClick={!isLastStep ? handleNext : handleSubmit}
+                  >
+                    {isLastStep ? "Enviar" : "Siguiente"}
+                  </MDButton>
+                </MDBox>
               </MDBox>
             </MDBox>
           </Card>
