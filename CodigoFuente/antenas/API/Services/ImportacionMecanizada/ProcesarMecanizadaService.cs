@@ -21,6 +21,14 @@ namespace API.Services
 
         public async Task PreprocesarAsync(int idCabecera)
         {
+            var cabecera = await _context.MEC_CabeceraLiquidacion
+                                  .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
+            if (cabecera == null || cabecera.Estado != "I")
+            {
+                throw new Exception("La cabecera debe ser Estado I."); ; // Si no existe o no está en estado 'I', retornar false
+            }
+
             // Realizar todas las validaciones
             await ValidarNroEstabAsync(idCabecera);
             await ValidarCodFuncionAsync(idCabecera);
