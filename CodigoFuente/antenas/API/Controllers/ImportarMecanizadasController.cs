@@ -17,7 +17,7 @@ namespace API.Controllers
     public class ImportarMecanizadasController : ControllerBase
     {
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
-
+        private readonly IProcesarMecanizadaService _procesarMecanizadaService;
         private readonly ICRUDService<MEC_TMPMecanizadas> _serviceGenerico;
 
         public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico)
@@ -58,6 +58,30 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get()
         {
             return Ok(_serviceGenerico.GetAll());
+        }
+
+        [HttpPost("PreprocesarArchivo")]
+        public async Task<IActionResult> PreprocesarArchivo([FromBody] int idCabecera)
+        {
+            try
+            {
+                await _procesarMecanizadaService.PreprocesarAsync(idCabecera);
+                return Ok("Preprocesamiento y validación completados exitosamente.");
+            }
+            catch (Exception ex)
+            {
+                // Verificar si el error se debe a problemas en las validaciones
+                if (ex.Message.Contains("El archivo contiene errores"))
+                {
+                    return BadRequest(new
+                    {
+                        mensaje = ex.Message,
+                        accionRequerida = "Si el archivo contiene errores de formato, corrija y vuelva a importar. Si faltan registros en tablas paramétricas, agregue los registros necesarios y reprocese el archivo.",
+                        estadoCabecera = "Pendiente de Importación"
+                    });
+                }
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
