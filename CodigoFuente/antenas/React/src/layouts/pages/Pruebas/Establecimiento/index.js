@@ -57,9 +57,9 @@ function Establecimiento() {
     navigate("/EstablecimientoFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idTipoEstablecimiento) {
-      const productId = rowData.idTipoEstablecimiento;
-      const url = `/EstablecimientoFE/${productId}`;
+    if (rowData && rowData.idEstablecimiento) {
+      const productId = rowData.idEstablecimiento;
+      const url = `/VerEstablecimientoFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -95,18 +95,9 @@ function Establecimiento() {
                 columns: [
                   //{ Header: "ID", accessor: "id" },
                   { Header: "Nro. Diegep", accessor: "nroDiegep" },
-                  { Header: "Tipo Est.", accessor: "tipoEstablecimiento.descripcion" },
+                  { Header: "Tipo Est.", accessor: "tipoEstablecimientos.descripcion" },
                   { Header: "Nro. Establecimiento", accessor: "nroEstablecimiento" },
                   { Header: "Nombre MGP", accessor: "nombreMgp" },
-                  { Header: "Nombre Pcia.", accessor: "nombrePcia" },
-                  { Header: "Domicilio", accessor: "domicilio" },
-                  { Header: "Telefono", accessor: "telefono" },
-                  { Header: "UE", accessor: "uE" },
-                  { Header: "Cant. Secciones", accessor: "cantSecciones" },
-                  { Header: "Cant. Turnos", accessor: "cantTurnos" },
-                  { Header: "Ruralidad", accessor: "ruralidad" },
-                  { Header: "Subvención", accessor: "subvencion" },
-                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Mas Info",
                     accessor: "edit",
