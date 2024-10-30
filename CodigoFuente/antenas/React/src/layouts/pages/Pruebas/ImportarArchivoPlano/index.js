@@ -25,7 +25,7 @@ function ImportarArchivo() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "ImportarArchivos/getall", {
+      .get(process.env.REACT_APP_API_URL + "ImportarMecanizadas/getall", {
         //     headers: {
         //       Authorization: `Bearer ${token}`, // Envía el token en los headers
         //     },

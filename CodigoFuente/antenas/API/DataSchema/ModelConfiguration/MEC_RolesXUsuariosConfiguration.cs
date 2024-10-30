@@ -36,6 +36,7 @@ namespace API.DataSchema
                 .Navigation(e => e.Rol)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
+
         }
     }
 
