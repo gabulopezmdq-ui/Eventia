@@ -12,6 +12,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Authorize(Roles = "SuperAdmin")]
+    //[AllowAnonymous]
     [Route("Roles")]
     public class RolesController : ControllerBase
     {
