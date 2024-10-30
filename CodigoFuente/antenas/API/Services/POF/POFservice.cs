@@ -78,8 +78,7 @@ namespace API.Services
         }
 
         public async Task<string> RegistrarPOFAsync(string dni, int idEstablecimiento, string secuencia, string barra,
-            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
-            string sinHaberes, string subvencionada, string vigente)
+            int idCategoria, string tipoCargo, string vigente)
         {
             // Verificar si la persona existe en MEC_Personas
             var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == dni);
@@ -119,8 +118,7 @@ namespace API.Services
 
         // Servicio para registrar suplencia
         public async Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
-            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
-            string sinHaberes, string subvencionada, string vigente)
+            int idCategoria, string tipoCargo, string vigente)
         {
             // Verificar si ya existe un registro en MEC_POF para esta combinación
             if (await _context.MEC_POF.AnyAsync(p => p.IdEstablecimiento == idEstablecimiento &&
