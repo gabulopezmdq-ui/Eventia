@@ -52,12 +52,17 @@ function UsuarioPorRol() {
       });
   }, []);
 
+  // Nueva función para manejar la navegación a la página de editar
+  const handleEditarUsuarioXRol = (idRolXUsuario) => {
+    const url = `/UsuarioPorRolFE/Edit/${idRolXUsuario}`;
+    navigate(url);
+  };
   const handleNuevoTipo = () => {
     navigate("/UsuarioPorRolFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idUsuarioPorRol) {
-      const productId = rowData.idUsuarioPorRol;
+    if (rowData && rowData.idRolXUsuario) {
+      const productId = rowData.idRolXUsuario;
       const url = `/UsuarioPorRolFE/${productId}`;
       navigate(url);
     } else {
@@ -96,15 +101,15 @@ function UsuarioPorRol() {
                   { Header: "Nombre", accessor: "usuario.nombre" },
                   { Header: "Rol", accessor: "rol.nombreRol" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() => handleEditarUsuarioXRol(row.original.idRolXUsuario)}
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },

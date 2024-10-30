@@ -10,7 +10,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
 
 // Función principal del componente
-function VerConceptoData() {
+function VerConcepto() {
   // Obtener el ID desde los parámetros de la URL
   const { id } = useParams();
   // Estado para almacenar los datos de la empresa
@@ -39,13 +39,13 @@ function VerConceptoData() {
   }, [id]);
 
   // Función para manejar la navegación a la página de crear nueva inspección (o cualquier otra funcionalidad)
-  const handleNuevoEmpresa = () => {
-    navigate("/VerConceptoDataFE/Nuevo");
+  const handleNuevoConcepto = () => {
+    navigate("/VerConceptoFE/Nuevo");
   };
 
   // Función para manejar la navegación a la página de editar
-  const handleEditaridConcepto = (idConcepto) => {
-    const url = `/VerConceptoDataFE/Edit/${idConcepto}`;
+  const handleEditarConcepto = (idConcepto) => {
+    const url = `/AltaConceptosFE/Edit/${idConcepto}`;
     console.log(url);
     navigate(url);
   };
@@ -57,17 +57,29 @@ function VerConceptoData() {
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">{"Detalles de la liquidación"}</p>
+              <p className="tituloModal">{"Conceptos"}</p>
               <div className="contenidoCard">
                 <p>
+                  <b>Con Aporte: </b>
+                  {idConceptoData?.conAporte ?? "N/A"}
+                </p>
+                <p>
+                  <b>Patronal: </b>
+                  {idConceptoData?.patronal ?? "N/A"}
+                </p>
+                <p>
+                  <b>Vigente: </b>
+                  {idConceptoData?.vigente ?? "N/A"}
+                </p>
+                {/*<p>
                   <b>Vigente: </b>
                   {idConceptoData?.vigente === "S"
                     ? "SI"
                     : idConceptoData?.vigente === "N"
                     ? "NO"
                     : "N/A"}
-                </p>
-                <MDButton onClick={() => handleEditaridConcepto(idConceptoData?.idConcepto)}>
+                </p>*/}
+                <MDButton onClick={() => handleEditarConcepto(idConceptoData?.idConcepto)}>
                   Editar
                 </MDButton>
               </div>
@@ -79,4 +91,4 @@ function VerConceptoData() {
   );
 }
 
-export default VerConceptoData;
+export default VerConcepto;
