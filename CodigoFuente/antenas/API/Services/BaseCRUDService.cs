@@ -69,7 +69,7 @@ namespace API.Services
         {
             if (entity is not IRegistroUnico uniqueEntity)
             {
-                throw new InvalidOperationException("La entidad no implementa IRegistroUnico.");
+                return false;
             }
 
             foreach (var property in uniqueEntity.UniqueProperties)
