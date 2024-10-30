@@ -18,7 +18,7 @@ namespace API.Services
         {
             _context = context;
         }
-        
+
         public async Task<MEC_Personas> AddPersona(MEC_Personas persona)
         {
             _context.MEC_Personas.Add(persona);
