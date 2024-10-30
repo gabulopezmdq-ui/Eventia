@@ -259,7 +259,6 @@ namespace API.Services
                                           .FirstOrDefault();
 
                 POF.TipoCargo = registro.TipoCargo[0].ToString();
-                POF.CantHsCargo = registro.TipoCargo.Substring(1);
 
                 await _context.SaveChangesAsync();
 
