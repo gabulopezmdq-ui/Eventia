@@ -15,9 +15,9 @@ namespace API.DataSchema.ModelConfiguration
                 .ValueGeneratedOnAdd();
 
             builder
-                .HasOne(e => e.Establecimiento)
-                .WithOne()
-                .HasForeignKey<MEC_Establecimientos>(e => e.IdEstablecimiento)
+                .HasOne(p => p.Establecimiento)
+                .WithMany(t => t.POFs)
+                .HasForeignKey(p => p.IdEstablecimiento)
                 .IsRequired(true);
 
             builder
@@ -26,9 +26,20 @@ namespace API.DataSchema.ModelConfiguration
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder
-                .HasOne(e => e.Persona)
-                .WithOne()
-                .HasForeignKey<MEC_Personas>(e => e.IdPersona)
+                .HasOne(p => p.TipoFuncion) 
+                .WithMany(t => t.POFs)
+                .HasForeignKey(p => p.IdFuncion)
+              .IsRequired(true);
+
+            builder
+                .Navigation(e => e.TipoFuncion)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder
+                .HasOne(p => p.Persona)
+                .WithMany(t => t.POFs)
+                .HasForeignKey(p => p.IdPersona)
                 .IsRequired(true);
 
             builder
@@ -37,15 +48,17 @@ namespace API.DataSchema.ModelConfiguration
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder
-                .HasOne(e => e.Categoria)
-                .WithOne()
-                .HasForeignKey<MEC_TiposCategorias>(e => e.IdTipoCategoria)
+                .HasOne(p => p.Categoria)
+                .WithMany(t => t.POFs)
+                .HasForeignKey(p => p.IdCategoria)
                 .IsRequired(true);
 
             builder
                 .Navigation(e => e.Categoria)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+
 
             builder.Property(e => e.Secuencia)
                 .HasColumnType("char(3)")
@@ -58,31 +71,6 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(false); 
 
             builder.Property(e => e.TipoCargo)
-                .HasColumnType("char(1)")
-                .IsFixedLength(true)
-                .IsRequired(true);
-
-            builder.Property(e => e.CantHsCargo)
-                .HasColumnType("char(4)")
-                .IsFixedLength(true)
-                .IsRequired(true);
-            
-            builder.Property(e => e.AntigAnios)
-                .HasColumnType("char(2)")
-                .IsFixedLength(true)
-                .IsRequired(true);
-            
-            builder.Property(e => e.AntigMeses)
-                .HasColumnType("char(2)")
-                .IsFixedLength(true)
-                .IsRequired(true);
-
-            builder.Property(e => e.SinHaberes)
-                .HasColumnType("char(1)")
-                .IsFixedLength(true)
-                .IsRequired(true);
-
-            builder.Property(e => e.Subvencionada)
                 .HasColumnType("char(1)")
                 .IsFixedLength(true)
                 .IsRequired(true);
