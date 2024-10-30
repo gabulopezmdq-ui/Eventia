@@ -81,7 +81,7 @@ function AltaConceptos() {
           name: "conAporte",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "S", label: "No" },
+            { value: "N", label: "No" },
           ],
           valueField: "value",
           optionField: "label",
@@ -93,7 +93,7 @@ function AltaConceptos() {
           name: "patronal",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "S", label: "No" },
+            { value: "N", label: "No" },
           ],
           valueField: "value",
           optionField: "label",
@@ -105,7 +105,7 @@ function AltaConceptos() {
           name: "vigente",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "S", label: "No" },
+            { value: "N", label: "No" },
           ],
           valueField: "value",
           optionField: "label",
