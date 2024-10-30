@@ -16,10 +16,8 @@ namespace API.Services
         Task<bool> GuardarPersonaAsync(MEC_Personas persona);
         Task<bool> ExisteRegistroEnPOFAsync(int idPersona, int idEstablecimiento);
         Task<string> RegistrarPOFAsync(string dni, int idEstablecimiento, string secuencia, string barra,
-            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
-            string sinHaberes, string subvencionada, string vigente);
+            int idCategoria, string tipoCargo, string vigente);
         Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
-            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
-            string sinHaberes, string subvencionada, string vigente);
+            int idCategoria, string tipoCargo, string vigente);
     }
 }

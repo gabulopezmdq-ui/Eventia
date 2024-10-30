@@ -103,11 +103,6 @@ namespace API.Services
                 Barra = barra,
                 IdCategoria = idCategoria,
                 TipoCargo = tipoCargo,
-                CantHsCargo = cantHsCargo,
-                AntigAnios = antigAnios,
-                AntigMeses = antigMeses,
-                SinHaberes = sinHaberes,
-                Subvencionada = subvencionada,
                 Vigente = vigente
             };
 

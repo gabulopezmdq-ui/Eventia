@@ -170,7 +170,7 @@ namespace API.Controllers
 
             // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
             var mensajeValidacion = await _pofService.RegistrarSuplenciaAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia, POF.Barra, POF.IdCategoria, 
-                POF.TipoCargo, POF.CantHsCargo, POF.AntigAnios, POF.AntigMeses, POF.SinHaberes, POF.Subvencionada, POF.Vigente);
+                POF.TipoCargo, POF.Vigente);
 
             if (mensajeValidacion.StartsWith("Ya existe"))
             {
