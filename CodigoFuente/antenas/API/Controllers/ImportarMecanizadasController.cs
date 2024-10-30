@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
 
 namespace API.Controllers
 {
@@ -17,9 +18,12 @@ namespace API.Controllers
     {
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
 
-        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService)
+        private readonly ICRUDService<MEC_TMPMecanizadas> _serviceGenerico;
+
+        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico)
         {
             _importacionMecanizadaService = importacionService;
+            _serviceGenerico = serviceGenerico;
         }
 
         [HttpPost("ImportarExcel")]
@@ -48,6 +52,12 @@ namespace API.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get()
+        {
+            return Ok(_serviceGenerico.GetAll());
         }
     }
 }

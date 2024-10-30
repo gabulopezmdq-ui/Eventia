@@ -18,30 +18,7 @@ namespace API.Services
         {
             _context = context;
         }
-
-        public async Task<string> ValidarEst(int idEstablecimiento)
-        {
-            // Verificar si el establecimiento está seleccionado
-            if (idEstablecimiento <= 0)
-            {
-                return "Debe seleccionar un Establecimiento.";
-            }
-
-            // Comprobar si el establecimiento existe
-            var establecimiento = await _context.MEC_Establecimientos.FindAsync(idEstablecimiento);
-            if (establecimiento == null)
-            {
-                return "El Establecimiento no existe.";
-            }
-
-            return null; // No hay errores
-        }
-
-        public async Task<MEC_Personas> GetPersonaByDocumento(string nroDocumento)
-        {
-            return await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == nroDocumento);
-        }
-
+        
         public async Task<MEC_Personas> AddPersona(MEC_Personas persona)
         {
             _context.MEC_Personas.Add(persona);
@@ -49,80 +26,34 @@ namespace API.Services
             return persona;
         }
 
-        public async Task<(MEC_Personas persona, string errorMessage)> ValidarPersonas(MEC_Personas persona)
-        {
-            // Verificar si el número de documento existe
-            var existingPersona = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == persona.DNI);
-
-            if (existingPersona != null)
-            {
-                return (existingPersona, null); // Retorna la persona existente
-            }
-
-            // Si no existe, valida los datos obligatorios
-            if (string.IsNullOrWhiteSpace(persona.Apellido) || string.IsNullOrWhiteSpace(persona.Nombre))
-            {
-                return (null, "Debe completar los datos obligatorios (*)");
-            }
-
-            // Crear un nuevo registro en MEC_Personas
-            _context.MEC_Personas.Add(persona);
-            await _context.SaveChangesAsync();
-
-            return (persona, null); // Retorna la nueva persona creada
-        }
 
         //probar otro tipo de codigo
 
         // Método para verificar la existencia de la persona en MEC_POF con un DNI, Legajo y Establecimiento específicos.
-        public async Task<(bool, MEC_POF?, string, object?)> VerificarPofAsync(string dni, string legajo, int idEstablecimiento)
+        public async Task<(bool Existe, MEC_Personas? Persona, string Mensaje, object? DatosRegistroManual)> VerificarYRegistrarPersonaAsync(string nroDocumento)
         {
-            // Busca la persona en la tabla MEC_Personas con el DNI y el Legajo especificados
-            var persona = await _context.MEC_Personas
-                .FirstOrDefaultAsync(p => p.DNI == dni);
+            // Verifica si la persona existe
+            var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == nroDocumento);
 
-            if (persona == null)
+            if (personaExistente != null)
             {
-                // Si la persona no existe, retornamos un objeto para habilitar los campos
-                return (false, null, "La persona no está registrada. Completa los campos requeridos.",
-                    new { HabilitarCampos = true, DNI = dni });
+                // Si la persona existe, retornamos sus datos
+                return (true, personaExistente, "Persona encontrada.", null);
             }
 
-            // Verifica si existe una entrada en MEC_POF con el idPersona y idEstablecimiento
-            var pof = await _context.MEC_POF
-                .Include(p => p.Establecimiento) // Para obtener datos del establecimiento
-                .Include(p => p.Persona)         // Para obtener datos de la persona
-                .FirstOrDefaultAsync(p =>
-                    p.IdPersona == persona.IdPersona &&
-                    p.IdEstablecimiento == idEstablecimiento);
-
-            if (pof != null)
-            {
-                // Si se encuentra un registro en MEC_POF
-                return (true, pof, "Registro encontrado.",
-                   new
-                   {
-                       IdPersona = persona.IdPersona,
-                       IdEstablecimiento = idEstablecimiento,
-                       DatosPof = pof
-                   });
-            }
-
-            // Si la persona existe pero no tiene POF asociada
-            return (false, null, "La persona está registrada pero no tiene POF asociada. Puede registrarla manualmente.",
-                new
-                {
-                    HabilitarCampos = false,
-                    DNI = persona.DNI,
-                    Legajo = persona.Legajo,
-                    Apellido = persona.Apellido,
-                    Nombre = persona.Nombre,
-                    IdEstablecimiento = idEstablecimiento
-                });
+            // Si no existe, habilitamos campos para completar la información
+            return (false, null, "La persona no está registrada. Completa los campos requeridos.", new { HabilitarCampos = true });
         }
-        public async Task<bool> RegistrarPersonaAsync(string dni, string legajo, string apellido, string nombre)
+        public async Task<string> CompletarRegistroPersonaAsync(string dni, string legajo, string apellido, string nombre)
         {
-            var persona = new MEC_Personas
+            // Validar campos obligatorios
+            if (string.IsNullOrWhiteSpace(dni) || string.IsNullOrWhiteSpace(apellido) || string.IsNullOrWhiteSpace(nombre))
+            {
+                return "Debe completar los datos obligatorios (*)";
+            }
+
+            // Crear un nuevo registro en MEC_Personas
+            var nuevaPersona = new MEC_Personas
             {
                 DNI = dni,
                 Legajo = legajo,
@@ -130,17 +61,77 @@ namespace API.Services
                 Nombre = nombre
             };
 
-            _context.MEC_Personas.Add(persona);
-            await _context.SaveChangesAsync(); // Guarda el nuevo registro
+            await AddPersona(nuevaPersona); // Usar el método existente para agregar la persona
 
-            return true;
+            return "Persona registrada correctamente.";
         }
 
-        public async Task<List<MEC_POF>> GetPofByEstablecimientoAsync(int idEstablecimiento)
+        public async Task<bool> GuardarPersonaAsync(MEC_Personas persona)
         {
-            return await _context.MEC_POF
-                .Where(p => p.IdEstablecimiento == idEstablecimiento)
-                .ToListAsync();
-        } 
+            _context.MEC_Personas.Add(persona);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        public async Task<bool> ExisteRegistroEnPOFAsync(int idPersona, int idEstablecimiento)
+        {
+            return await _context.MEC_POF.AnyAsync(p => p.IdPersona == idPersona && p.IdEstablecimiento == idEstablecimiento);
+        }
+
+        public async Task<string> RegistrarPOFAsync(string dni, int idEstablecimiento, string secuencia, string barra,
+            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
+            string sinHaberes, string subvencionada, string vigente)
+        {
+            // Verificar si la persona existe en MEC_Personas
+            var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == dni);
+
+            if (personaExistente == null)
+            {
+                return "No se encontró una persona con el DNI proporcionado.";
+            }
+
+            // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
+            if (await ExisteRegistroEnPOFAsync(personaExistente.IdPersona, idEstablecimiento))
+            {
+                return "Ya existe un registro en MEC_POF para esta persona y establecimiento.";
+            }
+
+            // Si no existe, proceder a crear el nuevo registro
+            var nuevaPOF = new MEC_POF
+            {
+                IdPersona = personaExistente.IdPersona,  // Guardar el IdPersona
+                IdEstablecimiento = idEstablecimiento,
+                Secuencia = secuencia,
+                Barra = barra,
+                IdCategoria = idCategoria,
+                TipoCargo = tipoCargo,
+                CantHsCargo = cantHsCargo,
+                AntigAnios = antigAnios,
+                AntigMeses = antigMeses,
+                SinHaberes = sinHaberes,
+                Subvencionada = subvencionada,
+                Vigente = vigente
+            };
+
+            _context.MEC_POF.Add(nuevaPOF);
+            await _context.SaveChangesAsync();
+            return "POF registrada correctamente.";
+        }
+
+        // Servicio para registrar suplencia
+        public async Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
+            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
+            string sinHaberes, string subvencionada, string vigente)
+        {
+            // Verificar si ya existe un registro en MEC_POF para esta combinación
+            if (await _context.MEC_POF.AnyAsync(p => p.IdEstablecimiento == idEstablecimiento &&
+                                                        p.IdPersona == idPersona &&
+                                                        p.Secuencia == secuencia))
+            {
+                return "Ya existe un registro en MEC_POF para esta combinación de Establecimiento, Persona y Secuencia.";
+            }
+
+            // Si no existe, aquí podrías crear una nueva entrada para la suplencia si así lo deseas
+            return "Puede proceder a registrar la suplencia.";
+        }
     }
 }

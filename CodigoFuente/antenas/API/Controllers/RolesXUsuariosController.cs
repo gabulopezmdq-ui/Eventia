@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin")]
+    //[Authorize(Roles = "SuperAdmin")]
+    [AllowAnonymous]
     [Route("RolesXUsuarios")]
     public class RolesXUsuariosController : ControllerBase
     {
@@ -56,8 +57,14 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<MEC_RolesXUsuarios>> Update([FromBody] MEC_RolesXUsuarios rolXUsuario)
+        public async Task<ActionResult<MEC_RolesXUsuarios>> Update([FromBody] UPRolXUsuarioDto dto)
         {
+            var rolXUsuario = new MEC_RolesXUsuarios
+            {
+                IdRolXUsuario = dto.IdRolXUsuario,
+                IdRol = dto.IdRol,
+                IdUsuario = dto.IdUsuario
+            };
             await _serviceGenerico.Update(rolXUsuario);
             return Ok(rolXUsuario);
         }

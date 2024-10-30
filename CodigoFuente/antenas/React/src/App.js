@@ -267,6 +267,10 @@ export default function App() {
       path: "/CarRevistaFE/Edit/:id",
       component: AltaCarRevista,
     },
+    {
+      path: "/TiposEstablecimientoFE/Edit/:id",
+      component: AltaTipoEstablecimiento,
+    },
     //----------------------------------Rutas de Alta
     {
       path: "/CabeceraLiquidacionFE/Nuevo",
