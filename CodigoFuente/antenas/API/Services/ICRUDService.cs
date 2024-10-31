@@ -10,7 +10,7 @@ namespace API.Services
     public interface ICRUDService<T>
     {
         IEnumerable<T> GetAll();
-
+        IEnumerable<T> GetAllVigente();
         Task<T> GetByID(int id);
 
         Task Add(T genericClass);
