@@ -10,6 +10,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Authorize(Roles = "SuperAdmin")]
+    //[AllowAnonymous]
     [Route("Usuarios")]
     public class UsuariosController : ControllerBase
     {
@@ -23,9 +24,9 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_Usuarios>>> Get()
+        public async Task<ActionResult<IEnumerable<MEC_Usuarios>>> GetAllVigente()
         {
-            return Ok(_serviceGenerico.GetAll());
+            return Ok(_serviceGenerico.GetAllVigente());
         }
 
         [HttpGet("GetById")]
