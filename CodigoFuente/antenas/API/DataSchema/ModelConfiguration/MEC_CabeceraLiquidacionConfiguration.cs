@@ -17,7 +17,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
            .HasOne(e => e.Usuarios)
            .WithMany()
-           .HasForeignKey(e => e.Usuarios)
+           .HasForeignKey(e => e.IdUsuario)
            .IsRequired(true);
 
             builder
@@ -46,7 +46,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsFixedLength(true)
                 .IsRequired(false); 
 
-            builder.Property(e => e.Usuario)
+            builder.Property(e => e.IdUsuario)
                 .IsRequired(true);
 
             builder.Property(e => e.Observaciones)

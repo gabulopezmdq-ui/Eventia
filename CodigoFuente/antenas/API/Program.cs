@@ -89,7 +89,7 @@ builder.Services.AddHealthChecks();
 //Services
 
 builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPOFService, POFService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
