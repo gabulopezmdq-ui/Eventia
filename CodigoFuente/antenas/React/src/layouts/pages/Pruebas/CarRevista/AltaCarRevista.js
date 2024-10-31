@@ -34,7 +34,7 @@ function AltaCarRevista() {
 
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         { type: "text", label: "CodPcia", name: "codPcia", required: true },
         { type: "text", label: "Descripcion", name: "descripcion", required: true },

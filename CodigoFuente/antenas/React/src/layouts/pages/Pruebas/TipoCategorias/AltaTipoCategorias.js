@@ -34,7 +34,7 @@ function AltaTipoCategorias() {
 
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         { type: "text", label: "CodCategoria", name: "codCategoria", required: true },
         { type: "text", label: "CodCategoriaMGP", name: "codCategoriaMGP", required: true },

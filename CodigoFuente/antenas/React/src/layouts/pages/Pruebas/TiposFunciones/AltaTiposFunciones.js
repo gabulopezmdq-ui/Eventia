@@ -34,7 +34,7 @@ function AltaTiposFunciones() {
 
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         { type: "text", label: "codFuncion", name: "codFuncion", required: true },
         { type: "text", label: "codFuncionMGP", name: "codFuncionMGP", required: true },
