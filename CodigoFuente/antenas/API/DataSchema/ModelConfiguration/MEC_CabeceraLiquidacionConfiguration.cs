@@ -15,6 +15,17 @@ namespace API.DataSchema.ModelConfiguration
                 .ValueGeneratedOnAdd();
 
             builder
+           .HasOne(e => e.Usuarios)
+           .WithMany()
+           .HasForeignKey(e => e.Usuarios)
+           .IsRequired(true);
+
+            builder
+               .Navigation(e => e.Usuarios)
+               .AutoInclude(true)
+               .UsePropertyAccessMode(PropertyAccessMode.FieldDuringConstruction);
+
+            builder
                 .HasOne(e => e.TipoLiquidacion)
                 .WithMany(e => e.CabeceraLiquidacion)
                 .HasForeignKey(e => e.idTipoLiquidacion)

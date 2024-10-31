@@ -16,5 +16,6 @@ namespace API.DataSchema
         public string Estado { get; set; }
         public string Vigente { get; set; }
         public virtual MEC_TiposLiquidaciones? TipoLiquidacion { get; set; }
-     }
+        public virtual MEC_Usuarios Usuarios { get; set; }
+    }
 }
