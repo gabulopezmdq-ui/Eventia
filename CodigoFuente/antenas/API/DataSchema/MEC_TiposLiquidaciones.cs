@@ -9,5 +9,6 @@ namespace API.DataSchema
         public string Descripcion { get; set; }
         public string Vigente { get; set; }
         public string[] UniqueProperties => new[] { "Descripcion" }; //  CodCategoria es unico
+        public virtual ICollection<MEC_CabeceraLiquidacion>? CabeceraLiquidacion { get; set; } = new List<MEC_CabeceraLiquidacion>();
     }
 }
