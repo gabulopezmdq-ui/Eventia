@@ -49,7 +49,7 @@ namespace API.Controllers
         public async Task<ActionResult> Post([FromBody] MEC_CabeceraLiquidacion cab)
         {
             int idUsuario = _userService.GetAuthenticatedUserId();
-            cab.Usuario = idUsuario;  // Asigna el ID de usuario al campo correspondiente
+            cab.Usuario = idUsuario;  // Asigna el ID de usuario 
             await _serviceGenerico.Add(cab);
             return Ok(cab);
         }
@@ -65,7 +65,7 @@ namespace API.Controllers
         public async Task<ActionResult<MEC_CabeceraLiquidacion>> Update([FromBody] MEC_CabeceraLiquidacion cab)
         {
             int idUsuario = _userService.GetAuthenticatedUserId();
-            cab.Usuario = idUsuario;  // Asigna el ID de usuario al campo correspondiente
+            cab.Usuario = idUsuario;  // Asigna el ID de usuario
             await _serviceGenerico.Update(cab);
             return Ok(cab);
         }
