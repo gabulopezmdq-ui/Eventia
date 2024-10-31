@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
 import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
 import FormField from "layouts/pages/account/components/FormField";
 
 function SelectField({
@@ -14,58 +13,61 @@ function SelectField({
   formData,
   handleChange,
   customOptions,
+  multiple = false,
 }) {
   const [options, setOptions] = useState([]);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    // Verificar si apiUrl está definido y no es nulo
-    if (apiUrl && apiUrl.includes("${idConservadora}")) {
-      const idConservadora = formData["idConservadora"];
-      const url = apiUrl.replace("${idConservadora}", idConservadora);
-      axios
-        .get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`, // Envía el token en los headers
-          },
-        })
-        .then((response) => {
-          setOptions(response.data);
-        })
-        .catch((error) => {
-          console.error("Error al cargar las opciones:", error);
-        });
-    } else if (apiUrl) {
+    if (apiUrl) {
       axios
         .get(apiUrl, {
           headers: {
-            Authorization: `Bearer ${token}`, // Envía el token en los headers
+            Authorization: `Bearer ${token}`,
           },
         })
         .then((response) => {
           setOptions(response.data);
         })
         .catch((error) => {
-          console.error("Error al cargar las opciones:", error);
+          console.error("Error al cargar las opciones desde la API:", error);
         });
     }
-  }, [apiUrl, formData.idConservadora, token]);
+  }, [apiUrl, token]);
 
-  const combinedOptions = [...customOptions, ...options];
+  // Usa customOptions si se proporcionan, de lo contrario usa las opciones obtenidas de la API
+  const combinedOptions = customOptions.length > 0 ? customOptions : options;
+
+  const handleSelectionChange = (event, newValue) => {
+    const selectedValues = multiple
+      ? newValue.map((option) => option[valueField])
+      : newValue
+      ? [newValue[valueField]]
+      : [];
+    handleChange({
+      target: {
+        name,
+        value: multiple ? selectedValues : selectedValues[0] || null,
+      },
+    });
+  };
 
   return (
     <div>
       <Autocomplete
+        multiple={multiple}
         options={combinedOptions}
         getOptionLabel={(option) =>
           optionField === "nombre" && option.apellido
             ? `${option.nombre} ${option.apellido}`
             : option[optionField]
         }
-        value={combinedOptions.find((option) => option[valueField] === formData[name]) || null}
-        onChange={(event, newValue) => {
-          handleChange({ target: { name, value: newValue ? newValue[valueField] : null } });
-        }}
+        value={
+          multiple
+            ? combinedOptions.filter((option) => formData[name]?.includes(option[valueField]))
+            : combinedOptions.find((option) => option[valueField] === formData[name]) || null
+        }
+        onChange={handleSelectionChange}
         renderInput={(params) => <FormField {...params} label={label} />}
       />
     </div>
@@ -81,11 +83,13 @@ SelectField.propTypes = {
   formData: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   customOptions: PropTypes.array,
+  multiple: PropTypes.bool,
 };
 
 SelectField.defaultProps = {
   apiUrl: null,
   customOptions: [],
+  multiple: false,
 };
 
 export default SelectField;

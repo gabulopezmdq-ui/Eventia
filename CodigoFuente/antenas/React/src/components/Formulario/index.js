@@ -130,10 +130,17 @@ function Formulario({
       return;
     }
 
-    // Filtrar updatedFormData para incluir solo los campos necesarios
-    const filteredFormData = Object.keys(updatedFormData).reduce((acc, key) => {
-      if (!key.startsWith("eV_")) {
-        acc[key] = updatedFormData[key];
+    const filteredFormData = Object.keys(formData).reduce((acc, key) => {
+      const value = formData[key];
+      const hasArrayInObject = (obj) => {
+        return Object.values(obj).some((val) => Array.isArray(val));
+      };
+
+      // Formateamos las fechas al enviar
+      if (value instanceof Date) {
+        acc[key] = formatDateToString(value); // Aplicamos el formato a las fechas
+      } else if (!Array.isArray(value) && (typeof value !== "object" || !hasArrayInObject(value))) {
+        acc[key] = value;
       }
       return acc;
     }, {});
