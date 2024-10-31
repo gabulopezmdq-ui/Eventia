@@ -9,7 +9,7 @@ namespace API.DataSchema
         public int idTipoLiquidacion { get; set; }
         public string MesLiquidacion { get; set; }
         public string AnioLiquidacion { get; set; }
-        public int Usuario { get; set; }
+        public int IdUsuario { get; set; }
         public string Observaciones { get; set; }
         public DateTime InicioLiquidacion { get; set; }
         public DateTime FinLiquidacion { get; set; }
