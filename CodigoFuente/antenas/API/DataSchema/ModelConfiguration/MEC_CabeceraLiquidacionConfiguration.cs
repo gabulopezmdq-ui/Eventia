@@ -16,7 +16,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
            .HasOne(e => e.Usuarios)
-           .WithMany()
+           .WithMany(u => u.CabeceraLiquidacion)
            .HasForeignKey(e => e.IdUsuario)
            .IsRequired(true);
 
