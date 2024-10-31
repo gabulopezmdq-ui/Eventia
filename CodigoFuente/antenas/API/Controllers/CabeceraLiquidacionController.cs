@@ -1,4 +1,5 @@
 ﻿using  API.DataSchema;
+using API.DataSchema.DTO;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +29,7 @@ namespace API.Controllers
         }
         
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_CabeceraLiquidacion>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<CabLiquidacionDTO>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }

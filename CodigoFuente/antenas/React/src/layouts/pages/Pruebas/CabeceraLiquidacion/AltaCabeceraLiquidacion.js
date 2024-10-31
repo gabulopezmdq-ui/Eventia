@@ -47,7 +47,6 @@ function AltaCabeceraLiquidacion() {
         },
         { type: "text", label: "Mes Liquidacion", name: "mesLiquidacion", required: true },
         { type: "text", label: "Año Liquidacion", name: "anioLiquidacion", required: true },
-        { type: "text", label: "Usuario", name: "usuario", required: true },
         { type: "text", label: "Observaciones", name: "observaciones", required: true },
         { type: "text", label: "Inicio Liquidacion", name: "inicioLiquidacion", required: true },
         { type: "text", label: "Fin Liquidacion", name: "finLiquidacion", required: true },

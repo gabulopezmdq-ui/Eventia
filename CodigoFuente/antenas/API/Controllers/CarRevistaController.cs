@@ -26,9 +26,15 @@ namespace API.Controllers
         }
         
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> Get() //Trae los registros Vigentes = S
         {
             return Ok(_serviceGenerico.GetAll());
+        }
+
+        [HttpGet("GetAllN")]
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetAllVigente() //Trae TODOS los registros independientemente de que son Vigente S o N
+        {
+            return Ok(_serviceGenerico.GetAllVigente());
         }
 
         [HttpGet("GetById")]
