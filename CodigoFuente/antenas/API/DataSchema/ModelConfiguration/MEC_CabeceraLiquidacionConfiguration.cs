@@ -16,8 +16,8 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
                 .HasOne(e => e.TipoLiquidacion)
-                .WithOne()
-                .HasForeignKey<MEC_TiposLiquidaciones>(k => k.IdTipoLiquidacion)
+                .WithMany(e => e.CabeceraLiquidacion)
+                .HasForeignKey(e => e.idTipoLiquidacion)
                 .IsRequired(true);
 
             builder
@@ -36,8 +36,6 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(false); 
 
             builder.Property(e => e.Usuario)
-                .HasColumnType("varchar(50)")
-                .IsFixedLength(true)
                 .IsRequired(true);
 
             builder.Property(e => e.Observaciones)
