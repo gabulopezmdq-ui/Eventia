@@ -25,9 +25,9 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_RolesXUsuarios>>> Get()
+        public async Task<ActionResult<IEnumerable<MEC_RolesXUsuarios>>> GetAllVigente()
         {
-            return Ok(_serviceGenerico.GetAll());
+            return Ok(_serviceGenerico.GetAllVigente());
         }
 
         [HttpGet("GetById")]
