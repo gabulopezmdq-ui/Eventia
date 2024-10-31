@@ -34,7 +34,7 @@ function AltaCabeceraLiquidacion() {
 
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         {
           type: "select",

@@ -53,7 +53,7 @@ function AltaConceptos() {
   //----------------------Fin Validadciones--------------------
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         {
           type: "text",
