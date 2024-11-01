@@ -11,5 +11,6 @@ namespace API.Services
     public interface IUserService
     {
         int GetAuthenticatedUserId();
+        Task VerifRol(MEC_RolesXUsuarios rolXUsuario);
     }
 }
