@@ -4,6 +4,7 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -17,11 +18,13 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_RolesXUsuarios> _serviceGenerico;
+        private readonly IUserService _userService;
 
-        public RolesXUsuariosController(DataContext context, ILogger<MEC_RolesXUsuarios> logger, ICRUDService<MEC_RolesXUsuarios> serviceGenerico)
+        public RolesXUsuariosController(DataContext context, ILogger<MEC_RolesXUsuarios> logger, ICRUDService<MEC_RolesXUsuarios> serviceGenerico, IUserService userService)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
+            _userService = userService;
         }
 
         [HttpGet("GetAll")]
@@ -39,15 +42,25 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] RolXUsuarioDto dto)
         {
-            var rolXUsuario = new MEC_RolesXUsuarios
+            try
             {
-                IdRol = dto.IdRol,
-                IdUsuario = dto.IdUsuario
-            };
 
-            await _serviceGenerico.Add(rolXUsuario);
-            return Ok(rolXUsuario);
+
+                var rolXUsuario = new MEC_RolesXUsuarios
+                {
+                    IdRol = dto.IdRol,
+                    IdUsuario = dto.IdUsuario
+                };
+
+                await _userService.VerifRol(rolXUsuario);
+                return Ok(rolXUsuario);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
         }
+
 
         [HttpDelete]
         public async Task<IActionResult> Delete(int Id)

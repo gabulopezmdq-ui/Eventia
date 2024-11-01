@@ -11,16 +11,20 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.IO.Compression;
+using DocumentFormat.OpenXml.InkML;
 
 namespace API.Services
 {
     public class UserService : IUserService
     {
+        private readonly DataContext _context;
+
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserService(IHttpContextAccessor httpContextAccessor)
+        public UserService(IHttpContextAccessor httpContextAccessor, DataContext context)
         {
             _httpContextAccessor = httpContextAccessor;
+            _context = context;
         }
 
         public int GetAuthenticatedUserId()
@@ -32,5 +36,22 @@ namespace API.Services
             }
             return int.Parse(userIdClaim.Value);
         }
+
+        public async Task VerifRol(MEC_RolesXUsuarios rolXUsuario)
+        {
+            // Verificar si ya existe la combinación de UsuarioId y RolId
+            bool exists = await _context.MEC_RolesXUsuarios
+                .AnyAsync(rx => rx.IdUsuario == rolXUsuario.IdUsuario && rx.IdRol == rolXUsuario.IdRol);
+
+            if (exists)
+            {
+                throw new InvalidOperationException("El usuario ya tiene este rol asignado.");
+            }
+
+            // Si no existe, agregar el nuevo rol
+            _context.MEC_RolesXUsuarios.Add(rolXUsuario);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
