@@ -32,14 +32,14 @@ function ImportarArchivo() {
   useEffect(() => {
     // Fetch Mecanizadas
     axios
-      .get(`${process.env.REACT_APP_API_URL}ImportarMecanizadas/GetAll`, {
+      .get(`${process.env.REACT_APP_API_URL}CabeceraLiquidacion/GetAll`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
         const uniquenroEstablecimientos = [
-          ...new Set(response.data.map((person) => person.nroEstablecimiento)),
+          ...new Set(response.data.map((person) => person.observaciones)),
         ];
         setnroEstablecimientos(uniquenroEstablecimientos);
       })
@@ -160,7 +160,7 @@ function ImportarArchivo() {
                     label="Selecciona un Establecimiento"
                   >
                     <MenuItem value="">
-                      <em>Selecciona cabecera</em>
+                      <em>Selecciona un Establecimiento</em>
                     </MenuItem>
                     {nroEstablecimientos.map((nroEstablecimiento, index) => (
                       <MenuItem key={index} value={nroEstablecimiento}>
