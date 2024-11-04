@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin")]
-    //[AllowAnonymous]
+    //[Authorize(Roles = "SuperAdmin")]
+    [AllowAnonymous]
     [Route("RolesXUsuarios")]
     public class RolesXUsuariosController : ControllerBase
     {
@@ -28,9 +29,21 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_RolesXUsuarios>>> GetAllVigente()
+        public ActionResult<IEnumerable<object>> GetAllVigente()
         {
-            return Ok(_serviceGenerico.GetAllVigente());
+            var roles = _serviceGenerico.GetAllVigente(); // Sin await aquí
+
+            // Agrupar los roles por usuario
+            var groupedRoles = roles
+                .GroupBy(x => x.IdUsuario)
+                .Select(g => new
+                {
+                    IdUsuario = g.Key,
+                    Roles = g.Select(r => r.IdRol).ToList()
+                })
+                .ToList();
+
+            return Ok(groupedRoles);
         }
 
         [HttpGet("GetById")]
