@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,12 @@ namespace API.Controllers
         [HttpGet("GetById")]
         public async Task<ActionResult<MEC_RolesXUsuarios>> Get(int Id)
         {
-            return Ok(await _serviceGenerico.GetByID(Id));
+            var usuarioConRolesDetalle = await _userService.GetUsuarioConRolesDetalleById(Id);
+            if (usuarioConRolesDetalle == null)
+            {
+                return NotFound();
+            }
+            return Ok(usuarioConRolesDetalle);
         }
 
         [HttpPost]
