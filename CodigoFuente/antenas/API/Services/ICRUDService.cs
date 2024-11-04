@@ -24,6 +24,7 @@ namespace API.Services
         Task<IEnumerable<T>> GetAllActivos();
         Task<bool> UserDuplicate(T entity);
         Task<bool> IsUserDuplicate(T entity);
+        Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null);
 
     }
 }

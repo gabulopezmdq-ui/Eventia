@@ -30,7 +30,18 @@ namespace API.Services
         {
             return _genericRepo.AllAsNoTracking();
         }
+        public async Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null)
+        {
+            var query = _genericRepo.AllAsNoTracking();
 
+            if (!string.IsNullOrEmpty(vigenteStatus))
+            {
+                // Filtra solo si el estado de "Vigente" es proporcionado ("S" o "N")
+                query = query.Where(x => EF.Property<string>(x, "Vigente") == vigenteStatus);
+            }
+            // Si el valor es nulo o vacío, retorna todos sin aplicar filtro
+            return await Task.FromResult(query);
+        }
         public async Task<IEnumerable<T>> GetAllActivos()
         {
             return await Task.FromResult(_genericRepo.AllAsNoTracking().Where(x => EF.Property<bool>(x, "Activo") == true));
@@ -71,7 +82,20 @@ namespace API.Services
 
         public async Task Delete(int Id)
         {
-            await _genericRepo.Delete(Id);
+            // Obtiene el registro por su ID
+            var entity = await _genericRepo.Find(Id);
+
+            // Verifica si se encontró la entidad
+            if (entity == null)
+            {
+                throw new KeyNotFoundException("El registro no existe.");
+            }
+
+            // Cambia el estado 'Vigente' a "N" en lugar de eliminar físicamente
+            typeof(T).GetProperty("Vigente")?.SetValue(entity, "N");
+
+            // Guarda los cambios en la base de datos
+            await _genericRepo.Update(entity);
         }
 
         public virtual async Task<T> Update(T genericClass)
