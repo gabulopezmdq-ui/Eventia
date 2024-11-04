@@ -98,8 +98,15 @@ function UsuarioPorRol() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "usuario.nombre" },
-                  { Header: "Rol", accessor: "rol.nombreRol" },
+                  { Header: "Nombre", accessor: "nombreUsuario" },
+                  {
+                    Header: "Rol",
+                    accessor: "roles",
+                    Cell: ({ cell }) => {
+                      const roles = cell.value || []; // Usa un array vacío si cell.value es undefined
+                      return roles.map((role) => role.nombreRol).join(", "); // Manejar el caso vacío
+                    },
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",

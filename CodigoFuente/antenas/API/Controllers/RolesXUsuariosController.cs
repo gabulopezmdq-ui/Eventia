@@ -31,19 +31,26 @@ namespace API.Controllers
         [HttpGet("GetAll")]
         public ActionResult<IEnumerable<object>> GetAllVigente()
         {
-            var roles = _serviceGenerico.GetAllVigente(); // Sin await aquí
+            // Obtener todos los roles y usuarios
+            var rolesXUsuarios = _context.MEC_RolesXUsuarios.ToList();
 
-            // Agrupar los roles por usuario
-            var groupedRoles = roles
-                .GroupBy(x => x.IdUsuario)
+            // Agrupar y proyectar a un nuevo objeto
+            var result = rolesXUsuarios
+              .GroupBy(x => x.IdUsuario)
                 .Select(g => new
-                {
-                    IdUsuario = g.Key,
-                    Roles = g.Select(r => r.IdRol).ToList()
-                })
-                .ToList();
+                    {
+                        IdUsuario = g.Key,
+                        NombreUsuario = _context.MEC_Usuarios.FirstOrDefault(u => u.IdUsuario == g.Key)?.Nombre,
+                        Roles = g.Select(r => new
+                    {
+                IdRol = r.IdRol,
+                NombreRol = _context.MEC_Roles.FirstOrDefault(rol => rol.IdRol == r.IdRol)?.NombreRol,
+             }).ToList(),
+                IdRolXUsuario = g.FirstOrDefault().IdRolXUsuario // Asegúrate de que este campo esté aquí
+            })
+             .ToList();
 
-            return Ok(groupedRoles);
+            return Ok(result);
         }
 
         [HttpGet("GetById")]
