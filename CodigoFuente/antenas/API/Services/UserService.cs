@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.IO.Compression;
 using DocumentFormat.OpenXml.InkML;
+using API.DataSchema.DTO;
 
 namespace API.Services
 {
@@ -52,6 +53,28 @@ namespace API.Services
             _context.MEC_RolesXUsuarios.Add(rolXUsuario);
             await _context.SaveChangesAsync();
         }
+        public async Task<UsuarioConRolesDetalleDto> GetUsuarioConRolesDetalleById(int id)
+        {
+            var usuario = await _context.MEC_Usuarios
+                .Where(u => u.IdUsuario == id)
+                .Include(u => u.UsuariosXRoles)
+                    .ThenInclude(ur => ur.Rol)
+                .Select(u => new UsuarioConRolesDetalleDto
+                {
+                    IdUsuario = u.IdUsuario,
+                    NombreUsuario = u.Nombre,
+                    Email = u.Email,
+                    Activo = u.Activo ?? false,
+                    Roles = u.UsuariosXRoles.Select(ur => new RolDetalleDto
+                    {
+                        IdRol = ur.Rol.IdRol,
+                        NombreRol = ur.Rol.NombreRol,
+                        Vigente = ur.Rol.Vigente
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
+            return usuario;
+        }
     }
 }
