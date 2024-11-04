@@ -44,15 +44,19 @@ namespace API.Controllers
         {
             try
             {
-
-
                 var rolXUsuario = new MEC_RolesXUsuarios
                 {
                     IdRol = dto.IdRol,
                     IdUsuario = dto.IdUsuario
                 };
 
-                await _userService.VerifRol(rolXUsuario);
+                // Verificar si el usuario ya tiene este rol
+                if (await _serviceGenerico.UserDuplicate(rolXUsuario))
+                {
+                    return BadRequest(new { mensaje = "El usuario ya tiene este rol." });
+                }
+
+                await _serviceGenerico.Add(rolXUsuario);
                 return Ok(rolXUsuario);
             }
             catch (InvalidOperationException ex)
