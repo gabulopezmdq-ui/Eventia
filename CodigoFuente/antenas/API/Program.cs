@@ -19,6 +19,7 @@ using API;
 using FluentAssertions.Common;
 using System.Text;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using API.Services.UsXRol;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -92,6 +93,7 @@ builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(Impor
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPOFService, POFService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUsXRolService, UsXRolService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 
 //Repositories
