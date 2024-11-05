@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services;
+using API.Services.UsXRol;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,12 +22,14 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_RolesXUsuarios> _serviceGenerico;
         private readonly IUserService _userService;
+        private readonly IUsXRolService _usXRolService;
 
-        public RolesXUsuariosController(DataContext context, ILogger<MEC_RolesXUsuarios> logger, ICRUDService<MEC_RolesXUsuarios> serviceGenerico, IUserService userService)
+        public RolesXUsuariosController(DataContext context, ILogger<MEC_RolesXUsuarios> logger, ICRUDService<MEC_RolesXUsuarios> serviceGenerico, IUserService userService, IUsXRolService usXRolService)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _userService = userService;
+            _usXRolService = usXRolService;
         }
 
         [HttpGet("GetAll")]
@@ -99,71 +102,21 @@ namespace API.Controllers
             return Ok();
         }
 
-        //[HttpPut]
-        //public async Task<ActionResult<MEC_RolesXUsuarios>> Update([FromBody] UPRolXUsuarioDto dto)
-        //{
-        //    try
-        //    {
-        //        // Primero, eliminar los roles actuales asociados al usuario
-        //        var rolesActuales = _context.MEC_RolesXUsuarios
-        //            .Where(r => r.IdUsuario == dto.IdUsuario)
-        //            .ToList();
-
-        //        _context.MEC_RolesXUsuarios.RemoveRange(rolesActuales);
-
-        //        // Luego, agregar los nuevos roles que vienen en la lista `IdRoles`
-        //        var nuevosRoles = dto.IdRoles.Select(idRol => new MEC_RolesXUsuarios
-        //        {
-        //            IdUsuario = dto.IdUsuario,
-        //            IdRol = idRol
-        //        });
-
-        //        await _context.MEC_RolesXUsuarios.AddRangeAsync(nuevosRoles);
-
-        //        // Guardar cambios en la base de datos
-        //        await _context.SaveChangesAsync();
-
-        //        return Ok(new { mensaje = "Roles actualizados exitosamente." });
-        //    }
-
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new { mensaje = ex.Message });
-        //    }
-        //}
-
         [HttpPut]
-        public async Task<ActionResult<MEC_RolesXUsuarios>> Update([FromBody] UPRolXUsuarioDto dto)
+        public async Task<ActionResult> Update([FromBody] UPRolXUsuarioDto dto)
         {
             try
             {
-                // Obtener los roles actuales del usuario
-                var rolesActuales = _context.MEC_RolesXUsuarios
-                    .Where(r => r.IdUsuario == dto.IdUsuario)
-                    .ToList();
+                bool result = await _usXRolService.UpdateRolesAsync(dto);
 
-                // Identificar los roles a eliminar
-                var rolesAEliminar = rolesActuales
-                    .Where(r => !dto.IdRoles.Contains(r.IdRol))
-                    .ToList();
-
-                // Identificar los roles a agregar
-                var rolesExistentesIds = rolesActuales.Select(r => r.IdRol).ToHashSet();
-                var rolesAAgregar = dto.IdRoles
-                    .Where(idRol => !rolesExistentesIds.Contains(idRol))
-                    .Select(idRol => new MEC_RolesXUsuarios
-                    {
-                        IdUsuario = dto.IdUsuario,
-                        IdRol = idRol
-                    });
-
-                // Eliminar roles que ya no están en la lista de roles del usuario
-                _context.MEC_RolesXUsuarios.RemoveRange(rolesAEliminar);
-
-                await _context.MEC_RolesXUsuarios.AddRangeAsync(rolesAAgregar);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { mensaje = "Roles actualizados exitosamente." });
+                if (result)
+                {
+                    return Ok(new { mensaje = "Roles actualizados exitosamente." });
+                }
+                else
+                {
+                    return BadRequest(new { mensaje = "No se pudieron actualizar los roles." });
+                }
             }
             catch (Exception ex)
             {
