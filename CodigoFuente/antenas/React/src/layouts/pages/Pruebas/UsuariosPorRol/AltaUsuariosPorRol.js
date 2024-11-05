@@ -23,18 +23,38 @@ function AltaUsuariosPorRol() {
   const [saving, setSaving] = useState(false);
   const token = sessionStorage.getItem("token");
 
-  // Fetch usuarios and roles on component mount
   useEffect(() => {
     const fetchUsuariosAndRoles = async () => {
       try {
+        // Obtener todos los usuarios
         const usuariosResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}usuarios/GetAll`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setUsuarios(usuariosResponse.data);
 
+        // Obtener usuarios que ya tienen roles asignados
+        const usuariosConRolesResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}RolesXUsuarios/GetAll`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Extraer IDs de usuarios con roles, asegurándonos de que sean números
+        const usuariosConRolesIds = usuariosConRolesResponse.data.map((usuario) =>
+          Number(usuario.idUsuario)
+        );
+
+        // Filtrar solo los usuarios sin roles asignados
+        const usuariosSinRoles = usuariosResponse.data.filter(
+          (usuario) => !usuariosConRolesIds.includes(Number(usuario.idUsuario))
+        );
+
+        setUsuarios(usuariosSinRoles);
+
+        // Obtener todos los roles
         const rolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}Roles/GetAll`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -79,19 +99,19 @@ function AltaUsuariosPorRol() {
       alert("Debe seleccionar un usuario.");
       return;
     }
-
+    const rol = rolesAsignados.map((rol) => rol.idRol);
     setSaving(true);
     try {
       await axios.post(
-        `https://localhost:44382/RolesXUsuarios`, // Endpoint actualizado
+        `${process.env.REACT_APP_API_URL}RolesXUsuarios`,
         {
           IdUsuario: usuarioSeleccionado,
-          IdRoles: rolesAsignados.map((rol) => rol.idRol), // Formato esperado del body
+          IdRoles: rol,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json", // Aseguramos el tipo de contenido
+            "Content-Type": "application/json",
           },
         }
       );
@@ -104,7 +124,6 @@ function AltaUsuariosPorRol() {
       setSaving(false);
     }
   };
-
   const isAddButtonEnabled = selectedRoles.every((rol) =>
     rolesDisponibles.some((disponible) => disponible.idRol === rol.idRol)
   );
