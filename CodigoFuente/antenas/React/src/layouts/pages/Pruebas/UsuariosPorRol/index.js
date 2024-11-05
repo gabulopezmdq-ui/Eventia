@@ -62,10 +62,6 @@ function UsuarioPorRol() {
     navigate("/UsuarioPorRolFE/Nuevo");
   };
 
-  const handleNuevoTipoAgregarUsuario = () => {
-    navigate("/UsuarioPorRolFE/Nuevo");
-  };
-
   const handleVer = (rowData) => {
     if (rowData && rowData.idRolXUsuario) {
       const productId = rowData.idRolXUsuario;
