@@ -1,4 +1,5 @@
 ﻿using API.DataSchema;
+using API.DataSchema.DTO;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,7 @@ namespace API.Services
     public interface IUserService
     {
         int GetAuthenticatedUserId();
+        Task VerifRol(MEC_RolesXUsuarios rolXUsuario);
+        Task<UsuarioConRolesDetalleDto> GetUsuarioConRolesDetalleById(int id);
     }
 }

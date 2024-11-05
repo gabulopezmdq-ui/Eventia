@@ -31,6 +31,13 @@ namespace API.Controllers
             return Ok(_serviceGenerico.GetAll());
         }
 
+        [HttpGet("GetByVigente")]
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetByVigente([FromQuery] string vigente = null)
+        {
+            var result = await _serviceGenerico.GetByVigente(vigente);
+            return Ok(result);
+        }
+
         [HttpGet("GetById")]
         public async Task<ActionResult<MEC_Roles>> Get(int Id)
         {

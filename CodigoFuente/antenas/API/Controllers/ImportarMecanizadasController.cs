@@ -11,7 +11,8 @@ using System.Collections.Generic;
 
 namespace API.Controllers
 {
-    [ApiController]  //[Authorize(Roles = "Admin")]
+    [ApiController]  
+   [Authorize(Roles = "SuperAdmin, Admin")]
     [AllowAnonymous]
     [Route("[controller]")]
     public class ImportarMecanizadasController : ControllerBase
