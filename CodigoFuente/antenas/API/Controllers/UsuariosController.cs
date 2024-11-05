@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin")]
-    //[AllowAnonymous]
+    //[Authorize(Roles = "SuperAdmin")]
+    [AllowAnonymous]
     [Route("Usuarios")]
     public class UsuariosController : ControllerBase
     {
@@ -29,11 +29,26 @@ namespace API.Controllers
             return Ok(_serviceGenerico.GetAllVigente());
         }
 
+
         [HttpGet("GetById")]
         public async Task<ActionResult<MEC_Usuarios>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
+
+        [HttpGet("GetAllActivos")]
+        public ActionResult<IEnumerable<MEC_Usuarios>> GetAllActivos()
+        {
+            return Ok(_serviceGenerico.GetAllActivos());
+        }
+
+        // Obtener usuarios filtrados por propiedades opcionales
+        [HttpGet("GetByActivo")]
+        public ActionResult<IEnumerable<MEC_Usuarios>> GetByActivo([FromQuery] bool? boolValue)
+        {
+            return Ok(_serviceGenerico.GetByActivo(boolValue));
+        }
+
 
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] MEC_Usuarios usuario)

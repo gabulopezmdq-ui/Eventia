@@ -39,6 +39,7 @@ import VerCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/Ve
 import VerGestionUsuarios from "layouts/pages/Pruebas/GestionUsuarios/VerGestionUsuarios";
 import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
 import VerConcepto from "layouts/pages/Pruebas/Conceptos/VerConcepto";
+import EdicionRolXUsuario from "layouts/pages/Pruebas/UsuariosPorRol/EdicionUsuarioPorRol";
 import VerEstablecimiento from "layouts/pages/Pruebas/Establecimiento/VerEstablecimiento";
 import Inicio from "layouts/pages/Pruebas/Inicio/Index";
 
@@ -267,7 +268,7 @@ export default function App() {
     },
     {
       path: "/UsuarioPorRolFE/Edit/:id",
-      component: AltaUsuariosPorRol,
+      component: EdicionRolXUsuario,
     },
     {
       path: "/AltaConceptosFE/Edit/:id",
