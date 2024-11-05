@@ -29,7 +29,7 @@ function GestionUsuario() {
 
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "Usuarios/getall", {
+      .get(process.env.REACT_APP_API_URL + "Usuarios/GetAll", {
         headers: {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
