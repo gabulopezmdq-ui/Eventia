@@ -10,6 +10,7 @@ import { useState } from "react";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
+import DataTablePlanta from "examples/Tables/DataTablePlanta";
 import Formulario from "components/Formulario";
 import { Field } from "formik";
 import MDDropzone from "components/MDDropzone";
@@ -34,7 +35,7 @@ function AltaUsuariosPorRol() {
 
   const steps = [
     {
-      label: labelTitulo,
+      label: labelTitulo + " Paso 1",
       fields: [
         {
           type: "select",
