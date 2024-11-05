@@ -99,33 +99,72 @@ namespace API.Controllers
             return Ok();
         }
 
+        //[HttpPut]
+        //public async Task<ActionResult<MEC_RolesXUsuarios>> Update([FromBody] UPRolXUsuarioDto dto)
+        //{
+        //    try
+        //    {
+        //        // Primero, eliminar los roles actuales asociados al usuario
+        //        var rolesActuales = _context.MEC_RolesXUsuarios
+        //            .Where(r => r.IdUsuario == dto.IdUsuario)
+        //            .ToList();
+
+        //        _context.MEC_RolesXUsuarios.RemoveRange(rolesActuales);
+
+        //        // Luego, agregar los nuevos roles que vienen en la lista `IdRoles`
+        //        var nuevosRoles = dto.IdRoles.Select(idRol => new MEC_RolesXUsuarios
+        //        {
+        //            IdUsuario = dto.IdUsuario,
+        //            IdRol = idRol
+        //        });
+
+        //        await _context.MEC_RolesXUsuarios.AddRangeAsync(nuevosRoles);
+
+        //        // Guardar cambios en la base de datos
+        //        await _context.SaveChangesAsync();
+
+        //        return Ok(new { mensaje = "Roles actualizados exitosamente." });
+        //    }
+
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { mensaje = ex.Message });
+        //    }
+        //}
+
         [HttpPut]
         public async Task<ActionResult<MEC_RolesXUsuarios>> Update([FromBody] UPRolXUsuarioDto dto)
         {
             try
             {
-                // Primero, eliminar los roles actuales asociados al usuario
+                // Obtener los roles actuales del usuario
                 var rolesActuales = _context.MEC_RolesXUsuarios
                     .Where(r => r.IdUsuario == dto.IdUsuario)
                     .ToList();
 
-                _context.MEC_RolesXUsuarios.RemoveRange(rolesActuales);
+                // Identificar los roles a eliminar
+                var rolesAEliminar = rolesActuales
+                    .Where(r => !dto.IdRoles.Contains(r.IdRol))
+                    .ToList();
 
-                // Luego, agregar los nuevos roles que vienen en la lista `IdRoles`
-                var nuevosRoles = dto.IdRoles.Select(idRol => new MEC_RolesXUsuarios
-                {
-                    IdUsuario = dto.IdUsuario,
-                    IdRol = idRol
-                });
+                // Identificar los roles a agregar
+                var rolesExistentesIds = rolesActuales.Select(r => r.IdRol).ToHashSet();
+                var rolesAAgregar = dto.IdRoles
+                    .Where(idRol => !rolesExistentesIds.Contains(idRol))
+                    .Select(idRol => new MEC_RolesXUsuarios
+                    {
+                        IdUsuario = dto.IdUsuario,
+                        IdRol = idRol
+                    });
 
-                await _context.MEC_RolesXUsuarios.AddRangeAsync(nuevosRoles);
+                // Eliminar roles que ya no están en la lista de roles del usuario
+                _context.MEC_RolesXUsuarios.RemoveRange(rolesAEliminar);
 
-                // Guardar cambios en la base de datos
+                await _context.MEC_RolesXUsuarios.AddRangeAsync(rolesAAgregar);
                 await _context.SaveChangesAsync();
 
                 return Ok(new { mensaje = "Roles actualizados exitosamente." });
             }
-            
             catch (Exception ex)
             {
                 return BadRequest(new { mensaje = ex.Message });
