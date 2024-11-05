@@ -102,14 +102,34 @@ namespace API.Controllers
         [HttpPut]
         public async Task<ActionResult<MEC_RolesXUsuarios>> Update([FromBody] UPRolXUsuarioDto dto)
         {
-            var rolXUsuario = new MEC_RolesXUsuarios
+            try
             {
-                IdRolXUsuario = dto.IdRolXUsuario,
-                IdRol = dto.IdRol,
-                IdUsuario = dto.IdUsuario
-            };
-            await _serviceGenerico.Update(rolXUsuario);
-            return Ok(rolXUsuario);
+                // Primero, eliminar los roles actuales asociados al usuario
+                var rolesActuales = _context.MEC_RolesXUsuarios
+                    .Where(r => r.IdUsuario == dto.IdUsuario)
+                    .ToList();
+
+                _context.MEC_RolesXUsuarios.RemoveRange(rolesActuales);
+
+                // Luego, agregar los nuevos roles que vienen en la lista `IdRoles`
+                var nuevosRoles = dto.IdRoles.Select(idRol => new MEC_RolesXUsuarios
+                {
+                    IdUsuario = dto.IdUsuario,
+                    IdRol = idRol
+                });
+
+                await _context.MEC_RolesXUsuarios.AddRangeAsync(nuevosRoles);
+
+                // Guardar cambios en la base de datos
+                await _context.SaveChangesAsync();
+
+                return Ok(new { mensaje = "Roles actualizados exitosamente." });
+            }
+            
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
         }
     }
 }
