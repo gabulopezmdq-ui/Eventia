@@ -31,6 +31,7 @@ import AltaCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/A
 import AltaPersona from "layouts/pages/Pruebas/Persona/AltaPersona";
 import AltaGestionUsuario from "layouts/pages/Pruebas/GestionUsuarios/AltaGestionUsuario";
 import AltaUsuariosPorRol from "layouts/pages/Pruebas/UsuariosPorRol/AltaUsuariosPorRol";
+import EdicionUsuariosPorRol from "layouts/pages/Pruebas/UsuariosPorRol/EdicionUsuariosPorRol";
 import AltaEstablecimiento from "layouts/pages/Pruebas/Establecimiento/AltaEstablecimiento";
 import AltaTiposFunciones from "layouts/pages/Pruebas/TiposFunciones/AltaTiposFunciones";
 import AltaTipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones/AltaTipoLiquidaciones";
@@ -267,8 +268,8 @@ export default function App() {
       component: AltaGestionUsuario,
     },
     {
-      path: "/UsuarioPorRolFE/Edit/:id",
-      component: EdicionRolXUsuario,
+      path: "/UsuariosPorRolFE/Edit/:id",
+      component: EdicionUsuariosPorRol,
     },
     {
       path: "/AltaConceptosFE/Edit/:id",
