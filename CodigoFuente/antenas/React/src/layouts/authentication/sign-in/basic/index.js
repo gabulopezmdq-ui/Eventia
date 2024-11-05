@@ -74,7 +74,7 @@ function Basic() {
           let errorMessage = "";
           let errorType = "error";
           if (statusCode >= 400 && statusCode < 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
+            errorMessage = `Error: Hubo un problema con el Usuario y/o Contraseña.`;
           } else if (statusCode >= 500) {
             errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
           }
