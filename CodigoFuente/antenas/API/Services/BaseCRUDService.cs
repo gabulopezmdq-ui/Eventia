@@ -52,9 +52,11 @@ namespace API.Services
         {
             if (!boolValue.HasValue)
             {
-                return Enumerable.Empty<T>(); // Retornar vacío si no se proporciona valor
+                // Si boolValue es null, retornamos todos los usuarios
+                return await Task.FromResult(_genericRepo.AllAsNoTracking());
             }
 
+            // Si boolValue tiene valor (true o false), filtramos por 'Activo'
             return await Task.FromResult(
                 _genericRepo.AllAsNoTracking()
                     .Where(x => EF.Property<bool>(x, "Activo") == boolValue.Value)
