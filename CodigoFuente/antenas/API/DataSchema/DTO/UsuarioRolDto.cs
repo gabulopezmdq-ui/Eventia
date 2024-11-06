@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
 
 namespace API.DataSchema.DTO
 {
@@ -19,5 +17,22 @@ namespace API.DataSchema.DTO
         public int IdRol { get; set; }
         public string NombreRol { get; set; }
         public string Vigente { get; set; }
+    }
+
+    public class UsuarioRolDto
+    {
+        public List<UsuarioConRolesDetalleDto> UsuariosConRolesDetalle { get; set; }
+    }
+
+    public class RolXUsuarioDto
+    {
+        public int IdUsuario { get; set; }
+        public int IdRol { get; set; }
+    }
+
+    public class UPRolXUsuarioDto
+    {
+        public int IdUsuario { get; set; }
+        public List<int> IdRoles { get; set; } = new List<int>();
     }
 }
