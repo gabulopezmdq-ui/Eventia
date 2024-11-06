@@ -36,18 +36,19 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
+        [HttpGet("GetByActivo")]
+        public async Task<ActionResult<MEC_Usuarios>> GetByActivo(bool? usuario)
+        {
+            var usuarios = await _serviceGenerico.GetByActivo(usuario);
+            return Ok(usuarios);
+        }
+
         [HttpGet("GetAllActivos")]
         public ActionResult<IEnumerable<MEC_Usuarios>> GetAllActivos()
         {
             return Ok(_serviceGenerico.GetAllActivos());
         }
 
-        // Obtener usuarios filtrados por propiedades opcionales
-        [HttpGet("GetByActivo")]
-        public ActionResult<IEnumerable<MEC_Usuarios>> GetByActivo([FromQuery] bool? boolValue)
-        {
-            return Ok(_serviceGenerico.GetByActivo(boolValue));
-        }
 
 
         [HttpPost]
