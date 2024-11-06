@@ -17,6 +17,7 @@ import PropTypes from "prop-types";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 
 import "../../Pruebas/pruebas.css";
 
@@ -88,25 +89,26 @@ function GestionUsuario() {
           <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
             Agregar
           </MDButton>
-          <MDBox
-            component="select"
-            onChange={handleFilterChange}
-            defaultValue={activoFilter === null ? "" : activoFilter ? "S" : "N"}
-            sx={{
-              padding: "10px 20px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              backgroundColor: "#fff",
-              "&:focus": {
-                borderColor: "#4caf50",
-              },
-            }}
-          >
-            <option value="">Todos</option>
-            <option value="S">Activos</option>
-            <option value="N">Inactivos</option>
-          </MDBox>
+          <FormControl variant="outlined" sx={{ minWidth: 150, height: 48 }}>
+            <InputLabel id="filter-select-label">Estado </InputLabel>
+            <Select
+              labelId="filter-select-label"
+              id="filter-select"
+              value={activoFilter === null ? "" : activoFilter ? "S" : "N"}
+              label="Filtro"
+              onChange={handleFilterChange}
+              sx={{
+                height: 56,
+                "& .MuiSelect-select": {
+                  padding: "16px 14px",
+                },
+              }}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="S">Activos</MenuItem>
+              <MenuItem value="N">Inactivos</MenuItem>
+            </Select>
+          </FormControl>
         </MDBox>
         {errorAlert.show && (
           <Grid container justifyContent="center">
