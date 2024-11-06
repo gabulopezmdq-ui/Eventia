@@ -2,19 +2,16 @@
 using API.DataSchema.DTO;
 using API.Services;
 using API.Services.UsXRol;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SuperAdmin")]
     [AllowAnonymous]
     [Route("RolesXUsuarios")]
     public class RolesXUsuariosController : ControllerBase
@@ -32,8 +29,9 @@ namespace API.Controllers
             _usXRolService = usXRolService;
         }
 
+        // Obtener todos los roles asociados a los usuarios
         [HttpGet("GetAll")]
-        public ActionResult<IEnumerable<object>> GetAllVigente()
+        public async Task<ActionResult<IEnumerable<object>>> GetAllVigente()
         {
             // Obtener todos los roles y usuarios
             var rolesXUsuarios = _context.MEC_RolesXUsuarios.ToList();
@@ -57,8 +55,9 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        // Obtener un usuario con sus roles por Id
         [HttpGet("GetById")]
-        public async Task<ActionResult<MEC_RolesXUsuarios>> Get(int Id)
+        public async Task<ActionResult<UsuarioConRolesDetalleDto>> Get(int Id)
         {
             var usuarioConRolesDetalle = await _userService.GetUsuarioConRolesDetalleById(Id);
             if (usuarioConRolesDetalle == null)
@@ -68,14 +67,16 @@ namespace API.Controllers
             return Ok(usuarioConRolesDetalle);
         }
 
+        // Agregar un rol a un usuario
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] UPRolXUsuarioDto dto)
         {
             try
             {
-                bool result = await _usXRolService.UpdateRolesAsync(dto);
+                // Llamamos al servicio para agregar el rol al usuario
+                var result = await _usXRolService.AddRolToUsuarioAsync(dto);
 
-                if (result)
+                if (result == null)
                 {
                     return Ok(new { mensaje = "Roles actualizados exitosamente." });
                 }
@@ -83,6 +84,8 @@ namespace API.Controllers
                 {
                     return BadRequest(new { mensaje = "No se pudieron actualizar los roles." });
                 }
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -90,7 +93,7 @@ namespace API.Controllers
             }
         }
 
-
+        // Eliminar un rol de un usuario
         [HttpDelete]
         public async Task<IActionResult> Delete(int Id)
         {
@@ -98,8 +101,9 @@ namespace API.Controllers
             return Ok();
         }
 
+        // Actualizar los roles de un usuario
         [HttpPut]
-        public async Task<ActionResult> Update([FromBody] UPRolXUsuarioDto dto)
+        public async Task<ActionResult> Update([FromBody] UsuarioRolDto dto)
         {
             try
             {
