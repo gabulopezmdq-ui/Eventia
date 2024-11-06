@@ -245,7 +245,7 @@ function EdicionUsuariosPorRol() {
           </Grid>
         </Grid>
       </MDBox>
-      <MDBox display="flex" justifyContent="center" alignItems="center" mt={4}>
+      <MDBox display="flex" justifyContent="center" alignItems="center" mt={0}>
         <MDButton variant="contained" color="error" onClick={() => navigate(-1)}>
           CANCELAR
         </MDButton>
