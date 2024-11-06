@@ -88,14 +88,25 @@ function GestionUsuario() {
           <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
             Agregar
           </MDButton>
-          <select
+          <MDBox
+            component="select"
             onChange={handleFilterChange}
             defaultValue={activoFilter === null ? "" : activoFilter ? "S" : "N"}
+            sx={{
+              padding: "10px 20px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              "&:focus": {
+                borderColor: "#4caf50",
+              },
+            }}
           >
             <option value="">Todos</option>
             <option value="S">Activos</option>
             <option value="N">Inactivos</option>
-          </select>
+          </MDBox>
         </MDBox>
         {errorAlert.show && (
           <Grid container justifyContent="center">

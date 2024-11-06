@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SuperAdmin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin")]
+    //[AllowAnonymous]
     [Route("Usuarios")]
     public class UsuariosController : ControllerBase
     {
