@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -31,28 +32,11 @@ namespace API.Controllers
 
         // Obtener todos los roles asociados a los usuarios
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<object>>> GetAllVigente()
+        public async Task<ActionResult<IEnumerable<UsuarioConRolesDetalleDto>>> GetAllVigente()
         {
-            // Obtener todos los roles y usuarios
-            var rolesXUsuarios = _context.MEC_RolesXUsuarios.ToList();
+            var rolesXUsuarios = await _usXRolService.GetAllRolesXUsuariosAsync();
 
-            // Agrupar y proyectar a un nuevo objeto
-            var result = rolesXUsuarios
-              .GroupBy(x => x.IdUsuario)
-                .Select(g => new
-                {
-                    IdUsuario = g.Key,
-                    NombreUsuario = _context.MEC_Usuarios.FirstOrDefault(u => u.IdUsuario == g.Key)?.Nombre,
-                    Roles = g.Select(r => new
-                    {
-                        IdRol = r.IdRol,
-                        NombreRol = _context.MEC_Roles.FirstOrDefault(rol => rol.IdRol == r.IdRol)?.NombreRol,
-                    }).ToList(),
-                    IdRolXUsuario = g.FirstOrDefault().IdRolXUsuario // Asegúrate de que este campo esté aquí
-                })
-             .ToList();
-
-            return Ok(result);
+            return Ok(rolesXUsuarios);
         }
 
         // Obtener un usuario con sus roles por Id
@@ -73,10 +57,10 @@ namespace API.Controllers
         {
             try
             {
-                // Llamamos al servicio para agregar el rol al usuario
-                var result = await _usXRolService.AddRolToUsuarioAsync(dto);
+                // Llamar al servicio para actualizar los roles del usuario
+                bool result = await _usXRolService.UpdateRolesAsync(dto);
 
-                if (result == null)
+                if (result)
                 {
                     return Ok(new { mensaje = "Roles actualizados exitosamente." });
                 }
@@ -84,14 +68,13 @@ namespace API.Controllers
                 {
                     return BadRequest(new { mensaje = "No se pudieron actualizar los roles." });
                 }
-
-                return Ok(result);
             }
             catch (Exception ex)
             {
                 return BadRequest(new { mensaje = ex.Message });
             }
         }
+
 
         // Eliminar un rol de un usuario
         [HttpDelete]
@@ -103,7 +86,7 @@ namespace API.Controllers
 
         // Actualizar los roles de un usuario
         [HttpPut]
-        public async Task<ActionResult> Update([FromBody] UsuarioRolDto dto)
+        public async Task<ActionResult> Update([FromBody] UPRolXUsuarioDto dto)
         {
             try
             {
