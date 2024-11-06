@@ -111,6 +111,7 @@ function Formulario({
       return;
     }
 
+    // Agregar datos adicionales al formulario
     if (idObra) {
       formData.idObra = idObra;
     }
@@ -124,7 +125,6 @@ function Formulario({
       updatedFormData.idCons = formData.idConservadora;
     }
     if (!isFormValid) {
-      // Mostrar un mensaje de error o realizar alguna acción
       alert("Por favor complete los campos");
       console.error("Por favor complete los campos requeridos.");
       return;
@@ -136,27 +136,25 @@ function Formulario({
         return Object.values(obj).some((val) => Array.isArray(val));
       };
 
-      // Formateamos las fechas al enviar
       if (value instanceof Date) {
-        acc[key] = formatDateToString(value); // Aplicamos el formato a las fechas
+        acc[key] = formatDateToString(value);
       } else if (!Array.isArray(value) && (typeof value !== "object" || !hasArrayInObject(value))) {
         acc[key] = value;
       }
       return acc;
     }, {});
-    // Actualizar la URL para incluir el idRepTecnico
+
     const formatDate = (date) => {
       const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Los meses son 0-indexed, por lo que sumamos 1
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear();
       return `${day}/${month}/${year}`;
     };
 
     const formattedFDesde = formatDate(new Date(formData.fDesde));
     const formattedFHasta = formatDate(new Date(formData.fHasta));
-    //Esto es un funcion solamente para cambiar la url de RepTecxConservadora
     const apiUrlWithIdRepTecnico = includeIdRepTecnico
-      ? ` ${apiUrl}?idCons=${formData.idConservadora}&idRepTec=${formData.idRepTecnico}&fDesde=${formattedFDesde}&fHasta=${formattedFHasta}&nroContrato=${formData.nroContrato}`
+      ? `${apiUrl}?idCons=${formData.idConservadora}&idRepTec=${formData.idRepTecnico}&fDesde=${formattedFDesde}&fHasta=${formattedFHasta}&nroContrato=${formData.nroContrato}`
       : apiUrl;
 
     if (productId) {
@@ -170,18 +168,30 @@ function Formulario({
           navigate(-1);
         })
         .catch((error) => {
+          console.error("Error en la respuesta del backend:", error); // Agregado para depuración
+
+          // Verificar si el error es por registro duplicado
           if (error.response && error.response.status === 400) {
+            const errorMessage = error.response.data.error;
+            if (errorMessage && errorMessage.includes("El registro ya existe.")) {
+              setAlertData({
+                show: true,
+                message: "El usuario ya se encuentra registrado.",
+                type: "error",
+              });
+            } else {
+              setAlertData({
+                show: true,
+                message: errorMessage || "Error desconocido.",
+                type: "error",
+              });
+            }
+          } else {
             setAlertData({
               show: true,
-              message: error.response.data.error,
+              message: "Hubo un error al procesar la solicitud.",
               type: "error",
             });
-            console.log("Error 400: " + error.response.data.error);
-            setTimeout(() => {
-              setAlertData({ show: false, message: "", type: "error" });
-            }, 4000);
-          } else {
-            console.error("Error al enviar el formulario:", error);
           }
         });
     } else {
@@ -195,18 +205,30 @@ function Formulario({
           navigate(-1);
         })
         .catch((error) => {
+          console.error("Error en la respuesta del backend:", error); // Agregado para depuración
+
+          // Verificar si el error es por registro duplicado
           if (error.response && error.response.status === 400) {
+            const errorMessage = error.response.data.error;
+            if (errorMessage && errorMessage.includes("El registro ya existe.")) {
+              setAlertData({
+                show: true,
+                message: "El usuario ya se encuentra registrado.",
+                type: "error",
+              });
+            } else {
+              setAlertData({
+                show: true,
+                message: errorMessage || "Error desconocido.",
+                type: "error",
+              });
+            }
+          } else {
             setAlertData({
               show: true,
-              message: error.response.data.error,
+              message: "El usuario ya se encuentra registrado.",
               type: "error",
             });
-            console.log("Error 400: " + error.response.data.error);
-            setTimeout(() => {
-              setAlertData({ show: false, message: "", type: "error" });
-            }, 4000);
-          } else {
-            console.error("Error al enviar el formulario:", error);
           }
         });
     }
