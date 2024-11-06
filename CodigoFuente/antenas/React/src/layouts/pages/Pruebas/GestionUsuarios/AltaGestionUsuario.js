@@ -1,16 +1,25 @@
 import Grid from "@mui/material/Grid";
+
+// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
+
+// Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Box from "@mui/material/Box";
+import Footer from "examples/Footer";
 import FormularioGestion from "components/FormularioGestion";
+import { Field } from "formik";
+import MDDropzone from "components/MDDropzone";
+
+// Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
+// Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
 
 function AltaGestionUsuario() {
   const { id } = useParams();
   const isEditMode = Boolean(id);
-  const labelTitulo = isEditMode ? "Editar Usuario de Red" : "Alta Usuario de Red";
+  const labelTitulo = isEditMode ? "Editar Gestion de Usuario" : "Alta Gestion de Usuario";
 
   // Set initial state with activo set to true for new users
   const [formData, setFormData] = useState({
@@ -31,8 +40,13 @@ function AltaGestionUsuario() {
     {
       label: labelTitulo,
       fields: [
-        { type: "text", label: "Nombre de Red", name: "nombre", required: true },
-        { type: "text", label: "Email de Red", name: "email", required: true },
+        {
+          type: "text",
+          label: "Ingrese su Usuario de Red Municipal",
+          name: "nombre",
+          required: true,
+        },
+        { type: "text", label: "Email", name: "email", required: true },
         ...(isEditMode
           ? [
               {
@@ -56,39 +70,24 @@ function AltaGestionUsuario() {
 
   // Function to handle form submission
   const handleSubmit = async (data) => {
-    const payload = { ...data, activo: isEditMode ? data.activo : true }; // Establecer `activo` como `true` para nuevos usuarios
+    const payload = { ...data, activo: isEditMode ? data.activo : true }; // Set `activo` to true for new users
+    // Execute POST request with payload (assumes FormularioGestion accepts handleSubmit prop)
   };
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox pt={0}>
-        <Box
-          display="flex"
-          flexDirection="column" // Apila verticalmente el Card y el Grid
-          justifyContent="center"
-          alignItems="center"
-          height="100vh"
-          gap={0} // Espacio entre el Card y el Grid
-        >
-          <Grid
-            container
-            justifyContent="center"
-            alignItems="center"
-            sx={{
-              height: "100%", // Mantiene la altura del Grid sin cambios
-            }}
-          >
-            <Grid item xs={12} lg={10}>
-              <FormularioGestion
-                steps={steps}
-                apiUrl={apiUrl}
-                productId={id}
-                handleSubmit={handleSubmit}
-              />
-            </Grid>
+      <MDBox py={3} mb={20} height="65vh">
+        <Grid container justifyContent="center" alignItems="center" sx={{ height: "100%", mt: 8 }}>
+          <Grid item xs={12} lg={10}>
+            <FormularioGestion
+              steps={steps}
+              apiUrl={apiUrl}
+              productId={id}
+              handleSubmit={handleSubmit}
+            />
           </Grid>
-        </Box>
+        </Grid>
       </MDBox>
     </DashboardLayout>
   );
