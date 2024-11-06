@@ -135,12 +135,13 @@ function AltaUsuariosPorRol() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <Grid container spacing={3} mb={4}>
+      <Grid container spacing={0} mb={1}>
         <Grid item xs={12}>
           <Card>
             <MDBox p={3}>
               <MDTypography variant="h6">Asignación de Roles a Usuario</MDTypography>
               <Select
+                style={{ width: "40%", padding: "8px", color: "#495057" }}
                 fullWidth
                 value={usuarioSeleccionado}
                 onChange={handleUsuarioChange}
@@ -159,7 +160,7 @@ function AltaUsuariosPorRol() {
           </Card>
         </Grid>
 
-        <Grid container spacing={3} justifyContent="center" mt={4}>
+        <Grid container spacing={1} justifyContent="center" mt={4}>
           <Grid item xs={5}>
             <Card sx={{ p: 2 }}>
               <MDTypography variant="h6">Roles Disponibles</MDTypography>
@@ -182,26 +183,34 @@ function AltaUsuariosPorRol() {
             </Card>
           </Grid>
 
-          <Grid item xs={2} display="flex" flexDirection="column" alignItems="center">
-            <MDButton
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={handleAddRoles}
-              disabled={!isAddButtonEnabled || selectedRoles.length === 0}
+          <Grid item xs={2}>
+            <MDBox
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              height="100%" // Asegura que el MDBox ocupe toda la altura
             >
-              Agregar Rol
-            </MDButton>
-            <MDButton
-              variant="contained"
-              color="secondary"
-              size="small"
-              sx={{ mt: 2 }}
-              onClick={handleRemoveRoles}
-              disabled={!isRemoveButtonEnabled || selectedRoles.length === 0}
-            >
-              Quitar Rol
-            </MDButton>
+              <MDButton
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleAddRoles}
+                disabled={!isAddButtonEnabled || selectedRoles.length === 0}
+              >
+                Agregar Rol
+              </MDButton>
+              <MDButton
+                variant="contained"
+                color="secondary"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={handleRemoveRoles}
+                disabled={!isRemoveButtonEnabled || selectedRoles.length === 0}
+              >
+                Quitar Rol
+              </MDButton>
+            </MDBox>
           </Grid>
 
           <Grid item xs={5}>
@@ -227,7 +236,7 @@ function AltaUsuariosPorRol() {
           </Grid>
         </Grid>
 
-        <MDBox display="flex" justifyContent="center" mt={4}>
+        <MDBox display="flex" justifyContent="center" alignItems="center" width="100%" mt={4}>
           <MDButton variant="contained" color="error" onClick={() => navigate(-1)} sx={{ mx: 1 }}>
             Cancelar
           </MDButton>
