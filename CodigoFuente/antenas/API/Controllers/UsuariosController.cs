@@ -54,6 +54,7 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] MEC_Usuarios usuario)
         {
+            usuario.Activo = true;
             await _serviceGenerico.Add(usuario);
             return Ok(usuario);
         }
