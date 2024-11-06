@@ -7,7 +7,7 @@ namespace API.DataSchema.DTO
 {
     public class RolXUsuarioDto
     {
-        public int IdRol { get; set; }
+        public List<int> IdRoles { get; set; } = new List<int>();
         public int IdUsuario { get; set; }
     }
 }
