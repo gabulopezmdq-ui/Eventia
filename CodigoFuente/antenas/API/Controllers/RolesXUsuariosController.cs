@@ -42,16 +42,16 @@ namespace API.Controllers
             var result = rolesXUsuarios
               .GroupBy(x => x.IdUsuario)
                 .Select(g => new
+                {
+                    IdUsuario = g.Key,
+                    NombreUsuario = _context.MEC_Usuarios.FirstOrDefault(u => u.IdUsuario == g.Key)?.Nombre,
+                    Roles = g.Select(r => new
                     {
-                        IdUsuario = g.Key,
-                        NombreUsuario = _context.MEC_Usuarios.FirstOrDefault(u => u.IdUsuario == g.Key)?.Nombre,
-                        Roles = g.Select(r => new
-                    {
-                IdRol = r.IdRol,
-                NombreRol = _context.MEC_Roles.FirstOrDefault(rol => rol.IdRol == r.IdRol)?.NombreRol,
-             }).ToList(),
-                IdRolXUsuario = g.FirstOrDefault().IdRolXUsuario // Asegúrate de que este campo esté aquí
-            })
+                        IdRol = r.IdRol,
+                        NombreRol = _context.MEC_Roles.FirstOrDefault(rol => rol.IdRol == r.IdRol)?.NombreRol,
+                    }).ToList(),
+                    IdRolXUsuario = g.FirstOrDefault().IdRolXUsuario // Asegúrate de que este campo esté aquí
+                })
              .ToList();
 
             return Ok(result);
@@ -69,26 +69,22 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromBody] RolXUsuarioDto dto)
+        public async Task<ActionResult> Post([FromBody] UPRolXUsuarioDto dto)
         {
             try
             {
-                var rolXUsuario = new MEC_RolesXUsuarios
-                {
-                    IdRol = dto.IdRol,
-                    IdUsuario = dto.IdUsuario
-                };
+                bool result = await _usXRolService.UpdateRolesAsync(dto);
 
-                // Verificar si el usuario ya tiene este rol
-                if (await _serviceGenerico.UserDuplicate(rolXUsuario))
+                if (result)
                 {
-                    return BadRequest(new { mensaje = "El usuario ya tiene este rol." });
+                    return Ok(new { mensaje = "Roles actualizados exitosamente." });
                 }
-
-                await _serviceGenerico.Add(rolXUsuario);
-                return Ok(rolXUsuario);
+                else
+                {
+                    return BadRequest(new { mensaje = "No se pudieron actualizar los roles." });
+                }
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
                 return BadRequest(new { mensaje = ex.Message });
             }
