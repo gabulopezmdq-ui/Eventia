@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin, Admin")]
     //[AllowAnonymous]
     [Route("[controller]")]
     public class TiposEstablecimientosController : ControllerBase
