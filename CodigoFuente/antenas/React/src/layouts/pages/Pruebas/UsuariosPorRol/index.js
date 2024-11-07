@@ -17,12 +17,13 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
+
 function UsuarioPorRol() {
   const navigate = useNavigate();
-  const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState();
+  const [dataTableData, setDataTableData] = useState([]);
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "RolesXUsuarios/getall", {
@@ -50,80 +51,103 @@ function UsuarioPorRol() {
           });
         }
       });
-  }, []);
+  }, [token]);
+
+  const handleEditarUsuarioXRol = (idRolXUsuario) => {
+    const url = `/UsuariosPorRolFE/Edit/${idRolXUsuario}`;
+    navigate(url);
+  };
 
   const handleNuevoTipo = () => {
     navigate("/UsuarioPorRolFE/Nuevo");
   };
+
   const handleVer = (rowData) => {
-    if (rowData && rowData.idUsuarioPorRol) {
-      const productId = rowData.idUsuarioPorRol;
-      const url = `/UsuarioPorRolFE/${productId}`;
-      navigate(url);
+    if (rowData && rowData.idRolXUsuario) {
+      const productId = rowData.idRolXUsuario;
+      navigate(`/UsuarioPorRolFE/${productId}`);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
-  //Funcion para que cuando el campo viene vacio muestre N/A
+
+  // Función para que cuando el campo viene vacío muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
   return (
-    <>
-      <DashboardLayout>
-        <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
-        {errorAlert.show && (
-          <Grid container justifyContent="center">
-            <Grid item xs={12} lg={12}>
-              <MDBox pt={2}>
-                <MDAlert color={errorAlert.type} dismissible>
-                  <MDTypography variant="body2" color="white">
-                    {errorAlert.message}
-                  </MDTypography>
-                </MDAlert>
-              </MDBox>
-            </Grid>
+    <DashboardLayout>
+      <DashboardNavbar />
+      <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        Agregar
+      </MDButton>
+      {errorAlert.show && (
+        <Grid container justifyContent="center">
+          <Grid item xs={12} lg={12}>
+            <MDBox pt={2}>
+              <MDAlert color={errorAlert.type} dismissible>
+                <MDTypography variant="body2" color="white">
+                  {errorAlert.message}
+                </MDTypography>
+              </MDAlert>
+            </MDBox>
           </Grid>
-        )}
-        <MDBox my={3}>
-          <Card>
-            <DataTable
-              table={{
-                columns: [
-                  //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "usuario.nombre" },
-                  { Header: "Rol", accessor: "rol.nombreRol" },
-                  {
-                    Header: "Mas Info",
-                    accessor: "edit",
-                    Cell: ({ row }) => (
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        onClick={() => handleVer(row.original)}
-                      >
-                        Mas Info
-                      </MDButton>
-                    ),
+        </Grid>
+      )}
+      <MDBox my={3}>
+        <Card>
+          <DataTable
+            table={{
+              columns: [
+                { Header: "Nombre", accessor: "nombreUsuario" },
+                {
+                  Header: "Rol",
+                  accessor: "roles",
+                  Cell: ({ cell }) => {
+                    const roles = cell.value || []; // Usa un array vacío si cell.value es undefined
+                    return roles.map((role) => role.nombreRol).join(", "); // Manejar el caso vacío
                   },
-                ],
-                rows: dataTableData,
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          </Card>
-        </MDBox>
-      </DashboardLayout>
-    </>
+                },
+                {
+                  Header: "Editar",
+                  accessor: "edit",
+                  Cell: ({ row }) => (
+                    <MDButton
+                      variant="gradient"
+                      color="info"
+                      onClick={() => handleEditarUsuarioXRol(row.original.idUsuario)}
+                    >
+                      Editar
+                    </MDButton>
+                  ),
+                },
+                /*{
+                  Header: "Agregar Rol",
+                  accessor: "AgregarRol",
+                  Cell: ({ row }) => (
+                    <MDButton
+                      variant="gradient"
+                      color="info"
+                      onClick={() => handleNuevoTipoAgregarUsuario(row.original.idRolXUsuario)}
+                    >
+                      Agregar Rol
+                    </MDButton>
+                  ),
+                },*/
+              ],
+              rows: dataTableData,
+            }}
+            entriesPerPage={false}
+            canSearch
+            show
+          />
+        </Card>
+      </MDBox>
+    </DashboardLayout>
   );
 }
 
 UsuarioPorRol.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),

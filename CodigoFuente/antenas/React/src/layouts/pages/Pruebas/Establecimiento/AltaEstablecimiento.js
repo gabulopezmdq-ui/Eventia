@@ -36,11 +36,12 @@ function AltaEstablecimiento() {
     if (value === undefined || value === null || value === "" || field.name === undefined) {
       return null;
     }
-    if (value.length > 2) {
+    if (value.length > 5) {
       return "Los Nros. de Diegep no pueden tener más de 4 caracteres.";
     }
     return null;
-  } function validateSecciones(value, field) {
+  }
+  function validateSecciones(value, field) {
     if (value === undefined || value === null || value === "" || field.name === undefined) {
       return null;
     }
@@ -48,7 +49,8 @@ function AltaEstablecimiento() {
       return "Las Secciones no pueden tener más de 2 caracteres.";
     }
     return null;
-  } function validateTurnos(value, field) {
+  }
+  function validateTurnos(value, field) {
     if (value === undefined || value === null || value === "" || field.name === undefined) {
       return null;
     }
@@ -56,11 +58,12 @@ function AltaEstablecimiento() {
       return "Los Turnos no pueden tener más de 2 caracteres.";
     }
     return null;
-  }function validateSubvenciones(value, field) {
+  }
+  function validateSubvenciones(value, field) {
     if (value === undefined || value === null || value === "" || field.name === undefined) {
       return null;
     }
-    if (value.length > 2) {
+    if (value.length > 4) {
       return "Las Subvenciones no pueden tener más de 3 caracteres.";
     }
     return null;
@@ -68,22 +71,22 @@ function AltaEstablecimiento() {
   //----------------------Fin Validadciones--------------------
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         {
           type: "text",
           label: "Nro. Diegep",
-          name: "NroDiegep",
+          name: "nroDiegep",
           required: true,
           customValidation: validateDiegep,
         },
         {
           type: "select",
-          label: "Tipo Est.",
+          label: "Tipo Establecimiento.",
           name: "idTipoEstablecimiento",
           apiUrl: process.env.REACT_APP_API_URL + "TiposEstablecimientos/GetAll",
-          valueField: "idTipoEstablecimiento", 
-          optionField: "Descripcion",
+          valueField: "idTipoEstablecimiento",
+          optionField: "descripcion",
           required: true,
         },
         {
@@ -119,7 +122,7 @@ function AltaEstablecimiento() {
         {
           type: "text",
           label: "UE",
-          name: "UE",
+          name: "ue",
           required: true,
         },
         {
@@ -137,15 +140,9 @@ function AltaEstablecimiento() {
           customValidation: validateTurnos,
         },
         {
-          type: "select",
+          type: "text",
           label: "Ruralidad",
           name: "ruralidad",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "S", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
           required: true,
         },
         {
@@ -161,7 +158,7 @@ function AltaEstablecimiento() {
           name: "vigente",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "S", label: "No" },
+            { value: "N", label: "No" },
           ],
           valueField: "value",
           optionField: "label",

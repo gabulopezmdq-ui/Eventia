@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaPersona() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta Gestion Persona";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar Gestion Persona";
   }
   const [formData, setFormData] = useState({});
 
@@ -34,7 +34,7 @@ function AltaPersona() {
 
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         { type: "text", label: "Nombre", name: "nombre", required: true },
         { type: "text", label: "Apellido", name: "apellido", required: true },

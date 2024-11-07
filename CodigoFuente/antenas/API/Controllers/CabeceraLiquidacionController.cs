@@ -11,18 +11,20 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class CabeceraLiquidacionController : ControllerBase
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_CabeceraLiquidacion> _serviceGenerico;
+        private readonly IUserService _userService;
 
-        public CabeceraLiquidacionController(DataContext context, ILogger<MEC_CabeceraLiquidacion> logger, ICRUDService<MEC_CabeceraLiquidacion> serviceGenerico)
+        public CabeceraLiquidacionController(DataContext context, ILogger<MEC_CabeceraLiquidacion> logger, ICRUDService<MEC_CabeceraLiquidacion> serviceGenerico, IUserService userService)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
+            _userService = userService;
         }
         
         [HttpGet("GetAll")]
@@ -46,6 +48,8 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] MEC_CabeceraLiquidacion cab)
         {
+            int idUsuario = _userService.GetAuthenticatedUserId();
+            cab.IdUsuario = idUsuario;  // Asigna el ID de usuario 
             await _serviceGenerico.Add(cab);
             return Ok(cab);
         }
@@ -60,6 +64,8 @@ namespace API.Controllers
         [HttpPut]
         public async Task<ActionResult<MEC_CabeceraLiquidacion>> Update([FromBody] MEC_CabeceraLiquidacion cab)
         {
+            int idUsuario = _userService.GetAuthenticatedUserId();
+            cab.IdUsuario = idUsuario;  // Asigna el ID de usuario
             await _serviceGenerico.Update(cab);
             return Ok(cab);
         }

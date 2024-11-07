@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class PersonasController : ControllerBase
     {
@@ -24,7 +24,14 @@ namespace API.Controllers
             _context = context;
             _serviceGenerico = serviceGenerico;
         }
-        
+
+        [HttpGet("GetByVigente")]
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetByVigente([FromQuery] string vigente = null)
+        {
+            var result = await _serviceGenerico.GetByVigente(vigente);
+            return Ok(result);
+        }
+
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_Personas>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {

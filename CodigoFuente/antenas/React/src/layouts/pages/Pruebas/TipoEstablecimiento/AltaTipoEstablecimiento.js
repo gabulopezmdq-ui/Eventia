@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaTipoEstablecimiento() {
   const { id } = useParams();
-  let labelTitulo = "Alta TipoEstablecimiento";
+  let labelTitulo = "Alta Tipo Establecimiento";
   if (id) {
-    labelTitulo = "Editar TipoEstablecimiento";
+    labelTitulo = "Editar Tipo Establecimiento";
   }
   const [formData, setFormData] = useState({});
 
@@ -44,7 +44,7 @@ function AltaTipoEstablecimiento() {
   //----------------------Fin Validadciones--------------------
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         {
           type: "text",
@@ -65,7 +65,7 @@ function AltaTipoEstablecimiento() {
           name: "vigente",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "S", label: "No" },
+            { value: "N", label: "No" },
           ],
           valueField: "value",
           optionField: "label",

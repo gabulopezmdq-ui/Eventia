@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaTipoLiquidaciones() {
   const { id } = useParams();
-  let labelTitulo = "Alta Persona";
+  let labelTitulo = "Alta Tipos Liquidaciones";
   if (id) {
-    labelTitulo = "Editar Persona";
+    labelTitulo = "Editar Tipos Liquidaciones";
   }
   const [formData, setFormData] = useState({});
 
@@ -34,12 +34,9 @@ function AltaTipoLiquidaciones() {
 
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
-        { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
+        { type: "text", label: "Descripcion", name: "descripcion", required: true },
         {
           type: "select",
           label: "Vigente",
@@ -56,7 +53,7 @@ function AltaTipoLiquidaciones() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `Personas`;
+  const apiUrl = process.env.REACT_APP_API_URL + `TiposLiquidaciones`;
   return (
     <DashboardLayout>
       <DashboardNavbar />

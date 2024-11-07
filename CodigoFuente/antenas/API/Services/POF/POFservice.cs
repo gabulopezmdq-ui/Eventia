@@ -18,30 +18,7 @@ namespace API.Services
         {
             _context = context;
         }
-
-        public async Task<string> ValidarEst(int idEstablecimiento)
-        {
-            // Verificar si el establecimiento está seleccionado
-            if (idEstablecimiento <= 0)
-            {
-                return "Debe seleccionar un Establecimiento.";
-            }
-
-            // Comprobar si el establecimiento existe
-            var establecimiento = await _context.MEC_Establecimientos.FindAsync(idEstablecimiento);
-            if (establecimiento == null)
-            {
-                return "El Establecimiento no existe.";
-            }
-
-            return null; // No hay errores
-        }
-
-        public async Task<MEC_Personas> GetPersonaByDocumento(string nroDocumento)
-        {
-            return await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == nroDocumento);
-        }
-
+        
         public async Task<MEC_Personas> AddPersona(MEC_Personas persona)
         {
             _context.MEC_Personas.Add(persona);
@@ -49,28 +26,6 @@ namespace API.Services
             return persona;
         }
 
-        public async Task<(MEC_Personas persona, string errorMessage)> ValidarPersonas(MEC_Personas persona)
-        {
-            // Verificar si el número de documento existe
-            var existingPersona = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == persona.DNI);
-
-            if (existingPersona != null)
-            {
-                return (existingPersona, null); // Retorna la persona existente
-            }
-
-            // Si no existe, valida los datos obligatorios
-            if (string.IsNullOrWhiteSpace(persona.Apellido) || string.IsNullOrWhiteSpace(persona.Nombre))
-            {
-                return (null, "Debe completar los datos obligatorios (*)");
-            }
-
-            // Crear un nuevo registro en MEC_Personas
-            _context.MEC_Personas.Add(persona);
-            await _context.SaveChangesAsync();
-
-            return (persona, null); // Retorna la nueva persona creada
-        }
 
         //probar otro tipo de codigo
 
@@ -123,8 +78,7 @@ namespace API.Services
         }
 
         public async Task<string> RegistrarPOFAsync(string dni, int idEstablecimiento, string secuencia, string barra,
-            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
-            string sinHaberes, string subvencionada, string vigente)
+            int idCategoria, string tipoCargo, string vigente)
         {
             // Verificar si la persona existe en MEC_Personas
             var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.DNI == dni);
@@ -149,11 +103,6 @@ namespace API.Services
                 Barra = barra,
                 IdCategoria = idCategoria,
                 TipoCargo = tipoCargo,
-                CantHsCargo = cantHsCargo,
-                AntigAnios = antigAnios,
-                AntigMeses = antigMeses,
-                SinHaberes = sinHaberes,
-                Subvencionada = subvencionada,
                 Vigente = vigente
             };
 
@@ -164,8 +113,7 @@ namespace API.Services
 
         // Servicio para registrar suplencia
         public async Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
-            int idCategoria, string tipoCargo, string cantHsCargo, int antigAnios, int antigMeses,
-            string sinHaberes, string subvencionada, string vigente)
+            int idCategoria, string tipoCargo, string vigente)
         {
             // Verificar si ya existe un registro en MEC_POF para esta combinación
             if (await _context.MEC_POF.AnyAsync(p => p.IdEstablecimiento == idEstablecimiento &&

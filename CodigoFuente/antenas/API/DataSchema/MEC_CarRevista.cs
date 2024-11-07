@@ -13,6 +13,7 @@ namespace API.DataSchema
         public string Descripcion {  get; set; }
         public string CodMgp { get; set; }
         public string Vigente { get; set; }
-        public string[] UniqueProperties => new[] { "CodMGP", "CodPcia" }; //  CodCategoria es unico
+        public string[] UniqueProperties => new[] { "CodMgp", "CodPcia" }; //  CodCategoria es unico
+        public virtual ICollection<MEC_POF>? POFs { get; set; } = new List<MEC_POF>();
     }
 }

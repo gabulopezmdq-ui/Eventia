@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaCarRevista() {
   const { id } = useParams();
-  let labelTitulo = "Alta CarRevista";
+  let labelTitulo = "Alta Car Revista";
   if (id) {
-    labelTitulo = "Editar CarRevista";
+    labelTitulo = "Editar Car Revista";
   }
   const [formData, setFormData] = useState({});
 
@@ -34,7 +34,7 @@ function AltaCarRevista() {
 
   const steps = [
     {
-      label: labelTitulo + " Paso 1",
+      label: labelTitulo,
       fields: [
         { type: "text", label: "CodPcia", name: "codPcia", required: true },
         { type: "text", label: "Descripcion", name: "descripcion", required: true },
@@ -45,7 +45,7 @@ function AltaCarRevista() {
           name: "vigente",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "S", label: "No" },
+            { value: "N", label: "No" },
           ],
           valueField: "value",
           optionField: "label",

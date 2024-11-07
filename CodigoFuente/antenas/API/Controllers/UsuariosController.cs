@@ -10,6 +10,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Authorize(Roles = "SuperAdmin")]
+    //[AllowAnonymous]
     [Route("Usuarios")]
     public class UsuariosController : ControllerBase
     {
@@ -23,10 +24,11 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_Usuarios>>> Get()
+        public async Task<ActionResult<IEnumerable<MEC_Usuarios>>> GetAllVigente()
         {
-            return Ok(_serviceGenerico.GetAll());
+            return Ok(_serviceGenerico.GetAllVigente());
         }
+
 
         [HttpGet("GetById")]
         public async Task<ActionResult<MEC_Usuarios>> Get(int Id)
@@ -34,9 +36,25 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
+        [HttpGet("GetByActivo")]
+        public async Task<ActionResult<MEC_Usuarios>> GetByActivo(bool? usuario)
+        {
+            var usuarios = await _serviceGenerico.GetByActivo(usuario);
+            return Ok(usuarios);
+        }
+
+        [HttpGet("GetAllActivos")]
+        public ActionResult<IEnumerable<MEC_Usuarios>> GetAllActivos()
+        {
+            return Ok(_serviceGenerico.GetAllActivos());
+        }
+
+
+
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] MEC_Usuarios usuario)
         {
+            usuario.Activo = true;
             await _serviceGenerico.Add(usuario);
             return Ok(usuario);
         }

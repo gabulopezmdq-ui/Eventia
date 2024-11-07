@@ -27,9 +27,9 @@ function TipoEstablecimiento() {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "TiposEstablecimientos/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
@@ -65,6 +65,10 @@ function TipoEstablecimiento() {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
+  const handleEditarTipoEstablecimiento = (idTipoEstablecimiento) => {
+    const url = `/TiposEstablecimientoFE/Edit/${idTipoEstablecimiento}`;
+    navigate(url);
+  };
   //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
@@ -98,15 +102,17 @@ function TipoEstablecimiento() {
                   { Header: "Descripcion", accessor: "descripcion" },
                   { Header: "Vigente", accessor: "vigente" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() =>
+                          handleEditarTipoEstablecimiento(row.original.idTipoEstablecimiento)
+                        }
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },
