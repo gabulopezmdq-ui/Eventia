@@ -26,9 +26,9 @@ function TiposFunciones() {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "TiposFunciones/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
@@ -56,13 +56,17 @@ function TiposFunciones() {
     navigate("/TiposFuncionesFE/Nuevo");
   };
   const handleVer = (rowData) => {
-    if (rowData && rowData.idTiposFunciones) {
-      const productId = rowData.idTiposFunciones;
+    if (rowData && rowData.idTipoFuncion) {
+      const productId = rowData.idTipoFuncion;
       const url = `/TiposFuncionesFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
+  };
+  const handleEditarTiposFunciones = (idTipoFuncion) => {
+    const url = `/TiposFuncionesFE/Edit/${idTipoFuncion}`;
+    navigate(url);
   };
   //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
@@ -98,15 +102,15 @@ function TiposFunciones() {
                   { Header: "Descripcion", accessor: "descripcion" },
                   { Header: "Vigente", accessor: "vigente" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() => handleEditarTiposFunciones(row.original.idTipoFuncion)}
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },

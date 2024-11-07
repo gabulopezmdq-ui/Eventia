@@ -95,7 +95,7 @@ function CabeceraLiquidacion() {
                   //{ Header: "ID", accessor: "id" },
                   { Header: "Mes Liquidacion", accessor: "mesLiquidacion" },
                   { Header: "Año Liquidacion", accessor: "anioLiquidacion" },
-                  { Header: "Usuario", accessor: "usuario" },
+                  { Header: "Usuario", accessor: "usuario.nombre" },
                   { Header: "Observaciones", accessor: "observaciones" },
                   {
                     Header: "Mas Info",

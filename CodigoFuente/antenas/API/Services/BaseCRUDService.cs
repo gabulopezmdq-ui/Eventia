@@ -22,10 +22,46 @@ namespace API.Services
 
         public IEnumerable<T> GetAll()
         {
-            return _genericRepo.AllAsNoTracking();
+            return _genericRepo.AllAsNoTracking().Where(x => EF.Property<string>(x, "Vigente") == "S");
+
         }
 
+        public IEnumerable<T> GetAllVigente()
+        {
+            return _genericRepo.AllAsNoTracking();
+        }
+        public async Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null)
+        {
+            var query = _genericRepo.AllAsNoTracking();
 
+            if (!string.IsNullOrEmpty(vigenteStatus))
+            {
+                // Filtra solo si el estado de "Vigente" es proporcionado ("S" o "N")
+                query = query.Where(x => EF.Property<string>(x, "Vigente") == vigenteStatus);
+            }
+            // Si el valor es nulo o vacío, retorna todos sin aplicar filtro
+            return await Task.FromResult(query);
+        }
+        public async Task<IEnumerable<T>> GetAllActivos()
+        {
+            return await Task.FromResult(_genericRepo.AllAsNoTracking().Where(x => EF.Property<bool>(x, "Activo") == true));
+        }
+
+        // Método GetAll genérico con filtro opcional
+        public async Task<IEnumerable<T>> GetByActivo(bool? boolValue)
+        {
+            if (!boolValue.HasValue)
+            {
+                // Si boolValue es null, retornamos todos los usuarios
+                return await Task.FromResult(_genericRepo.AllAsNoTracking());
+            }
+
+            // Si boolValue tiene valor (true o false), filtramos por 'Activo'
+            return await Task.FromResult(
+                _genericRepo.AllAsNoTracking()
+                    .Where(x => EF.Property<bool>(x, "Activo") == boolValue.Value)
+            );
+        }
         public async Task<T> GetByID(int id)
         {
             return await _genericRepo.Find(id);
@@ -48,7 +84,20 @@ namespace API.Services
 
         public async Task Delete(int Id)
         {
-            await _genericRepo.Delete(Id);
+            // Obtiene el registro por su ID
+            var entity = await _genericRepo.Find(Id);
+
+            // Verifica si se encontró la entidad
+            if (entity == null)
+            {
+                throw new KeyNotFoundException("El registro no existe.");
+            }
+
+            // Cambia el estado 'Vigente' a "N" en lugar de eliminar físicamente
+            typeof(T).GetProperty("Vigente")?.SetValue(entity, "N");
+
+            // Guarda los cambios en la base de datos
+            await _genericRepo.Update(entity);
         }
 
         public virtual async Task<T> Update(T genericClass)
@@ -69,7 +118,7 @@ namespace API.Services
         {
             if (entity is not IRegistroUnico uniqueEntity)
             {
-                throw new InvalidOperationException("La entidad no implementa IRegistroUnico.");
+                return false;
             }
 
             foreach (var property in uniqueEntity.UniqueProperties)
@@ -95,6 +144,27 @@ namespace API.Services
             }
 
             return false; // No se encontró ningún duplicado
+        }
+
+
+        // Método para verificar duplicados de usuario
+        public async Task<bool> IsUserDuplicate(T entity)
+        {
+            return await UserDuplicate(entity);
+        }
+        public async Task<bool> UserDuplicate(T entity)
+        {
+            if (entity is MEC_RolesXUsuarios rolesXUsuariosEntity)
+            {
+                // Verificar duplicados de RolesXUsuarios
+                var existingEntities = await _genericRepo.GetAllAsync();
+                return existingEntities.Any(x =>
+                    (x as MEC_RolesXUsuarios)?.IdUsuario == rolesXUsuariosEntity.IdUsuario &&
+                    (x as MEC_RolesXUsuarios)?.IdRol == rolesXUsuariosEntity.IdRol);
+            }
+
+            // No se encontró ningún duplicado para otras entidades
+            return false;
         }
     }
 }

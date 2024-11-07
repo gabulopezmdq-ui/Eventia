@@ -26,9 +26,9 @@ function TipoLiquidaciones() {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "TiposLiquidaciones/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
@@ -64,6 +64,10 @@ function TipoLiquidaciones() {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
+  const handleEditarTiposLiquidaciones = (idTipoFuncion) => {
+    const url = `/TipoLiquidacionesFE/Edit/${idTipoFuncion}`;
+    navigate(url);
+  };
   //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
@@ -95,15 +99,17 @@ function TipoLiquidaciones() {
                   //{ Header: "ID", accessor: "id" },
                   { Header: "Descripcion", accessor: "descripcion" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() =>
+                          handleEditarTiposLiquidaciones(row.original.idTipoLiquidacion)
+                        }
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },

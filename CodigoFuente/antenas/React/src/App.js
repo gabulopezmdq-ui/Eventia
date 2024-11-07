@@ -23,7 +23,7 @@ import GestionUsuario from "layouts/pages/Pruebas/GestionUsuarios";
 import UsuarioPorRol from "layouts/pages/Pruebas/UsuariosPorRol";
 import CabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion";
 import ImportarArchivo from "layouts/pages/Pruebas/ImportarArchivoPlano";
-import Establecimientos from "layouts/pages/Pruebas/Establecimientos";
+import Establecimiento from "layouts/pages/Pruebas/Establecimiento";
 import TiposFunciones from "layouts/pages/Pruebas/TiposFunciones";
 import TipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones";
 import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
@@ -31,13 +31,17 @@ import AltaCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/A
 import AltaPersona from "layouts/pages/Pruebas/Persona/AltaPersona";
 import AltaGestionUsuario from "layouts/pages/Pruebas/GestionUsuarios/AltaGestionUsuario";
 import AltaUsuariosPorRol from "layouts/pages/Pruebas/UsuariosPorRol/AltaUsuariosPorRol";
-import AltaEstablecimiento from "layouts/pages/Pruebas/Establecimientos/AltaEstablecimiento";
+import EdicionUsuariosPorRol from "layouts/pages/Pruebas/UsuariosPorRol/EdicionUsuariosPorRol";
+import AltaEstablecimiento from "layouts/pages/Pruebas/Establecimiento/AltaEstablecimiento";
 import AltaTiposFunciones from "layouts/pages/Pruebas/TiposFunciones/AltaTiposFunciones";
 import AltaTipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones/AltaTipoLiquidaciones";
 import AltaTipoCategorias from "layouts/pages/Pruebas/TipoCategorias/AltaTipoCategorias";
 import VerCabeceraLiquidacion from "layouts/pages/Pruebas/CabeceraLiquidacion/VerCabeceraLiquidacion";
 import VerGestionUsuarios from "layouts/pages/Pruebas/GestionUsuarios/VerGestionUsuarios";
 import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
+import VerConcepto from "layouts/pages/Pruebas/Conceptos/VerConcepto";
+import VerEstablecimiento from "layouts/pages/Pruebas/Establecimiento/VerEstablecimiento";
+import Inicio from "layouts/pages/Pruebas/Inicio/Index";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -153,6 +157,10 @@ export default function App() {
   const RoutesProtegidas = [
     //----------------------------------Rutas de index
     {
+      path: "/InicioFE",
+      component: Inicio,
+    },
+    {
       path: "/CabeceraLiquidacionFE",
       component: CabeceraLiquidacion,
     },
@@ -205,8 +213,8 @@ export default function App() {
       component: ListadoTipoEstablecimiento,
     },
     {
-      path: "/EstablecimientosFE",
-      component: Establecimientos,
+      path: "/EstablecimientoFE",
+      component: Establecimiento,
     },
     {
       path: "/TiposFuncionesFE",
@@ -233,14 +241,62 @@ export default function App() {
       path: "/VerGestionUsuariosFE/:id",
       component: VerGestionUsuarios,
     },
+    {
+      path: "/VerConceptoFE/:id",
+      component: VerConcepto,
+    },
+    {
+      path: "/CarRevistaFE/:id",
+      component: CarRevistaVer,
+    },
+    {
+      path: "/TiposEstablecimientoFE/:id",
+      component: CarRevistaVer,
+    },
+    {
+      path: "/VerEstablecimientoFE/:id",
+      component: VerEstablecimiento,
+    },
     //----------------------------------Rutas de Editar
     {
       path: "/VerCabeceraLiquidacionFe/Edit/:id",
       component: AltaCabeceraLiquidacion,
     },
     {
-      path: "/VerGestionUsuariosFE/Edit/:id",
+      path: "/GestionUsuariosFE/Edit/:id",
       component: AltaGestionUsuario,
+    },
+    {
+      path: "/UsuariosPorRolFE/Edit/:id",
+      component: EdicionUsuariosPorRol,
+    },
+    {
+      path: "/AltaConceptosFE/Edit/:id",
+      component: AltaConceptos,
+    },
+    {
+      path: "/CarRevistaFE/Edit/:id",
+      component: AltaCarRevista,
+    },
+    {
+      path: "/TiposEstablecimientoFE/Edit/:id",
+      component: AltaTipoEstablecimiento,
+    },
+    {
+      path: "/TiposFuncionesFE/Edit/:id",
+      component: AltaTiposFunciones,
+    },
+    {
+      path: "/TipoLiquidacionesFE/Edit/:id",
+      component: AltaTipoLiquidaciones,
+    },
+    {
+      path: "/TipoCategoriasFE/Edit/:id",
+      component: AltaTipoCategorias,
+    },
+    {
+      path: "/EstablecimientoFE/Edit/:id",
+      component: AltaEstablecimiento,
     },
     //----------------------------------Rutas de Alta
     {
@@ -272,7 +328,7 @@ export default function App() {
       component: AltaTipoEstablecimiento,
     },
     {
-      path: "/EstablecimientosFE/Nuevo",
+      path: "/EstablecimientoFE/Nuevo",
       component: AltaEstablecimiento,
     },
     {

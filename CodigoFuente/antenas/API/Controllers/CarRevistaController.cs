@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class CarRevistaController : ControllerBase
     {
@@ -26,9 +26,22 @@ namespace API.Controllers
         }
         
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> Get() //Trae los registros Vigentes = S
         {
             return Ok(_serviceGenerico.GetAll());
+        }
+
+        [HttpGet("GetByVigente")]
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetByVigente([FromQuery] string vigente = null)
+        {
+            var result = await _serviceGenerico.GetByVigente(vigente);
+            return Ok(result);
+        }
+
+        [HttpGet("GetAllN")]
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetAllVigente() //Trae TODOS los registros independientemente de que son Vigente S o N
+        {
+            return Ok(_serviceGenerico.GetAllVigente());
         }
 
         [HttpGet("GetById")]

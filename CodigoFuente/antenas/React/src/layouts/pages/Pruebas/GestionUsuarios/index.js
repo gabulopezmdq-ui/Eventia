@@ -12,68 +12,102 @@ import Grid from "@mui/material/Grid";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
+
 // Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
+
 import "../../Pruebas/pruebas.css";
+
 function GestionUsuario() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState();
+  const [dataTableData, setDataTableData] = useState([]);
+  const [activoFilter, setActivoFilter] = useState(true); // Estado para el filtro de activo, por defecto es true (activos)
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
+    fetchUsuarios(); // Llama a la función para obtener datos al cargar el componente y cuando cambia el filtro
+  }, [activoFilter]);
+
+  const fetchUsuarios = () => {
+    const url = `${process.env.REACT_APP_API_URL}Usuarios/GetByActivo`;
+
+    // Si activoFilter es null, no pasamos parámetro, lo cual traerá todos los usuarios
+    const params = activoFilter !== null ? { usuario: activoFilter } : {};
+
     axios
-      .get(process.env.REACT_APP_API_URL + "Usuarios/getall", {
+      .get(url, {
         headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
+          Authorization: `Bearer ${token}`,
         },
+        params, // Si no es null, pasa el parámetro
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        const data = Array.isArray(response.data) ? response.data : [];
+        setDataTableData(data);
+      })
       .catch((error) => {
-        if (error.response) {
-          const statusCode = error.response.status;
-          let errorMessage = "";
-          let errorType = "error";
-          if (statusCode >= 400 && statusCode < 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
-          } else if (statusCode >= 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
-          }
-          setErrorAlert({ show: true, message: errorMessage, type: errorType });
-        } else {
-          setErrorAlert({
-            show: true,
-            message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-            type: "error",
-          });
-        }
+        console.error("Error en la solicitud:", error);
+        setErrorAlert({
+          show: true,
+          message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
+          type: "error",
+        });
       });
-  }, []);
+  };
+
+  // Maneja el cambio en el filtro de activo
+  const handleFilterChange = (event) => {
+    const value = event.target.value;
+    if (value === "S") setActivoFilter(true); // Activos
+    else if (value === "N") setActivoFilter(false); // Inactivos
+    else setActivoFilter(null); // Todos
+  };
+
+  // Navega a la página de edición de usuario
+  const handleEditarUsuario = (idUsuario) => {
+    const url = `/GestionUsuariosFE/Edit/${idUsuario}`;
+    navigate(url);
+  };
 
   const handleNuevoTipo = () => {
     navigate("/GestionUsuarioFE/Nuevo");
   };
-  const handleVer = (rowData) => {
-    if (rowData && rowData.idUsuario) {
-      const productId = rowData.idUsuario;
-      const url = `/VerGestionUsuariosFE/${productId}`;
-      navigate(url);
-    } else {
-      console.error("El objeto rowData o su propiedad 'id' no están definidos.");
-    }
-  };
-  //Funcion para que cuando el campo viene vacio muestre N/A
+
+  // Función para que cuando el campo viene vacío muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
   return (
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
+        <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
+          <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+            Agregar
+          </MDButton>
+          <MDBox
+            component="select"
+            onChange={handleFilterChange}
+            defaultValue={activoFilter === null ? "" : activoFilter ? "S" : "N"}
+            sx={{
+              padding: "10px 20px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              "&:focus": {
+                borderColor: "#4caf50",
+              },
+            }}
+          >
+            <option value="">Todos</option>
+            <option value="S">Activos</option>
+            <option value="N">Inactivos</option>
+          </MDBox>
+        </MDBox>
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -92,19 +126,18 @@ function GestionUsuario() {
             <DataTable
               table={{
                 columns: [
-                  //{ Header: "ID", accessor: "id" },
                   { Header: "Nombre", accessor: "nombre" },
                   { Header: "Email", accessor: "email" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() => handleEditarUsuario(row.original.idUsuario)}
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },
@@ -123,9 +156,9 @@ function GestionUsuario() {
 }
 
 GestionUsuario.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
-    id: PropTypes.number,
+    idUsuario: PropTypes.number,
   }),
 };
 

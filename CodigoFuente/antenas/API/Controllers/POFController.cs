@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+   // [AllowAnonymous]
     [Route("[controller]")]
     public class POFController : ControllerBase
     {
@@ -33,6 +33,13 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<MEC_POF>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
+        }
+
+        [HttpGet("GetByVigente")]
+        public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetByVigente([FromQuery] string vigente = null)
+        {
+            var result = await _serviceGenerico.GetByVigente(vigente);
+            return Ok(result);
         }
 
         [HttpGet("GetById")]
@@ -170,7 +177,7 @@ namespace API.Controllers
 
             // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
             var mensajeValidacion = await _pofService.RegistrarSuplenciaAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia, POF.Barra, POF.IdCategoria, 
-                POF.TipoCargo, POF.CantHsCargo, POF.AntigAnios, POF.AntigMeses, POF.SinHaberes, POF.Subvencionada, POF.Vigente);
+                POF.TipoCargo, POF.Vigente);
 
             if (mensajeValidacion.StartsWith("Ya existe"))
             {

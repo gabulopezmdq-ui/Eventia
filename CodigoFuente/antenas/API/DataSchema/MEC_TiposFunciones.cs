@@ -11,6 +11,7 @@ namespace API.DataSchema
         public string Descripcion { get; set; }
         public string Vigente { get; set; }
         public string[] UniqueProperties => new[] { "CodFuncion", "CodFuncionMGP" }; //  CodCategoria es unico
+        public virtual ICollection<MEC_POF>? POFs { get; set; } = new List<MEC_POF>();
 
     }
 }

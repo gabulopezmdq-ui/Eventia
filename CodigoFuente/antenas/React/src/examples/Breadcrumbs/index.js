@@ -1,18 +1,3 @@
-/**
-=========================================================
-* Material Dashboard 2 PRO React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-pro-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 // react-router-dom components
 import { Link } from "react-router-dom";
 
@@ -28,7 +13,9 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 
 function Breadcrumbs({ icon, title, route, light }) {
-  const routes = route.slice(0, -1);
+  // Eliminar el sufijo "FE" de las rutas y el título
+  const cleanTitle = title.endsWith("FE") ? title.slice(0, -2) : title;
+  const cleanRoutes = route.slice(0, -1).map((el) => (el.endsWith("FE") ? el.slice(0, -2) : el));
 
   return (
     <MDBox mr={{ xs: 0, xl: 8 }}>
@@ -39,7 +26,7 @@ function Breadcrumbs({ icon, title, route, light }) {
           },
         }}
       >
-        <Link to="/ObraTipoFE">
+        <Link to="/ObraTipo">
           <MDTypography
             component="span"
             variant="body2"
@@ -50,7 +37,7 @@ function Breadcrumbs({ icon, title, route, light }) {
             <Icon>{icon}</Icon>
           </MDTypography>
         </Link>
-        {routes.map((el) => (
+        {cleanRoutes.map((el) => (
           <Link to={`/${el}`} key={el}>
             <MDTypography
               component="span"
@@ -72,7 +59,7 @@ function Breadcrumbs({ icon, title, route, light }) {
           color={light ? "white" : "dark"}
           sx={{ lineHeight: 0 }}
         >
-          {title.replace("-", " ")}
+          {cleanTitle.replace("-", " ")}
         </MDTypography>
       </MuiBreadcrumbs>
       <MDTypography
@@ -81,9 +68,7 @@ function Breadcrumbs({ icon, title, route, light }) {
         variant="h6"
         color={light ? "white" : "dark"}
         noWrap
-      >
-        {title.replace("-", " ")}
-      </MDTypography>
+      ></MDTypography>
     </MDBox>
   );
 }

@@ -1,72 +1,256 @@
-// @mui material components
 import Grid from "@mui/material/Grid";
-
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
-import { useParams } from "react-router-dom";
-import { useState } from "react";
-
-// Material Dashboard 2 PRO React examples
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
-import Formulario from "components/Formulario";
-import { Field } from "formik";
-import MDDropzone from "components/MDDropzone";
-
-//Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
-//Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
+import MDButton from "components/MDButton";
+import MDTypography from "components/MDTypography";
+import axios from "axios";
+import Card from "@mui/material/Card";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 
 function AltaUsuariosPorRol() {
-  const { id } = useParams();
-  let labelTitulo = "Alta Persona";
-  if (id) {
-    labelTitulo = "Editar Persona";
-  }
-  const [formData, setFormData] = useState({});
+  const navigate = useNavigate();
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState("");
+  const [roles, setRoles] = useState([]);
+  const [rolesAsignados, setRolesAsignados] = useState([]);
+  const [rolesDisponibles, setRolesDisponibles] = useState([]);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const token = sessionStorage.getItem("token");
 
-  const handleChange = (e) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [e.target.name]: e.target.value,
-    }));
+  useEffect(() => {
+    const fetchUsuariosAndRoles = async () => {
+      try {
+        // Obtener todos los usuarios
+        const usuariosResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}usuarios/GetAll`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Obtener usuarios que ya tienen roles asignados
+        const usuariosConRolesResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}RolesXUsuarios/GetAll`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Extraer IDs de usuarios con roles, asegurándonos de que sean números
+        const usuariosConRolesIds = usuariosConRolesResponse.data.map((usuario) =>
+          Number(usuario.idUsuario)
+        );
+
+        // Filtrar solo los usuarios sin roles asignados
+        const usuariosSinRoles = usuariosResponse.data.filter(
+          (usuario) => !usuariosConRolesIds.includes(Number(usuario.idUsuario))
+        );
+
+        setUsuarios(usuariosSinRoles);
+
+        // Obtener todos los roles
+        const rolesResponse = await axios.get(`${process.env.REACT_APP_API_URL}Roles/GetAll`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setRoles(rolesResponse.data);
+        setRolesDisponibles(rolesResponse.data);
+      } catch (err) {
+        console.error("Error fetching users or roles", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsuariosAndRoles();
+  }, [token]);
+
+  const handleUsuarioChange = (event) => {
+    setUsuarioSeleccionado(event.target.value);
   };
 
-  const steps = [
-    {
-      label: labelTitulo + " Paso 1",
-      fields: [
-        { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
-        {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
-          required: true,
-        },
-      ],
-    },
-  ];
+  const toggleRoleSelection = (role) => {
+    if (selectedRoles.includes(role)) {
+      setSelectedRoles(selectedRoles.filter((r) => r.idRol !== role.idRol));
+    } else {
+      setSelectedRoles([...selectedRoles, role]);
+    }
+  };
 
-  const apiUrl = process.env.REACT_APP_API_URL + `Personas`;
+  const handleAddRoles = () => {
+    setRolesAsignados([...rolesAsignados, ...selectedRoles]);
+    setRolesDisponibles(rolesDisponibles.filter((rol) => !selectedRoles.includes(rol)));
+    setSelectedRoles([]);
+  };
+
+  const handleRemoveRoles = () => {
+    setRolesDisponibles([...rolesDisponibles, ...selectedRoles]);
+    setRolesAsignados(rolesAsignados.filter((rol) => !selectedRoles.includes(rol)));
+    setSelectedRoles([]);
+  };
+
+  const handleSaveRoles = async () => {
+    if (!usuarioSeleccionado) {
+      alert("Debe seleccionar un usuario.");
+      return;
+    }
+    const rol = rolesAsignados.map((rol) => rol.idRol);
+    setSaving(true);
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}RolesXUsuarios`,
+        {
+          IdUsuario: usuarioSeleccionado,
+          IdRoles: rol,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      alert("Roles guardados correctamente.");
+      navigate(-1);
+    } catch (err) {
+      console.error("Error al guardar roles:", err);
+      alert("Error al guardar los roles. Por favor, intenta nuevamente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+  const isAddButtonEnabled = selectedRoles.every((rol) =>
+    rolesDisponibles.some((disponible) => disponible.idRol === rol.idRol)
+  );
+
+  const isRemoveButtonEnabled = selectedRoles.every((rol) =>
+    rolesAsignados.some((asignado) => asignado.idRol === rol.idRol)
+  );
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox py={3} mb={20} height="65vh">
-        <Grid container justifyContent="center" alignItems="center" sx={{ height: "100%", mt: 8 }}>
-          <Grid item xs={12} lg={10}>
-            <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
+      <Grid container spacing={0} mb={1}>
+        <Grid item xs={12}>
+          <Card>
+            <MDBox p={3}>
+              <MDTypography variant="h6">Asignación de Roles a Usuario</MDTypography>
+              <Select
+                style={{ width: "40%", padding: "8px", color: "#495057" }}
+                fullWidth
+                value={usuarioSeleccionado}
+                onChange={handleUsuarioChange}
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  Seleccione un usuario
+                </MenuItem>
+                {usuarios.map((usuario) => (
+                  <MenuItem key={usuario.idUsuario} value={usuario.idUsuario}>
+                    {usuario.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </MDBox>
+          </Card>
+        </Grid>
+
+        <Grid container spacing={1} justifyContent="center" mt={4}>
+          <Grid item xs={5}>
+            <Card sx={{ p: 2 }}>
+              <MDTypography variant="h6">Roles Disponibles</MDTypography>
+              <ul style={{ listStyleType: "none", paddingLeft: 0, paddingTop: 10 }}>
+                {rolesDisponibles.map((rol) => (
+                  <li
+                    key={rol.idRol}
+                    onClick={() => toggleRoleSelection(rol)}
+                    style={{
+                      cursor: "pointer",
+                      backgroundColor: selectedRoles.includes(rol) ? "#b2ebf2" : "transparent",
+                      padding: "5px",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    <MDTypography variant="subtitle2">{rol.nombreRol}</MDTypography>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </Grid>
+
+          <Grid item xs={2}>
+            <MDBox
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              height="100%" // Asegura que el MDBox ocupe toda la altura
+            >
+              <MDButton
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleAddRoles}
+                disabled={!isAddButtonEnabled || selectedRoles.length === 0}
+              >
+                Agregar Rol
+              </MDButton>
+              <MDButton
+                variant="contained"
+                color="secondary"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={handleRemoveRoles}
+                disabled={!isRemoveButtonEnabled || selectedRoles.length === 0}
+              >
+                Quitar Rol
+              </MDButton>
+            </MDBox>
+          </Grid>
+
+          <Grid item xs={5}>
+            <Card sx={{ p: 2 }}>
+              <MDTypography variant="h6">Roles Asignados</MDTypography>
+              <ul style={{ listStyleType: "none", paddingLeft: 0, paddingTop: 10 }}>
+                {rolesAsignados.map((rol) => (
+                  <li
+                    key={rol.idRol}
+                    onClick={() => toggleRoleSelection(rol)}
+                    style={{
+                      cursor: "pointer",
+                      backgroundColor: selectedRoles.includes(rol) ? "#b2ebf2" : "transparent",
+                      padding: "5px",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    <MDTypography variant="subtitle2">{rol.nombreRol}</MDTypography>
+                  </li>
+                ))}
+              </ul>
+            </Card>
           </Grid>
         </Grid>
-      </MDBox>
+
+        <MDBox display="flex" justifyContent="center" alignItems="center" width="100%" mt={4}>
+          <MDButton variant="contained" color="error" onClick={() => navigate(-1)} sx={{ mx: 1 }}>
+            Cancelar
+          </MDButton>
+          <MDButton
+            variant="contained"
+            color="success"
+            onClick={handleSaveRoles}
+            disabled={saving}
+            sx={{ mx: 1 }}
+          >
+            {saving ? "Guardando..." : "Guardar"}
+          </MDButton>
+        </MDBox>
+      </Grid>
     </DashboardLayout>
   );
 }
