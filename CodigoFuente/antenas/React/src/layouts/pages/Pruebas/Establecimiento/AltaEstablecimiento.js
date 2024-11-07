@@ -31,15 +31,127 @@ function AltaEstablecimiento() {
       [e.target.name]: e.target.value,
     }));
   };
-
+  //------------------------Validaciones Especificas-------------------------------------
+  function validateDiegep(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 5) {
+      return "Los Nros. de Diegep no pueden tener más de 4 caracteres.";
+    }
+    return null;
+  }
+  function validateSecciones(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 2) {
+      return "Las Secciones no pueden tener más de 2 caracteres.";
+    }
+    return null;
+  }
+  function validateTurnos(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 2) {
+      return "Los Turnos no pueden tener más de 2 caracteres.";
+    }
+    return null;
+  }
+  function validateSubvenciones(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 4) {
+      return "Las Subvenciones no pueden tener más de 3 caracteres.";
+    }
+    return null;
+  }
+  //----------------------Fin Validadciones--------------------
   const steps = [
     {
       label: labelTitulo,
       fields: [
-        { type: "text", label: "Nombre", name: "nombre", required: true },
-        { type: "text", label: "Apellido", name: "apellido", required: true },
-        { type: "number", label: "DNI", name: "dni", required: true },
-        { type: "text", label: "Legajo", name: "legajo", required: true },
+        {
+          type: "text",
+          label: "Nro. Diegep",
+          name: "nroDiegep",
+          required: true,
+          customValidation: validateDiegep,
+        },
+        {
+          type: "select",
+          label: "Tipo Establecimiento.",
+          name: "idTipoEstablecimiento",
+          apiUrl: process.env.REACT_APP_API_URL + "TiposEstablecimientos/GetAll",
+          valueField: "idTipoEstablecimiento",
+          optionField: "descripcion",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Nro. Establecimiento",
+          name: "nroEstablecimiento",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Nombre MGP",
+          name: "nombreMgp",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Nombre Provincia",
+          name: "nombrePcia",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Domicilio",
+          name: "domicilio",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Telefono",
+          name: "telefono",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "UE",
+          name: "ue",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Cant. Secciones",
+          name: "cantSecciones",
+          required: true,
+          customValidation: validateSecciones,
+        },
+        {
+          type: "text",
+          label: "Cant. Turnos",
+          name: "cantTurnos",
+          required: true,
+          customValidation: validateTurnos,
+        },
+        {
+          type: "text",
+          label: "Ruralidad",
+          name: "ruralidad",
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Subvención",
+          name: "subvencion",
+          required: true,
+          customValidation: validateSubvenciones,
+        },
         {
           type: "select",
           label: "Vigente",
