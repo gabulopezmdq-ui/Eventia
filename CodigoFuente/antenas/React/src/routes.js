@@ -126,12 +126,12 @@ const routes = [
         route: "/TipoCategoriasFE",
         component: <TipoCategorias />,
       },
-      {
+      /*{
         name: "Importar",
         key: "Importar",
         route: "/ImportarFE",
         component: <Importar />,
-      },
+      },*/
     ],
   },
 ];
