@@ -26,9 +26,9 @@ function TiposFunciones() {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "TiposFunciones/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
