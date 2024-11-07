@@ -19,9 +19,9 @@ import MDDropzone from "components/MDDropzone";
 
 function AltaTipoEstablecimiento() {
   const { id } = useParams();
-  let labelTitulo = "Alta TipoEstablecimiento";
+  let labelTitulo = "Alta Tipo Establecimiento";
   if (id) {
-    labelTitulo = "Editar TipoEstablecimiento";
+    labelTitulo = "Editar Tipo Establecimiento";
   }
   const [formData, setFormData] = useState({});
 
