@@ -13,7 +13,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin")]
+    //[AllowAnonymous]
     [Route("RolesXUsuarios")]
     public class RolesXUsuariosController : ControllerBase
     {
