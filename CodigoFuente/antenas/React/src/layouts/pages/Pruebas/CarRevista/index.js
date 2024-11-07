@@ -26,9 +26,9 @@ function CarRevista() {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "CarRevista/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
