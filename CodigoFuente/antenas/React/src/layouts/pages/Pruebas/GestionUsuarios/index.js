@@ -46,8 +46,10 @@ function GestionUsuario() {
         params, // Si no es null, pasa el parámetro
       })
       .then((response) => {
+        // Ordena los datos alfabéticamente por el campo 'nombre'
         const data = Array.isArray(response.data) ? response.data : [];
-        setDataTableData(data);
+        const sortedData = data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        setDataTableData(sortedData);
       })
       .catch((error) => {
         console.error("Error en la solicitud:", error);
