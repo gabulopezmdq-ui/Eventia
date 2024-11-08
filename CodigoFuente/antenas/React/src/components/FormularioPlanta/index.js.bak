@@ -26,23 +26,13 @@ import MDAlert from "components/MDAlert";
 import StepLabel from "@mui/material/StepLabel";
 import MDButton from "components/MDButton";
 import Prueba from "../Formulario/components/Prueba";
-import { red } from "@mui/material/colors";
 
-function Formulario({
-  steps,
-  apiUrl,
-  productId,
-  idObra,
-  includeIdRepTecnico,
-  idAdministracion,
-  idConservadora,
-}) {
+function Formulario({ steps, apiUrl, productId, idObra, includeIdRepTecnico }) {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({});
   const currentStep = steps[activeStep];
   const isLastStep = activeStep === steps.length - 1;
-  const token = sessionStorage.getItem("token");
   const [alertData, setAlertData] = useState({
     show: false,
     message: "",
@@ -51,21 +41,11 @@ function Formulario({
 
   const handleNext = () => setActiveStep(activeStep + 1);
   const handleBack = () => setActiveStep(activeStep - 1);
-  const handleCancel = () => navigate(activeStep - 1); // Cambia "/menu" a la ruta deseada
   includeIdRepTecnico = includeIdRepTecnico || false;
-  //Esto es un funcion solamente para cambiar la url de RepTecxConservadora
-  let apiGetbyId = includeIdRepTecnico
-    ? process.env.REACT_APP_API_URL + `RespTecById?idEVConsEVRespTec=${productId}`
-    : `${apiUrl}/getbyid?id=${productId}`;
-
   useEffect(() => {
     if (productId) {
       axios
-        .get(apiGetbyId, {
-          headers: {
-            Authorization: `Bearer ${token}`, // Envía el token en los headers
-          },
-        })
+        .get(`${apiUrl}/getbyid?id=${productId}`)
         .then((response) => {
           setFormData(response.data);
         })
@@ -111,125 +91,47 @@ function Formulario({
       return;
     }
 
-    // Agregar datos adicionales al formulario
     if (idObra) {
       formData.idObra = idObra;
     }
-    if (idConservadora) {
-      formData.idConservadora = idConservadora;
-    }
 
-    const updatedFormData = { ...formData };
-    if (idAdministracion) {
-      updatedFormData.idAdmin = idAdministracion;
-      updatedFormData.idCons = formData.idConservadora;
-    }
     if (!isFormValid) {
+      // Mostrar un mensaje de error o realizar alguna acción
       alert("Por favor complete los campos");
       console.error("Por favor complete los campos requeridos.");
       return;
     }
 
-    const filteredFormData = Object.keys(formData).reduce((acc, key) => {
-      const value = formData[key];
-      const hasArrayInObject = (obj) => {
-        return Object.values(obj).some((val) => Array.isArray(val));
-      };
-
-      if (value instanceof Date) {
-        acc[key] = formatDateToString(value);
-      } else if (!Array.isArray(value) && (typeof value !== "object" || !hasArrayInObject(value))) {
-        acc[key] = value;
+    // Filtrar formData para incluir solo los campos necesarios
+	const filteredFormData = Object.keys(formData).reduce((acc, key) => {
+      if (!key.startsWith("eV_")) {
+        acc[key] = formData[key];
       }
       return acc;
     }, {});
-
-    const formatDate = (date) => {
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
-
-    const formattedFDesde = formatDate(new Date(formData.fDesde));
-    const formattedFHasta = formatDate(new Date(formData.fHasta));
+	
+    // Actualizar la URL para incluir el idRepTecnico
     const apiUrlWithIdRepTecnico = includeIdRepTecnico
-      ? `${apiUrl}?idCons=${formData.idConservadora}&idRepTec=${formData.idRepTecnico}&fDesde=${formattedFDesde}&fHasta=${formattedFHasta}&nroContrato=${formData.nroContrato}`
+      ? `${apiUrl}&idRepTecnico=${formData.idRepTecnico}`
       : apiUrl;
 
     if (productId) {
       axios
-        .put(apiUrlWithIdRepTecnico, filteredFormData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        .put(apiUrlWithIdRepTecnico, filteredFormData) // Enviar solo los campos necesarios
         .then((response) => {
-          navigate(-1);
+          navigate(-2); // Volver a la pantalla anterior
         })
         .catch((error) => {
-          console.error("Error en la respuesta del backend:", error); // Agregado para depuración
-
-          // Verificar si el error es por registro duplicado
-          if (error.response && error.response.status === 400) {
-            const errorMessage = error.response.data.error;
-            if (errorMessage && errorMessage.includes("El registro ya existe.")) {
-              setAlertData({
-                show: true,
-                message: "El usuario ya se encuentra registrado.",
-                type: "error",
-              });
-            } else {
-              setAlertData({
-                show: true,
-                message: errorMessage || "Error desconocido.",
-                type: "error",
-              });
-            }
-          } else {
-            setAlertData({
-              show: true,
-              message: "Hubo un error al procesar la solicitud.",
-              type: "error",
-            });
-          }
+          console.error("Error al editar el producto:", error);
         });
     } else {
       axios
-        .post(apiUrlWithIdRepTecnico, filteredFormData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        .post(apiUrlWithIdRepTecnico, filteredFormData) // Enviar solo los campos necesarios
         .then((response) => {
           navigate(-1);
         })
         .catch((error) => {
-          console.error("Error en la respuesta del backend:", error); // Agregado para depuración
-
-          // Verificar si el error es por registro duplicado
-          if (error.response && error.response.status === 400) {
-            const errorMessage = error.response.data.error;
-            if (errorMessage && errorMessage.includes("El registro ya existe.")) {
-              setAlertData({
-                show: true,
-                message: "El usuario ya se encuentra registrado.",
-                type: "error",
-              });
-            } else {
-              setAlertData({
-                show: true,
-                message: errorMessage || "Error desconocido.",
-                type: "error",
-              });
-            }
-          } else {
-            setAlertData({
-              show: true,
-              message: "Ya se encuentra registrado.",
-              type: "error",
-            });
-          }
+          console.error("Error al enviar el formulario:", error);
         });
     }
   };
@@ -238,7 +140,7 @@ function Formulario({
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: typeof value === "string" ? value.toUpperCase() : value, // Solo aplicar toUpperCase si es un string
+      [name]: value,
     }));
   };
 
@@ -286,21 +188,16 @@ function Formulario({
                   <MDBox />
                 ) : (
                   <MDButton variant="gradient" color="light" onClick={handleBack}>
-                    Atrás
+                    back
                   </MDButton>
                 )}
-                <MDBox display="flex" gap={2}>
-                  <MDButton variant="gradient" color="light" onClick={handleCancel}>
-                    Cancelar
-                  </MDButton>
-                  <MDButton
-                    variant="gradient"
-                    color="info"
-                    onClick={!isLastStep ? handleNext : handleSubmit}
-                  >
-                    {isLastStep ? "Enviar" : "Siguiente"}
-                  </MDButton>
-                </MDBox>
+                <MDButton
+                  variant="gradient"
+                  color="dark"
+                  onClick={!isLastStep ? handleNext : handleSubmit} // Cambiar handleNext por handleSubmit en el botón "send"
+                >
+                  {isLastStep ? "send" : "next"}
+                </MDButton>
               </MDBox>
             </MDBox>
           </Card>
@@ -326,8 +223,6 @@ Formulario.propTypes = {
   apiUrl: PropTypes.string.isRequired,
   productId: PropTypes.number,
   idObra: PropTypes.number,
-  idConservadora: PropTypes.number,
-  idAdministracion: PropTypes.number,
   includeIdRepTecnico: PropTypes.bool,
 };
 export default Formulario;
