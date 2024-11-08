@@ -118,7 +118,7 @@ namespace API.Services
             // Verificar si ya existe un registro en MEC_POF para esta combinación
             if (await _context.MEC_POF.AnyAsync(p => p.IdEstablecimiento == idEstablecimiento &&
                                                         p.IdPersona == idPersona &&
-                                                        p.Secuencia == secuencia))
+                                                        p.Secuencia == secuencia))  
             {
                 return "Ya existe un registro en MEC_POF para esta combinación de Establecimiento, Persona y Secuencia.";
             }
