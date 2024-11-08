@@ -47,10 +47,10 @@ function AltaUsuariosPorRol() {
           Number(usuario.idUsuario)
         );
 
-        // Filtrar solo los usuarios sin roles asignados
-        const usuariosSinRoles = usuariosResponse.data.filter(
-          (usuario) => !usuariosConRolesIds.includes(Number(usuario.idUsuario))
-        );
+        // Filtrar solo los usuarios sin roles asignados y ordenar alfabéticamente por 'nombre'
+        const usuariosSinRoles = usuariosResponse.data
+          .filter((usuario) => !usuariosConRolesIds.includes(Number(usuario.idUsuario)))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre)); // Ordenar alfabéticamente por nombre
 
         setUsuarios(usuariosSinRoles);
 

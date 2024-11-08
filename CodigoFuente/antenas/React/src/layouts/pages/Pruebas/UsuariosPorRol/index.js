@@ -31,7 +31,13 @@ function UsuarioPorRol() {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        // Ordena los datos alfabéticamente por 'nombreUsuario'
+        const sortedData = response.data.sort((a, b) =>
+          a.nombreUsuario.localeCompare(b.nombreUsuario)
+        );
+        setDataTableData(sortedData);
+      })
       .catch((error) => {
         if (error.response) {
           const statusCode = error.response.status;
