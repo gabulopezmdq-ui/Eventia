@@ -154,7 +154,6 @@ function TiposFunciones() {
                   { Header: "Cod Función.", accessor: "codFuncion" },
                   { Header: "Cod Función MGP", accessor: "codFuncionMGP" },
                   { Header: "Descripcion", accessor: "descripcion" },
-                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Editar",
                     accessor: "edit",

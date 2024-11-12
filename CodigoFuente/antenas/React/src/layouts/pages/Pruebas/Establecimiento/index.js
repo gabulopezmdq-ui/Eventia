@@ -97,6 +97,10 @@ function Establecimiento() {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
+  const handleEditarEstablecimiento = (idEstablecimiento) => {
+    const url = `/CarRevistaFE/Edit/${idEstablecimiento}`;
+    navigate(url);
+  };
 
   const displayValue = (value) => (value ? value : "N/A");
 
@@ -151,8 +155,21 @@ function Establecimiento() {
                   { Header: "Nro. Establecimiento", accessor: "nroEstablecimiento" },
                   { Header: "Nombre MGP", accessor: "nombreMgp" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
+                    Cell: ({ row }) => (
+                      <MDButton
+                        variant="gradient"
+                        color="info"
+                        onClick={() => handleEditarEstablecimiento(row.original.idEstablecimiento)}
+                      >
+                        Editar
+                      </MDButton>
+                    ),
+                  },
+                  {
+                    Header: "Mas Info",
+                    accessor: "ver",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
