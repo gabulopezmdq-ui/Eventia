@@ -153,6 +153,7 @@ function TipoEstablecimiento() {
                 columns: [
                   { Header: "Cod Tipo Est.", accessor: "codTipoEstablecimiento" },
                   { Header: "Descripcion", accessor: "descripcion" },
+                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Editar",
                     accessor: "edit",

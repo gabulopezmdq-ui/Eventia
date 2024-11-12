@@ -153,9 +153,10 @@ function TipoCategoria() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Cod Tipo Cat.", accessor: "codCategoria" },
+                  { Header: "Cod Tipo Cat. Pcia.", accessor: "codCategoria" },
                   { Header: "Cod Cat. MGP", accessor: "codCategoriaMGP" },
-                  { Header: "Descripcion", accessor: "descripcion" },
+                  { Header: "Descripción", accessor: "descripcion" },
+                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Editar",
                     accessor: "edit",

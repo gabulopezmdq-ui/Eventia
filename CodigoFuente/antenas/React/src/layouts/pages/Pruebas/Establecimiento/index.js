@@ -152,7 +152,7 @@ function Establecimiento() {
                 columns: [
                   { Header: "Nro. Diegep", accessor: "nroDiegep" },
                   { Header: "Tipo Est.", accessor: "tipoEstablecimientos.descripcion" },
-                  { Header: "Nro. Establecimiento", accessor: "nroEstablecimiento" },
+                  { Header: "Nombre Pcia", accessor: "nombrePcia" },
                   { Header: "Nombre MGP", accessor: "nombreMgp" },
                   {
                     Header: "Editar",
