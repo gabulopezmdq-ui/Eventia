@@ -152,6 +152,7 @@ function TipoLiquidaciones() {
               table={{
                 columns: [
                   { Header: "Descripcion", accessor: "descripcion" },
+                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Editar",
                     accessor: "edit",
