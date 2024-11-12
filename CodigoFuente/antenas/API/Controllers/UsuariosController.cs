@@ -60,9 +60,9 @@ namespace API.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> Delete(int Id)
+        public async Task<IActionResult> DeleteUsuario(int Id)
         {
-            await _serviceGenerico.Delete(Id);
+            await _serviceGenerico.DeleteUsuario(Id);
             return Ok();
         }
 
