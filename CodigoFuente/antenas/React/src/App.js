@@ -42,6 +42,7 @@ import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
 import VerConcepto from "layouts/pages/Pruebas/Conceptos/VerConcepto";
 import VerEstablecimiento from "layouts/pages/Pruebas/Establecimiento/VerEstablecimiento";
 import Inicio from "layouts/pages/Pruebas/Inicio/Index";
+import AltaPlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional/AltaPlantaFuncional";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -306,6 +307,10 @@ export default function App() {
     {
       path: "/PersonaFE/Nuevo",
       component: AltaPersona,
+    },
+    {
+      path: "/PlantaFuncionalFE/Nuevo",
+      component: AltaPlantaFuncional,
     },
     {
       path: "/GestionUsuarioFE/Nuevo",
