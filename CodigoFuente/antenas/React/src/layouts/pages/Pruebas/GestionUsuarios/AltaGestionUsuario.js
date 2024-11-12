@@ -42,7 +42,7 @@ function AltaGestionUsuario() {
       fields: [
         {
           type: "text",
-          label: "Ingrese su Usuario de Red Municipal",
+          label: "Ingrese Usuario de Red Municipal",
           name: "nombre",
           required: true,
         },

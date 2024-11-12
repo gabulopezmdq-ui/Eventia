@@ -22,7 +22,8 @@ namespace API.Services
 
         public IEnumerable<T> GetAll()
         {
-            return _genericRepo.AllAsNoTracking().Where(x => EF.Property<string>(x, "Vigente") == "S");
+            return _genericRepo.AllAsNoTracking();
+                //.Where(x => EF.Property<string>(x, "Vigente") == "S");
 
         }
 
