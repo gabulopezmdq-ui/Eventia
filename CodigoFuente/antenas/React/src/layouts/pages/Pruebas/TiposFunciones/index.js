@@ -3,7 +3,7 @@ import axios from "axios";
 
 // @mui material components
 import Card from "@mui/material/Card";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
@@ -17,20 +17,32 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
+
 function TiposFunciones() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState();
+  const [dataTableData, setDataTableData] = useState([]);
+  const [allData, setAllData] = useState([]);
+  const [activoFilter, setActivoFilter] = useState("S"); // Filtro por "Vigentes" por defecto
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
+    fetchTiposFunciones(); // Llama a la función para obtener los datos
+  }, []);
+
+  // Función para obtener datos desde la API
+  const fetchTiposFunciones = () => {
     axios
       .get(process.env.REACT_APP_API_URL + "TiposFunciones/getall", {
         headers: {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        setAllData(response.data); // Guarda todos los datos
+        filterData(response.data, "S"); // Aplica filtro inicial "Vigentes"
+      })
       .catch((error) => {
         if (error.response) {
           const statusCode = error.response.status;
@@ -50,11 +62,32 @@ function TiposFunciones() {
           });
         }
       });
-  }, []);
+  };
+
+  // Función para filtrar los datos según el filtro activo
+  const filterData = (data, filter) => {
+    let filteredData;
+    if (filter === "S") {
+      filteredData = data.filter((item) => item.vigente === "S" || item.vigente === true);
+    } else if (filter === "N") {
+      filteredData = data.filter((item) => item.vigente === "N" || item.vigente === false);
+    } else {
+      filteredData = data; // Si es "Todos", no filtra
+    }
+    setDataTableData(filteredData);
+  };
+
+  // Maneja el cambio de filtro
+  const handleFilterChange = (event) => {
+    const filter = event.target.value;
+    setActivoFilter(filter);
+    filterData(allData, filter); // Aplica el filtro a todos los datos
+  };
 
   const handleNuevoTipo = () => {
     navigate("/TiposFuncionesFE/Nuevo");
   };
+
   const handleVer = (rowData) => {
     if (rowData && rowData.idTipoFuncion) {
       const productId = rowData.idTipoFuncion;
@@ -64,20 +97,42 @@ function TiposFunciones() {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
+
   const handleEditarTiposFunciones = (idTipoFuncion) => {
     const url = `/TiposFuncionesFE/Edit/${idTipoFuncion}`;
     navigate(url);
   };
-  //Funcion para que cuando el campo viene vacio muestre N/A
+
   const displayValue = (value) => (value ? value : "N/A");
 
   return (
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
+        <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
+          <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+            Agregar
+          </MDButton>
+          <MDBox
+            component="select"
+            onChange={handleFilterChange} // Maneja cambios en el filtro
+            value={activoFilter} // Valor inicial "Vigentes"
+            sx={{
+              padding: "10px 20px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              "&:focus": {
+                borderColor: "#4caf50",
+              },
+            }}
+          >
+            <option value="">Todos</option>
+            <option value="S">Vigentes</option>
+            <option value="N">No Vigentes</option>
+          </MDBox>
+        </MDBox>
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -96,7 +151,6 @@ function TiposFunciones() {
             <DataTable
               table={{
                 columns: [
-                  //{ Header: "ID", accessor: "id" },
                   { Header: "Cod Función.", accessor: "codFuncion" },
                   { Header: "Cod Función MGP", accessor: "codFuncionMGP" },
                   { Header: "Descripcion", accessor: "descripcion" },
@@ -129,7 +183,7 @@ function TiposFunciones() {
 }
 
 TiposFunciones.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
