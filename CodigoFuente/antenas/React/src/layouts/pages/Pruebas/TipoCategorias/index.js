@@ -3,7 +3,7 @@ import axios from "axios";
 
 // @mui material components
 import Card from "@mui/material/Card";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
@@ -17,20 +17,32 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import "../../Pruebas/pruebas.css";
-function TipoCategorias() {
+
+function TipoCategoria() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState();
+  const [dataTableData, setDataTableData] = useState([]);
+  const [allData, setAllData] = useState([]);
+  const [activoFilter, setActivoFilter] = useState("S"); // Filtro por "Vigentes" por defecto
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
+    fetchTipoCategorias(); // Llama a la función para obtener los datos
+  }, []);
+
+  // Función para obtener datos desde la API
+  const fetchTipoCategorias = () => {
     axios
       .get(process.env.REACT_APP_API_URL + "TiposCategorias/getall", {
         headers: {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        setAllData(response.data); // Guarda todos los datos
+        filterData(response.data, "S"); // Aplica filtro inicial "Vigentes"
+      })
       .catch((error) => {
         if (error.response) {
           const statusCode = error.response.status;
@@ -50,34 +62,75 @@ function TipoCategorias() {
           });
         }
       });
-  }, []);
+  };
+
+  // Función para filtrar los datos según el filtro activo
+  const filterData = (data, filter) => {
+    let filteredData;
+    if (filter === "S") {
+      // Filtra por "Vigentes" (S o true)
+      filteredData = data.filter((item) => item.vigente === "S" || item.vigente === true);
+    } else if (filter === "N") {
+      // Filtra por "No Vigentes" (N o false)
+      filteredData = data.filter((item) => item.vigente === "N" || item.vigente === false);
+    } else {
+      // Si es "Todos", no filtra
+      filteredData = data;
+    }
+    setDataTableData(filteredData); // Actualiza los datos filtrados
+  };
+
+  // Maneja el cambio de filtro
+  const handleFilterChange = (event) => {
+    const filter = event.target.value;
+    setActivoFilter(filter);
+    filterData(allData, filter); // Aplica el filtro a todos los datos
+  };
 
   const handleNuevoTipo = () => {
-    navigate("/TipoCategoriasFE/Nuevo");
+    navigate("/TipoCategoriaFE/Nuevo");
   };
+
   const handleVer = (rowData) => {
-    if (rowData && rowData.idTipoCategorias) {
-      const productId = rowData.idTipoCategorias;
-      const url = `/TipoCategoriasFE/${productId}`;
+    if (rowData && rowData.idTipoCategoria) {
+      const productId = rowData.idTipoCategoria;
+      const url = `/TipoCategoriaFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
-  const handleEditarTiposCategorias = (idTipoCategoria) => {
-    const url = `/TipoCategoriasFE/Edit/${idTipoCategoria}`;
-    navigate(url);
-  };
-  //Funcion para que cuando el campo viene vacio muestre N/A
+
   const displayValue = (value) => (value ? value : "N/A");
 
   return (
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
+        <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
+          <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+            Agregar
+          </MDButton>
+          <MDBox
+            component="select"
+            onChange={handleFilterChange} // Maneja cambios en el filtro
+            value={activoFilter} // Valor inicial "Vigentes"
+            sx={{
+              padding: "10px 20px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              "&:focus": {
+                borderColor: "#4caf50",
+              },
+            }}
+          >
+            <option value="">Todos</option>
+            <option value="S">Vigentes</option>
+            <option value="N">No Vigentes</option>
+          </MDBox>
+        </MDBox>
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -96,25 +149,24 @@ function TipoCategorias() {
             <DataTable
               table={{
                 columns: [
-                  //{ Header: "ID", accessor: "id" },
-                  { Header: "Codigó Categoria", accessor: "codCategoria" },
-                  { Header: "Codidó CategoriaMGP", accessor: "codCategoriaMGP" },
+                  { Header: "Cod Tipo Cat.", accessor: "codCategoria" },
+                  { Header: "Cod Cat. MGP", accessor: "codCategoriaMGP" },
                   { Header: "Descripcion", accessor: "descripcion" },
                   {
-                    Header: "Editar",
+                    Header: "Mas Info",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleEditarTiposCategorias(row.original.idTipoCategoria)}
+                        onClick={() => handleVer(row.original)}
                       >
-                        Editar
+                        Mas Info
                       </MDButton>
                     ),
                   },
                 ],
-                rows: dataTableData,
+                rows: dataTableData, // Los datos filtrados
               }}
               entriesPerPage={false}
               canSearch
@@ -127,11 +179,11 @@ function TipoCategorias() {
   );
 }
 
-TipoCategorias.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+TipoCategoria.propTypes = {
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default TipoCategorias;
+export default TipoCategoria;
