@@ -151,9 +151,10 @@ function TiposFunciones() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Cod Función.", accessor: "codFuncion" },
+                  { Header: "Cod Función. Pcia.", accessor: "codFuncion" },
                   { Header: "Cod Función MGP", accessor: "codFuncionMGP" },
-                  { Header: "Descripcion", accessor: "descripcion" },
+                  { Header: "Descripción", accessor: "descripcion" },
+                  { Header: "Vigente", accessor: "vigente" },
                   {
                     Header: "Editar",
                     accessor: "edit",
