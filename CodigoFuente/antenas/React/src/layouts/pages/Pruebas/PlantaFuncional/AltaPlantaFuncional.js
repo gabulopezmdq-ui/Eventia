@@ -10,14 +10,9 @@ import { useState } from "react";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
-import Formulario from "components/Formulario";
-import { Field } from "formik";
-import MDDropzone from "components/MDDropzone";
+import FormularioPlanta from "components/FormularioPlanta";
 
-//Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
-//Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
-
-function AltaTipoCategoria() {
+function AltaPlantaFuncional() {
   const { id } = useParams();
   let labelTitulo = "Alta TipoCategoria";
   if (id) {
@@ -32,15 +27,7 @@ function AltaTipoCategoria() {
     }));
   };
   //------------------------Validaciones Especificas-------------------------------------
-  function validateCodEst(value, field) {
-    if (value === undefined || value === null || value === "" || field.name === undefined) {
-      return null;
-    }
-    if (value.length > 2) {
-      return "Los Códigos de Categoria no pueden tener más de 2 caracteres.";
-    }
-    return null;
-  }
+
   //----------------------Fin Validadciones--------------------
   const steps = [
     {
@@ -51,14 +38,12 @@ function AltaTipoCategoria() {
           label: "Cod Tipo Cat.",
           name: "codCategoria",
           required: true,
-          customValidation: validateCodEst,
         },
         {
           type: "text",
           label: "Cod Categoria MGP",
           name: "codCategoriaMGP",
           required: true,
-          customValidation: validateCodEst,
         },
         {
           type: "text",
@@ -89,7 +74,7 @@ function AltaTipoCategoria() {
       <MDBox py={3} mb={20} height="65vh">
         <Grid container justifyContent="center" alignItems="center" sx={{ height: "100%", mt: 8 }}>
           <Grid item xs={12} lg={10}>
-            <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
+            <FormularioPlanta steps={steps} apiUrl={apiUrl} productId={id} />
           </Grid>
         </Grid>
       </MDBox>
@@ -97,4 +82,4 @@ function AltaTipoCategoria() {
   );
 }
 
-export default AltaTipoCategoria;
+export default AltaPlantaFuncional;
