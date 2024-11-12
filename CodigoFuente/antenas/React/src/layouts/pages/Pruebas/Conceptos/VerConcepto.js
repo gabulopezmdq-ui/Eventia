@@ -61,24 +61,28 @@ function VerConcepto() {
               <div className="contenidoCard">
                 <p>
                   <b>Con Aporte: </b>
-                  {idConceptoData?.conAporte ?? "N/A"}
+                  {idConceptoData?.conAporte === "S"
+                    ? "SI"
+                    : idConceptoData?.conAporte === "N"
+                    ? "NO"
+                    : "N/A"}
                 </p>
                 <p>
                   <b>Patronal: </b>
-                  {idConceptoData?.patronal ?? "N/A"}
+                  {idConceptoData?.patronal === "S"
+                    ? "SI"
+                    : idConceptoData?.patronal === "N"
+                    ? "NO"
+                    : "N/A"}
                 </p>
                 <p>
-                  <b>Vigente: </b>
-                  {idConceptoData?.vigente ?? "N/A"}
-                </p>
-                {/*<p>
                   <b>Vigente: </b>
                   {idConceptoData?.vigente === "S"
                     ? "SI"
                     : idConceptoData?.vigente === "N"
                     ? "NO"
                     : "N/A"}
-                </p>*/}
+                </p>
                 <MDButton onClick={() => handleEditarConcepto(idConceptoData?.idConcepto)}>
                   Editar
                 </MDButton>

@@ -99,6 +99,10 @@ function Conceptos() {
       console.error("El objeto rowData o su propiedad 'idConcepto' no están definidos.");
     }
   };
+  const handleEditarConceptos = (idConcepto) => {
+    const url = `/CarRevistaFE/Edit/${idConcepto}`;
+    navigate(url);
+  };
 
   const displayValue = (value) => (value ? value : "N/A");
 
@@ -152,8 +156,21 @@ function Conceptos() {
                   { Header: "Cod Concepto MGP", accessor: "codConceptoMgp" },
                   { Header: "Descripcion", accessor: "descripcion" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
+                    Cell: ({ row }) => (
+                      <MDButton
+                        variant="gradient"
+                        color="info"
+                        onClick={() => handleEditarConceptos(row.original.idConcepto)}
+                      >
+                        Editar
+                      </MDButton>
+                    ),
+                  },
+                  {
+                    Header: "Mas Info",
+                    accessor: "info",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
