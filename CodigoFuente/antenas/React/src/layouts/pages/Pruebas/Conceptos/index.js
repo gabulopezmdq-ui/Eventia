@@ -100,7 +100,7 @@ function Conceptos() {
     }
   };
   const handleEditarConceptos = (idConcepto) => {
-    const url = `/CarRevistaFE/Edit/${idConcepto}`;
+    const url = `/ConceptosFE/Edit/${idConcepto}`;
     navigate(url);
   };
 

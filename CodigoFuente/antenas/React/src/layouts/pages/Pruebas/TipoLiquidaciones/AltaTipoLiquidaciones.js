@@ -23,7 +23,9 @@ function AltaTipoLiquidaciones() {
   if (id) {
     labelTitulo = "Editar Tipos Liquidaciones";
   }
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
+  });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -36,19 +38,23 @@ function AltaTipoLiquidaciones() {
     {
       label: labelTitulo,
       fields: [
-        { type: "text", label: "Descripcion", name: "descripcion", required: true },
-        {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
-          required: true,
-        },
+        { type: "text", label: "Descripción", name: "descripcion", required: true },
+        ...(id
+          ? [
+              {
+                type: "select",
+                label: "Vigente",
+                name: "vigente",
+                customOptions: [
+                  { value: "S", label: "Si" },
+                  { value: "N", label: "No" },
+                ],
+                valueField: "value",
+                optionField: "label",
+                required: true,
+              },
+            ]
+          : []),
       ],
     },
   ];

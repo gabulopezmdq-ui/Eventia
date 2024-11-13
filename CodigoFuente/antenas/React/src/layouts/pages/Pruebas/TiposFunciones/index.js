@@ -151,10 +151,15 @@ function TiposFunciones() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Cod Función. Pcia.", accessor: "codFuncion" },
-                  { Header: "Cod Función MGP", accessor: "codFuncionMGP" },
-                  { Header: "Descripción", accessor: "descripcion" },
-                  { Header: "Vigente", accessor: "vigente" },
+                  { Header: "CÓD. FUNCIÓN PCIA.", accessor: "codFuncion" },
+                  { Header: "CÓD. FUNCIÓN MGP", accessor: "codFuncionMGP" },
+                  { Header: "DESCRIPCIÓN", accessor: "descripcion" },
+                  {
+                    Header: "VIGENTE",
+                    accessor: (row) => (
+                      <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                    ),
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",
