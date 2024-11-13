@@ -152,7 +152,12 @@ function TipoLiquidaciones() {
               table={{
                 columns: [
                   { Header: "Descripcion", accessor: "descripcion" },
-                  { Header: "Vigente", accessor: "vigente" },
+                  {
+                    Header: "VIGENTE",
+                    accessor: (row) => (
+                      <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                    ),
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",

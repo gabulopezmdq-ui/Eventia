@@ -23,7 +23,9 @@ function AltaTipoCategorias() {
   if (id) {
     labelTitulo = "Editar Tipo Categoria";
   }
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
+  });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -36,21 +38,25 @@ function AltaTipoCategorias() {
     {
       label: labelTitulo,
       fields: [
-        { type: "text", label: "CodCategoria", name: "codCategoria", required: true },
-        { type: "text", label: "CodCategoriaMGP", name: "codCategoriaMGP", required: true },
-        { type: "text", label: "Descripcion", name: "descripcion", required: true },
-        {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
-          required: true,
-        },
+        { type: "text", label: " Cód. Categoría PCIA", name: "codCategoria", required: true },
+        { type: "text", label: "Cód. Categoría MGP", name: "codCategoriaMGP", required: true },
+        { type: "text", label: "Descripción", name: "descripcion", required: true },
+        ...(id
+          ? [
+              {
+                type: "select",
+                label: "Vigente",
+                name: "vigente",
+                customOptions: [
+                  { value: "S", label: "Si" },
+                  { value: "N", label: "No" },
+                ],
+                valueField: "value",
+                optionField: "label",
+                required: true,
+              },
+            ]
+          : []),
       ],
     },
   ];

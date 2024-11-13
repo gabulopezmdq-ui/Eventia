@@ -77,9 +77,17 @@ function Formulario({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    // Copia formData y agrega "vigente": "S" si es un alta y no se ha definido
+    const dataToSubmit = { ...formData };
+    if (!productId && !dataToSubmit.vigente) {
+      dataToSubmit.vigente = "S"; // Asegura que "vigente" se envíe como "S" en el alta
+    }
+
     const requiredFields = currentStep.fields.filter((field) => field.required);
     const isFormValid = requiredFields.every((field) => formData[field.name]);
     const missingFields = requiredFields.filter((field) => !formData[field.name]);
+
     currentStep.fields.forEach((field) => {
       if (field.type === "checkbox" && !formData.hasOwnProperty(field.name)) {
         formData[field.name] = false;
@@ -113,16 +121,14 @@ function Formulario({
 
     // Agregar datos adicionales al formulario
     if (idObra) {
-      formData.idObra = idObra;
+      dataToSubmit.idObra = idObra;
     }
     if (idConservadora) {
-      formData.idConservadora = idConservadora;
+      dataToSubmit.idConservadora = idConservadora;
     }
-
-    const updatedFormData = { ...formData };
     if (idAdministracion) {
-      updatedFormData.idAdmin = idAdministracion;
-      updatedFormData.idCons = formData.idConservadora;
+      dataToSubmit.idAdmin = idAdministracion;
+      dataToSubmit.idCons = formData.idConservadora;
     }
     if (!isFormValid) {
       alert("Por favor complete los campos");
@@ -130,8 +136,8 @@ function Formulario({
       return;
     }
 
-    const filteredFormData = Object.keys(formData).reduce((acc, key) => {
-      const value = formData[key];
+    const filteredFormData = Object.keys(dataToSubmit).reduce((acc, key) => {
+      const value = dataToSubmit[key];
       const hasArrayInObject = (obj) => {
         return Object.values(obj).some((val) => Array.isArray(val));
       };
@@ -236,12 +242,18 @@ function Formulario({
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
+    // Limita el valor a un solo carácter si el campo es "codPcia" o "codFuncion"
+    if ((name === "codPcia" || name === "codFuncion") && value.length > 1) {
+      return; // Cancela el cambio si el usuario intenta ingresar más de un carácter
+    }
+
+    // Actualiza el estado, convirtiendo el valor a mayúsculas si es una cadena
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: typeof value === "string" ? value.toUpperCase() : value, // Solo aplicar toUpperCase si es un string
+      [name]: typeof value === "string" ? value.toUpperCase() : value,
     }));
   };
-
   return (
     <MDBox mt={-9} mb={9}>
       {alertData.show && (

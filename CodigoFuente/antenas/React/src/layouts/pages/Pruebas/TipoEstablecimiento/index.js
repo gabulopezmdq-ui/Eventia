@@ -151,9 +151,14 @@ function TipoEstablecimiento() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Cod Tipo Est.", accessor: "codTipoEstablecimiento" },
-                  { Header: "Descripcion", accessor: "descripcion" },
-                  { Header: "Vigente", accessor: "vigente" },
+                  { Header: "COD: TIPO ESTABLECIMIENTO.", accessor: "codTipoEstablecimiento" },
+                  { Header: "DESCRIPCIÓN", accessor: "descripcion" },
+                  {
+                    Header: "VIGENTE",
+                    accessor: (row) => (
+                      <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                    ),
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",

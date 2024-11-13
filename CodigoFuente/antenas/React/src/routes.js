@@ -85,25 +85,25 @@ const routes = [
     key: "parametricas",
     collapse: [
       {
-        name: "Listado Conceptos",
+        name: "Conceptos",
         key: "ListadoConceptos",
         route: "/ConceptosFE",
         component: <ListadoConceptos />,
       },
       {
-        name: "Caracteres Revista",
+        name: "Caracteres de Revista",
         key: "CarRevista",
         route: "/CarRevistaFE",
         component: <ListadoCarRevista />,
       },
       {
-        name: "Tipo Establecimiento",
+        name: "Tipos de Establecimientos",
         key: "ListadoTipoEstablecimiento",
         route: "/TipoEstablecimientoFE",
         component: <ListadoTipoEstablecimiento />,
       },
       {
-        name: "Establecimiento",
+        name: "Establecimientos",
         key: "Establecimiento",
         route: "/EstablecimientoFE",
         component: <Establecimiento />,
@@ -115,13 +115,13 @@ const routes = [
         component: <TiposFunciones />,
       },
       {
-        name: "Tipo Liquidaciones",
+        name: "Tipos de Liquidaciones",
         key: "TipoLiquidaciones",
         route: "/TipoLiquidacionesFE",
         component: <TipoLiquidaciones />,
       },
       {
-        name: "Tipo Categorias",
+        name: "Tipos de Categorias",
         key: "TipoCategorias",
         route: "/TipoCategoriasFE",
         component: <TipoCategorias />,
