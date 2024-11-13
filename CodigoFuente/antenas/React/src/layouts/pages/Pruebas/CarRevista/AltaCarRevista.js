@@ -46,7 +46,7 @@ function AltaCarRevista() {
           inputProps: { maxLength: 1 },
         },
         { type: "text", label: "Descripcion", name: "descripcion", required: true },
-        { type: "text", label: "codMGP", name: "codMgp", required: true },
+        { type: "text", label: "codMGP", name: "codMgp" },
         // Solo incluimos el campo "Vigente" si estamos en modo edición (id está presente)
         ...(id
           ? [
