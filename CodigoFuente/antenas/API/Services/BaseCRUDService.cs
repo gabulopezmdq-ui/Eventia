@@ -100,7 +100,23 @@ namespace API.Services
             // Guarda los cambios en la base de datos
             await _genericRepo.Update(entity);
         }
+        public async Task DeleteUsuario(int Id)
+        {
+            // Obtiene el registro por su ID
+            var entity = await _genericRepo.Find(Id);
 
+            // Verifica si se encontró la entidad
+            if (entity == null)
+            {
+                throw new KeyNotFoundException("El registro no existe.");
+            }
+
+            // Cambia el estado 'Vigente' a "N" en lugar de eliminar físicamente
+            typeof(T).GetProperty("Activo")?.SetValue(entity, false);
+
+            // Guarda los cambios en la base de datos
+            await _genericRepo.Update(entity);
+        }
         public virtual async Task<T> Update(T genericClass)
         {
             try

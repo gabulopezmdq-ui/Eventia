@@ -98,7 +98,7 @@ function Establecimiento() {
     }
   };
   const handleEditarEstablecimiento = (idEstablecimiento) => {
-    const url = `/CarRevistaFE/Edit/${idEstablecimiento}`;
+    const url = `/EstablecimientoFE/Edit/${idEstablecimiento}`;
     navigate(url);
   };
 
@@ -150,10 +150,16 @@ function Establecimiento() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Nro. Diegep", accessor: "nroDiegep" },
-                  { Header: "Tipo Est.", accessor: "tipoEstablecimientos.descripcion" },
-                  { Header: "Nro. Establecimiento", accessor: "nroEstablecimiento" },
-                  { Header: "Nombre MGP", accessor: "nombreMgp" },
+                  { Header: "NRO. DIEGEP", accessor: "nroDiegep" },
+                  { Header: "TIPO ESTABLECIMIENTO", accessor: "tipoEstablecimientos.descripcion" },
+                  { Header: "NOMBRE PCIA", accessor: "nombrePcia" },
+                  { Header: "NOMBRE MGP", accessor: "nombreMgp" },
+                  {
+                    Header: "VIGENTE",
+                    accessor: (row) => (
+                      <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                    ),
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",
@@ -167,7 +173,7 @@ function Establecimiento() {
                       </MDButton>
                     ),
                   },
-                  {
+                  /*{
                     Header: "Mas Info",
                     accessor: "ver",
                     Cell: ({ row }) => (
@@ -179,7 +185,7 @@ function Establecimiento() {
                         Mas Info
                       </MDButton>
                     ),
-                  },
+                  },*/
                 ],
                 rows: dataTableData,
               }}
