@@ -23,7 +23,9 @@ function AltaTipoEstablecimiento() {
   if (id) {
     labelTitulo = "Editar Tipo Establecimiento";
   }
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
+  });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -59,18 +61,23 @@ function AltaTipoEstablecimiento() {
           name: "descripcion",
           required: true,
         },
-        {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
-          required: true,
-        },
+        // Solo incluimos el campo "Vigente" si estamos en modo edición (id está presente)
+        ...(id
+          ? [
+              {
+                type: "select",
+                label: "Vigente",
+                name: "vigente",
+                customOptions: [
+                  { value: "S", label: "Si" },
+                  { value: "N", label: "No" },
+                ],
+                valueField: "value",
+                optionField: "label",
+                required: true,
+              },
+            ]
+          : []),
       ],
     },
   ];

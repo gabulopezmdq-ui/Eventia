@@ -12,7 +12,7 @@ namespace API.DataSchema
         public string DNI { get; set; }
         public string Apellido { get; set; }
         public string Nombre {  get; set; }
-        public string Legajo { get; set; }
+        public string? Legajo { get; set; }
         public string Vigente { get; set; }
         public string[] UniqueProperties => new[] { "DNI", "Legajo" }; //  CodCategoria es unico
         public virtual ICollection<MEC_POF>? POFs { get; set; } = new List<MEC_POF>();

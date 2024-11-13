@@ -100,7 +100,7 @@ function Conceptos() {
     }
   };
   const handleEditarConceptos = (idConcepto) => {
-    const url = `/CarRevistaFE/Edit/${idConcepto}`;
+    const url = `/ConceptosFE/Edit/${idConcepto}`;
     navigate(url);
   };
 
@@ -152,9 +152,9 @@ function Conceptos() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Cod Concepto", accessor: "codConcepto" },
+                  { Header: "Cod Concepto Provincia", accessor: "codConcepto" },
                   { Header: "Cod Concepto MGP", accessor: "codConceptoMgp" },
-                  { Header: "Descripcion", accessor: "descripcion" },
+                  { Header: "Descripción", accessor: "descripcion" },
                   {
                     Header: "Editar",
                     accessor: "edit",
@@ -165,19 +165,6 @@ function Conceptos() {
                         onClick={() => handleEditarConceptos(row.original.idConcepto)}
                       >
                         Editar
-                      </MDButton>
-                    ),
-                  },
-                  {
-                    Header: "Mas Info",
-                    accessor: "info",
-                    Cell: ({ row }) => (
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        onClick={() => handleVer(row.original)}
-                      >
-                        Mas Info
                       </MDButton>
                     ),
                   },
