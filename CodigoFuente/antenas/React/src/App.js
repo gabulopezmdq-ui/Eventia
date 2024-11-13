@@ -272,7 +272,7 @@ export default function App() {
       component: EdicionUsuariosPorRol,
     },
     {
-      path: "/AltaConceptosFE/Edit/:id",
+      path: "/ConceptosFE/Edit/:id",
       component: AltaConceptos,
     },
     {

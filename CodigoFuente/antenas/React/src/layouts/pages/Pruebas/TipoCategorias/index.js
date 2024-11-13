@@ -88,13 +88,13 @@ function TipoCategoria() {
   };
 
   const handleNuevoTipo = () => {
-    navigate("/TipoCategoriaFE/Nuevo");
+    navigate("/TipoCategoriasFE/Nuevo");
   };
 
   const handleVer = (rowData) => {
     if (rowData && rowData.idTipoCategoria) {
       const productId = rowData.idTipoCategoria;
-      const url = `/TipoCategoriaFE/${productId}`;
+      const url = `/TipoCategoriasFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -153,10 +153,15 @@ function TipoCategoria() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Cod Tipo Cat. Pcia.", accessor: "codCategoria" },
-                  { Header: "Cod Cat. MGP", accessor: "codCategoriaMGP" },
-                  { Header: "Descripción", accessor: "descripcion" },
-                  { Header: "Vigente", accessor: "vigente" },
+                  { Header: "CÓDIGO CATEGORÍA PCIA", accessor: "codCategoria" },
+                  { Header: "CÓDIGO CATEGORÍA MGP", accessor: "codCategoriaMGP" },
+                  { Header: "DESCRIPCIÓN", accessor: "descripcion" },
+                  {
+                    Header: "VIGENTE",
+                    accessor: (row) => (
+                      <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                    ),
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",
