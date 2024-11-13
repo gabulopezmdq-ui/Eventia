@@ -27,6 +27,21 @@ function GestionUsuario() {
   const [dataTableData, setDataTableData] = useState([]);
   const [activoFilter, setActivoFilter] = useState(true); // Estado para el filtro de activo, por defecto es true (activos)
   const token = sessionStorage.getItem("token");
+  const handleDelete = (rowData) => {
+    const id = rowData.idUsuario;
+    axios
+      .delete(process.env.REACT_APP_API_URL + `Usuarios?id=${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
+      })
+      .then((response) => {
+        setDataTableData((prevData) => prevData.filter((row) => row.idUsuario !== id));
+      })
+      .catch((error) => {
+        console.error("Error al eliminar los datos:", error);
+      });
+  };
 
   useEffect(() => {
     fetchUsuarios(); // Llama a la función para obtener datos al cargar el componente y cuando cambia el filtro
@@ -140,6 +155,19 @@ function GestionUsuario() {
                         onClick={() => handleEditarUsuario(row.original.idUsuario)}
                       >
                         Editar
+                      </MDButton>
+                    ),
+                  },
+                  {
+                    Header: "Acciones",
+                    accessor: "acciones",
+                    Cell: ({ row }) => (
+                      <MDButton
+                        variant="gradient"
+                        color="error"
+                        onClick={() => handleDelete(row.original)}
+                      >
+                        DESHABILITAR
                       </MDButton>
                     ),
                   },
