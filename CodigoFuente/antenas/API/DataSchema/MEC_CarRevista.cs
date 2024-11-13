@@ -11,7 +11,7 @@ namespace API.DataSchema
         public int IdCarRevista {  get; set; }
         public string CodPcia { get; set; }
         public string Descripcion {  get; set; }
-        public string CodMgp { get; set; }
+        public string? CodMgp { get; set; }
         public string Vigente { get; set; }
         public string[] UniqueProperties => new[] { "CodMgp", "CodPcia" }; //  CodCategoria es unico
         public virtual ICollection<MEC_POF>? POFs { get; set; } = new List<MEC_POF>();
