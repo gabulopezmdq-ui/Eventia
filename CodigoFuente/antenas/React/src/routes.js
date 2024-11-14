@@ -15,47 +15,47 @@ import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
 import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
 
 const routes = [
-  {
-    type: "collapse",
-    icon: <Icon>account_balance_wallet</Icon>,
-    name: "Liquidaciones",
-    key: "liquidaciones",
-    collapse: [
-      {
-        name: "Cabecera Liquidacion",
-        key: "cabeceraLiquidacion",
-        route: "/CabeceraLiquidacionFE",
-        component: <CabeceraLiquidacion />,
-      },
-      {
-        name: "Importar Archivo Plano",
-        key: "ImportarArchivoPlano",
-        route: "/ImportarArchivoPlanoFE",
-        component: <ImportarArchivo />,
-      },
-    ],
-  },
-  { type: "divider", key: "divider-0" },
-  {
-    type: "collapse",
-    icon: <Icon>person</Icon>,
-    name: "POF",
-    key: "pof",
-    collapse: [
-      {
-        name: "Gestion de Persona",
-        key: "listadoPersona",
-        route: "/PersonaFE",
-        component: <PersonaListados />,
-      },
-      {
-        name: "Planta Funcional",
-        key: "plantaFuncional",
-        route: "/PlantaFuncionalFE",
-        component: <PlantaFuncional />,
-      },
-    ],
-  },
+  // {
+  //   type: "collapse",
+  //   icon: <Icon>account_balance_wallet</Icon>,
+  //   name: "Liquidaciones",
+  //   key: "liquidaciones",
+  //   collapse: [
+  //     {
+  //       name: "Cabecera Liquidacion",
+  //       key: "cabeceraLiquidacion",
+  //       route: "/CabeceraLiquidacionFE",
+  //       component: <CabeceraLiquidacion />,
+  //     },
+  //     {
+  //       name: "Importar Archivo Plano",
+  //       key: "ImportarArchivoPlano",
+  //       route: "/ImportarArchivoPlanoFE",
+  //       component: <ImportarArchivo />,
+  //     },
+  //   ],
+  // },
+  // { type: "divider", key: "divider-0" },
+  // {
+  //   type: "collapse",
+  //   icon: <Icon>person</Icon>,
+  //   name: "POF",
+  //   key: "pof",
+  //   collapse: [
+  //     {
+  //       name: "Gestion de Persona",
+  //       key: "listadoPersona",
+  //       route: "/PersonaFE",
+  //       component: <PersonaListados />,
+  //     },
+  //     {
+  //       name: "Planta Funcional",
+  //       key: "plantaFuncional",
+  //       route: "/PlantaFuncionalFE",
+  //       component: <PlantaFuncional />,
+  //     },
+  //   ],
+  // },
   { type: "divider", key: "divider-1" },
   {
     type: "collapse",
@@ -85,25 +85,25 @@ const routes = [
     key: "parametricas",
     collapse: [
       {
-        name: "Listado Conceptos",
+        name: "Conceptos",
         key: "ListadoConceptos",
         route: "/ConceptosFE",
         component: <ListadoConceptos />,
       },
       {
-        name: "Caracteres Revista",
+        name: "Caracteres de Revista",
         key: "CarRevista",
         route: "/CarRevistaFE",
         component: <ListadoCarRevista />,
       },
       {
-        name: "Tipo Establecimiento",
+        name: "Tipos de Establecimientos",
         key: "ListadoTipoEstablecimiento",
         route: "/TipoEstablecimientoFE",
         component: <ListadoTipoEstablecimiento />,
       },
       {
-        name: "Establecimiento",
+        name: "Establecimientos",
         key: "Establecimiento",
         route: "/EstablecimientoFE",
         component: <Establecimiento />,
@@ -115,13 +115,13 @@ const routes = [
         component: <TiposFunciones />,
       },
       {
-        name: "Tipo Liquidaciones",
+        name: "Tipos de Liquidaciones",
         key: "TipoLiquidaciones",
         route: "/TipoLiquidacionesFE",
         component: <TipoLiquidaciones />,
       },
       {
-        name: "Tipo Categorias",
+        name: "Tipos de Categorias",
         key: "TipoCategorias",
         route: "/TipoCategoriasFE",
         component: <TipoCategorias />,

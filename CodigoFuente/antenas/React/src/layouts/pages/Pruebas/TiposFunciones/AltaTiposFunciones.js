@@ -23,7 +23,9 @@ function AltaTiposFunciones() {
   if (id) {
     labelTitulo = "Editar Tipos Funciones";
   }
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
+  });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -36,21 +38,31 @@ function AltaTiposFunciones() {
     {
       label: labelTitulo,
       fields: [
-        { type: "text", label: "codFuncion", name: "codFuncion", required: true },
-        { type: "text", label: "codFuncionMGP", name: "codFuncionMGP", required: true },
-        { type: "text", label: "descripcion", name: "descripcion", required: true },
         {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
+          type: "text",
+          label: "Cód. Función PCIA",
+          name: "codFuncion",
           required: true,
+          inputProps: { maxLength: 1 },
         },
+        { type: "text", label: "Cód. Función MGP", name: "codFuncionMGP" },
+        { type: "text", label: "Descripción", name: "descripcion", required: true },
+        ...(id
+          ? [
+              {
+                type: "select",
+                label: "Vigente",
+                name: "vigente",
+                customOptions: [
+                  { value: "S", label: "Si" },
+                  { value: "N", label: "No" },
+                ],
+                valueField: "value",
+                optionField: "label",
+                required: true,
+              },
+            ]
+          : []),
       ],
     },
   ];

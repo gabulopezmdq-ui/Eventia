@@ -24,7 +24,7 @@ function FormField({ label, name, type, formData, handleChange }) {
       type={type}
       label={label}
       name={name}
-      value={formData[name] || ""}
+      value={formData[name] || ""} // Valor predeterminado si es undefined
       onChange={handleChange}
       variant="standard"
       fullWidth

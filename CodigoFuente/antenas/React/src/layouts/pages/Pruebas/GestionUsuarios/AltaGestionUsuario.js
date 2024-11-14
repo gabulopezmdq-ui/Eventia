@@ -67,11 +67,8 @@ function AltaGestionUsuario() {
   ];
 
   const apiUrl = process.env.REACT_APP_API_URL + `Usuarios`;
-
-  // Function to handle form submission
   const handleSubmit = async (data) => {
-    const payload = { ...data, activo: isEditMode ? data.activo : true }; // Set `activo` to true for new users
-    // Execute POST request with payload (assumes FormularioGestion accepts handleSubmit prop)
+    const payload = { ...data, activo: isEditMode ? data.activo : true };
   };
 
   return (

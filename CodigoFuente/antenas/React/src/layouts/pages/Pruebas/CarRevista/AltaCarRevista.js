@@ -23,7 +23,9 @@ function AltaCarRevista() {
   if (id) {
     labelTitulo = "Editar Car Revista";
   }
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
+  });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -36,21 +38,32 @@ function AltaCarRevista() {
     {
       label: labelTitulo,
       fields: [
-        { type: "text", label: "CodPcia", name: "codPcia", required: true },
-        { type: "text", label: "Descripcion", name: "descripcion", required: true },
-        { type: "text", label: "codMGP", name: "codMgp", required: true },
         {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
+          type: "text",
+          label: "CodPcia",
+          name: "codPcia",
           required: true,
+          inputProps: { maxLength: 1 },
         },
+        { type: "text", label: "Descripcion", name: "descripcion", required: true },
+        { type: "text", label: "codMGP", name: "codMgp" },
+        // Solo incluimos el campo "Vigente" si estamos en modo edición (id está presente)
+        ...(id
+          ? [
+              {
+                type: "select",
+                label: "Vigente",
+                name: "vigente",
+                customOptions: [
+                  { value: "S", label: "Si" },
+                  { value: "N", label: "No" },
+                ],
+                valueField: "value",
+                optionField: "label",
+                required: true,
+              },
+            ]
+          : []),
       ],
     },
   ];
