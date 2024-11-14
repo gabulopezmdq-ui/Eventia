@@ -15,47 +15,47 @@ import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
 import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
 
 const routes = [
-  // {
-  //   type: "collapse",
-  //   icon: <Icon>account_balance_wallet</Icon>,
-  //   name: "Liquidaciones",
-  //   key: "liquidaciones",
-  //   collapse: [
-  //     {
-  //       name: "Cabecera Liquidacion",
-  //       key: "cabeceraLiquidacion",
-  //       route: "/CabeceraLiquidacionFE",
-  //       component: <CabeceraLiquidacion />,
-  //     },
-  //     {
-  //       name: "Importar Archivo Plano",
-  //       key: "ImportarArchivoPlano",
-  //       route: "/ImportarArchivoPlanoFE",
-  //       component: <ImportarArchivo />,
-  //     },
-  //   ],
-  // },
-  // { type: "divider", key: "divider-0" },
-  // {
-  //   type: "collapse",
-  //   icon: <Icon>person</Icon>,
-  //   name: "POF",
-  //   key: "pof",
-  //   collapse: [
-  //     {
-  //       name: "Gestion de Persona",
-  //       key: "listadoPersona",
-  //       route: "/PersonaFE",
-  //       component: <PersonaListados />,
-  //     },
-  //     {
-  //       name: "Planta Funcional",
-  //       key: "plantaFuncional",
-  //       route: "/PlantaFuncionalFE",
-  //       component: <PlantaFuncional />,
-  //     },
-  //   ],
-  // },
+  {
+    type: "collapse",
+    icon: <Icon>account_balance_wallet</Icon>,
+    name: "Liquidaciones",
+    key: "liquidaciones",
+    collapse: [
+      {
+        name: "Cabecera Liquidacion",
+        key: "cabeceraLiquidacion",
+        route: "/CabeceraLiquidacionFE",
+        component: <CabeceraLiquidacion />,
+      },
+      {
+        name: "Importar Archivo Plano",
+        key: "ImportarArchivoPlano",
+        route: "/ImportarArchivoPlanoFE",
+        component: <ImportarArchivo />,
+      },
+    ],
+  },
+  { type: "divider", key: "divider-0" },
+  {
+    type: "collapse",
+    icon: <Icon>person</Icon>,
+    name: "POF",
+    key: "pof",
+    collapse: [
+      {
+        name: "Gestion de Persona",
+        key: "listadoPersona",
+        route: "/PersonaFE",
+        component: <PersonaListados />,
+      },
+      {
+        name: "Planta Funcional",
+        key: "plantaFuncional",
+        route: "/PlantaFuncionalFE",
+        component: <PlantaFuncional />,
+      },
+    ],
+  },
   { type: "divider", key: "divider-1" },
   {
     type: "collapse",
