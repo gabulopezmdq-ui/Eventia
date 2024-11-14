@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin")]
-   // [AllowAnonymous]
+   // [Authorize(Roles = "SuperAdmin, Admin")]
+    [AllowAnonymous]
     [Route("[controller]")]
     public class POFController : ControllerBase
     {
@@ -137,28 +137,61 @@ namespace API.Controllers
         [HttpPost("RegistrarPOF")]
         public async Task<IActionResult> RegistrarPOF([FromBody] MEC_POF POF)
         {
+            // Verificar que el objeto POF no sea nulo
             if (POF == null)
             {
-                return BadRequest("El cuerpo de la solicitud no puede ser nulo.");
+                return BadRequest("El objeto POF no puede ser nulo.");
             }
 
-            //// Verificar si la persona existe en MEC_Personas usando el DNI
-            //var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.IdPersona == POF.IdPersona);
-            //if (personaExistente == null)
+            // Verificar que el objeto Persona esté presente y tenga un DNI
+            if (POF.Persona == null || string.IsNullOrWhiteSpace(POF.Persona.DNI))
+            {
+                return BadRequest("El DNI de la persona no puede estar vacío.");
+            }
+
+            // Llamar al servicio RegistrarPOFAsync para registrar la POF
+            var resultado = await _pofService.RegistrarPOFAsync(
+                POF.Persona.DNI,
+                POF.IdEstablecimiento,
+                POF.Secuencia,
+                POF.Barra,
+                POF.IdCategoria,
+                POF.TipoCargo,
+                POF.Vigente
+            );
+
+            // Retornar respuesta según el resultado
+            if (resultado == "POF registrada correctamente.")
+            {
+                return Ok(resultado);  // Respuesta exitosa
+            }
+            else
+            {
+                return BadRequest(resultado);  // Respuesta de error
+            }
+
+            //if (POF == null)
             //{
-            //    return Conflict("No se encontró una persona con el ID proporcionado.");
+            //    return BadRequest("El cuerpo de la solicitud no puede ser nulo.");
             //}
 
-            // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
-            if (await ExisteRegistroEnPOFAsync(POF.IdPersona, POF.IdEstablecimiento))
-            {
-                return Conflict("Ya existe un registro en MEC_POF para esta persona y establecimiento.");
-            }
+            ////// Verificar si la persona existe en MEC_Personas usando el DNI
+            ////var personaExistente = await _context.MEC_Personas.FirstOrDefaultAsync(p => p.IdPersona == POF.IdPersona);
+            ////if (personaExistente == null)
+            ////{
+            ////    return Conflict("No se encontró una persona con el ID proporcionado.");
+            ////}
 
-            // Si no existe, proceder a crear el nuevo registro
-            _context.MEC_POF.Add(POF);
-            await _context.SaveChangesAsync();  
-            return Ok("POF registrada correctamente.");
+            //// Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
+            //if (await ExisteRegistroEnPOFAsync(POF.IdPersona, POF.IdEstablecimiento))
+            //{
+            //    return Conflict("Ya existe un registro en MEC_POF para esta persona y establecimiento.");
+            //}
+
+            //// Si no existe, proceder a crear el nuevo registro
+            //_context.MEC_POF.Add(POF);
+            //await _context.SaveChangesAsync();  
+            //return Ok("POF registrada correctamente.");
         }
 
         private async Task<bool> ExisteRegistroEnPOFAsync(int idPersona, int idEstablecimiento)
