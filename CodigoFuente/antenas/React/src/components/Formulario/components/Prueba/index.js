@@ -23,13 +23,13 @@ import Grid from "@mui/material/Grid";
 import SelectField from "components/SelectField";
 import MDDatePicker from "components/MDDatePicker";
 import MDTypography from "components/MDTypography";
-function Prueba({ formData, handleChange, fields }) {
+function Prueba({ formData = {}, handleChange, fields = [] }) {
   const initialFormData = { ...formData };
+
+  // Configurar los valores iniciales de los checkboxes si no existen en formData
   fields.forEach((field) => {
-    if (field.type === "checkbox") {
-      if (typeof initialFormData[field.name] === "undefined") {
-        initialFormData[field.name] = false;
-      }
+    if (field.type === "checkbox" && typeof initialFormData[field.name] === "undefined") {
+      initialFormData[field.name] = false;
     }
   });
 

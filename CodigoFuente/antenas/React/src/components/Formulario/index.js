@@ -51,23 +51,28 @@ function Formulario({
 
   const handleNext = () => setActiveStep(activeStep + 1);
   const handleBack = () => setActiveStep(activeStep - 1);
-  const handleCancel = () => navigate(activeStep - 1); // Cambia "/menu" a la ruta deseada
+  const handleCancel = () => navigate(activeStep - 1);
   includeIdRepTecnico = includeIdRepTecnico || false;
-  //Esto es un funcion solamente para cambiar la url de RepTecxConservadora
   let apiGetbyId = includeIdRepTecnico
     ? process.env.REACT_APP_API_URL + `RespTecById?idEVConsEVRespTec=${productId}`
     : `${apiUrl}/getbyid?id=${productId}`;
-
   useEffect(() => {
     if (productId) {
       axios
         .get(apiGetbyId, {
           headers: {
-            Authorization: `Bearer ${token}`, // Envía el token en los headers
+            Authorization: `Bearer ${token}`,
           },
         })
         .then((response) => {
-          setFormData(response.data);
+          // Normaliza los datos, reemplazando null o undefined por un valor predeterminado
+          const normalizedData = Object.fromEntries(
+            Object.entries(response.data || {}).map(([key, value]) => [
+              key,
+              value !== null && value !== undefined ? value : "", // Usa un valor predeterminado como "" o 0
+            ])
+          );
+          setFormData(normalizedData);
         })
         .catch((error) => {
           console.error("Error al cargar los datos del producto:", error);
@@ -77,9 +82,21 @@ function Formulario({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    const dataToSubmit = { ...formData };
+    Object.keys(dataToSubmit).forEach((key) => {
+      if (dataToSubmit[key] === null || dataToSubmit[key] === undefined) {
+        dataToSubmit[key] = "";
+      }
+    });
+    if (!productId && !dataToSubmit.vigente) {
+      dataToSubmit.vigente = "S"; // Asegura que "vigente" se envíe como "S" en el alta
+    }
+
     const requiredFields = currentStep.fields.filter((field) => field.required);
     const isFormValid = requiredFields.every((field) => formData[field.name]);
     const missingFields = requiredFields.filter((field) => !formData[field.name]);
+
     currentStep.fields.forEach((field) => {
       if (field.type === "checkbox" && !formData.hasOwnProperty(field.name)) {
         formData[field.name] = false;
@@ -113,16 +130,14 @@ function Formulario({
 
     // Agregar datos adicionales al formulario
     if (idObra) {
-      formData.idObra = idObra;
+      dataToSubmit.idObra = idObra;
     }
     if (idConservadora) {
-      formData.idConservadora = idConservadora;
+      dataToSubmit.idConservadora = idConservadora;
     }
-
-    const updatedFormData = { ...formData };
     if (idAdministracion) {
-      updatedFormData.idAdmin = idAdministracion;
-      updatedFormData.idCons = formData.idConservadora;
+      dataToSubmit.idAdmin = idAdministracion;
+      dataToSubmit.idCons = formData?.idConservadora || null;
     }
     if (!isFormValid) {
       alert("Por favor complete los campos");
@@ -130,12 +145,12 @@ function Formulario({
       return;
     }
 
-    const filteredFormData = Object.keys(formData).reduce((acc, key) => {
-      const value = formData[key];
-      const hasArrayInObject = (obj) => {
-        return Object.values(obj).some((val) => Array.isArray(val));
-      };
-
+    const hasArrayInObject = (obj) => {
+      if (!obj || typeof obj !== "object") return false;
+      return Object.values(obj).some((val) => Array.isArray(val));
+    };
+    const filteredFormData = Object.keys(dataToSubmit).reduce((acc, key) => {
+      const value = dataToSubmit[key];
       if (value instanceof Date) {
         acc[key] = formatDateToString(value);
       } else if (!Array.isArray(value) && (typeof value !== "object" || !hasArrayInObject(value))) {
@@ -151,8 +166,8 @@ function Formulario({
       return `${day}/${month}/${year}`;
     };
 
-    const formattedFDesde = formatDate(new Date(formData.fDesde));
-    const formattedFHasta = formatDate(new Date(formData.fHasta));
+    const formattedFDesde = formData.fDesde ? formatDate(new Date(formData.fDesde)) : null;
+    const formattedFHasta = formData.fHasta ? formatDate(new Date(formData.fHasta)) : null;
     const apiUrlWithIdRepTecnico = includeIdRepTecnico
       ? `${apiUrl}?idCons=${formData.idConservadora}&idRepTec=${formData.idRepTecnico}&fDesde=${formattedFDesde}&fHasta=${formattedFHasta}&nroContrato=${formData.nroContrato}`
       : apiUrl;
@@ -236,12 +251,18 @@ function Formulario({
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
+    // Limita el valor a un solo carácter si el campo es "codPcia" o "codFuncion"
+    if ((name === "codPcia" || name === "codFuncion") && value.length > 1) {
+      return; // Cancela el cambio si el usuario intenta ingresar más de un carácter
+    }
+
+    // Actualiza el estado, convirtiendo el valor a mayúsculas si es una cadena
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: typeof value === "string" ? value.toUpperCase() : value, // Solo aplicar toUpperCase si es un string
+      [name]: typeof value === "string" ? value.toUpperCase() : value,
     }));
   };
-
   return (
     <MDBox mt={-9} mb={9}>
       {alertData.show && (
