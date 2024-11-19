@@ -4,6 +4,7 @@ import axios from "axios";
 // @mui material components
 import Card from "@mui/material/Card";
 import { useNavigate } from "react-router-dom";
+import Icon from "@mui/material/Icon";
 
 // Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
@@ -41,7 +42,7 @@ function PlantaFuncional() {
     apellido: "",
     nombre: "",
     legajo: "",
-    vigente: "",
+    vigente: "S",
     dni: "",
   });
   const [pofFormData, setPofFormData] = useState({
@@ -49,7 +50,7 @@ function PlantaFuncional() {
     carRevista: "",
     funcion: "",
     tipoCargo: "",
-    horas: "",
+    barra: "",
   });
 
   useEffect(() => {
@@ -134,7 +135,7 @@ function PlantaFuncional() {
           apellido: "",
           nombre: "",
           legajo: "",
-          vigente: "",
+          vigente: "S",
           dni: dni,
         });
       }
@@ -308,6 +309,12 @@ function PlantaFuncional() {
             </MDBox>
             {verificarRespuesta !== null && (
               <MDBox mt={2}>
+                <MDAlert className="custom-alert">
+                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+                  <MDTypography ml={1} variant="button">
+                    Datos Persona
+                  </MDTypography>
+                </MDAlert>
                 <Card mt={3}>
                   <MDBox p={3}>
                     <Grid container spacing={2}>
@@ -369,6 +376,12 @@ function PlantaFuncional() {
             )}
             {pofVisible && (
               <MDBox mt={3}>
+                <MDAlert className="custom-alert">
+                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+                  <MDTypography ml={1} variant="button">
+                    Datos POF
+                  </MDTypography>
+                </MDAlert>
                 <Card mt={3}>
                   <MDBox p={3}>
                     <Grid container spacing={2}>
@@ -445,9 +458,9 @@ function PlantaFuncional() {
                       </Grid>
                       <Grid item xs={6}>
                         <FormField
-                          label="Horas"
-                          name="horas"
-                          value={pofFormData.horas}
+                          label="Barra"
+                          name="barra"
+                          value={pofFormData.barra}
                           onChange={handlePofChange}
                         />
                       </Grid>
