@@ -19,11 +19,12 @@ namespace API.Services
             _context = context;
         }
         
-        public async Task<MEC_Personas> AddPersona(MEC_Personas persona)
+        public async Task<int> AddPersona(MEC_Personas persona)
         {
             _context.MEC_Personas.Add(persona);
             await _context.SaveChangesAsync();
-            return persona;
+
+            return persona.IdPersona;
         }
 
 
