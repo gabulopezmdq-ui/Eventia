@@ -151,9 +151,13 @@ function PlantaFuncional() {
 
   const handlePersonaSubmit = async () => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/personaP`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}pof/POFPersona`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setIdPersona(response.data.idPersona);
       setPofVisible(true);
     } catch (error) {
@@ -169,7 +173,7 @@ function PlantaFuncional() {
   const handlePofSubmit = async () => {
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/pof`,
+        `${process.env.REACT_APP_API_URL}pof/RegistrarPOF`,
         {
           ...pofFormData,
           establecimiento: selectedEstablecimiento,
