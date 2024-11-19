@@ -37,6 +37,7 @@ function PlantaFuncional() {
   const [pofVisible, setPofVisible] = useState(false);
   const [idPersona, setIdPersona] = useState(null);
   const [carRevistaOptions, setCarRevistaOptions] = useState([]);
+  const [categoriasOptions, setCategoriasOptions] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [formData, setFormData] = useState({
     apellido: "",
@@ -51,6 +52,7 @@ function PlantaFuncional() {
     funcion: "",
     tipoCargo: "",
     barra: "",
+    categorias: "",
   });
 
   useEffect(() => {
@@ -217,8 +219,21 @@ function PlantaFuncional() {
         console.error("Error al cargar Funciones:", error);
       }
     };
+    const fetchCategorias = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCategoriasOptions(response.data);
+      } catch (error) {
+        console.error("Error al cargar CarRevistas:", error);
+      }
+    };
     fetchCarRevistas();
     fetchFunciones();
+    fetchCategorias();
   }, [token]);
 
   const tipoCargoOptions = [
@@ -346,15 +361,6 @@ function PlantaFuncional() {
                         />
                       </Grid>
                       <Grid item xs={6}>
-                        <FormField
-                          label="Vigente"
-                          name="vigente"
-                          value={formData.vigente}
-                          onChange={handleFormChange}
-                          disabled={verificarRespuesta}
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
                         <FormField label="DNI" name="dni" value={formData.dni} disabled />
                       </Grid>
                     </Grid>
@@ -402,6 +408,14 @@ function PlantaFuncional() {
                         />
                       </Grid>
                       <Grid item xs={6}>
+                        <FormField
+                          label="Barra"
+                          name="barra"
+                          value={pofFormData.barra}
+                          onChange={handlePofChange}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
                         <FormControl fullWidth>
                           <InputLabel id="car-revista-select-label">Car. Revista</InputLabel>
                           <Select
@@ -414,6 +428,25 @@ function PlantaFuncional() {
                           >
                             {carRevistaOptions.map((option) => (
                               <MenuItem key={option.idCarRevista} value={option.idCarRevista}>
+                                {option.descripcion}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormControl fullWidth>
+                          <InputLabel id="categorias-select-label">Categorias</InputLabel>
+                          <Select
+                            labelId="categorias-select-label"
+                            name="categorias"
+                            value={pofFormData.categorias}
+                            onChange={handlePofChange}
+                            label="categorias"
+                            style={{ height: "2.5rem", backgroundColor: "white" }}
+                          >
+                            {categoriasOptions.map((option) => (
+                              <MenuItem key={option.idTipoCategoria} value={option.idTipoCategoria}>
                                 {option.descripcion}
                               </MenuItem>
                             ))}
@@ -455,14 +488,6 @@ function PlantaFuncional() {
                             ))}
                           </Select>
                         </FormControl>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormField
-                          label="Barra"
-                          name="barra"
-                          value={pofFormData.barra}
-                          onChange={handlePofChange}
-                        />
                       </Grid>
                     </Grid>
                     <MDBox mt={3}>
