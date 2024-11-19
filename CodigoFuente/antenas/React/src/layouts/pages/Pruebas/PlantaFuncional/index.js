@@ -15,245 +15,455 @@ import PropTypes from "prop-types";
 // Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import DataTablePlanta from "examples/Tables/DataTablePlanta";
 import "../../Pruebas/pruebas.css";
 import MDInput from "components/MDInput";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import DataTable from "examples/Tables/DataTable";
+import FormField from "layouts/pages/account/components/FormField";
 
 function PlantaFuncional() {
-  const navigate = useNavigate();
-  const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState([]); // Para almacenar las personas
-  const [nroEstablecimientos, setnroEstablecimientos] = useState([]); // Lista de establecimientos
-  const [selectednroEstablecimiento, setSelectednroEstablecimiento] = useState(""); // Establecimiento seleccionado
-  const [isDataLoaded, setIsDataLoaded] = useState(false); // Controla la visibilidad de la tabla
-  const token = sessionStorage.getItem("token"); // Token de sesión
-  const [mostrarSoloDNI, setMostrarSoloDNI] = useState(false);
+  const [establecimientos, setEstablecimientos] = useState([]);
+  const [selectedEstablecimiento, setSelectedEstablecimiento] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [personas, setPersonas] = useState([]);
+  const [establecimientoNombre, setEstablecimientoNombre] = useState("");
+  const [dni, setDni] = useState("");
+  const token = sessionStorage.getItem("token");
+  const [verificarRespuesta, setVerificarRespuesta] = useState(null);
+  const [pofVisible, setPofVisible] = useState(false);
+  const [idPersona, setIdPersona] = useState(null);
+  const [carRevistaOptions, setCarRevistaOptions] = useState([]);
+  const [funciones, setFunciones] = useState([]);
+  const [formData, setFormData] = useState({
+    apellido: "",
+    nombre: "",
+    legajo: "",
+    vigente: "",
+    dni: "",
+  });
+  const [pofFormData, setPofFormData] = useState({
+    secuencia: "",
+    carRevista: "",
+    funcion: "",
+    tipoCargo: "",
+    horas: "",
+  });
 
-  // Fetch de todos los establecimientos al cargar el componente
-  // Asumiendo que la respuesta contiene tanto 'idEstablecimiento' como 'nroEstablecimiento' (nombre)
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_API_URL}Establecimientos/getall`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        // Extrae establecimientos con nombre y id
-        const establecimientos = response.data;
-
-        // Mapea a los ID y los nombres
-        const uniqueEstablecimientos = establecimientos.map((establecimiento) => ({
-          id: establecimiento.idEstablecimiento, // ID numérico
-          nombre: establecimiento.nroEstablecimiento, // Nombre del establecimiento
-        }));
-
-        setnroEstablecimientos(uniqueEstablecimientos); // Guarda el listado completo
-      })
-      .catch((error) => {
-        setErrorAlert({
-          show: true,
-          message: "Error al cargar los establecimientos.",
-          type: "error",
-        });
-      });
+    const fetchEstablecimientos = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}Establecimientos/getall`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setEstablecimientos(response.data);
+      } catch (error) {
+        console.error("Error al cargar los establecimientos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEstablecimientos();
   }, [token]);
 
-  const handleSelectnroEstablecimiento = () => {
-    if (!selectednroEstablecimiento) {
-      setErrorAlert({
-        show: true,
-        message: "Por favor, selecciona un nroEstablecimiento.",
-        type: "error",
-      });
-      return;
-    }
+  const handleChange = (event) => {
+    const selectedId = event.target.value;
+    const selectedEstablecimiento = establecimientos.find(
+      (establecimiento) => establecimiento.idEstablecimiento === selectedId
+    );
+    setSelectedEstablecimiento(selectedId);
+    setEstablecimientoNombre(selectedEstablecimiento?.nroEstablecimiento || "");
+  };
 
-    // Usamos el ID directamente para la consulta
-    const establecimientoId = selectednroEstablecimiento;
-
-    axios
-      .get(`${process.env.REACT_APP_API_URL}POF/GetByIdEstablecimiento`, {
-        params: { IdEstablecimiento: establecimientoId }, // Se pasa el ID como parámetro
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        const personas = response.data; // Personas asociadas
-        setDataTableData(personas); // Asigna las personas al DataTable
-        setIsDataLoaded(true); // Mostrar la tabla cuando los datos están cargados
-      })
-      .catch((error) => {
-        if (error.response) {
-          const statusCode = error.response.status;
-          let errorMessage = "";
-          if (statusCode >= 400 && statusCode < 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
-          } else if (statusCode >= 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
-          }
-          setErrorAlert({ show: true, message: errorMessage, type: "error" });
-        } else {
-          setErrorAlert({
-            show: true,
-            message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-            type: "error",
-          });
+  const handleCargar = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}POF/GetByIdEstablecimiento?IdEstablecimiento=${selectedEstablecimiento}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
+      const personasData = response.data.map((item) => ({
+        nombre: item.persona.nombre,
+        apellido: item.persona.apellido,
+        dni: item.persona.dni,
+        legajo: item.persona.legajo,
+      }));
+      setPersonas(personasData);
+    } catch (error) {
+      console.error("Error al realizar la petición POST:", error);
+      alert("Hubo un error al enviar los datos.");
+    }
   };
 
-  // Lógica para manejar la acción de agregar un nuevo tipo, directamente en el componente
-  const handleNuevoTipoPof = () => {
-    if (!selectednroEstablecimiento) {
-      setErrorAlert({
-        show: true,
-        message: "Por favor, selecciona un establecimiento antes de continuar.",
-        type: "error",
-      });
-      return;
+  const handleAgregar = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}POF/VerificarPOF`,
+        { DNI: dni },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = response.data;
+
+      if (data.item1) {
+        setVerificarRespuesta(true);
+        setPofVisible(true);
+        setFormData({
+          apellido: data.item2.apellido,
+          nombre: data.item2.nombre,
+          legajo: data.item2.legajo,
+          vigente: data.item2.vigente,
+          dni: data.item2.dni,
+        });
+      } else {
+        setVerificarRespuesta(false);
+        setPofVisible(false);
+        setFormData({
+          apellido: "",
+          nombre: "",
+          legajo: "",
+          vigente: "",
+          dni: dni,
+        });
+      }
+    } catch (error) {
+      console.error("Error al verificar:", error);
+      alert("Hubo un error al verificar el DNI.");
     }
-    // Aquí puedes agregar la lógica para el establecimiento seleccionado
-    // Por ejemplo, enviar una solicitud para agregar un nuevo tipo para este establecimiento
-    const establecimientoId = selectednroEstablecimiento;
-    console.log("ID del establecimiento seleccionado:", establecimientoId);
-    // Cambiar el estado para mostrar solo los campos de DNI
-    setMostrarSoloDNI(true);
   };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePersonaSubmit = async () => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/personaP`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIdPersona(response.data.idPersona);
+      setPofVisible(true);
+    } catch (error) {
+      console.error("Error al crear la persona:", error);
+      alert("Hubo un error al enviar los datos.");
+    }
+  };
+  const handlePofChange = (e) => {
+    const { name, value } = e.target;
+    setPofFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePofSubmit = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/pof`,
+        {
+          ...pofFormData,
+          establecimiento: selectedEstablecimiento,
+          idPersona,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert("Formulario POF enviado con éxito.");
+    } catch (error) {
+      console.error("Error al enviar formulario POF:", error);
+      alert("Error al enviar el formulario POF.");
+    }
+  };
+
+  useEffect(() => {
+    const fetchCarRevistas = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}CarRevista/getall`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCarRevistaOptions(response.data);
+      } catch (error) {
+        console.error("Error al cargar CarRevistas:", error);
+      }
+    };
+
+    const fetchFunciones = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}TiposFunciones/getall`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setFunciones(response.data);
+      } catch (error) {
+        console.error("Error al cargar Funciones:", error);
+      }
+    };
+    fetchCarRevistas();
+    fetchFunciones();
+  }, [token]);
+
+  const tipoCargoOptions = [
+    { value: "C", label: "CARGO" },
+    { value: "H", label: "HORAS" },
+    { value: "M", label: "MODULOS" },
+  ];
 
   return (
     <>
       <DashboardLayout>
+        <p>hola</p>
         <DashboardNavbar />
         <MDBox my={3}>
           <Grid container spacing={2}>
+            <Grid item xs={4}>
+              <FormControl fullWidth>
+                <InputLabel id="establecimiento-select-label"> Establecimiento </InputLabel>
+                <Select
+                  labelId="establecimiento-select-label"
+                  value={selectedEstablecimiento}
+                  onChange={handleChange}
+                  label="Establecimiento"
+                  style={{ height: "2.5rem", backgroundColor: "white" }}
+                >
+                  {establecimientos.map((establecimiento) => (
+                    <MenuItem
+                      key={establecimiento.idEstablecimiento}
+                      value={establecimiento.idEstablecimiento}
+                    >
+                      {establecimiento.nroEstablecimiento}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={3}>
               <MDBox>
-                <select
-                  value={selectednroEstablecimiento}
-                  onChange={(e) => setSelectednroEstablecimiento(e.target.value)}
-                  style={{ width: "100%", padding: "8px", color: "#495057" }}
-                >
-                  <option value="">Selecciona un Establecimiento</option>
-                  {/* Itera sobre los establecimientos y usa solo el 'nroEstablecimiento' como texto */}
-                  {nroEstablecimientos.map((establecimiento, index) => (
-                    <option key={index} value={establecimiento.id}>
-                      {establecimiento.nombre} {/* Solo mostramos el nombre del establecimiento */}
-                    </option>
-                  ))}
-                </select>
+                <MDButton variant="gradient" color="info" size="small" onClick={handleCargar}>
+                  Cargar
+                </MDButton>
               </MDBox>
             </Grid>
-            <Grid item xs={4}>
-              <MDButton variant="gradient" color="info" onClick={handleSelectnroEstablecimiento}>
-                Cargar
-              </MDButton>
-            </Grid>
           </Grid>
-
-          {/* Mostrar mensajes de error si existe uno */}
-          {errorAlert.show && (
-            <Grid container justifyContent="center">
-              <Grid item xs={12} lg={12}>
-                <MDBox pt={2}>
-                  <MDAlert color={errorAlert.type} dismissible>
-                    <MDTypography variant="body2" color="white">
-                      {errorAlert.message}
-                    </MDTypography>
-                  </MDAlert>
-                </MDBox>
-              </Grid>
-            </Grid>
-          )}
-
-          {/* Mostrar la tabla con los datos cuando se han cargado */}
-          {isDataLoaded && (
+        </MDBox>
+        {personas.length > 0 && (
+          <>
             <Card>
-              <DataTablePlanta
+              <DataTable
                 table={{
                   columns: [
-                    {
-                      Header: "Nombre de la Persona", // Cambiar título según los datos
-                      accessor: (row) => row.persona.nombre, // Acceder a 'nombre' dentro del objeto 'persona'
-                    },
-                    {
-                      Header: "Apellido", // Mostrar apellido
-                      accessor: (row) => row.persona.apellido, // Acceder a 'apellido' dentro de 'persona'
-                    },
-                    /*{
-                      Header: "Mas Info",
-                      accessor: "edit",
-                      Cell: ({ row }) => (
-                        <MDButton
-                          variant="gradient"
-                          color="info"
-                          onClick={() => handleVer(row.original)}
-                        >
-                          Mas Info
-                        </MDButton>
-                      ),
-                    },*/
+                    { Header: "Nombre", accessor: "nombre" },
+                    { Header: "Apellido", accessor: "apellido" },
+                    { Header: "DNI", accessor: "dni" },
+                    { Header: "Legajo", accessor: "legajo" },
                   ],
-                  rows: dataTableData, // Los datos de las personas
+                  rows: personas,
                 }}
                 entriesPerPage={false}
                 canSearch
-                show
               />
-              <MDButton variant="gradient" color="success" onClick={handleNuevoTipoPof}>
-                Agregar
-              </MDButton>
             </Card>
-          )}
-        </MDBox>
-        {/*---------------------------------   POF   --------------------------------------------------*/}
-        <Card sx={{ width: "90%", margin: "0 auto" }}>
-          <MDBox>
-            <MDBox width="80%" textAlign="center" mx="auto" my={4}>
-              <MDBox mb={1}>
-                <MDTypography variant="h5" fontWeight="regular">
-                  Planta Organica Funcional (POF)
-                </MDTypography>
+            <MDBox mt={2}>
+              <Card m={2}>
+                <MDBox component="form" m={2}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <FormField
+                        label="DNI"
+                        name="Dni"
+                        value={dni}
+                        onChange={(e) => setDni(e.target.value)}
+                      />
+                    </Grid>
+                    <MDBox mt={3} ml={2}>
+                      <MDButton
+                        variant="gradient"
+                        color="info"
+                        size="small"
+                        onClick={handleAgregar}
+                      >
+                        Verificar Persona
+                      </MDButton>
+                    </MDBox>
+                  </Grid>
+                </MDBox>
+              </Card>
+            </MDBox>
+            {verificarRespuesta !== null && (
+              <MDBox mt={2}>
+                <Card mt={3}>
+                  <MDBox p={3}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <FormField
+                          label="Apellido"
+                          name="apellido"
+                          value={formData.apellido}
+                          onChange={handleFormChange}
+                          disabled={verificarRespuesta}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormField
+                          label="Nombre"
+                          name="nombre"
+                          value={formData.nombre}
+                          onChange={handleFormChange}
+                          disabled={verificarRespuesta}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormField
+                          label="Legajo"
+                          name="legajo"
+                          value={formData.legajo}
+                          onChange={handleFormChange}
+                          disabled={verificarRespuesta}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormField
+                          label="Vigente"
+                          name="vigente"
+                          value={formData.vigente}
+                          onChange={handleFormChange}
+                          disabled={verificarRespuesta}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormField label="DNI" name="dni" value={formData.dni} disabled />
+                      </Grid>
+                    </Grid>
+                    {!verificarRespuesta && (
+                      <MDBox mt={3}>
+                        <MDButton
+                          variant="gradient"
+                          color="success"
+                          size="small"
+                          onClick={handlePersonaSubmit}
+                        >
+                          Enviar Persona
+                        </MDButton>
+                      </MDBox>
+                    )}
+                  </MDBox>
+                </Card>
               </MDBox>
-            </MDBox>
-            <MDBox mt={2} mb={2}>
-              <Grid container spacing={2}>
-                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
-                  <MDBox width="90%">
-                    <MDInput variant="standard" label="dni" fullWidth />
+            )}
+            {pofVisible && (
+              <MDBox mt={3}>
+                <Card mt={3}>
+                  <MDBox p={3}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <FormField
+                          label="Establecimiento"
+                          name="establecimientoNombre"
+                          value={establecimientoNombre}
+                          disabled
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormField
+                          label="Secuencia"
+                          name="secuencia"
+                          value={pofFormData.secuencia}
+                          onChange={handlePofChange}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormControl fullWidth>
+                          <InputLabel id="car-revista-select-label">Car. Revista</InputLabel>
+                          <Select
+                            labelId="car-revista-select-label"
+                            name="carRevista"
+                            value={pofFormData.carRevista}
+                            onChange={handlePofChange}
+                            label="Car. Revista"
+                            style={{ height: "2.5rem", backgroundColor: "white" }}
+                          >
+                            {carRevistaOptions.map((option) => (
+                              <MenuItem key={option.idCarRevista} value={option.idCarRevista}>
+                                {option.descripcion}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormControl fullWidth>
+                          <InputLabel id="funcion-select-label">Función</InputLabel>
+                          <Select
+                            labelId="funcion-select-label"
+                            value={pofFormData.funcion}
+                            onChange={handlePofChange}
+                            name="funcion"
+                            style={{ height: "2.5rem", backgroundColor: "white" }}
+                          >
+                            {funciones.map((funcion) => (
+                              <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
+                                {funcion.descripcion}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormControl fullWidth>
+                          <InputLabel id="tipoCargo-select-label">Tipo Cargo</InputLabel>
+                          <Select
+                            labelId="tipoCargo-select-label"
+                            value={pofFormData.tipoCargo}
+                            onChange={handlePofChange}
+                            name="tipoCargo"
+                            style={{ height: "2.5rem", backgroundColor: "white" }}
+                          >
+                            {tipoCargoOptions.map((option) => (
+                              <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormField
+                          label="Horas"
+                          name="horas"
+                          value={pofFormData.horas}
+                          onChange={handlePofChange}
+                        />
+                      </Grid>
+                    </Grid>
+                    <MDBox mt={3}>
+                      <MDButton
+                        variant="gradient"
+                        color="success"
+                        size="small"
+                        onClick={handlePofSubmit}
+                      >
+                        Enviar POF
+                      </MDButton>
+                    </MDBox>
                   </MDBox>
-                </Grid>
-                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
-                  <MDButton variant="gradient" color="success" onClick={handleNuevoTipoPof}>
-                    Consultar DNI
-                  </MDButton>
-                </Grid>
-                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
-                  <MDBox width="90%">
-                    <MDInput variant="standard" label="Apellido" fullWidth />
-                  </MDBox>
-                </Grid>
-                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
-                  <MDBox width="90%">
-                    <MDInput variant="standard" label="nombre" fullWidth />
-                  </MDBox>
-                </Grid>
-                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
-                  <MDBox width="90%">
-                    <MDInput variant="standard" label="legajo" fullWidth />
-                  </MDBox>
-                </Grid>
-                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
-                  <MDBox width="90%">
-                    <MDInput variant="standard" label="vigente" fullWidth />
-                  </MDBox>
-                </Grid>
-              </Grid>
-            </MDBox>
-          </MDBox>
-        </Card>
-        {/*---------------------------------   POF   --------------------------------------------------*/}
+                </Card>
+              </MDBox>
+            )}
+          </>
+        )}
       </DashboardLayout>
     </>
   );
