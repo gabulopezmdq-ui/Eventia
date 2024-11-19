@@ -96,7 +96,7 @@ namespace API.Controllers
             return Ok(existe);
         }
 
-        [HttpPost("CompletarRegistroPersona")]
+        [HttpPost("CompletarRegistroPersona")] //
         public async Task<IActionResult> CompletarRegistroPersona([FromBody] RegistrarPersonaRequestDTO request)
         {
             var mensaje = await _pofService.CompletarRegistroPersonaAsync(request.DNI, request.Legajo, request.Apellido, request.Nombre);
@@ -126,10 +126,10 @@ namespace API.Controllers
         public async Task<IActionResult> CreatePersona([FromBody] MEC_Personas persona)
         {
             int idPersona = await _pofService.AddPersona(persona);
-            return Ok(new { IdPersona = idPersona });
+            return Ok(new { IdPersona = idPersona });                                               
         }
 
-        [HttpPost("RegistrarSuplencia")]
+        [HttpPost("RegistrarSuplencia")] //
         public async Task<IActionResult> RegistrarSuplencia([FromBody] MEC_POF POF)
         {
             if (POF == null)
