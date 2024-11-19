@@ -6,14 +6,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace API.Controllers
 {
     [ApiController]
-   [Authorize(Roles = "SuperAdmin, Admin")]
-   // [AllowAnonymous]
+   //[Authorize(Roles = "SuperAdmin, Admin")]
+    [AllowAnonymous]
     [Route("[controller]")]
     public class POFController : ControllerBase
     {
@@ -21,12 +22,14 @@ namespace API.Controllers
 
         private readonly IPOFService _pofService;
         private readonly ICRUDService<MEC_POF> _serviceGenerico;
+        private readonly ICRUDService<MEC_Personas> _personasGenerico;
 
-        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService)
+        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService, ICRUDService<MEC_Personas> personasGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _pofService = pofService;
+            _personasGenerico = personasGenerico;
         }
 
         [HttpGet("GetAll")]
@@ -119,6 +122,12 @@ namespace API.Controllers
             return BadRequest(existe);
         }
 
+        [HttpPost("POFPersona")]
+        public async Task<IActionResult> CreatePersona([FromBody] MEC_Personas persona)
+        {
+            int idPersona = await _pofService.AddPersona(persona);
+            return Ok(new { IdPersona = idPersona });
+        }
 
         [HttpPost("RegistrarSuplencia")]
         public async Task<IActionResult> RegistrarSuplencia([FromBody] MEC_POF POF)
