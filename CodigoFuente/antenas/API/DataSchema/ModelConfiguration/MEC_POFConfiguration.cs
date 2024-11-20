@@ -78,7 +78,19 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.Vigente)
                 .HasColumnType("char(1)")
                 .IsFixedLength(true)
-                .IsRequired(true); 
+                .IsRequired(true);
+
+            builder
+                .HasOne(p => p.CarRevista)
+                .WithMany(t => t.POFs)
+                .HasForeignKey(p => p.IdCarRevista)
+                .IsRequired(true);
+
+            builder
+                .Navigation(e => e.CarRevista)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
         }
     }
 }
