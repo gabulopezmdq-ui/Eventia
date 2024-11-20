@@ -1,23 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
-// @mui material components
 import Card from "@mui/material/Card";
 import { useNavigate } from "react-router-dom";
 import Icon from "@mui/material/Icon";
-
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
-// Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import "../../Pruebas/pruebas.css";
-import MDInput from "components/MDInput";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import InputLabel from "@mui/material/InputLabel";
@@ -36,6 +30,10 @@ function PlantaFuncional() {
   const [verificarRespuesta, setVerificarRespuesta] = useState(null);
   const [pofVisible, setPofVisible] = useState(false);
   const [idPersona, setIdPersona] = useState(null);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertPOF, setAlertPOF] = useState(false);
+  const [alertPersona, setAlertPersona] = useState(false);
+  const [alertType, setAlertType] = useState("");
   const [carRevistaOptions, setCarRevistaOptions] = useState([]);
   const [categoriasOptions, setCategoriasOptions] = useState([]);
   const [funciones, setFunciones] = useState([]);
@@ -48,11 +46,12 @@ function PlantaFuncional() {
   });
   const [pofFormData, setPofFormData] = useState({
     secuencia: "",
-    carRevista: "",
-    funcion: "",
+    idCarRevista: "",
+    idFuncion: "",
     tipoCargo: "",
     barra: "",
-    categorias: "",
+    idCategoria: "",
+    vigente: "S",
   });
 
   useEffect(() => {
@@ -123,6 +122,7 @@ function PlantaFuncional() {
       if (data.item1) {
         setVerificarRespuesta(true);
         setPofVisible(true);
+        setIdPersona(data.item2.idPersona);
         setFormData({
           apellido: data.item2.apellido,
           nombre: data.item2.nombre,
@@ -174,22 +174,89 @@ function PlantaFuncional() {
   };
 
   const handlePofSubmit = async () => {
+    const requiredFields = ["secuencia", "idCarRevista", "idFuncion", "tipoCargo", "idCategoria"];
+
+    const missingFields = requiredFields.filter((field) => !pofFormData[field]);
+
+    if (missingFields.length > 0) {
+      const missingFieldsNames = missingFields
+        .map((field) => {
+          switch (field) {
+            case "secuencia":
+              return "Secuencia";
+            case "idCarRevista":
+              return "Car. Revista";
+            case "idFuncion":
+              return "Función";
+            case "tipoCargo":
+              return "Tipo Cargo";
+            case "idCategoria":
+              return "Categorías";
+            default:
+              return field;
+          }
+        })
+        .join(", ");
+
+      setAlertMessage(`Por favor, complete los siguientes campos: ${missingFieldsNames}`);
+      setAlertType("error");
+      setAlertPOF(true);
+      setTimeout(() => {
+        setAlertPOF(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
+
+      return;
+    }
+    if (pofFormData.secuencia.length > 3) {
+      setAlertMessage("El campo 'Secuencia' no puede tener más de 3 caracteres.");
+      setAlertType("error");
+      setAlertPOF(true);
+
+      setTimeout(() => {
+        setAlertPOF(false);
+        setAlertMessage("");
+      }, 5000);
+
+      return;
+    }
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}pof/RegistrarPOF`,
         {
           ...pofFormData,
-          establecimiento: selectedEstablecimiento,
+          idEstablecimiento: selectedEstablecimiento,
           idPersona,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert("Formulario POF enviado con éxito.");
+      setAlertMessage("Formulario enviado con éxito.");
+      setAlertType("success");
+      setAlertPOF(true);
+      setTimeout(() => {
+        setAlertPOF(false);
+        setAlertMessage("");
+      }, 5000);
+      setPofFormData({
+        secuencia: "",
+        idCarRevista: "",
+        idFuncion: "",
+        tipoCargo: "",
+        barra: "",
+        idCategoria: "",
+        vigente: "S",
+      });
     } catch (error) {
-      console.error("Error al enviar formulario POF:", error);
-      alert("Error al enviar el formulario POF.");
+      setAlertMessage("Error al enviar el formulario POF.");
+      setAlertType("error");
+      setAlertPOF(true);
+      setTimeout(() => {
+        setAlertPOF(false);
+        setAlertMessage("");
+      }, 5000);
     }
   };
 
@@ -388,6 +455,15 @@ function PlantaFuncional() {
                     Datos POF
                   </MDTypography>
                 </MDAlert>
+                {alertPOF && (
+                  <MDBox mt={3}>
+                    <MDAlert color={alertType} dismissible onClose={() => setAlertPOF(false)}>
+                      <MDTypography variant="body2" color="white">
+                        {alertMessage}
+                      </MDTypography>
+                    </MDAlert>
+                  </MDBox>
+                )}
                 <Card mt={3}>
                   <MDBox p={3}>
                     <Grid container spacing={2}>
@@ -420,7 +496,7 @@ function PlantaFuncional() {
                           <InputLabel id="car-revista-select-label">Car. Revista</InputLabel>
                           <Select
                             labelId="car-revista-select-label"
-                            name="carRevista"
+                            name="idCarRevista"
                             value={pofFormData.carRevista}
                             onChange={handlePofChange}
                             label="Car. Revista"
@@ -439,7 +515,7 @@ function PlantaFuncional() {
                           <InputLabel id="categorias-select-label">Categorias</InputLabel>
                           <Select
                             labelId="categorias-select-label"
-                            name="categorias"
+                            name="idCategoria"
                             value={pofFormData.categorias}
                             onChange={handlePofChange}
                             label="categorias"
@@ -460,7 +536,7 @@ function PlantaFuncional() {
                             labelId="funcion-select-label"
                             value={pofFormData.funcion}
                             onChange={handlePofChange}
-                            name="funcion"
+                            name="idFuncion"
                             style={{ height: "2.5rem", backgroundColor: "white" }}
                           >
                             {funciones.map((funcion) => (
