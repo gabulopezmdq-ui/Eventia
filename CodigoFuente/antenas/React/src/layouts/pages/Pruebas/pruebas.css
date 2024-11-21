@@ -71,3 +71,8 @@ flex-direction: column;
   font-weight: 400 !important;
 }
 
+.custom-alert {
+  background-color: #cce7ffa6 !important;
+  background-image: none !important;
+  color: white !important;
+}
