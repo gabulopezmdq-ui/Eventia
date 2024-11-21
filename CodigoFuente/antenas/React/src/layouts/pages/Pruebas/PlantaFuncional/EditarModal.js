@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
+import MDTypography from "components/MDTypography";
 
 const EditarModal = ({ isOpen, onClose, idPof, token }) => {
   const [formData, setFormData] = useState({
@@ -50,6 +51,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token }) => {
             idCarRevista: data.idCarRevista || "",
             idEstablecimiento: data.establecimiento?.idEstablecimiento || "",
             idPersona: data.idPersona || null,
+            vigente: data.vigente || "",
           });
           setEstablecimientoNombre(data.establecimiento?.nroEstablecimiento || "");
           setLoading(false);
@@ -118,7 +120,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token }) => {
 
     try {
       setLoading(true);
-      await fetch(`${process.env.REACT_APP_API_URL}pof/Update`, {
+      await fetch(`${process.env.REACT_APP_API_URL}pof`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +132,6 @@ const EditarModal = ({ isOpen, onClose, idPof, token }) => {
         }),
       });
       setLoading(false);
-      alert("Datos actualizados correctamente");
       onClose();
     } catch (error) {
       console.error("Error al actualizar los datos:", error);
@@ -159,13 +160,18 @@ const EditarModal = ({ isOpen, onClose, idPof, token }) => {
   return (
     <Modal open={isOpen} onClose={onClose} aria-labelledby="modal-title">
       <Box sx={style} component="form" onSubmit={handleSubmit}>
-        <h2 id="modal-title">Editar Datos</h2>
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center">
+            <MDTypography variant="body2" mr={2}>
+              Procesando la edicion
+            </MDTypography>
             <CircularProgress color="info" />
           </Box>
         ) : (
           <>
+            <MDTypography mb={2} variant="body1" id="modal-title">
+              Editar Datos
+            </MDTypography>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <TextField
@@ -186,7 +192,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token }) => {
               </Grid>
               <Grid item xs={6}>
                 <FormControl fullWidth>
-                  <InputLabel id="tipoCargo-select-label">Tipo Cargo</InputLabel>
+                  <InputLabel id="tipoCargo-select-label"> Tipo Cargo </InputLabel>
                   <Select
                     labelId="tipoCargo-select-label"
                     value={formData.tipoCargo}
