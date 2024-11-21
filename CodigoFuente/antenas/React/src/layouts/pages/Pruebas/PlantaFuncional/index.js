@@ -17,6 +17,7 @@ import MenuItem from "@mui/material/MenuItem";
 import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
+import EditarModal from "./EditarModal";
 import FormField from "layouts/pages/account/components/FormField";
 
 function PlantaFuncional() {
@@ -37,6 +38,8 @@ function PlantaFuncional() {
   const [carRevistaOptions, setCarRevistaOptions] = useState([]);
   const [categoriasOptions, setCategoriasOptions] = useState([]);
   const [funciones, setFunciones] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIdPof, setSelectedIdPof] = useState(null);
   const [formData, setFormData] = useState({
     apellido: "",
     nombre: "",
@@ -99,6 +102,9 @@ function PlantaFuncional() {
         apellido: item.persona.apellido,
         dni: item.persona.dni,
         legajo: item.persona.legajo,
+        secuencia: item.secuencia,
+        tipoCargo: item.tipoCargo,
+        idPof: item.idPOF,
       }));
       setPersonas(personasData);
     } catch (error) {
@@ -308,7 +314,10 @@ function PlantaFuncional() {
     { value: "H", label: "HORAS" },
     { value: "M", label: "MODULOS" },
   ];
-
+  const handleEditar = (idPof) => {
+    setSelectedIdPof(idPof);
+    setIsModalOpen(true);
+  };
   return (
     <>
       <DashboardLayout>
@@ -356,11 +365,33 @@ function PlantaFuncional() {
                     { Header: "Apellido", accessor: "apellido" },
                     { Header: "DNI", accessor: "dni" },
                     { Header: "Legajo", accessor: "legajo" },
+                    { Header: "Secuencia", accessor: "secuencia" },
+                    { Header: "Tipo Cargo", accessor: "tipoCargo" },
+                    {
+                      Header: "Mas Info",
+                      accessor: "edit",
+                      Cell: ({ row }) => (
+                        <MDButton
+                          variant="gradient"
+                          color="info"
+                          size="small"
+                          onClick={() => handleEditar(row.original.idPof)}
+                        >
+                          Editar
+                        </MDButton>
+                      ),
+                    },
                   ],
                   rows: personas,
                 }}
                 entriesPerPage={false}
                 canSearch
+              />
+              <EditarModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                idPof={selectedIdPof}
+                token={token}
               />
             </Card>
             <MDBox mt={2}>
