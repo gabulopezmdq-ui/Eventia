@@ -377,7 +377,6 @@ function PlantaFuncional() {
   return (
     <>
       <DashboardLayout>
-        <p>hola</p>
         <DashboardNavbar />
         <MDBox my={3}>
           <Grid container spacing={2}>
