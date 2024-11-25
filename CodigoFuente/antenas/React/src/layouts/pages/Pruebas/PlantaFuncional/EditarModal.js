@@ -152,6 +152,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
     bgcolor: "background.paper",
     boxShadow: 24,
     p: 4,
+    borderRadius: "0.5rem",
   };
 
   const tipoCargoOptions = [
