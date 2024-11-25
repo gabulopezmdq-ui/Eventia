@@ -69,7 +69,6 @@ function Persona() {
 
   const handleEditar = (idPersona) => {
     const url = `/PersonaFE/Edit/${idPersona}`;
-    console.log(url)
     navigate(url);
   };
 
