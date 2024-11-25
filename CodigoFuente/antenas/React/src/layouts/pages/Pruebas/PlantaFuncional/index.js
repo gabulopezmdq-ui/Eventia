@@ -34,6 +34,7 @@ function PlantaFuncional() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertPOF, setAlertPOF] = useState(false);
   const [alertPersona, setAlertPersona] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [carRevistaOptions, setCarRevistaOptions] = useState([]);
   const [categoriasOptions, setCategoriasOptions] = useState([]);
@@ -130,9 +131,9 @@ function PlantaFuncional() {
         setPofVisible(true);
         setIdPersona(data.item2.idPersona);
         setFormData({
-          apellido: data.item2.apellido,
-          nombre: data.item2.nombre,
-          legajo: data.item2.legajo,
+          apellido: data.item2.apellido.toUpperCase(),
+          nombre: data.item2.nombre.toUpperCase(),
+          legajo: data.item2.legajo.toUpperCase(),
           vigente: data.item2.vigente,
           dni: data.item2.dni,
         });
@@ -153,12 +154,47 @@ function PlantaFuncional() {
     }
   };
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleFormChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: name === "apellido" || name === "nombre" ? value.toUpperCase() : value,
+    }));
   };
 
   const handlePersonaSubmit = async () => {
+    const requiredFields = ["nombre", "apellido", "dni", "legajo"];
+    const missingFields = requiredFields.filter((field) => !formData[field]);
+    if (missingFields.length > 0) {
+      const missingFieldsNames = missingFields
+        .map((field) => {
+          switch (field) {
+            case "nombre":
+              return "Nombre";
+            case "apellido":
+              return "Apellido";
+            case "dni":
+              return "DNI";
+            case "legajo":
+              return "Legajo";
+            default:
+              return field;
+          }
+        })
+        .join(", ");
+
+      setAlertMessage(`Por favor, complete los siguientes campos: ${missingFieldsNames}`);
+      setAlertType("error");
+      setAlertPersona(true);
+      setTimeout(() => {
+        setAlertPersona(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
+
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}pof/POFPersona`,
@@ -245,16 +281,26 @@ function PlantaFuncional() {
       setTimeout(() => {
         setAlertPOF(false);
         setAlertMessage("");
-      }, 5000);
-      setPofFormData({
-        secuencia: "",
-        idCarRevista: "",
-        idFuncion: "",
-        tipoCargo: "",
-        barra: "",
-        idCategoria: "",
-        vigente: "S",
-      });
+        setPofFormData({
+          secuencia: "",
+          idCarRevista: "",
+          idFuncion: "",
+          tipoCargo: "",
+          barra: "",
+          idCategoria: "",
+          vigente: "S",
+        });
+        setDni("");
+        setFormData({
+          apellido: "",
+          nombre: "",
+          legajo: "",
+          dni: "",
+        });
+        setVerificarRespuesta(null);
+        setPofVisible(false);
+        handleCargar();
+      }, 3000);
     } catch (error) {
       setAlertMessage("Error al enviar el formulario POF.");
       setAlertType("error");
@@ -314,6 +360,16 @@ function PlantaFuncional() {
     { value: "H", label: "HORAS" },
     { value: "M", label: "MODULOS" },
   ];
+  const handleEditSuccess = () => {
+    setShowAlert(true);
+    setAlertMessage("¡Datos actualizados con éxito!");
+    setAlertType("success");
+    setTimeout(() => {
+      setShowAlert(false);
+      setAlertMessage("");
+    }, 3000);
+    handleCargar();
+  };
   const handleEditar = (idPof) => {
     setSelectedIdPof(idPof);
     setIsModalOpen(true);
@@ -356,6 +412,13 @@ function PlantaFuncional() {
         </MDBox>
         {personas.length > 0 && (
           <>
+            {showAlert && (
+              <MDAlert color={alertType} dismissible>
+                <MDTypography variant="body2" color="white">
+                  {alertMessage}
+                </MDTypography>
+              </MDAlert>
+            )}
             <Card>
               <DataTable
                 table={{
@@ -391,6 +454,7 @@ function PlantaFuncional() {
                 onClose={() => setIsModalOpen(false)}
                 idPof={selectedIdPof}
                 token={token}
+                onEditSuccess={handleEditSuccess}
               />
             </Card>
             <MDBox mt={2}>
@@ -427,6 +491,15 @@ function PlantaFuncional() {
                     Datos Persona
                   </MDTypography>
                 </MDAlert>
+                {alertPersona && (
+                  <MDBox mt={3}>
+                    <MDAlert color={alertType} dismissible onClose={() => setAlertPersona(false)}>
+                      <MDTypography variant="body2" color="white">
+                        {alertMessage}
+                      </MDTypography>
+                    </MDAlert>
+                  </MDBox>
+                )}
                 <Card mt={3}>
                   <MDBox p={3}>
                     <Grid container spacing={2}>
