@@ -129,6 +129,7 @@
     <Compile Remove="Repositories\ICabLiquidacionRepository.cs" />
     <Compile Remove="Services\ICF_ProcesoxGrupoService - Copy.cs" />
     <Compile Remove="Startup.cs" />
+    <Compile Remove="Test\ImportacionMecanizadaServiceTests.cs" />
     <Compile Remove="Utility\ImageTools.cs" />
     <Compile Remove="Utility\LdapConnectionProvider.cs" />
   </ItemGroup>
