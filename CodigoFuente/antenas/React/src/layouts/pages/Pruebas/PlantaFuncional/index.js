@@ -392,6 +392,7 @@ function PlantaFuncional() {
                 onClose={() => setIsModalOpen(false)}
                 idPof={selectedIdPof}
                 token={token}
+                onEditSuccess={handleCargar}
               />
             </Card>
             <MDBox mt={2}>

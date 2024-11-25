@@ -15,7 +15,7 @@ import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
 
-const EditarModal = ({ isOpen, onClose, idPof, token }) => {
+const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
   const [formData, setFormData] = useState({
     secuencia: "",
     tipoCargo: "",
@@ -110,7 +110,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const requiredFields = ["idCategoria"];
+    const requiredFields = ["secuencia", "idCarRevista", "idFuncion", "tipoCargo", "idCategoria"];
     const missingFields = requiredFields.filter((field) => !formData[field]);
 
     if (missingFields.length > 0) {
@@ -132,6 +132,9 @@ const EditarModal = ({ isOpen, onClose, idPof, token }) => {
         }),
       });
       setLoading(false);
+      if (onEditSuccess) {
+        onEditSuccess();
+      }
       onClose();
     } catch (error) {
       console.error("Error al actualizar los datos:", error);
@@ -298,6 +301,7 @@ EditarModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   idPof: PropTypes.number,
   token: PropTypes.string.isRequired,
+  onEditSuccess: PropTypes.func.isRequired,
 };
 
 export default EditarModal;
