@@ -13,7 +13,7 @@ namespace API.Controllers
 {
     [ApiController]  
     [Authorize(Roles = "SuperAdmin, Admin")]
-    //[AllowAnonymous]
+    //  [AllowAnonymous]
     [Route("[controller]")]
     public class ImportarMecanizadasController : ControllerBase
     {

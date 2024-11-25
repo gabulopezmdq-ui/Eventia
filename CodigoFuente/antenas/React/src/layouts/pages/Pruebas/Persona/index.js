@@ -67,9 +67,16 @@ function Persona() {
   //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
+  const handleEditar = (idPersona) => {
+    const url = `/PersonaFE/Edit/${idPersona}`;
+    console.log(url)
+    navigate(url);
+  };
+
   return (
     <>
       <DashboardLayout>
+        <p>Hola</p>
         <DashboardNavbar />
         <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
           Agregar
@@ -98,15 +105,15 @@ function Persona() {
                   { Header: "Legajo", accessor: "legajo" },
                   { Header: "DNI", accessor: "dni" },
                   {
-                    Header: "Mas Info",
+                    Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleVer(row.original)}
+                        onClick={() => handleEditar(row.original.idPersona)}
                       >
-                        Mas Info
+                        Editar
                       </MDButton>
                     ),
                   },
