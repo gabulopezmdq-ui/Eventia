@@ -25,6 +25,7 @@ function PlantaFuncional() {
   const [selectedEstablecimiento, setSelectedEstablecimiento] = useState("");
   const [loading, setLoading] = useState(true);
   const [personas, setPersonas] = useState([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [establecimientoNombre, setEstablecimientoNombre] = useState("");
   const [dni, setDni] = useState("");
   const token = sessionStorage.getItem("token");
@@ -111,6 +112,8 @@ function PlantaFuncional() {
     } catch (error) {
       console.error("Error al realizar la petición POST:", error);
       alert("Hubo un error al enviar los datos.");
+    } finally {
+      setIsDataLoaded(true);
     }
   };
 
@@ -382,7 +385,7 @@ function PlantaFuncional() {
           <Grid container spacing={2}>
             <Grid item xs={4}>
               <FormControl fullWidth>
-                <InputLabel id="establecimiento-select-label"> Establecimiento </InputLabel>
+                <InputLabel id="establecimiento-select-label">Establecimiento</InputLabel>
                 <Select
                   labelId="establecimiento-select-label"
                   value={selectedEstablecimiento}
@@ -410,280 +413,307 @@ function PlantaFuncional() {
             </Grid>
           </Grid>
         </MDBox>
-        {personas.length > 0 && (
-          <>
-            {showAlert && (
-              <MDAlert color={alertType} dismissible>
-                <MDTypography variant="body2" color="white">
-                  {alertMessage}
+        {isDataLoaded ? (
+          personas.length === 0 ? (
+            <MDBox mt={3}>
+              <MDBox sx={{ display: "flex" }}>
+                <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+                <MDTypography variant="body2" ml={1}>
+                  No hay personas registradas en este establecimiento.
                 </MDTypography>
-              </MDAlert>
-            )}
-            <Card>
-              <DataTable
-                table={{
-                  columns: [
-                    { Header: "Nombre", accessor: "nombre" },
-                    { Header: "Apellido", accessor: "apellido" },
-                    { Header: "DNI", accessor: "dni" },
-                    { Header: "Legajo", accessor: "legajo" },
-                    { Header: "Secuencia", accessor: "secuencia" },
-                    { Header: "Tipo Cargo", accessor: "tipoCargo" },
-                    {
-                      Header: "Mas Info",
-                      accessor: "edit",
-                      Cell: ({ row }) => (
+              </MDBox>
+              <MDBox mt={2}>
+                <Card>
+                  <MDBox component="form" m={2}>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} sm={6}>
+                        <FormField
+                          label="DNI"
+                          name="Dni"
+                          value={dni}
+                          onChange={(e) => setDni(e.target.value)}
+                        />
+                      </Grid>
+                      <MDBox mt={3} ml={2}>
                         <MDButton
                           variant="gradient"
                           color="info"
                           size="small"
-                          onClick={() => handleEditar(row.original.idPof)}
+                          onClick={handleAgregar}
                         >
-                          Editar
-                        </MDButton>
-                      ),
-                    },
-                  ],
-                  rows: personas,
-                }}
-                entriesPerPage={false}
-                canSearch
-              />
-              <EditarModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                idPof={selectedIdPof}
-                token={token}
-                onEditSuccess={handleEditSuccess}
-              />
-            </Card>
-            <MDBox mt={2}>
-              <Card m={2}>
-                <MDBox component="form" m={2}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
-                      <FormField
-                        label="DNI"
-                        name="Dni"
-                        value={dni}
-                        onChange={(e) => setDni(e.target.value)}
-                      />
-                    </Grid>
-                    <MDBox mt={3} ml={2}>
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        size="small"
-                        onClick={handleAgregar}
-                      >
-                        Verificar Persona
-                      </MDButton>
-                    </MDBox>
-                  </Grid>
-                </MDBox>
-              </Card>
-            </MDBox>
-            {verificarRespuesta !== null && (
-              <MDBox mt={2}>
-                <MDAlert className="custom-alert">
-                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
-                  <MDTypography ml={1} variant="button">
-                    Datos Persona
-                  </MDTypography>
-                </MDAlert>
-                {alertPersona && (
-                  <MDBox mt={3}>
-                    <MDAlert color={alertType} dismissible onClose={() => setAlertPersona(false)}>
-                      <MDTypography variant="body2" color="white">
-                        {alertMessage}
-                      </MDTypography>
-                    </MDAlert>
-                  </MDBox>
-                )}
-                <Card mt={3}>
-                  <MDBox p={3}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6}>
-                        <FormField
-                          label="Apellido"
-                          name="apellido"
-                          value={formData.apellido}
-                          onChange={handleFormChange}
-                          disabled={verificarRespuesta}
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormField
-                          label="Nombre"
-                          name="nombre"
-                          value={formData.nombre}
-                          onChange={handleFormChange}
-                          disabled={verificarRespuesta}
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormField
-                          label="Legajo"
-                          name="legajo"
-                          value={formData.legajo}
-                          onChange={handleFormChange}
-                          disabled={verificarRespuesta}
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormField label="DNI" name="dni" value={formData.dni} disabled />
-                      </Grid>
-                    </Grid>
-                    {!verificarRespuesta && (
-                      <MDBox mt={3}>
-                        <MDButton
-                          variant="gradient"
-                          color="success"
-                          size="small"
-                          onClick={handlePersonaSubmit}
-                        >
-                          Enviar Persona
+                          Verificar Persona
                         </MDButton>
                       </MDBox>
-                    )}
+                    </Grid>
                   </MDBox>
                 </Card>
               </MDBox>
-            )}
-            {pofVisible && (
+            </MDBox>
+          ) : (
+            <>
+              <Card>
+                <DataTable
+                  table={{
+                    columns: [
+                      { Header: "Nombre", accessor: "nombre" },
+                      { Header: "Apellido", accessor: "apellido" },
+                      { Header: "DNI", accessor: "dni" },
+                      { Header: "Legajo", accessor: "legajo" },
+                      { Header: "Secuencia", accessor: "secuencia" },
+                      { Header: "Tipo Cargo", accessor: "tipoCargo" },
+                      {
+                        Header: "Mas Info",
+                        accessor: "edit",
+                        Cell: ({ row }) => (
+                          <MDButton
+                            variant="gradient"
+                            color="info"
+                            size="small"
+                            onClick={() => handleEditar(row.original.idPof)}
+                          >
+                            Editar
+                          </MDButton>
+                        ),
+                      },
+                    ],
+                    rows: personas,
+                  }}
+                  entriesPerPage={false}
+                  canSearch
+                />
+              </Card>
+              <MDBox mt={2}>
+                <Card>
+                  <MDBox component="form" m={2}>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} sm={6}>
+                        <FormField
+                          label="DNI"
+                          name="Dni"
+                          value={dni}
+                          onChange={(e) => setDni(e.target.value)}
+                        />
+                      </Grid>
+                      <MDBox mt={3} ml={2}>
+                        <MDButton
+                          variant="gradient"
+                          color="info"
+                          size="small"
+                          onClick={handleAgregar}
+                        >
+                          Verificar Persona
+                        </MDButton>
+                      </MDBox>
+                    </Grid>
+                  </MDBox>
+                </Card>
+              </MDBox>
+            </>
+          )
+        ) : (
+          <MDTypography variant="body2" m={1}>
+            Seleccione un establecimiento y haga clic en Cargar para mostrar datos.
+          </MDTypography>
+        )}
+        {verificarRespuesta !== null && (
+          <MDBox mt={2}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                Datos Persona
+              </MDTypography>
+            </MDAlert>
+            {alertPersona && (
               <MDBox mt={3}>
-                <MDAlert className="custom-alert">
-                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
-                  <MDTypography ml={1} variant="button">
-                    Datos POF
+                <MDAlert color={alertType} dismissible onClose={() => setAlertPersona(false)}>
+                  <MDTypography variant="body2" color="white">
+                    {alertMessage}
                   </MDTypography>
                 </MDAlert>
-                {alertPOF && (
-                  <MDBox mt={3}>
-                    <MDAlert color={alertType} dismissible onClose={() => setAlertPOF(false)}>
-                      <MDTypography variant="body2" color="white">
-                        {alertMessage}
-                      </MDTypography>
-                    </MDAlert>
-                  </MDBox>
-                )}
-                <Card mt={3}>
-                  <MDBox p={3}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6}>
-                        <FormField
-                          label="Establecimiento"
-                          name="establecimientoNombre"
-                          value={establecimientoNombre}
-                          disabled
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormField
-                          label="Secuencia"
-                          name="secuencia"
-                          value={pofFormData.secuencia}
-                          onChange={handlePofChange}
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormField
-                          label="Barra"
-                          name="barra"
-                          value={pofFormData.barra}
-                          onChange={handlePofChange}
-                        />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormControl fullWidth>
-                          <InputLabel id="car-revista-select-label">Car. Revista</InputLabel>
-                          <Select
-                            labelId="car-revista-select-label"
-                            name="idCarRevista"
-                            value={pofFormData.carRevista}
-                            onChange={handlePofChange}
-                            label="Car. Revista"
-                            style={{ height: "2.5rem", backgroundColor: "white" }}
-                          >
-                            {carRevistaOptions.map((option) => (
-                              <MenuItem key={option.idCarRevista} value={option.idCarRevista}>
-                                {option.descripcion}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormControl fullWidth>
-                          <InputLabel id="categorias-select-label">Categorias</InputLabel>
-                          <Select
-                            labelId="categorias-select-label"
-                            name="idCategoria"
-                            value={pofFormData.categorias}
-                            onChange={handlePofChange}
-                            label="categorias"
-                            style={{ height: "2.5rem", backgroundColor: "white" }}
-                          >
-                            {categoriasOptions.map((option) => (
-                              <MenuItem key={option.idTipoCategoria} value={option.idTipoCategoria}>
-                                {option.descripcion}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormControl fullWidth>
-                          <InputLabel id="funcion-select-label">Función</InputLabel>
-                          <Select
-                            labelId="funcion-select-label"
-                            value={pofFormData.funcion}
-                            onChange={handlePofChange}
-                            name="idFuncion"
-                            style={{ height: "2.5rem", backgroundColor: "white" }}
-                          >
-                            {funciones.map((funcion) => (
-                              <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
-                                {funcion.descripcion}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <FormControl fullWidth>
-                          <InputLabel id="tipoCargo-select-label">Tipo Cargo</InputLabel>
-                          <Select
-                            labelId="tipoCargo-select-label"
-                            value={pofFormData.tipoCargo}
-                            onChange={handlePofChange}
-                            name="tipoCargo"
-                            style={{ height: "2.5rem", backgroundColor: "white" }}
-                          >
-                            {tipoCargoOptions.map((option) => (
-                              <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    </Grid>
-                    <MDBox mt={3}>
-                      <MDButton
-                        variant="gradient"
-                        color="success"
-                        size="small"
-                        onClick={handlePofSubmit}
-                      >
-                        Enviar POF
-                      </MDButton>
-                    </MDBox>
-                  </MDBox>
-                </Card>
               </MDBox>
             )}
-          </>
+            <Card mt={3}>
+              <MDBox p={3}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <FormField
+                      label="Apellido"
+                      name="apellido"
+                      value={formData.apellido}
+                      onChange={handleFormChange}
+                      disabled={verificarRespuesta}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormField
+                      label="Nombre"
+                      name="nombre"
+                      value={formData.nombre}
+                      onChange={handleFormChange}
+                      disabled={verificarRespuesta}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormField
+                      label="Legajo"
+                      name="legajo"
+                      value={formData.legajo}
+                      onChange={handleFormChange}
+                      disabled={verificarRespuesta}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormField label="DNI" name="dni" value={formData.dni} disabled />
+                  </Grid>
+                </Grid>
+                {!verificarRespuesta && (
+                  <MDBox mt={3}>
+                    <MDButton
+                      variant="gradient"
+                      color="success"
+                      size="small"
+                      onClick={handlePersonaSubmit}
+                    >
+                      Enviar Persona
+                    </MDButton>
+                  </MDBox>
+                )}
+              </MDBox>
+            </Card>
+          </MDBox>
+        )}
+        {pofVisible && (
+          <MDBox mt={3}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                Datos POF
+              </MDTypography>
+            </MDAlert>
+            {alertPOF && (
+              <MDBox mt={3}>
+                <MDAlert color={alertType} dismissible onClose={() => setAlertPOF(false)}>
+                  <MDTypography variant="body2" color="white">
+                    {alertMessage}
+                  </MDTypography>
+                </MDAlert>
+              </MDBox>
+            )}
+            <Card mt={3}>
+              <MDBox p={3}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <FormField
+                      label="Establecimiento"
+                      name="establecimientoNombre"
+                      value={establecimientoNombre}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormField
+                      label="Secuencia"
+                      name="secuencia"
+                      value={pofFormData.secuencia}
+                      onChange={handlePofChange}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormField
+                      label="Barra"
+                      name="barra"
+                      value={pofFormData.barra}
+                      onChange={handlePofChange}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="car-revista-select-label">Car. Revista</InputLabel>
+                      <Select
+                        labelId="car-revista-select-label"
+                        name="idCarRevista"
+                        value={pofFormData.carRevista}
+                        onChange={handlePofChange}
+                        label="Car. Revista"
+                        style={{ height: "2.5rem", backgroundColor: "white" }}
+                      >
+                        {carRevistaOptions.map((option) => (
+                          <MenuItem key={option.idCarRevista} value={option.idCarRevista}>
+                            {option.descripcion}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="categorias-select-label">Categorias</InputLabel>
+                      <Select
+                        labelId="categorias-select-label"
+                        name="idCategoria"
+                        value={pofFormData.categorias}
+                        onChange={handlePofChange}
+                        label="categorias"
+                        style={{ height: "2.5rem", backgroundColor: "white" }}
+                      >
+                        {categoriasOptions.map((option) => (
+                          <MenuItem key={option.idTipoCategoria} value={option.idTipoCategoria}>
+                            {option.descripcion}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="funcion-select-label">Función</InputLabel>
+                      <Select
+                        labelId="funcion-select-label"
+                        value={pofFormData.funcion}
+                        onChange={handlePofChange}
+                        name="idFuncion"
+                        style={{ height: "2.5rem", backgroundColor: "white" }}
+                      >
+                        {funciones.map((funcion) => (
+                          <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
+                            {funcion.descripcion}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="tipoCargo-select-label">Tipo Cargo</InputLabel>
+                      <Select
+                        labelId="tipoCargo-select-label"
+                        value={pofFormData.tipoCargo}
+                        onChange={handlePofChange}
+                        name="tipoCargo"
+                        style={{ height: "2.5rem", backgroundColor: "white" }}
+                      >
+                        {tipoCargoOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+                <MDBox mt={3}>
+                  <MDButton
+                    variant="gradient"
+                    color="success"
+                    size="small"
+                    onClick={handlePofSubmit}
+                  >
+                    Enviar POF
+                  </MDButton>
+                </MDBox>
+              </MDBox>
+            </Card>
+          </MDBox>
         )}
       </DashboardLayout>
     </>
