@@ -4,9 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using API.DataSchema.Interfaz;
 using System.Linq.Expressions;
+using API.DataSchema.Interfaz;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using System.Reflection;
+using System.ComponentModel.DataAnnotations;
+
 
 namespace API.Services
 {
@@ -23,7 +28,7 @@ namespace API.Services
         public IEnumerable<T> GetAll()
         {
             return _genericRepo.AllAsNoTracking();
-                //.Where(x => EF.Property<string>(x, "Vigente") == "S");
+            //.Where(x => EF.Property<string>(x, "Vigente") == "S");
 
         }
 
@@ -94,6 +99,13 @@ namespace API.Services
                 throw new KeyNotFoundException("El registro no existe.");
             }
 
+            bool tieneEntidadAsociada = await _genericRepo.HasRelatedEntities(Id);
+
+            if (tieneEntidadAsociada)
+            {
+                throw new InvalidOperationException("No se puede eliminar el registro");
+            }
+
             // Cambia el estado 'Vigente' a "N" en lugar de eliminar físicamente
             typeof(T).GetProperty("Vigente")?.SetValue(entity, "N");
 
@@ -121,14 +133,77 @@ namespace API.Services
         {
             try
             {
-                return await _genericRepo.Update(genericClass);
+                // Usamos la nueva lógica para obtener la propiedad de la clave primaria desde el repositorio
+                var primaryKeyProperty = _genericRepo.GetPrimaryKeyProperty(genericClass);
+
+                if (primaryKeyProperty == null)
+                {
+                    throw new InvalidOperationException("No se encontró una clave primaria en la entidad.");
+                }
+
+                // Obtener el valor de la clave primaria
+                var id = primaryKeyProperty.GetValue(genericClass);
+
+                if (id == null)
+                {
+                    throw new ArgumentNullException("La clave primaria no puede ser nula.");
+                }
+
+                // Verificar si existen entidades relacionadas antes de actualizar
+                bool tieneEntidadAsociada = await _genericRepo.HasRelatedEntities((int)id);
+
+                if (tieneEntidadAsociada)
+                {
+                    throw new InvalidOperationException("No se puede actualizar el registro porque está asociado con otras entidades.");
+                }
+
+                // Obtener la entidad desde la base de datos antes de hacer el update
+                T originalEntity;
+                if (id is int intId)
+                {
+                    originalEntity = await _genericRepo.Find(intId);  // Usar el método Find(int id) del repositorio
+                }
+                else if (id is Guid guidId)
+                {
+                    originalEntity = await _genericRepo.Find(guidId);  // Usar el método Find(Guid id) del repositorio
+                }
+                else
+                {
+                    throw new InvalidOperationException("Tipo de clave primaria no soportado.");
+                }
+
+                if (originalEntity == null)
+                {
+                    throw new InvalidOperationException("Entidad no encontrada");
+                }
+
+                // Obtener el valor de 'Vigente' antes de actualizar
+                var originalVigente = originalEntity.GetType().GetProperty("Vigente")?.GetValue(originalEntity, null);
+                var newVigente = genericClass.GetType().GetProperty("Vigente")?.GetValue(genericClass, null);
+
+                // Mostrar o procesar el valor original de 'Vigente' antes del update
+                Console.WriteLine($"Valor de 'Vigente' antes del update: {originalVigente}");
+
+                // Si el estado 'Vigente' no se está modificando, no es necesario actualizarlo
+                if (originalVigente != newVigente)
+                {
+                    // Realizar el update utilizando el repositorio
+                    return await _genericRepo.Update(genericClass);  // Usar el método Update del repositorio
+                }
+                else
+                {
+                    // Si el estado 'Vigente' no ha cambiado, también proceder con la actualización
+                    return await _genericRepo.Update(genericClass);  // Usar el método Update del repositorio
+                }
             }
             catch (Exception e)
             {
-                throw e;
+                throw e;  // Puedes agregar más detalles de la excepción si lo necesitas
             }
-
         }
+
+
+
 
         // Método para verificar duplicados
         private async Task<bool> IsDuplicate(T entity)
@@ -182,6 +257,11 @@ namespace API.Services
 
             // No se encontró ningún duplicado para otras entidades
             return false;
+        }
+        public async Task<bool> HasRelatedEntities(int id)
+        {
+            // Llamar al método HasRelatedEntities del repositorio y devolver su resultado
+            return await _genericRepo.HasRelatedEntities(id);
         }
     }
 }
