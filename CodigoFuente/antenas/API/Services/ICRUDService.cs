@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace API.Services
@@ -26,6 +27,7 @@ namespace API.Services
         Task<bool> IsUserDuplicate(T entity);
         Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null);
         Task DeleteUsuario(int Id);
+        Task<bool> HasRelatedEntities(int id);
 
     }
 }

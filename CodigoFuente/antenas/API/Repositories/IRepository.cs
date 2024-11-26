@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace API.Repositories
@@ -29,6 +30,8 @@ namespace API.Repositories
         Task<IEnumerable<TResult>> GetAllDTO<TResult>(Expression<Func<T, bool>>? criterio, Expression<Func<T, TResult>>? selector, bool? orderbydescendin, int? page, int? limit, params Expression<Func<T, Object>>[]? order) where TResult : class;
         Task<IEnumerable<T>> GetAllAsync();
         public int Count(Expression<Func<T, bool>> criterio);
+        Task<bool> HasRelatedEntities(int id);
+        PropertyInfo GetPrimaryKeyProperty(T entity);
 
     }
 }
