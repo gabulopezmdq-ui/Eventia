@@ -28,11 +28,7 @@ namespace API.Services
         public IEnumerable<T> GetAll()
         {
             return _genericRepo.AllAsNoTracking();
-<<<<<<< HEAD
-                //.Where(x => EF.Property<string>(x, "Vigente") == "S");
-=======
             //.Where(x => EF.Property<string>(x, "Vigente") == "S");
->>>>>>> a02644dad39404e1341f59561a8eb4813b7c81c8
 
         }
 
@@ -158,7 +154,7 @@ namespace API.Services
 
                 if (tieneEntidadAsociada)
                 {
-                    throw new InvalidOperationException("No se puede actualizar el registro porque está asociado con otras entidades.");
+                    throw new InvalidOperationException("No se puede cambiar a Vigente NO porque este parámetro esta siento utilizado.");
                 }
 
                 // Obtener la entidad desde la base de datos antes de hacer el update
