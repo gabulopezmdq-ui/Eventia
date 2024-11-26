@@ -128,7 +128,6 @@ function Formulario({
       return;
     }
 
-    // Agregar datos adicionales al formulario
     if (idObra) {
       dataToSubmit.idObra = idObra;
     }
