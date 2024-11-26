@@ -264,6 +264,10 @@ export default function App() {
       component: AltaCabeceraLiquidacion,
     },
     {
+      path: "/PersonaFE/Edit/:id",
+      component: AltaPersona,
+    },
+    {
       path: "/GestionUsuariosFE/Edit/:id",
       component: AltaGestionUsuario,
     },
