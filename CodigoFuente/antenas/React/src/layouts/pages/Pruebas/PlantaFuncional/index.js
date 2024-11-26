@@ -87,6 +87,20 @@ function PlantaFuncional() {
     );
     setSelectedEstablecimiento(selectedId);
     setEstablecimientoNombre(selectedEstablecimiento?.nroEstablecimiento || "");
+    setPersonas([]);
+    setDni("");
+    setIsDataLoaded(false);
+    setPofVisible(false);
+    setPofFormData({
+      secuencia: "",
+      idCarRevista: "",
+      idFuncion: "",
+      tipoCargo: "",
+      barra: "",
+      idCategoria: "",
+      vigente: "S",
+    });
+    setVerificarRespuesta(null);
   };
 
   const handleCargar = async () => {
@@ -413,12 +427,19 @@ function PlantaFuncional() {
             </Grid>
           </Grid>
         </MDBox>
+        {showAlert && (
+          <MDAlert color={alertType} dismissible>
+            <MDTypography variant="body2" color="white">
+              {alertMessage}
+            </MDTypography>
+          </MDAlert>
+        )}
         {isDataLoaded ? (
           personas.length === 0 ? (
             <MDBox mt={3}>
               <MDBox sx={{ display: "flex" }}>
                 <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
-                <MDTypography variant="body2" ml={1}>
+                <MDTypography variant="body2" mlci={1}>
                   No hay personas registradas en este establecimiento.
                 </MDTypography>
               </MDBox>
@@ -480,6 +501,13 @@ function PlantaFuncional() {
                   }}
                   entriesPerPage={false}
                   canSearch
+                />
+                <EditarModal
+                  isOpen={isModalOpen}
+                  onClose={() => setIsModalOpen(false)}
+                  idPof={selectedIdPof}
+                  token={token}
+                  onEditSuccess={handleEditSuccess}
                 />
               </Card>
               <MDBox mt={2}>
