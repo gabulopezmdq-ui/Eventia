@@ -128,8 +128,8 @@ function Establecimiento() {
             }}
           >
             <option value="">Todos</option>
-            <option value="S">Activos</option>
-            <option value="N">No Activos</option>
+            <option value="S">Vigentes</option>
+            <option value="N">No Vigentes</option>
           </MDBox>
         </MDBox>
         {errorAlert.show && (
