@@ -25,10 +25,10 @@ function CabeceraLiquidacion() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+      .get(process.env.REACT_APP_API_URL + "cabeceraliquidacion/getall", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
@@ -64,6 +64,10 @@ function CabeceraLiquidacion() {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
+  const handleEditarCabeceraLiquidacion = (idCabecera) => {
+    const url = `/CabeceraLiquidacionFE/Edit/${idCabecera}`;
+    navigate(url);
+  };
   //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
@@ -93,11 +97,22 @@ function CabeceraLiquidacion() {
               table={{
                 columns: [
                   //{ Header: "ID", accessor: "id" },
-                  { Header: "Mes Liquidacion", accessor: "mesLiquidacion" },
-                  { Header: "Año Liquidacion", accessor: "anioLiquidacion" },
-                  { Header: "Usuario", accessor: "usuario.nombre" },
-                  { Header: "Observaciones", accessor: "observaciones" },
+                  { Header: "mes Liquidación", accessor: "mesLiquidacion" },
+                  { Header: "año Liquidacion", accessor: "anioLiquidacion" },
+                  { Header: "observaciones", accessor: "observaciones" },
                   {
+                    Header: "inicio Liquidacion",
+                    accessor: "inicioLiquidacion",
+                    Cell: ({ value }) =>
+                      value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
+                  },
+                  {
+                    Header: "finLiquidacion",
+                    accessor: "finLiquidacion",
+                    Cell: ({ value }) =>
+                      value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
+                  },
+                  /*{
                     Header: "Mas Info",
                     accessor: "edit",
                     Cell: ({ row }) => (
@@ -107,6 +122,19 @@ function CabeceraLiquidacion() {
                         onClick={() => handleVer(row.original)}
                       >
                         Mas Info
+                      </MDButton>
+                    ),
+                  },*/
+                  {
+                    Header: "Editar",
+                    accessor: "edit",
+                    Cell: ({ row }) => (
+                      <MDButton
+                        variant="gradient"
+                        color="info"
+                        onClick={() => handleEditarCabeceraLiquidacion(row.original.idCabecera)}
+                      >
+                        Editar
                       </MDButton>
                     ),
                   },
