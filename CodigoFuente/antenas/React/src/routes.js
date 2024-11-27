@@ -13,6 +13,8 @@ import TiposFunciones from "layouts/pages/Pruebas/TiposFunciones";
 import TipoLiquidaciones from "layouts/pages/Pruebas/TipoLiquidaciones";
 import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
 import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
+import RevertirImportacion from "layouts/pages/Pruebas/RevertirImportacion/index";
+import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
 
 const routes = [
   {
@@ -27,11 +29,23 @@ const routes = [
         route: "/CabeceraLiquidacionFE",
         component: <CabeceraLiquidacion />,
       },
-      {
+      /*{
         name: "Importar Archivo Plano",
         key: "ImportarArchivoPlano",
         route: "/ImportarArchivoPlanoFE",
         component: <ImportarArchivo />,
+      },
+      {
+        name: "Revertir Importación",
+        key: "RevertirImportacion",
+        route: "/RevertirImportacionFE",
+        component: <RevertirImportacion />,
+      },*/
+      {
+        name: "Consolidar Mec Pof",
+        key: "ConsolidarMecPof",
+        route: "/ConsolidarMecPofFE",
+        component: <ConsolidarMecPof />,
       },
     ],
   },

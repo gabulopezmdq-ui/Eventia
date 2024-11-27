@@ -12,7 +12,7 @@ using System.Collections.Generic;
 namespace API.Controllers
 {
     [ApiController]  
-   [Authorize(Roles = "SuperAdmin, Admin")]
+    [Authorize(Roles = "SuperAdmin, Admin")]
     [AllowAnonymous]
     [Route("[controller]")]
     public class ImportarMecanizadasController : ControllerBase
@@ -42,7 +42,7 @@ namespace API.Controllers
         }
 
         [HttpPost("RevertirExcel")]
-        public async Task<IActionResult> RevetirImportacionAsync([FromBody] int idCabecera)
+        public async Task<ActionResult> RevetirImportacionAsync(int idCabecera)
         {
             try
             {

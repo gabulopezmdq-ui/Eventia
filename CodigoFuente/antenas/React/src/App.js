@@ -43,6 +43,8 @@ import VerConcepto from "layouts/pages/Pruebas/Conceptos/VerConcepto";
 import VerEstablecimiento from "layouts/pages/Pruebas/Establecimiento/VerEstablecimiento";
 import Inicio from "layouts/pages/Pruebas/Inicio/Index";
 import AltaPlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional/AltaPlantaFuncional";
+import RevertirImportacion from "layouts/pages/Pruebas/RevertirImportacion/index";
+import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -170,6 +172,14 @@ export default function App() {
       component: ImportarArchivo,
     },
     {
+      path: "/RevertirImportacionFE",
+      component: RevertirImportacion,
+    },
+    {
+      path: "/ConsolidarMecPofFE",
+      component: ConsolidarMecPof,
+    },
+    {
       path: "/PersonaFE",
       component: PersonaListado,
     },
@@ -260,7 +270,7 @@ export default function App() {
     },
     //----------------------------------Rutas de Editar
     {
-      path: "/VerCabeceraLiquidacionFe/Edit/:id",
+      path: "/CabeceraLiquidacionFe/Edit/:id",
       component: AltaCabeceraLiquidacion,
     },
     {
