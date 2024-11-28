@@ -34,6 +34,7 @@ namespace API.DataSchema
         public DbSet<MEC_Usuarios> MEC_Usuarios { get; set; }
         public DbSet<MEC_Roles> MEC_Roles { get; set; }
         public DbSet<MEC_RolesXUsuarios> MEC_RolesXUsuarios { get; set; }
+        public DbSet<MEC_UsuariosEstablecimientos> MEC_UsuariosEstablecimientos { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
@@ -56,6 +57,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_UsuariosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_RolesConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_RolesXUsuariosConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_UsuariosEstablecimientosConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }
