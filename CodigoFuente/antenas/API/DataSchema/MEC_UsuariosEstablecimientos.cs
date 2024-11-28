@@ -7,5 +7,9 @@
         public int IdEstablecimiento { get; set; }
         public int IdCargo { get; set; }
         public string Vigente { get; set; }
+
+        public virtual MEC_Usuarios? Usuario { get; set; }
+        public virtual MEC_Establecimientos? Establecimiento { get; set; }
+        public virtual MEC_TiposCategorias? Cargo { get; set; }
     }
 }
