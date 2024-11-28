@@ -19,14 +19,13 @@ function SelectField({
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    // Verificar si apiUrl está definido y no es nulo
     if (apiUrl && apiUrl.includes("${idConservadora}")) {
       const idConservadora = formData["idConservadora"];
       const url = apiUrl.replace("${idConservadora}", idConservadora);
       axios
         .get(url, {
           headers: {
-            Authorization: `Bearer ${token}`, // Envía el token en los headers
+            Authorization: `Bearer ${token}`,
           },
         })
         .then((response) => {
@@ -39,11 +38,12 @@ function SelectField({
       axios
         .get(apiUrl, {
           headers: {
-            Authorization: `Bearer ${token}`, // Envía el token en los headers
+            Authorization: `Bearer ${token}`,
           },
         })
         .then((response) => {
-          setOptions(response.data);
+          const filteredOptions = response.data.filter((option) => option.vigente === "S");
+          setOptions(filteredOptions);
         })
         .catch((error) => {
           console.error("Error al cargar las opciones:", error);
