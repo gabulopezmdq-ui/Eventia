@@ -23,7 +23,9 @@ function ImportarArchivo() {
   // Muestra los datos en una tabla
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "ImportarMecanizadas/GetAll")
+      .get(process.env.REACT_APP_API_URL + "ImportarMecanizadas/GetAll", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => setDataTableData(response.data))
       .catch((error) => {
         if (error.response) {
