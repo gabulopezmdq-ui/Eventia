@@ -86,7 +86,7 @@ function PlantaFuncional() {
       (establecimiento) => establecimiento.idEstablecimiento === selectedId
     );
     setSelectedEstablecimiento(selectedId);
-    setEstablecimientoNombre(selectedEstablecimiento?.nroEstablecimiento || "");
+    setEstablecimientoNombre(selectedEstablecimiento?.nombrePcia || "");
     setPersonas([]);
     setDni("");
     setIsDataLoaded(false);
@@ -319,7 +319,7 @@ function PlantaFuncional() {
         handleCargar();
       }, 3000);
     } catch (error) {
-      setAlertMessage("Error al enviar el formulario POF.");
+      setAlertMessage("Ya existe el cargo en la POF.");
       setAlertType("error");
       setAlertPOF(true);
       setTimeout(() => {
@@ -412,7 +412,7 @@ function PlantaFuncional() {
                       key={establecimiento.idEstablecimiento}
                       value={establecimiento.idEstablecimiento}
                     >
-                      {establecimiento.nroEstablecimiento}
+                      {establecimiento.nombrePcia}
                     </MenuItem>
                   ))}
                 </Select>
@@ -518,6 +518,7 @@ function PlantaFuncional() {
                         <FormField
                           label="DNI"
                           name="Dni"
+                          type="number"
                           value={dni}
                           onChange={(e) => setDni(e.target.value)}
                         />
@@ -591,7 +592,7 @@ function PlantaFuncional() {
                     />
                   </Grid>
                   <Grid item xs={6}>
-                    <FormField label="DNI" name="dni" value={formData.dni} disabled />
+                    <FormField label="DNI" name="dni" type="number" value={formData.dni} disabled />
                   </Grid>
                 </Grid>
                 {!verificarRespuesta && (
@@ -643,6 +644,7 @@ function PlantaFuncional() {
                       label="Secuencia"
                       name="secuencia"
                       value={pofFormData.secuencia}
+                      type="number"
                       onChange={handlePofChange}
                     />
                   </Grid>
