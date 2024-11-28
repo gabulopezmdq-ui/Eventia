@@ -43,7 +43,7 @@ namespace API.Repositories
         {
             return await _context.FindAsync<T>(id);
         }
-        
+
         public virtual async Task<T> Find(int id)
         {
             var keyName = _context.Model.FindEntityType(typeof(T)).FindPrimaryKey().Properties
@@ -118,7 +118,7 @@ namespace API.Repositories
                         // Asignar los datos del archivo a la propiedad correspondiente de la entidad
                         propiedadDatosArchivo.SetValue(entity, datosArchivo);
                     }
-                   
+
                 }
             }
             await _context.Set<T>().AddAsync(entity);
@@ -195,5 +195,94 @@ namespace API.Repositories
         {
             return await _context.Set<T>().ToListAsync();
         }
+
+        public async Task<bool> HasRelatedEntities(int id)
+        {
+            var entityType = typeof(T);
+            var navigationProperties = _context.Model.FindEntityType(entityType)?.GetNavigations();
+
+            if (navigationProperties == null)
+            {
+                return false; // No hay propiedades de navegación, por lo tanto, no hay entidades relacionadas.
+            }
+
+            foreach (var navigation in navigationProperties)
+            {
+                // Obtiene el tipo de la entidad relacionada.
+                var relatedEntityType = navigation.TargetEntityType.ClrType;
+
+                // Obtiene la propiedad de la clave foránea.
+                var foreignKeyProperty = navigation.ForeignKey.Properties.FirstOrDefault();
+                if (foreignKeyProperty == null)
+                {
+                    continue; // Si no hay clave foránea, saltamos esta relación.
+                }
+
+                // Utilizamos la versión genérica correcta de 'Set<T>()'
+                var relatedDbSetMethod = _context.GetType()
+                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                    .FirstOrDefault(m => m.Name == "Set" && m.IsGenericMethod && m.GetGenericArguments().Length == 1);
+
+                if (relatedDbSetMethod == null)
+                {
+                    continue; // Si no se puede encontrar el método 'Set', continuamos con la siguiente relación.
+                }
+
+                // Invoca el DbSet de la entidad relacionada.
+                var relatedDbSet = relatedDbSetMethod.MakeGenericMethod(relatedEntityType)
+                    .Invoke(_context, null) as IQueryable;
+                if (relatedDbSet == null)
+                {
+                    continue;
+                }
+
+                // Construye una expresión para la consulta.
+                var parameter = Expression.Parameter(relatedEntityType, "e");
+
+                // Acceso dinámico a la propiedad de clave foránea.
+                var propertyAccess = Expression.Call(
+                    typeof(EF),
+                    nameof(EF.Property),
+                    new[] { foreignKeyProperty.PropertyInfo.PropertyType },
+                    parameter,
+                    Expression.Constant(foreignKeyProperty.Name)
+                );
+
+                var condition = Expression.Equal(propertyAccess, Expression.Constant(id));
+                var lambda = Expression.Lambda(condition, parameter);
+
+                // Usamos el método `Any` para verificar si existe alguna entidad relacionada.
+                var method = typeof(Queryable).GetMethods()
+                    .First(m => m.Name == "Any" && m.GetParameters().Length == 2)
+                    .MakeGenericMethod(relatedEntityType);
+
+                var exists = (bool)method.Invoke(null, new object[] { relatedDbSet, lambda });
+
+                if (exists)
+                {
+                    return true; // Si se encuentra alguna entidad relacionada, retornamos true.
+                }
+            }
+
+            return false; // Si no se encontró ninguna relación, retornamos false.
+        }
+        public PropertyInfo GetPrimaryKeyProperty(T entity)
+        {
+            var model = _context.Model;
+            var entityType = model.FindEntityType(typeof(T));
+
+            var primaryKey = entityType.FindPrimaryKey();
+
+            if (primaryKey == null)
+            {
+                throw new InvalidOperationException("No se encontró una clave primaria configurada.");
+            }
+
+            var primaryKeyProperty = entity.GetType().GetProperty(primaryKey.Properties[0].Name);
+
+            return primaryKeyProperty;
+        }
+
+
     }
 }

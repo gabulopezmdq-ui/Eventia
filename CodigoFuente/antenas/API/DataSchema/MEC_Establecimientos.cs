@@ -22,5 +22,6 @@ namespace API.DataSchema
         public string[] UniqueProperties => new[] { "NroDiegep" }; //  CodCategoria es unico
         public virtual MEC_TiposEstablecimientos? TipoEstablecimientos { get; set; }
         public virtual ICollection<MEC_POF>? POFs { get; set; } = new List<MEC_POF>();
+        public virtual ICollection<MEC_UsuariosEstablecimientos>? UsuarioEstablecimiento { get; set; } = new List<MEC_UsuariosEstablecimientos>();
     }
 }

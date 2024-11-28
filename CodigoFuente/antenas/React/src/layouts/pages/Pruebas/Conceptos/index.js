@@ -156,6 +156,12 @@ function Conceptos() {
                   { Header: "Cod Concepto MGP", accessor: "codConceptoMgp" },
                   { Header: "Descripción", accessor: "descripcion" },
                   {
+                    Header: "VIGENTE",
+                    accessor: (row) => (
+                      <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                    ),
+                  },
+                  {
                     Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (

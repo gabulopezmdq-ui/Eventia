@@ -42,7 +42,7 @@ namespace API.Controllers
         }
 
         [HttpPost("RevertirExcel")]
-        public async Task<IActionResult> RevetirImportacionAsync([FromBody] int idCabecera)
+        public async Task<ActionResult> RevetirImportacionAsync(int idCabecera)
         {
             try
             {

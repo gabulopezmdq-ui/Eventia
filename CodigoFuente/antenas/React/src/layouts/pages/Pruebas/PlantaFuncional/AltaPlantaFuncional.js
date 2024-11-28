@@ -27,6 +27,7 @@ function PlantaFuncional() {
   const [selectednroEstablecimiento, setSelectednroEstablecimiento] = useState(""); // Establecimiento seleccionado
   const [isDataLoaded, setIsDataLoaded] = useState(false); // Controla la visibilidad de la tabla
   const token = sessionStorage.getItem("token"); // Token de sesión
+  const [mostrarSoloDNI, setMostrarSoloDNI] = useState(false);
 
   // Fetch de todos los establecimientos al cargar el componente
   // Asumiendo que la respuesta contiene tanto 'idEstablecimiento' como 'nroEstablecimiento' (nombre)
@@ -104,7 +105,7 @@ function PlantaFuncional() {
   };
 
   // Lógica para manejar la acción de agregar un nuevo tipo, directamente en el componente
-  const handleNuevoTipo = () => {
+  const handleNuevoTipoPof = () => {
     if (!selectednroEstablecimiento) {
       setErrorAlert({
         show: true,
@@ -113,40 +114,12 @@ function PlantaFuncional() {
       });
       return;
     }
-
     // Aquí puedes agregar la lógica para el establecimiento seleccionado
     // Por ejemplo, enviar una solicitud para agregar un nuevo tipo para este establecimiento
-
     const establecimientoId = selectednroEstablecimiento;
-
     console.log("ID del establecimiento seleccionado:", establecimientoId);
-
-    // Aquí iría la lógica para agregar el nuevo tipo o mostrar un formulario para editarlo
-    // Ejemplo de un POST si quieres enviar datos a un servidor
-    /*
-    axios
-      .post(`${process.env.REACT_APP_API_URL}ruta/nueva/accion`, {
-        establecimientoId,
-        otrosDatos: valor,
-      })
-      .then((response) => {
-        console.log("Nuevo tipo agregado con éxito");
-      })
-      .catch((error) => {
-        console.error("Error al agregar el nuevo tipo", error);
-      });
-    */
-  };
-
-  // Redirigir a la página con más información de la persona seleccionada
-  const handleVer = (rowData) => {
-    if (rowData && rowData.idPlantaFuncional) {
-      const productId = rowData.idPlantaFuncional;
-      const url = `/PlantaFuncionalFE/${productId}`;
-      navigate(url);
-    } else {
-      console.error("El objeto rowData o su propiedad 'id' no están definidos.");
-    }
+    // Cambiar el estado para mostrar solo los campos de DNI
+    setMostrarSoloDNI(true);
   };
 
   return (
@@ -228,16 +201,13 @@ function PlantaFuncional() {
                 canSearch
                 show
               />
-              <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+              <MDButton variant="gradient" color="success" onClick={handleNuevoTipoPof}>
                 Agregar
               </MDButton>
             </Card>
           )}
         </MDBox>
-        {/*-----------------------------------------------------------------------------------*/}
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
+        {/*---------------------------------   POF   --------------------------------------------------*/}
         <Card sx={{ width: "90%", margin: "0 auto" }}>
           <MDBox>
             <MDBox width="80%" textAlign="center" mx="auto" my={4}>
@@ -249,23 +219,41 @@ function PlantaFuncional() {
             </MDBox>
             <MDBox mt={2} mb={2}>
               <Grid container spacing={2}>
-                {/* Primer input ocupa el 50% */}
                 <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
                   <MDBox width="90%">
-                    <MDInput variant="standard" label="Nombre" fullWidth />
+                    <MDInput variant="standard" label="dni" fullWidth />
                   </MDBox>
                 </Grid>
-
-                {/* Segundo input ocupa el 50% */}
+                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
+                  <MDButton variant="gradient" color="success" onClick={handleNuevoTipoPof}>
+                    Consultar DNI
+                  </MDButton>
+                </Grid>
                 <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
                   <MDBox width="90%">
                     <MDInput variant="standard" label="Apellido" fullWidth />
+                  </MDBox>
+                </Grid>
+                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
+                  <MDBox width="90%">
+                    <MDInput variant="standard" label="nombre" fullWidth />
+                  </MDBox>
+                </Grid>
+                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
+                  <MDBox width="90%">
+                    <MDInput variant="standard" label="legajo" fullWidth />
+                  </MDBox>
+                </Grid>
+                <Grid item xs={6} display="flex" justifyContent="center" alignItems="center">
+                  <MDBox width="90%">
+                    <MDInput variant="standard" label="vigente" fullWidth />
                   </MDBox>
                 </Grid>
               </Grid>
             </MDBox>
           </MDBox>
         </Card>
+        {/*---------------------------------   POF   --------------------------------------------------*/}
       </DashboardLayout>
     </>
   );
