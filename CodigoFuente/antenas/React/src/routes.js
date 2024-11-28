@@ -29,7 +29,7 @@ const routes = [
         route: "/CabeceraLiquidacionFE",
         component: <CabeceraLiquidacion />,
       },
-      /*{
+      {
         name: "Importar Archivo Plano",
         key: "ImportarArchivoPlano",
         route: "/ImportarArchivoPlanoFE",
@@ -40,7 +40,7 @@ const routes = [
         key: "RevertirImportacion",
         route: "/RevertirImportacionFE",
         component: <RevertirImportacion />,
-      },*/
+      },
       {
         name: "Consolidar Mec Pof",
         key: "ConsolidarMecPof",
@@ -57,7 +57,7 @@ const routes = [
     key: "pof",
     collapse: [
       {
-        name: "Gestion de Persona",
+        name: "Gestión de Personas",
         key: "listadoPersona",
         route: "/PersonaFE",
         component: <PersonaListados />,

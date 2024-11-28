@@ -22,15 +22,21 @@ function Persona() {
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [dataTableData, setDataTableData] = useState();
+  const [activoFilter, setActivoFilter] = useState("S"); // Estado inicial para mostrar solo los vigentes
+  const [allData, setAllData] = useState([]); // Almacena todos los datos sin filtrar
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "Personas/getall", {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`, // Envía el token en los headers
-        //     },
+        headers: {
+          Authorization: `Bearer ${token}`, // Envía el token en los headers
+        },
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        console.log("Datos recibidos del backend:", response.data); // Depuración: ver datos originales
+        setAllData(response.data); // Guardar todos los datos
+        filterData(response.data, "S"); // Filtrar solo vigentes al inicio
+      })
       .catch((error) => {
         if (error.response) {
           const statusCode = error.response.status;
@@ -51,6 +57,24 @@ function Persona() {
         }
       });
   }, []);
+  const filterData = (data, filter) => {
+    let filteredData;
+    if (filter === "S") {
+      filteredData = data.filter((item) => item.vigente === "S" || item.vigente === true);
+    } else if (filter === "N") {
+      filteredData = data.filter((item) => item.vigente === "N" || item.vigente === false);
+    } else {
+      filteredData = data; // Todos los datos
+    }
+    console.log("Datos filtrados:", filteredData); // Depuración: ver datos filtrados
+    setDataTableData(filteredData);
+  };
+  // Maneja el cambio en el filtro de activo
+  const handleFilterChange = (event) => {
+    const filter = event.target.value;
+    setActivoFilter(filter); // Actualizar el estado del filtro
+    filterData(allData, filter); // Filtrar los datos según el valor seleccionado
+  };
 
   const handleNuevoTipo = () => {
     navigate("/PersonaFE/Nuevo");
@@ -75,11 +99,31 @@ function Persona() {
   return (
     <>
       <DashboardLayout>
-        <p>Hola</p>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
+        <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
+          <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+            Agregar
+          </MDButton>
+          <MDBox
+            component="select"
+            onChange={handleFilterChange} // Llamar a la función al cambiar el filtro
+            value={activoFilter} // Vincular el estado del filtro al valor del `select`
+            sx={{
+              padding: "10px 20px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              "&:focus": {
+                borderColor: "#4caf50",
+              },
+            }}
+          >
+            <option value="">Todos</option>
+            <option value="S">Vigente</option>
+            <option value="N">No Vigente</option>
+          </MDBox>
+        </MDBox>
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -103,6 +147,12 @@ function Persona() {
                   { Header: "Apellido", accessor: "apellido" },
                   { Header: "Legajo", accessor: "legajo" },
                   { Header: "DNI", accessor: "dni" },
+                  {
+                    Header: "VIGENTE",
+                    accessor: (row) => (
+                      <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                    ),
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",
