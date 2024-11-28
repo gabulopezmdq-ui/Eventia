@@ -36,6 +36,7 @@ function PlantaFuncional() {
   const [alertPOF, setAlertPOF] = useState(false);
   const [alertPersona, setAlertPersona] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [alertaDNI, setAlertaDNI] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [carRevistaOptions, setCarRevistaOptions] = useState([]);
   const [categoriasOptions, setCategoriasOptions] = useState([]);
@@ -132,6 +133,17 @@ function PlantaFuncional() {
   };
 
   const handleAgregar = async () => {
+    if (!/^\d{8}$/.test(dni)) {
+      setAlertMessage("El DNI debe tener exactamente 8 caracteres numéricos.");
+      setAlertType("error");
+      setAlertaDNI(true);
+      setTimeout(() => {
+        setAlertaDNI(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
+      return;
+    }
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}POF/VerificarPOF`,
@@ -391,6 +403,29 @@ function PlantaFuncional() {
     setSelectedIdPof(idPof);
     setIsModalOpen(true);
   };
+  const handleCancel = () => {
+    setAlertPOF(false);
+    setAlertMessage("");
+    setPofFormData({
+      secuencia: "",
+      idCarRevista: "",
+      idFuncion: "",
+      tipoCargo: "",
+      barra: "",
+      idCategoria: "",
+      vigente: "S",
+    });
+    setDni("");
+    setFormData({
+      apellido: "",
+      nombre: "",
+      legajo: "",
+      dni: "",
+    });
+    setVerificarRespuesta(null);
+    setPofVisible(false);
+    handleCargar();
+  };
   return (
     <>
       <DashboardLayout>
@@ -443,6 +478,15 @@ function PlantaFuncional() {
                   No hay personas registradas en este establecimiento.
                 </MDTypography>
               </MDBox>
+              {alertaDNI && (
+                <MDBox mt={3}>
+                  <MDAlert color={alertType} dismissible onClose={() => setAlertaDNI(false)}>
+                    <MDTypography variant="body2" color="white">
+                      {alertMessage}
+                    </MDTypography>
+                  </MDAlert>
+                </MDBox>
+              )}
               <MDBox mt={2}>
                 <Card>
                   <MDBox component="form" m={2}>
@@ -510,6 +554,15 @@ function PlantaFuncional() {
                   onEditSuccess={handleEditSuccess}
                 />
               </Card>
+              {alertaDNI && (
+                <MDBox mt={3}>
+                  <MDAlert color={alertType} dismissible onClose={() => setAlertaDNI(false)}>
+                    <MDTypography variant="body2" color="white">
+                      {alertMessage}
+                    </MDTypography>
+                  </MDAlert>
+                </MDBox>
+              )}
               <MDBox mt={2}>
                 <Card>
                   <MDBox component="form" m={2}>
@@ -731,15 +784,22 @@ function PlantaFuncional() {
                     </FormControl>
                   </Grid>
                 </Grid>
-                <MDBox mt={3}>
-                  <MDButton
-                    variant="gradient"
-                    color="success"
-                    size="small"
-                    onClick={handlePofSubmit}
-                  >
-                    Enviar POF
-                  </MDButton>
+                <MDBox mt={2} sx={{ display: "flex" }}>
+                  <MDBox mr={2}>
+                    <MDButton
+                      variant="gradient"
+                      color="success"
+                      size="small"
+                      onClick={handlePofSubmit}
+                    >
+                      Enviar POF
+                    </MDButton>
+                  </MDBox>
+                  <MDBox>
+                    <MDButton variant="gradient" color="light" size="small" onClick={handleCancel}>
+                      Cancelar
+                    </MDButton>
+                  </MDBox>
                 </MDBox>
               </MDBox>
             </Card>
