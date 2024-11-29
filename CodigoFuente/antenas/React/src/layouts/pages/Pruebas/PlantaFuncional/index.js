@@ -141,7 +141,7 @@ function PlantaFuncional() {
         setAlertaDNI(false);
         setAlertMessage("");
         setAlertType("");
-      }, 5000);
+      }, 3000);
       return;
     }
     try {
@@ -755,6 +755,7 @@ function PlantaFuncional() {
                         value={pofFormData.funcion}
                         onChange={handlePofChange}
                         name="idFuncion"
+                        label="funcion"
                         style={{ height: "2.5rem", backgroundColor: "white" }}
                       >
                         {funciones.map((funcion) => (
@@ -773,6 +774,7 @@ function PlantaFuncional() {
                         value={pofFormData.tipoCargo}
                         onChange={handlePofChange}
                         name="tipoCargo"
+                        label="tipoCargo"
                         style={{ height: "2.5rem", backgroundColor: "white" }}
                       >
                         {tipoCargoOptions.map((option) => (
