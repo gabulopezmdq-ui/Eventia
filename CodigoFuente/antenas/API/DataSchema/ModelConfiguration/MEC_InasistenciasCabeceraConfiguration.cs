@@ -25,6 +25,28 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder
+                .HasOne(p => p.Usuarios)
+                .WithMany(t => t.Inasistencias)
+                .HasForeignKey(p => p.Confecciono)
+                .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Usuarios)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder
+            .HasOne(p => p.Cabecera)
+            .WithMany(t => t.Cabeceras)
+            .HasForeignKey(p => p.IdCabecera)
+            .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Cabecera)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
             builder.Property(e => e.Mes)
                 .IsRequired(true);
 
@@ -35,22 +57,22 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder.Property(e => e.FechaEntrega)
+               .IsRequired(true);
+
+            builder.Property(e => e.SinNovedades)
+                .HasColumnType("char(1)")
+                .IsFixedLength(true)
                 .IsRequired(true);
 
-            builder
-                .HasOne(p => p.CarRevista)
-                .WithMany(t => t.POFs)
-                .HasForeignKey(p => p.IdCarRevista)
-                .IsRequired(true);
+            builder.Property(e => e.Observaciones)
+            .HasColumnType("char(1000)")
+            .IsFixedLength(true)
+            .IsRequired(true);
 
-            builder
-                .Navigation(e => e.CarRevista)
-                .AutoInclude()
-                .UsePropertyAccessMode(PropertyAccessMode.Property);
-
-            builder.HasMany(e => e.POFAntiguedad)
-                .WithOne(e => e.POF)
-                .HasForeignKey(e => e.IdPOF);
+            builder.Property(e => e.Estado)
+           .HasColumnType("char(1)")
+           .IsFixedLength(true)
+           .IsRequired(true);
 
         }
     }

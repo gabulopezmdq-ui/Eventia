@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace API.DataSchema
 {
@@ -23,5 +24,6 @@ namespace API.DataSchema
         public string Vigente { get; set; }
         public virtual MEC_TiposLiquidaciones? TipoLiquidacion { get; set; }
         public virtual MEC_Usuarios? Usuarios { get; set; }
+        public virtual ICollection<MEC_InasistenciasCabecera>? Cabeceras { get; set; } = new List<MEC_InasistenciasCabecera>();
     }
 }
