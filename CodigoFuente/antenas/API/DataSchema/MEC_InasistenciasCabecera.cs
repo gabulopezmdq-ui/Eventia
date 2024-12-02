@@ -2,10 +2,10 @@
 
 namespace API.DataSchema
 {
-    public class MEC_CabeceraLiquidacion
+    public class MEC_InasistenciasCabecera
     {
     
-        public int IdCabecera { get; set; }
+        public int IdInasistenciaCabecera { get; set; }
         public int idTipoLiquidacion { get; set; }
         public string? LeyendaTipoLiqReporte { get; set; }
 
