@@ -3,14 +3,19 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class MEC_POF_AntigudadesConfiguration : IEntityTypeConfiguration<MEC_POF_Antiguedades>
+    public class MEC_POF_AntiguedadesConfiguration : IEntityTypeConfiguration<MEC_POF_Antiguedades>
     {
         public void Configure(EntityTypeBuilder<MEC_POF_Antiguedades> builder)
         {
-            // Definir clave primaria
-            builder.HasKey(e => e.IdPOF);
+            // Definir la clave primaria
+            builder.HasKey(e => e.IdPOFAntig);
 
-            // Definir restricciones para las columnas
+            // Configurar la columna IdPOF como un campo generado automáticamente
+            builder
+               .Property(p => p.IdPOFAntig)
+               .ValueGeneratedOnAdd();
+
+            // Definir propiedades de la entidad
             builder.Property(e => e.MesReferencia)
                 .IsRequired();
 
@@ -21,12 +26,13 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(false);
 
             builder.Property(e => e.MesAntiguedad)
-                .IsRequired(false); 
-            
+                .IsRequired(false);
+
+            // Configurar la relación con la entidad MEC_POF
             builder
                 .HasOne(p => p.POF)
-                .WithOne()
-                .HasForeignKey<MEC_POF_Antiguedades>(p => p.IdPOF)
+                .WithMany()
+                .HasForeignKey(p => p.IdPOF)
                 .IsRequired(true);
 
             builder
