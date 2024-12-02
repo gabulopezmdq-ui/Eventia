@@ -84,7 +84,7 @@ namespace API.Controllers
         [HttpPut]
         public async Task<ActionResult<MEC_POF>> Update([FromBody] MEC_POF pof)
         {
-            await _serviceGenerico.UpdatePOF(pof);
+            await _serviceGenerico.Update(pof);
             return Ok(pof);
         }
 
