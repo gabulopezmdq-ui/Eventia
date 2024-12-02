@@ -29,5 +29,7 @@ namespace API.Services
         Task DeleteUsuario(int Id);
         Task<bool> HasRelatedEntities(int id);
 
+        Task<T> UpdatePOF(T genericClass);
+
     }
 }

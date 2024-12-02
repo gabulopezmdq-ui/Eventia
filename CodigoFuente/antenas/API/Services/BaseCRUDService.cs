@@ -203,7 +203,17 @@ namespace API.Services
         }
 
 
-
+        public virtual async Task<T> UpdatePOF(T genericClass)
+        {
+            try
+            {
+                return await _genericRepo.Update(genericClass);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
 
         // Método para verificar duplicados
         private async Task<bool> IsDuplicate(T entity)
