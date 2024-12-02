@@ -237,8 +237,14 @@ function PlantaFuncional() {
       setIdPersona(response.data.idPersona);
       setPofVisible(true);
     } catch (error) {
-      console.error("Error al crear la persona:", error);
-      alert("Hubo un error al enviar los datos.");
+      setAlertType("error");
+      setAlertMessage(error.response.data.error);
+      setAlertPersona(true);
+      setTimeout(() => {
+        setAlertPersona(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
     }
   };
   const handlePofChange = (e) => {
