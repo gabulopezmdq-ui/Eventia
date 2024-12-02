@@ -36,6 +36,7 @@ function PlantaFuncional() {
   const [alertPOF, setAlertPOF] = useState(false);
   const [alertPersona, setAlertPersona] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("Todos");
   const [alertaDNI, setAlertaDNI] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [carRevistaOptions, setCarRevistaOptions] = useState([]);
@@ -122,6 +123,7 @@ function PlantaFuncional() {
         secuencia: item.secuencia,
         tipoCargo: item.tipoCargo,
         idPof: item.idPOF,
+        vigente: item.vigente,
       }));
       setPersonas(personasData);
     } catch (error) {
@@ -235,8 +237,14 @@ function PlantaFuncional() {
       setIdPersona(response.data.idPersona);
       setPofVisible(true);
     } catch (error) {
-      console.error("Error al crear la persona:", error);
-      alert("Hubo un error al enviar los datos.");
+      setAlertType("error");
+      setAlertMessage(error.response.data.error);
+      setAlertPersona(true);
+      setTimeout(() => {
+        setAlertPersona(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
     }
   };
   const handlePofChange = (e) => {
@@ -426,6 +434,12 @@ function PlantaFuncional() {
     setPofVisible(false);
     handleCargar();
   };
+
+  const filteredData = personas.filter((persona) => {
+    if (selectedFilter === "Todos") return true;
+    return persona.vigente === selectedFilter;
+  });
+
   return (
     <>
       <DashboardLayout>
@@ -516,16 +530,37 @@ function PlantaFuncional() {
             </MDBox>
           ) : (
             <>
+              <Grid sx={{ display: "flex", justifyContent: "flex-end" }}>
+                <FormControl style={{ width: "10rem" }} margin="normal">
+                  <Select
+                    labelId="vigente-filter-label"
+                    value={selectedFilter}
+                    onChange={(e) => setSelectedFilter(e.target.value)}
+                    name="Vigente"
+                    style={{ height: "2.5rem", backgroundColor: "white" }}
+                  >
+                    <MenuItem value="Todos">Todos</MenuItem>
+                    <MenuItem value="S">Vigente</MenuItem>
+                    <MenuItem value="N">No Vigente</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
               <Card>
                 <DataTable
                   table={{
                     columns: [
-                      { Header: "Nombre", accessor: "nombre" },
                       { Header: "Apellido", accessor: "apellido" },
+                      { Header: "Nombre", accessor: "nombre" },
                       { Header: "DNI", accessor: "dni" },
                       { Header: "Legajo", accessor: "legajo" },
                       { Header: "Secuencia", accessor: "secuencia" },
                       { Header: "Tipo Cargo", accessor: "tipoCargo" },
+                      {
+                        Header: "Vigente",
+                        accessor: (row) => (
+                          <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                        ),
+                      },
                       {
                         Header: "Mas Info",
                         accessor: "edit",
@@ -541,7 +576,7 @@ function PlantaFuncional() {
                         ),
                       },
                     ],
-                    rows: personas,
+                    rows: filteredData,
                   }}
                   entriesPerPage={false}
                   canSearch
