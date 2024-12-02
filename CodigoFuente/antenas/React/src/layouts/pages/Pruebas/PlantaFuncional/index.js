@@ -357,7 +357,8 @@ function PlantaFuncional() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setCarRevistaOptions(response.data);
+        const carRevistaVigentes = response.data.filter((carRevista) => carRevista.vigente === "S");
+        setCarRevistaOptions(carRevistaVigentes);
       } catch (error) {
         console.error("Error al cargar CarRevistas:", error);
       }
@@ -370,7 +371,8 @@ function PlantaFuncional() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setFunciones(response.data);
+        const funcionesVigentes = response.data.filter((funcion) => funcion.vigente === "S");
+        setFunciones(funcionesVigentes);
       } catch (error) {
         console.error("Error al cargar Funciones:", error);
       }
@@ -382,7 +384,8 @@ function PlantaFuncional() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setCategoriasOptions(response.data);
+        const categoriasVigentes = response.data.filter((categoria) => categoria.vigente === "S");
+        setCategoriasOptions(categoriasVigentes);
       } catch (error) {
         console.error("Error al cargar CarRevistas:", error);
       }

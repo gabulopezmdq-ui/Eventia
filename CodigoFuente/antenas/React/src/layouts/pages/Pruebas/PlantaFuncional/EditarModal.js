@@ -67,7 +67,8 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          setCategorias(data);
+          const categoriasVigentes = data.filter((categoria) => categoria.vigente === "S");
+          setCategorias(categoriasVigentes);
         } catch (error) {
           console.error("Error al cargar categorías:", error);
         }
@@ -78,7 +79,8 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          setCarRevista(data);
+          const carRevistaVigentes = data.filter((carRevista) => carRevista.vigente === "S");
+          setCarRevista(carRevistaVigentes);
         } catch (error) {
           console.error("Error al cargar categorías:", error);
         }
@@ -89,7 +91,8 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          setFuncion(data);
+          const funcionesVigentes = data.filter((funcion) => funcion.vigente === "S");
+          setFuncion(funcionesVigentes);
         } catch (error) {
           console.error("Error al cargar categorías:", error);
         }
