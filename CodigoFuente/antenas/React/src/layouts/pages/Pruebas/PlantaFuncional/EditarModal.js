@@ -160,6 +160,10 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
     { value: "H", label: "HORAS" },
     { value: "M", label: "MODULOS" },
   ];
+  const tipoVigenteOptions = [
+    { value: "S", label: "Si" },
+    { value: "N", label: "No" },
+  ];
 
   return (
     <Modal open={isOpen} onClose={onClose} aria-labelledby="modal-title">
@@ -270,6 +274,24 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                     {categorias.map((categoria) => (
                       <MenuItem key={categoria.idTipoCategoria} value={categoria.idTipoCategoria}>
                         {categoria.descripcion}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl fullWidth>
+                  <InputLabel id="tipoVigente-select-label"> Vigente </InputLabel>
+                  <Select
+                    labelId="tipoVigente-select-label"
+                    value={formData.vigente}
+                    onChange={handleInputChange}
+                    name="vigente"
+                    style={{ height: "2.5rem", backgroundColor: "white" }}
+                  >
+                    {tipoVigenteOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
                       </MenuItem>
                     ))}
                   </Select>
