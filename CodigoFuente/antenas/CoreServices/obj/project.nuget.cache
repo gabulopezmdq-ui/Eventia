@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "XaDNOgtehRavdEszcBcCQVfPIzxBfALYEVZ3dzdKnwFzrVi5gij7OQT7Lg8cSsHJxLHH11kJxq97Jc00KR8TmQ==",
+  "dgSpecHash": "vurYZqI9rbnd5fOOQ8D7xLDQ90qsQL0vp3br5FLfXRF79kjUYzbidotDFtyr5GBtMcL5NmuHZexj1RUvr9Vmqg==",
   "success": true,
   "projectFilePath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
   "expectedPackageFiles": [
@@ -130,6 +130,7 @@
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.io.filesystem.primitives\\4.3.0\\system.io.filesystem.primitives.4.3.0.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.io.packaging\\8.0.0\\system.io.packaging.8.0.0.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.linq\\4.3.0\\system.linq.4.3.0.nupkg.sha512",
+    "C:\\Users\\gcassulo\\.nuget\\packages\\system.linq.dynamic.core\\1.4.9\\system.linq.dynamic.core.1.4.9.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.linq.expressions\\4.3.0\\system.linq.expressions.4.3.0.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\system.net.http\\4.3.0\\system.net.http.4.3.0.nupkg.sha512",

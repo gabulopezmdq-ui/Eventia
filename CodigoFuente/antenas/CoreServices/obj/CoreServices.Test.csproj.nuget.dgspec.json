@@ -136,6 +136,10 @@
               "target": "Package",
               "version": "[7.0.0, )"
             },
+            "System.Linq.Dynamic.Core": {
+              "target": "Package",
+              "version": "[1.4.9, )"
+            },
             "xunit": {
               "target": "Package",
               "version": "[2.4.2, )"
