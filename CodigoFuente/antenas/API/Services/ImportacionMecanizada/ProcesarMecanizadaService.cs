@@ -34,8 +34,8 @@ namespace API.Services
             {
                 // Captura excepciones y retorna un mensaje adecuado
                 return $"Error al procesar la cabecera con ID {idCabecera}: {ex.Message}";
-            }
-        }
+                }
+            }   
 
         public async Task PreprocesarAsync(int idCabecera)
         {
