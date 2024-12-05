@@ -778,7 +778,7 @@ function PlantaFuncional() {
                         style={{ height: "2.5rem", backgroundColor: "white" }}
                       >
                         {categoriasOptions.map((option) => (
-                          <MenuItem key={option.idCategoria} value={option.idCategoria}>
+                          <MenuItem key={option.idTipoCategoria} value={option.idTipoCategoria}>
                             {option.descripcion}
                           </MenuItem>
                         ))}

@@ -23,5 +23,6 @@ namespace API.DataSchema
         public virtual MEC_TiposFunciones? TipoFuncion { get; set; }
 
         public virtual ICollection<MEC_POF_Antiguedades>? POFAntiguedad { get; set; }
+        public virtual ICollection<MEC_Mecanizadas>? Mecanizada { get; set; }
     }
 }

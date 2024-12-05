@@ -25,5 +25,6 @@ namespace API.DataSchema
         public virtual MEC_TiposLiquidaciones? TipoLiquidacion { get; set; }
         public virtual MEC_Usuarios? Usuarios { get; set; }
         public virtual ICollection<MEC_InasistenciasCabecera>? Cabeceras { get; set; } = new List<MEC_InasistenciasCabecera>();
+        public virtual ICollection<MEC_Mecanizadas>? Mecanizadas { get; set; } = new List<MEC_Mecanizadas>();
     }
 }

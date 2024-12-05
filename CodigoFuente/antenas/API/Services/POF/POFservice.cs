@@ -105,5 +105,10 @@ namespace API.Services
             // Si no existe, aquí podrías crear una nueva entrada para la suplencia si así lo deseas
             return "Puede proceder a registrar la suplencia.";
         }
+
+        public async Task AddOrUpdateAsync(MEC_POF_Antiguedades antiguedades)
+        {
+
+        }
     }
 }

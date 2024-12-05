@@ -19,6 +19,7 @@ namespace API.Services
         Task Delete(int id);
 
         Task<T> Update(T genericClass);
+        //Task<bool> Update(T entityToUpdate);
         Task<IEnumerable<T>> GetByParam(Expression<Func<T, bool>> where);
         Task<IEnumerable<T>> GetByActivo(bool? boolValue);
         Task<IEnumerable<T>> GetAllActivos();
