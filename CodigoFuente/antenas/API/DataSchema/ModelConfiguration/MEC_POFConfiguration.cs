@@ -66,7 +66,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true); 
 
             builder.Property(e => e.Barra)
-                .HasColumnType("char(2)")
+                .HasColumnType("char(3)")
                 .IsFixedLength(true)
                 .IsRequired(false); 
 
