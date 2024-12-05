@@ -15,6 +15,7 @@ import TipoCategorias from "layouts/pages/Pruebas/TipoCategorias";
 import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
 import RevertirImportacion from "layouts/pages/Pruebas/RevertirImportacion/index";
 import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
+import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImportado";
 
 const routes = [
   {
@@ -40,6 +41,12 @@ const routes = [
         key: "RevertirImportacion",
         route: "/RevertirImportacionFE",
         component: <RevertirImportacion />,
+      },
+      {
+        name: "Procesar Archivo Importado",
+        key: "ProcesarArchivoImportado",
+        route: "/ProcesarArchivoImportadoFE",
+        component: <ProcesarArchivoImportado />,
       },
       {
         name: "Consolidar Mec Pof",

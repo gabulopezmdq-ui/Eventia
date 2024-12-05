@@ -45,6 +45,7 @@ import Inicio from "layouts/pages/Pruebas/Inicio/Index";
 import AltaPlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional/AltaPlantaFuncional";
 import RevertirImportacion from "layouts/pages/Pruebas/RevertirImportacion/index";
 import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
+import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImportado";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -174,6 +175,10 @@ export default function App() {
     {
       path: "/RevertirImportacionFE",
       component: RevertirImportacion,
+    },
+    {
+      path: "/ProcesarArchivoImportadoFE",
+      component: ProcesarArchivoImportado,
     },
     {
       path: "/ConsolidarMecPofFE",
