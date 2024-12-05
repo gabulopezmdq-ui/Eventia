@@ -15,6 +15,7 @@ namespace API.Controllers
     [Authorize(Roles = "SuperAdmin, Admin")]
     //  [AllowAnonymous]
     [Route("[controller]")]
+
     public class ImportarMecanizadasController : ControllerBase
     {
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
