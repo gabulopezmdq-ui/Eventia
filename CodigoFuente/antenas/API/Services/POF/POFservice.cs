@@ -7,31 +7,31 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using API.Migrations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Services
 {
     public class POFService : IPOFService
     {
         private readonly DataContext _context;
-
-        public POFService(DataContext context)
+        private readonly ICRUDService<MEC_Personas> _serviceGenerico;
+        public POFService(DataContext context, ICRUDService<MEC_Personas> serviceGenerico)
         {
             _context = context;
+            _serviceGenerico = serviceGenerico;
         }
         
         public async Task<int> AddPersona(MEC_Personas persona)
         {
-            _context.MEC_Personas.Add(persona);
-            await _context.SaveChangesAsync();
+            await _serviceGenerico.Add(persona);
 
             return persona.IdPersona;
         }
 
-
         //probar otro tipo de codigo
 
         // Método para verificar la existencia de la persona en MEC_POF con un DNI, Legajo y Establecimiento específicos.
-      
+
         public async Task<string> CompletarRegistroPersonaAsync(string dni, string legajo, string apellido, string nombre)
         {
             // Validar campos obligatorios
@@ -49,7 +49,21 @@ namespace API.Services
                 Nombre = nombre
             };
 
-            await AddPersona(nuevaPersona); // Usar el método existente para agregar la persona
+            //await AddPersona(nuevaPersona); // Usar el método existente para agregar la persona
+            try
+            {
+                // Intentar agregar la persona usando el servicio genérico
+                await _serviceGenerico.Add(nuevaPersona); // Usar el método `Add` del servicio genérico
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Capturar la excepción de duplicado
+                if (ex.Message == "El registro ya existe.")
+                {
+                    return "La persona ya está registrada.";
+                }
+                throw; // Si es otra excepción, volver a lanzarla
+            }
 
             return "Persona registrada correctamente.";
         }
@@ -90,6 +104,11 @@ namespace API.Services
 
             // Si no existe, aquí podrías crear una nueva entrada para la suplencia si así lo deseas
             return "Puede proceder a registrar la suplencia.";
+        }
+
+        public async Task AddOrUpdateAsync(MEC_POF_Antiguedades antiguedades)
+        {
+
         }
     }
 }

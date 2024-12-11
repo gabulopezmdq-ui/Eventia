@@ -16,6 +16,7 @@ import PlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional";
 import RevertirImportacion from "layouts/pages/Pruebas/RevertirImportacion/index";
 import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
 import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImportado";
+import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
 
 const routes = [
   {
@@ -105,6 +106,12 @@ const routes = [
     name: "Parámetricas",
     key: "parametricas",
     collapse: [
+      {
+        name: "Usuarios por Establecimientos",
+        key: "UsuariosEstablecimientos",
+        route: "/UsuariosEstablecimientosFE",
+        component: <UsuariosEstablecimientos />,
+      },
       {
         name: "Conceptos",
         key: "ListadoConceptos",

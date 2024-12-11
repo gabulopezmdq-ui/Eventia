@@ -19,7 +19,7 @@ namespace API.Services
         Task Delete(int id);
 
         Task<T> Update(T genericClass);
-
+        //Task<bool> Update(T entityToUpdate);
         Task<IEnumerable<T>> GetByParam(Expression<Func<T, bool>> where);
         Task<IEnumerable<T>> GetByActivo(bool? boolValue);
         Task<IEnumerable<T>> GetAllActivos();
@@ -28,6 +28,8 @@ namespace API.Services
         Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null);
         Task DeleteUsuario(int Id);
         Task<bool> HasRelatedEntities(int id);
+
+        Task<T> UpdatePOF(T genericClass);
 
     }
 }

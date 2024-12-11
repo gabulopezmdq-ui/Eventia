@@ -36,6 +36,11 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder.Property(e => e.LeyendaTipoLiqReporte)
+                .HasColumnType("char(100)")
+                .IsFixedLength(true)
+                .IsRequired(true);
+
             builder.Property(e => e.MesLiquidacion)
                 .HasColumnType("char(2)")
                 .IsFixedLength(true)
@@ -67,7 +72,21 @@ namespace API.DataSchema.ModelConfiguration
                 .IsFixedLength(true)
                 .IsRequired(true);
 
-          
+            builder.Property(e => e.CalculaInasistencias)
+                  .HasColumnType("char(1)")
+                  .IsFixedLength(true)
+                  .IsRequired(false );
+
+            builder.Property(e => e.CalculaBajas)
+                .HasColumnType("char(1)")
+                .IsFixedLength(true)
+                .IsRequired(false);
+
+            builder.Property(e => e.CantDocentes)
+                .IsRequired(false);
+
+            builder.Property(e => e.RetenDeno7)
+                .IsRequired(false);
 
             builder.Property(e => e.Vigente)
                 .HasColumnType("char(1)")

@@ -36,6 +36,8 @@ function PlantaFuncional() {
   const [alertPOF, setAlertPOF] = useState(false);
   const [alertPersona, setAlertPersona] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("Todos");
+  const [alertaDNI, setAlertaDNI] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [carRevistaOptions, setCarRevistaOptions] = useState([]);
   const [categoriasOptions, setCategoriasOptions] = useState([]);
@@ -86,7 +88,7 @@ function PlantaFuncional() {
       (establecimiento) => establecimiento.idEstablecimiento === selectedId
     );
     setSelectedEstablecimiento(selectedId);
-    setEstablecimientoNombre(selectedEstablecimiento?.nroEstablecimiento || "");
+    setEstablecimientoNombre(selectedEstablecimiento?.nombrePcia || "");
     setPersonas([]);
     setDni("");
     setIsDataLoaded(false);
@@ -121,6 +123,7 @@ function PlantaFuncional() {
         secuencia: item.secuencia,
         tipoCargo: item.tipoCargo,
         idPof: item.idPOF,
+        vigente: item.vigente,
       }));
       setPersonas(personasData);
     } catch (error) {
@@ -132,6 +135,17 @@ function PlantaFuncional() {
   };
 
   const handleAgregar = async () => {
+    if (!/^\d{8}$/.test(dni)) {
+      setAlertMessage("El DNI debe tener exactamente 8 caracteres numéricos.");
+      setAlertType("error");
+      setAlertaDNI(true);
+      setTimeout(() => {
+        setAlertaDNI(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 3000);
+      return;
+    }
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}POF/VerificarPOF`,
@@ -223,8 +237,14 @@ function PlantaFuncional() {
       setIdPersona(response.data.idPersona);
       setPofVisible(true);
     } catch (error) {
-      console.error("Error al crear la persona:", error);
-      alert("Hubo un error al enviar los datos.");
+      setAlertType("error");
+      setAlertMessage(error.response.data.error);
+      setAlertPersona(true);
+      setTimeout(() => {
+        setAlertPersona(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
     }
   };
   const handlePofChange = (e) => {
@@ -319,7 +339,7 @@ function PlantaFuncional() {
         handleCargar();
       }, 3000);
     } catch (error) {
-      setAlertMessage("Error al enviar el formulario POF.");
+      setAlertMessage("Ya existe el cargo en la POF.");
       setAlertType("error");
       setAlertPOF(true);
       setTimeout(() => {
@@ -337,7 +357,8 @@ function PlantaFuncional() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setCarRevistaOptions(response.data);
+        const carRevistaVigentes = response.data.filter((carRevista) => carRevista.vigente === "S");
+        setCarRevistaOptions(carRevistaVigentes);
       } catch (error) {
         console.error("Error al cargar CarRevistas:", error);
       }
@@ -350,7 +371,8 @@ function PlantaFuncional() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setFunciones(response.data);
+        const funcionesVigentes = response.data.filter((funcion) => funcion.vigente === "S");
+        setFunciones(funcionesVigentes);
       } catch (error) {
         console.error("Error al cargar Funciones:", error);
       }
@@ -362,7 +384,8 @@ function PlantaFuncional() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setCategoriasOptions(response.data);
+        const categoriasVigentes = response.data.filter((categoria) => categoria.vigente === "S");
+        setCategoriasOptions(categoriasVigentes);
       } catch (error) {
         console.error("Error al cargar CarRevistas:", error);
       }
@@ -391,6 +414,35 @@ function PlantaFuncional() {
     setSelectedIdPof(idPof);
     setIsModalOpen(true);
   };
+  const handleCancel = () => {
+    setAlertPOF(false);
+    setAlertMessage("");
+    setPofFormData({
+      secuencia: "",
+      idCarRevista: "",
+      idFuncion: "",
+      tipoCargo: "",
+      barra: "",
+      idCategoria: "",
+      vigente: "S",
+    });
+    setDni("");
+    setFormData({
+      apellido: "",
+      nombre: "",
+      legajo: "",
+      dni: "",
+    });
+    setVerificarRespuesta(null);
+    setPofVisible(false);
+    handleCargar();
+  };
+
+  const filteredData = personas.filter((persona) => {
+    if (selectedFilter === "Todos") return true;
+    return persona.vigente === selectedFilter;
+  });
+
   return (
     <>
       <DashboardLayout>
@@ -412,7 +464,7 @@ function PlantaFuncional() {
                       key={establecimiento.idEstablecimiento}
                       value={establecimiento.idEstablecimiento}
                     >
-                      {establecimiento.nroEstablecimiento}
+                      {establecimiento.nombrePcia}
                     </MenuItem>
                   ))}
                 </Select>
@@ -443,6 +495,15 @@ function PlantaFuncional() {
                   No hay personas registradas en este establecimiento.
                 </MDTypography>
               </MDBox>
+              {alertaDNI && (
+                <MDBox mt={3}>
+                  <MDAlert color={alertType} dismissible onClose={() => setAlertaDNI(false)}>
+                    <MDTypography variant="body2" color="white">
+                      {alertMessage}
+                    </MDTypography>
+                  </MDAlert>
+                </MDBox>
+              )}
               <MDBox mt={2}>
                 <Card>
                   <MDBox component="form" m={2}>
@@ -472,16 +533,37 @@ function PlantaFuncional() {
             </MDBox>
           ) : (
             <>
+              <Grid sx={{ display: "flex", justifyContent: "flex-end" }}>
+                <FormControl style={{ width: "10rem" }} margin="normal">
+                  <Select
+                    labelId="vigente-filter-label"
+                    value={selectedFilter}
+                    onChange={(e) => setSelectedFilter(e.target.value)}
+                    name="Vigente"
+                    style={{ height: "2.5rem", backgroundColor: "white" }}
+                  >
+                    <MenuItem value="Todos">Todos</MenuItem>
+                    <MenuItem value="S">Vigente</MenuItem>
+                    <MenuItem value="N">No Vigente</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
               <Card>
                 <DataTable
                   table={{
                     columns: [
-                      { Header: "Nombre", accessor: "nombre" },
                       { Header: "Apellido", accessor: "apellido" },
+                      { Header: "Nombre", accessor: "nombre" },
                       { Header: "DNI", accessor: "dni" },
                       { Header: "Legajo", accessor: "legajo" },
                       { Header: "Secuencia", accessor: "secuencia" },
                       { Header: "Tipo Cargo", accessor: "tipoCargo" },
+                      {
+                        Header: "Vigente",
+                        accessor: (row) => (
+                          <p>{row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A"}</p>
+                        ),
+                      },
                       {
                         Header: "Mas Info",
                         accessor: "edit",
@@ -497,7 +579,7 @@ function PlantaFuncional() {
                         ),
                       },
                     ],
-                    rows: personas,
+                    rows: filteredData,
                   }}
                   entriesPerPage={false}
                   canSearch
@@ -510,6 +592,15 @@ function PlantaFuncional() {
                   onEditSuccess={handleEditSuccess}
                 />
               </Card>
+              {alertaDNI && (
+                <MDBox mt={3}>
+                  <MDAlert color={alertType} dismissible onClose={() => setAlertaDNI(false)}>
+                    <MDTypography variant="body2" color="white">
+                      {alertMessage}
+                    </MDTypography>
+                  </MDAlert>
+                </MDBox>
+              )}
               <MDBox mt={2}>
                 <Card>
                   <MDBox component="form" m={2}>
@@ -518,6 +609,7 @@ function PlantaFuncional() {
                         <FormField
                           label="DNI"
                           name="Dni"
+                          type="number"
                           value={dni}
                           onChange={(e) => setDni(e.target.value)}
                         />
@@ -591,7 +683,7 @@ function PlantaFuncional() {
                     />
                   </Grid>
                   <Grid item xs={6}>
-                    <FormField label="DNI" name="dni" value={formData.dni} disabled />
+                    <FormField label="DNI" name="dni" type="number" value={formData.dni} disabled />
                   </Grid>
                 </Grid>
                 {!verificarRespuesta && (
@@ -643,6 +735,7 @@ function PlantaFuncional() {
                       label="Secuencia"
                       name="secuencia"
                       value={pofFormData.secuencia}
+                      type="number"
                       onChange={handlePofChange}
                     />
                   </Grid>
@@ -700,6 +793,7 @@ function PlantaFuncional() {
                         value={pofFormData.funcion}
                         onChange={handlePofChange}
                         name="idFuncion"
+                        label="funcion"
                         style={{ height: "2.5rem", backgroundColor: "white" }}
                       >
                         {funciones.map((funcion) => (
@@ -718,6 +812,7 @@ function PlantaFuncional() {
                         value={pofFormData.tipoCargo}
                         onChange={handlePofChange}
                         name="tipoCargo"
+                        label="tipoCargo"
                         style={{ height: "2.5rem", backgroundColor: "white" }}
                       >
                         {tipoCargoOptions.map((option) => (
@@ -729,15 +824,22 @@ function PlantaFuncional() {
                     </FormControl>
                   </Grid>
                 </Grid>
-                <MDBox mt={3}>
-                  <MDButton
-                    variant="gradient"
-                    color="success"
-                    size="small"
-                    onClick={handlePofSubmit}
-                  >
-                    Enviar POF
-                  </MDButton>
+                <MDBox mt={2} sx={{ display: "flex" }}>
+                  <MDBox mr={2}>
+                    <MDButton
+                      variant="gradient"
+                      color="success"
+                      size="small"
+                      onClick={handlePofSubmit}
+                    >
+                      Enviar POF
+                    </MDButton>
+                  </MDBox>
+                  <MDBox>
+                    <MDButton variant="gradient" color="light" size="small" onClick={handleCancel}>
+                      Cancelar
+                    </MDButton>
+                  </MDBox>
                 </MDBox>
               </MDBox>
             </Card>

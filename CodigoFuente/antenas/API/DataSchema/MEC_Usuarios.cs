@@ -14,6 +14,9 @@ namespace API.DataSchema
         public bool? Activo { get; set; }
         public virtual ICollection<MEC_RolesXUsuarios> UsuariosXRoles { get; set; } = new List<MEC_RolesXUsuarios>();
         public virtual ICollection<MEC_CabeceraLiquidacion> CabeceraLiquidacion { get; set; } = new List<MEC_CabeceraLiquidacion>();
+        public virtual ICollection<MEC_UsuariosEstablecimientos> UsXEstablecimiento { get; set; } = new List<MEC_UsuariosEstablecimientos>();
+        public virtual ICollection<MEC_InasistenciasCabecera> Inasistencias { get; set; } = new List<MEC_InasistenciasCabecera>();
+        public virtual ICollection<MEC_Mecanizadas> Mecanizadas { get; set; } = new List<MEC_Mecanizadas>();
         public string[] UniqueProperties => new[] {"Nombre"};
     }
 }

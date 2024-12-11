@@ -50,45 +50,33 @@ function ProcesarArchivoImportado() {
     try {
       console.log("Enviando ID para procesamiento:", selectedIdCabecera);
 
-      // Configuración del cuerpo y los encabezados
-      const payload = JSON.stringify({ idCabecera: Number(selectedIdCabecera) });
-      console.log("Payload enviado:", payload);
+      // Construir la URL con el parámetro idCabecera
+      const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
 
       const response = await axios.post(
-        "https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo",
-        payload, // Enviamos el JSON serializado
+        url, // La URL incluye el parámetro
+        null, // No se envía cuerpo en la solicitud
         {
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // Token en los encabezados
           },
         }
       );
 
       console.log("Respuesta del servidor:", response.data);
 
-      const resultado = response.data;
-
-      // Manejar el resultado de las validaciones
-      if (resultado.tieneErrores) {
-        setErrorAlert({
-          show: true,
-          message: "El archivo contiene errores. Revisa las tablas de errores para más detalles.",
-          type: "error",
-        });
-      } else {
-        setErrorAlert({
-          show: true,
-          message: "El archivo se procesó correctamente.",
-          type: "success",
-        });
-      }
+      // Manejar la respuesta
+      setErrorAlert({
+        show: true,
+        message: response.data,
+        type: "success",
+      });
     } catch (error) {
       console.error("Error en la solicitud:", error.response?.data || error.message);
 
       const errorMessage =
-        error.response?.data?.errors?.[""]?.[0] ||
-        error.response?.data?.title ||
+        error.response?.data?.mensaje || // Mensaje del backend
+        error.response?.data?.title || // Si hay un título en la respuesta
         "Error al procesar el archivo.";
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
     }

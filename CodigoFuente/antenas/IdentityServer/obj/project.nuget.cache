@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "+/2BQ4S3N7xpi+SHXhFyI7Aks75IoD8BZiws+tsHnG0I4QlMcEbNhw8YQyYGZT4WdTbgEx0L4BjQdmy3Q1MqqQ==",
+  "dgSpecHash": "EGUri68otQZuEsaiFSm7jP7XmQxRIZHxOOO4fJlcAVKFdLBMXAuyzoA+8nuRKQY6AJ/JTBcJHmDWMzplWZq4mw==",
   "success": true,
   "projectFilePath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
   "expectedPackageFiles": [
@@ -156,6 +156,7 @@
     "C:\\Users\\efrontera\\.nuget\\packages\\system.io.filesystem.primitives\\4.3.0\\system.io.filesystem.primitives.4.3.0.nupkg.sha512",
     "C:\\Users\\efrontera\\.nuget\\packages\\system.io.packaging\\8.0.0\\system.io.packaging.8.0.0.nupkg.sha512",
     "C:\\Users\\efrontera\\.nuget\\packages\\system.linq\\4.3.0\\system.linq.4.3.0.nupkg.sha512",
+    "C:\\Users\\efrontera\\.nuget\\packages\\system.linq.dynamic.core\\1.4.9\\system.linq.dynamic.core.1.4.9.nupkg.sha512",
     "C:\\Users\\efrontera\\.nuget\\packages\\system.linq.expressions\\4.3.0\\system.linq.expressions.4.3.0.nupkg.sha512",
     "C:\\Users\\efrontera\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
     "C:\\Users\\efrontera\\.nuget\\packages\\system.net.http\\4.3.0\\system.net.http.4.3.0.nupkg.sha512",
@@ -206,5 +207,12 @@
     "C:\\Users\\efrontera\\.nuget\\packages\\xunit.extensibility.core\\2.4.2\\xunit.extensibility.core.2.4.2.nupkg.sha512",
     "C:\\Users\\efrontera\\.nuget\\packages\\xunit.extensibility.execution\\2.4.2\\xunit.extensibility.execution.2.4.2.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Problema al leer el archivo de caché C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+    }
+  ]
 }

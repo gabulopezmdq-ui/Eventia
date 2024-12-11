@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace API.Services
 {
-    public interface IProcesarMecanizadaService
+    public interface IProcesarMecanizadaService<T> where T : class
     {
+        Task<string> HandlePreprocesarArchivoAsync(int idCabecera);
         Task PreprocesarAsync(int idCabecera);
     }
+
 }
