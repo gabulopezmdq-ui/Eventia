@@ -12,6 +12,7 @@ namespace API.DataSchema
         public int? AnioAntiguedad { get; set; }
 
         // Propiedades de navegación
+        public string[] UniqueProperties => new[] { "IdPof" };
         public virtual MEC_POF? POF { get; set; }
     }
 }
