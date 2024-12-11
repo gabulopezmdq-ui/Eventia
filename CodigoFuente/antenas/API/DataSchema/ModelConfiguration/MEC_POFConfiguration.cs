@@ -91,6 +91,10 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder.HasMany(e => e.POFAntiguedad)
+                .WithOne(e => e.POF)
+                .HasForeignKey(e => e.IdPOF);
+
         }
     }
 }

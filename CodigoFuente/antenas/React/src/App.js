@@ -46,6 +46,8 @@ import AltaPlantaFuncional from "layouts/pages/Pruebas/PlantaFuncional/AltaPlant
 import RevertirImportacion from "layouts/pages/Pruebas/RevertirImportacion/index";
 import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
 import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImportado";
+import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
+import AltaUsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/AltaUsuariosEstablecimientos";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -197,6 +199,10 @@ export default function App() {
       component: PlantaFuncional,
     },
     {
+      path: "/UsuariosEstablecimientosFE",
+      component: UsuariosEstablecimientos,
+    },
+    {
       path: "/CarRevistaFE",
       component: ListadoCarRevista,
     },
@@ -338,6 +344,10 @@ export default function App() {
     {
       path: "/UsuarioPorRolFE/Nuevo",
       component: AltaUsuariosPorRol,
+    },
+    {
+      path: "/UsuariosEstablecimientosFE/Nuevo",
+      component: AltaUsuariosEstablecimientos,
     },
     {
       path: "/ConceptosFE/Nuevo",

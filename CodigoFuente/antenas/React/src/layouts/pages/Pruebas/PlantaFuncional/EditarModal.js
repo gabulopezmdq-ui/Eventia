@@ -67,7 +67,8 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          setCategorias(data);
+          const categoriasVigentes = data.filter((categoria) => categoria.vigente === "S");
+          setCategorias(categoriasVigentes);
         } catch (error) {
           console.error("Error al cargar categorías:", error);
         }
@@ -78,7 +79,8 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          setCarRevista(data);
+          const carRevistaVigentes = data.filter((carRevista) => carRevista.vigente === "S");
+          setCarRevista(carRevistaVigentes);
         } catch (error) {
           console.error("Error al cargar categorías:", error);
         }
@@ -89,7 +91,8 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          setFuncion(data);
+          const funcionesVigentes = data.filter((funcion) => funcion.vigente === "S");
+          setFuncion(funcionesVigentes);
         } catch (error) {
           console.error("Error al cargar categorías:", error);
         }
@@ -159,6 +162,10 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
     { value: "C", label: "CARGO" },
     { value: "H", label: "HORAS" },
     { value: "M", label: "MODULOS" },
+  ];
+  const tipoVigenteOptions = [
+    { value: "S", label: "Si" },
+    { value: "N", label: "No" },
   ];
 
   return (
@@ -270,6 +277,24 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                     {categorias.map((categoria) => (
                       <MenuItem key={categoria.idTipoCategoria} value={categoria.idTipoCategoria}>
                         {categoria.descripcion}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl fullWidth>
+                  <InputLabel id="tipoVigente-select-label"> Vigente </InputLabel>
+                  <Select
+                    labelId="tipoVigente-select-label"
+                    value={formData.vigente}
+                    onChange={handleInputChange}
+                    name="vigente"
+                    style={{ height: "2.5rem", backgroundColor: "white" }}
+                  >
+                    {tipoVigenteOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
                       </MenuItem>
                     ))}
                   </Select>

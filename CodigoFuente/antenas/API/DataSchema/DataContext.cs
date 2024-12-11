@@ -31,9 +31,14 @@ namespace API.DataSchema
         public DbSet<MEC_TMPErroresCarRevista> MEC_TMPErroresCarRevista { get; set; }
         public DbSet<MEC_TMPErroresTiposEstablecimientos> MEC_TMPErroresTiposEstablecimientos { get; set; }
         public DbSet<MEC_TMPErroresMecanizadas> MEC_TMPErroresMecanizadas { get; set; }
+        public DbSet<MEC_POF_Antiguedades> MEC_POF_Antiguedades { get; set; }
+        public DbSet<MEC_InasistenciasCabecera> MEC_InasistenciasCabecera{ get; set; }
+        public DbSet<MEC_InasistenciasDetalle> MEC_InasistenciasDetalle { get; set; }
+        public DbSet<MEC_Mecanizadas> MEC_Mecanizadas { get; set; }
         public DbSet<MEC_Usuarios> MEC_Usuarios { get; set; }
         public DbSet<MEC_Roles> MEC_Roles { get; set; }
         public DbSet<MEC_RolesXUsuarios> MEC_RolesXUsuarios { get; set; }
+        public DbSet<MEC_UsuariosEstablecimientos> MEC_UsuariosEstablecimientos { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
@@ -53,9 +58,14 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_TMPErroresCarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TMPErroresTipoEstablecimientoConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TMPErroresMecanizadasConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_POF_AntiguedadesConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_InasistenciasCabeceraConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_InasistenciasDetalleConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_MecanizadasConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_UsuariosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_RolesConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_RolesXUsuariosConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_UsuariosEstablecimientosConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }

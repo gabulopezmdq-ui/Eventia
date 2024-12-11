@@ -12,20 +12,21 @@ using System.Collections.Generic;
 namespace API.Controllers
 {
     [ApiController]  
-    [Authorize(Roles = "SuperAdmin, Admin")]
-    //  [AllowAnonymous]
+    //[Authorize(Roles = "SuperAdmin, Admin")]
+    [AllowAnonymous]
     [Route("[controller]")]
 
     public class ImportarMecanizadasController : ControllerBase
     {
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
-        private readonly IProcesarMecanizadaService _procesarMecanizadaService;
+        private readonly IProcesarMecanizadaService<MEC_TMPMecanizadas> _procesarMecanizadaService;
         private readonly ICRUDService<MEC_TMPMecanizadas> _serviceGenerico;
 
-        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico)
+        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico, IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService)
         {
             _importacionMecanizadaService = importacionService;
             _serviceGenerico = serviceGenerico;
+            _procesarMecanizadaService = procesarMecanizadaService;
         }
 
         [HttpPost("ImportarExcel")]
@@ -63,7 +64,7 @@ namespace API.Controllers
         }
 
         [HttpPost("PreprocesarArchivo")]
-        public async Task<IActionResult> PreprocesarArchivo([FromBody] int idCabecera)
+        public async Task<IActionResult> PreprocesarArchivo(int idCabecera)
         {
             try
             {

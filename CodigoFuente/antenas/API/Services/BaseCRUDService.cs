@@ -1,9 +1,10 @@
-﻿using  API.DataSchema;
-using  API.Repositories;
+﻿using API.DataSchema;
+using API.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using API.DataSchema.Interfaz;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using System.Reflection;
 using System.ComponentModel.DataAnnotations;
+using IdentityModel;
 
 
 namespace API.Services
@@ -19,10 +21,13 @@ namespace API.Services
         where T : class
     {
         internal readonly IRepository<T> _genericRepo;
+        protected readonly DataContext _context;
 
-        public BaseCRUDService(IRepository<T> genericRepo)
+
+        public BaseCRUDService(IRepository<T> genericRepo, DataContext context)
         {
             _genericRepo = genericRepo;
+            _context = context;
         }
 
         public IEnumerable<T> GetAll()
@@ -133,9 +138,8 @@ namespace API.Services
         {
             try
             {
-                // Usamos la nueva lógica para obtener la propiedad de la clave primaria desde el repositorio
+                // Obtener la clave primaria de la entidad
                 var primaryKeyProperty = _genericRepo.GetPrimaryKeyProperty(genericClass);
-
                 if (primaryKeyProperty == null)
                 {
                     throw new InvalidOperationException("No se encontró una clave primaria en la entidad.");
@@ -143,67 +147,220 @@ namespace API.Services
 
                 // Obtener el valor de la clave primaria
                 var id = primaryKeyProperty.GetValue(genericClass);
-
                 if (id == null)
                 {
                     throw new ArgumentNullException("La clave primaria no puede ser nula.");
                 }
 
-                // Verificar si existen entidades relacionadas antes de actualizar
-                bool tieneEntidadAsociada = await _genericRepo.HasRelatedEntities((int)id);
-
-                if (tieneEntidadAsociada)
+                // Obtener la entidad original desde la base de datos
+                T originalEntity = id switch
                 {
-                    throw new InvalidOperationException("No se puede cambiar a Vigente NO porque este parámetro esta siento utilizado.");
-                }
-
-                // Obtener la entidad desde la base de datos antes de hacer el update
-                T originalEntity;
-                if (id is int intId)
-                {
-                    originalEntity = await _genericRepo.Find(intId);  // Usar el método Find(int id) del repositorio
-                }
-                else if (id is Guid guidId)
-                {
-                    originalEntity = await _genericRepo.Find(guidId);  // Usar el método Find(Guid id) del repositorio
-                }
-                else
-                {
-                    throw new InvalidOperationException("Tipo de clave primaria no soportado.");
-                }
+                    int intId => await _genericRepo.Find(intId),
+                    Guid guidId => await _genericRepo.Find(guidId),
+                    _ => throw new InvalidOperationException("Tipo de clave primaria no soportado."),
+                };
 
                 if (originalEntity == null)
                 {
-                    throw new InvalidOperationException("Entidad no encontrada");
+                    throw new InvalidOperationException("Entidad no encontrada.");
                 }
 
-                // Obtener el valor de 'Vigente' antes de actualizar
-                var originalVigente = originalEntity.GetType().GetProperty("Vigente")?.GetValue(originalEntity, null);
-                var newVigente = genericClass.GetType().GetProperty("Vigente")?.GetValue(genericClass, null);
+                // Obtener los valores de 'Vigente'
+                var vigenteProperty = typeof(T).GetProperty("Vigente");
+                var originalVigente = vigenteProperty?.GetValue(originalEntity);
+                var newVigente = vigenteProperty?.GetValue(genericClass);
 
-                // Mostrar o procesar el valor original de 'Vigente' antes del update
-                Console.WriteLine($"Valor de 'Vigente' antes del update: {originalVigente}");
-
-                // Si el estado 'Vigente' no se está modificando, no es necesario actualizarlo
-                if (originalVigente != newVigente)
+                // Validar si el campo 'Vigente' ha cambiado
+                if (vigenteProperty != null && !Equals(originalVigente, newVigente))
                 {
-                    // Realizar el update utilizando el repositorio
-                    return await _genericRepo.Update(genericClass);  // Usar el método Update del repositorio
+                    // Verificar si hay entidades relacionadas
+                    bool tieneEntidadAsociada = await _genericRepo.HasRelatedEntities(Convert.ToInt32(id));
+
+                    // Si tiene relaciones asociadas, pero esas relaciones no tienen entidades, permitimos el cambio
+                    if (tieneEntidadAsociada)
+                    {
+                        bool tieneRelacionVacía = await TieneRelacionVacia(Convert.ToInt32(id));
+
+                        if (tieneRelacionVacía)
+                        {
+                            // Si la relación está vacía, permitimos cambiar el valor de 'Vigente'
+                            return await _genericRepo.Update(genericClass);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("No se puede cambiar el estado 'Vigente' porque la entidad relacionada tiene elementos asociados.");
+                        }
+                    }
+                    else
+                    {
+                        // Si no tiene ninguna relación asociada, permitimos el cambio de 'Vigente'
+                        return await _genericRepo.Update(genericClass);
+                    }
                 }
-                else
-                {
-                    // Si el estado 'Vigente' no ha cambiado, también proceder con la actualización
-                    return await _genericRepo.Update(genericClass);  // Usar el método Update del repositorio
-                }
+
+                // Si no se modificó 'Vigente', simplemente actualizamos la entidad
+                return await _genericRepo.Update(genericClass);
             }
             catch (Exception e)
             {
-                throw e;  // Puedes agregar más detalles de la excepción si lo necesitas
+                throw new Exception("Error al actualizar la entidad.", e); // Lanzar una excepción con más contexto
             }
+        }
+        // Método para verificar si la entidad relacionada tiene alguna relación "vacía" (sin elementos asociados)
+        public async Task<bool> TieneRelacionVacia(int id)
+        {
+            var entityType = typeof(T);
+            var navigationProperties = _context.Model.FindEntityType(entityType)?.GetNavigations();
+
+            if (navigationProperties == null)
+            {
+                return false; // No hay propiedades de navegación, por lo tanto, no hay entidades relacionadas.
+            }
+
+            foreach (var navigation in navigationProperties)
+            {
+                // Obtiene el tipo de la entidad relacionada.
+                var relatedEntityType = navigation.TargetEntityType.ClrType;
+
+                // Obtiene la propiedad de la clave foránea.
+                var foreignKeyProperty = navigation.ForeignKey.Properties.FirstOrDefault();
+                if (foreignKeyProperty == null)
+                {
+                    continue; // Si no hay clave foránea, saltamos esta relación.
+                }
+
+                // Usamos la versión genérica correcta de 'Set<T>()'
+                var relatedDbSetMethod = _context.GetType()
+                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                    .FirstOrDefault(m => m.Name == "Set" && m.IsGenericMethod && m.GetGenericArguments().Length == 1);
+
+                if (relatedDbSetMethod == null)
+                {
+                    continue; // Si no se puede encontrar el método 'Set', continuamos con la siguiente relación.
+                }
+
+                // Invoca el DbSet de la entidad relacionada.
+                var relatedDbSet = relatedDbSetMethod.MakeGenericMethod(relatedEntityType)
+                    .Invoke(_context, null) as IQueryable;
+                if (relatedDbSet == null)
+                {
+                    continue;
+                }
+
+                // Construye una expresión para la consulta.
+                var parameter = Expression.Parameter(relatedEntityType, "e");
+
+                // Acceso dinámico a la propiedad de clave foránea.
+                var propertyAccess = Expression.Call(
+                    typeof(EF),
+                    nameof(EF.Property),
+                    new[] { foreignKeyProperty.PropertyInfo.PropertyType },
+                    parameter,
+                    Expression.Constant(foreignKeyProperty.Name)
+                );
+
+                var condition = Expression.Equal(propertyAccess, Expression.Constant(id));
+                var lambda = Expression.Lambda(condition, parameter);
+
+                // Usamos el método `Any` para verificar si existe alguna entidad relacionada.
+                var method = typeof(Queryable).GetMethods()
+                    .First(m => m.Name == "Any" && m.GetParameters().Length == 2)
+                    .MakeGenericMethod(relatedEntityType);
+
+                var exists = (bool)method.Invoke(null, new object[] { relatedDbSet, lambda });
+
+                if (!exists)
+                {
+                    return true; // Si no se encuentran entidades relacionadas, devolvemos 'true' (relación vacía)
+                }
+            }
+
+            return false; // Si no se encontró ninguna relación vacía, devolvemos 'false'
         }
 
 
 
+        // Método auxiliar para obtener el ID de la entidad
+        private int GetId(T entity)
+        {
+            var keyName = _context.Model.FindEntityType(typeof(T))
+                             ?.FindPrimaryKey()
+                             ?.Properties
+                             ?.Select(p => p.Name)
+                             ?.FirstOrDefault();
+
+            if (keyName == null)
+            {
+                throw new InvalidOperationException($"La entidad '{typeof(T).Name}' no tiene una clave primaria definida.");
+            }
+
+            var propertyInfo = typeof(T).GetProperty(keyName);
+            if (propertyInfo == null)
+            {
+                throw new InvalidOperationException($"No se encontró la propiedad '{keyName}' en la entidad '{typeof(T).Name}'.");
+            }
+
+            return (int)propertyInfo.GetValue(entity);
+        }
+
+
+        // Método para verificar si la entidad relacionada tiene alguna relación "vacía" (sin elementos asociados)
+
+        private async Task<bool> TieneRelacionVacia(int id, string foreignKeyName)
+        {
+            // Obtener el tipo de la entidad
+            var entityType = typeof(T);
+
+            // Obtener el DbSet dinámicamente desde el contexto
+            var dbSetProperty = _context.GetType().GetProperties()
+                .FirstOrDefault(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>)
+                    && p.PropertyType.GetGenericArguments()[0] == entityType);
+
+            if (dbSetProperty == null)
+            {
+                throw new InvalidOperationException($"No se encontró un DbSet para el tipo '{entityType.Name}'.");
+            }
+
+            var dbSet = dbSetProperty.GetValue(_context);
+
+            // Crear una expresión dinámica para verificar las relaciones
+            var parameter = Expression.Parameter(entityType, "x");
+            var property = Expression.Property(parameter, foreignKeyName);
+            var constant = Expression.Constant(id);
+            var equals = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda(equals, parameter);
+
+            // Convertir el dbSet a IQueryable dinámico
+            var queryable = (IQueryable<object>)dbSet;
+
+            // Obtener el método Where correctamente
+            var whereMethod = typeof(Queryable)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(m => m.Name == "Where" && m.GetParameters().Length == 2)
+                .First()
+                .MakeGenericMethod(entityType);
+
+            // Aplicar el filtro dinámico
+            var filteredQuery = (IQueryable<object>)whereMethod.Invoke(null, new object[] { queryable, lambda });
+
+            // Ejecutar la consulta y verificar los resultados
+            var relatedEntities = await filteredQuery.ToListAsync();
+            return relatedEntities.Count == 0;
+        }
+
+
+
+        public virtual async Task<T> UpdatePOF(T genericClass)
+        {
+            try
+            {
+                return await _genericRepo.Update(genericClass);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
 
         // Método para verificar duplicados
         private async Task<bool> IsDuplicate(T entity)
@@ -263,5 +420,220 @@ namespace API.Services
             // Llamar al método HasRelatedEntities del repositorio y devolver su resultado
             return await _genericRepo.HasRelatedEntities(id);
         }
+
+        private string GetForeignKeyName(Type entityType)
+        {
+            // Obtener el modelo de EF Core para el tipo especificado
+            var entityTypeModel = _context.Model.FindEntityType(entityType);
+            if (entityTypeModel == null)
+            {
+                throw new InvalidOperationException($"El tipo '{entityType.Name}' no está definido en el modelo.");
+            }
+
+            // Buscar las propiedades de clave foránea
+            var foreignKey = entityTypeModel.GetForeignKeys()
+                .FirstOrDefault();
+
+            if (foreignKey == null)
+            {
+                throw new InvalidOperationException($"No se encontró una clave foránea en la entidad '{entityType.Name}'.");
+            }
+
+            // Devolver el nombre de la propiedad de clave foránea
+            return foreignKey.Properties.FirstOrDefault()?.Name
+                ?? throw new InvalidOperationException($"La clave foránea en '{entityType.Name}' no tiene una propiedad válida.");
+        }
+        //metodo NUEVO
+        public async Task<bool> UpdateVigenteAsync(int entityId, T entityToUpdate)
+        {
+            // 1. Buscar la entidad original en la base de datos
+            var entity = await _context.Set<T>().FindAsync(entityId);
+            if (entity == null)
+            {
+                throw new Exception("Entidad no encontrada.");  // Lanzamos un error si no se encuentra la entidad
+            }
+
+            // 2. Verificar si la entidad tiene la propiedad 'Vigente'
+            var vigenteProperty = entity.GetType().GetProperty("Vigente");
+            if (vigenteProperty == null)
+            {
+                throw new Exception("La propiedad 'Vigente' no existe en la entidad.");  // Lanzamos un error si no tiene la propiedad 'Vigente'
+            }
+
+            // 3. Recuperar el valor actual de 'Vigente' en la entidad original
+            var currentVigenteValue = vigenteProperty.GetValue(entity).ToString();
+            var newVigenteValue = vigenteProperty.GetValue(entityToUpdate).ToString();  // El valor de 'Vigente' en el objeto que se quiere actualizar
+
+            // 4. Verificar si se intenta cambiar de 'S' a 'N' en la propiedad 'Vigente'
+            if (currentVigenteValue == "S" && newVigenteValue == "N")
+            {
+                // 5. Verificar si la entidad tiene relaciones hacia adelante (relaciones dependientes)
+                var navigationProperties = _context.Model.FindEntityType(typeof(T)).GetNavigations();
+
+                foreach (var navigation in navigationProperties)
+                {
+                    // 6. Verificar si la relación es hacia adelante (la entidad actual es la principal en la relación)
+                    if (navigation.ForeignKey.PrincipalEntityType.IsAssignableFrom(navigation.TargetEntityType))
+                    {
+                        // 7. Comprobar si hay registros dependientes que están activos
+                        var dependentEntities = await _context.Set<T>()
+                            .Where(e => EF.Property<int>(e, navigation.ForeignKey.PrincipalKey.Properties.First().Name) == entityId)
+                            .ToListAsync();
+
+                        // 8. Si hay entidades dependientes con 'Vigente' = "S", lanzamos un error
+                        foreach (var dependentEntity in dependentEntities)
+                        {
+                            var dependentVigenteValue = EF.Property<string>(dependentEntity, "Vigente");
+                            if (dependentVigenteValue == "S")
+                            {
+                                // Lanzamos un error indicando que no se puede cambiar el valor de 'Vigente' porque hay dependencias activas
+                                throw new Exception($"No se puede actualizar 'Vigente' de 'S' a 'N' porque hay registros dependientes con 'Vigente' = 'S'. Relación: {navigation.Name}.");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 9. Si todo está bien, actualizamos la entidad con los nuevos valores
+            _context.Entry(entity).CurrentValues.SetValues(entityToUpdate);
+
+            // 10. Guardar los cambios en la base de datos
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+
+        ////Este es el método de actualización genérico que se usará sin cambios en el controlador
+        //public async Task<bool> Update(T entityToUpdate)
+        //{
+        //    try
+        //    {
+        //        // Obtén el tipo de la entidad
+        //        var entityType = _context.Model.FindEntityType(typeof(T));
+
+        //        // Obtén la propiedad que es la clave primaria
+        //        var primaryKey = entityType.FindPrimaryKey();
+        //        var keyProperty = primaryKey?.Properties.FirstOrDefault(); // La primera propiedad en la clave primaria
+
+        //        if (keyProperty == null)
+        //        {
+        //            return false; // Si no se encuentra la clave primaria, devolvemos false
+        //        }
+
+        //        // Obtén el valor de la clave primaria de la entidad
+        //        var entityKey = _context.Entry(entityToUpdate).Property(keyProperty.Name).CurrentValue;
+
+        //        // Buscar la entidad en la base de datos
+        //        var entity = await _context.Set<T>().FindAsync(entityKey);
+
+        //        if (entity == null)
+        //        {
+        //            return false; // Si la entidad no se encuentra, devolvemos false
+        //        }
+
+        //        // Verificar el valor actual de "Vigente"
+        //        var vigenteProperty = entity.GetType().GetProperty("Vigente");
+        //        if (vigenteProperty == null)
+        //        {
+        //            return false; // Si no se encuentra la propiedad 'Vigente', devolvemos false
+        //        }
+
+        //        var currentVigenteValue = vigenteProperty.GetValue(entity).ToString();
+        //        var newVigenteValue = vigenteProperty.GetValue(entityToUpdate).ToString();
+
+        //        // Si se intenta cambiar de 'S' a 'N', validar dependencias
+        //        if (currentVigenteValue == "S" && newVigenteValue == "N")
+        //        {
+        //            // Verificar si existen entidades dependientes
+        //            var hasDependencies = await HasDependentEntities(entityKey);
+
+        //            // Si hay dependencias, no se permite cambiar 'Vigente' y devolvemos un mensaje de advertencia o error
+        //            if (hasDependencies)
+        //            {
+        //                // Lanza un error o advertencia
+        //                throw new InvalidOperationException("No se puede cambiar el valor de 'Vigente' de 'S' a 'N' porque existen registros dependientes.");
+        //            }
+        //        }
+
+        //        // Si no hay dependencias y 'Vigente' no está siendo modificado de 'S' a 'N', actualizamos todos los valores
+        //        _context.Entry(entity).CurrentValues.SetValues(entityToUpdate);
+
+        //        // Asegurarnos de que no se modifique el campo 'Vigente' de 'S' a 'N' si hay dependencias
+        //        if (currentVigenteValue == "S" && newVigenteValue == "N")
+        //        {
+        //            _context.Entry(entity).Property("Vigente").IsModified = false; // No permitir modificación de 'Vigente'
+        //        }
+        //        else
+        //        {
+        //            // Permitir la modificación si no hay dependencias
+        //            _context.Entry(entity).Property("Vigente").IsModified = true;
+        //        }
+
+        //        // Guardar cambios en la base de datos
+        //        await _context.SaveChangesAsync();
+
+        //        return true; // La actualización fue exitosa
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Si ocurre una excepción, devolvemos false
+        //        return false; // O lanzar la excepción: throw;
+        //    }
+        //}
+
+        //private async Task<bool> HasDependentEntities(object entityKey)
+        //{
+        //    try
+        //    {
+        //        // Verificar si existen entidades que dependan de esta clave primaria
+        //        var navigationProperties = _context.Model.FindEntityType(typeof(T)).GetNavigations();
+
+        //        foreach (var navigation in navigationProperties)
+        //        {
+        //            // Si la relación tiene una clave foránea apuntando a la entidad
+        //            if (navigation.ForeignKey.PrincipalEntityType.IsAssignableFrom(navigation.TargetEntityType))
+        //            {
+        //                var relatedEntityType = navigation.TargetEntityType.ClrType;
+        //                var relatedEntityPrimaryKeyName = _context.Model.FindEntityType(relatedEntityType).FindPrimaryKey().Properties.First().Name;
+
+        //                // Verificar si existen entidades dependientes con la clave foránea
+        //                var dependentEntities = await _context.Set<T>()
+        //                    .Where(e => EF.Property<object>(e, navigation.ForeignKey.PrincipalKey.Properties.First().Name) == entityKey)
+        //                    .ToListAsync();
+
+        //                if (dependentEntities.Any())
+        //                {
+        //                    return true; // Hay dependencias, no se puede actualizar Vigente
+        //                }
+        //            }
+        //        }
+
+        //        return false; // No hay dependencias
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new InvalidOperationException($"Error al verificar las dependencias: {ex.Message}", ex);
+        //    }
+        //}
     }
-}
+
+        // Este método es para aplicar la lógica de actualización de 'Vigente' antes de la actualización genérica
+        //public async Task<bool> UpdateWithVigenteAsync(int entityId, string vigenteValue, T entidad)
+        //{
+        //    // Llamamos a la función que valida y actualiza 'Vigente'
+        //    var result = await UpdateVigenteAsync(entityId, vigenteValue);
+
+        //    if (result)
+        //    {
+        //        // Si 'Vigente' se actualizó correctamente, actualizamos la entidad
+        //        await Update(entidad);
+        //        return true;
+        //    }
+
+        //    // Si no se pudo actualizar 'Vigente' (por las relaciones), no actualizamos la entidad
+        //    return false;
+        //}
+    }
+
+
+

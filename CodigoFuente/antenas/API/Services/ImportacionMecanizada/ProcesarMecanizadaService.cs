@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using Microsoft.AspNetCore.Http;
 using System;
+using API.Services;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,19 +11,41 @@ using API.Migrations;
 
 namespace API.Services
 {
-    public class ProcesarMecanizadaService : IProcesarMecanizadaService
+    public class ProcesarMecanizadaService<T> : IProcesarMecanizadaService<T> where T : class
+
     {
         private readonly DataContext _context;
 
-        public ProcesarMecanizadaService(DataContext context) 
+        public ProcesarMecanizadaService(DataContext context)
         {
             _context = context;
+        }
+
+        // Método para manejar la lógica de PreprocesarArchivo
+        public async Task<string> HandlePreprocesarArchivoAsync(int idCabecera)
+        {
+            try
+            {
+                // Llama al método Preprocesar existente
+                await PreprocesarAsync(idCabecera);
+                return $"ID recibido: {idCabecera} y preprocesado exitosamente.";
+            }
+            catch (Exception ex)
+            {
+                // Captura excepciones y retorna un mensaje adecuado
+                return $"Error al procesar la cabecera con ID {idCabecera}: {ex.Message}";
+            }
         }
 
         public async Task PreprocesarAsync(int idCabecera)
         {
             var cabecera = await _context.MEC_CabeceraLiquidacion
-                                  .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+                                .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
+            if (cabecera == null)
+            {
+                throw new Exception("No se encontró la cabecera con el ID proporcionado.");
+            }
 
             if (cabecera == null || cabecera.Estado != "I")
             {

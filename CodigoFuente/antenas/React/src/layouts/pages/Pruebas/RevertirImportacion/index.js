@@ -13,7 +13,6 @@ function ImportarArchivo() {
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const token = sessionStorage.getItem("token");
-  const idCabecera = Number(selectedIdCabecera);
 
   // Obtener las cabeceras al cargar la página
   useEffect(() => {
@@ -22,10 +21,9 @@ function ImportarArchivo() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        // Mapea los datos para crear los valores concatenados
         const formattedCabeceras = response.data.map((item) => ({
-          id: item.idCabecera, // ID único
-          displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`, // Texto para mostrar
+          id: item.idCabecera,
+          displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
         }));
         setIdCabeceras(formattedCabeceras);
       })
@@ -46,18 +44,19 @@ function ImportarArchivo() {
     }
 
     try {
-      console.log("Enviando ID:", selectedIdCabecera);
+      const idCabecera = Number(selectedIdCabecera);
+      console.log("Enviando ID por URL:", idCabecera);
 
       const response = await axios.post(
-        "https://localhost:44382/ImportarMecanizadas/RevertirExcel",
-        selectedIdCabecera, // Envía directamente el número
+        `https://localhost:44382/ImportarMecanizadas/RevertirExcel?idCabecera=${idCabecera}`,
+        {}, // Cuerpo vacío
         {
           headers: {
-            "Content-Type": "application/json", // Especifica el tipo de contenido
             Authorization: `Bearer ${token}`,
           },
         }
       );
+
       setErrorAlert({ show: true, message: response.data, type: "success" });
     } catch (error) {
       console.error("Error en la solicitud:", error.response?.data || error.message);
@@ -69,6 +68,7 @@ function ImportarArchivo() {
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
     }
   };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -125,7 +125,7 @@ function ImportarArchivo() {
               variant="outlined"
               color="error"
               onClick={handleRevert}
-              endIcon={<DeleteOutlineIcon />} // Agrega el ícono aquí
+              endIcon={<DeleteOutlineIcon />}
             >
               Revertir
             </MDButton>
