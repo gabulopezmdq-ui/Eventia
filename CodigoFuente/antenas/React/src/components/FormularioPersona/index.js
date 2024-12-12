@@ -251,16 +251,24 @@ function Formulario({
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    // Limita el valor a un solo carácter si el campo es "codPcia" o "codFuncion"
-    if ((name === "codPcia" || name === "codFuncion") && value.length > 1) {
-      return; // Cancela el cambio si el usuario intenta ingresar más de un carácter
-    }
+    // Si el campo es "descripcion", no convertimos el valor a mayúsculas
+    if (name === "descripcion") {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: value, // Mantiene el valor tal como lo ingresa el usuario
+      }));
+    } else {
+      // Limita el valor a un solo carácter si el campo es "codPcia" o "codFuncion"
+      if ((name === "codPcia" || name === "codFuncion") && value.length > 1) {
+        return; // Cancela el cambio si el usuario intenta ingresar más de un carácter
+      }
 
-    // Actualiza el estado, convirtiendo el valor a mayúsculas si es una cadena
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: typeof value === "string" ? value.toUpperCase() : value,
-    }));
+      // Convierte el valor a mayúsculas para todos los demás campos
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: value, // Se guarda el valor tal cual lo escribe el usuario
+      }));
+    }
   };
   return (
     <MDBox mt={-9} mb={9}>
