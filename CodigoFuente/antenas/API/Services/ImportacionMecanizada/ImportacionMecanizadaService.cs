@@ -47,6 +47,9 @@ namespace API.Services
                         throw new ArgumentException("Formato incorrecto. El archivo debe tener exactamente 21 columnas.");
                     }
 
+                    // Eliminar registros relacionados con la cabecera
+                    await EliminarTMPErrores(idCabecera);
+
                     int totalRowsInExcel = worksheet.LastRowUsed().RowNumber(); // Número total de filas en el archivo
                     int totalRecordsSaved = 0;
 
@@ -179,7 +182,28 @@ namespace API.Services
 
             // Guardar los cambios
             await _context.SaveChangesAsync();
+
+            // Reiniciar los índices de la tabla MEC_TMPMecanizadas
+            await _context.Database.ExecuteSqlRawAsync("ALTER SEQUENCE MEC_TMPMecanizadas_id_seq RESTART WITH 1;");
         }
 
+        private async Task EliminarTMPErrores(int idCabecera)
+        {
+            await _context.Database.ExecuteSqlRawAsync(@"
+        DELETE FROM TMPErroresEstablecimientos WHERE idCabecera = {0};
+        DELETE FROM TMPErroresFuncion WHERE idCabecera = {0};
+        DELETE FROM TMPErroresConceptos WHERE idCabecera = {0};
+        DELETE FROM TMPErroresCarRevista WHERE idCabecera = {0};
+        DELETE FROM TMPErroresTiposEstablecimientos WHERE idCabecera = {0};
+        DELETE FROM TMPErroresMecanizada WHERE idCabecera = {0};
+
+        ALTER SEQUENCE TMPErroresEstablecimientos_id_seq RESTART WITH 1;
+        ALTER SEQUENCE TMPErroresFuncion_id_seq RESTART WITH 1;
+        ALTER SEQUENCE TMPErroresConceptos_id_seq RESTART WITH 1;
+        ALTER SEQUENCE TMPErroresCarRevista_id_seq RESTART WITH 1;
+        ALTER SEQUENCE TMPErroresTiposEstablecimientos_id_seq RESTART WITH 1;
+        ALTER SEQUENCE TMPErroresMecanizada_id_seq RESTART WITH 1;
+        ", idCabecera);
+        }
     }
 }

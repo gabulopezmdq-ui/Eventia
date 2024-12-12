@@ -8,32 +8,36 @@ import MDAlert from "components/MDAlert";
 import MDButton from "components/MDButton";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
-function ImportarArchivo() {
+function ProcesarArchivoImportado() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const token = sessionStorage.getItem("token");
 
-  // Obtener las cabeceras al cargar la página
+  // Obtener las cabeceras al cargar el componente
   useEffect(() => {
     axios
       .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        const formattedCabeceras = response.data.map((item) => ({
+        console.log("Respuesta del servidor:", response.data); // Verifica la respuesta
+        const filteredCabeceras = response.data.filter((item) => item.estado === "I");
+        console.log("Cabeceras filtradas:", filteredCabeceras); // Revisa los datos filtrados
+        const formattedCabeceras = filteredCabeceras.map((item) => ({
           id: item.idCabecera,
           displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
         }));
         setIdCabeceras(formattedCabeceras);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Error al cargar las cabeceras:", error);
         setErrorAlert({ show: true, message: "Error al cargar las cabeceras.", type: "error" });
       });
   }, [token]);
 
-  // Manejar acción del botón "Revertir"
-  const handleRevert = async () => {
+  // Procesar los archivos importados
+  const handleProcessFile = async () => {
     if (!selectedIdCabecera) {
       setErrorAlert({
         show: true,
@@ -44,27 +48,36 @@ function ImportarArchivo() {
     }
 
     try {
-      const idCabecera = Number(selectedIdCabecera);
-      console.log("Enviando ID por URL:", idCabecera);
+      console.log("Enviando ID para procesamiento:", selectedIdCabecera);
+
+      // Construir la URL con el parámetro idCabecera
+      const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
 
       const response = await axios.post(
-        `https://localhost:44382/ImportarMecanizadas/RevertirExcel?idCabecera=${idCabecera}`,
-        {}, // Cuerpo vacío
+        url, // La URL incluye el parámetro
+        null, // No se envía cuerpo en la solicitud
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // Token en los encabezados
           },
         }
       );
 
-      setErrorAlert({ show: true, message: response.data, type: "success" });
+      console.log("Respuesta del servidor:", response.data);
+
+      // Manejar la respuesta
+      setErrorAlert({
+        show: true,
+        message: response.data,
+        type: "success",
+      });
     } catch (error) {
       console.error("Error en la solicitud:", error.response?.data || error.message);
 
       const errorMessage =
-        error.response?.data?.errors?.[""]?.[0] ||
-        error.response?.data?.title ||
-        "Error al procesar la solicitud.";
+        error.response?.data?.mensaje || // Mensaje del backend
+        error.response?.data?.title || // Si hay un título en la respuesta
+        "Error al procesar el archivo.";
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
     }
   };
@@ -84,7 +97,7 @@ function ImportarArchivo() {
               <InputLabel
                 id="filter-label"
                 sx={{
-                  "&.Mui-focused": { color: "#1A73E8" }, // Estilo al enfocar
+                  "&.Mui-focused": { color: "#1A73E8" },
                 }}
               >
                 Seleccionar Cabecera
@@ -102,10 +115,10 @@ function ImportarArchivo() {
                     alignItems: "center",
                   },
                   "&:hover fieldset": {
-                    borderColor: "#000", // Color del borde al pasar el mouse
+                    borderColor: "#000",
                   },
                   "&.Mui-focused fieldset": {
-                    borderColor: "#000", // Color del borde al enfocar
+                    borderColor: "#000",
                   },
                 }}
               >
@@ -120,14 +133,14 @@ function ImportarArchivo() {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={5}>
             <MDButton
               variant="outlined"
               color="error"
-              onClick={handleRevert}
+              onClick={handleProcessFile}
               endIcon={<DeleteOutlineIcon />}
             >
-              Revertir
+              Procesar archivo importado
             </MDButton>
           </Grid>
         </Grid>
@@ -136,4 +149,4 @@ function ImportarArchivo() {
   );
 }
 
-export default ImportarArchivo;
+export default ProcesarArchivoImportado;

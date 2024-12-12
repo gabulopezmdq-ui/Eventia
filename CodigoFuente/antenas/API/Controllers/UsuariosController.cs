@@ -23,6 +23,7 @@ namespace API.Controllers
             _serviceGenerico = serviceGenerico;
         }
 
+        [AllowAnonymous]
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_Usuarios>>> GetAllVigente()
         {
