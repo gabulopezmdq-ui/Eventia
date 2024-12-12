@@ -26,7 +26,7 @@ function ConsolidarMecPof() {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "ImportarMecanizadas/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "POF/GetAll", {
         headers: {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
@@ -154,27 +154,6 @@ function ConsolidarMecPof() {
                       value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
                   },
                   { Header: "mes Liquidacion", accessor: "mesLiquidacion" },
-                  { Header: "orden Pago", accessor: "ordenPago" },
-                  { Header: "año Mes Afectacion", accessor: "anioMesAfectacion" },
-                  { Header: "dni", accessor: "documento" },
-                  { Header: "secuencia", accessor: "secuencia" },
-                  { Header: "funcion", accessor: "funcion" },
-                  { Header: "codigo Liquidacion", accessor: "codigoLiquidacion" },
-                  { Header: "importe", accessor: "importe" },
-                  { Header: "signo", accessor: "signo" },
-                  { Header: "marca Transferido", accessor: "marcaTransferido" },
-                  { Header: "moneda", accessor: "moneda" },
-                  { Header: "regimen Estatutario", accessor: "regimenEstatutario" },
-                  { Header: "caracter Revista", accessor: "caracterRevista" },
-                  { Header: "dependencia", accessor: "dependencia" },
-                  { Header: "distrito", accessor: "distrito" },
-                  { Header: "tipo Organizacion", accessor: "tipoOrganizacion" },
-                  { Header: "nroEstab", accessor: "nroEstab" },
-                  { Header: "categoria", accessor: "categoria" },
-                  { Header: "tipoCargo", accessor: "tipoCargo" },
-                  { Header: "horas Designadas", accessor: "horasDesignadas" },
-                  { Header: "subvencion", accessor: "subvencion" },
-                  { Header: "registroValido", accessor: "registroValido" },
                 ],
                 rows: dataTableData,
               }}

@@ -259,7 +259,8 @@ function Formulario({
     // Actualiza el estado, convirtiendo el valor a mayúsculas si es una cadena
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: typeof value === "string" ? value.toUpperCase() : value,
+      [name]:
+        name === "descripcion" ? value : typeof value === "string" ? value.toUpperCase() : value,
     }));
   };
   return (
