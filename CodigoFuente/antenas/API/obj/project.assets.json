@@ -10216,7 +10216,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
+    "C:\\Users\\gabrielalopez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -10225,14 +10225,14 @@
       "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
       "projectName": "API",
       "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
-      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\gabrielalopez\\.nuget\\packages\\",
       "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\gabrielalopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -10241,6 +10241,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -10253,6 +10254,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -10385,7 +10391,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400\\RuntimeIdentifierGraph.json"
       }
     }
   },
