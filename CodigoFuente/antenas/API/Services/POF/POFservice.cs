@@ -110,5 +110,33 @@ namespace API.Services
         {
 
         }
+
+        public async Task<MEC_POF_Antiguedades?> GetByIdPOFAsync(int idPOF)
+        {
+            return await _context.MEC_POF_Antiguedades
+                .FirstOrDefaultAsync(a => a.IdPOF == idPOF);
+        }
+
+        public async Task<MEC_POF_Antiguedades> CreateOrUpdateAsync(MEC_POF_Antiguedades data)
+        {
+            var existe = await GetByIdPOFAsync(data.IdPOF);
+
+            if (existe != null)
+            {
+                
+                existe.MesReferencia = data.MesReferencia;
+                existe.AnioReferencia = data.AnioReferencia;
+                existe.AnioAntiguedad = data.AnioAntiguedad;
+                existe.MesAntiguedad = data.MesAntiguedad;
+                _context.Update(existe);
+            }
+            else
+            {
+                _context.Add(data);
+            }
+
+            await _context.SaveChangesAsync();
+            return data;
+        }
     }
 }

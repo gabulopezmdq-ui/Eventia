@@ -17,5 +17,7 @@ namespace API.Services
         Task<bool> ExisteRegistroEnPOFAsync(int idPersona, int idEstablecimiento, string secuencia);
         Task<string> RegistrarSuplenciaAsync(int idPersona, int idEstablecimiento, string secuencia, string barra,
             int idCategoria, string tipoCargo, string vigente);
+        Task<MEC_POF_Antiguedades?> GetByIdPOFAsync(int idPOF);
+        Task<MEC_POF_Antiguedades> CreateOrUpdateAsync(MEC_POF_Antiguedades data);
     }
 }

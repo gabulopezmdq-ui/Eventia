@@ -31,7 +31,7 @@ namespace API.DataSchema.ModelConfiguration
             // Configurar la relación con la entidad MEC_POF
             builder
                 .HasOne(p => p.POF)
-                .WithMany()
+                .WithMany(p => p.POFAntiguedad)
                 .HasForeignKey(p => p.IdPOF)
                 .IsRequired(true);
 
