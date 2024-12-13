@@ -1,13 +1,13 @@
 {
   "format": 1,
   "restore": {
-    "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {}
+    "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {}
   },
   "projects": {
-    "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
+    "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
         "projectName": "API",
         "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
         "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",

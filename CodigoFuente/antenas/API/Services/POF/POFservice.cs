@@ -82,6 +82,8 @@ namespace API.Services
             // Si no existe, habilitamos campos para completar la información
             return (false, null, "La persona no está registrada. Completa los campos requeridos.", new { HabilitarCampos = true });
         }
+
+        // Verifica la existencia de la existencia de un registro con la misma persona, establecimiento y secuencia
         public async Task<bool> ExisteRegistroEnPOFAsync(int idPersona, int idEstablecimiento, string secuencia)
         {
             var pof =  await _context.MEC_POF.AnyAsync(p => p.IdPersona == idPersona && p.IdEstablecimiento == idEstablecimiento && p.Secuencia == secuencia);

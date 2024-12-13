@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "+vtax642rghtSvvcvhDrUBzlKDrIx4yykPwJPc047QYqZjSVnIMGwpbZWpdhb70hI4xVrQ6fgV5ERVIUYwKVAA==",
   "success": true,
-  "projectFilePath": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+  "projectFilePath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gcassulo\\.nuget\\packages\\bogus\\34.0.2\\bogus.34.0.2.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",

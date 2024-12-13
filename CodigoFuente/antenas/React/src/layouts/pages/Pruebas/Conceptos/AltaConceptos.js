@@ -52,6 +52,15 @@ function AltaConceptos() {
     }
     return null;
   }
+  function validateDevSalario(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > 1) {
+      return "Los Códigos MGP no pueden tener más de 10 caracteres.";
+    }
+    return null;
+  }
   //----------------------Fin Validadciones--------------------
 
   // Configuración de pasos, excluyendo el campo "Vigente" si es una alta
@@ -102,6 +111,13 @@ function AltaConceptos() {
           valueField: "value",
           optionField: "label",
           required: true,
+        },
+        {
+          type: "text",
+          label: "Devolución Salario",
+          name: "ddevolucionSalario",
+          required: false,
+          customValidation: validateDevSalario,
         },
         // Solo incluimos el campo "Vigente" si estamos en modo edición (id está presente)
         ...(id
