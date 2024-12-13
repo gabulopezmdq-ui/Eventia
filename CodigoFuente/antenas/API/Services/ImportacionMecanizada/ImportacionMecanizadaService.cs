@@ -48,7 +48,7 @@ namespace API.Services
                     }
 
                     // Eliminar registros relacionados con la cabecera
-                    await EliminarTMPErrores(idCabecera);
+                    //await EliminarTMPErrores(idCabecera);
 
                     int totalRowsInExcel = worksheet.LastRowUsed().RowNumber(); // Número total de filas en el archivo
                     int totalRecordsSaved = 0;
