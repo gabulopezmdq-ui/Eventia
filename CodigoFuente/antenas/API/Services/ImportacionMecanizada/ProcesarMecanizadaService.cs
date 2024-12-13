@@ -94,7 +94,11 @@ namespace API.Services
                                                       .ToListAsync();
 
             _context.MEC_TMPMecanizadas.RemoveRange(registrosParaEliminar);
-            //await _context.Database.ExecuteSqlRawAsync("ALTER SEQUENCE MEC_TMPMecanizadas_id_seq RESTART WITH 1;");
+            await _context.Database.ExecuteSqlRawAsync(
+                 @"DELETE FROM ""MEC_TMPErroresEstablecimientos"" WHERE ""IdCabecera"" = {0}; 
+                  ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;",
+                 idCabecera);
+
             await _context.SaveChangesAsync();
         }
 
@@ -111,25 +115,25 @@ namespace API.Services
         }
         private async Task ValidarNroEstabAsync(int idCabecera)
         {
-            // Obtener todos los NroEstab para la cabecera en TMPMecanizadas
             var nroEstabTMP = await _context.MEC_TMPMecanizadas
-                                            .Where(m => m.idCabecera == idCabecera)
-                                            .Select(m => m.NroEstab)
-                                            .Distinct()
-                                            .ToListAsync();
+                .Where(m => m.idCabecera == idCabecera)
+                .Select(m => m.NroEstab)
+                .Distinct()
+                .ToListAsync();
 
-            // Verificar la existencia en Establecimientos (NroDiegep)
             var nroEstabInvalidos = nroEstabTMP.Where(nro =>
                 !_context.MEC_Establecimientos.Any(e => e.NroDiegep == nro)).ToList();
 
-            // Insertar errores en TMP_ErroresEstablecimientos si hay NroEstab inválidos
             if (nroEstabInvalidos.Any())
             {
-                var erroresEstablecimientos = nroEstabInvalidos.Select(nro => new MEC_TMPErroresEstablecimientos
-                {
-                    IdCabecera = idCabecera,
-                    NroEstab = nro
-                });
+                var erroresEstablecimientos = nroEstabInvalidos
+                    .Where(nro => !_context.MEC_TMPErroresEstablecimientos
+                        .Any(e => e.IdCabecera == idCabecera && e.NroEstab == nro))
+                    .Select(nro => new MEC_TMPErroresEstablecimientos
+                    {
+                        IdCabecera = idCabecera,
+                        NroEstab = nro
+                    });
 
                 await _context.MEC_TMPErroresEstablecimientos.AddRangeAsync(erroresEstablecimientos);
                 await _context.SaveChangesAsync();
@@ -138,25 +142,25 @@ namespace API.Services
 
         private async Task ValidarCodFuncionAsync(int idCabecera)
         {
-            // Obtener todos los CodFuncion para la cabecera en TMPMecanizadas
             var codFuncionTMP = await _context.MEC_TMPMecanizadas
-                                              .Where(m => m.idCabecera == idCabecera)
-                                              .Select(m => m.Funcion)
-                                              .Distinct()
-                                              .ToListAsync();
+                .Where(m => m.idCabecera == idCabecera)
+                .Select(m => m.Funcion)
+                .Distinct()
+                .ToListAsync();
 
-            // Verificar la existencia en MEC_TiposFunciones
             var codFuncionInvalidos = codFuncionTMP.Where(cod =>
                 !_context.MEC_TiposFunciones.Any(f => f.CodFuncion == cod)).ToList();
 
-            // Insertar errores en TMP_ErroresFuncion si hay CodFuncion inválidos
             if (codFuncionInvalidos.Any())
             {
-                var erroresFuncion = codFuncionInvalidos.Select(cod => new MEC_TMPErroresFuncion
-                {
-                    IdCabecera = idCabecera,
-                    CodFuncion = cod
-                });
+                var erroresFuncion = codFuncionInvalidos
+                    .Where(cod => !_context.MEC_TMPErroresFuncion
+                        .Any(e => e.IdCabecera == idCabecera && e.CodFuncion == cod))
+                    .Select(cod => new MEC_TMPErroresFuncion
+                    {
+                        IdCabecera = idCabecera,
+                        CodFuncion = cod
+                    });
 
                 await _context.MEC_TMPErroresFuncion.AddRangeAsync(erroresFuncion);
                 await _context.SaveChangesAsync();
@@ -165,82 +169,85 @@ namespace API.Services
 
         private async Task ValidarCodLiquidacionAsync(int idCabecera)
         {
-            // Obtener todos los CodFuncion para la cabecera en TMPMecanizadas
             var codLiquidacionTMP = await _context.MEC_TMPMecanizadas
-                                              .Where(m => m.idCabecera == idCabecera)
-                                              .Select(m => m.CodigoLiquidacion)
-                                              .Distinct()
-                                              .ToListAsync();
+                .Where(m => m.idCabecera == idCabecera)
+                .Select(m => m.CodigoLiquidacion)
+                .Distinct()
+                .ToListAsync();
 
-            // Verificar la existencia en MEC_TiposConceptos
             var codLiquidacionInvalidos = codLiquidacionTMP.Where(cod =>
                 !_context.MEC_Conceptos.Any(f => f.CodConcepto == cod)).ToList();
 
-            // Insertar errores en TMP_ErroresFuncion si hay CodFuncion inválidos
             if (codLiquidacionInvalidos.Any())
             {
-                var erroresConceptos = codLiquidacionInvalidos.Select(cod => new MEC_TMPErroresConceptos
-                {
-                    IdCabecera = idCabecera,
-                    CodigoLiquidacion = cod
-                });
+                var erroresConceptos = codLiquidacionInvalidos
+                    .Where(cod => !_context.MEC_TMPErroresConceptos
+                        .Any(e => e.IdCabecera == idCabecera && e.CodigoLiquidacion == cod))
+                    .Select(cod => new MEC_TMPErroresConceptos
+                    {
+                        IdCabecera = idCabecera,
+                        CodigoLiquidacion = cod
+                    });
 
                 await _context.MEC_TMPErroresConceptos.AddRangeAsync(erroresConceptos);
                 await _context.SaveChangesAsync();
             }
         }
+
         private async Task ValidarCarRevistaAsync(int idCabecera)
         {
-            // Obtener todos los CarRevista para la cabecera en TMPMecanizadas
             var carRevistaTMP = await _context.MEC_TMPMecanizadas
-                                              .Where(m => m.idCabecera == idCabecera)
-                                              .Select(m => m.CaracterRevista)
-                                              .Distinct()
-                                              .ToListAsync();
+                .Where(m => m.idCabecera == idCabecera)
+                .Select(m => m.CaracterRevista)
+                .Distinct()
+                .ToListAsync();
 
-            // Verificar la existencia en MEC_CarRevista
             var carRevistaInvalidos = carRevistaTMP.Where(cod =>
                 !_context.MEC_CarRevista.Any(f => f.CodPcia == cod)).ToList();
 
-            // Insertar errores en TMP_ErroresFuncion si hay CodFuncion inválidos
             if (carRevistaInvalidos.Any())
             {
-                var erroresConceptos = carRevistaInvalidos.Select(cod => new MEC_TMPErroresCarRevista
-                {
-                    IdCabecera = idCabecera,
-                    CaracterRevista = cod
-                });
+                var erroresCarRevista = carRevistaInvalidos
+                    .Where(cod => !_context.MEC_TMPErroresCarRevista
+                        .Any(e => e.IdCabecera == idCabecera && e.CaracterRevista == cod))
+                    .Select(cod => new MEC_TMPErroresCarRevista
+                    {
+                        IdCabecera = idCabecera,
+                        CaracterRevista = cod
+                    });
 
-                await _context.MEC_TMPErroresCarRevista.AddRangeAsync(erroresConceptos);
+                await _context.MEC_TMPErroresCarRevista.AddRangeAsync(erroresCarRevista);
                 await _context.SaveChangesAsync();
             }
         }
+
         private async Task ValidarTipoOrgAsync(int idCabecera)
         {
-            // Obtener todos los Tipo Organizacionpara la cabecera en TMPMecanizadas
             var tipoOrgTMP = await _context.MEC_TMPMecanizadas
-                                              .Where(m => m.idCabecera == idCabecera)
-                                              .Select(m => m.TipoOrganizacion)
-                                              .Distinct()
-                                              .ToListAsync();
+                .Where(m => m.idCabecera == idCabecera)
+                .Select(m => m.TipoOrganizacion)
+                .Distinct()
+                .ToListAsync();
 
-            // Verificar la existencia en MEC_CarRevista
             var tipoOrgInvalidos = tipoOrgTMP.Where(cod =>
                 !_context.MEC_TiposEstablecimientos.Any(f => f.CodTipoEstablecimiento == cod)).ToList();
 
-            // Insertar errores en TMP_ErroresFuncion si hay CodFuncion inválidos
             if (tipoOrgInvalidos.Any())
-            {   
-                var erroresTipoOrg = tipoOrgInvalidos.Select(cod => new MEC_TMPErroresTiposEstablecimientos
-                {
-                    IdCabecera = idCabecera,
-                    TipoOrganizacion = cod
-                });
+            {
+                var erroresTiposEstablecimientos = tipoOrgInvalidos
+                    .Where(cod => !_context.MEC_TMPErroresTiposEstablecimientos
+                        .Any(e => e.IdCabecera == idCabecera && e.TipoOrganizacion == cod))
+                    .Select(cod => new MEC_TMPErroresTiposEstablecimientos
+                    {
+                        IdCabecera = idCabecera,
+                        TipoOrganizacion = cod
+                    });
 
-                await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(erroresTipoOrg);
+                await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(erroresTiposEstablecimientos);
                 await _context.SaveChangesAsync();
             }
         }
+
 
         private async Task ValidarMecAsync(int idCabecera)
         {

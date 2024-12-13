@@ -190,20 +190,22 @@ namespace API.Services
         private async Task EliminarTMPErrores(int idCabecera)
         {
             await _context.Database.ExecuteSqlRawAsync(@"
-        DELETE FROM TMPErroresEstablecimientos WHERE idCabecera = {0};
-        DELETE FROM TMPErroresFuncion WHERE idCabecera = {0};
-        DELETE FROM TMPErroresConceptos WHERE idCabecera = {0};
-        DELETE FROM TMPErroresCarRevista WHERE idCabecera = {0};
-        DELETE FROM TMPErroresTiposEstablecimientos WHERE idCabecera = {0};
-        DELETE FROM TMPErroresMecanizada WHERE idCabecera = {0};
+                DELETE FROM ""MEC_TMPErroresEstablecimientos"" WHERE ""IdCabecera"" = {0};
+                DELETE FROM ""MEC_TMPErroresFuncion"" WHERE ""IdCabecera"" = {0};
+                DELETE FROM ""MEC_TMPErroresConceptos"" WHERE ""IdCabecera"" = {0};
+                DELETE FROM ""MEC_TMPErroresCarRevista"" WHERE ""IdCabecera"" = {0};
+                DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"" WHERE ""IdCabecera"" = {0};
+                DELETE FROM ""MEC_TMPErroresMecanizadas"" WHERE ""IdCabecera"" = {0};
 
-        ALTER SEQUENCE TMPErroresEstablecimientos_id_seq RESTART WITH 1;
-        ALTER SEQUENCE TMPErroresFuncion_id_seq RESTART WITH 1;
-        ALTER SEQUENCE TMPErroresConceptos_id_seq RESTART WITH 1;
-        ALTER SEQUENCE TMPErroresCarRevista_id_seq RESTART WITH 1;
-        ALTER SEQUENCE TMPErroresTiposEstablecimientos_id_seq RESTART WITH 1;
-        ALTER SEQUENCE TMPErroresMecanizada_id_seq RESTART WITH 1;
-        ", idCabecera);
+                ALTER SEQUENCE ""MEC_TMPErroresEstablecimientos_IdTMPErrorEstablecimiento_seq"" RESTART WITH 1;
+                ALTER SEQUENCE ""MEC_TMPErroresFuncion_IdTMPErrorFuncion_seq"" RESTART WITH 1;
+                ALTER SEQUENCE ""MEC_TMPErroresConceptos_IdTMPErrorConcepto_seq"" RESTART WITH 1;
+                ALTER SEQUENCE ""MEC_TMPErroresCarRevista_IdTMPErrorCarRevista_seq"" RESTART WITH 1;
+                ALTER SEQUENCE ""MEC_TMPErroresTiposEstablecim_IdTMPErrorTipoEstablecimiento_seq"" RESTART WITH 1;
+                ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq"" RESTART WITH 1;
+                ", idCabecera);
         }
+
+
     }
 }
