@@ -155,6 +155,7 @@ function Conceptos() {
                   { Header: "Cod Concepto Provincia", accessor: "codConcepto" },
                   { Header: "Cod Concepto MGP", accessor: "codConceptoMgp" },
                   { Header: "Descripción", accessor: "descripcion" },
+                  { Header: "Dev. Salario", accessor: "devolucionSalario" },
                   {
                     Header: "VIGENTE",
                     accessor: (row) => (
