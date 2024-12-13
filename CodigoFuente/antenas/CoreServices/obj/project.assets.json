@@ -9834,7 +9834,7 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "projectName": "CoreServices.Test",
       "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
@@ -9859,8 +9859,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
-              "projectPath": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
+            "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
             }
           }
         }

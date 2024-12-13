@@ -11,6 +11,7 @@ namespace API.DataSchema
         public string ConAporte { get; set; }
         public string Patronal { get; set; }
         public string Vigente { get; set; }
+        public string? DevolucionSalario { get; set; }
         public string[] UniqueProperties => new[] { "CodConcepto", "CodConceptoMgp" }; //  CodCategoria es unico
     }
 }

@@ -38,7 +38,12 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.Patronal)
                 .HasColumnType("char(1)")
                 .IsFixedLength(true)
-                .IsRequired(true); 
+                .IsRequired(true);
+
+            builder.Property(e => e.DevolucionSalario)
+                .HasColumnType("char(1)")
+                .IsFixedLength(true)
+                .IsRequired(true);
 
             builder.Property(e => e.Vigente)
                 .HasColumnType("char(1)")

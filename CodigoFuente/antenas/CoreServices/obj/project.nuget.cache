@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "vurYZqI9rbnd5fOOQ8D7xLDQ90qsQL0vp3br5FLfXRF79kjUYzbidotDFtyr5GBtMcL5NmuHZexj1RUvr9Vmqg==",
   "success": true,
-  "projectFilePath": "C:\\ProyectosGit\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
+  "projectFilePath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gcassulo\\.nuget\\packages\\bogus\\34.0.2\\bogus.34.0.2.nupkg.sha512",
     "C:\\Users\\gcassulo\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
