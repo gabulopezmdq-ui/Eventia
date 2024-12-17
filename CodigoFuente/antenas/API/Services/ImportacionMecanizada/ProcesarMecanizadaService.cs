@@ -94,8 +94,9 @@ namespace API.Services
                                                       .ToListAsync();
 
             _context.MEC_TMPMecanizadas.RemoveRange(registrosParaEliminar);
+
             await _context.Database.ExecuteSqlRawAsync(
-                 @"DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0}; 
+                 @"
                   ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;",
                  idCabecera);
 
