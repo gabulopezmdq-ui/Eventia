@@ -42,7 +42,12 @@ function SelectField({
           },
         })
         .then((response) => {
-          const filteredOptions = response.data.filter((option) => option.vigente === "S");
+          const filteredOptions = response.data.filter((option) => {
+            if ("vigente" in option) {
+              return option.vigente === "S";
+            }
+            return true;
+          });
           setOptions(filteredOptions);
         })
         .catch((error) => {
