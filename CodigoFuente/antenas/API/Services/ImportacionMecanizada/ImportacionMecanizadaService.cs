@@ -133,38 +133,28 @@ namespace API.Services
         }
         public async Task RevertirImportacionAsync(int idCabecera)
         {
-            // Buscar el estado en la tabla CabeceraDeLiquidacion
+            // Verificar el estado de la cabecera
             var estadoCabecera = await _context.MEC_CabeceraLiquidacion
-                                               .Where(c => c.IdCabecera == idCabecera)
-                                               .FirstOrDefaultAsync();
+                                               .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
-            // Verificar que la cabecera exista y que el estado sea "I"
             if (estadoCabecera == null || estadoCabecera.Estado != "I")
             {
                 throw new InvalidOperationException("No se encontraron registros con el estado 'I' para revertir.");
             }
 
-            // Buscar y eliminar los registros si la confirmación es verdadera
-            var registros = await _context.MEC_TMPMecanizadas
-                                          .Where(m => m.idCabecera == idCabecera )
-                                          .ToListAsync();
-
-            if (!registros.Any())
-            {
-                throw new InvalidOperationException("No se encontraron registros para revertir.");
-            }
-
-            _context.MEC_TMPMecanizadas.RemoveRange(registros);
+            // Eliminar registros directamente con SQL crudo
+            string deleteSql = @"
+        DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};
+        ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;";
+            await _context.Database.ExecuteSqlRawAsync(deleteSql, idCabecera);
 
             // Cambiar el estado de la cabecera de "I" a "P"
-             estadoCabecera.Estado = "P";
+            estadoCabecera.Estado = "P";
 
-            // Guardar los cambios
+            // Guardar el cambio de estado
             await _context.SaveChangesAsync();
-
-            // Reiniciar los índices de la tabla MEC_TMPMecanizadas
-            await _context.Database.ExecuteSqlRawAsync("ALTER SEQUENCE MEC_TMPMecanizadas_id_seq RESTART WITH 1;");
         }
+
 
         private async Task EliminarTMPErrores(int idCabecera)
         {
