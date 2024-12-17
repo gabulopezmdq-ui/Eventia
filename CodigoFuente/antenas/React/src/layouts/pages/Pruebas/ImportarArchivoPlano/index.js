@@ -149,7 +149,7 @@ function ImportarArchivo() {
             <label htmlFor="upload-file">
               <input
                 type="file"
-                accept=".xlsx, .xls"
+                accept=".txt"
                 id="upload-file"
                 style={{ display: "none" }} // Oculta el input file
                 onChange={handleFileChange}

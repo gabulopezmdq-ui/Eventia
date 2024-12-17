@@ -58,20 +58,20 @@ namespace API.Services
                                 Secuencia = line.Substring(23, 3).Trim(),
                                 Funcion = line.Substring(26, 1).Trim(),
                                 CodigoLiquidacion = line.Substring(27, 5).Trim(),
-                                Importe = decimal.Parse(line.Substring(32, 8).Trim(), CultureInfo.InvariantCulture) / 100,
-                                Signo = line.Substring(40, 1).Trim(),
-                                MarcaTransferido = line.Substring(41, 1).Trim(),
-                                Moneda = line.Substring(42, 1).Trim(),
-                                RegimenEstatutario = line.Substring(43, 1).Trim(),
-                                CaracterRevista = line.Substring(44, 1).Trim(),
-                                Dependencia = line.Substring(45, 1).Trim(),
-                                Distrito = line.Substring(46, 3).Trim(),
-                                TipoOrganizacion = line.Substring(49, 2).Trim(),
-                                NroEstab = line.Substring(51, 4).Trim(),
-                                Categoria = line.Substring(55, 2).Trim(),
-                                TipoCargo = line.Substring(57, 1).Trim(),
-                                HorasDesignadas = decimal.Parse(line.Substring(58, 4).Trim(), CultureInfo.InvariantCulture) / 100,
-                                Subvencion = line.Substring(62, 3).Trim(),
+                                Importe = ParseDecimal(line.Substring(32, 9).Trim()) / 100,
+                                Signo = line.Substring(41, 1).Trim(),
+                                MarcaTransferido = line.Substring(42, 1).Trim(),
+                                Moneda = line.Substring(43, 1).Trim(),
+                                RegimenEstatutario = line.Substring(44, 1).Trim(),
+                                CaracterRevista = line.Substring(45, 1).Trim(),
+                                Dependencia = line.Substring(46, 1).Trim(),
+                                Distrito = line.Substring(47, 3).Trim(),
+                                TipoOrganizacion = line.Substring(50, 2).Trim(),
+                                NroEstab = line.Substring(52, 4).Trim(),
+                                Categoria = line.Substring(56, 2).Trim(),
+                                TipoCargo = line.Substring(58, 1).Trim(),
+                                HorasDesignadas = ParseDecimal(line.Substring(60, 3).Trim()) / 100, 
+                                Subvencion = line.Substring(63, 3).Trim(),
                                 RegistroValido = "N"
                             };
 
@@ -103,19 +103,23 @@ namespace API.Services
         }
         // Función ParseDecimal para convertir strings en decimales de forma segura. Algunos registros generaban errores porque los tomaba como un entero
         private decimal ParseDecimal(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return 0;
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return 0;
 
-        // Quitar comas y espacios innecesarios
-        value = value.Replace(",", "").Replace(" ", "");
+            value = value.Replace(",", "").Replace(" ", "");
 
-        // Intentar convertir el valor a decimal
-        if (decimal.TryParse(value, out decimal result))
-            return result;
+            // Validación adicional para evitar valores no numéricos
+            if (!value.All(char.IsDigit) && !value.Contains('.'))
+            {
+                throw new FormatException($"El valor '{value}' no tiene un formato decimal válido.");
+            }
 
-        throw new FormatException($"El valor '{value}' no tiene un formato decimal válido.");
-    }
+            if (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal result))
+                return result;
+
+            throw new FormatException($"El valor '{value}' no tiene un formato decimal válido.");
+        }
 
         //Revetir importación
         public async Task<List<MEC_TMPMecanizadas>> ObtenerRegistrosPorCabeceraAsync(int idCabecera)
