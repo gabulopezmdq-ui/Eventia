@@ -6,24 +6,24 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
 import MDAlert from "components/MDAlert";
 import MDButton from "components/MDButton";
+import MDTypography from "components/MDTypography";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 function ProcesarArchivoImportado() {
-  const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
+  const [errorAlert, setErrorAlert] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const token = sessionStorage.getItem("token");
 
-  // Obtener las cabeceras al cargar el componente
   useEffect(() => {
     axios
       .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("Respuesta del servidor:", response.data); // Verifica la respuesta
         const filteredCabeceras = response.data.filter((item) => item.estado === "I");
-        console.log("Cabeceras filtradas:", filteredCabeceras); // Revisa los datos filtrados
         const formattedCabeceras = filteredCabeceras.map((item) => ({
           id: item.idCabecera,
           displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
@@ -31,120 +31,101 @@ function ProcesarArchivoImportado() {
         setIdCabeceras(formattedCabeceras);
       })
       .catch((error) => {
-        console.error("Error al cargar las cabeceras:", error);
-        setErrorAlert({ show: true, message: "Error al cargar las cabeceras.", type: "error" });
+        setErrorAlert(true);
+        setAlertType("error");
+        setAlertMessage("Error al cargar las cabeceras.");
+        setTimeout(() => {
+          setErrorAlert(false);
+          setAlertType("");
+          setAlertMessage("");
+        }, 3000);
       });
   }, [token]);
 
-  // Procesar los archivos importados
   const handleProcessFile = async () => {
     if (!selectedIdCabecera) {
-      setErrorAlert({
-        show: true,
-        message: "Por favor, selecciona una cabecera antes de continuar.",
-        type: "error",
-      });
+      setErrorAlert(true);
+      setAlertType("error");
+      setAlertMessage("Por favor, selecciona una cabecera antes de continuar.");
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertType("");
+        setAlertMessage("");
+      }, 3000);
       return;
     }
 
     try {
-      console.log("Enviando ID para procesamiento:", selectedIdCabecera);
-
-      // Construir la URL con el parámetro idCabecera
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
-
-      const response = await axios.post(
-        url, // La URL incluye el parámetro
-        null, // No se envía cuerpo en la solicitud
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Token en los encabezados
-          },
-        }
-      );
-
-      console.log("Respuesta del servidor:", response.data);
-
-      // Manejar la respuesta
-      setErrorAlert({
-        show: true,
-        message: response.data,
-        type: "success",
+      const response = await axios.post(url, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+      setErrorAlert(true);
+      setAlertType("success");
+      setAlertMessage("El archivo ha sido procesado.");
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertType("");
+        setAlertMessage("");
+      }, 3000);
     } catch (error) {
-      console.error("Error en la solicitud:", error.response?.data || error.message);
-
       const errorMessage =
-        error.response?.data?.mensaje || // Mensaje del backend
-        error.response?.data?.title || // Si hay un título en la respuesta
+        error.response?.data?.mensaje ||
+        error.response?.data?.title ||
         "Error al procesar el archivo.";
-      setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      setErrorAlert(false);
+      setAlertType("error");
+      setAlertMessage(errorMessage);
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertType("error");
+        setAlertMessage("");
+      }, 3000);
     }
   };
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      {errorAlert.show && (
-        <MDAlert severity={errorAlert.type} onClose={() => setErrorAlert({ show: false })}>
-          {errorAlert.message}
+      {errorAlert && (
+        <MDAlert color={alertType} dismissible onClose={() => setErrorAlert({ show: false })}>
+          <MDTypography variant="body2" color="white">
+            {alertMessage}
+          </MDTypography>
         </MDAlert>
       )}
-      <Card sx={{ width: "70%", margin: "0 auto" }}>
-        <Grid container spacing={2} sx={{ m: 3 }}>
-          <Grid item xs={6}>
-            <FormControl fullWidth>
-              <InputLabel
-                id="filter-label"
-                sx={{
-                  "&.Mui-focused": { color: "#1A73E8" },
-                }}
-              >
-                Seleccionar Cabecera
-              </InputLabel>
-              <Select
-                labelId="filter-label"
-                value={selectedIdCabecera}
-                onChange={(e) => setSelectedIdCabecera(e.target.value)}
-                sx={{
-                  height: "40px",
-                  "& .MuiSelect-select": {
-                    height: "40px",
-                    padding: "10px",
-                    display: "flex",
-                    alignItems: "center",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#000",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#000",
-                  },
-                }}
-              >
-                <MenuItem value="">
-                  <em>Seleccionar Cabecera</em>
-                </MenuItem>
-                {idCabeceras.map((item, index) => (
-                  <MenuItem key={index} value={item.id}>
-                    {item.displayText}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={5}>
-            <MDButton
-              variant="outlined"
-              color="error"
-              onClick={handleProcessFile}
-              endIcon={<DeleteOutlineIcon />}
+      <Grid container spacing={2}>
+        <Grid item xs={4}>
+          <FormControl fullWidth>
+            <InputLabel id="filter-label"> Seleccionar Cabecera </InputLabel>
+            <Select
+              labelId="filter-label"
+              value={selectedIdCabecera}
+              onChange={(e) => setSelectedIdCabecera(e.target.value)}
+              style={{ height: "2.5rem", backgroundColor: "white" }}
+              label="Seleccionar Cabecera"
             >
-              Procesar archivo importado
-            </MDButton>
-          </Grid>
+              {idCabeceras.map((item, index) => (
+                <MenuItem key={index} value={item.id}>
+                  {item.displayText}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
-      </Card>
+        <Grid item xs={5}>
+          <MDButton
+            size="small"
+            color="info"
+            onClick={handleProcessFile}
+            endIcon={<DeleteOutlineIcon />}
+          >
+            Procesar archivo importado
+          </MDButton>
+        </Grid>
+      </Grid>
     </DashboardLayout>
   );
 }
