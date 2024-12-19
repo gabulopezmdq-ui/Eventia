@@ -1,17 +1,44 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FormControl, InputLabel, Select, MenuItem, Grid } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
 import MDAlert from "components/MDAlert";
 import MDButton from "components/MDButton";
+import Box from "@mui/material/Box";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DataTableProcesar from "examples/Tables/DataTableProcesar";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 function ProcesarArchivoImportado() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
+  const [showErrorButton, setShowErrorButton] = useState(true);
+  const [errorData, setErrorData] = useState([]); // Estado para almacenar los datos de los errores
+  const [loadingErrors, setLoadingErrors] = useState(false); // Estado para indicar si se están cargando los errores
+  const [carRevistaData, setCarRevistaData] = useState([]); // Estado para los datos de CarRevista
+  const [conceptosData, setConceptosData] = useState([]);
+  const [establecimientosData, setEstablecimientosData] = useState([]);
+  const [funcionesData, setFuncionesData] = useState([]);
+  const [mecanizadasData, setMecanizadasData] = useState([]);
+  const [estData, setEstData] = useState([]);
+
   const token = sessionStorage.getItem("token");
 
   // Obtener las cabeceras al cargar el componente
@@ -21,9 +48,7 @@ function ProcesarArchivoImportado() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        console.log("Respuesta del servidor:", response.data); // Verifica la respuesta
         const filteredCabeceras = response.data.filter((item) => item.estado === "I");
-        console.log("Cabeceras filtradas:", filteredCabeceras); // Revisa los datos filtrados
         const formattedCabeceras = filteredCabeceras.map((item) => ({
           id: item.idCabecera,
           displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
@@ -31,10 +56,73 @@ function ProcesarArchivoImportado() {
         setIdCabeceras(formattedCabeceras);
       })
       .catch((error) => {
-        console.error("Error al cargar las cabeceras:", error);
         setErrorAlert({ show: true, message: "Error al cargar las cabeceras.", type: "error" });
       });
   }, [token]);
+  // Generar PDF con los errores
+  const handleGeneratePDF = async () => {
+    setLoadingErrors(true); // Indicar que se está cargando la información
+
+    try {
+      const responses = await Promise.all([
+        axios.get("https://localhost:44382/TMPErrores/GetAllCarRevista", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("https://localhost:44382/TMPErrores/GetAllConceptos", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("https://localhost:44382/TMPErrores/GetAllEstablecimientos", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("https://localhost:44382/TMPErrores/GetAllFunciones", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("https://localhost:44382/TMPErrores/GetAllMecanizadas", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("https://localhost:44382/TMPErrores/GetAllTipoEst", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      // Combina los datos de todas las respuestas
+      const allData = [
+        { title: "CarRevista", data: responses[0].data },
+        { title: "Conceptos", data: responses[1].data },
+        { title: "Establecimientos", data: responses[2].data },
+        { title: "Funciones", data: responses[3].data },
+        { title: "Mecanizadas", data: responses[4].data },
+        { title: "TipoEst", data: responses[5].data },
+      ];
+
+      // Crear el PDF
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text("Errores Detectados", 10, 10);
+
+      // Agregar las tablas de errores
+      allData.forEach((section, index) => {
+        if (section.data.length > 0) {
+          if (index !== 0) doc.addPage(); // Agregar nueva página para secciones siguientes
+          doc.text(section.title, 10, 20);
+          doc.autoTable({
+            head: [Object.keys(section.data[0])], // Obtener las claves del primer objeto para la cabecera
+            body: section.data.map((row) => Object.values(row)), // Obtener los valores para las filas
+            startY: 30,
+          });
+        }
+      });
+
+      // Descargar el PDF
+      doc.save("ErroresDetectados.pdf");
+      setLoadingErrors(false); // Finalizar la carga
+    } catch (error) {
+      setLoadingErrors(false); // Finalizar la carga en caso de error
+      const errorMessage =
+        error.response?.data?.mensaje || error.response?.data?.title || "Error al generar el PDF.";
+      setErrorAlert({ show: true, message: errorMessage, type: "error" });
+    }
+  };
 
   // Procesar los archivos importados
   const handleProcessFile = async () => {
@@ -48,39 +136,34 @@ function ProcesarArchivoImportado() {
     }
 
     try {
-      console.log("Enviando ID para procesamiento:", selectedIdCabecera);
-
-      // Construir la URL con el parámetro idCabecera
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
+      const response = await axios.post(url, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const response = await axios.post(
-        url, // La URL incluye el parámetro
-        null, // No se envía cuerpo en la solicitud
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Token en los encabezados
-          },
-        }
-      );
-
-      console.log("Respuesta del servidor:", response.data);
-
-      // Manejar la respuesta
       setErrorAlert({
         show: true,
         message: response.data,
         type: "success",
       });
+      setShowErrorButton(false);
     } catch (error) {
-      console.error("Error en la solicitud:", error.response?.data || error.message);
-
       const errorMessage =
-        error.response?.data?.mensaje || // Mensaje del backend
-        error.response?.data?.title || // Si hay un título en la respuesta
+        error.response?.data?.mensaje ||
+        error.response?.data?.title ||
         "Error al procesar el archivo.";
+
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
+
+      if (errorMessage === "Error al procesar el archivo.") {
+        setShowErrorButton(true);
+      }
     }
   };
+
+  // Obtener los datos de errores
 
   return (
     <DashboardLayout>
@@ -144,7 +227,115 @@ function ProcesarArchivoImportado() {
             </MDButton>
           </Grid>
         </Grid>
+        {showErrorButton && (
+          <Grid container justifyContent="center" sx={{ mt: 2 }}>
+            <MDButton
+              variant="contained"
+              color="warning"
+              onClick={handleGeneratePDF}
+              disabled={loadingErrors}
+            >
+              {loadingErrors ? "Cargando..." : "Ver errores"}
+            </MDButton>
+          </Grid>
+        )}
       </Card>
+      <Box sx={{ mt: 3 }}>
+        {carRevistaData.length > 0 && (
+          <DataTableProcesar
+            table={{
+              columns: [
+                { Header: "ID", accessor: "idTMPErrorCarRevista" }, // Accesor del campo 'id'
+                { Header: "caracterRevista", accessor: "caracterRevista" }, // Accesor del campo 'descripcion'
+              ],
+              rows: carRevistaData, // Pasar los datos obtenidos
+            }}
+            entriesPerPage={false}
+            canSearch
+            show
+          />
+        )}
+        <Card sx={{ mt: 3 }}>
+          {conceptosData.length > 0 && (
+            <DataTableProcesar
+              table={{
+                columns: [
+                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
+                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
+                ],
+                rows: conceptosData, // Pasar los datos obtenidos
+              }}
+              entriesPerPage={false}
+              canSearch
+              show
+            />
+          )}
+        </Card>
+        <Card sx={{ mt: 3 }}>
+          {establecimientosData.length > 0 && (
+            <DataTableProcesar
+              table={{
+                columns: [
+                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
+                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
+                ],
+                rows: establecimientosData, // Pasar los datos obtenidos
+              }}
+              entriesPerPage={false}
+              canSearch
+              show
+            />
+          )}
+        </Card>
+        <Card sx={{ mt: 3 }}>
+          {funcionesData.length > 0 && (
+            <DataTableProcesar
+              table={{
+                columns: [
+                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
+                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
+                ],
+                rows: funcionesData, // Pasar los datos obtenidos
+              }}
+              entriesPerPage={false}
+              canSearch
+              show
+            />
+          )}
+        </Card>
+        <Card sx={{ mt: 3 }}>
+          {mecanizadasData.length > 0 && (
+            <DataTableProcesar
+              table={{
+                columns: [
+                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
+                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
+                ],
+                rows: mecanizadasData, // Pasar los datos obtenidos
+              }}
+              entriesPerPage={false}
+              canSearch
+              show
+            />
+          )}
+        </Card>
+        <Card sx={{ mt: 3 }}>
+          {estData.length > 0 && (
+            <DataTableProcesar
+              table={{
+                columns: [
+                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
+                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
+                ],
+                rows: estData, // Pasar los datos obtenidos
+              }}
+              entriesPerPage={false}
+              canSearch
+              show
+            />
+          )}
+        </Card>
+      </Box>
     </DashboardLayout>
   );
 }
