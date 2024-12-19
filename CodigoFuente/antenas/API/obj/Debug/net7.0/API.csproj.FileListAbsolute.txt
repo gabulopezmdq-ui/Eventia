@@ -896,3 +896,4 @@ C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\refint\API
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.pdb
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.genruntimeconfig.cache
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\ref\API.dll
+C:\Users\jcgarcia\Desktop\Desarrollo\mecanizadas\CodigoFuente\antenas\API\bin\Debug\net7.0\System.Linq.Dynamic.Core.dll
