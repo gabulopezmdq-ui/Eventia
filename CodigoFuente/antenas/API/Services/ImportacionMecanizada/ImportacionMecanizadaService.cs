@@ -31,6 +31,8 @@ namespace API.Services
 
         public async Task ImportarExcel(IFormFile file, int idCabecera)
         {
+            await EliminarTMPErrores(idCabecera);
+
             if (file == null || file.Length == 0)
                 throw new ArgumentException("Archivo no proporcionado.");
 
@@ -144,8 +146,8 @@ namespace API.Services
 
             // Eliminar registros directamente con SQL crudo
             string deleteSql = @"
-        DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};
-        ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;";
+                DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};
+                ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;";
             await _context.Database.ExecuteSqlRawAsync(deleteSql, idCabecera);
 
             // Cambiar el estado de la cabecera de "I" a "P"

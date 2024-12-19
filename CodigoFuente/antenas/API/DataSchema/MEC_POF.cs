@@ -24,5 +24,6 @@ namespace API.DataSchema
 
         public virtual ICollection<MEC_POF_Antiguedades>? POFAntiguedad { get; set; }
         public virtual ICollection<MEC_Mecanizadas>? Mecanizada { get; set; }
+        public virtual ICollection<MEC_BajasDetalle>? BajasDetalle { get; set; }
     }
 }

@@ -89,18 +89,28 @@ namespace API.Services
 
         private async Task EliminarRegistrosAsync(int idCabecera)
         {
+            // Obtener registros para eliminar
             var registrosParaEliminar = await _context.MEC_TMPMecanizadas
                                                       .Where(m => m.idCabecera == idCabecera)
                                                       .ToListAsync();
 
-            _context.MEC_TMPMecanizadas.RemoveRange(registrosParaEliminar);
+            // Validar existencia de registros
+            if (!registrosParaEliminar.Any())
+            {
+                throw new InvalidOperationException($"No se encontraron registros con idCabecera = {idCabecera} en MEC_TMPMecanizadas.");
+            }
 
+            // Eliminar registros
+            //_context.MEC_TMPMecanizadas.RemoveRange(registrosParaEliminar);
+            //await _context.SaveChangesAsync(); // Confirmar cambios
+
+            // Reiniciar la secuencia
             await _context.Database.ExecuteSqlRawAsync(
-                 @"
-                  ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;",
-                 idCabecera);
+                @"DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};", idCabecera);
 
-            await _context.SaveChangesAsync();
+            // Reiniciar la secuencia en una llamada separada
+            await _context.Database.ExecuteSqlRawAsync(
+                @"ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;");
         }
 
         private async Task CambiarEstadoCabeceraAsync(int idCabecera, string estado)
