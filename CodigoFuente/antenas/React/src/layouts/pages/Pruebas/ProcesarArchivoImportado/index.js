@@ -19,14 +19,16 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
 import MDAlert from "components/MDAlert";
 import MDButton from "components/MDButton";
-import Box from "@mui/material/Box";
+import MDTypography from "components/MDTypography";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DataTableProcesar from "examples/Tables/DataTableProcesar";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 function ProcesarArchivoImportado() {
-  const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
+  const [errorAlert, setErrorAlert] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const [showErrorButton, setShowErrorButton] = useState(true);
@@ -41,7 +43,6 @@ function ProcesarArchivoImportado() {
 
   const token = sessionStorage.getItem("token");
 
-  // Obtener las cabeceras al cargar el componente
   useEffect(() => {
     axios
       .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
@@ -56,7 +57,14 @@ function ProcesarArchivoImportado() {
         setIdCabeceras(formattedCabeceras);
       })
       .catch((error) => {
-        setErrorAlert({ show: true, message: "Error al cargar las cabeceras.", type: "error" });
+        setErrorAlert(true);
+        setAlertType("error");
+        setAlertMessage("Error al cargar las cabeceras.");
+        setTimeout(() => {
+          setErrorAlert(false);
+          setAlertType("");
+          setAlertMessage("");
+        }, 3000);
       });
   }, [token]);
   // Generar PDF con los errores
@@ -154,14 +162,16 @@ function ProcesarArchivoImportado() {
     }
   };
 
-  // Procesar los archivos importados
   const handleProcessFile = async () => {
     if (!selectedIdCabecera) {
-      setErrorAlert({
-        show: true,
-        message: "Por favor, selecciona una cabecera antes de continuar.",
-        type: "error",
-      });
+      setErrorAlert(true);
+      setAlertType("error");
+      setAlertMessage("Por favor, selecciona una cabecera antes de continuar.");
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertType("");
+        setAlertMessage("");
+      }, 3000);
       return;
     }
 
@@ -172,24 +182,27 @@ function ProcesarArchivoImportado() {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      setErrorAlert({
-        show: true,
-        message: response.data,
-        type: "success",
-      });
-      setShowErrorButton(false);
+      setErrorAlert(true);
+      setAlertType("success");
+      setAlertMessage("El archivo ha sido procesado.");
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertType("");
+        setAlertMessage("");
+      }, 3000);
     } catch (error) {
       const errorMessage =
         error.response?.data?.mensaje ||
         error.response?.data?.title ||
         "Error al procesar el archivo.";
-
-      setErrorAlert({ show: true, message: errorMessage, type: "error" });
-
-      if (errorMessage === "Error al procesar el archivo.") {
-        setShowErrorButton(true);
-      }
+      setErrorAlert(false);
+      setAlertType("error");
+      setAlertMessage(errorMessage);
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertType("error");
+        setAlertMessage("");
+      }, 3000);
     }
   };
 
@@ -198,174 +211,43 @@ function ProcesarArchivoImportado() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      {errorAlert.show && (
-        <MDAlert severity={errorAlert.type} onClose={() => setErrorAlert({ show: false })}>
-          {errorAlert.message}
+      {errorAlert && (
+        <MDAlert color={alertType} dismissible onClose={() => setErrorAlert({ show: false })}>
+          <MDTypography variant="body2" color="white">
+            {alertMessage}
+          </MDTypography>
         </MDAlert>
       )}
-      <Card sx={{ width: "70%", margin: "0 auto" }}>
-        <Grid container spacing={2} sx={{ m: 3 }}>
-          <Grid item xs={6}>
-            <FormControl fullWidth>
-              <InputLabel
-                id="filter-label"
-                sx={{
-                  "&.Mui-focused": { color: "#1A73E8" },
-                }}
-              >
-                Seleccionar Cabecera
-              </InputLabel>
-              <Select
-                labelId="filter-label"
-                value={selectedIdCabecera}
-                onChange={(e) => setSelectedIdCabecera(e.target.value)}
-                sx={{
-                  height: "40px",
-                  "& .MuiSelect-select": {
-                    height: "40px",
-                    padding: "10px",
-                    display: "flex",
-                    alignItems: "center",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#000",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#000",
-                  },
-                }}
-              >
-                <MenuItem value="">
-                  <em>Seleccionar Cabecera</em>
+      <Grid container spacing={2}>
+        <Grid item xs={4}>
+          <FormControl fullWidth>
+            <InputLabel id="filter-label"> Seleccionar Cabecera </InputLabel>
+            <Select
+              labelId="filter-label"
+              value={selectedIdCabecera}
+              onChange={(e) => setSelectedIdCabecera(e.target.value)}
+              style={{ height: "2.5rem", backgroundColor: "white" }}
+              label="Seleccionar Cabecera"
+            >
+              {idCabeceras.map((item, index) => (
+                <MenuItem key={index} value={item.id}>
+                  {item.displayText}
                 </MenuItem>
-                {idCabeceras.map((item, index) => (
-                  <MenuItem key={index} value={item.id}>
-                    {item.displayText}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={5}>
-            <MDButton
-              variant="outlined"
-              color="error"
-              onClick={handleProcessFile}
-              endIcon={<DeleteOutlineIcon />}
-            >
-              Procesar archivo importado
-            </MDButton>
-          </Grid>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
-        {showErrorButton && (
-          <Grid container justifyContent="center" sx={{ mt: 2 }}>
-            <MDButton
-              variant="contained"
-              color="warning"
-              onClick={handleGeneratePDF}
-              disabled={loadingErrors}
-            >
-              {loadingErrors ? "Cargando..." : "Ver errores"}
-            </MDButton>
-          </Grid>
-        )}
-      </Card>
-      {/*<Box sx={{ mt: 3 }}>
-        {carRevistaData.length > 0 && (
-          <DataTableProcesar
-            table={{
-              columns: [
-                { Header: "ID", accessor: "idTMPErrorCarRevista" }, // Accesor del campo 'id'
-                { Header: "caracterRevista", accessor: "caracterRevista" }, // Accesor del campo 'descripcion'
-              ],
-              rows: carRevistaData, // Pasar los datos obtenidos
-            }}
-            entriesPerPage={false}
-            canSearch
-            show
-          />
-        )}
-        <Card sx={{ mt: 3 }}>
-          {conceptosData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: conceptosData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {establecimientosData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: establecimientosData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {funcionesData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: funcionesData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {mecanizadasData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: mecanizadasData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {estData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: estData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-      </Box>*/}
+        <Grid item xs={5}>
+          <MDButton
+            size="small"
+            color="info"
+            onClick={handleProcessFile}
+            endIcon={<DeleteOutlineIcon />}
+          >
+            Procesar archivo importado
+          </MDButton>
+        </Grid>
+      </Grid>
     </DashboardLayout>
   );
 }
