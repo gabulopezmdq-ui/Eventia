@@ -12,8 +12,8 @@ namespace API.DataSchema
         public int IdMotivoBaja { get; set; }
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
-        public int CantHs { get; set; }
-        public int CantMin { get; set; }
+        public int? CantHs { get; set; }
+        public int? CantMin { get; set; }
         public string Observaciones { get; set; }
         public string EstadoRegistro { get; set; }
         public string MotivoRechazo { get; set; }
