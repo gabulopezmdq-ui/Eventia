@@ -85,14 +85,44 @@ function ProcesarArchivoImportado() {
         }),
       ]);
 
-      // Combina los datos de todas las respuestas
-      const allData = [
-        { title: "CarRevista", data: responses[0].data },
-        { title: "Conceptos", data: responses[1].data },
-        { title: "Establecimientos", data: responses[2].data },
-        { title: "Funciones", data: responses[3].data },
-        { title: "Mecanizadas", data: responses[4].data },
-        { title: "TipoEst", data: responses[5].data },
+      // Configurar qué campos incluir para cada sección
+      const dataToInclude = [
+        {
+          title: "Paramétricas - Caracteres de Revista",
+          data: responses[0].data.map((item) => ({
+            COD_PCIA: item.caracterRevista,
+          })),
+        },
+        {
+          title: "Paramétricas - Conceptos",
+          data: responses[1].data.map((item) => ({
+            COD_CONCEPTO_PROVINCIA: item.codigoLiquidacion,
+          })),
+        },
+        {
+          title: "Paramétricas - Establecimientos",
+          data: responses[2].data.map((item) => ({
+            COD_TIPO_ESTABLECIMIENTO: item.NroEstab,
+          })),
+        },
+        {
+          title: "Paramétricas - Tipos de Funciones",
+          data: responses[3].data.map((item) => ({
+            COD_FUNCION_PCA: item.CodFuncion,
+          })),
+        },
+        {
+          title: "Paramétricas - Mecanizadas",
+          data: responses[4].data.map((item) => ({
+            MECANIZADAS: item.codigoLiquidacion,
+          })),
+        },
+        {
+          title: "Paramétricas - Tipos de Establecimientos",
+          data: responses[5].data.map((item) => ({
+            COD_TIPO_ESTABLECIMIENTO: item.TipoOrganizacion,
+          })),
+        },
       ];
 
       // Crear el PDF
@@ -101,13 +131,13 @@ function ProcesarArchivoImportado() {
       doc.text("Errores Detectados", 10, 10);
 
       // Agregar las tablas de errores
-      allData.forEach((section, index) => {
+      dataToInclude.forEach((section, index) => {
         if (section.data.length > 0) {
           if (index !== 0) doc.addPage(); // Agregar nueva página para secciones siguientes
           doc.text(section.title, 10, 20);
           doc.autoTable({
-            head: [Object.keys(section.data[0])], // Obtener las claves del primer objeto para la cabecera
-            body: section.data.map((row) => Object.values(row)), // Obtener los valores para las filas
+            head: [Object.keys(section.data[0])], // Claves seleccionadas como cabecera
+            body: section.data.map((row) => Object.values(row)), // Valores seleccionados como filas
             startY: 30,
           });
         }
@@ -240,7 +270,7 @@ function ProcesarArchivoImportado() {
           </Grid>
         )}
       </Card>
-      <Box sx={{ mt: 3 }}>
+      {/*<Box sx={{ mt: 3 }}>
         {carRevistaData.length > 0 && (
           <DataTableProcesar
             table={{
@@ -335,7 +365,7 @@ function ProcesarArchivoImportado() {
             />
           )}
         </Card>
-      </Box>
+      </Box>*/}
     </DashboardLayout>
   );
 }
