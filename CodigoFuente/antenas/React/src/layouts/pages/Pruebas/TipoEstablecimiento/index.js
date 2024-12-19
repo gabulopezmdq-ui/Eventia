@@ -28,20 +28,19 @@ function TipoEstablecimiento() {
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    fetchTipoEstablecimiento(); // Llama a la función para obtener los datos
+    fetchTipoEstablecimiento();
   }, []);
 
-  // Función para obtener datos desde la API
   const fetchTipoEstablecimiento = () => {
     axios
       .get(process.env.REACT_APP_API_URL + "TiposEstablecimientos/getall", {
         headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
+          Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        setAllData(response.data); // Almacenar todos los datos
-        filterData(response.data, "S"); // Filtrar solo vigentes al inicio
+        setAllData(response.data);
+        filterData(response.data, "S");
       })
       .catch((error) => {
         if (error.response) {
@@ -72,7 +71,7 @@ function TipoEstablecimiento() {
     } else if (filter === "N") {
       filteredData = data.filter((item) => item.vigente === "N" || item.vigente === false);
     } else {
-      filteredData = data; // Todos los datos
+      filteredData = data;
     }
     setDataTableData(filteredData);
   };
