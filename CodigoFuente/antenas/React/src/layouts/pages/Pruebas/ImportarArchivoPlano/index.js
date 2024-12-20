@@ -4,23 +4,24 @@ import { FormControl, InputLabel, Select, MenuItem, Button, Grid, Alert } from "
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
-import MDInput from "components/MDInput";
-import AttachFileIcon from "@mui/icons-material/AttachFile"; // Icono de archivo
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import MDButton from "components/MDButton";
+import MDTypography from "components/MDTypography";
 import MDAlert from "components/MDAlert";
 import MDBox from "components/MDBox";
 import DataTable from "examples/Tables/DataTable";
 
 function ImportarArchivo() {
-  const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState([]); // Para almacenar las personas
+  const [errorAlert, setErrorAlert] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [dataTableData, setDataTableData] = useState([]);
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const [file, setFile] = useState(null);
   const token = sessionStorage.getItem("token");
   const [filterIdCabecera, setFilterIdCabecera] = useState("");
 
-  // Muestra los datos en una tabla
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "ImportarMecanizadas/GetAll", {
@@ -38,12 +39,23 @@ function ImportarArchivo() {
             errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
           }
           setErrorAlert({ show: true, message: errorMessage, type: errorType });
+          setErrorAlert(true);
+          setAlertMessage(errorMessage);
+          setAlertType("error");
+          setTimeout(() => {
+            setErrorAlert(false);
+            setAlertMessage("");
+            setAlertType("");
+          }, 3000);
         } else {
-          setErrorAlert({
-            show: true,
-            message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-            type: "error",
-          });
+          setErrorAlert(true);
+          setAlertMessage("Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.");
+          setAlertType("error");
+          setTimeout(() => {
+            setErrorAlert(false);
+            setAlertMessage("");
+            setAlertType("");
+          }, 3000);
         }
       });
   }, []);
@@ -54,10 +66,9 @@ function ImportarArchivo() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        // Mapea los datos para crear los valores concatenados
         const formattedCabeceras = response.data.map((item) => ({
-          id: item.idCabecera, // Sigue usando idCabecera como identificador único
-          displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`, // Concatenar los valores
+          id: item.idCabecera,
+          displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
         }));
         setIdCabeceras(formattedCabeceras);
       })
@@ -66,22 +77,24 @@ function ImportarArchivo() {
       });
   }, [token]);
 
-  // Manejar selección de archivo
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
+
   const filteredData = filterIdCabecera
     ? dataTableData.filter((item) => item.idCabecera === filterIdCabecera)
     : dataTableData;
 
-  // Manejar importación del archivo
   const handleImport = async () => {
     if (!file || !selectedIdCabecera) {
-      setErrorAlert({
-        show: true,
-        message: "Por favor, selecciona un archivo y un idCabecera.",
-        type: "error",
-      });
+      setErrorAlert(true);
+      setAlertMessage("Por favor, selecciona un archivo y un idCabecera.");
+      setAlertType("error");
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 3000);
       return;
     }
 
@@ -103,116 +116,83 @@ function ImportarArchivo() {
       setErrorAlert({ show: true, message: response.data, type: "success" });
     } catch (error) {
       const errorMessage = error.response?.data || "Error al importar el archivo.";
-      setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      setErrorAlert(true);
+      setAlertType("error");
+      setAlertMessage(errorMessage);
+      setTimeout(() => {
+        setErrorAlert(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 3000);
     }
   };
-
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      {errorAlert.show && (
-        <MDAlert severity={errorAlert.type} onClose={() => setErrorAlert({ show: false })}>
-          {errorAlert.message}
+      {errorAlert && (
+        <MDAlert color={alertType} dismissible onClose={() => setErrorAlert({ show: false })}>
+          <MDTypography variant="body2" color="white">
+            {alertMessage}
+          </MDTypography>
         </MDAlert>
       )}
-      <Card sx={{ width: "70%", margin: "0 auto" }}>
-        <Grid container spacing={2} sx={{ m: 3 }}>
-          <Grid item xs={4}>
-            <FormControl fullWidth>
-              <MDInput
-                select
-                fullWidth
-                label="Selecciona una Cabecera"
-                value={selectedIdCabecera}
-                onChange={(e) => setSelectedIdCabecera(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                sx={{
-                  height: "40px",
-                  "& .MuiInputBase-root": {
-                    height: "40px",
-                    padding: "10px",
-                  },
-                }}
-              >
-                <MenuItem value="">
-                  <em>Selecciona una Cabecera</em>
-                </MenuItem>
-                {idCabeceras.map((item, index) => (
-                  <MenuItem key={index} value={item.id}>
-                    {item.displayText} {/* Muestra el texto concatenado */}
-                  </MenuItem>
-                ))}
-              </MDInput>
-            </FormControl>
-          </Grid>
-          <Grid item xs={3}>
-            <label htmlFor="upload-file">
-              <input
-                type="file"
-                accept=".txt"
-                id="upload-file"
-                style={{ display: "none" }} // Oculta el input file
-                onChange={handleFileChange}
-              />
-              <MDButton
-                variant="outlined"
-                component="span"
-                color="info"
-                endIcon={<AttachFileIcon />} // Añadir el ícono a la derecha
-              >
-                Subir archivo
-              </MDButton>
-            </label>
-          </Grid>
-          <Grid item xs={3}>
-            <MDButton variant="outlined" color="info" onClick={handleImport}>
-              Cargar
-            </MDButton>
-          </Grid>
-        </Grid>
-      </Card>
-      <MDBox my={2}>
-        <Card>
-          <FormControl sx={{ margin: 2 }}>
-            <InputLabel
-              id="filter-label"
-              sx={{
-                "&.Mui-focused": { color: "#1A73E8" }, // Estilo al enfocar
-              }}
-            >
-              Filtrar por Cabecera
-            </InputLabel>
+      <Grid container>
+        <Grid item xs={4} mr={1}>
+          <FormControl fullWidth>
+            <InputLabel id="cabecera-select-label">Selecciona una Cabecera</InputLabel>
             <Select
-              labelId="filter-label"
-              value={filterIdCabecera}
-              onChange={(e) => setFilterIdCabecera(e.target.value)}
-              sx={{
-                height: "40px",
-                "& .MuiSelect-select": {
-                  height: "40px",
-                  padding: "10px",
-                  display: "flex",
-                  alignItems: "center",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#000", // Color del borde al pasar el mouse
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#000", // Color del borde al enfocar
-                },
-              }}
+              labelId="cabecera-select-label"
+              value={selectedIdCabecera}
+              onChange={(e) => setSelectedIdCabecera(e.target.value)}
+              label="Selecciona una Cabecera"
+              style={{ height: "2.5rem", backgroundColor: "white" }}
             >
-              <MenuItem value="">
-                <em>Todos</em>
-              </MenuItem>
               {idCabeceras.map((item) => (
                 <MenuItem key={item.id} value={item.id}>
-                  {item.displayText} {/* Mostrar el texto concatenado */}
+                  {item.displayText}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-        </Card>
+        </Grid>
+        <Grid item mr={1}>
+          <label htmlFor="upload-file">
+            <input
+              type="file"
+              accept=".txt"
+              id="upload-file"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+            <MDButton size="small" component="span" color="info" endIcon={<AttachFileIcon />}>
+              Subir archivo
+            </MDButton>
+          </label>
+        </Grid>
+        <Grid item xs={3}>
+          <MDButton size="small" color="success" onClick={handleImport}>
+            Cargar
+          </MDButton>
+        </Grid>
+      </Grid>
+      <MDBox my={2}>
+        <FormControl fullWidth>
+          <InputLabel id="cabecera-select-label">Filtrar por Cabecera</InputLabel>
+          <Select
+            labelId="cabecera-select-label"
+            value={filterIdCabecera}
+            onChange={(e) => setFilterIdCabecera(e.target.value)}
+            label="Filtrar por Cabecera"
+            style={{ height: "2.5rem", backgroundColor: "white" }}
+          >
+            <MenuItem value="">Todos</MenuItem>
+            {idCabeceras.map((item) => (
+              <MenuItem key={item.id} value={item.id}>
+                {item.displayText}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Card sx={{ marginTop: 1 }}>
           <DataTable
             table={{
@@ -247,7 +227,7 @@ function ImportarArchivo() {
                 { Header: "subvencion", accessor: "subvencion" },
                 { Header: "registroValido", accessor: "registroValido" },
               ],
-              rows: filteredData, // Usa los datos filtrados
+              rows: filteredData,
             }}
             entriesPerPage={false}
             canSearch
