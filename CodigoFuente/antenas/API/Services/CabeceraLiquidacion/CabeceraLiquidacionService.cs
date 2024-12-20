@@ -1,4 +1,5 @@
 ﻿using API.DataSchema;
+using API.Migrations;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -22,44 +23,36 @@ namespace API.Services
             return await _context.MEC_CabeceraLiquidacion
                 .AnyAsync(c => c.AnioLiquidacion == anio && c.MesLiquidacion == mes && c.idTipoLiquidacion == idTipo);
         }
-
-        // Método para crear una nueva cabecera de liquidación
-        public async Task<MEC_CabeceraLiquidacion> CreateAsync(MEC_CabeceraLiquidacion cabeceraLiquidacion)
+         
+        public async Task<string> AddCabecera(MEC_CabeceraLiquidacion cabecera)
         {
-            _context.MEC_CabeceraLiquidacion.Add(cabeceraLiquidacion);
-            await _context.SaveChangesAsync();
-            return cabeceraLiquidacion;
-        }
-
-        // Método para actualizar una cabecera de liquidación existente
-        public async Task<MEC_CabeceraLiquidacion> UpdateAsync(MEC_CabeceraLiquidacion cabeceraLiquidacion)
-        {
-            _context.MEC_CabeceraLiquidacion.Update(cabeceraLiquidacion);
-            await _context.SaveChangesAsync();
-            return cabeceraLiquidacion;
-        }
-
-        // Método para eliminar una cabecera de liquidación por su ID
-        public async Task DeleteAsync(int id)
-        {
-            var cabecera = await _context.MEC_CabeceraLiquidacion.FindAsync(id);
-            if (cabecera != null)
+            bool check = await CheckIfExists(cabecera.AnioLiquidacion, cabecera.MesLiquidacion, cabecera.idTipoLiquidacion);
+            if(check)
             {
-                _context.MEC_CabeceraLiquidacion.Remove(cabecera);
-                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Ya existe una Cabecera de Liquidación para el Mes/Año y Tipo de Liquidación.");
             }
+            else
+            {
+                await SetLiqui(cabecera);
+                await SeEstados(cabecera);
+            }
+            return "Cabecera agregada";
         }
-
-        // Método para obtener todas las cabeceras de liquidación
-        public async Task<IEnumerable<MEC_CabeceraLiquidacion>> GetAllAsync()
+        public async Task SetLiqui(MEC_CabeceraLiquidacion cab)
         {
-            return await _context.MEC_CabeceraLiquidacion.ToListAsync();
+            cab.Estado = "P";
+            cab.Vigente = "S";
+
+            _context.AddRange(cab);
+            await _context.SaveChangesAsync();
         }
-
-        // Método para obtener una cabecera de liquidación por su ID
-        public async Task<MEC_CabeceraLiquidacion> GetByIdAsync(int id)
+        public async Task SeEstados(MEC_CabeceraLiquidacionEstados cab)
         {
-            return await _context.MEC_CabeceraLiquidacion.FindAsync(id);
+            cab.Estado = "P";
+            cab.FechaCambioEstado = DateTime.Now;
+
+            _context.AddRange(cab);
+            await _context.SaveChangesAsync();
         }
     }
 }
