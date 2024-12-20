@@ -42,7 +42,7 @@ function AltaUsuariosEstablecimientos() {
           name: "idUsuario",
           apiUrl: process.env.REACT_APP_API_URL + "Usuarios/GetAll",
           valueField: "idUsuario", // Sigue siendo el identificador único
-          optionField: "idUsuario", // Ahora muestra el nombre del usuario
+          optionField: "nombre", // Ahora muestra el nombre del usuario
           required: true,
         },
         {
