@@ -24,7 +24,7 @@ namespace API.Services
                 .AnyAsync(c => c.AnioLiquidacion == anio && c.MesLiquidacion == mes && c.idTipoLiquidacion == idTipo);
         }
          
-        public async Task<string> AddCabecera(MEC_CabeceraLiquidacion cabecera, MEC_CabeceraLiquidacionEstados cab)
+        public async Task<string> AddCabecera(MEC_CabeceraLiquidacion cabecera, MEC_CabeceraLiquidacionEstados cab, MEC_BajasCabecera baja, MEC_InasistenciasCabecera obj)
         {
             bool check = await CheckIfExists(cabecera.AnioLiquidacion, cabecera.MesLiquidacion, cabecera.idTipoLiquidacion);
             if(check)
@@ -35,12 +35,21 @@ namespace API.Services
             {
                 await SetLiqui(cabecera);
                 await SeEstados(cab);
+                if (cabecera.CalculaBajas == "s")
+                {
+                    await SetEstablecimientoXCabeceraLiquidacion(baja);
+                }
+                else if(cabecera.CalculaInasistencias == "s")
+                {
+                    await SetInasistenciaXCabeceraLiquidacion(obj);
+                }
             }
             return "Cabecera agregada";
         }
         public async Task SetLiqui(MEC_CabeceraLiquidacion cab)
         {
             cab.Estado = "P";
+            cab.Vigente = "S";
 
             _context.AddRange(cab);
             await _context.SaveChangesAsync();
@@ -51,6 +60,31 @@ namespace API.Services
             cab.FechaCambioEstado = DateTime.Now;
 
             _context.AddRange(cab);
+            await _context.SaveChangesAsync();
+        }
+        public async Task SetEstablecimientoXCabeceraLiquidacion(MEC_BajasCabecera baja)
+        {
+            /*baja.IdCabecera = recientemente creada 
+             baja.IdEstablecimiento= recientemente creada 
+             */
+            baja.FechaApertura = DateTime.Now;
+            baja.Estado = "P";
+            baja.SinNovedades = "N";
+
+            _context.AddRange(baja);
+            await _context.SaveChangesAsync();
+        }
+        public async Task SetInasistenciaXCabeceraLiquidacion(MEC_InasistenciasCabecera obj)
+        {
+            /*obj.IdCabecera = recientemente creada 
+             obj.IdEstablecimiento=  
+             */
+            
+            obj.Estado = "P";
+            obj.FechaApertura = DateTime.Now;
+            obj.SinNovedades = "N";
+
+            _context.AddRange(obj);
             await _context.SaveChangesAsync();
         }
     }
