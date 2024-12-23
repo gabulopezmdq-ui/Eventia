@@ -24,7 +24,7 @@ namespace API.Services
                 .AnyAsync(c => c.AnioLiquidacion == anio && c.MesLiquidacion == mes && c.idTipoLiquidacion == idTipo);
         }
          
-        public async Task<string> AddCabecera(MEC_CabeceraLiquidacion cabecera)
+        public async Task<string> AddCabecera(MEC_CabeceraLiquidacion cabecera, MEC_CabeceraLiquidacionEstados cab)
         {
             bool check = await CheckIfExists(cabecera.AnioLiquidacion, cabecera.MesLiquidacion, cabecera.idTipoLiquidacion);
             if(check)
@@ -34,14 +34,13 @@ namespace API.Services
             else
             {
                 await SetLiqui(cabecera);
-                await SeEstados(cabecera);
+                await SeEstados(cab);
             }
             return "Cabecera agregada";
         }
         public async Task SetLiqui(MEC_CabeceraLiquidacion cab)
         {
             cab.Estado = "P";
-            cab.Vigente = "S";
 
             _context.AddRange(cab);
             await _context.SaveChangesAsync();
