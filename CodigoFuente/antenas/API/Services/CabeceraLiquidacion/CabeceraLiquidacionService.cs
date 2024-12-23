@@ -90,8 +90,8 @@ namespace API.Services
         {
             obj.IdCabecera = idCabecera;  // Asignamos el idCabecera a la inasistencia
             obj.Estado = "P";
-            obj.Mes = MesLiquidacion;
-            obj.Anio = AnioLiquidacion;
+            obj.Mes = int.Parse(MesLiquidacion);
+            obj.Anio = int.Parse(AnioLiquidacion);
             obj.FechaApertura = DateTime.Now;
             obj.SinNovedades = "N";
 
