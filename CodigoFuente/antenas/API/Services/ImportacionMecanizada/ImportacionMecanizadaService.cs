@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using API.Migrations;
+using System.Globalization;
 
 namespace API.Services
 {
@@ -30,117 +31,97 @@ namespace API.Services
 
         public async Task ImportarExcel(IFormFile file, int idCabecera)
         {
+            await EliminarTMPErrores(idCabecera);
+
             if (file == null || file.Length == 0)
                 throw new ArgumentException("Archivo no proporcionado.");
 
-            using (var stream = new MemoryStream())
+            using (var stream = file.OpenReadStream())
+            using (var reader = new StreamReader(stream))
             {
-                await file.CopyToAsync(stream);
-                stream.Position = 0;
-                using (var workbook = new XLWorkbook(stream))
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    var worksheet = workbook.Worksheet(1);
-
-                    // Validación del número de columnas
-                    if (worksheet.FirstRowUsed().LastCellUsed().Address.ColumnNumber != 21)
+                    try
                     {
-                        throw new ArgumentException("Formato incorrecto. El archivo debe tener exactamente 21 columnas.");
-                    }
-
-                    // Eliminar registros relacionados con la cabecera
-                    //await EliminarTMPErrores(idCabecera);
-
-                    int totalRowsInExcel = worksheet.LastRowUsed().RowNumber(); // Número total de filas en el archivo
-                    int totalRecordsSaved = 0;
-
-                    using (var transaction = await _context.Database.BeginTransactionAsync())
-                    {
-                        try
+                        while (!reader.EndOfStream)
                         {
-                            for (int row = 2; row <= totalRowsInExcel; row++)
+                            var line = await reader.ReadLineAsync();
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+
+                            // Parsear los campos de acuerdo a las posiciones
+                            var mecanizada = new MEC_TMPMecanizadas
                             {
-                                var mecanizada = new MEC_TMPMecanizadas
-                                {
-                                    idCabecera = idCabecera,
-                                    FechaImportacion = DateTime.Now,
-                                    MesLiquidacion = worksheet.Cell(row, 1).GetString(),
-                                    OrdenPago = worksheet.Cell(row, 2).GetString(),
-                                    AnioMesAfectacion = worksheet.Cell(row, 3).GetString(),
-                                    Documento = worksheet.Cell(row, 4).GetString(),
-                                    Secuencia = worksheet.Cell(row, 5).GetString(),
-                                    Funcion = worksheet.Cell(row, 6).GetString(),
-                                    CodigoLiquidacion = worksheet.Cell(row, 7).GetString(),
-                                    Importe = ParseDecimal(worksheet.Cell(row, 8).GetString()),
-                                    Signo = worksheet.Cell(row, 9).GetString(),
-                                    MarcaTransferido = worksheet.Cell(row, 10).GetString(),
-                                    Moneda = worksheet.Cell(row, 11).GetString(),
-                                    RegimenEstatutario = worksheet.Cell(row, 12).GetString(),
-                                    CaracterRevista = worksheet.Cell(row, 13).GetString(),
-                                    Dependencia = worksheet.Cell(row, 14).GetString(),
-                                    Distrito = worksheet.Cell(row, 15).GetString(),
-                                    TipoOrganizacion = worksheet.Cell(row, 16).GetString(),
-                                    NroEstab = worksheet.Cell(row, 17).GetString(),
-                                    Categoria = worksheet.Cell(row, 18).GetString(),
-                                    TipoCargo = worksheet.Cell(row, 19).GetString(),
-                                    HorasDesignadas = ParseDecimal(worksheet.Cell(row, 20).GetString()),
-                                    Subvencion = worksheet.Cell(row, 21).GetString(),
-                                    RegistroValido = "N"
-                                };
+                                idCabecera = idCabecera,
+                                FechaImportacion = DateTime.Now,
+                                MesLiquidacion = line.Substring(0, 6).Trim(),
+                                OrdenPago = line.Substring(6, 5).Trim(),
+                                AnioMesAfectacion = line.Substring(11, 4).Trim(),
+                                Documento = line.Substring(15, 8).Trim(),
+                                Secuencia = line.Substring(23, 3).Trim(),
+                                Funcion = line.Substring(26, 1).Trim(),
+                                CodigoLiquidacion = line.Substring(27, 5).Trim(),
+                                Importe = ParseDecimal(line.Substring(32, 9).Trim()) / 100,
+                                Signo = line.Substring(41, 1).Trim(),
+                                MarcaTransferido = line.Substring(42, 1).Trim(),
+                                Moneda = line.Substring(43, 1).Trim(),
+                                RegimenEstatutario = line.Substring(44, 1).Trim(),
+                                CaracterRevista = line.Substring(45, 1).Trim(),
+                                Dependencia = line.Substring(46, 1).Trim(),
+                                Distrito = line.Substring(47, 3).Trim(),
+                                TipoOrganizacion = line.Substring(50, 2).Trim(),
+                                NroEstab = line.Substring(52, 4).Trim(),
+                                Categoria = line.Substring(56, 2).Trim(),
+                                TipoCargo = line.Substring(58, 1).Trim(),
+                                HorasDesignadas = ParseDecimal(line.Substring(60, 3).Trim()) / 100, 
+                                Subvencion = line.Substring(63, 3).Trim(),
+                                RegistroValido = "N"
+                            };
 
-                                _context.MEC_TMPMecanizadas.Add(mecanizada);
-                                //totalRecordsSaved++;
+                            // Agregar a la base de datos
+                            _context.MEC_TMPMecanizadas.Add(mecanizada);
+                        }
 
-                                //// Guardar los registros por tandas, por ejemplo, cada 100 registros. 
-                                //if (totalRecordsSaved % 100 == 0)
-                                //{
-                                //    await _context.SaveChangesAsync();
-                                //}
-                            }
+                        // Guardar todos los registros en la base de datos
+                        await _context.SaveChangesAsync();
 
-                            // Guardar todos los registros al final
+                        // Actualizar el estado de la cabecera a "I"
+                        var cabecera = await _context.MEC_CabeceraLiquidacion.FindAsync(idCabecera);
+                        if (cabecera != null)
+                        {
+                            cabecera.Estado = "I";
                             await _context.SaveChangesAsync();
-
-                            // Comprobar si todos los registros se guardaron. Esto es por si se guarda en tandas
-                            //if (totalRecordsSaved != (totalRowsInExcel - 1)) // -1 porque no contamos la fila del header
-                            //{
-                            //    throw new InvalidOperationException("La importación se interrumpió y no se guardaron todos los registros.");
-                            //}
-
-                            // Actualizar el estado de la cabecera a "I"
-                            var cabecera = await _context.MEC_CabeceraLiquidacion.FindAsync(idCabecera);
-                            if (cabecera != null)
-                            {
-                                cabecera.Estado = "I";
-                                await _context.SaveChangesAsync();
-                            }
-
-                            await transaction.CommitAsync(); // Confirmar la transacción
-
                         }
-                        catch (Exception ex)
-                        {
-                            await transaction.RollbackAsync(); // Revertir los cambios si ocurre un error
-                            throw new InvalidOperationException("Error en la importación de datos: " + ex.Message);
-                        }
+
+                        // Confirmar la transacción
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        throw new InvalidOperationException("Error en la importación de datos: " + ex.Message);
                     }
                 }
             }
         }
-            // Función ParseDecimal para convertir strings en decimales de forma segura. Algunos registros generaban errores porque los tomaba como un entero
-            private decimal ParseDecimal(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return 0;
+        // Función ParseDecimal para convertir strings en decimales de forma segura. Algunos registros generaban errores porque los tomaba como un entero
+        private decimal ParseDecimal(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return 0;
 
-        // Quitar comas y espacios innecesarios
-        value = value.Replace(",", "").Replace(" ", "");
+            value = value.Replace(",", "").Replace(" ", "");
 
-        // Intentar convertir el valor a decimal
-        if (decimal.TryParse(value, out decimal result))
-            return result;
+            // Validación adicional para evitar valores no numéricos
+            if (!value.All(char.IsDigit) && !value.Contains('.'))
+            {
+                throw new FormatException($"El valor '{value}' no tiene un formato decimal válido.");
+            }
 
-        throw new FormatException($"El valor '{value}' no tiene un formato decimal válido.");
-    }
+            if (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal result))
+                return result;
+
+            throw new FormatException($"El valor '{value}' no tiene un formato decimal válido.");
+        }
 
         //Revetir importación
         public async Task<List<MEC_TMPMecanizadas>> ObtenerRegistrosPorCabeceraAsync(int idCabecera)
@@ -154,38 +135,28 @@ namespace API.Services
         }
         public async Task RevertirImportacionAsync(int idCabecera)
         {
-            // Buscar el estado en la tabla CabeceraDeLiquidacion
+            // Verificar el estado de la cabecera
             var estadoCabecera = await _context.MEC_CabeceraLiquidacion
-                                               .Where(c => c.IdCabecera == idCabecera)
-                                               .FirstOrDefaultAsync();
+                                               .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
-            // Verificar que la cabecera exista y que el estado sea "I"
             if (estadoCabecera == null || estadoCabecera.Estado != "I")
             {
                 throw new InvalidOperationException("No se encontraron registros con el estado 'I' para revertir.");
             }
 
-            // Buscar y eliminar los registros si la confirmación es verdadera
-            var registros = await _context.MEC_TMPMecanizadas
-                                          .Where(m => m.idCabecera == idCabecera )
-                                          .ToListAsync();
-
-            if (!registros.Any())
-            {
-                throw new InvalidOperationException("No se encontraron registros para revertir.");
-            }
-
-            _context.MEC_TMPMecanizadas.RemoveRange(registros);
+            // Eliminar registros directamente con SQL crudo
+            string deleteSql = @"
+                DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};
+                ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;";
+            await _context.Database.ExecuteSqlRawAsync(deleteSql, idCabecera);
 
             // Cambiar el estado de la cabecera de "I" a "P"
-             estadoCabecera.Estado = "P";
+            estadoCabecera.Estado = "P";
 
-            // Guardar los cambios
+            // Guardar el cambio de estado
             await _context.SaveChangesAsync();
-
-            // Reiniciar los índices de la tabla MEC_TMPMecanizadas
-            await _context.Database.ExecuteSqlRawAsync("ALTER SEQUENCE MEC_TMPMecanizadas_id_seq RESTART WITH 1;");
         }
+
 
         private async Task EliminarTMPErrores(int idCabecera)
         {

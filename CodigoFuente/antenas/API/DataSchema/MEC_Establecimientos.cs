@@ -25,5 +25,6 @@ namespace API.DataSchema
         public virtual ICollection<MEC_UsuariosEstablecimientos>? UsuarioEstablecimiento { get; set; } = new List<MEC_UsuariosEstablecimientos>();
         public virtual ICollection<MEC_InasistenciasCabecera>? Inasistencias { get; set; } = new List<MEC_InasistenciasCabecera>();
         public virtual ICollection<MEC_Mecanizadas>? Mecanizada { get; set; } = new List<MEC_Mecanizadas>();
+        public virtual ICollection<MEC_BajasCabecera>? BajaCabecera { get; set; } = new List<MEC_BajasCabecera>();
     }
 }

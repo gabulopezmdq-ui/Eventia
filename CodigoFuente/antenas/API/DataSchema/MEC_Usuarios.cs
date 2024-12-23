@@ -17,6 +17,9 @@ namespace API.DataSchema
         public virtual ICollection<MEC_UsuariosEstablecimientos> UsXEstablecimiento { get; set; } = new List<MEC_UsuariosEstablecimientos>();
         public virtual ICollection<MEC_InasistenciasCabecera> Inasistencias { get; set; } = new List<MEC_InasistenciasCabecera>();
         public virtual ICollection<MEC_Mecanizadas> Mecanizadas { get; set; } = new List<MEC_Mecanizadas>();
+        public virtual ICollection<MEC_BajasCabecera> BajaCabecera { get; set; } = new List<MEC_BajasCabecera>();
+        public virtual ICollection<MEC_BajasDetalle> BajaDetalle { get; set; } = new List<MEC_BajasDetalle>();
+        public virtual ICollection<MEC_CabeceraLiquidacionEstados> CabeceraLiqEstados { get; set; } = new List<MEC_CabeceraLiquidacionEstados>();
         public string[] UniqueProperties => new[] {"Nombre"};
     }
 }
