@@ -97,6 +97,12 @@ const routes = [
         route: "/UsuariosPorRolFE",
         component: <UsuarioPorRol />,
       },
+      {
+        name: "Usuarios por Establecimientos",
+        key: "UsuariosEstablecimientos",
+        route: "/UsuariosEstablecimientosFE",
+        component: <UsuariosEstablecimientos />,
+      },
     ],
   },
   { type: "divider", key: "divider-2" },
@@ -106,12 +112,6 @@ const routes = [
     name: "Parámetricas",
     key: "parametricas",
     collapse: [
-      {
-        name: "Usuarios por Establecimientos",
-        key: "UsuariosEstablecimientos",
-        route: "/UsuariosEstablecimientosFE",
-        component: <UsuariosEstablecimientos />,
-      },
       {
         name: "Conceptos",
         key: "ListadoConceptos",
