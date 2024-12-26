@@ -1,4 +1,5 @@
 ﻿using API.DataSchema;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -32,7 +33,7 @@ namespace API.Services
             }
 
             // Crear cabecera principal
-            int cabeceraId = await SetLiquiAsync(cabecera);
+            int cabeceraId = await SetLiquiAsync(cabecera, userId);
 
             // Crear cabecera de estados
             await SetEstadosAsync(cabeceraId, userId);
@@ -76,9 +77,10 @@ namespace API.Services
         }
 
         // Crear cabecera principal
-        public async Task<int> SetLiquiAsync(MEC_CabeceraLiquidacion cabecera)
+        public async Task<int> SetLiquiAsync(MEC_CabeceraLiquidacion cabecera, int userId)
         {
             cabecera.Estado = "P";
+            cabecera.IdUsuario = userId;
             cabecera.Vigente = "S";
 
             _context.Add(cabecera);
