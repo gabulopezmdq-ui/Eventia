@@ -26,6 +26,48 @@ function AltaCabeceraLiquidacion() {
     }));
   };
 
+  function validateVarchar(value, field, maxLength) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > maxLength) {
+      return `${field.label} no puede tener más de ${maxLength} caracteres.`;
+    }
+    return null;
+  }
+
+  function validateChar(value, field, exactLength) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length !== exactLength) {
+      return `${field.label} debe tener exactamente ${exactLength} caracteres.`;
+    }
+    return null;
+  }
+
+  function validateNumber(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (isNaN(value)) {
+      return `${field.label} debe ser un número válido.`;
+    }
+    return null;
+  }
+
+  function validateDecimal(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    const decimalRegex = /^(\d+(\.\d{1,2})?)$/;
+    if (!decimalRegex.test(value)) {
+      return `${field.label} debe ser un número decimal válido con hasta 2 decimales.`;
+    }
+    return null;
+  }
+  //--------------------FIN VALIDACIONES----------------------//
+
   const steps = [
     {
       label: labelTitulo,
@@ -43,14 +85,65 @@ function AltaCabeceraLiquidacion() {
           type: "text",
           label: "Leyenda Tipo Liq.Reporte",
           name: "leyendaTipoLiqReporte",
+          customValidation: (value, field) => validateVarchar(value, field, 100),
           required: true,
         },
-        { type: "text", label: "Mes Liquidacion", name: "mesLiquidacion", required: true },
-        { type: "text", label: "Año Liquidacion", name: "anioLiquidacion", required: true },
-        { type: "text", label: "Usuario Liquidacion", name: "usuarioLiquidacion", required: true },
-        { type: "text", label: "Observaciones", name: "observaciones", required: true },
-        { type: "date", label: "Inicio Liquidacion", name: "inicioLiquidacion", required: true },
-        { type: "date", label: "Fin Liquidacion", name: "finLiquidacion", required: true },
+        {
+          type: "text",
+          label: "Mes Liquidacion",
+          name: "mesLiquidacion",
+          customValidation: (value, field) => validateChar(value, field, 2),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Año Liquidacion",
+          name: "anioLiquidacion",
+          customValidation: (value, field) => validateChar(value, field, 4),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Usuario Liquidacion",
+          name: "usuarioLiquidacion",
+          customValidation: (value, field) => validateVarchar(value, field, 50),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Observaciones",
+          name: "observaciones",
+          customValidation: (value, field) => validateVarchar(value, field, 1000),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Observaciones Inasistencias",
+          name: "observacionesInasistencias",
+          customValidation: (value, field) => validateVarchar(value, field, 1000),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Observaciones Bajas",
+          name: "observacionesBajas",
+          customValidation: (value, field) => validateVarchar(value, field, 1000),
+          required: true,
+        },
+        {
+          type: "number",
+          label: "Cant. Docentes",
+          name: "cantDocentes",
+          customValidation: validateNumber,
+          required: true,
+        },
+        {
+          type: "number",
+          label: "RetenDeno7",
+          name: "retenDeno7",
+          customValidation: validateDecimal,
+          required: true,
+        },
         {
           type: "select",
           label: "Estado",
@@ -91,15 +184,6 @@ function AltaCabeceraLiquidacion() {
           optionField: "label",
           required: true,
         },
-        {
-          type: "text",
-          label: "Observaciones Inasistencias",
-          name: "observacionesInasistencias",
-          required: true,
-        },
-        { type: "text", label: "Observaciones Bajas", name: "observacionesBajas", required: true },
-        { type: "number", label: "Cant. Docentes", name: "cantDocentes", required: true },
-        { type: "number", label: "RetenDeno7", name: "retenDeno7", required: true },
         {
           type: "select",
           label: "Vigente",
