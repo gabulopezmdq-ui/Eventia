@@ -27,7 +27,7 @@ function CabeceraLiquidacion() {
     axios
       .get(process.env.REACT_APP_API_URL + "cabeceraliquidacion/getall", {
         headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
+          Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => setDataTableData(response.data))
@@ -68,7 +68,6 @@ function CabeceraLiquidacion() {
     const url = `/CabeceraLiquidacionFE/Edit/${idCabecera}`;
     navigate(url);
   };
-  //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
   return (
@@ -96,7 +95,6 @@ function CabeceraLiquidacion() {
             <DataTable
               table={{
                 columns: [
-                  //{ Header: "ID", accessor: "id" },
                   { Header: "mes Liquidación", accessor: "mesLiquidacion" },
                   { Header: "año Liquidacion", accessor: "anioLiquidacion" },
                   { Header: "observaciones", accessor: "observaciones" },
@@ -112,19 +110,6 @@ function CabeceraLiquidacion() {
                     Cell: ({ value }) =>
                       value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
                   },
-                  /*{
-                    Header: "Mas Info",
-                    accessor: "edit",
-                    Cell: ({ row }) => (
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        onClick={() => handleVer(row.original)}
-                      >
-                        Mas Info
-                      </MDButton>
-                    ),
-                  },*/
                   {
                     Header: "Editar",
                     accessor: "edit",
@@ -153,7 +138,7 @@ function CabeceraLiquidacion() {
 }
 
 CabeceraLiquidacion.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
