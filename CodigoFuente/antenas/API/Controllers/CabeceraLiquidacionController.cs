@@ -18,11 +18,13 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICabeceraLiquidacionService _cabeceraService;
+        private readonly ICRUDService<MEC_CarRevista> _serviceGenerico;
 
-        public CabeceraLiquidacionController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraLiquidacionService cabeceraService)
+        public CabeceraLiquidacionController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraLiquidacionService cabeceraService, ICRUDService<MEC_CarRevista> serviceGenerico)
         {
             _context = context;
             _cabeceraService = cabeceraService;
+            _serviceGenerico = serviceGenerico;
         }
 
         [HttpGet("CheckIfExists")]
@@ -56,6 +58,36 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<MEC_CabeceraLiquidacion>>> Get() //Trae los registros Vigentes = S
+        {
+            return Ok(_serviceGenerico.GetAll());
+        }
+
+        [HttpGet("GetByVigente")]
+        public async Task<ActionResult<IEnumerable<MEC_CabeceraLiquidacion>>> GetByVigente([FromQuery] string vigente = null)
+        {
+            var result = await _serviceGenerico.GetByVigente(vigente);
+            return Ok(result);
+        }
+
+        [HttpGet("GetAllN")]
+        public async Task<ActionResult<IEnumerable<MEC_CabeceraLiquidacion>>> GetAllVigente() //Trae TODOS los registros independientemente de que son Vigente S o N
+        {
+            return Ok(_serviceGenerico.GetAllVigente());
+        }
+
+        [HttpGet("GetById")]
+        public async Task<ActionResult<MEC_CabeceraLiquidacion>> Get(int Id)
+        {
+            return Ok(await _serviceGenerico.GetByID(Id));
+        }
+
+        [HttpGet("GetByName")]
+        public async Task<ActionResult<MEC_CabeceraLiquidacion>> Get(string Name)
+        {
+            return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
+        }
 
     }
 }
