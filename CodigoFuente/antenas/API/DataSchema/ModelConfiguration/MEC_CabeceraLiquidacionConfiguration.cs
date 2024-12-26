@@ -70,7 +70,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.Estado)
                 .HasColumnType("char(1)")
                 .IsFixedLength(true)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.CalculaInasistencias)
                   .HasColumnType("char(1)")
