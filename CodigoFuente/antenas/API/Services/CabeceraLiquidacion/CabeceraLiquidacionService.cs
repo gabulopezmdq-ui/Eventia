@@ -41,13 +41,13 @@ namespace API.Services
             // Generar cabeceras de bajas, si aplica
             if (cabecera.CalculaBajas == "S")
             {
-                await GenerarCabecerasBajasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion);
+                await GenerarCabecerasBajasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion, userId);
             }
 
             // Generar cabeceras de inasistencias, si aplica
             if (cabecera.CalculaInasistencias == "S")
             {
-                await GenerarCabecerasInasistenciasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion);
+                await GenerarCabecerasInasistenciasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion, userId);
             }
 
             return "Cabecera agregada exitosamente.";
@@ -105,7 +105,7 @@ namespace API.Services
         }
 
         // Generar cabeceras de bajas
-        public async Task GenerarCabecerasBajasAsync(int cabeceraId, string anio, string mes)
+        public async Task GenerarCabecerasBajasAsync(int cabeceraId, string anio, string mes, int userId)
         {
             var establecimientos = await _context.MEC_Establecimientos
                 .Where(e => e.Vigente == "S")
@@ -126,7 +126,8 @@ namespace API.Services
                         Mes = int.Parse(mes),
                         Estado = "P",
                         FechaApertura = DateTime.Today,
-                        SinNovedades = "N"
+                        SinNovedades = "N",
+                        Confecciono = userId
                     };
 
                     _context.Add(bajaCabecera);
@@ -137,7 +138,7 @@ namespace API.Services
         }
 
         // Generar cabeceras de inasistencias
-        public async Task GenerarCabecerasInasistenciasAsync(int cabeceraId, string anio, string mes)
+        public async Task GenerarCabecerasInasistenciasAsync(int cabeceraId, string anio, string mes, int userId)
         {
             var establecimientos = await _context.MEC_Establecimientos
                 .Where(e => e.Vigente == "S")
@@ -158,7 +159,8 @@ namespace API.Services
                         Mes = int.Parse(mes),
                         Estado = "P",
                         FechaApertura = DateTime.Today,
-                        SinNovedades = "N"
+                        SinNovedades = "N",
+                        Confecciono = userId,
                     };
 
                     _context.Add(inasistenciaCabecera);
