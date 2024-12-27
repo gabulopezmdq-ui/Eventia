@@ -13,6 +13,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
                .Property(e => e.IdCabeceraEstado)
                .ValueGeneratedOnAdd();
+
             builder
                 .HasOne(e => e.Cabecera)
                 .WithMany(e => e.EstadoCabecera)
@@ -21,6 +22,17 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
                 .Navigation(e => e.Cabecera)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder
+                .HasOne(e => e.Usuario)
+                .WithMany(e => e.CabeceraLiqEstados)
+                .HasForeignKey(e => e.IdUsuario)
+                .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Usuario)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
