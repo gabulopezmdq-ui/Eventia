@@ -5,7 +5,7 @@
         public int IdUsuarioEstablecimiento {  get; set; }
         public int IdUsuario { get; set; }
         public int IdEstablecimiento { get; set; }
-        public int IdCargo { get; set; }
+        public int IdTipoCategoria { get; set; }
         public string Vigente { get; set; }
 
         public virtual MEC_Usuarios? Usuario { get; set; }
