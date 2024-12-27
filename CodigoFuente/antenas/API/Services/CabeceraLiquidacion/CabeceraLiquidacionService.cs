@@ -41,13 +41,13 @@ namespace API.Services
             // Generar cabeceras de bajas, si aplica
             if (cabecera.CalculaBajas == "S")
             {
-                await GenerarCabecerasBajasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion);
+                await GenerarCabecerasBajasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion, userId);
             }
 
             // Generar cabeceras de inasistencias, si aplica
             if (cabecera.CalculaInasistencias == "S")
             {
-                await GenerarCabecerasInasistenciasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion);
+                await GenerarCabecerasInasistenciasAsync(cabeceraId, cabecera.AnioLiquidacion, cabecera.MesLiquidacion, userId);
             }
 
             return "Cabecera agregada exitosamente.";
@@ -105,7 +105,7 @@ namespace API.Services
         }
 
         // Generar cabeceras de bajas
-        public async Task GenerarCabecerasBajasAsync(int cabeceraId, string anio, string mes)
+        public async Task GenerarCabecerasBajasAsync(int cabeceraId, string anio, string mes, int userId)
         {
             var establecimientos = await _context.MEC_Establecimientos
                 .Where(e => e.Vigente == "S")
@@ -125,7 +125,8 @@ namespace API.Services
                         Mes = int.Parse(mes),
                         Estado = "P",
                         FechaApertura = DateTime.Today,
-                        SinNovedades = "N"
+                        SinNovedades = "N",
+                        Confecciono = userId
                     };
 
                     _context.Add(bajaCabecera);
@@ -136,7 +137,7 @@ namespace API.Services
         }
 
         // Generar cabeceras de inasistencias
-        public async Task GenerarCabecerasInasistenciasAsync(int cabeceraId, string anio, string mes)
+        public async Task GenerarCabecerasInasistenciasAsync(int cabeceraId, string anio, string mes, int userId)
         {
             var establecimientos = await _context.MEC_Establecimientos
                 .Where(e => e.Vigente == "S")
@@ -157,13 +158,41 @@ namespace API.Services
                         Mes = int.Parse(mes),
                         Estado = "P",
                         FechaApertura = DateTime.Today,
-                        SinNovedades = "N"
+                        SinNovedades = "N",
+                        Confecciono = userId,
                     };
 
                     _context.Add(inasistenciaCabecera);
                 }
             }
 
+            await _context.SaveChangesAsync();
+        }
+
+        // Método para guardar las bajas asociadas a la cabecera
+        public async Task SetEstablecimientoXCabeceraLiquidacion(MEC_BajasCabecera baja, int idCabecera)
+        {
+            baja.IdCabecera = idCabecera;  // Asignamos el idCabecera a la baja
+            baja.FechaApertura = DateTime.Now;
+            baja.Usuario=baja.Usuario;//cambiar
+            baja.Estado = "P";
+            baja.SinNovedades = "N";
+
+            _context.AddRange(baja);
+            await _context.SaveChangesAsync();
+        }
+
+        // Método para guardar las inasistencias asociadas a la cabecera
+        public async Task SetInasistenciaXCabeceraLiquidacion(MEC_InasistenciasCabecera obj, int idCabecera, string MesLiquidacion, string AnioLiquidacion)
+        {
+            obj.IdCabecera = idCabecera;  // Asignamos el idCabecera a la inasistencia
+            obj.Estado = "P";
+            obj.Mes = int.Parse(MesLiquidacion);
+            obj.Anio = int.Parse(AnioLiquidacion);
+            obj.FechaApertura = DateTime.Now;
+            obj.SinNovedades = "N";
+
+            _context.AddRange(obj);
             await _context.SaveChangesAsync();
         }
     }
