@@ -19,6 +19,7 @@ function ImportarArchivo() {
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const [file, setFile] = useState(null);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false); // Nuevo estado para habilitar/deshabilitar el botón
   const token = sessionStorage.getItem("token");
   const [filterIdCabecera, setFilterIdCabecera] = useState("");
 
@@ -102,6 +103,8 @@ function ImportarArchivo() {
     formData.append("file", file);
     formData.append("idCabecera", selectedIdCabecera);
 
+    setIsButtonDisabled(true); // Deshabilita el botón al iniciar la petición
+
     try {
       const response = await axios.post(
         "https://localhost:44382/ImportarMecanizadas/ImportarExcel",
@@ -113,19 +116,32 @@ function ImportarArchivo() {
           },
         }
       );
-      setErrorAlert({ show: true, message: response.data, type: "success" });
+      // Comprueba si la respuesta es "Importación exitosa."
+      if (response.data === "Importación exitosa.") {
+        setErrorAlert(true); // Muestra el alert
+        setAlertMessage(response.data); // Muestra el mensaje de éxito
+        setAlertType("success"); // Estilo de alerta de éxito
+      } else {
+        // Maneja otros mensajes del backend
+        setErrorAlert(true);
+        setAlertMessage(response.data || "Respuesta inesperada del servidor.");
+        setAlertType("info");
+      }
     } catch (error) {
       const errorMessage = error.response?.data || "Error al importar el archivo.";
       setErrorAlert(true);
       setAlertType("error");
       setAlertMessage(errorMessage);
+    } finally {
       setTimeout(() => {
         setErrorAlert(false);
         setAlertMessage("");
         setAlertType("");
       }, 3000);
+      setIsButtonDisabled(false); // Habilita el botón después de recibir la respuesta
     }
   };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -170,7 +186,12 @@ function ImportarArchivo() {
           </label>
         </Grid>
         <Grid item xs={3}>
-          <MDButton size="small" color="success" onClick={handleImport}>
+          <MDButton
+            size="small"
+            color="success"
+            onClick={handleImport}
+            disabled={isButtonDisabled} // Botón deshabilitado según el estado
+          >
             Cargar
           </MDButton>
         </Grid>
