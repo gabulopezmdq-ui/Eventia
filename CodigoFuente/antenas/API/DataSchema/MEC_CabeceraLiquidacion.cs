@@ -16,7 +16,7 @@ namespace API.DataSchema
         public string? Observaciones { get; set; }
         public DateTime? InicioLiquidacion { get; set; }
         public DateTime? FinLiquidacion { get; set; }
-        public string Estado { get; set; }
+        public string? Estado { get; set; }
         public string? CalculaInasistencias { get; set; }
         public string? CalculaBajas { get; set; }
         public int? CantDocentes { get; set; }
