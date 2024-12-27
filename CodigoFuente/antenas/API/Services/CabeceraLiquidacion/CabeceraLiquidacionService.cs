@@ -115,7 +115,6 @@ namespace API.Services
             {
                 bool existe = await _context.MEC_BajasCabecera
                     .AnyAsync(b => b.IdCabecera == cabeceraId && b.IdEstablecimiento == establecimiento.IdEstablecimiento);
-
                 if (!existe)
                 {
                     var bajaCabecera = new MEC_BajasCabecera
