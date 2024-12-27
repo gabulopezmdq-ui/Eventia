@@ -22,7 +22,8 @@ function ImportarArchivo() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        const formattedCabeceras = response.data.map((item) => ({
+        const filteredCabeceras = response.data.filter((item) => item.estado === "I");
+        const formattedCabeceras = filteredCabeceras.map((item) => ({
           id: item.idCabecera,
           displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
         }));
@@ -65,7 +66,7 @@ function ImportarArchivo() {
         }
       );
       setErrorAlert(true);
-      setAlertMessage("Se ha subido el archivo con exito.");
+      setAlertMessage("Importación eliminada.");
       setAlertType("success");
       setTimeout(() => {
         setErrorAlert(false);

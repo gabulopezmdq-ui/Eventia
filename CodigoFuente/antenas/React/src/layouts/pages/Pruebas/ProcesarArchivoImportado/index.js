@@ -29,15 +29,10 @@ function ProcesarArchivoImportado() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
-  const [showErrorButton, setShowErrorButton] = useState(true);
+  const [showErrorButton, setShowErrorButton] = useState(false);
   const [errorData, setErrorData] = useState([]); // Estado para almacenar los datos de los errores
   const [loadingErrors, setLoadingErrors] = useState(false); // Estado para indicar si se están cargando los errores
-  const [carRevistaData, setCarRevistaData] = useState([]); // Estado para los datos de CarRevista
-  const [conceptosData, setConceptosData] = useState([]);
-  const [establecimientosData, setEstablecimientosData] = useState([]);
-  const [funcionesData, setFuncionesData] = useState([]);
-  const [mecanizadasData, setMecanizadasData] = useState([]);
-  const [estData, setEstData] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false); // Nuevo estado
 
   const token = sessionStorage.getItem("token");
 
@@ -128,12 +123,14 @@ function ProcesarArchivoImportado() {
       // Crear el PDF
       const doc = new jsPDF();
       doc.setFontSize(14);
-      doc.text("Errores Detectados", 10, 10);
+      //doc.text("Errores Detectados", 10, 10);
+      let firstPage = true; // Bandera para evitar una primera página en blanco
 
       // Agregar las tablas de errores
-      dataToInclude.forEach((section, index) => {
+      dataToInclude.forEach((section) => {
         if (section.data.length > 0) {
-          if (index !== 0) doc.addPage(); // Agregar nueva página para secciones siguientes
+          if (!firstPage) doc.addPage(); // Agregar nueva página solo si no es la primera
+          firstPage = false; // Cambiar bandera después de la primera sección
           doc.text(section.title, 10, 20);
           doc.autoTable({
             head: [Object.keys(section.data[0])], // Claves seleccionadas como cabecera
@@ -164,6 +161,7 @@ function ProcesarArchivoImportado() {
       });
       return;
     }
+    setIsProcessing(true); // Deshabilitar el botón antes de iniciar el proceso
 
     try {
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
@@ -173,23 +171,22 @@ function ProcesarArchivoImportado() {
         },
       });
 
+      // Si el procesamiento es exitoso, ocultamos el botón de errores
+      setShowErrorButton(false);
       setErrorAlert({
         show: true,
-        message: response.data,
+        message: "Archivo procesado exitosamente.",
         type: "success",
       });
-      setShowErrorButton(false);
     } catch (error) {
       const errorMessage =
-        error.response?.data?.mensaje ||
-        error.response?.data?.title ||
-        "Error al procesar el archivo.";
-
+        error.response?.data?.mensaje || "Error inesperado al procesar el archivo.";
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
 
-      if (errorMessage === "Error al procesar el archivo.") {
-        setShowErrorButton(true);
-      }
+      // Mostrar siempre el botón de "Ver errores" cuando ocurre un error
+      setShowErrorButton(true);
+    } finally {
+      setIsProcessing(false); // Habilitar el botón después de completar el proceso
     }
   };
 
@@ -252,6 +249,7 @@ function ProcesarArchivoImportado() {
               color="error"
               onClick={handleProcessFile}
               endIcon={<DeleteOutlineIcon />}
+              disabled={isProcessing} // Deshabilitar el botón mientras se procesa
             >
               Procesar archivo importado
             </MDButton>
@@ -270,102 +268,6 @@ function ProcesarArchivoImportado() {
           </Grid>
         )}
       </Card>
-      {/*<Box sx={{ mt: 3 }}>
-        {carRevistaData.length > 0 && (
-          <DataTableProcesar
-            table={{
-              columns: [
-                { Header: "ID", accessor: "idTMPErrorCarRevista" }, // Accesor del campo 'id'
-                { Header: "caracterRevista", accessor: "caracterRevista" }, // Accesor del campo 'descripcion'
-              ],
-              rows: carRevistaData, // Pasar los datos obtenidos
-            }}
-            entriesPerPage={false}
-            canSearch
-            show
-          />
-        )}
-        <Card sx={{ mt: 3 }}>
-          {conceptosData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: conceptosData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {establecimientosData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: establecimientosData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {funcionesData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: funcionesData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {mecanizadasData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: mecanizadasData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-        <Card sx={{ mt: 3 }}>
-          {estData.length > 0 && (
-            <DataTableProcesar
-              table={{
-                columns: [
-                  { Header: "idCabecera", accessor: "idCabecera" }, // Accesor del campo 'id'
-                  { Header: "codigoLiquidacion", accessor: "codigoLiquidacion" }, // Accesor del campo 'descripcion'
-                ],
-                rows: estData, // Pasar los datos obtenidos
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          )}
-        </Card>
-      </Box>*/}
     </DashboardLayout>
   );
 }
