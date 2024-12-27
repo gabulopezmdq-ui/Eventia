@@ -125,6 +125,13 @@ function Formulario({
         message: `Corrija los errores de validación específicos:\n${errorMessages}`,
         type: "error",
       });
+      setTimeout(() => {
+        setAlertData({
+          show: false,
+          message: "",
+          type: "",
+        });
+      }, 4000);
       return;
     }
 
