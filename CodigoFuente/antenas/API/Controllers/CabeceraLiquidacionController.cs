@@ -45,7 +45,7 @@ namespace API.Controllers
 
             try
             {
-                var result = await _cabeceraService.AddCabeceraAsync(cabecera);
+                    var result = await _cabeceraService.AddCabeceraAsync(cabecera);
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
