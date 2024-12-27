@@ -151,8 +151,9 @@ function UsuariosEstablecimientos() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "COD: TIPO ESTABLECIMIENTO.", accessor: "establecimiento.codUsuariosEstablecimientos" },
-                  { Header: "DESCRIPCIÓN", accessor: "establecimiento.descripcion" },
+                  { Header: "USUARIO.", accessor: "usuario.nombre" },
+                  { Header: "COD: TIPO ESTABLECIMIENTO.", accessor: "establecimiento.nombreMgp" },
+                  { Header: "DESCRIPCIÓN", accessor: "cargo.descripcion" },
                   {
                     Header: "VIGENTE",
                     accessor: (row) => (
