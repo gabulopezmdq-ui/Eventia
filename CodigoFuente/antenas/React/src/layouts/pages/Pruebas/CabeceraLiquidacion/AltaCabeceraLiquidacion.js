@@ -9,13 +9,7 @@ import { useState } from "react";
 // Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
 import Formulario from "components/Formulario";
-import { Field } from "formik";
-import MDDropzone from "components/MDDropzone";
-
-//Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
-//Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
 
 function AltaCabeceraLiquidacion() {
   const { id } = useParams();
@@ -32,6 +26,48 @@ function AltaCabeceraLiquidacion() {
     }));
   };
 
+  function validateVarchar(value, field, maxLength) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length > maxLength) {
+      return `${field.label} no puede tener más de ${maxLength} caracteres.`;
+    }
+    return null;
+  }
+
+  function validateChar(value, field, exactLength) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (value.length !== exactLength) {
+      return `${field.label} debe tener exactamente ${exactLength} caracteres.`;
+    }
+    return null;
+  }
+
+  function validateNumber(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    if (isNaN(value)) {
+      return `${field.label} debe ser un número válido.`;
+    }
+    return null;
+  }
+
+  function validateDecimal(value, field) {
+    if (value === undefined || value === null || value === "" || field.name === undefined) {
+      return null;
+    }
+    const decimalRegex = /^(\d+(\.\d{1,2})?)$/;
+    if (!decimalRegex.test(value)) {
+      return `${field.label} debe ser un número decimal válido con hasta 2 decimales.`;
+    }
+    return null;
+  }
+  //--------------------FIN VALIDACIONES----------------------//
+
   const steps = [
     {
       label: labelTitulo,
@@ -41,23 +77,120 @@ function AltaCabeceraLiquidacion() {
           label: "Tipo de Liquidacion",
           name: "idTipoLiquidacion",
           apiUrl: process.env.REACT_APP_API_URL + "TiposLiquidaciones/GetAll",
-          valueField: "idTipoLiquidacion", // Nombre del campo del valor
+          valueField: "idTipoLiquidacion",
           optionField: "descripcion",
           required: true,
         },
-        { type: "text", label: "Mes Liquidacion", name: "mesLiquidacion", required: true },
-        { type: "text", label: "Año Liquidacion", name: "anioLiquidacion", required: true },
-        { type: "text", label: "Observaciones", name: "observaciones", required: true },
-        { type: "date", label: "Inicio Liquidacion", name: "inicioLiquidacion", required: true },
-        { type: "date", label: "Fin Liquidacion", name: "finLiquidacion", required: true },
-        { type: "text", label: "Estado", name: "estado", required: true },
+        {
+          type: "text",
+          label: "Leyenda Tipo Liq.Reporte",
+          name: "leyendaTipoLiqReporte",
+          customValidation: (value, field) => validateVarchar(value, field, 100),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Mes Liquidacion",
+          name: "mesLiquidacion",
+          customValidation: (value, field) => validateChar(value, field, 2),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Año Liquidacion",
+          name: "anioLiquidacion",
+          customValidation: (value, field) => validateChar(value, field, 4),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Usuario Liquidacion",
+          name: "usuarioLiquidacion",
+          customValidation: (value, field) => validateVarchar(value, field, 50),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Observaciones",
+          name: "observaciones",
+          customValidation: (value, field) => validateVarchar(value, field, 1000),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Observaciones Inasistencias",
+          name: "observacionesInasistencias",
+          customValidation: (value, field) => validateVarchar(value, field, 1000),
+          required: true,
+        },
+        {
+          type: "text",
+          label: "Observaciones Bajas",
+          name: "observacionesBajas",
+          customValidation: (value, field) => validateVarchar(value, field, 1000),
+          required: true,
+        },
+        {
+          type: "number",
+          label: "Cant. Docentes",
+          name: "cantDocentes",
+          customValidation: validateNumber,
+          required: true,
+        },
+        {
+          type: "number",
+          label: "RetenDeno7",
+          name: "retenDeno7",
+          customValidation: validateDecimal,
+          required: true,
+        },
+        {
+          type: "select",
+          label: "Estado",
+          name: "estado",
+          customOptions: [
+            { value: "P", label: "Pendiente Importación" },
+            { value: "I", label: "Archivo Importado" },
+            { value: "R", label: "Archivo Procesado" },
+            { value: "B", label: "Inasistencias / Bajas Procesado" },
+            { value: "L", label: "En Liquidación" },
+            { value: "C", label: "Liquidación cerrada" },
+          ],
+          valueField: "value",
+          optionField: "label",
+          required: true,
+        },
+        {
+          type: "select",
+          label: "Calcula Inasistencias",
+          name: "calculaInasistencias",
+          customOptions: [
+            { value: "S", label: "Si" },
+            { value: "N", label: "No" },
+          ],
+          valueField: "value",
+          optionField: "label",
+          required: true,
+        },
+        {
+          type: "select",
+          label: "Calcula Bajas",
+          name: "CalculaBajas",
+          customOptions: [
+            { value: "S", label: "Si" },
+            { value: "N", label: "No" },
+          ],
+          valueField: "value",
+          optionField: "label",
+          required: true,
+        },
         {
           type: "select",
           label: "Vigente",
           name: "vigente",
           customOptions: [
             { value: "S", label: "Si" },
-            { value: "S", label: "No" },
+            { value: "N", label: "No" },
           ],
           valueField: "value",
           optionField: "label",
