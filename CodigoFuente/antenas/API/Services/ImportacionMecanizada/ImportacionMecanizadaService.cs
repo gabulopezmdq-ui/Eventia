@@ -74,7 +74,7 @@ namespace API.Services
                                 TipoCargo = line.Substring(58, 1).Trim(),
                                 HorasDesignadas = ParseDecimal(line.Substring(60, 3).Trim()) / 100, 
                                 Subvencion = line.Substring(63, 3).Trim(),
-                                RegistroValido = "N"
+                                RegistroValido = "X"
                             };
 
                             // Agregar a la base de datos

@@ -34,6 +34,11 @@ namespace API.DataSchema.ModelConfiguration
                .HasColumnType("char(2)")
                .IsFixedLength(true)
                .IsRequired(false);
+
+            builder.Property(e => e.Antiguedad)
+              .HasColumnType("char(2)")
+              .IsFixedLength(true)
+              .IsRequired(false);
         }
     }
 }
