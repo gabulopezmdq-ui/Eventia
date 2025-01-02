@@ -23,7 +23,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
     anioAntiguedad: "",
   });
   const [loading, setLoading] = useState(false);
-  const [idPOFAntig, setIdPOFAntig] = useState(null); // Para almacenar el idPOFAntig
+  const [idPOFAntig, setIdPOFAntig] = useState(null);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
               mesAntiguedad: "",
               anioAntiguedad: "",
             });
-            setIdPOFAntig(null); // No hay idPOFAntig
+            setIdPOFAntig(null);
           } else if (response.ok) {
             const data = await response.json();
             setFormData({
@@ -53,7 +53,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
               mesAntiguedad: data.mesAntiguedad || "",
               anioAntiguedad: data.anioAntiguedad || "",
             });
-            setIdPOFAntig(data.idPOFAntig || null); // Guardar idPOFAntig si existe
+            setIdPOFAntig(data.idPOFAntig || null);
           } else {
             alert("Hubo un error al obtener los datos.");
           }
@@ -124,7 +124,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
         body: JSON.stringify({
           idPOF: idPof,
           ...formData,
-          ...(idPOFAntig && { idPOFAntig }), // Incluir idPOFAntig solo si existe
+          ...(idPOFAntig && { idPOFAntig }),
         }),
       });
 
@@ -190,8 +190,8 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
                     name={name}
                     value={formData[name]}
                     onChange={handleInputChange}
-                    error={!!errors[name]} // Si hay error en este campo, se aplicará el estilo
-                    helperText={errors[name]} // Muestra el mensaje de error
+                    error={!!errors[name]}
+                    helperText={errors[name]}
                   />
                 </Grid>
               ))}
