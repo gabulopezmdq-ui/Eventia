@@ -51,18 +51,6 @@ namespace API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePOFAntiguedad([FromBody] MEC_POF_Antiguedades antiguedad)
         {
-            // Validar unicidad del IdPOF
-            //var existingRecord = await _pofService.GetByIdPOFAsync(antiguedad.IdPOF);
-            //if (existingRecord != null)
-            //{
-            //    //return BadRequest($"Ya existe un registro con IdPOF: {antiguedad.IdPOF}");
-            //    await _pofService.CreateOrUpdateAsync(antiguedad);
-            //    return Ok(antiguedad);
-            //}
-
-            //await _pofService.CreateOrUpdateAsync(antiguedad);
-            //return CreatedAtAction(nameof(GetByIdPOF), new { idPOF = antiguedad.IdPOF }, antiguedad);
-
             await _serviceGenerico.Add(antiguedad);
             return Ok(antiguedad);
         }
