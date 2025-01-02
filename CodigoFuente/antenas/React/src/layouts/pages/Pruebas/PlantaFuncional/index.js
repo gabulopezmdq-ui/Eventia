@@ -567,7 +567,7 @@ function PlantaFuncional() {
                         ),
                       },
                       {
-                        Header: "Mas Info",
+                        Header: "Acciones",
                         accessor: "edit",
                         Cell: ({ row }) => (
                           <>
@@ -583,6 +583,7 @@ function PlantaFuncional() {
                               variant="gradient"
                               color="secondary"
                               size="small"
+                              style={{ marginLeft: "10px" }}
                               onClick={() => {
                                 setSelectedIdPof(row.original.idPof);
                                 setIsAntiguedadModalOpen(true);
