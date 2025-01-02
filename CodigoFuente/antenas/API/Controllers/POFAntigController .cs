@@ -42,7 +42,7 @@ namespace API.Controllers
             var antiguedad = await _pofService.GetByIdPOFAsync(idPOF);
             if (antiguedad == null)
             {
-                return NotFound($"No se encontró un registro con IdPOF: {idPOF}");
+                return Ok(false);
             }
             return Ok(antiguedad);
         }
