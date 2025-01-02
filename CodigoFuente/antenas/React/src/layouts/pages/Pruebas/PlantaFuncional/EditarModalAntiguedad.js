@@ -25,6 +25,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
   const [loading, setLoading] = useState(false);
   const [idPOFAntig, setIdPOFAntig] = useState(null);
   const [errors, setErrors] = useState({});
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [secuencia, setSecuencia] = useState("");
 
   useEffect(() => {
     if (idPof) {
@@ -45,6 +48,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
               anioAntiguedad: "",
             });
             setIdPOFAntig(null);
+            setNombre("");
+            setApellido("");
+            setSecuencia("");
           } else if (response.ok) {
             const data = await response.json();
             setFormData({
@@ -54,6 +60,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
               anioAntiguedad: data.anioAntiguedad || "",
             });
             setIdPOFAntig(data.idPOFAntig || null);
+            setNombre(data.pof.persona.nombre || "");
+            setApellido(data.pof.persona.apellido || "");
+            setSecuencia(data.pof.secuencia || "");
           } else {
             alert("Hubo un error al obtener los datos.");
           }
@@ -175,6 +184,19 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
             <MDTypography mb={2} variant="body1" id="modal-title">
               Editar Antigüedad
             </MDTypography>
+            <Grid container spacing={3} mb={3}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Nombre Completo"
+                  value={`${nombre} ${apellido}`}
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Secuencia" value={`${secuencia}`} disabled />
+              </Grid>
+            </Grid>
             <Grid container spacing={3}>
               {[
                 { name: "mesReferencia", label: "Mes Referencia" },
