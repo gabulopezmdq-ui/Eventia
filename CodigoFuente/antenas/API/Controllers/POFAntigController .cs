@@ -39,28 +39,12 @@ namespace API.Controllers
         [HttpGet("GetByIdPOF")]
         public async Task<IActionResult> GetByIdPOF([FromQuery] int idPOF)
         {
-            var pofAntiguedad = await _context.MEC_POF_Antiguedades
-                .FirstOrDefaultAsync(a => a.IdPOF == idPOF);
-
-            // Verificar si no existe ningún registro
-            if (pofAntiguedad == null)
+            var antiguedad = await _pofService.GetByIdPOFAsync(idPOF);
+            if (antiguedad == null)
             {
-                // Si no existe, devolver un 204 No Content con un mensaje en formato JSON
-                return NoContent(); // 204: No Content, para que el frontend cargue el formulario vacío
+                return NotFound($"No se encontró un registro con IdPOF: {idPOF}");
             }
-
-            // Verificar si hay más de un registro para el mismo IdPOF
-            var count = await _context.MEC_POF_Antiguedades
-                .CountAsync(a => a.IdPOF == idPOF);
-
-            if (count > 1)
-            {
-                // Si hay más de un registro, devolver un 400 Bad Request con un mensaje en formato JSON
-                return BadRequest(new { Message = "Existen múltiples registros para el mismo IdPOF." });
-            }
-
-            // Si todo está bien y existe solo un registro, devolver el objeto con 200 OK
-            return Ok(pofAntiguedad); // 200: OK, para devolver los datos del registro existente
+            return Ok(antiguedad);
         }
 
 
@@ -68,14 +52,19 @@ namespace API.Controllers
         public async Task<IActionResult> CreatePOFAntiguedad([FromBody] MEC_POF_Antiguedades antiguedad)
         {
             // Validar unicidad del IdPOF
-            var existingRecord = await _pofService.GetByIdPOFAsync(antiguedad.IdPOF);
-            if (existingRecord != null)
-            {
-                return BadRequest($"Ya existe un registro con IdPOF: {antiguedad.IdPOF}");
-            }
+            //var existingRecord = await _pofService.GetByIdPOFAsync(antiguedad.IdPOF);
+            //if (existingRecord != null)
+            //{
+            //    //return BadRequest($"Ya existe un registro con IdPOF: {antiguedad.IdPOF}");
+            //    await _pofService.CreateOrUpdateAsync(antiguedad);
+            //    return Ok(antiguedad);
+            //}
 
-            await _pofService.CreateOrUpdateAsync(antiguedad);
-            return CreatedAtAction(nameof(GetByIdPOF), new { idPOF = antiguedad.IdPOF }, antiguedad);
+            //await _pofService.CreateOrUpdateAsync(antiguedad);
+            //return CreatedAtAction(nameof(GetByIdPOF), new { idPOF = antiguedad.IdPOF }, antiguedad);
+
+            await _serviceGenerico.Add(antiguedad);
+            return Ok(antiguedad);
         }
 
 
