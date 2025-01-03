@@ -215,6 +215,11 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
                 <TextField fullWidth label="Secuencia" value={`${secuencia}`} disabled />
               </Grid>
             </Grid>
+            <div style={{ marginBottom: "25px", fontSize: "15px", color: "#bbbbbb" }}>
+              El mes y año de referencia son clave para calcular la antigüedad. Ej: si para 01/2024
+              el docente tenía 3 meses y 11 años de antigüedad, cualquier fecha distinta se
+              calculará a partir de esos datos cargados, ajustando la antigüedad según corresponda.
+            </div>
             <Grid container spacing={3}>
               {[
                 { name: "mesReferencia", label: "Mes Referencia" },
