@@ -611,6 +611,7 @@ function PlantaFuncional() {
                   isOpen={isAntiguedadModalOpen}
                   onClose={() => setIsAntiguedadModalOpen(false)}
                   idPof={selectedIdPof}
+                  onEditSuccess={handleEditSuccess}
                   token={token}
                 />
               </Card>

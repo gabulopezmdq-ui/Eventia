@@ -15,7 +15,7 @@ import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
 
-const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
+const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
   const [formData, setFormData] = useState({
     mesReferencia: "",
     anioReferencia: "",
@@ -30,7 +30,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
   const [secuencia, setSecuencia] = useState("");
 
   useEffect(() => {
-    if (idPof) {
+    if (isOpen && idPof) {
       const fetchData = async () => {
         try {
           setLoading(true);
@@ -74,7 +74,22 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
       };
       fetchData();
     }
-  }, [idPof, token]);
+  }, [isOpen, idPof, token]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        mesReferencia: "",
+        anioReferencia: "",
+        mesAntiguedad: "",
+        anioAntiguedad: "",
+      });
+      setErrors({});
+      setNombre("");
+      setApellido("");
+      setSecuencia("");
+    }
+  }, [isOpen]);
 
   const validateInput = (name, value) => {
     let error = "";
@@ -139,6 +154,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
 
       if (response.ok) {
         setLoading(false);
+        if (onEditSuccess) {
+          onEditSuccess();
+        }
         onClose();
       } else {
         setLoading(false);
@@ -244,6 +262,7 @@ EditarModalAntiguedad.propTypes = {
   onClose: PropTypes.func.isRequired,
   idPof: PropTypes.number.isRequired,
   token: PropTypes.string.isRequired,
+  onEditSuccess: PropTypes.func.isRequired,
 };
 
 export default EditarModalAntiguedad;
