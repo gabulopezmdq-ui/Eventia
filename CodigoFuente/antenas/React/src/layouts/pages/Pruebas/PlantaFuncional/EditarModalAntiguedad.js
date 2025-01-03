@@ -15,7 +15,7 @@ import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
 
-const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
+const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
   const [formData, setFormData] = useState({
     mesReferencia: "",
     anioReferencia: "",
@@ -25,9 +25,12 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
   const [loading, setLoading] = useState(false);
   const [idPOFAntig, setIdPOFAntig] = useState(null);
   const [errors, setErrors] = useState({});
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [secuencia, setSecuencia] = useState("");
 
   useEffect(() => {
-    if (idPof) {
+    if (isOpen && idPof) {
       const fetchData = async () => {
         try {
           setLoading(true);
@@ -45,6 +48,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
               anioAntiguedad: "",
             });
             setIdPOFAntig(null);
+            setNombre("");
+            setApellido("");
+            setSecuencia("");
           } else if (response.ok) {
             const data = await response.json();
             setFormData({
@@ -54,6 +60,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
               anioAntiguedad: data.anioAntiguedad || "",
             });
             setIdPOFAntig(data.idPOFAntig || null);
+            setNombre(data.pof.persona.nombre || "");
+            setApellido(data.pof.persona.apellido || "");
+            setSecuencia(data.pof.secuencia || "");
           } else {
             alert("Hubo un error al obtener los datos.");
           }
@@ -65,7 +74,22 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
       };
       fetchData();
     }
-  }, [idPof, token]);
+  }, [isOpen, idPof, token]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        mesReferencia: "",
+        anioReferencia: "",
+        mesAntiguedad: "",
+        anioAntiguedad: "",
+      });
+      setErrors({});
+      setNombre("");
+      setApellido("");
+      setSecuencia("");
+    }
+  }, [isOpen]);
 
   const validateInput = (name, value) => {
     let error = "";
@@ -130,6 +154,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
 
       if (response.ok) {
         setLoading(false);
+        if (onEditSuccess) {
+          onEditSuccess();
+        }
         onClose();
       } else {
         setLoading(false);
@@ -175,6 +202,24 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token }) => {
             <MDTypography mb={2} variant="body1" id="modal-title">
               Editar Antigüedad
             </MDTypography>
+            <Grid container spacing={3} mb={3}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Nombre Completo"
+                  value={`${nombre} ${apellido}`}
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Secuencia" value={`${secuencia}`} disabled />
+              </Grid>
+            </Grid>
+            <div style={{ marginBottom: "25px", fontSize: "15px", color: "#bbbbbb" }}>
+              El mes y año de referencia son clave para calcular la antigüedad. Ej: si para 01/2024
+              el docente tenía 3 meses y 11 años de antigüedad, cualquier fecha distinta se
+              calculará a partir de esos datos cargados, ajustando la antigüedad según corresponda.
+            </div>
             <Grid container spacing={3}>
               {[
                 { name: "mesReferencia", label: "Mes Referencia" },
@@ -222,6 +267,7 @@ EditarModalAntiguedad.propTypes = {
   onClose: PropTypes.func.isRequired,
   idPof: PropTypes.number.isRequired,
   token: PropTypes.string.isRequired,
+  onEditSuccess: PropTypes.func.isRequired,
 };
 
 export default EditarModalAntiguedad;
