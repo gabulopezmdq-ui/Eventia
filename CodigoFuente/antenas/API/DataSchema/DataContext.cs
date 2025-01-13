@@ -43,6 +43,7 @@ namespace API.DataSchema
         public DbSet<MEC_BajasCabecera> MEC_BajasCabecera { get; set; }
         public DbSet<MEC_BajasDetalle> MEC_BajasDetalle { get; set; } 
         public DbSet<MEC_MotivosBajas> MEC_MotivosBajas { get; set; }
+        public DbSet<MEC_POFDetalle> MEC_POFDetalle { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
@@ -74,6 +75,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_BajasCabeceraConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_BajasDetalleConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_MotivosBajasConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_POFDetalleConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }
