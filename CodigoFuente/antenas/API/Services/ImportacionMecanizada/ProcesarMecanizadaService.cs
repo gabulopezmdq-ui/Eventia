@@ -52,6 +52,23 @@ namespace API.Services
             }
 
             await ValidarMecAsync(idCabecera);
+
+            // Verificar si hay registros con RegistroValido = "N"
+            var registrosInvalidos = await _context.MEC_TMPMecanizadas
+                                                    .Where(m => m.idCabecera == idCabecera && m.RegistroValido == "N")
+                                                    .ToListAsync();
+
+            if (registrosInvalidos.Any())
+            {
+                // Crear la leyenda
+                string leyenda = "Existen Personas que no están registradas en el sistema, no están dadas de alta en la POF del Establecimiento, o no tienen cargada la Antigüedad base.\n" +
+                                 "Por favor para cada uno de los registros que se muestran a continuación, genere el alta en el sistema\n" +
+                                 "Una vez realizada las correcciones, vuelva a ejecutar el proceso Pre-Procesar Mecanizada.\n" +
+                                 "Realice este proceso las veces necesarias hasta que todos los registros del archivo estén correctos.";
+
+                // Puedes agregar la leyenda como un detalle adicional o mostrarla según el contexto
+                throw new Exception(leyenda);
+            }
         }
 
         private async Task ValidarDatosCabeceraAsync(int idCabecera)
@@ -350,5 +367,95 @@ namespace API.Services
         {
             return int.TryParse(valor, out var result) ? result : (int?)null;
         }
+
+        public async Task<bool> VerificarTodosRegistrosValidosAsync(int idCabecera)
+        {
+            return await _context.MEC_TMPMecanizadas
+                .Where(m => m.idCabecera == idCabecera)
+                .AllAsync(m => m.RegistroValido == "S");
+        }
+
+        public async Task<string> ProcesarSiEsValidoAsync(int idCabecera, int usuario)
+        {
+            // Verificar si todos los registros son válidos
+            bool todosValidos = await VerificarTodosRegistrosValidosAsync(idCabecera);
+            if (!todosValidos)
+            {
+                return "No todos los registros tienen RegistroValido = 'S'.";
+            }
+
+            // Obtener registros de MEC_TMPMecanizadas
+            var registros = await _context.MEC_TMPMecanizadas
+                .Where(m => m.idCabecera == idCabecera)
+                .ToListAsync();
+
+            // Insertar registros en MEC_Mecanizadas
+            foreach (var registro in registros)
+            {
+                var mecanizada = new MEC_Mecanizadas
+                {
+                    Origen = "MEC",
+                    Consolidado = "N",
+                };
+
+                _context.MEC_Mecanizadas.Add(mecanizada);
+            }
+
+            // Cambiar el estado de la cabecera
+            var cabecera = await _context.MEC_CabeceraLiquidacion
+                .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
+            if (cabecera != null)
+            {
+                cabecera.Estado = "R";
+                _context.MEC_CabeceraLiquidacion.Update(cabecera);
+            }
+
+            // Eliminar registros de MEC_TMPErroresMecanizadas
+            var errores = _context.MEC_TMPErroresMecanizadas
+                .Where(e => e.IdCabecera == idCabecera);
+
+            _context.MEC_TMPErroresMecanizadas.RemoveRange(errores);
+
+            // Insertar registro en MEC_CabeceraLiquidacionEstados
+            var estado = new MEC_CabeceraLiquidacionEstados
+            {
+                IdCabecera = idCabecera,
+                FechaCambioEstado = DateTime.Now,
+                IdUsuario = usuario,
+                Estado = "R"
+            };
+
+            _context.MEC_CabeceraLiquidacionEstados.Add(estado);
+
+            // Actualizar registros en MEC_InasistenciasCabecera
+            var inasistencias = await _context.MEC_InasistenciasCabecera
+                .Where(i => i.IdCabecera == idCabecera)
+                .ToListAsync();
+
+            foreach (var inasistencia in inasistencias)
+            {
+                inasistencia.Estado = "H";
+            }
+            _context.MEC_InasistenciasCabecera.UpdateRange(inasistencias);
+
+            // Actualizar registros en MEC_BajasCabecera
+            var bajas = await _context.MEC_BajasCabecera
+                .Where(b => b.IdCabecera == idCabecera)
+                .ToListAsync();
+
+            foreach (var baja in bajas)
+            {
+                baja.Estado = "H";
+            }
+            _context.MEC_BajasCabecera.UpdateRange(bajas);
+
+            // Guardar todos los cambios
+            await _context.SaveChangesAsync();
+
+            return "Registros procesados correctamente.";
+        }
+
+
     }
 }
