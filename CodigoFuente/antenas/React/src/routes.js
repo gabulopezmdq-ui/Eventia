@@ -19,44 +19,44 @@ import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImpor
 import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
 
 const routes = [
-  {
-    type: "collapse",
-    icon: <Icon>account_balance_wallet</Icon>,
-    name: "Liquidaciones",
-    key: "liquidaciones",
-    collapse: [
-      {
-        name: "Cabecera Liquidacion",
-        key: "cabeceraLiquidacion",
-        route: "/CabeceraLiquidacionFE",
-        component: <CabeceraLiquidacion />,
-      },
-      {
-        name: "Importar Archivo Plano",
-        key: "ImportarArchivoPlano",
-        route: "/ImportarArchivoPlanoFE",
-        component: <ImportarArchivo />,
-      },
-      {
-        name: "Revertir Importación",
-        key: "RevertirImportacion",
-        route: "/RevertirImportacionFE",
-        component: <RevertirImportacion />,
-      },
-      {
-        name: "Procesar Archivo Importado",
-        key: "ProcesarArchivoImportado",
-        route: "/ProcesarArchivoImportadoFE",
-        component: <ProcesarArchivoImportado />,
-      },
-      {
-        name: "Consolidar Mec Pof",
-        key: "ConsolidarMecPof",
-        route: "/ConsolidarMecPofFE",
-        component: <ConsolidarMecPof />,
-      },
-    ],
-  },
+  // {
+  //   type: "collapse",
+  //   icon: <Icon>account_balance_wallet</Icon>,
+  //   name: "Liquidaciones",
+  //   key: "liquidaciones",
+  //   collapse: [
+  //     {
+  //       name: "Cabecera Liquidacion",
+  //       key: "cabeceraLiquidacion",
+  //       route: "/CabeceraLiquidacionFE",
+  //       component: <CabeceraLiquidacion />,
+  //     },
+  //     {
+  //       name: "Importar Archivo Plano",
+  //       key: "ImportarArchivoPlano",
+  //       route: "/ImportarArchivoPlanoFE",
+  //       component: <ImportarArchivo />,
+  //     },
+  //     {
+  //       name: "Revertir Importación",
+  //       key: "RevertirImportacion",
+  //       route: "/RevertirImportacionFE",
+  //       component: <RevertirImportacion />,
+  //     },
+  //     {
+  //       name: "Procesar Archivo Importado",
+  //       key: "ProcesarArchivoImportado",
+  //       route: "/ProcesarArchivoImportadoFE",
+  //       component: <ProcesarArchivoImportado />,
+  //     },
+  //     {
+  //       name: "Consolidar Mec Pof",
+  //       key: "ConsolidarMecPof",
+  //       route: "/ConsolidarMecPofFE",
+  //       component: <ConsolidarMecPof />,
+  //     },
+  //   ],
+  // },
   { type: "divider", key: "divider-0" },
   {
     type: "collapse",
