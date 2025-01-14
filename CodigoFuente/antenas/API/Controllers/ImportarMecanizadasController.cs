@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
+using FluentAssertions.Common;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -21,12 +23,14 @@ namespace API.Controllers
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
         private readonly IProcesarMecanizadaService<MEC_TMPMecanizadas> _procesarMecanizadaService;
         private readonly ICRUDService<MEC_TMPMecanizadas> _serviceGenerico;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico, IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService)
+        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico, IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService, IHttpContextAccessor httpContextAccessor)
         {
             _importacionMecanizadaService = importacionService;
             _serviceGenerico = serviceGenerico;
             _procesarMecanizadaService = procesarMecanizadaService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost("ImportarExcel")]
@@ -84,6 +88,31 @@ namespace API.Controllers
                     });
                 }
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("Procesar")]
+        public async Task<IActionResult> ProcesarRegistros(int idCabecera)
+        {
+            try
+            {
+                var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
+                // Usuario desde el contexto (ajusta según sea necesario)
+                int usuario = int.Parse(idUsuario.Value);
+
+                // Delegar al servicio
+                string resultado = await _procesarMecanizadaService.ProcesarSiEsValidoAsync(idCabecera, usuario);
+
+                if (resultado.StartsWith("No"))
+                {
+                    return BadRequest(resultado);
+                }
+
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al procesar registros: {ex.Message}");
             }
         }
     }
