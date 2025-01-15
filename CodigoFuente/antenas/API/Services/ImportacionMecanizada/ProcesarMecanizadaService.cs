@@ -68,7 +68,7 @@ namespace API.Services
 
                 // Puedes agregar la leyenda como un detalle adicional o mostrarla según el contexto
                 throw new Exception(leyenda);
-            }
+            } 
         }
 
         private async Task ValidarDatosCabeceraAsync(int idCabecera)
@@ -268,7 +268,6 @@ namespace API.Services
                 }
 
                 await ProcesarDetallePOFAsync(idCabecera, POF, registro);
-                registro.RegistroValido = "S";
             }
         }
 
@@ -302,6 +301,23 @@ namespace API.Services
 
                 nuevoDetallePOF.AntiguedadAnios = antiguedadResult.antiguedadAnios.GetValueOrDefault();
                 nuevoDetallePOF.AntiguedadMeses = antiguedadResult.antiguedadMeses.GetValueOrDefault();
+
+                registro.RegistroValido = "S";
+            } 
+            else
+            {
+                var POFMec = _context.MEC_POF.FirstOrDefault(p => p.Persona.DNI == registro.Documento);
+                var error = new MEC_TMPErroresMecanizadas
+                {
+                    IdCabecera = idCabecera,
+                    IdTMPMecanizada = registro.idTMPMecanizada,
+                    Antiguedad = "NE",
+                    Documento = registro.Documento,
+                    POF = POFMec.ToString()
+
+                };
+
+                registro.RegistroValido = "N";
             }
 
             await _context.SaveChangesAsync();
