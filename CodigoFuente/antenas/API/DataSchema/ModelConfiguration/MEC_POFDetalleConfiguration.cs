@@ -38,7 +38,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder
                 .HasOne(p => p.Suplencia)
-                .WithMany(t => t.POFDetalle)
+                .WithMany(t => t.POFSuplencia)
                 .HasForeignKey(p => p.SupleA)
                 .IsRequired(true);
 
@@ -53,7 +53,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.CantHorasSS)
                 .HasColumnType("decimal")
-                .IsRequired(false); 
+                .IsRequired(true); 
 
             builder.Property(e => e.AntiguedadAnios)
                 .IsRequired(true);
@@ -70,11 +70,11 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(false);
 
             builder.Property(e => e.SupleDesde)
-              .HasColumnType("datetime")
+                .HasColumnType("DateTime")
               .IsRequired(false);
 
             builder.Property(e => e.SupleHasta)
-                .HasColumnType("datetime")
+                .HasColumnType("DateTime")
                 .IsRequired(false);
         }
     }
