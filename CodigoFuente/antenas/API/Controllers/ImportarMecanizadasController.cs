@@ -97,10 +97,8 @@ namespace API.Controllers
             try
             {
                 var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
-                // Usuario desde el contexto (ajusta según sea necesario)
                 int usuario = int.Parse(idUsuario.Value);
 
-                // Delegar al servicio
                 string resultado = await _procesarMecanizadaService.ProcesarSiEsValidoAsync(idCabecera, usuario);
 
                 if (resultado.StartsWith("No"))
