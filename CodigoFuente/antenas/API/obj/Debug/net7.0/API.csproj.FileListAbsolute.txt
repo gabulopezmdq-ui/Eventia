@@ -665,7 +665,6 @@ C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\staticwebass
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\staticwebassets.build.json
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\staticwebassets.development.json
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\scopedcss\bundle\API.styles.css
-C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.csproj.CopyComplete
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.dll
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\refint\API.dll
 C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.pdb
@@ -898,3 +897,4 @@ C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.genrun
 C:\ProyectosGit\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\ref\API.dll
 C:\Users\jcgarcia\Desktop\Desarrollo\mecanizadas\CodigoFuente\antenas\API\bin\Debug\net7.0\System.Linq.Dynamic.Core.dll
 C:\mecanizadas\CodigoFuente\antenas\API\bin\Debug\net7.0\System.Linq.Dynamic.Core.dll
+C:\Desarrollo\mecanizadas\CodigoFuente\antenas\API\obj\Debug\net7.0\API.csproj.CopyComplete
