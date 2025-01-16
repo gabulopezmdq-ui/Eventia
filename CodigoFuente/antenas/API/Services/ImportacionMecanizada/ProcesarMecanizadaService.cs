@@ -85,7 +85,7 @@ namespace API.Services
 
                 // Puedes agregar la leyenda como un detalle adicional o mostrarla según el contexto
                 throw new Exception(leyenda);
-            }
+            } 
         }
 
         private async Task ValidarDatosCabeceraAsync(int idCabecera)
@@ -393,9 +393,12 @@ namespace API.Services
 <<<<<<< HEAD
 =======
                 await ProcesarDetallePOFAsync(idCabecera, POF, registro);
+<<<<<<< HEAD
 >>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
                 registro.RegistroValido = "S";
                 await _context.SaveChangesAsync();
+=======
+>>>>>>> 324707cb95d0a31700a69f955931ad690e95b91e
             }
         }
 
@@ -432,6 +435,23 @@ namespace API.Services
 
                 nuevoDetallePOF.AntiguedadAnios = antiguedadResult.antiguedadAnios.GetValueOrDefault();
                 nuevoDetallePOF.AntiguedadMeses = antiguedadResult.antiguedadMeses.GetValueOrDefault();
+
+                registro.RegistroValido = "S";
+            } 
+            else
+            {
+                var POFMec = _context.MEC_POF.FirstOrDefault(p => p.Persona.DNI == registro.Documento);
+                var error = new MEC_TMPErroresMecanizadas
+                {
+                    IdCabecera = idCabecera,
+                    IdTMPMecanizada = registro.idTMPMecanizada,
+                    Antiguedad = "NE",
+                    Documento = registro.Documento,
+                    POF = POFMec.ToString()
+
+                };
+
+                registro.RegistroValido = "N";
             }
 
             await _context.SaveChangesAsync();
@@ -522,14 +542,60 @@ namespace API.Services
             // Insertar registros en MEC_Mecanizadas
             foreach (var registro in registros)
             {
-                var mecanizada = new MEC_Mecanizadas
-                {
-                    Origen = "MEC",
-                    Consolidado = "N",
-                };
+                var persona = await _context.MEC_Personas
+                                            .FirstOrDefaultAsync(x => x.DNI == registro.Documento);
 
-                _context.MEC_Mecanizadas.Add(mecanizada);
+                if (persona != null)
+                {
+                    // Obtener el IdEstablecimiento a partir de NroEstab
+                    var idEstablecimiento = await _context.MEC_Establecimientos
+                                                           .Where(e => e.NroDiegep == registro.NroEstab)
+                                                           .Select(e => e.IdEstablecimiento)
+                                                           .FirstOrDefaultAsync();
+
+                    if (idEstablecimiento == 0)
+                    {
+                        // Si no se encuentra el establecimiento, manejar el error
+                        await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
+                        continue;
+                    }
+
+                    // Buscar POF utilizando el IdEstablecimiento obtenido
+                    var POF = await _context.MEC_POF
+                                            .FirstOrDefaultAsync(p => p.IdEstablecimiento == idEstablecimiento &&
+                                                                      p.IdPersona == persona.IdPersona &&
+                                                                      p.Secuencia == registro.Secuencia);
+
+
+                    if (POF != null)
+                    {
+                        var mecanizada = new MEC_Mecanizadas
+                        {
+                            FechaConsolidacion = DateTime.Now,
+                            IdUsuario = usuario,
+                            IdCabecera = idCabecera,
+                            IdPOF = POF.IdPOF,
+                            IdEstablecimiento = POF.IdEstablecimiento,
+                            MesLiquidacion = registro.MesLiquidacion,
+                            OrdenPago = registro.OrdenPago,
+                            AnioMesAfectacion = registro.AnioMesAfectacion,
+                            Importe = registro.Importe,
+                            Signo = registro.Signo,
+                            MarcaTransferido = registro.MarcaTransferido,
+                            Moneda = registro.Moneda,
+                            RegimenEstatutario = registro.RegimenEstatutario,
+                            Dependencia = registro.Dependencia,
+                            Distrito = registro.Distrito,
+                            Subvencion = registro.Subvencion,
+                            Origen = "MEC",
+                            Consolidado = "N",
+                        };
+
+                        _context.MEC_Mecanizadas.Add(mecanizada);
+                    }
+                }
             }
+
 
             // Cambiar el estado de la cabecera
             var cabecera = await _context.MEC_CabeceraLiquidacion
