@@ -18,9 +18,9 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICabeceraLiquidacionService _cabeceraService;
-        private readonly ICRUDService<MEC_CarRevista> _serviceGenerico;
+        private readonly ICRUDService<MEC_CabeceraLiquidacion> _serviceGenerico;
 
-        public CabeceraLiquidacionController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraLiquidacionService cabeceraService, ICRUDService<MEC_CarRevista> serviceGenerico)
+        public CabeceraLiquidacionController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraLiquidacionService cabeceraService, ICRUDService<MEC_CabeceraLiquidacion> serviceGenerico)
         {
             _context = context;
             _cabeceraService = cabeceraService;
@@ -83,11 +83,11 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
-        [HttpGet("GetByName")]
-        public async Task<ActionResult<MEC_CabeceraLiquidacion>> Get(string Name)
-        {
-            return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
-        }
+        //[HttpGet("GetByName")]
+        //public async Task<ActionResult<MEC_CabeceraLiquidacion>> Get(string Name)
+        //{
+        //    return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
+        //}
 
     }
 }
