@@ -70,11 +70,11 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(false);
 
             builder.Property(e => e.SupleDesde)
-                .HasColumnType("DateTime")
+                .HasColumnType("Date")
               .IsRequired(false);
 
             builder.Property(e => e.SupleHasta)
-                .HasColumnType("DateTime")
+                .HasColumnType("Date")
                 .IsRequired(false);
         }
     }
