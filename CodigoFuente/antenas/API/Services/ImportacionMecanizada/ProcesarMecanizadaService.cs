@@ -73,13 +73,26 @@ namespace API.Services
 
         private async Task ValidarDatosCabeceraAsync(int idCabecera)
         {
-            await Task.WhenAll(
+                    var tareas = new List<Task>
+            {
                 ValidarNroEstabAsync(idCabecera),
                 ValidarCodFuncionAsync(idCabecera),
                 ValidarCodLiquidacionAsync(idCabecera),
                 ValidarCarRevistaAsync(idCabecera),
                 ValidarTipoOrgAsync(idCabecera)
-            );
+            };
+
+                    var resultados = await Task.WhenAll(tareas.Select(task =>
+                        task.ContinueWith(t => t, TaskContinuationOptions.ExecuteSynchronously)));
+
+                    foreach (var resultado in resultados)
+                    {
+                        if (resultado.IsFaulted)
+                        {
+                            // Manejo de errores para tareas fallidas.
+                            Console.WriteLine($"Error: {resultado.Exception}");
+                        }
+                    }
         }
 
         private async Task<bool> VerificarErroresAsync(int idCabecera)
@@ -145,6 +158,7 @@ namespace API.Services
                 await _context.MEC_TMPErroresEstablecimientos.AddRangeAsync(erroresEstablecimientos);
                 await _context.SaveChangesAsync();
             }
+            await _context.SaveChangesAsync();
         }
 
         private async Task ValidarCodFuncionAsync(int idCabecera)
