@@ -38,7 +38,19 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
             `${process.env.REACT_APP_API_URL}POFAntig/getbyidPOF?idPOF=${idPof}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          if (responseAntig.status === 204) {
+          const dataAntig = await responseAntig.json();
+          if (responseAntig.ok && dataAntig !== false) {
+            setFormData({
+              mesReferencia: dataAntig.mesReferencia || "",
+              anioReferencia: dataAntig.anioReferencia || "",
+              mesAntiguedad: dataAntig.mesAntiguedad || "",
+              anioAntiguedad: dataAntig.anioAntiguedad || "",
+            });
+            setIdPOFAntig(dataAntig.idPOFAntig || null);
+            setNombre(dataAntig.pof.persona.nombre || "");
+            setApellido(dataAntig.pof.persona.apellido || "");
+            setSecuencia(dataAntig.pof.secuencia || "");
+          } else {
             const responsePOF = await fetch(
               `${process.env.REACT_APP_API_URL}POF/getbyid?id=${idPof}`,
               { headers: { Authorization: `Bearer ${token}` } }
@@ -56,20 +68,6 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
               anioAntiguedad: "",
             });
             setIdPOFAntig(null);
-          } else if (responseAntig.ok) {
-            const data = await responseAntig.json();
-            setFormData({
-              mesReferencia: data.mesReferencia || "",
-              anioReferencia: data.anioReferencia || "",
-              mesAntiguedad: data.mesAntiguedad || "",
-              anioAntiguedad: data.anioAntiguedad || "",
-            });
-            setIdPOFAntig(data.idPOFAntig || null);
-            setNombre(data.pof.persona.nombre || "");
-            setApellido(data.pof.persona.apellido || "");
-            setSecuencia(data.pof.secuencia || "");
-          } else {
-            alert("Hubo un error al obtener los datos.");
           }
         } catch (error) {
           alert("Hubo un error al conectar con el servidor.");
