@@ -161,12 +161,12 @@ namespace API.Services
         private async Task EliminarTMPErrores(int idCabecera)
         {
             await _context.Database.ExecuteSqlRawAsync(@"
-                DELETE FROM ""MEC_TMPErroresEstablecimientos"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresFuncion"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresConceptos"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresCarRevista"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresMecanizadas"" WHERE ""IdCabecera"" = {0};
+                  DELETE FROM ""MEC_TMPErroresEstablecimientos"";
+                    DELETE FROM ""MEC_TMPErroresFuncion"";
+                    DELETE FROM ""MEC_TMPErroresConceptos"";
+                    DELETE FROM ""MEC_TMPErroresCarRevista"";
+                    DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"";
+                    DELETE FROM ""MEC_TMPErroresMecanizadas"";
 
                 ALTER SEQUENCE ""MEC_TMPErroresEstablecimientos_IdTMPErrorEstablecimiento_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresFuncion_IdTMPErrorFuncion_seq"" RESTART WITH 1;
@@ -175,6 +175,22 @@ namespace API.Services
                 ALTER SEQUENCE ""MEC_TMPErroresTiposEstablecim_IdTMPErrorTipoEstablecimiento_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq"" RESTART WITH 1;
                 ", idCabecera);
+
+            //await _context.Database.ExecuteSqlRawAsync(@"
+            //    DELETE FROM ""MEC_TMPErroresEstablecimientos"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresFuncion"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresConceptos"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresCarRevista"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresMecanizadas"" WHERE ""IdCabecera"" = {0};
+
+            //    ALTER SEQUENCE ""MEC_TMPErroresEstablecimientos_IdTMPErrorEstablecimiento_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresFuncion_IdTMPErrorFuncion_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresConceptos_IdTMPErrorConcepto_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresCarRevista_IdTMPErrorCarRevista_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresTiposEstablecim_IdTMPErrorTipoEstablecimiento_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq"" RESTART WITH 1;
+            //    ", idCabecera);
         }
 
 
