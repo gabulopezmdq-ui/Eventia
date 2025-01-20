@@ -113,7 +113,8 @@ namespace API.Services
                 _context.MEC_TMPErroresTiposEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera)
             };
 
-            return (await Task.WhenAll(erroresExistentes)).Any(e => e);
+           var tieneErrores = (await Task.WhenAll(erroresExistentes)).Any(e => e);
+            return tieneErrores;
         }
 
         private async Task EliminarRegistrosAsync(int idCabecera)
