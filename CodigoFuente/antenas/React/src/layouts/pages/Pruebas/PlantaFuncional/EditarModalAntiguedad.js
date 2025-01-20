@@ -34,13 +34,21 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
       const fetchData = async () => {
         try {
           setLoading(true);
-          const response = await fetch(
+          const responseAntig = await fetch(
             `${process.env.REACT_APP_API_URL}POFAntig/getbyidPOF?idPOF=${idPof}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            { headers: { Authorization: `Bearer ${token}` } }
           );
-          if (response.status === 204) {
+          if (responseAntig.status === 200) {
+            const responsePOF = await fetch(
+              `${process.env.REACT_APP_API_URL}POF/getbyid?id=${idPof}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (responsePOF.ok) {
+              const dataPOF = await responsePOF.json();
+              setNombre(dataPOF.persona.nombre || "");
+              setApellido(dataPOF.persona.apellido || "");
+              setSecuencia(dataPOF.secuencia || "");
+            }
             setFormData({
               mesReferencia: "",
               anioReferencia: "",
@@ -48,11 +56,8 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
               anioAntiguedad: "",
             });
             setIdPOFAntig(null);
-            setNombre("");
-            setApellido("");
-            setSecuencia("");
-          } else if (response.ok) {
-            const data = await response.json();
+          } else if (responseAntig.ok) {
+            const data = await responseAntig.json();
             setFormData({
               mesReferencia: data.mesReferencia || "",
               anioReferencia: data.anioReferencia || "",
