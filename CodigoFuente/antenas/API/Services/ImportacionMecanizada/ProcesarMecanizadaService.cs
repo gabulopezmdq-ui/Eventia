@@ -41,13 +41,20 @@ namespace API.Services
                 throw new Exception("La cabecera no existe o no está en estado 'I'.");
             }
 
-            await ValidarDatosCabeceraAsync(idCabecera);
+            // await ValidarDatosCabeceraAsync(idCabecera);
+            await ValidarNroEstabAsync(idCabecera);
+            await ValidarCodFuncionAsync(idCabecera);
+            await ValidarCodLiquidacionAsync(idCabecera);
+            await ValidarCarRevistaAsync(idCabecera);
+            await ValidarTipoOrgAsync(idCabecera);
+
             bool tieneErrores = await VerificarErroresAsync(idCabecera);
 
             if (tieneErrores)
             {
                 await EliminarRegistrosAsync(idCabecera);
                 await CambiarEstadoCabeceraAsync(idCabecera, "P");
+                await _context.SaveChangesAsync();
                 throw new Exception("El archivo contiene errores. Debe corregir el archivo y volver a importarlo.");
             }
 
