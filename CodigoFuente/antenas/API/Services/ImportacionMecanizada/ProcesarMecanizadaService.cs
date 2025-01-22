@@ -57,7 +57,13 @@ namespace API.Services
                 throw new Exception("La cabecera no existe o no está en estado 'I'.");
             }
 
-            await ValidarDatosCabeceraAsync(idCabecera);
+            // await ValidarDatosCabeceraAsync(idCabecera);
+            await ValidarNroEstabAsync(idCabecera);
+            await ValidarCodFuncionAsync(idCabecera);
+            await ValidarCodLiquidacionAsync(idCabecera);
+            await ValidarCarRevistaAsync(idCabecera);
+            await ValidarTipoOrgAsync(idCabecera);
+
             bool tieneErrores = await VerificarErroresAsync(idCabecera);
 
             if (tieneErrores)
@@ -65,6 +71,7 @@ namespace API.Services
             {
                 await EliminarRegistrosAsync(idCabecera);
                 await CambiarEstadoCabeceraAsync(idCabecera, "P");
+                await _context.SaveChangesAsync();
                 throw new Exception("El archivo contiene errores. Debe corregir el archivo y volver a importarlo.");
             }
 
@@ -123,7 +130,8 @@ namespace API.Services
                 _context.MEC_TMPErroresTiposEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera)
             };
 
-            return (await Task.WhenAll(erroresExistentes)).Any(e => e);
+           var tieneErrores = (await Task.WhenAll(erroresExistentes)).Any(e => e);
+            return tieneErrores;
         }
 
         private async Task EliminarRegistrosAsync(int idCabecera)
