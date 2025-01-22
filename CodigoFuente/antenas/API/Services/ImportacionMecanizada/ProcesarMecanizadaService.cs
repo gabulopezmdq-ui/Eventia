@@ -34,22 +34,6 @@ namespace API.Services
         public async Task PreprocesarAsync(int idCabecera)
         {
             var cabecera = await _context.MEC_CabeceraLiquidacion
-<<<<<<< HEAD
-                                         .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
-
-            if (cabecera == null || cabecera.Estado != "I")
-            {
-                throw new Exception("No se encontró la cabecera o no está en estado 'I'.");
-            }
-
-            await ValidarNroEstabAsync(idCabecera);
-            await ValidarCodFuncionAsync(idCabecera);
-            await ValidarCodLiquidacionAsync(idCabecera);
-            await ValidarCarRevistaAsync(idCabecera);
-            await ValidarTipoOrgAsync(idCabecera);
-
-            if (await VerificarErroresAsync(idCabecera))
-=======
                                           .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
             if (cabecera == null || cabecera.Estado != "I")
@@ -67,7 +51,6 @@ namespace API.Services
             bool tieneErrores = await VerificarErroresAsync(idCabecera);
 
             if (tieneErrores)
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
             {
                 await EliminarRegistrosAsync(idCabecera);
                 await CambiarEstadoCabeceraAsync(idCabecera, "P");
@@ -92,12 +75,12 @@ namespace API.Services
 
                 // Puedes agregar la leyenda como un detalle adicional o mostrarla según el contexto
                 throw new Exception(leyenda);
-            } 
+            }
         }
 
         private async Task ValidarDatosCabeceraAsync(int idCabecera)
         {
-                    var tareas = new List<Task>
+            var tareas = new List<Task>
             {
                 ValidarNroEstabAsync(idCabecera),
                 ValidarCodFuncionAsync(idCabecera),
@@ -106,17 +89,17 @@ namespace API.Services
                 ValidarTipoOrgAsync(idCabecera)
             };
 
-                    var resultados = await Task.WhenAll(tareas.Select(task =>
-                        task.ContinueWith(t => t, TaskContinuationOptions.ExecuteSynchronously)));
+            var resultados = await Task.WhenAll(tareas.Select(task =>
+                task.ContinueWith(t => t, TaskContinuationOptions.ExecuteSynchronously)));
 
-                    foreach (var resultado in resultados)
-                    {
-                        if (resultado.IsFaulted)
-                        {
-                            // Manejo de errores para tareas fallidas.
-                            Console.WriteLine($"Error: {resultado.Exception}");
-                        }
-                    }
+            foreach (var resultado in resultados)
+            {
+                if (resultado.IsFaulted)
+                {
+                    // Manejo de errores para tareas fallidas.
+                    Console.WriteLine($"Error: {resultado.Exception}");
+                }
+            }
         }
 
         private async Task<bool> VerificarErroresAsync(int idCabecera)
@@ -130,14 +113,12 @@ namespace API.Services
                 _context.MEC_TMPErroresTiposEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera)
             };
 
-           var tieneErrores = (await Task.WhenAll(erroresExistentes)).Any(e => e);
+            var tieneErrores = (await Task.WhenAll(erroresExistentes)).Any(e => e);
             return tieneErrores;
         }
 
         private async Task EliminarRegistrosAsync(int idCabecera)
         {
-<<<<<<< HEAD
-=======
             var registros = await _context.MEC_TMPMecanizadas
                                           .Where(m => m.idCabecera == idCabecera)
                                           .ToListAsync();
@@ -145,7 +126,6 @@ namespace API.Services
             if (!registros.Any())
                 throw new InvalidOperationException($"No se encontraron registros con idCabecera = {idCabecera}.");
 
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
             await _context.Database.ExecuteSqlRawAsync(
                 @"DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};", idCabecera);
 
@@ -155,51 +135,35 @@ namespace API.Services
 
         private async Task CambiarEstadoCabeceraAsync(int idCabecera, string estado)
         {
-            var cabecera = await _context.MEC_CabeceraLiquidacion
-                                         .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+            var estadoCabecera = await _context.MEC_CabeceraLiquidacion
+                                               .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
-            if (cabecera != null)
+            if (estadoCabecera != null)
             {
-                cabecera.Estado = estado;
+                estadoCabecera.Estado = estado;
                 await _context.SaveChangesAsync();
             }
         }
 
         private async Task ValidarNroEstabAsync(int idCabecera)
         {
-<<<<<<< HEAD
-            var nroEstabTMP = await _context.MEC_TMPMecanizadas
-                                            .Where(m => m.idCabecera == idCabecera)
-                                            .Select(m => m.NroEstab)
-                                            .Distinct()
-                                            .ToListAsync();
-=======
             var nroEstabInvalidos = await _context.MEC_TMPMecanizadas
                 .Where(m => m.idCabecera == idCabecera)
                 .Select(m => m.NroEstab)
                 .Distinct()
                 .Where(nro => !_context.MEC_Establecimientos.Any(e => e.NroDiegep == nro))
                 .ToListAsync();
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
             if (nroEstabInvalidos.Any())
             {
-<<<<<<< HEAD
-                var errores = nroEstabInvalidos.Select(nro => new MEC_TMPErroresEstablecimientos
-                {
-                    IdCabecera = idCabecera,
-                    NroEstab = nro
-                });
-=======
                 var erroresEstablecimientos = nroEstabInvalidos
                     .Select(nro => new MEC_TMPErroresEstablecimientos
                     {
                         IdCabecera = idCabecera,
                         NroEstab = nro
                     });
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
-                await _context.MEC_TMPErroresEstablecimientos.AddRangeAsync(errores);
+                await _context.MEC_TMPErroresEstablecimientos.AddRangeAsync(erroresEstablecimientos);
                 await _context.SaveChangesAsync();
             }
             await _context.SaveChangesAsync();
@@ -207,63 +171,29 @@ namespace API.Services
 
         private async Task ValidarCodFuncionAsync(int idCabecera)
         {
-<<<<<<< HEAD
-            var codFuncionTMP = await _context.MEC_TMPMecanizadas
-                                              .Where(m => m.idCabecera == idCabecera)
-                                              .Select(m => m.Funcion)
-                                              .Distinct()
-                                              .ToListAsync();
-=======
             var codFuncionInvalidos = await _context.MEC_TMPMecanizadas
                 .Where(m => m.idCabecera == idCabecera)
                 .Select(m => m.Funcion)
                 .Distinct()
                 .Where(cod => !_context.MEC_TiposFunciones.Any(f => f.CodFuncion == cod))
                 .ToListAsync();
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
             if (codFuncionInvalidos.Any())
             {
-<<<<<<< HEAD
-                var errores = codFuncionInvalidos.Select(cod => new MEC_TMPErroresFuncion
-                {
-                    IdCabecera = idCabecera,
-                    CodFuncion = cod
-                });
-=======
                 var erroresFuncion = codFuncionInvalidos
                     .Select(cod => new MEC_TMPErroresFuncion
                     {
                         IdCabecera = idCabecera,
                         CodFuncion = cod
                     });
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
-                await _context.MEC_TMPErroresFuncion.AddRangeAsync(errores);
+                await _context.MEC_TMPErroresFuncion.AddRangeAsync(erroresFuncion);
                 await _context.SaveChangesAsync();
             }
         }
 
         private async Task ValidarCodLiquidacionAsync(int idCabecera)
         {
-<<<<<<< HEAD
-            var codLiquidacionTMP = await _context.MEC_TMPMecanizadas
-                                                  .Where(m => m.idCabecera == idCabecera)
-                                                  .Select(m => m.CodigoLiquidacion)
-                                                  .Distinct()
-                                                  .ToListAsync();
-
-            var codLiquidacionInvalidos = codLiquidacionTMP.Where(cod =>
-                !_context.MEC_Conceptos.Any(c => c.CodConcepto == cod)).ToList();
-
-            if (codLiquidacionInvalidos.Any())
-            {
-                var errores = codLiquidacionInvalidos.Select(cod => new MEC_TMPErroresConceptos
-                {
-                    IdCabecera = idCabecera,
-                    CodigoLiquidacion = cod
-                });
-=======
             var codLiquidacionInvalidos = await _context.MEC_TMPMecanizadas
                 .Where(m => m.idCabecera == idCabecera)
                 .Select(m => m.CodigoLiquidacion)
@@ -279,33 +209,14 @@ namespace API.Services
                         IdCabecera = idCabecera,
                         CodigoLiquidacion = cod
                     });
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
-                await _context.MEC_TMPErroresConceptos.AddRangeAsync(errores);
+                await _context.MEC_TMPErroresConceptos.AddRangeAsync(erroresConceptos);
                 await _context.SaveChangesAsync();
             }
         }
 
         private async Task ValidarCarRevistaAsync(int idCabecera)
         {
-<<<<<<< HEAD
-            var carRevistaTMP = await _context.MEC_TMPMecanizadas
-                                              .Where(m => m.idCabecera == idCabecera)
-                                              .Select(m => m.CaracterRevista)
-                                              .Distinct()
-                                              .ToListAsync();
-
-            var carRevistaInvalidos = carRevistaTMP.Where(cod =>
-                !_context.MEC_CarRevista.Any(c => c.CodPcia == cod)).ToList();
-
-            if (carRevistaInvalidos.Any())
-            {
-                var errores = carRevistaInvalidos.Select(cod => new MEC_TMPErroresCarRevista
-                {
-                    IdCabecera = idCabecera,
-                    CaracterRevista = cod
-                });
-=======
             var carRevistaInvalidos = await _context.MEC_TMPMecanizadas
                 .Where(m => m.idCabecera == idCabecera)
                 .Select(m => m.CaracterRevista)
@@ -321,33 +232,14 @@ namespace API.Services
                         IdCabecera = idCabecera,
                         CaracterRevista = cod
                     });
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
-                await _context.MEC_TMPErroresCarRevista.AddRangeAsync(errores);
+                await _context.MEC_TMPErroresCarRevista.AddRangeAsync(erroresCarRevista);
                 await _context.SaveChangesAsync();
             }
         }
 
         private async Task ValidarTipoOrgAsync(int idCabecera)
         {
-<<<<<<< HEAD
-            var tipoOrgTMP = await _context.MEC_TMPMecanizadas
-                                           .Where(m => m.idCabecera == idCabecera)
-                                           .Select(m => m.TipoOrganizacion)
-                                           .Distinct()
-                                           .ToListAsync();
-
-            var tipoOrgInvalidos = tipoOrgTMP.Where(cod =>
-                !_context.MEC_TiposEstablecimientos.Any(c => c.CodTipoEstablecimiento == cod)).ToList();
-
-            if (tipoOrgInvalidos.Any())
-            {
-                var errores = tipoOrgInvalidos.Select(cod => new MEC_TMPErroresTiposEstablecimientos
-                {
-                    IdCabecera = idCabecera,
-                    TipoOrganizacion = cod
-                });
-=======
             var tipoOrgInvalidos = await _context.MEC_TMPMecanizadas
                 .Where(m => m.idCabecera == idCabecera)
                 .Select(m => m.TipoOrganizacion)
@@ -363,9 +255,8 @@ namespace API.Services
                         IdCabecera = idCabecera,
                         TipoOrganizacion = cod
                     });
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
-                await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(errores);
+                await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(erroresTiposEstablecimientos);
                 await _context.SaveChangesAsync();
             }
         }
@@ -379,54 +270,29 @@ namespace API.Services
             foreach (var registro in registros)
             {
                 var persona = await _context.MEC_Personas
-<<<<<<< HEAD
-                                            .FirstOrDefaultAsync(p => p.DNI == registro.Documento);
-=======
                                             .FirstOrDefaultAsync(x => x.DNI == registro.Documento);
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
 
                 if (persona == null)
                 {
-                    await RegistrarErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
+                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
                     continue;
                 }
 
-<<<<<<< HEAD
-                var pof = await _context.MEC_POF
-                                        .FirstOrDefaultAsync(p =>
-                                            p.IdEstablecimiento == int.Parse(registro.NroEstab) &&
-                                            p.IdPersona == persona.IdPersona &&
-                                            p.Secuencia == registro.Secuencia);
-
-                if (pof == null)
-=======
                 var POF = await _context.MEC_POF
                                          .FirstOrDefaultAsync(p => p.IdEstablecimiento == int.Parse(registro.NroEstab) &&
                                                                    p.IdPersona == persona.IdPersona &&
                                                                    p.Secuencia == registro.Secuencia);
 
                 if (POF == null)
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
                 {
-                    await RegistrarErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
+                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
                     continue;
                 }
 
-<<<<<<< HEAD
-=======
                 await ProcesarDetallePOFAsync(idCabecera, POF, registro);
-<<<<<<< HEAD
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
-                registro.RegistroValido = "S";
-                await _context.SaveChangesAsync();
-=======
->>>>>>> 324707cb95d0a31700a69f955931ad690e95b91e
             }
         }
 
-<<<<<<< HEAD
-        private async Task RegistrarErrorMecAsync(int idCabecera, MEC_TMPMecanizadas registro, string documentoError, string pofError, string registroValido)
-=======
         private async Task ProcesarDetallePOFAsync(int idCabecera, MEC_POF POF, MEC_TMPMecanizadas registro)
         {
             var nuevoDetallePOF = new MEC_POFDetalle
@@ -459,7 +325,7 @@ namespace API.Services
                 nuevoDetallePOF.AntiguedadMeses = antiguedadResult.antiguedadMeses.GetValueOrDefault();
 
                 registro.RegistroValido = "S";
-            } 
+            }
             else
             {
                 var POFMec = _context.MEC_POF.FirstOrDefault(p => p.Persona.DNI == registro.Documento);
@@ -480,7 +346,6 @@ namespace API.Services
         }
 
         private async Task RegistroErrorMecAsync(int idCabecera, MEC_TMPMecanizadas registro, string documentoError, string pofError, string registroValido)
->>>>>>> e0525dc4cf7ad76de0358f17396b9982e609a546
         {
             var error = new MEC_TMPErroresMecanizadas
             {
@@ -491,6 +356,7 @@ namespace API.Services
 
             _context.MEC_TMPErroresMecanizadas.Add(error);
             registro.RegistroValido = registroValido;
+
             await _context.SaveChangesAsync();
         }
 
