@@ -1,4 +1,5 @@
 ﻿using API.DataSchema;
+using API.DataSchema.DTO;
 using API.Services.ImportacionMecanizada;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,7 +18,7 @@ namespace API.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<List<ConteoConsolidadoResult>> ObtenerConteosConsolidadoAsync(string estadoCabecera)
+        public async Task<List<ConteoConsolidadoResultDTO>> ObtenerConteosConsolidadoAsync(string estadoCabecera)
         {
             if (string.IsNullOrWhiteSpace(estadoCabecera))
                 throw new ArgumentException("El estado de la cabecera no puede ser nulo o vacío.");
@@ -25,7 +26,7 @@ namespace API.Services
             return await _context.MEC_Mecanizadas
                 .Where(m => m.Cabecera != null && m.Cabecera.Estado == estadoCabecera)
                 .GroupBy(m => m.IdEstablecimiento)
-                .Select(group => new ConteoConsolidadoResult
+                .Select(group => new ConteoConsolidadoResultDTO
                 {
                     IdEstablecimiento = group.Key,
                     CountConsolidadoS = group.Count(m => m.Consolidado == "S"),
@@ -49,7 +50,6 @@ namespace API.Services
             return countN > 0;
         }
 
-
         public async Task<bool> HabilitarCambiarEstadoCabeceraAsync(int idCabecera)
         {
             var totalRegistros = await _context.MEC_Mecanizadas
@@ -62,12 +62,5 @@ namespace API.Services
 
             return totalRegistros > 0 && totalRegistros == totalConsolidadoS;
         }
-    }
-
-    public class ConteoConsolidadoResult
-    {
-        public int IdEstablecimiento { get; set; }
-        public int CountConsolidadoS { get; set; }
-        public int CountConsolidadoN { get; set; }
     }
 }
