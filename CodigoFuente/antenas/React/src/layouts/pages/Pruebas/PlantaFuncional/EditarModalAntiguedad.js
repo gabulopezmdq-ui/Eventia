@@ -34,13 +34,33 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
       const fetchData = async () => {
         try {
           setLoading(true);
-          const response = await fetch(
+          const responseAntig = await fetch(
             `${process.env.REACT_APP_API_URL}POFAntig/getbyidPOF?idPOF=${idPof}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            { headers: { Authorization: `Bearer ${token}` } }
           );
-          if (response.status === 204) {
+          const dataAntig = await responseAntig.json();
+          if (responseAntig.ok && dataAntig !== false) {
+            setFormData({
+              mesReferencia: dataAntig.mesReferencia || "",
+              anioReferencia: dataAntig.anioReferencia || "",
+              mesAntiguedad: dataAntig.mesAntiguedad || "",
+              anioAntiguedad: dataAntig.anioAntiguedad || "",
+            });
+            setIdPOFAntig(dataAntig.idPOFAntig || null);
+            setNombre(dataAntig.pof.persona.nombre || "");
+            setApellido(dataAntig.pof.persona.apellido || "");
+            setSecuencia(dataAntig.pof.secuencia || "");
+          } else {
+            const responsePOF = await fetch(
+              `${process.env.REACT_APP_API_URL}POF/getbyid?id=${idPof}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (responsePOF.ok) {
+              const dataPOF = await responsePOF.json();
+              setNombre(dataPOF.persona.nombre || "");
+              setApellido(dataPOF.persona.apellido || "");
+              setSecuencia(dataPOF.secuencia || "");
+            }
             setFormData({
               mesReferencia: "",
               anioReferencia: "",
@@ -48,23 +68,6 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
               anioAntiguedad: "",
             });
             setIdPOFAntig(null);
-            setNombre("");
-            setApellido("");
-            setSecuencia("");
-          } else if (response.ok) {
-            const data = await response.json();
-            setFormData({
-              mesReferencia: data.mesReferencia || "",
-              anioReferencia: data.anioReferencia || "",
-              mesAntiguedad: data.mesAntiguedad || "",
-              anioAntiguedad: data.anioAntiguedad || "",
-            });
-            setIdPOFAntig(data.idPOFAntig || null);
-            setNombre(data.pof.persona.nombre || "");
-            setApellido(data.pof.persona.apellido || "");
-            setSecuencia(data.pof.secuencia || "");
-          } else {
-            alert("Hubo un error al obtener los datos.");
           }
         } catch (error) {
           alert("Hubo un error al conectar con el servidor.");
