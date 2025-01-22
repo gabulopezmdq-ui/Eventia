@@ -59,7 +59,7 @@ namespace API.Services
                                 Documento = line.Substring(15, 8).Trim(),
                                 Secuencia = line.Substring(23, 3).Trim(),
                                 Funcion = line.Substring(26, 1).Trim(),
-                                CodigoLiquidacion = line.Substring(27, 5).Trim(),
+                                CodigoLiquidacion = line.Substring(28, 4).Trim(),
                                 Importe = ParseDecimal(line.Substring(32, 9).Trim()) / 100,
                                 Signo = line.Substring(41, 1).Trim(),
                                 MarcaTransferido = line.Substring(42, 1).Trim(),
