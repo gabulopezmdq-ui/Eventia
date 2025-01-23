@@ -10,26 +10,33 @@ using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using FluentAssertions.Common;
 using System.Linq;
+using API.Services.ImportacionMecanizada;
 
 namespace API.Controllers
 {
-    [ApiController]  
+    [ApiController]
     //[Authorize(Roles = "SuperAdmin, Admin")]
     [AllowAnonymous]
     [Route("[controller]")]
-
     public class ImportarMecanizadasController : ControllerBase
     {
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
         private readonly IProcesarMecanizadaService<MEC_TMPMecanizadas> _procesarMecanizadaService;
         private readonly ICRUDService<MEC_TMPMecanizadas> _serviceGenerico;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IConsolidarMecanizadaService _consolidarMecanizadaService;
 
-        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico, IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService, IHttpContextAccessor httpContextAccessor)
+        public ImportarMecanizadasController(
+            IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService,
+            ICRUDService<MEC_TMPMecanizadas> serviceGenerico,
+            IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService,
+            IConsolidarMecanizadaService consolidarMecanizadaService,
+            IHttpContextAccessor httpContextAccessor)
         {
             _importacionMecanizadaService = importacionService;
             _serviceGenerico = serviceGenerico;
             _procesarMecanizadaService = procesarMecanizadaService;
+            _consolidarMecanizadaService = consolidarMecanizadaService;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -69,7 +76,7 @@ namespace API.Controllers
 
         [HttpPost("PreprocesarArchivo")]
         public async Task<IActionResult> PreprocesarArchivo(int idCabecera)
-         {
+        {
             try
             {
                 await _procesarMecanizadaService.PreprocesarAsync(idCabecera);
@@ -77,7 +84,6 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                // Verificar si el error se debe a problemas en las validaciones
                 if (ex.Message.Contains("El archivo contiene errores"))
                 {
                     return BadRequest(new
@@ -114,6 +120,48 @@ namespace API.Controllers
             }
         }
         
+        /////////////////////////////////////////////////////////
+        
+        [HttpPost("ObtenerConteosConsolidado")]
+        public async Task<IActionResult> ObtenerConteosConsolidado(int estadoCabecera)
+        {
+            try
+            {
+                var conteos = await _consolidarMecanizadaService.ObtenerConteosConsolidadoAsync(estadoCabecera);
+                return Ok(conteos);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
+        [HttpGet("HabilitarAcciones")]
+        public async Task<IActionResult> HabilitarAcciones(int idEstablecimiento, string estadoCabecera)
+        {
+            try
+            {
+                var habilitado = await _consolidarMecanizadaService.HabilitarAccionesAsync(idEstablecimiento, estadoCabecera);
+                return Ok(new { Habilitado = habilitado });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("HabilitarCambiarEstadoCabecera")]
+        public async Task<IActionResult> HabilitarCambiarEstadoCabecera(int idCabecera)
+        {
+            try
+            {
+                var habilitado = await _consolidarMecanizadaService.HabilitarCambiarEstadoCabeceraAsync(idCabecera);
+                return Ok(new { Habilitado = habilitado });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
