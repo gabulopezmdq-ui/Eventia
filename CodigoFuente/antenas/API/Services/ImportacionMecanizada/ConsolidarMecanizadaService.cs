@@ -18,22 +18,24 @@ namespace API.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<List<object>> ObtenerConteosConsolidadoAsync(int idCabecera)
+        public async Task<object> ObtenerConteosConsolidadoAsync(int idCabecera)
         {
             if (idCabecera <= 0)
-                throw new ArgumentException("El id de la cabecera no puede ser menor o igual a cero.");
+                throw new ArgumentException("Los IDs no pueden ser menores o iguales a cero.");
 
-            return await _context.MEC_Mecanizadas
-                .Where(m => m.Cabecera != null && m.Cabecera.IdCabecera == idCabecera)
-                .GroupBy(m => m.IdEstablecimiento)
-                .Select(group => new
-                {
-                    IdEstablecimiento = group.Key,
-                    CountConsolidadoS = group.Count(m => m.Consolidado == "S"),
-                    CountConsolidadoN = group.Count(m => m.Consolidado == "N"),
-                    AccionHabilitada = group.Count(m => m.Consolidado == "N") > 0
-                })
-                .ToListAsync<object>();
+            var query = _context.MEC_Mecanizadas
+                .Where(m => m.Cabecera != null
+                            && m.Cabecera.IdCabecera == idCabecera);
+
+            int countS = await query.CountAsync(m => m.Consolidado == "S");
+            int countN = await query.CountAsync(m => m.Consolidado == "N");
+
+            return new
+            {
+                CountConsolidadoS = countS,
+                CountConsolidadoN = countN,
+                AccionHabilitada = countN > 0
+            };
         }
 
         public async Task<bool> HabilitarAccionesAsync(int idEstablecimiento, string estadoCabecera)
