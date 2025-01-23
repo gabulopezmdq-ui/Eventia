@@ -11,11 +11,11 @@ namespace API.DataSchema
         public int IdCabecera { get; set; }
         public int? CantHorasCS { get; set; }
         public int? CantHorasSS { get; set; }
-        public int AntiguedadAnios { get; set; }
-        public int AntiguedadMeses { get; set; }
-        public string SinHaberes { get; set; }
-        public string NoSubvencionado { get; set; }
-        public int SupleA { get; set; }
+        public int? AntiguedadAnios { get; set; }
+        public int? AntiguedadMeses { get; set; }
+        public string? SinHaberes { get; set; }
+        public string? NoSubvencionado { get; set; }
+        public int? SupleA { get; set; }
         public DateTime? SupleDesde { get; set; }
         public DateTime? SupleHasta { get; set; }
 
