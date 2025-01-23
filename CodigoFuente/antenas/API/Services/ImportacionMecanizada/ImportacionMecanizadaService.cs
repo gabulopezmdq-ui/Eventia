@@ -72,9 +72,10 @@ namespace API.Services
                                 NroEstab = line.Substring(52, 4).Trim(),
                                 Categoria = line.Substring(56, 2).Trim(),
                                 TipoCargo = line.Substring(58, 1).Trim(),
-                                HorasDesignadas = ParseDecimal(line.Substring(60, 3).Trim()) / 100, 
+                                HorasDesignadas = ParseDecimal(line.Substring(60, 3).Trim()) / 100,
                                 Subvencion = line.Substring(63, 3).Trim(),
                                 RegistroValido = "X"
+
                             };
 
                             // Agregar a la base de datos
