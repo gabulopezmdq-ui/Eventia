@@ -122,8 +122,8 @@ namespace API.Controllers
         
         /////////////////////////////////////////////////////////
         
-        [HttpGet("ObtenerConteosConsolidado")]
-        public async Task<IActionResult> ObtenerConteosConsolidado(string estadoCabecera)
+        [HttpPost("ObtenerConteosConsolidado")]
+        public async Task<IActionResult> ObtenerConteosConsolidado(int estadoCabecera)
         {
             try
             {
