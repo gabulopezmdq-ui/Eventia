@@ -130,6 +130,7 @@
     <Compile Remove="Services\ICF_ProcesoxGrupoService - Copy.cs" />
     <Compile Remove="Startup.cs" />
     <Compile Remove="Test\ImportacionMecanizadaServiceTests.cs" />
+    <Compile Remove="Test\ProcesarMecanizadaControllerTests.cs" />
     <Compile Remove="Utility\ImageTools.cs" />
     <Compile Remove="Utility\LdapConnectionProvider.cs" />
   </ItemGroup>
@@ -181,6 +182,7 @@
   <ItemGroup>
     <Folder Include="DataSchema\Extensions\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Test\" />
   </ItemGroup>
 
 

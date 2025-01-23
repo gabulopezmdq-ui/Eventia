@@ -6,7 +6,7 @@ namespace API.Services.ImportacionMecanizada
 {
     public interface IConsolidarMecanizadaService
     {
-        Task<List<ConteoConsolidadoResultDTO>> ObtenerConteosConsolidadoAsync(string estadoCabecera);
+        Task<List<object>> ObtenerConteosConsolidadoAsync(int idCabecera);
         Task<bool> HabilitarAccionesAsync(int idEstablecimiento, string estadoCabecera);
         Task<bool> HabilitarCambiarEstadoCabeceraAsync(int idCabecera);
     }

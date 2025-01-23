@@ -18,21 +18,22 @@ namespace API.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<List<ConteoConsolidadoResultDTO>> ObtenerConteosConsolidadoAsync(string estadoCabecera)
+        public async Task<List<object>> ObtenerConteosConsolidadoAsync(int idCabecera)
         {
-            if (string.IsNullOrWhiteSpace(estadoCabecera))
-                throw new ArgumentException("El estado de la cabecera no puede ser nulo o vacío.");
+            if (idCabecera <= 0)
+                throw new ArgumentException("El id de la cabecera no puede ser menor o igual a cero.");
 
             return await _context.MEC_Mecanizadas
-                .Where(m => m.Cabecera != null && m.Cabecera.Estado == estadoCabecera)
+                .Where(m => m.Cabecera != null && m.Cabecera.IdCabecera == idCabecera)
                 .GroupBy(m => m.IdEstablecimiento)
-                .Select(group => new ConteoConsolidadoResultDTO
+                .Select(group => new
                 {
                     IdEstablecimiento = group.Key,
                     CountConsolidadoS = group.Count(m => m.Consolidado == "S"),
-                    CountConsolidadoN = group.Count(m => m.Consolidado == "N")
+                    CountConsolidadoN = group.Count(m => m.Consolidado == "N"),
+                    AccionHabilitada = group.Count(m => m.Consolidado == "N") > 0
                 })
-                .ToListAsync();
+                .ToListAsync<object>();
         }
 
         public async Task<bool> HabilitarAccionesAsync(int idEstablecimiento, string estadoCabecera)
