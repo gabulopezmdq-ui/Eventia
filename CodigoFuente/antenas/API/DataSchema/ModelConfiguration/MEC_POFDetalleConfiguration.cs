@@ -40,7 +40,7 @@ namespace API.DataSchema.ModelConfiguration
                 .HasOne(p => p.Suplencia)
                 .WithMany(t => t.POFSuplencia)
                 .HasForeignKey(p => p.SupleA)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder
                 .Navigation(e => e.Suplencia)
@@ -49,17 +49,17 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.CantHorasCS)
                 .HasColumnType("decimal")
-                .IsRequired(true); 
+                .IsRequired(false); 
 
             builder.Property(e => e.CantHorasSS)
                 .HasColumnType("decimal")
-                .IsRequired(true); 
+                .IsRequired(false); 
 
             builder.Property(e => e.AntiguedadAnios)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.AntiguedadMeses)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.SinHaberes)
                 .HasColumnType("char(1)")
