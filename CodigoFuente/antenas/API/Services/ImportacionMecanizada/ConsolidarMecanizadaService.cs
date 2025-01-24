@@ -43,27 +43,33 @@ namespace API.Services
             if (string.IsNullOrWhiteSpace(estadoCabecera))
                 throw new ArgumentException("El estado de la cabecera no puede ser nulo o vacío.");
 
-            var countN = await _context.MEC_Mecanizadas
+            if (idEstablecimiento <= 0)
+                throw new ArgumentException("El ID del establecimiento no puede ser menor o igual a cero.");
+
+            var query = _context.MEC_Mecanizadas
                 .Where(m => m.Cabecera != null
                             && m.Cabecera.Estado == estadoCabecera
-                            && m.IdEstablecimiento == idEstablecimiento
-                            && m.Consolidado == "N")
-                .CountAsync();
+                            && m.IdEstablecimiento == idEstablecimiento);
+
+            int countN = await query.CountAsync(m => m.Consolidado == "N");
 
             return countN > 0;
         }
 
+
         public async Task<bool> HabilitarCambiarEstadoCabeceraAsync(int idCabecera)
         {
-            var totalRegistros = await _context.MEC_Mecanizadas
-                .Where(m => m.Cabecera.IdCabecera == idCabecera)
-                .CountAsync();
+            if (idCabecera <= 0)
+                throw new ArgumentException("El ID de la cabecera no puede ser menor o igual a cero.");
 
-            var totalConsolidadoS = await _context.MEC_Mecanizadas
-                .Where(m => m.Cabecera.IdCabecera == idCabecera && m.Consolidado == "S")
-                .CountAsync();
+            var query = _context.MEC_Mecanizadas
+                .Where(m => m.Cabecera.IdCabecera == idCabecera);
+
+            int totalRegistros = await query.CountAsync();
+            int totalConsolidadoS = await query.CountAsync(m => m.Consolidado == "S");
 
             return totalRegistros > 0 && totalRegistros == totalConsolidadoS;
         }
+
     }
 }
