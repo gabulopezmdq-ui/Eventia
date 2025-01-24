@@ -283,7 +283,7 @@ namespace API.Services
 
                 var detalle = await ProcesarDetallePOFAsync(idCabecera, POF, registro);
                 detallesPOF.Add(detalle);
-                //registro.RegistroValido = "S";
+                registro.RegistroValido = "S";
             } 
             // Agregar todos los detalles y errores de una sola vez
             _context.MEC_POFDetalle.AddRange(detallesPOF);
@@ -538,11 +538,12 @@ namespace API.Services
                     cabecera.Estado = "R";
                 }
 
-                // 3. Eliminar errores
-                await _context.MEC_TMPErroresMecanizadas
-                    .Where(e => e.IdCabecera == idCabecera)
-                    .ExecuteDeleteAsync()
-                    .ConfigureAwait(false);
+
+                // 3. Eliminar errores 
+                await _context.Database.ExecuteSqlRawAsync(
+                     @"DELETE FROM ""MEC_TMPErroresMecanizadas"" WHERE ""IdCabecera"" = {0}",
+                        idCabecera
+                ).ConfigureAwait(false);
 
                 // 4. Insertar estado
                 await _context.MEC_CabeceraLiquidacionEstados.AddAsync(new MEC_CabeceraLiquidacionEstados
