@@ -141,27 +141,42 @@ namespace API.Controllers
         {
             try
             {
+                if (idEstablecimiento <= 0)
+                    return BadRequest("El ID del establecimiento no puede ser menor o igual a cero.");
+
+                if (string.IsNullOrWhiteSpace(estadoCabecera))
+                    return BadRequest("El estado de la cabecera no puede ser nulo o vacío.");
+
                 var habilitado = await _consolidarMecanizadaService.HabilitarAccionesAsync(idEstablecimiento, estadoCabecera);
+
+                // Devolver la respuesta adecuada en formato JSON
                 return Ok(new { Habilitado = habilitado });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, new { Error = "Ocurrió un error interno en el servidor.", Detalles = ex.Message });
             }
         }
+
 
         [HttpGet("HabilitarCambiarEstadoCabecera")]
         public async Task<IActionResult> HabilitarCambiarEstadoCabecera(int idCabecera)
         {
             try
             {
+                if (idCabecera <= 0)
+                    return BadRequest("El ID de la cabecera no puede ser menor o igual a cero.");
+
                 var habilitado = await _consolidarMecanizadaService.HabilitarCambiarEstadoCabeceraAsync(idCabecera);
+
+                // Devolver la respuesta con el estado de habilitación
                 return Ok(new { Habilitado = habilitado });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, new { Error = "Ocurrió un error interno en el servidor.", Detalles = ex.Message });
             }
         }
+
     }
 }
