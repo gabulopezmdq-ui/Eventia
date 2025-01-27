@@ -12,6 +12,7 @@ namespace API.Services
     {
         Task<string> HandlePreprocesarArchivoAsync(int idCabecera);
         Task PreprocesarAsync(int idCabecera);
+        Task<string> ProcesarSiEsValidoAsync(int idCabecera, int usuario);
     }
 
 }

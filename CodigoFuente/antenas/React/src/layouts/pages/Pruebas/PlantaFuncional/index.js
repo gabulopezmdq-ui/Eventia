@@ -18,6 +18,7 @@ import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
 import EditarModal from "./EditarModal";
+import EditarModalAntiguedad from "./EditarModalAntiguedad";
 import FormField from "layouts/pages/account/components/FormField";
 
 function PlantaFuncional() {
@@ -43,6 +44,7 @@ function PlantaFuncional() {
   const [categoriasOptions, setCategoriasOptions] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAntiguedadModalOpen, setIsAntiguedadModalOpen] = useState(false);
   const [selectedIdPof, setSelectedIdPof] = useState(null);
   const [formData, setFormData] = useState({
     apellido: "",
@@ -565,17 +567,31 @@ function PlantaFuncional() {
                         ),
                       },
                       {
-                        Header: "Mas Info",
+                        Header: "Acciones",
                         accessor: "edit",
                         Cell: ({ row }) => (
-                          <MDButton
-                            variant="gradient"
-                            color="info"
-                            size="small"
-                            onClick={() => handleEditar(row.original.idPof)}
-                          >
-                            Editar
-                          </MDButton>
+                          <>
+                            <MDButton
+                              variant="gradient"
+                              color="info"
+                              size="small"
+                              onClick={() => handleEditar(row.original.idPof)}
+                            >
+                              Editar
+                            </MDButton>
+                            <MDButton
+                              variant="gradient"
+                              color="secondary"
+                              size="small"
+                              style={{ marginLeft: "10px" }}
+                              onClick={() => {
+                                setSelectedIdPof(row.original.idPof);
+                                setIsAntiguedadModalOpen(true);
+                              }}
+                            >
+                              Antigüedad
+                            </MDButton>
+                          </>
                         ),
                       },
                     ],
@@ -590,6 +606,13 @@ function PlantaFuncional() {
                   idPof={selectedIdPof}
                   token={token}
                   onEditSuccess={handleEditSuccess}
+                />
+                <EditarModalAntiguedad
+                  isOpen={isAntiguedadModalOpen}
+                  onClose={() => setIsAntiguedadModalOpen(false)}
+                  idPof={selectedIdPof}
+                  onEditSuccess={handleEditSuccess}
+                  token={token}
                 />
               </Card>
               {alertaDNI && (

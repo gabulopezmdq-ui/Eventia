@@ -21,7 +21,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder
-                .Property(p => p.IdCargo)
+                .Property(p => p.IdTipoCategoria)
                 .IsRequired(true);
 
             builder.Property(e => e.Vigente)
@@ -54,7 +54,7 @@ namespace API.DataSchema.ModelConfiguration
             builder
                .HasOne(p => p.Cargo)
                .WithMany(t => t.UsuarioEstablecimiento)
-               .HasForeignKey(p => p.IdCargo)
+               .HasForeignKey(p => p.IdTipoCategoria)
                .IsRequired(true);
 
             builder
