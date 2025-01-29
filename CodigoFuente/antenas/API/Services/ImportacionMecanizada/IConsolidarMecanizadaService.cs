@@ -11,5 +11,7 @@ namespace API.Services.ImportacionMecanizada
         Task<bool> HabilitarAccionesAsync(int idEstablecimiento, string estadoCabecera);
         Task<bool> HabilitarCambiarEstadoCabeceraAsync(int idCabecera);
         Task<List<MEC_POF>> ObtenerRegistrosPOFNoMecanizadosAsync(int idCabecera, int idEstablecimiento);
+        Task<bool> ValidarExistenciaAntiguedadAsync(int idPOF);
+
     }
 }

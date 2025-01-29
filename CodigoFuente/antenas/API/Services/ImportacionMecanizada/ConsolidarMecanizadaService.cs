@@ -84,5 +84,15 @@ namespace API.Services
 
             return registros;
         }
+        public async Task<bool> ValidarExistenciaAntiguedadAsync(int idPOF)
+        {
+            if (idPOF <= 0)
+                throw new ArgumentException("El ID del POF no puede ser menor o igual a cero.");
+
+            bool existe = await _context.MEC_POF_Antiguedades.AnyAsync(a => a.IdPOF == idPOF);
+
+            return existe;
+        }
+
     }
 }

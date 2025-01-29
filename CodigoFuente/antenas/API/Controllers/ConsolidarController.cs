@@ -101,5 +101,23 @@ namespace API.Controllers
                 return StatusCode(500, new { Error = "Ocurrió un error interno en el servidor.", Detalles = ex.Message });
             }
         }
+        [HttpGet("ValidarExistenciaAntiguedad")]
+        public async Task<IActionResult> ValidarExistenciaAntiguedad(int idPOF)
+        {
+            try
+            {
+                if (idPOF <= 0)
+                    return BadRequest("El ID del POF no puede ser menor o igual a cero.");
+
+                bool existe = await _consolidarMecanizadaService.ValidarExistenciaAntiguedadAsync(idPOF);
+
+                return Ok(new { Existe = existe });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = "Ocurrió un error interno en el servidor.", Detalles = ex.Message });
+            }
+        }
+
     }
 }
