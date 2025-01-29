@@ -56,7 +56,6 @@ namespace API.Services
             return countN > 0;
         }
 
-
         public async Task<bool> HabilitarCambiarEstadoCabeceraAsync(int idCabecera)
         {
             if (idCabecera <= 0)
@@ -71,5 +70,19 @@ namespace API.Services
             return totalRegistros > 0 && totalRegistros == totalConsolidadoS;
         }
 
+        public async Task<List<MEC_POF>> ObtenerRegistrosPOFNoMecanizadosAsync(int idCabecera, int idEstablecimiento)
+        {
+            if (idCabecera <= 0 || idEstablecimiento <= 0)
+                throw new ArgumentException("Los IDs no pueden ser menores o iguales a cero.");
+
+            var registros = await _context.MEC_POF
+                .Where(p => p.IdEstablecimiento == idEstablecimiento &&
+                            !_context.MEC_Mecanizadas.Any(m => m.IdPOF == p.IdPOF &&
+                                                                m.IdEstablecimiento == idEstablecimiento &&
+                                                                m.IdCabecera == idCabecera))
+                .ToListAsync();
+
+            return registros;
+        }
     }
 }
