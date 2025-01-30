@@ -118,6 +118,26 @@ namespace API.Controllers
                 return StatusCode(500, new { Error = "Ocurrió un error interno en el servidor.", Detalles = ex.Message });
             }
         }
+        [HttpPost("ProcesarAltaMecanizada")]
+        public async Task<IActionResult> ProcesarAltaMecanizada([FromBody] AltaMecanizadaDTO datos)
+        {
+            try
+            {
+                if (datos == null)
+                    return BadRequest("Los datos no pueden ser nulos.");
+
+                bool resultado = await _consolidarMecanizadaService.ProcesarAltaMecanizadaAsync(datos);
+
+                if (resultado)
+                    return Ok(new { Mensaje = "Alta mecanizada procesada correctamente." });
+
+                return BadRequest("No se pudo procesar el alta mecanizada.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = "Ocurrió un error interno en el servidor.", Detalles = ex.Message });
+            }
+        }
 
     }
 }
