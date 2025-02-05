@@ -104,40 +104,16 @@ namespace API.Services
 
         private async Task<bool> VerificarErroresAsync(int idCabecera)
         {
+            var erroresExistentes = new List<Task<bool>>
+            {
+                _context.MEC_TMPErroresEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera),
+                _context.MEC_TMPErroresFuncion.AnyAsync(e => e.IdCabecera == idCabecera),
+                _context.MEC_TMPErroresConceptos.AnyAsync(e => e.IdCabecera == idCabecera),
+                _context.MEC_TMPErroresCarRevista.AnyAsync(e => e.IdCabecera == idCabecera),
+                _context.MEC_TMPErroresTiposEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera)
+            };
 
-            bool existeErroresEstablecimientos = await _context.MEC_TMPErroresEstablecimientos
-                                                      .AnyAsync(e => e.IdCabecera == idCabecera);
-
-            bool existeErroresFuncion = await _context.MEC_TMPErroresFuncion
-                                                      .AnyAsync(e => e.IdCabecera == idCabecera);
-
-            bool existeErroresConceptos = await _context.MEC_TMPErroresConceptos
-                                                        .AnyAsync(e => e.IdCabecera == idCabecera);
-
-            bool existeErroresCarRevista = await _context.MEC_TMPErroresCarRevista
-                                                         .AnyAsync(e => e.IdCabecera == idCabecera);
-
-            bool existeErroresTiposEstablecimientos = await _context.MEC_TMPErroresTiposEstablecimientos
-                                                                    .AnyAsync(e => e.IdCabecera == idCabecera);
-
-            // Verificar si hay errores en al menos una tabla
-            return existeErroresEstablecimientos ||
-                   existeErroresFuncion ||
-                   existeErroresConceptos ||
-                   existeErroresCarRevista ||
-                   existeErroresTiposEstablecimientos;
-
-           // var erroresExistentes = new List<Task<bool>>
-           // {
-           //     _context.MEC_TMPErroresEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera),
-           //     _context.MEC_TMPErroresFuncion.AnyAsync(e => e.IdCabecera == idCabecera),
-           //     _context.MEC_TMPErroresConceptos.AnyAsync(e => e.IdCabecera == idCabecera),
-           //     _context.MEC_TMPErroresCarRevista.AnyAsync(e => e.IdCabecera == idCabecera),
-           //     _context.MEC_TMPErroresTiposEstablecimientos.AnyAsync(e => e.IdCabecera == idCabecera)
-           // };
-
-           //var tieneErrores = (await Task.WhenAll(erroresExistentes)).Any(e => e);
-           // return tieneErrores;
+            return (await Task.WhenAll(erroresExistentes)).Any(e => e);
         }
 
         private async Task EliminarRegistrosAsync(int idCabecera)
