@@ -40,13 +40,13 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
             setApellido(dataAntig.persona?.apellido || "");
           } else {
             const responsePOF = await fetch(
-              `${process.env.REACT_APP_API_URL}POF/getbyid?id=${idPersona}`,
+              `${process.env.REACT_APP_API_URL}Personas/getbyid?id=${idPersona}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
             if (responsePOF.ok) {
               const dataPOF = await responsePOF.json();
-              setNombre(dataPOF.persona?.nombre || "");
-              setApellido(dataPOF.persona?.apellido || "");
+              setNombre(dataPOF.nombre || "");
+              setApellido(dataPOF.apellido || "");
             }
             setFormData({
               mesReferencia: "",
