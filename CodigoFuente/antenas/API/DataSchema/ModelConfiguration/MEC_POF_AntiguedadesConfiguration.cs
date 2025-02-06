@@ -30,13 +30,13 @@ namespace API.DataSchema.ModelConfiguration
 
             // Configurar la relación con la entidad MEC_POF
             builder
-                .HasOne(p => p.POF)
+                .HasOne(p => p.Persona)
                 .WithMany(p => p.POFAntiguedad)
-                .HasForeignKey(p => p.IdPOF)
+                .HasForeignKey(p => p.IdPersona)
                 .IsRequired(true);
 
             builder
-                .Navigation(e => e.POF)
+                .Navigation(e => e.Persona)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
