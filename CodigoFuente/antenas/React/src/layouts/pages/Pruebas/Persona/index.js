@@ -76,7 +76,6 @@ function Persona() {
     } else {
       filteredData = data;
     }
-    console.log("Datos filtrados:", filteredData);
     setDataTableData(filteredData);
   };
 
@@ -210,7 +209,7 @@ function Persona() {
             <EditarModalAntiguedad
               isOpen={isAntiguedadModalOpen}
               onClose={() => setIsAntiguedadModalOpen(false)}
-              idPof={selectedIdPof}
+              idPersona={selectedIdPof}
               onEditSuccess={handleEditSuccess}
               token={token}
             />
