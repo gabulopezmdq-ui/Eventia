@@ -8,6 +8,10 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = CoreServices.Test
+<<<<<<< HEAD
 build_property.ProjectDir = C:\mecanizadas\CodigoFuente\antenas\CoreServices\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
+=======
+build_property.ProjectDir = C:\Users\jcgarcia\Desktop\Desarrollo\mecanizadas\CodigoFuente\antenas\CoreServices\
+>>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0

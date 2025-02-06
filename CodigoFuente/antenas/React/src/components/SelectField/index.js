@@ -29,7 +29,10 @@ function SelectField({
           },
         })
         .then((response) => {
-          setOptions(response.data);
+          const sortedOptions = response.data.sort((a, b) =>
+            a[optionField].localeCompare(b[optionField])
+          );
+          setOptions(sortedOptions);
         })
         .catch((error) => {
           console.error("Error al cargar las opciones:", error);
@@ -48,7 +51,10 @@ function SelectField({
             }
             return true;
           });
-          setOptions(filteredOptions);
+          const sortedOptions = filteredOptions.sort((a, b) =>
+            a[optionField].localeCompare(b[optionField])
+          );
+          setOptions(sortedOptions);
         })
         .catch((error) => {
           console.error("Error al cargar las opciones:", error);
@@ -56,7 +62,9 @@ function SelectField({
     }
   }, [apiUrl, formData.idConservadora, token]);
 
-  const combinedOptions = [...customOptions, ...options];
+  const combinedOptions = [...customOptions, ...options].sort((a, b) =>
+    a[optionField].localeCompare(b[optionField])
+  );
 
   return (
     <div>

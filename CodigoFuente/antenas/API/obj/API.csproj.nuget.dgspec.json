@@ -1,6 +1,7 @@
 {
   "format": 1,
   "restore": {
+<<<<<<< HEAD
     "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {}
   },
   "projects": {
@@ -18,11 +19,22 @@
         "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
         "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
 >>>>>>> 9220147128a13dea5b684f765ba6e54e5b718bdb
+=======
+    "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectName": "API",
+        "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
+>>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
           "C:\\Users\\lramirez\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -34,6 +46,9 @@
           "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
 >>>>>>> 6a3a49a225491de6650426be77d1f80af9742f93
+=======
+          "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
+>>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -193,6 +208,7 @@
           },
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
 =======
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
@@ -200,6 +216,9 @@
 =======
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
 >>>>>>> 6a3a49a225491de6650426be77d1f80af9742f93
+=======
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+>>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
         }
       }
     }
