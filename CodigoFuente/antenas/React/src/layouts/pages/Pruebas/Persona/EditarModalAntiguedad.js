@@ -13,7 +13,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
     anioAntiguedad: "",
   });
   const [loading, setLoading] = useState(false);
-  const [idPersonaAntig, setidPersonaAntig] = useState(null);
+  const [idPOFAntig, setidPOFAntig] = useState(null);
   const [errors, setErrors] = useState({});
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -35,7 +35,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
               mesAntiguedad: dataAntig.mesAntiguedad || "",
               anioAntiguedad: dataAntig.anioAntiguedad || "",
             });
-            setidPersonaAntig(dataAntig.idPOFAntig || null);
+            setidPOFAntig(dataAntig.idPOFAntig || null);
             setNombre(dataAntig.persona?.nombre || "");
             setApellido(dataAntig.persona?.apellido || "");
           } else {
@@ -54,7 +54,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
               mesAntiguedad: "",
               anioAntiguedad: "",
             });
-            setidPersonaAntig(null);
+            setidPOFAntig(null);
           }
         } catch (error) {
           alert("Hubo un error al conectar con el servidor.");
@@ -122,11 +122,11 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
     try {
       setLoading(true);
 
-      const url = idPersonaAntig
+      const url = idPOFAntig
         ? `${process.env.REACT_APP_API_URL}POFAntig`
         : `${process.env.REACT_APP_API_URL}POFAntig`;
 
-      const method = idPersonaAntig ? "PUT" : "POST";
+      const method = idPOFAntig ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -137,7 +137,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
         body: JSON.stringify({
           idPersona: idPersona,
           ...formData,
-          ...(idPersonaAntig && { idPersonaAntig }),
+          ...(idPOFAntig && { idPOFAntig }),
         }),
       });
 
