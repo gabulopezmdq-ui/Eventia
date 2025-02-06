@@ -1,41 +1,50 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-
-// @mui material components
 import Card from "@mui/material/Card";
-import { Link, useNavigate, useParams } from "react-router-dom";
-
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
-// Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
+import EditarModalAntiguedad from "../Persona/EditarModalAntiguedad";
 import "../../Pruebas/pruebas.css";
 function Persona() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [dataTableData, setDataTableData] = useState();
-  const [activoFilter, setActivoFilter] = useState("S"); // Estado inicial para mostrar solo los vigentes
-  const [allData, setAllData] = useState([]); // Almacena todos los datos sin filtrar
+  const [activoFilter, setActivoFilter] = useState("S");
+  const [allData, setAllData] = useState([]);
+  const [isAntiguedadModalOpen, setIsAntiguedadModalOpen] = useState(false);
+  const [selectedIdPof, setSelectedIdPof] = useState(null);
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "Personas/getall", {
         headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
+          Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Datos recibidos del backend:", response.data); // Depuración: ver datos originales
-        setAllData(response.data); // Guardar todos los datos
-        filterData(response.data, "S"); // Filtrar solo vigentes al inicio
+        const sortedData = response.data.sort((a, b) => {
+          const apellidoA = a.apellido.toLowerCase();
+          const apellidoB = b.apellido.toLowerCase();
+          if (apellidoA < apellidoB) return -1;
+          if (apellidoA > apellidoB) return 1;
+          const nombreA = a.nombre.toLowerCase();
+          const nombreB = b.nombre.toLowerCase();
+          if (nombreA < nombreB) return -1;
+          if (nombreA > nombreB) return 1;
+          return 0;
+        });
+        setAllData(sortedData);
+        filterData(sortedData, "S");
       })
       .catch((error) => {
         if (error.response) {
@@ -57,6 +66,7 @@ function Persona() {
         }
       });
   }, []);
+
   const filterData = (data, filter) => {
     let filteredData;
     if (filter === "S") {
@@ -64,21 +74,21 @@ function Persona() {
     } else if (filter === "N") {
       filteredData = data.filter((item) => item.vigente === "N" || item.vigente === false);
     } else {
-      filteredData = data; // Todos los datos
+      filteredData = data;
     }
-    console.log("Datos filtrados:", filteredData); // Depuración: ver datos filtrados
     setDataTableData(filteredData);
   };
-  // Maneja el cambio en el filtro de activo
+
   const handleFilterChange = (event) => {
     const filter = event.target.value;
-    setActivoFilter(filter); // Actualizar el estado del filtro
-    filterData(allData, filter); // Filtrar los datos según el valor seleccionado
+    setActivoFilter(filter);
+    filterData(allData, filter);
   };
 
   const handleNuevoTipo = () => {
     navigate("/PersonaFE/Nuevo");
   };
+
   const handleVer = (rowData) => {
     if (rowData && rowData.idPersona) {
       const productId = rowData.idPersona;
@@ -88,12 +98,21 @@ function Persona() {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
-  //Funcion para que cuando el campo viene vacio muestre N/A
-  const displayValue = (value) => (value ? value : "N/A");
 
   const handleEditar = (idPersona) => {
     const url = `/PersonaFE/Edit/${idPersona}`;
     navigate(url);
+  };
+
+  const handleEditSuccess = () => {
+    setShowAlert(true);
+    setAlertMessage("¡Datos actualizados con éxito!");
+    setAlertType("success");
+    setTimeout(() => {
+      setShowAlert(false);
+      setAlertMessage("");
+    }, 3000);
+    handleCargar();
   };
 
   return (
@@ -101,13 +120,13 @@ function Persona() {
       <DashboardLayout>
         <DashboardNavbar />
         <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
-          <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+          <MDButton variant="gradient" size="small" color="success" onClick={handleNuevoTipo}>
             Agregar
           </MDButton>
           <MDBox
             component="select"
-            onChange={handleFilterChange} // Llamar a la función al cambiar el filtro
-            value={activoFilter} // Vincular el estado del filtro al valor del `select`
+            onChange={handleFilterChange}
+            value={activoFilter}
             sx={{
               padding: "10px 20px",
               borderRadius: "5px",
@@ -142,9 +161,8 @@ function Persona() {
             <DataTable
               table={{
                 columns: [
-                  //{ Header: "ID", accessor: "id" },
-                  { Header: "Nombre", accessor: "nombre" },
                   { Header: "Apellido", accessor: "apellido" },
+                  { Header: "Nombre", accessor: "nombre" },
                   { Header: "Legajo", accessor: "legajo" },
                   { Header: "DNI", accessor: "dni" },
                   {
@@ -157,13 +175,28 @@ function Persona() {
                     Header: "Editar",
                     accessor: "edit",
                     Cell: ({ row }) => (
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        onClick={() => handleEditar(row.original.idPersona)}
-                      >
-                        Editar
-                      </MDButton>
+                      <>
+                        <MDButton
+                          variant="gradient"
+                          color="info"
+                          size="small"
+                          onClick={() => handleEditar(row.original.idPersona)}
+                        >
+                          Editar
+                        </MDButton>
+                        <MDButton
+                          variant="gradient"
+                          color="secondary"
+                          size="small"
+                          style={{ marginLeft: "10px" }}
+                          onClick={() => {
+                            setSelectedIdPof(row.original.idPersona);
+                            setIsAntiguedadModalOpen(true);
+                          }}
+                        >
+                          Antigüedad
+                        </MDButton>
+                      </>
                     ),
                   },
                 ],
@@ -173,6 +206,13 @@ function Persona() {
               canSearch
               show
             />
+            <EditarModalAntiguedad
+              isOpen={isAntiguedadModalOpen}
+              onClose={() => setIsAntiguedadModalOpen(false)}
+              idPersona={selectedIdPof}
+              onEditSuccess={handleEditSuccess}
+              token={token}
+            />
           </Card>
         </MDBox>
       </DashboardLayout>
@@ -181,7 +221,7 @@ function Persona() {
 }
 
 Persona.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
