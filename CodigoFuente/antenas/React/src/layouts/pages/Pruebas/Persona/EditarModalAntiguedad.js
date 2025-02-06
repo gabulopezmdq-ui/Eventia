@@ -15,7 +15,7 @@ import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
 
-const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
+const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSuccess }) => {
   const [formData, setFormData] = useState({
     mesReferencia: "",
     anioReferencia: "",
@@ -23,19 +23,19 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
     anioAntiguedad: "",
   });
   const [loading, setLoading] = useState(false);
-  const [idPOFAntig, setIdPOFAntig] = useState(null);
+  const [idPersonaAntig, setidPersonaAntig] = useState(null);
   const [errors, setErrors] = useState({});
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [secuencia, setSecuencia] = useState("");
 
   useEffect(() => {
-    if (isOpen && idPof) {
+    if (isOpen && idPersona) {
       const fetchData = async () => {
         try {
           setLoading(true);
           const responseAntig = await fetch(
-            `${process.env.REACT_APP_API_URL}POFAntig/getbyidPOF?idPOF=${idPof}`,
+            `${process.env.REACT_APP_API_URL}POFAntig/getbyidPersona?idPersona=${idPersona}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           const dataAntig = await responseAntig.json();
@@ -46,13 +46,13 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
               mesAntiguedad: dataAntig.mesAntiguedad || "",
               anioAntiguedad: dataAntig.anioAntiguedad || "",
             });
-            setIdPOFAntig(dataAntig.idPOFAntig || null);
+            setidPersonaAntig(dataAntig.idPersonaAntig || null);
             setNombre(dataAntig.pof.persona.nombre || "");
             setApellido(dataAntig.pof.persona.apellido || "");
             setSecuencia(dataAntig.pof.secuencia || "");
           } else {
             const responsePOF = await fetch(
-              `${process.env.REACT_APP_API_URL}POF/getbyid?id=${idPof}`,
+              `${process.env.REACT_APP_API_URL}POF/getbyid?id=${idPersona}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
             if (responsePOF.ok) {
@@ -67,7 +67,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
               mesAntiguedad: "",
               anioAntiguedad: "",
             });
-            setIdPOFAntig(null);
+            setidPersonaAntig(null);
           }
         } catch (error) {
           alert("Hubo un error al conectar con el servidor.");
@@ -77,7 +77,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
       };
       fetchData();
     }
-  }, [isOpen, idPof, token]);
+  }, [isOpen, idPersona, token]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -136,11 +136,11 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
     try {
       setLoading(true);
 
-      const url = idPOFAntig
+      const url = idPersonaAntig
         ? `${process.env.REACT_APP_API_URL}POFAntig`
         : `${process.env.REACT_APP_API_URL}POFAntig`;
 
-      const method = idPOFAntig ? "PUT" : "POST";
+      const method = idPersonaAntig ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -149,9 +149,9 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          idPOF: idPof,
+          idPersona: idPersona,
           ...formData,
-          ...(idPOFAntig && { idPOFAntig }),
+          ...(idPersonaAntig && { idPersonaAntig }),
         }),
       });
 
@@ -268,7 +268,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPof, token, onEditSuccess })
 EditarModalAntiguedad.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  idPof: PropTypes.number.isRequired,
+  idPersona: PropTypes.number.isRequired,
   token: PropTypes.string.isRequired,
   onEditSuccess: PropTypes.func.isRequired,
 };
