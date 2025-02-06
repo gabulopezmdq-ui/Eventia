@@ -303,7 +303,7 @@ namespace API.Services
             };
 
             var antiguedad = await _context.MEC_POF_Antiguedades
-                                           .FirstOrDefaultAsync(a => a.IdPOF == POF.IdPOF);
+                                           .FirstOrDefaultAsync(a => a.IdPersona == POF.IdPersona);
 
             if (antiguedad != null)
             {
