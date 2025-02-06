@@ -113,15 +113,15 @@ namespace API.Services
 
         }
 
-        public async Task<MEC_POF_Antiguedades?> GetByIdPOFAsync(int idPOF)
+        public async Task<MEC_POF_Antiguedades?> GetByIdPOFAsync(int idPersona)
         {
             return await _context.MEC_POF_Antiguedades
-                .FirstOrDefaultAsync(a => a.IdPOF == idPOF);
+                .FirstOrDefaultAsync(a => a.IdPersona == idPersona);
         }
 
         public async Task<MEC_POF_Antiguedades> CreateOrUpdateAsync(MEC_POF_Antiguedades data)
         {
-            var existe = await GetByIdPOFAsync(data.IdPOF);
+            var existe = await GetByIdPOFAsync(data.IdPersona);
 
             if (existe != null)
             {
