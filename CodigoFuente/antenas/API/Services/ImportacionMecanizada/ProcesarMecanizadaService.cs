@@ -323,7 +323,7 @@ namespace API.Services
                 nuevoDetallePOF.AntiguedadMeses = antiguedadResult.antiguedadMeses.GetValueOrDefault();
             }
 
-            return nuevoDetallePOF; // <-- Asegúrate de retornar el objeto
+            return nuevoDetallePOF;
         }
         //private async Task ProcesarDetallePOFAsync(int idCabecera, MEC_POF POF, MEC_TMPMecanizadas registro)
         //{
