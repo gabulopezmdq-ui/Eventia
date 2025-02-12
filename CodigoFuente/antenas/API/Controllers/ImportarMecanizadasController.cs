@@ -74,6 +74,20 @@ namespace API.Controllers
             return Ok(_serviceGenerico.GetAll());
         }
 
+        //[HttpGet("GetAll")] SOLUCION 
+        //public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
+        //{
+        //    var query = _serviceGenerico.GetAll().AsQueryable();
+
+        //    var totalItems = query.Count();
+        //    var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        //    return Ok(new
+        //    {
+        //        Data = items
+        //    });
+        //}
+
         [HttpPost("PreprocesarArchivo")]
         public async Task<IActionResult> PreprocesarArchivo(int idCabecera)
         {

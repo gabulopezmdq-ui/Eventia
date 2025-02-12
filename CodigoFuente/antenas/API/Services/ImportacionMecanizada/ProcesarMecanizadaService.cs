@@ -325,58 +325,6 @@ namespace API.Services
 
             return nuevoDetallePOF;
         }
-        //private async Task ProcesarDetallePOFAsync(int idCabecera, MEC_POF POF, MEC_TMPMecanizadas registro)
-        //{
-        //    var nuevoDetallePOF = new MEC_POFDetalle
-        //    {
-        //        IdCabecera = idCabecera,
-        //        IdPOF = POF.IdPOF,
-        //        CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
-        //    };
-
-        //    _context.MEC_POFDetalle.Add(nuevoDetallePOF);
-
-        //    var antiguedad = await _context.MEC_POF_Antiguedades
-        //                                   .FirstOrDefaultAsync(a => a.IdPOF == POF.IdPOF);
-
-        //    if (antiguedad != null)
-        //    {
-        //        var cabecera = await _context.MEC_CabeceraLiquidacion
-        //                                     .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
-
-        //        var antiguedadResult = CalcularAntiguedad(
-        //            ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
-        //            ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
-        //            antiguedad.MesReferencia,
-        //            antiguedad.AnioReferencia,
-        //            antiguedad.AnioAntiguedad,
-        //            antiguedad.MesAntiguedad
-        //        );
-
-        //        nuevoDetallePOF.AntiguedadAnios = antiguedadResult.antiguedadAnios.GetValueOrDefault();
-        //        nuevoDetallePOF.AntiguedadMeses = antiguedadResult.antiguedadMeses.GetValueOrDefault();
-
-        //        registro.RegistroValido = "S";
-        //    }
-        //    else
-        //    {
-        //        var POFMec = _context.MEC_POF.FirstOrDefault(p => p.Persona.DNI == registro.Documento);
-        //        var error = new MEC_TMPErroresMecanizadas
-        //        {
-        //            IdCabecera = idCabecera,
-        //            IdTMPMecanizada = registro.idTMPMecanizada,
-        //            Antiguedad = "NE",
-        //            Documento = registro.Documento,
-        //            POF = POFMec.ToString()
-
-        //        };
-
-        //        registro.RegistroValido = "N";
-        //    }
-
-        //    await _context.SaveChangesAsync();
-        //}
-
         private void RegistroErrorMecAsync(int idCabecera, MEC_TMPMecanizadas registro, string documentoError, string pofError, string registroValido)
         {
             // Reattach solo si es necesario
