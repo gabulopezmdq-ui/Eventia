@@ -24,11 +24,16 @@ namespace API.Controllers
             _context = context;
             _serviceGenerico = serviceGenerico;
         }
-        
+
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
         {
-            return Ok(_serviceGenerico.GetAll());
+            var query = _serviceGenerico.GetAll().AsQueryable();
+
+            var totalItems = query.Count();
+            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            return Ok(items); // Devuelve solo el array
         }
 
         [HttpGet("GetByVigente")]
