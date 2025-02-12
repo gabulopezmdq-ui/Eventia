@@ -19,6 +19,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
 import MDAlert from "components/MDAlert";
 import MDButton from "components/MDButton";
+import DataTable from "examples/Tables/DataTable";
 import Box from "@mui/material/Box";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DataTableProcesar from "examples/Tables/DataTableProcesar";
@@ -33,8 +34,41 @@ function ProcesarArchivoImportado() {
   const [errorData, setErrorData] = useState([]); // Estado para almacenar los datos de los errores
   const [loadingErrors, setLoadingErrors] = useState(false); // Estado para indicar si se están cargando los errores
   const [isProcessing, setIsProcessing] = useState(false); // Nuevo estado
+  const [dataTableData, setDataTableData] = useState([]);
+  const [showDataTable, setShowDataTable] = useState(false);
 
   const token = sessionStorage.getItem("token");
+
+  // Función para obtener datos desde la API
+  useEffect(() => {
+    fetchTMPMecanizadas(); // Llama a la función para obtener los datos
+  }, []);
+
+  // Función para obtener datos desde la API
+  const fetchTMPMecanizadas = () => {
+    axios
+      .get(process.env.REACT_APP_API_URL + "TMPMecanizadas/getall", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Datos recibidos:", response.data); // 📌 Debugging
+
+        // 🔥 Filtrar solo los registros con errores (registroValido = "N")
+        const registrosConErrores = response.data.filter((item) => item.registroValido === "N");
+
+        setDataTableData(registrosConErrores); // ✅ ACTUALIZA EL ESTADO SOLO CON ERRORES
+      })
+      .catch((error) => {
+        console.error("Error al obtener TMPMecanizadas:", error);
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener TMPMecanizadas.",
+          type: "error",
+        });
+      });
+  };
 
   // Obtener las cabeceras al cargar el componente
   useEffect(() => {
@@ -152,6 +186,11 @@ function ProcesarArchivoImportado() {
   };
 
   // Procesar los archivos importados
+  const normalizeMessage = (message) => {
+    return message
+      .replace(/\s+/g, " ") // Reemplaza múltiples espacios y saltos de línea con un solo espacio
+      .trim(); // Elimina espacios extra al inicio y final
+  };
   const handleProcessFile = async () => {
     if (!selectedIdCabecera) {
       setErrorAlert({
@@ -163,34 +202,125 @@ function ProcesarArchivoImportado() {
     }
     setIsProcessing(true); // Deshabilitar el botón antes de iniciar el proceso
 
+    // ✅ Definir los mensajes esperados (sin saltos de línea)
+    const expectedErrorMessage =
+      "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
+    const expectedTMPMessage = "Existen Personas que no están registradas en el sistema.";
+
     try {
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
       const response = await axios.post(url, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Si el procesamiento es exitoso, ocultamos el botón de errores
-      setShowErrorButton(false);
-      setErrorAlert({
-        show: true,
-        message: "Archivo procesado exitosamente.",
-        type: "success",
-      });
+      const backendMessage = response.data?.message?.trim().replace(/\n/g, " ");
+
+      if (backendMessage === expectedErrorMessage) {
+        setShowErrorButton(true);
+      } else {
+        setShowErrorButton(false);
+      }
+
+      if (backendMessage === expectedTMPMessage) {
+        setShowDataTable(true);
+        console.log("✅ Mensaje de registros faltantes recibido:", backendMessage);
+
+        const getResponse = await axios.get("https://localhost:44382/TMPMecanizadas/GetAll", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setDataTableData(getResponse.data);
+      } else {
+        setShowDataTable(false);
+      }
+
+      setErrorAlert({ show: true, message: "Archivo procesado exitosamente.", type: "success" });
     } catch (error) {
       const errorMessage =
         error.response?.data?.mensaje || "Error inesperado al procesar el archivo.";
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
 
-      // Mostrar siempre el botón de "Ver errores" cuando ocurre un error
-      setShowErrorButton(true);
+      if (error.response?.data?.mensaje === expectedErrorMessage) {
+        setShowErrorButton(true);
+      } else {
+        setShowErrorButton(false);
+      }
+
+      setShowDataTable(false);
     } finally {
-      setIsProcessing(false); // Habilitar el botón después de completar el proceso
+      setIsProcessing(false);
     }
   };
 
-  // Obtener los datos de errores
+  //.......................... imprimir grilla.........................s
+  const handleGenerateGridPDF = () => {
+    if (dataTableData.length === 0) {
+      setErrorAlert({
+        show: true,
+        message: "No hay datos en la grilla para exportar.",
+        type: "warning",
+      });
+      return;
+    }
+
+    const doc = new jsPDF("landscape"); // Horizontal para más espacio
+    doc.setFontSize(10);
+    doc.text("Errores Detectados en Mecanizadas", 14, 10);
+
+    const columns = [
+      { header: "Mes Liq.", dataKey: "mesLiquidacion" },
+      { header: "Orden Pago", dataKey: "ordenPago" },
+      { header: "Año/Mes", dataKey: "anioMesAfectacion" },
+      { header: "DNI", dataKey: "documento" },
+      { header: "Secuencia", dataKey: "secuencia" },
+      { header: "Función", dataKey: "funcion" },
+      { header: "Código Liq.", dataKey: "codigoLiquidacion" },
+      { header: "Importe", dataKey: "importe" },
+      { header: "Signo", dataKey: "signo" },
+      { header: "Moneda", dataKey: "moneda" },
+      { header: "Estatutario", dataKey: "regimenEstatutario" },
+      { header: "Carácter Rev.", dataKey: "caracterRevista" },
+      { header: "Dependencia", dataKey: "dependencia" },
+      { header: "Distrito", dataKey: "distrito" },
+      { header: "Org.", dataKey: "tipoOrganizacion" },
+      { header: "Estab.", dataKey: "nroEstab" },
+      { header: "Categoría", dataKey: "categoria" },
+      { header: "Tipo Cargo", dataKey: "tipoCargo" },
+      { header: "Horas", dataKey: "horasDesignadas" },
+      { header: "Subvención", dataKey: "subvencion" },
+      { header: "Válido", dataKey: "registroValido" },
+    ];
+
+    doc.autoTable({
+      columns,
+      body: dataTableData,
+      startY: 20,
+      margin: { top: 20 },
+      styles: {
+        fontSize: 7, // Letra más pequeña
+        cellPadding: 1.2, // Menos espacio dentro de las celdas
+        overflow: "linebreak", // Evita que el texto se salga de las celdas
+      },
+      headStyles: {
+        fillColor: [41, 128, 185], // Azul elegante
+        textColor: [255, 255, 255],
+        fontSize: 8, // Letra un poco más grande en encabezado
+        halign: "center",
+      },
+      columnStyles: {
+        importe: { halign: "right" }, // Montos alineados a la derecha
+        signo: { halign: "center" },
+        registroValido: { halign: "center" },
+        documento: { fontStyle: "bold" }, // DNI en negrita
+      },
+      didDrawPage: function (data) {
+        doc.setFontSize(7);
+        doc.text(`Página ${doc.internal.getNumberOfPages()}`, 280, 200); // Número de página
+      },
+    });
+
+    doc.save("ErroresMecanizadas.pdf");
+  };
 
   return (
     <DashboardLayout>
@@ -268,6 +398,48 @@ function ProcesarArchivoImportado() {
           </Grid>
         )}
       </Card>
+      {showDataTable && (
+        <Card sx={{ marginTop: 1 }}>
+          <DataTable
+            table={{
+              columns: [
+                { Header: "idTMP Mecanizada", accessor: "idTMPMecanizada" },
+                { Header: "mes Liquidacion", accessor: "mesLiquidacion" },
+                { Header: "orden Pago", accessor: "ordenPago" },
+                { Header: "año Mes Afectacion", accessor: "anioMesAfectacion" },
+                { Header: "dni", accessor: "documento" },
+                { Header: "secuencia", accessor: "secuencia" },
+                { Header: "funcion", accessor: "funcion" },
+                { Header: "codigo Liquidacion", accessor: "codigoLiquidacion" },
+                { Header: "importe", accessor: "importe" },
+                { Header: "signo", accessor: "signo" },
+                { Header: "marca Transferido", accessor: "marcaTransferido" },
+                { Header: "moneda", accessor: "moneda" },
+                { Header: "regimen Estatutario", accessor: "regimenEstatutario" },
+                { Header: "caracter Revista", accessor: "caracterRevista" },
+                { Header: "dependencia", accessor: "dependencia" },
+                { Header: "distrito", accessor: "distrito" },
+                { Header: "tipo Organizacion", accessor: "tipoOrganizacion" },
+                { Header: "nroEstab", accessor: "nroEstab" },
+                { Header: "categoria", accessor: "categoria" },
+                { Header: "tipoCargo", accessor: "tipoCargo" },
+                { Header: "horas Designadas", accessor: "horasDesignadas" },
+                { Header: "subvencion", accessor: "subvencion" },
+                { Header: "registroValido", accessor: "registroValido" },
+              ],
+              rows: dataTableData,
+            }}
+            entriesPerPage={false}
+            canSearch
+            show
+          />
+          <Grid container justifyContent="center" sx={{ mt: 2 }}>
+            <MDButton variant="contained" color="warning" onClick={handleGenerateGridPDF}>
+              {loadingErrors ? "Cargando..." : "Ver errores"}
+            </MDButton>
+          </Grid>
+        </Card>
+      )}
     </DashboardLayout>
   );
 }

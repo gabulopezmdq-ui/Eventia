@@ -303,7 +303,7 @@ namespace API.Services
             };
 
             var antiguedad = await _context.MEC_POF_Antiguedades
-                                           .FirstOrDefaultAsync(a => a.IdPOF == POF.IdPOF);
+                                           .FirstOrDefaultAsync(a => a.IdPersona == POF.IdPersona);
 
             if (antiguedad != null)
             {
@@ -323,7 +323,7 @@ namespace API.Services
                 nuevoDetallePOF.AntiguedadMeses = antiguedadResult.antiguedadMeses.GetValueOrDefault();
             }
 
-            return nuevoDetallePOF; // <-- Asegúrate de retornar el objeto
+            return nuevoDetallePOF;
         }
         //private async Task ProcesarDetallePOFAsync(int idCabecera, MEC_POF POF, MEC_TMPMecanizadas registro)
         //{
