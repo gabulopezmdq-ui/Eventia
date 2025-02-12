@@ -41,8 +41,11 @@ function ProcesarArchivoImportado() {
 
   // Función para obtener datos desde la API
   useEffect(() => {
-    fetchTMPMecanizadas(); // Llama a la función para obtener los datos
-  }, []);
+    if (token) {
+      // ✅ Evita ejecutarse si el token no está listo
+      fetchTMPMecanizadas();
+    }
+  }, [token]); // 🔹 Se ejecuta solo cuando el token cambia
 
   // Función para obtener datos desde la API
   const fetchTMPMecanizadas = () => {
@@ -186,11 +189,6 @@ function ProcesarArchivoImportado() {
   };
 
   // Procesar los archivos importados
-  const normalizeMessage = (message) => {
-    return message
-      .replace(/\s+/g, " ") // Reemplaza múltiples espacios y saltos de línea con un solo espacio
-      .trim(); // Elimina espacios extra al inicio y final
-  };
   const handleProcessFile = async () => {
     if (!selectedIdCabecera) {
       setErrorAlert({
@@ -202,10 +200,10 @@ function ProcesarArchivoImportado() {
     }
     setIsProcessing(true); // Deshabilitar el botón antes de iniciar el proceso
 
-    // ✅ Definir los mensajes esperados (sin saltos de línea)
+    // ✅ Definir los mensajes esperados
     const expectedErrorMessage =
       "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
-    const expectedTMPMessage = "Existen Personas que no están registradas en el sistema.";
+    const expectedTMPMessage = "Existen Personas que no están registradas en el sistema...";
 
     try {
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
@@ -234,19 +232,47 @@ function ProcesarArchivoImportado() {
         setShowDataTable(false);
       }
 
-      setErrorAlert({ show: true, message: "Archivo procesado exitosamente.", type: "success" });
+      // ✅ Nuevo: Llamar al endpoint de Procesar después del preprocesamiento exitoso
+      try {
+        const processUrl = `https://localhost:44382/ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
+        const processResponse = await axios.post(processUrl, null, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log("✅ Procesamiento completado:", processResponse.data);
+        setErrorAlert({ show: true, message: "Archivo procesado exitosamente.", type: "success" });
+      } catch (processError) {
+        console.log("❌ Error en el procesamiento:", processError.response?.data);
+        setErrorAlert({
+          show: true,
+          message: processError.response?.data || "Error al procesar los registros.",
+          type: "error",
+        });
+      }
     } catch (error) {
+      console.log("📢 Respuesta completa del backend:", error.response?.data);
+
       const errorMessage =
-        error.response?.data?.mensaje || "Error inesperado al procesar el archivo.";
+        error.response?.data?.mensaje ||
+        error.response?.data?.Message ||
+        error.response?.data?.error ||
+        JSON.stringify(error.response?.data) ||
+        "Error inesperado al procesar el archivo.";
+
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
 
-      if (error.response?.data?.mensaje === expectedErrorMessage) {
-        setShowErrorButton(true);
+      console.log("📢 Mensaje esperado:", expectedTMPMessage);
+      console.log("📢 Mensaje recibido:", errorMessage);
+      console.log("📢 Coincidencia:", errorMessage.includes(expectedTMPMessage));
+
+      if (errorMessage.includes(expectedTMPMessage)) {
+        setShowDataTable(true);
+        console.log("⚠️ Activando setShowDataTable: error de registros faltantes detectado.");
       } else {
-        setShowErrorButton(false);
+        console.log("❌ No se detectó coincidencia.");
       }
 
-      setShowDataTable(false);
+      setShowErrorButton(errorMessage === expectedErrorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -320,6 +346,37 @@ function ProcesarArchivoImportado() {
     });
 
     doc.save("ErroresMecanizadas.pdf");
+  };
+  const handleProcessData = async () => {
+    if (!selectedIdCabecera) {
+      setErrorAlert({
+        show: true,
+        message: "Por favor, selecciona una cabecera antes de continuar.",
+        type: "error",
+      });
+      return;
+    }
+
+    setIsProcessing(true); // Deshabilitar el botón mientras se procesa
+
+    try {
+      const processUrl = `https://localhost:44382/ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
+      const processResponse = await axios.post(processUrl, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("✅ Procesamiento completado:", processResponse.data);
+      setErrorAlert({ show: true, message: "Archivo procesado exitosamente.", type: "success" });
+    } catch (error) {
+      console.log("❌ Error en el procesamiento:", error.response?.data);
+      setErrorAlert({
+        show: true,
+        message: error.response?.data || "Error al procesar los registros.",
+        type: "error",
+      });
+    } finally {
+      setIsProcessing(false); // Reactivar el botón
+    }
   };
 
   return (
@@ -440,6 +497,16 @@ function ProcesarArchivoImportado() {
           </Grid>
         </Card>
       )}
+      <Grid container justifyContent="center" sx={{ mt: 2 }}>
+        <MDButton
+          variant="contained"
+          color="primary"
+          onClick={handleProcessData}
+          disabled={isProcessing}
+        >
+          {isProcessing ? "Procesando..." : "Procesar"}
+        </MDButton>
+      </Grid>
     </DashboardLayout>
   );
 }
