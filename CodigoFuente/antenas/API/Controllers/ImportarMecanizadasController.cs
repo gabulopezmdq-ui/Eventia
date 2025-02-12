@@ -68,25 +68,22 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get()
-        {
-            return Ok(_serviceGenerico.GetAll());
-        }
-
-        //[HttpGet("GetAll")] SOLUCION 
-        //public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
+        //[HttpGet("GetAll")]
+        //public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get()
         //{
-        //    var query = _serviceGenerico.GetAll().AsQueryable();
-
-        //    var totalItems = query.Count();
-        //    var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-        //    return Ok(new
-        //    {
-        //        Data = items
-        //    });
+        //    return Ok(_serviceGenerico.GetAll());
         //}
+
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
+        {
+            var query = _serviceGenerico.GetAll().AsQueryable();
+
+            var totalItems = query.Count();
+            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            return Ok(items); // Devuelve solo el array
+        }
 
         [HttpPost("PreprocesarArchivo")]
         public async Task<IActionResult> PreprocesarArchivo(int idCabecera)
