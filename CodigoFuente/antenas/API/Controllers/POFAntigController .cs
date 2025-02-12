@@ -36,10 +36,10 @@ namespace API.Controllers
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
-        [HttpGet("GetByIdPOF")]
-        public async Task<IActionResult> GetByIdPOF([FromQuery] int idPOF)
+        [HttpGet("GetByIdPersona")]
+        public async Task<IActionResult> GetByIdPOF([FromQuery] int idPersona)
         {
-            var antiguedad = await _pofService.GetByIdPOFAsync(idPOF);
+            var antiguedad = await _pofService.GetByIdPOFAsync(idPersona);
             if (antiguedad == null)
             {
                 return Ok(false);
@@ -74,7 +74,7 @@ namespace API.Controllers
         [HttpPut]
         public async Task<ActionResult<MEC_POF_Antiguedades>> Update([FromBody] MEC_POF_Antiguedades pof)
         {
-            await _serviceGenerico.UpdatePOF(pof);
+            await _serviceGenerico.Update(pof);
             return Ok(pof);
         }
 

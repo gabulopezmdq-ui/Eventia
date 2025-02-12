@@ -67,34 +67,42 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          const categoriasVigentes = data.filter((categoria) => categoria.vigente === "S");
+          const categoriasVigentes = data
+            .filter((categoria) => categoria.vigente === "S")
+            .sort((a, b) => a.descripcion.localeCompare(b.descripcion));
           setCategorias(categoriasVigentes);
         } catch (error) {
           console.error("Error al cargar categorías:", error);
         }
       };
+
       const fetchCarRevistas = async () => {
         try {
           const response = await fetch(`${process.env.REACT_APP_API_URL}CarRevista/getall`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          const carRevistaVigentes = data.filter((carRevista) => carRevista.vigente === "S");
+          const carRevistaVigentes = data
+            .filter((carRevista) => carRevista.vigente === "S")
+            .sort((a, b) => a.descripcion.localeCompare(b.descripcion)); // Ordenar alfabéticamente
           setCarRevista(carRevistaVigentes);
         } catch (error) {
-          console.error("Error al cargar categorías:", error);
+          console.error("Error al cargar cargos de revista:", error);
         }
       };
+
       const fetchFuncion = async () => {
         try {
           const response = await fetch(`${process.env.REACT_APP_API_URL}TiposFunciones/getall`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
-          const funcionesVigentes = data.filter((funcion) => funcion.vigente === "S");
+          const funcionesVigentes = data
+            .filter((funcion) => funcion.vigente === "S")
+            .sort((a, b) => a.descripcion.localeCompare(b.descripcion)); // Ordenar alfabéticamente
           setFuncion(funcionesVigentes);
         } catch (error) {
-          console.error("Error al cargar categorías:", error);
+          console.error("Error al cargar funciones:", error);
         }
       };
 

@@ -16,5 +16,6 @@ namespace API.DataSchema
         public string Vigente { get; set; }
         public string[] UniqueProperties => new[] { "DNI", "Legajo" }; //  CodCategoria es unico
         public virtual ICollection<MEC_POF>? POFs { get; set; } = new List<MEC_POF>();
+        public virtual ICollection<MEC_POF_Antiguedades>? POFAntiguedad { get; set; }
     }
 }
