@@ -323,9 +323,12 @@ namespace API.Services
                 nuevoDetallePOF.AntiguedadMeses = antiguedadResult.antiguedadMeses.GetValueOrDefault();
             }
 
-            return nuevoDetallePOF; // <-- Asegúrate de retornar el objeto
+            return nuevoDetallePOF;
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> d7067a47db111ce66cd68fab0361a776b72fb4ec
         private void RegistroErrorMecAsync(int idCabecera, MEC_TMPMecanizadas registro, string documentoError, string pofError, string registroValido)
         {
             // Reattach solo si es necesario

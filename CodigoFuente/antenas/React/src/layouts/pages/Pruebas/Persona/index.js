@@ -22,6 +22,9 @@ function Persona() {
   const [allData, setAllData] = useState([]);
   const [isAntiguedadModalOpen, setIsAntiguedadModalOpen] = useState(false);
   const [selectedIdPof, setSelectedIdPof] = useState(null);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -108,11 +111,51 @@ function Persona() {
     setShowAlert(true);
     setAlertMessage("¡Datos actualizados con éxito!");
     setAlertType("success");
+    axios
+      .get(process.env.REACT_APP_API_URL + "Personas/getall", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        const sortedData = response.data.sort((a, b) => {
+          const apellidoA = a.apellido.toLowerCase();
+          const apellidoB = b.apellido.toLowerCase();
+          if (apellidoA < apellidoB) return -1;
+          if (apellidoA > apellidoB) return 1;
+          const nombreA = a.nombre.toLowerCase();
+          const nombreB = b.nombre.toLowerCase();
+          if (nombreA < nombreB) return -1;
+          if (nombreA > nombreB) return 1;
+          return 0;
+        });
+        setAllData(sortedData);
+        filterData(sortedData, activoFilter);
+      })
+      .catch((error) => {
+        if (error.response) {
+          const statusCode = error.response.status;
+          let errorMessage = "";
+          let errorType = "error";
+          if (statusCode >= 400 && statusCode < 500) {
+            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
+          } else if (statusCode >= 500) {
+            errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
+          }
+          setErrorAlert({ show: true, message: errorMessage, type: errorType });
+        } else {
+          setErrorAlert({
+            show: true,
+            message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
+            type: "error",
+          });
+        }
+      });
+
     setTimeout(() => {
       setShowAlert(false);
       setAlertMessage("");
     }, 3000);
-    handleCargar();
   };
 
   return (
@@ -155,6 +198,13 @@ function Persona() {
               </MDBox>
             </Grid>
           </Grid>
+        )}
+        {showAlert && (
+          <MDAlert color={alertType} dismissible>
+            <MDTypography variant="body2" color="white">
+              {alertMessage}
+            </MDTypography>
+          </MDAlert>
         )}
         <MDBox my={3}>
           <Card>

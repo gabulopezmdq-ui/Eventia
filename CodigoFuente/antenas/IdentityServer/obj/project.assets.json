@@ -10976,6 +10976,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "C:\\Users\\lramirez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
 =======
@@ -10988,10 +10989,15 @@
 =======
     "C:\\Users\\jcgarcia\\.nuget\\packages\\": {}
 >>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
+=======
+    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+>>>>>>> d7067a47db111ce66cd68fab0361a776b72fb4ec
   },
   "project": {
     "version": "1.0.0",
     "restore": {
+<<<<<<< HEAD
 <<<<<<< HEAD
       "projectUniqueName": "C:\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
@@ -11011,8 +11017,19 @@
       "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
 >>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
+=======
+      "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectName": "IdentityServer",
+      "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+>>>>>>> d7067a47db111ce66cd68fab0361a776b72fb4ec
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -11028,6 +11045,10 @@
 =======
         "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
 >>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
+=======
+        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+>>>>>>> d7067a47db111ce66cd68fab0361a776b72fb4ec
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -11043,12 +11064,17 @@
           "targetAlias": "net7.0",
           "projectReferences": {
 <<<<<<< HEAD
+<<<<<<< HEAD
             "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
               "projectPath": "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
 =======
             "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
               "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
 >>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
+=======
+            "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
+>>>>>>> d7067a47db111ce66cd68fab0361a776b72fb4ec
             }
           }
         }
@@ -11129,6 +11155,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
 =======
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
@@ -11139,6 +11166,9 @@
 =======
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
 >>>>>>> c917d92b7cd0458122ae5860f19ef7bffb4717d0
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+>>>>>>> d7067a47db111ce66cd68fab0361a776b72fb4ec
       }
     }
   }
