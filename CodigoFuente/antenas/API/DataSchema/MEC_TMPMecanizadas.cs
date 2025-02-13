@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace API.DataSchema
 {
@@ -31,6 +32,7 @@ namespace API.DataSchema
         public string Subvencion { get; set; }
         public string RegistroValido { get; set; }
         public virtual MEC_CabeceraLiquidacion? Cabecera { get; set; }
+        public virtual ICollection<MEC_TMPErroresMecanizadas>? TMPErroresMecanizadas { get; set; }
 
 
     }

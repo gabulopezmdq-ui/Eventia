@@ -25,6 +25,17 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder
+              .HasOne(e => e.TMPMecanizada)
+              .WithOne()
+              .HasForeignKey<MEC_TMPMecanizadas>(e => e.idTMPMecanizada)
+              .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Cabecera)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
             builder.Property(e => e.Documento)
                 .HasColumnType("char(2)")
                 .IsFixedLength(true)
