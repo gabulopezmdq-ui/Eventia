@@ -76,7 +76,7 @@ namespace API.Services
 
             if (registrosInvalidos.Any())
             {
-                string leyenda = "Existen Personas que no están registradas en el sistema...";
+                string leyenda = "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
                 throw new Exception(leyenda); // Eliminado el DisposeAsync
             }
         }
@@ -344,6 +344,7 @@ namespace API.Services
             {
                 IdCabecera = idCabecera,
                 Documento = documentoError,
+                IdTMPMecanizada = registro.idTMPMecanizada,
                 POF = pofError
             });
 
