@@ -24,7 +24,19 @@ namespace API.DataSchema.ModelConfiguration
                 .Navigation(e => e.Cabecera)
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
-                          
+
+            builder
+             .HasOne(e => e.TMPErroresMecanizadas)
+             .WithOne()
+             .HasForeignKey<MEC_TMPErroresMecanizadas>(e => e.IdTMPErrorMecanizada)
+             .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Cabecera)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+
 
             builder.Property(e => e.FechaImportacion)
                 .HasColumnType("DateTime")
