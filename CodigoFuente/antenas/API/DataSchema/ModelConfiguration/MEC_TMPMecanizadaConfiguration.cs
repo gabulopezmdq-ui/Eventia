@@ -26,10 +26,10 @@ namespace API.DataSchema.ModelConfiguration
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder
-             .HasOne(e => e.TMPErroresMecanizadas)
-             .WithOne()
-             .HasForeignKey<MEC_TMPErroresMecanizadas>(e => e.IdTMPErrorMecanizada)
-             .IsRequired(true);
+    .HasMany(e => e.TMPErroresMecanizadas)
+    .WithOne(e => e.TMPMecanizada)
+    .HasForeignKey(e => e.IdTMPMecanizada)
+    .IsRequired(true);
 
             builder
                 .Navigation(e => e.Cabecera)
