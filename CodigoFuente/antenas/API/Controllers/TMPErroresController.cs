@@ -63,15 +63,10 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAllMecanizadas")]
-        public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec()
         {
-            var query = _mecanizada.GetAll().AsQueryable();
-            var totalItems = query.Count();
-            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            return Ok(items);
+            return Ok(_mecanizada.GetAll().ToList());
         }
-
         [HttpGet("GetAllTipoEst")]
         public async Task<ActionResult<IEnumerable<MEC_TMPErroresTiposEstablecimientos>>> GetErroresTipoEst() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
