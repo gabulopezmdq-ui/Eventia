@@ -1,9 +1,11 @@
 ﻿using API.DataSchema;
 using API.Services;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -61,9 +63,13 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAllMecanizadas")]
-        public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            return Ok(_mecanizada.GetAll());
+            var query = _mecanizada.GetAll().AsQueryable();
+            var totalItems = query.Count();
+            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            return Ok(items);
         }
 
         [HttpGet("GetAllTipoEst")]
