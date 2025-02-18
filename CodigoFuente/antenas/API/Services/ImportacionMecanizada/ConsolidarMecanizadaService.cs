@@ -18,10 +18,11 @@ namespace API.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        // Obtener conteos del consolidado
         public async Task<object> ObtenerConteosConsolidadoAsync(int idCabecera)
         {
             if (idCabecera <= 0)
-                throw new ArgumentException("Los IDs no pueden ser menores o iguales a cero.");
+                throw new ArgumentException("El ID de la cabecera no puede ser menor o igual a cero.");
 
             var query = _context.MEC_Mecanizadas
                 .Where(m => m.Cabecera != null && m.Cabecera.IdCabecera == idCabecera);
@@ -37,6 +38,7 @@ namespace API.Services
             };
         }
 
+        // Verificar si se pueden habilitar acciones
         public async Task<bool> HabilitarAccionesAsync(int idEstablecimiento, string estadoCabecera)
         {
             if (string.IsNullOrWhiteSpace(estadoCabecera))
@@ -52,6 +54,7 @@ namespace API.Services
             return countN > 0;
         }
 
+        // Verificar si se puede cambiar el estado de la cabecera
         public async Task<bool> HabilitarCambiarEstadoCabeceraAsync(int idCabecera)
         {
             if (idCabecera <= 0)
@@ -65,6 +68,7 @@ namespace API.Services
             return totalRegistros > 0 && totalRegistros == totalConsolidadoS;
         }
 
+        // Obtener registros POF que no están mecanizados
         public async Task<List<MEC_POF>> ObtenerRegistrosPOFNoMecanizadosAsync(int idCabecera, int idEstablecimiento)
         {
             if (idCabecera <= 0 || idEstablecimiento <= 0)
@@ -84,22 +88,44 @@ namespace API.Services
             if (idPOF <= 0)
                 throw new ArgumentException("El ID del POF no puede ser menor o igual a cero.");
 
-            return await _context.MEC_POF_Antiguedades.AnyAsync(a => a.IdPOF == idPOF);
+            // Combinando consultas para optimización
+            return await _context.MEC_POF
+                         .Where(p => p.IdPOF == idPOF)
+                         .Join(_context.MEC_POF_Antiguedades,
+                               p => p.IdPersona,
+                               a => a.IdPersona,
+                               (p, a) => a)
+                         .AnyAsync();
         }
 
-        // Crear registro en MEC_POF_Antiguedades si no existe
-        private async Task CrearAntiguedadAsync(AltaMecanizadaDTO datos)
+        // Verificar y crear antigüedad si no existe
+        private async Task VerificarYCrearAntiguedadAsync(AltaMecanizadaDTO datos)
         {
-            var nuevaAntiguedad = new MEC_POF_Antiguedades
-            {
-                IdPOF = datos.IdPOF,
-                MesReferencia = datos.MesReferencia,
-                AnioReferencia = datos.AnioReferencia,
-                AnioAntiguedad = datos.AnioAntiguedad,
-                MesAntiguedad = datos.MesAntiguedad
-            };
+            var idPersona = await _context.MEC_POF
+                                          .Where(p => p.IdPOF == datos.IdPOF)
+                                          .Select(p => p.IdPersona)
+                                          .FirstOrDefaultAsync();
 
-            await _context.MEC_POF_Antiguedades.AddAsync(nuevaAntiguedad);
+            if (idPersona == 0)
+                throw new KeyNotFoundException("No se encontró una persona asociada al IdPOF.");
+
+            // Verificar si ya existe una antigüedad para esta persona
+            bool existeAntiguedad = await _context.MEC_POF_Antiguedades
+                                                  .AnyAsync(a => a.IdPersona == idPersona);
+
+            if (!existeAntiguedad)
+            {
+                var nuevaAntiguedad = new MEC_POF_Antiguedades
+                {
+                    IdPersona = idPersona,
+                    MesReferencia = datos.MesReferencia,
+                    AnioReferencia = datos.AnioReferencia,
+                    AnioAntiguedad = datos.AnioAntiguedad,
+                    MesAntiguedad = datos.MesAntiguedad
+                };
+
+                await _context.MEC_POF_Antiguedades.AddAsync(nuevaAntiguedad);
+            }
         }
 
         // Calcular antigüedad en meses
@@ -128,8 +154,6 @@ namespace API.Services
             await _context.MEC_POFDetalle.AddAsync(nuevoDetalle);
         }
 
-
-
         // Crear registro en MEC_Mecanizadas
         private async Task CrearMecanizadaAsync(AltaMecanizadaDTO datos)
         {
@@ -155,11 +179,7 @@ namespace API.Services
 
             try
             {
-                bool existeAntiguedad = await ValidarExistenciaAntiguedadAsync(datos.IdPOF);
-
-                if (!existeAntiguedad)
-                    await CrearAntiguedadAsync(datos);
-
+                await VerificarYCrearAntiguedadAsync(datos);
                 await CrearPOFDetalleAsync(datos);
                 await CrearMecanizadaAsync(datos);
 
