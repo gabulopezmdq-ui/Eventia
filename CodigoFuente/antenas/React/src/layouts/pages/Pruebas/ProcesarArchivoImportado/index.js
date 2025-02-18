@@ -146,7 +146,7 @@ function ProcesarArchivoImportado() {
         {
           title: "Paramétricas - Mecanizadas",
           data: responses[4].data.map((item) => ({
-            MECANIZADAS: item.documento,
+            MECANIZADAS: item.TMPMecanizada.documento,
           })),
         },
         {

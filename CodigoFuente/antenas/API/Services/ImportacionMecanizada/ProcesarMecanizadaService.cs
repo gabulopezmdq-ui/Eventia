@@ -76,7 +76,7 @@ namespace API.Services
 
             if (registrosInvalidos.Any())
             {
-                string leyenda = "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
+                string leyenda = "Existen Personas que no están registradas en el sistema...";
                 throw new Exception(leyenda); // Eliminado el DisposeAsync
             }
         }
