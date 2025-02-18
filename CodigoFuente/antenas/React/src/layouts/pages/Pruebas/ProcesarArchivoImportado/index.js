@@ -200,18 +200,26 @@ function ProcesarArchivoImportado() {
     }
     setIsProcessing(true); // Deshabilitar el botón antes de iniciar el proceso
 
-    // ✅ Definir los mensajes esperados
     const expectedErrorMessage =
       "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
     const expectedTMPMessage = "Existen Personas que no están registradas en el sistema...";
 
     try {
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
-      const response = await axios.post(url, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+
+      console.log("🔑 Token de autorización:", token);
+      console.log("📢 URL de la solicitud:", url);
+
+      const response = await axios.post(
+        url,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       const backendMessage = response.data?.message?.trim().replace(/\n/g, " ");
+      console.log("📢 Respuesta del backend:", backendMessage);
 
       if (backendMessage === expectedErrorMessage) {
         setShowErrorButton(true);
@@ -223,31 +231,40 @@ function ProcesarArchivoImportado() {
         setShowDataTable(true);
         console.log("✅ Mensaje de registros faltantes recibido:", backendMessage);
 
-        const getResponse = await axios.get("https://localhost:44382/TMPMecanizadas/GetAll", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Realizamos la llamada GET para obtener los datos necesarios
+        try {
+          console.log("📢 Haciendo la llamada GET a TMPErrores/GetAllMecanizadas...");
+          const getResponse = await axios.get(
+            "https://localhost:44382/TMPErrores/GetAllMecanizadas",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
 
-        setDataTableData(getResponse.data);
+          console.log("📢 Respuesta completa de la API:", getResponse);
+
+          // Si no hay datos, muestra un mensaje
+          if (!getResponse || !getResponse.data || getResponse.data.length === 0) {
+            console.log("❌ No se recibieron datos o la respuesta está vacía.");
+            return;
+          }
+
+          // Muestra los datos que recibimos
+          console.log("📢 Datos para la tabla:", getResponse.data);
+
+          // Si los datos están presentes, los formateamos para agregar 'tmpMecanizada.documento'
+          const formattedData = getResponse.data.map((item) => ({
+            ...item,
+            tmpMecanizadaDocumento: item.tmpMecanizada?.documento || "Sin datos",
+          }));
+
+          // Pasar los datos formateados a la función para renderizar la tabla
+          DataTableDataset(formattedData);
+        } catch (getError) {
+          console.log("❌ Error en la llamada GET:", getError.response?.data || getError.message);
+        }
       } else {
         setShowDataTable(false);
-      }
-
-      // ✅ Nuevo: Llamar al endpoint de Procesar después del preprocesamiento exitoso
-      try {
-        const processUrl = `https://localhost:44382/ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
-        const processResponse = await axios.post(processUrl, null, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        console.log("✅ Procesamiento completado:", processResponse.data);
-        setErrorAlert({ show: true, message: "Archivo procesado exitosamente.", type: "success" });
-      } catch (processError) {
-        console.log("❌ Error en el procesamiento:", processError.response?.data);
-        setErrorAlert({
-          show: true,
-          message: processError.response?.data || "Error al procesar los registros.",
-          type: "error",
-        });
       }
     } catch (error) {
       console.log("📢 Respuesta completa del backend:", error.response?.data);
@@ -260,19 +277,8 @@ function ProcesarArchivoImportado() {
         "Error inesperado al procesar el archivo.";
 
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
-
       console.log("📢 Mensaje esperado:", expectedTMPMessage);
       console.log("📢 Mensaje recibido:", errorMessage);
-      console.log("📢 Coincidencia:", errorMessage.includes(expectedTMPMessage));
-
-      if (errorMessage.includes(expectedTMPMessage)) {
-        setShowDataTable(true);
-        console.log("⚠️ Activando setShowDataTable: error de registros faltantes detectado.");
-      } else {
-        console.log("❌ No se detectó coincidencia.");
-      }
-
-      setShowErrorButton(errorMessage === expectedErrorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -460,29 +466,9 @@ function ProcesarArchivoImportado() {
           <DataTable
             table={{
               columns: [
-                { Header: "idTMP Mecanizada", accessor: "idTMPMecanizada" },
-                { Header: "mes Liquidacion", accessor: "mesLiquidacion" },
-                { Header: "orden Pago", accessor: "ordenPago" },
-                { Header: "año Mes Afectacion", accessor: "anioMesAfectacion" },
-                { Header: "dni", accessor: "documento" },
-                { Header: "secuencia", accessor: "secuencia" },
-                { Header: "funcion", accessor: "funcion" },
-                { Header: "codigo Liquidacion", accessor: "codigoLiquidacion" },
-                { Header: "importe", accessor: "importe" },
-                { Header: "signo", accessor: "signo" },
-                { Header: "marca Transferido", accessor: "marcaTransferido" },
-                { Header: "moneda", accessor: "moneda" },
-                { Header: "regimen Estatutario", accessor: "regimenEstatutario" },
-                { Header: "caracter Revista", accessor: "caracterRevista" },
-                { Header: "dependencia", accessor: "dependencia" },
-                { Header: "distrito", accessor: "distrito" },
-                { Header: "tipo Organizacion", accessor: "tipoOrganizacion" },
-                { Header: "nroEstab", accessor: "nroEstab" },
-                { Header: "categoria", accessor: "categoria" },
-                { Header: "tipoCargo", accessor: "tipoCargo" },
-                { Header: "horas Designadas", accessor: "horasDesignadas" },
-                { Header: "subvencion", accessor: "subvencion" },
-                { Header: "registroValido", accessor: "registroValido" },
+                { Header: "Documento (Nivel Principal)", accessor: "documento" },
+                { Header: "Pof", accessor: "pof" },
+                { Header: "Documento (Anidado)", accessor: "tmpMecanizadaDocumento" }, // Usando el campo transformado
               ],
               rows: dataTableData,
             }}
@@ -498,14 +484,14 @@ function ProcesarArchivoImportado() {
         </Card>
       )}
       <Grid container justifyContent="center" sx={{ mt: 2 }}>
-        <MDButton
+        {/*<MDButton
           variant="contained"
           color="primary"
           onClick={handleProcessData}
           disabled={isProcessing}
         >
           {isProcessing ? "Procesando..." : "Procesar"}
-        </MDButton>
+        </MDButton>*/}
       </Grid>
     </DashboardLayout>
   );
