@@ -65,8 +65,10 @@ namespace API.Controllers
         [HttpGet("GetAllMecanizadas")]
         public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec()
         {
-            return Ok(_mecanizada.GetAll().ToList());
+            return Ok(_mecanizada.GetAll().ToList()); //trae todos los registros. De la forma anterior generaba un problema por el volumen de la solicitud
+        
         }
+
         [HttpGet("GetAllTipoEst")]
         public async Task<ActionResult<IEnumerable<MEC_TMPErroresTiposEstablecimientos>>> GetErroresTipoEst() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
