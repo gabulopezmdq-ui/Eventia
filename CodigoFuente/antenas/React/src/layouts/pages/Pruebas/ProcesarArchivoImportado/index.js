@@ -50,7 +50,7 @@ function ProcesarArchivoImportado() {
   // Función para obtener datos desde la API
   const fetchTMPMecanizadas = () => {
     axios
-      .get(process.env.REACT_APP_API_URL + "TMPMecanizadas/getall", {
+      .get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllMecanizadas", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -227,8 +227,12 @@ function ProcesarArchivoImportado() {
 
       if (backendMessage.includes(expectedTMPMessage)) {
         console.log("✅ Mensaje de registros faltantes recibido:", backendMessage);
-        setShowDataTable(true);
-        await fetchDataForTable();
+
+        const getResponse = await axios.get("https://localhost:44382/TMPMecanizadas/GetAll", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setDataTableData(getResponse.data);
       } else {
         setShowDataTable(false);
       }
