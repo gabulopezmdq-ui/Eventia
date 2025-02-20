@@ -26,14 +26,9 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAll")]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
+        public async Task<IActionResult> GetAll()
         {
-            var query = _serviceGenerico.GetAll().AsQueryable();
-
-            var totalItems = query.Count();
-            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            return Ok(items); // Devuelve solo el array
+            return Ok(_serviceGenerico.GetAll().ToList());
         }
 
         [HttpGet("GetByVigente")]
