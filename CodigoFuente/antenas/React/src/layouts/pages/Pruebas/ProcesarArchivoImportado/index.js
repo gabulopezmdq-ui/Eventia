@@ -198,7 +198,8 @@ function ProcesarArchivoImportado() {
       });
       return;
     }
-    setIsProcessing(true); // Deshabilitar el botón antes de iniciar el proceso
+
+    setIsProcessing(true);
 
     const expectedErrorMessage =
       "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
@@ -206,32 +207,19 @@ function ProcesarArchivoImportado() {
 
     try {
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
-
       console.log("📢 URL de la solicitud:", url);
 
-      const response = await axios.post(
-        url,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
 
-      let backendMessage = response.data?.message?.trim().replace(/\n/g, " ") || "";
+      let backendMessage = response.data?.mensaje?.trim().replace(/\n/g, " ") || "";
+      console.log("📢 Mensaje del backend:", backendMessage);
 
-      if (backendMessage.includes(expectedErrorMessage)) {
-        setShowErrorButton(true);
-      } else {
-        setShowErrorButton(false);
-      }
-
+      // 🟢 Si el backend devuelve el mensaje esperado en el éxito
       if (backendMessage.includes(expectedTMPMessage)) {
         console.log("✅ Mensaje de registros faltantes recibido:", backendMessage);
-
         const getResponse = await axios.get("https://localhost:44382/TMPMecanizadas/GetAll", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setDataTableData(getResponse.data);
       } else {
         setShowDataTable(false);
@@ -246,10 +234,16 @@ function ProcesarArchivoImportado() {
         JSON.stringify(error.response?.data) ||
         "Error inesperado al procesar el archivo.";
 
-      console.log("📢 Mensaje esperado:", expectedTMPMessage);
       console.log("📢 Mensaje recibido en error:", errorMessage);
 
-      // 🚀 🔥 Si el mensaje esperado está en el error 400, aún así ejecutamos la lógica
+      // 🔥 🔎 Mover la lógica de activación del botón aquí
+      if (errorMessage.includes("El archivo contiene errores")) {
+        console.log("🔴 Activando botón de error");
+        setShowErrorButton(true);
+      } else {
+        setShowErrorButton(false);
+      }
+
       if (errorMessage.includes(expectedTMPMessage)) {
         console.log("✅ Mensaje de registros faltantes detectado en error 400.");
         setShowDataTable(true);
