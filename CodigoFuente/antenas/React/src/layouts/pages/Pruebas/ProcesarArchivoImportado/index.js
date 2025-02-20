@@ -200,57 +200,40 @@ function ProcesarArchivoImportado() {
     }
     setIsProcessing(true); // Deshabilitar el botón antes de iniciar el proceso
 
-    // ✅ Definir los mensajes esperados
     const expectedErrorMessage =
       "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
     const expectedTMPMessage = "Existen Personas que no están registradas en el sistema...";
 
     try {
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
-      const response = await axios.post(url, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
-      const backendMessage = response.data?.message?.trim().replace(/\n/g, " ");
+      console.log("📢 URL de la solicitud:", url);
 
-      if (backendMessage === expectedErrorMessage) {
+      const response = await axios.post(
+        url,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      let backendMessage = response.data?.message?.trim().replace(/\n/g, " ") || "";
+
+      if (backendMessage.includes(expectedErrorMessage)) {
         setShowErrorButton(true);
       } else {
         setShowErrorButton(false);
       }
 
-      if (backendMessage === expectedTMPMessage) {
-        setShowDataTable(true);
+      if (backendMessage.includes(expectedTMPMessage)) {
         console.log("✅ Mensaje de registros faltantes recibido:", backendMessage);
-
-        const getResponse = await axios.get("https://localhost:44382/TMPErrores/GetAllMecanizadas", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setDataTableData(getResponse.data);
+        setShowDataTable(true);
+        await fetchDataForTable();
       } else {
         setShowDataTable(false);
       }
-
-      // ✅ Nuevo: Llamar al endpoint de Procesar después del preprocesamiento exitoso
-      try {
-        const processUrl = `https://localhost:44382/ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
-        const processResponse = await axios.post(processUrl, null, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        console.log("✅ Procesamiento completado:", processResponse.data);
-        setErrorAlert({ show: true, message: "Archivo procesado exitosamente.", type: "success" });
-      } catch (processError) {
-        console.log("❌ Error en el procesamiento:", processError.response?.data);
-        setErrorAlert({
-          show: true,
-          message: processError.response?.data || "Error al procesar los registros.",
-          type: "error",
-        });
-      }
     } catch (error) {
-      console.log("📢 Respuesta completa del backend:", error.response?.data);
+      console.log("❌ Error en la respuesta del backend:", error.response?.data);
 
       const errorMessage =
         error.response?.data?.mensaje ||
@@ -259,22 +242,47 @@ function ProcesarArchivoImportado() {
         JSON.stringify(error.response?.data) ||
         "Error inesperado al procesar el archivo.";
 
-      setErrorAlert({ show: true, message: errorMessage, type: "error" });
-
       console.log("📢 Mensaje esperado:", expectedTMPMessage);
-      console.log("📢 Mensaje recibido:", errorMessage);
-      console.log("📢 Coincidencia:", errorMessage.includes(expectedTMPMessage));
+      console.log("📢 Mensaje recibido en error:", errorMessage);
 
+      // 🚀 🔥 Si el mensaje esperado está en el error 400, aún así ejecutamos la lógica
       if (errorMessage.includes(expectedTMPMessage)) {
+        console.log("✅ Mensaje de registros faltantes detectado en error 400.");
         setShowDataTable(true);
-        console.log("⚠️ Activando setShowDataTable: error de registros faltantes detectado.");
+        await fetchDataForTable();
       } else {
-        console.log("❌ No se detectó coincidencia.");
+        setErrorAlert({ show: true, message: errorMessage, type: "error" });
       }
-
-      setShowErrorButton(errorMessage === expectedErrorMessage);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  // Nueva función para traer datos cuando hay registros faltantes
+  const fetchDataForTable = async () => {
+    try {
+      console.log("📢 Haciendo la llamada GET a TMPErrores/GetAllMecanizadas...");
+      const getResponse = await axios.get("https://localhost:44382/TMPErrores/GetAllMecanizadas", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("📢 Respuesta completa de la API:", getResponse);
+
+      if (!getResponse?.data || getResponse.data.length === 0) {
+        console.log("❌ No se recibieron datos o la respuesta está vacía.");
+        return;
+      }
+
+      console.log("📢 Datos para la tabla:", getResponse.data);
+
+      const formattedData = getResponse.data.map((item) => ({
+        ...item,
+        tmpMecanizadaDocumento: item.tmpMecanizada?.documento || "Sin datos",
+      }));
+
+      setDataTableData(formattedData);
+    } catch (getError) {
+      console.log("❌ Error en la llamada GET:", getError.response?.data || getError.message);
     }
   };
 
@@ -289,64 +297,53 @@ function ProcesarArchivoImportado() {
       return;
     }
 
-    const doc = new jsPDF("landscape"); // Horizontal para más espacio
+    const doc = new jsPDF("landscape");
     doc.setFontSize(10);
     doc.text("Errores Detectados en Mecanizadas", 14, 10);
 
+    // Transformar los datos antes de pasarlos a autoTable
+
     const columns = [
-      { header: "Mes Liq.", dataKey: "mesLiquidacion" },
-      { header: "Orden Pago", dataKey: "ordenPago" },
-      { header: "Año/Mes", dataKey: "anioMesAfectacion" },
-      { header: "DNI", dataKey: "documento" },
-      { header: "Secuencia", dataKey: "secuencia" },
-      { header: "Función", dataKey: "funcion" },
-      { header: "Código Liq.", dataKey: "codigoLiquidacion" },
-      { header: "Importe", dataKey: "importe" },
-      { header: "Signo", dataKey: "signo" },
-      { header: "Moneda", dataKey: "moneda" },
-      { header: "Estatutario", dataKey: "regimenEstatutario" },
-      { header: "Carácter Rev.", dataKey: "caracterRevista" },
-      { header: "Dependencia", dataKey: "dependencia" },
-      { header: "Distrito", dataKey: "distrito" },
-      { header: "Org.", dataKey: "tipoOrganizacion" },
-      { header: "Estab.", dataKey: "nroEstab" },
-      { header: "Categoría", dataKey: "categoria" },
-      { header: "Tipo Cargo", dataKey: "tipoCargo" },
-      { header: "Horas", dataKey: "horasDesignadas" },
-      { header: "Subvención", dataKey: "subvencion" },
-      { header: "Válido", dataKey: "registroValido" },
+      { header: "DNI", dataKey: "documento" }, // Se usa dataKey en lugar de accessorKey
+      { header: "POF", dataKey: "pof" },
+      { header: "NÚMERO DNI", dataKey: "tmpMecanizadaDocumento" },
     ];
+    const processedData = dataTableData.map((row) => ({
+      documento: row.documento === "NE" ? "NO EXISTE" : row.documento,
+      pof: row.pof === "NE" ? "NO EXISTE" : row.pof,
+      tmpMecanizadaDocumento: row.tmpMecanizadaDocumento,
+    }));
 
     doc.autoTable({
       columns,
-      body: dataTableData,
+      body: processedData, // Usamos los datos modificados
       startY: 20,
       margin: { top: 20 },
       styles: {
-        fontSize: 7, // Letra más pequeña
-        cellPadding: 1.2, // Menos espacio dentro de las celdas
-        overflow: "linebreak", // Evita que el texto se salga de las celdas
+        fontSize: 9,
+        cellPadding: 1.2,
+        overflow: "linebreak",
       },
       headStyles: {
-        fillColor: [41, 128, 185], // Azul elegante
+        fillColor: [41, 128, 185],
         textColor: [255, 255, 255],
-        fontSize: 8, // Letra un poco más grande en encabezado
+        fontSize: 10,
         halign: "center",
       },
       columnStyles: {
-        importe: { halign: "right" }, // Montos alineados a la derecha
-        signo: { halign: "center" },
-        registroValido: { halign: "center" },
-        documento: { fontStyle: "bold" }, // DNI en negrita
+        documento: { halign: "center", fontStyle: "normal" },
+        pof: { halign: "center" },
+        tmpMecanizadaDocumento: { halign: "center" },
       },
       didDrawPage: function (data) {
         doc.setFontSize(7);
-        doc.text(`Página ${doc.internal.getNumberOfPages()}`, 280, 200); // Número de página
+        doc.text(`Página ${doc.internal.getNumberOfPages()}`, 280, 200);
       },
     });
 
     doc.save("ErroresMecanizadas.pdf");
   };
+
   const handleProcessData = async () => {
     if (!selectedIdCabecera) {
       setErrorAlert({
@@ -444,7 +441,7 @@ function ProcesarArchivoImportado() {
         </Grid>
         {showErrorButton && (
           <Grid container justifyContent="center" sx={{ mt: 2 }}>
-            <MDButton
+            <MDButton // Boton de pdf de errores de codigos
               variant="contained"
               color="warning"
               onClick={handleGeneratePDF}
@@ -460,29 +457,9 @@ function ProcesarArchivoImportado() {
           <DataTable
             table={{
               columns: [
-                { Header: "idTMP Mecanizada", accessor: "idTMPMecanizada" },
-                { Header: "mes Liquidacion", accessor: "mesLiquidacion" },
-                { Header: "orden Pago", accessor: "ordenPago" },
-                { Header: "año Mes Afectacion", accessor: "anioMesAfectacion" },
-                { Header: "dni", accessor: "documento" },
-                { Header: "secuencia", accessor: "secuencia" },
-                { Header: "funcion", accessor: "funcion" },
-                { Header: "codigo Liquidacion", accessor: "codigoLiquidacion" },
-                { Header: "importe", accessor: "importe" },
-                { Header: "signo", accessor: "signo" },
-                { Header: "marca Transferido", accessor: "marcaTransferido" },
-                { Header: "moneda", accessor: "moneda" },
-                { Header: "regimen Estatutario", accessor: "regimenEstatutario" },
-                { Header: "caracter Revista", accessor: "caracterRevista" },
-                { Header: "dependencia", accessor: "dependencia" },
-                { Header: "distrito", accessor: "distrito" },
-                { Header: "tipo Organizacion", accessor: "tipoOrganizacion" },
-                { Header: "nroEstab", accessor: "nroEstab" },
-                { Header: "categoria", accessor: "categoria" },
-                { Header: "tipoCargo", accessor: "tipoCargo" },
-                { Header: "horas Designadas", accessor: "horasDesignadas" },
-                { Header: "subvencion", accessor: "subvencion" },
-                { Header: "registroValido", accessor: "registroValido" },
+                { Header: "Documento (Nivel Principal)", accessor: "documento" },
+                { Header: "Pof", accessor: "pof" },
+                { Header: "Documento (Anidado)", accessor: "tmpMecanizadaDocumento" }, // Usando el campo transformado
               ],
               rows: dataTableData,
             }}
@@ -498,14 +475,14 @@ function ProcesarArchivoImportado() {
         </Card>
       )}
       <Grid container justifyContent="center" sx={{ mt: 2 }}>
-        <MDButton
+        {/*<MDButton
           variant="contained"
           color="primary"
           onClick={handleProcessData}
           disabled={isProcessing}
         >
           {isProcessing ? "Procesando..." : "Procesar"}
-        </MDButton>
+        </MDButton>*/}
       </Grid>
     </DashboardLayout>
   );
