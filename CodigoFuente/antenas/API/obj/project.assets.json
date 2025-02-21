@@ -10216,19 +10216,35 @@
     ]
   },
   "packageFolders": {
+<<<<<<< HEAD
     "C:\\Users\\efrontera\\.nuget\\packages\\": {}
+=======
+    "C:\\Users\\lramirez\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+>>>>>>> origin/ramirez2
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+      "projectUniqueName": "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
       "projectName": "API",
+<<<<<<< HEAD
       "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
       "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
       "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
+=======
+      "projectPath": "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+      "packagesPath": "C:\\Users\\lramirez\\.nuget\\packages\\",
+      "outputPath": "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
+>>>>>>> origin/ramirez2
       "projectStyle": "PackageReference",
       "configFilePaths": [
+<<<<<<< HEAD
         "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
+=======
+        "C:\\Users\\lramirez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+>>>>>>> origin/ramirez2
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -10236,6 +10252,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -10248,6 +10265,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -10380,8 +10402,30 @@
             "privateAssets": "all"
           }
         },
+<<<<<<< HEAD
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
+>>>>>>> origin/ramirez2
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Problema al leer el archivo de caché C:\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "El paquete \"System.Linq.Dynamic.Core\" 1.4.9 tiene una vulnerabilidad de gravedad alta conocida, https://github.com/advisories/GHSA-4cv2-4hjh-77rx",
+      "libraryId": "System.Linq.Dynamic.Core",
+      "targetGraphs": [
+        "net7.0"
+      ]
+    }
+  ]
 }
