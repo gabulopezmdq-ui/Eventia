@@ -10973,35 +10973,24 @@
     ]
   },
   "packageFolders": {
-<<<<<<< HEAD
-    "C:\\Users\\efrontera\\.nuget\\packages\\": {}
-=======
-    "C:\\Users\\lramirez\\.nuget\\packages\\": {},
+    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
->>>>>>> origin/ramirez2
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
-<<<<<<< HEAD
       "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-      "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
       "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
-=======
-      "projectPath": "C:\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-      "packagesPath": "C:\\Users\\lramirez\\.nuget\\packages\\",
-      "outputPath": "C:\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
->>>>>>> origin/ramirez2
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-<<<<<<< HEAD
-        "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
-=======
-        "C:\\Users\\lramirez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
->>>>>>> origin/ramirez2
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -11009,15 +10998,14 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
-              "projectPath": "C:\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
+            "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
             }
           }
         }
@@ -11026,11 +11014,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -11095,11 +11078,7 @@
             "privateAssets": "all"
           }
         },
-<<<<<<< HEAD
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
-=======
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
->>>>>>> origin/ramirez2
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
       }
     }
   },
@@ -11108,7 +11087,7 @@
       "code": "Undefined",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Problema al leer el archivo de caché C:\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+      "message": "Problema al leer el archivo de caché C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
     }
   ]
 }
