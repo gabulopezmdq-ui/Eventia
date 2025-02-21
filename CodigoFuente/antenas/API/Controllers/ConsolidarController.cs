@@ -27,12 +27,12 @@ namespace API.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        [HttpPost("ObtenerConteosConsolidado")]
-        public async Task<IActionResult> ObtenerConteosConsolidado(int estadoCabecera)
+        [HttpGet("ObtenerConteosConsolidado")]
+        public async Task<IActionResult> ObtenerConteosConsolidado(int idCabecera)
         {
             try
             {
-                var conteos = await _consolidarMecanizadaService.ObtenerConteosConsolidadoAsync(estadoCabecera);
+                var conteos = await _consolidarMecanizadaService.ObtenerConteosConsolidadoAsync(idCabecera);
                 return Ok(conteos);
             }
             catch (Exception ex)
