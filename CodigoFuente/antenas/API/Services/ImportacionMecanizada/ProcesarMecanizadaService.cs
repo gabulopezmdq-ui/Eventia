@@ -81,7 +81,7 @@ namespace API.Services
             }
         }
 
-        
+
 
         private async Task<bool> VerificarErroresAsync(int idCabecera)
         {
@@ -153,7 +153,7 @@ namespace API.Services
                     });
 
                 _context.MEC_TMPErroresEstablecimientos.AddRange(erroresEstablecimientos);
-         
+
             }
         }
 
@@ -198,7 +198,7 @@ namespace API.Services
                     });
 
                 _context.MEC_TMPErroresConceptos.AddRange(erroresConceptos);
-                
+
             }
         }
 
@@ -284,7 +284,7 @@ namespace API.Services
                 var detalle = await ProcesarDetallePOFAsync(idCabecera, POF, registro);
                 detallesPOF.Add(detalle);
                 registro.RegistroValido = "S";
-            } 
+            }
             // Agregar todos los detalles y errores de una sola vez
             _context.MEC_POFDetalle.AddRange(detallesPOF);
             _context.MEC_TMPErroresMecanizadas.AddRange(erroresMec);
@@ -528,3 +528,4 @@ namespace API.Services
         }
     }
 }
+
