@@ -36,6 +36,7 @@ function ProcesarArchivoImportado() {
   const [isProcessing, setIsProcessing] = useState(false); // Nuevo estado
   const [dataTableData, setDataTableData] = useState([]);
   const [showDataTable, setShowDataTable] = useState(false);
+  const [isButtonVisible, setIsButtonVisible] = useState(false);
 
   const token = sessionStorage.getItem("token");
 
@@ -204,6 +205,7 @@ function ProcesarArchivoImportado() {
     const expectedErrorMessage =
       "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
     const expectedTMPMessage = "Existen Personas que no están registradas en el sistema...";
+    const expectedTMPesitosamente = "Preprocesamiento y validación completados exitosamente.";
 
     try {
       const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
@@ -211,8 +213,17 @@ function ProcesarArchivoImportado() {
 
       const response = await axios.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
 
-      let backendMessage = response.data?.mensaje?.trim().replace(/\n/g, " ") || "";
-      console.log("📢 Mensaje del backend:", backendMessage);
+      let backendMessage = response.data?.trim().replace(/\n/g, " ") || ""; // 🔹 Tomar response.data directamente
+
+      console.log("📢 Mensaje del backend procesado:", backendMessage);
+
+      // 🔹 Verificar si el mensaje es el esperado y mostrar el botón
+      if (backendMessage === expectedTMPesitosamente) {
+        console.log("✅ Preprocesamiento exitoso, mostrando botón.");
+        setIsButtonVisible(true);
+      } else {
+        setIsButtonVisible(false);
+      }
 
       // 🟢 Si el backend devuelve el mensaje esperado en el éxito
       if (backendMessage.includes(expectedTMPMessage)) {
@@ -227,16 +238,18 @@ function ProcesarArchivoImportado() {
     } catch (error) {
       console.log("❌ Error en la respuesta del backend:", error.response?.data);
 
+      // 🔹 Extraer el mensaje de error correctamente
+      const errorData = error.response?.data;
       const errorMessage =
-        error.response?.data?.mensaje ||
-        error.response?.data?.Message ||
-        error.response?.data?.error ||
-        JSON.stringify(error.response?.data) ||
-        "Error inesperado al procesar el archivo.";
+        typeof errorData === "string"
+          ? errorData // Si el backend envía un string directo
+          : errorData?.mensaje ||
+            JSON.stringify(errorData) ||
+            "Error inesperado al procesar el archivo.";
 
       console.log("📢 Mensaje recibido en error:", errorMessage);
 
-      // 🔥 🔎 Mover la lógica de activación del botón aquí
+      // 🔴 Activar el botón de error si el mensaje coincide
       if (errorMessage.includes("El archivo contiene errores")) {
         console.log("🔴 Activando botón de error");
         setShowErrorButton(true);
@@ -250,6 +263,14 @@ function ProcesarArchivoImportado() {
         await fetchDataForTable();
       } else {
         setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      }
+
+      // 🔹 Mostrar botón si el mensaje llega en el error
+      if (errorMessage.includes(expectedTMPesitosamente)) {
+        console.log("✅ Preprocesamiento exitoso detectado en error, mostrando botón.");
+        setIsButtonVisible(true);
+      } else {
+        setIsButtonVisible(false);
       }
     } finally {
       setIsProcessing(false);
@@ -473,14 +494,18 @@ function ProcesarArchivoImportado() {
         </Card>
       )}
       <Grid container justifyContent="center" sx={{ mt: 2 }}>
-        {/*<MDButton
-          variant="contained"
-          color="primary"
-          onClick={handleProcessData}
-          disabled={isProcessing}
-        >
-          {isProcessing ? "Procesando..." : "Procesar"}
-        </MDButton>*/}
+        {isButtonVisible && (
+          <Grid container justifyContent="center" sx={{ mt: 2 }}>
+            <MDButton
+              variant="contained"
+              color="primary"
+              onClick={handleProcessData}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Procesando..." : "Procesar"}
+            </MDButton>
+          </Grid>
+        )}
       </Grid>
     </DashboardLayout>
   );
