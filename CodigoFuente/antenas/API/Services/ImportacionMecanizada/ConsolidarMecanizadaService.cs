@@ -35,6 +35,9 @@ namespace API.Services
                 CountConsolidadoS = countS,
                 CountConsolidadoN = countN,
                 AccionHabilitada = countN > 0
+                //(revisar si esta la funcionalida)
+                //Si en cambio todos los registros de MEC_Mecanizadas para la cabecera seleccionada, 
+                //tienen el campo Consolidado = “S”, entonces habilitará un botón “Cambiar Estado Cabecera” debajo de la grilla:
             };
         }
 
@@ -74,12 +77,22 @@ namespace API.Services
             if (idCabecera <= 0 || idEstablecimiento <= 0)
                 throw new ArgumentException("Los IDs no pueden ser menores o iguales a cero.");
 
-            return await _context.MEC_POF
-                .Where(p => p.IdEstablecimiento == idEstablecimiento &&
-                            !_context.MEC_Mecanizadas.Any(m => m.IdPOF == p.IdPOF &&
-                                                                m.IdEstablecimiento == idEstablecimiento &&
-                                                                m.IdCabecera == idCabecera))
+            // Obtener los IdPOF que ya están en MEC_Mecanizadas
+            var idsMecanizados = await _context.MEC_Mecanizadas
+                .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
+                .Select(m => m.IdPOF)
                 .ToListAsync();
+
+            Console.WriteLine($"IDs en MEC_Mecanizadas: {string.Join(", ", idsMecanizados)}");
+
+            // Filtrar MEC_POF excluyendo los IdPOF ya mecanizados
+            var registros = await _context.MEC_POF
+                .Where(p => p.IdEstablecimiento == idEstablecimiento && !idsMecanizados.Contains(p.IdPOF))
+                .ToListAsync();
+
+            Console.WriteLine($"Registros finales obtenidos: {registros.Count}");
+
+            return registros;
         }
 
         // Validar existencia de antigüedad
