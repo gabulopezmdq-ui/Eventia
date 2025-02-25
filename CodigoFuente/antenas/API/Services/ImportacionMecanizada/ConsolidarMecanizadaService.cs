@@ -25,16 +25,19 @@ namespace API.Services
                 throw new ArgumentException("El ID de la cabecera no puede ser menor o igual a cero.");
 
             var query = _context.MEC_Mecanizadas
-                .Where(m => m.Cabecera != null && m.Cabecera.IdCabecera == idCabecera);
+                .Where(m => m.Cabecera != null && m.Cabecera.IdCabecera == idCabecera).GroupBy(m => m.IdEstablecimiento)
+                .Select(g => new {
+                    IdEstablecimiento = g.Key,
+                    CountConsolidadoS = g.Count(m => m.Consolidado == "S"),
+                    CountConsolidadoN = g.Count(m => m.Consolidado == "N")
+                    }).ToListAsync();
 
-            int countS = await query.CountAsync(m => m.Consolidado == "S");
-            int countN = await query.CountAsync(m => m.Consolidado == "N");
+            var resultado = await query;
 
             return new
             {
-                CountConsolidadoS = countS,
-                CountConsolidadoN = countN,
-                AccionHabilitada = countN > 0
+                Datos = resultado,
+                AccionHabilitada = resultado.Any(r => r.CountConsolidadoN > 0)
                 //(revisar si esta la funcionalida)
                 //Si en cambio todos los registros de MEC_Mecanizadas para la cabecera seleccionada, 
                 //tienen el campo Consolidado = “S”, entonces habilitará un botón “Cambiar Estado Cabecera” debajo de la grilla:
