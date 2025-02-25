@@ -101,7 +101,55 @@ function ConsolidarMecPOF() {
       });
   }, [selectedCabecera, token, establecimientos]);
 
+  const allCountsZero = dataTableData.every((row) => row.countConsolidadoN === 0);
+
   const displayValue = (value) => (value ? value : "N/A");
+
+  const handleButtonClick = (row) => {
+    console.log("Consolidar", row);
+  };
+
+  const handleChangeStatus = () => {
+    if (!selectedCabecera) return;
+    const today = new Date();
+    const formattedDate =
+      today.getFullYear() +
+      "/" +
+      (today.getMonth() + 1).toString().padStart(2, "0") +
+      "/" +
+      today.getDate().toString().padStart(2, "0");
+    axios
+      .put(
+        `${process.env.REACT_APP_API_URL}Consolidar/HabilitarCambiarEstadoCabecera`,
+        {
+          idCabecera: selectedCabecera,
+          fechaCambioEstado: formattedDate,
+          estado: "S",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then(() => {
+        setErrorAlert({
+          show: true,
+          message: "Estado cambiado exitosamente.",
+          type: "success",
+        });
+      })
+      .catch((error) => {
+        let errorMessage = "Ocurrió un error al cambiar el estado.";
+        if (error.response) {
+          const statusCode = error.response.status;
+          if (statusCode >= 400 && statusCode < 500) {
+            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
+          } else if (statusCode >= 500) {
+            errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
+          }
+        }
+        setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      });
+  };
 
   return (
     <>
@@ -184,6 +232,13 @@ function ConsolidarMecPOF() {
           </MDBox>
         ) : (
           <p>No hay datos disponibles para mostrar</p>
+        )}
+        {allCountsZero && (
+          <MDBox my={3} display="flex" justifyContent="center">
+            <MDButton size="small" color="info" variant="gradient" onClick={handleChangeStatus}>
+              Cambiar Estado
+            </MDButton>
+          </MDBox>
         )}
       </DashboardLayout>
     </>
