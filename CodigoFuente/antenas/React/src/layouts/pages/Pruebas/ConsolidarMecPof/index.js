@@ -1,78 +1,75 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-// @mui material components
 import Card from "@mui/material/Card";
 import { Link, useNavigate, useParams } from "react-router-dom";
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
-// Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import DataTableConsolidar from "examples/Tables/DataTableConsolidar";
-import "../../Pruebas/pruebas.css";
-function ConsolidarMecPof() {
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import DataTable from "examples/Tables/DataTable";
+function ConsolidarMecPOF() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState();
-  const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
-  const [idCabeceras, setIdCabeceras] = useState([]);
+  const [cabeceras, setCabeceras] = useState([]);
+  const [selectedCabecera, setSelectedCabecera] = useState("");
+  const [dataTableData, setDataTableData] = useState([]);
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "POF/GetAll", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
+      .get(`${process.env.REACT_APP_API_URL}CabeceraLiquidacion/getall`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        setCabeceras(response.data ? response.data.filter((item) => item.estado === "R") : []);
+      })
       .catch((error) => {
+        let errorMessage = "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.";
+        let errorType = "error";
+
         if (error.response) {
           const statusCode = error.response.status;
-          let errorMessage = "";
-          let errorType = "error";
           if (statusCode >= 400 && statusCode < 500) {
             errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
           } else if (statusCode >= 500) {
             errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
           }
-          setErrorAlert({ show: true, message: errorMessage, type: errorType });
-        } else {
-          setErrorAlert({
-            show: true,
-            message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-            type: "error",
-          });
         }
-      });
-  }, []);
-  useEffect(() => {
-    axios
-      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        // Mapea los datos para crear los valores concatenados
-        const formattedCabeceras = response.data.map((item) => ({
-          id: item.idCabecera, // Sigue usando idCabecera como identificador único
-          displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`, // Concatenar los valores
-        }));
-        setIdCabeceras(formattedCabeceras);
-      })
-      .catch(() => {
-        setErrorAlert({ show: true, message: "Error al cargar los idCabecera.", type: "error" });
+
+        setErrorAlert({ show: true, message: errorMessage, type: errorType });
       });
   }, [token]);
 
-  const handleNuevoTipo = () => {
-    navigate("/ConsolidarMecPofFE/Nuevo");
-  };
+  useEffect(() => {
+    if (!selectedCabecera) return; // No hacer la petición si no hay un ID seleccionado
+
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerConteosConsolidado?idCabecera=${selectedCabecera}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        setDataTableData(response.data?.datos || []);
+      })
+      .catch((error) => {
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los conteos consolidados.",
+          type: "error",
+        });
+      });
+  }, [selectedCabecera, token]);
 
   //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
@@ -81,9 +78,6 @@ function ConsolidarMecPof() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -97,82 +91,72 @@ function ConsolidarMecPof() {
             </Grid>
           </Grid>
         )}
-        <MDBox my={3}>
-          <Card>
-            <Grid container spacing={2} sx={{ m: 3 }}>
-              <Grid item xs={6}>
-                <FormControl fullWidth>
-                  <InputLabel
-                    id="filter-label"
-                    sx={{
-                      "&.Mui-focused": { color: "#1A73E8" }, // Estilo al enfocar
-                    }}
-                  >
-                    Seleccionar Cabecera
-                  </InputLabel>
-                  <Select
-                    labelId="filter-label"
-                    value={selectedIdCabecera}
-                    onChange={(e) => setSelectedIdCabecera(e.target.value)}
-                    sx={{
-                      height: "40px",
-                      "& .MuiSelect-select": {
-                        height: "40px",
-                        padding: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#000", // Color del borde al pasar el mouse
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#000", // Color del borde al enfocar
-                      },
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Seleccionar Cabecera</em>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth>
+              <InputLabel id="cabecera-select-label">Cabecera</InputLabel>
+              <Select
+                labelId="cabecera-select-label"
+                value={selectedCabecera}
+                onChange={(e) => setSelectedCabecera(e.target.value)}
+                label="Cabecera"
+                style={{ height: "2.5rem", backgroundColor: "white" }}
+              >
+                {cabeceras.length > 0 ? (
+                  cabeceras.map((cabecera) => (
+                    <MenuItem key={cabecera.idCabecera} value={cabecera.idCabecera}>
+                      {cabecera.leyendaTipoLiqReporte}
                     </MenuItem>
-                    {idCabeceras.map((item, index) => (
-                      <MenuItem key={index} value={item.id}>
-                        {item.displayText}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={3}></Grid>
-            </Grid>
-            <DataTableConsolidar
-              table={{
-                columns: [
-                  { Header: "idTMP Mecanizada", accessor: "idTMPMecanizada" },
-                  {
-                    Header: "fecha Importacion",
-                    accessor: "fechaImportacion",
-                    Cell: ({ value }) =>
-                      value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
-                  },
-                  { Header: "mes Liquidacion", accessor: "mesLiquidacion" },
-                ],
-                rows: dataTableData,
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          </Card>
-        </MDBox>
+                  ))
+                ) : (
+                  <MenuItem disabled>No hay opciones disponibles</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+        {dataTableData.length > 0 && (
+          <MDBox my={3}>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "ID Establecimiento", accessor: "idEstablecimiento" },
+                    { Header: "Consolidado S", accessor: "countConsolidadoS" },
+                    { Header: "Consolidado N", accessor: "countConsolidadoN" },
+                    {
+                      Header: "Acción",
+                      accessor: "edit",
+                      Cell: ({ row }) => (
+                        <MDButton
+                          variant="gradient"
+                          color="info"
+                          onClick={() => console.log("Más Info:", row.original)}
+                        >
+                          Más Info
+                        </MDButton>
+                      ),
+                    },
+                  ],
+                  rows: dataTableData,
+                }}
+                entriesPerPage={false}
+                canSearch
+                show
+              />
+            </Card>
+          </MDBox>
+        )}
       </DashboardLayout>
     </>
   );
 }
 
-ConsolidarMecPof.propTypes = {
+ConsolidarMecPOF.propTypes = {
   row: PropTypes.object, // Add this line for 'row' prop
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default ConsolidarMecPof;
+export default ConsolidarMecPOF;
