@@ -22,6 +22,7 @@ function ConsolidarMecPOF() {
   const [cabeceras, setCabeceras] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
   const [dataTableData, setDataTableData] = useState([]);
+  const [establecimientos, setEstablecimientos] = useState([]);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -50,6 +51,23 @@ function ConsolidarMecPOF() {
   }, [token]);
 
   useEffect(() => {
+    axios
+      .get(`${process.env.REACT_APP_API_URL}Establecimientos/GetAll`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setEstablecimientos(response.data || []);
+      })
+      .catch((error) => {
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los establecimientos.",
+          type: "error",
+        });
+      });
+  }, [token]);
+
+  useEffect(() => {
     if (!selectedCabecera) return;
     axios
       .get(
@@ -59,8 +77,20 @@ function ConsolidarMecPOF() {
         }
       )
       .then((response) => {
-        const data = Array.isArray(response.data) ? response.data : [response.data];
-        setDataTableData(data);
+        const data = Array.isArray(response.data.datos)
+          ? response.data.datos
+          : [response.data.datos];
+        const enrichedData = data.map((item) => {
+          const establecimiento = establecimientos.find(
+            (e) => e.idEstablecimiento === item.idEstablecimiento
+          );
+          return {
+            ...item,
+            nroEstablecimiento: establecimiento ? establecimiento.nroEstablecimiento : "N/A",
+          };
+        });
+
+        setDataTableData(enrichedData);
       })
       .catch((error) => {
         setErrorAlert({
@@ -69,9 +99,8 @@ function ConsolidarMecPOF() {
           type: "error",
         });
       });
-  }, [selectedCabecera, token]);
+  }, [selectedCabecera, token, establecimientos]);
 
-  //Funcion para que cuando el campo viene vacio muestre N/A
   const displayValue = (value) => (value ? value : "N/A");
 
   return (
@@ -121,14 +150,13 @@ function ConsolidarMecPOF() {
               <DataTable
                 table={{
                   columns: [
-                    { Header: "ID Establecimiento", accessor: "idEstablecimiento" },
+                    { Header: "ID Establecimiento", accessor: "nroEstablecimiento" }, // Mostrar nroEstablecimiento
                     { Header: "Consolidado S", accessor: "countConsolidadoS" },
                     { Header: "Consolidado N", accessor: "countConsolidadoN" },
                     {
                       Header: "Acción",
                       accessor: "accion", // Aquí agregas una columna para el botón
                       Cell: ({ row }) => {
-                        // Verificas si countConsolidadoN > 0 en esa fila
                         const countConsolidadoN = row.original.countConsolidadoN;
                         if (countConsolidadoN > 0) {
                           return (
@@ -138,11 +166,11 @@ function ConsolidarMecPOF() {
                               variant="gradient"
                               onClick={() => handleButtonClick(row.original)}
                             >
-                              Consilidar
+                              Consolidar
                             </MDButton>
                           );
                         }
-                        return null; // Si no cumple la condición, no muestra nada
+                        return null;
                       },
                     },
                   ],
