@@ -32,12 +32,23 @@ namespace API.Controllers
         {
             try
             {
+                if (idCabecera <= 0)
+                    return BadRequest("El ID de la cabecera no puede ser menor o igual a cero.");
+
                 var conteos = await _consolidarMecanizadaService.ObtenerConteosConsolidadoAsync(idCabecera);
+
+                if (conteos == null)
+                    return NotFound("No se encontraron registros para la cabecera especificada.");
+
                 return Ok(conteos);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, new
+                {
+                    Error = "Ocurrió un error interno en el servidor.",
+                    Detalles = ex.Message
+                });
             }
         }
 
