@@ -50,8 +50,7 @@ function ConsolidarMecPOF() {
   }, [token]);
 
   useEffect(() => {
-    if (!selectedCabecera) return; // No hacer la petición si no hay un ID seleccionado
-
+    if (!selectedCabecera) return;
     axios
       .get(
         `${process.env.REACT_APP_API_URL}Consolidar/ObtenerConteosConsolidado?idCabecera=${selectedCabecera}`,
@@ -60,7 +59,8 @@ function ConsolidarMecPOF() {
         }
       )
       .then((response) => {
-        setDataTableData(response.data?.datos || []);
+        const data = Array.isArray(response.data) ? response.data : [response.data];
+        setDataTableData(data);
       })
       .catch((error) => {
         setErrorAlert({
@@ -115,7 +115,7 @@ function ConsolidarMecPOF() {
             </FormControl>
           </Grid>
         </Grid>
-        {dataTableData.length > 0 && (
+        {dataTableData.length > 0 ? (
           <MDBox my={3}>
             <Card>
               <DataTable
@@ -126,16 +126,24 @@ function ConsolidarMecPOF() {
                     { Header: "Consolidado N", accessor: "countConsolidadoN" },
                     {
                       Header: "Acción",
-                      accessor: "edit",
-                      Cell: ({ row }) => (
-                        <MDButton
-                          variant="gradient"
-                          color="info"
-                          onClick={() => console.log("Más Info:", row.original)}
-                        >
-                          Más Info
-                        </MDButton>
-                      ),
+                      accessor: "accion", // Aquí agregas una columna para el botón
+                      Cell: ({ row }) => {
+                        // Verificas si countConsolidadoN > 0 en esa fila
+                        const countConsolidadoN = row.original.countConsolidadoN;
+                        if (countConsolidadoN > 0) {
+                          return (
+                            <MDButton
+                              size="small"
+                              color="info"
+                              variant="gradient"
+                              onClick={() => handleButtonClick(row.original)}
+                            >
+                              Consilidar
+                            </MDButton>
+                          );
+                        }
+                        return null; // Si no cumple la condición, no muestra nada
+                      },
                     },
                   ],
                   rows: dataTableData,
@@ -146,6 +154,8 @@ function ConsolidarMecPOF() {
               />
             </Card>
           </MDBox>
+        ) : (
+          <p>No hay datos disponibles para mostrar</p>
         )}
       </DashboardLayout>
     </>
@@ -153,7 +163,7 @@ function ConsolidarMecPOF() {
 }
 
 ConsolidarMecPOF.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
