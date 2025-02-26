@@ -219,18 +219,18 @@ function ConsolidarMecPOF() {
             </FormControl>
           </Grid>
         </Grid>
-        {dataTableData.length > 0 ? (
+        {selectedCabecera && dataTableData.length > 0 ? (
           <MDBox my={3}>
             <Card>
               <DataTable
                 table={{
                   columns: [
-                    { Header: "ID Establecimiento", accessor: "nroEstablecimiento" }, // Mostrar nroEstablecimiento
+                    { Header: "ID Establecimiento", accessor: "nroEstablecimiento" },
                     { Header: "Consolidado S", accessor: "countConsolidadoS" },
                     { Header: "Consolidado N", accessor: "countConsolidadoN" },
                     {
                       Header: "Acción",
-                      accessor: "accion", // Aquí agregas una columna para el botón
+                      accessor: "accion",
                       Cell: ({ row }) => {
                         const countConsolidadoN = row.original.countConsolidadoN;
                         if (countConsolidadoN > 0) {
@@ -258,9 +258,10 @@ function ConsolidarMecPOF() {
             </Card>
           </MDBox>
         ) : (
-          <p>No hay datos disponibles para mostrar</p>
+          selectedCabecera &&
+          dataTableData.length === 0 && <p>No hay datos disponibles para mostrar</p>
         )}
-        {allCountsZero && (
+        {selectedCabecera && allCountsZero && (
           <MDBox my={3} display="flex" justifyContent="center">
             <MDButton size="small" color="info" variant="gradient" onClick={handleChangeStatus}>
               Cambiar Estado
@@ -279,11 +280,17 @@ function ConsolidarMecPOF() {
               <DataTable
                 table={{
                   columns: [
-                    { Header: "DNI", accessor: "persona.Apellido" },
+                    { Header: "DNI", accessor: "personaDNI" },
+                    {
+                      Header: "Nombre Completo",
+                      accessor: "nombreCompleto",
+                      Cell: ({ row }) =>
+                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                    },
                     { Header: "Secuencia", accessor: "secuencia" },
-                    { Header: "Año", accessor: "anioAfeccion" },
-                    { Header: "Mes", accessor: "mes" },
-                    { Header: "CodLiq", accessor: "codLiq" },
+                    { Header: "Año Afec", accessor: "mecanizadaAnioAfeccion" },
+                    { Header: "Mes Afec", accessor: "mecanizadaMesAfeccion" },
+                    { Header: "CodLiq", accessor: "mecanizadaCodigoLiquidacion" },
                     {
                       Header: "Acción",
                       accessor: "accion",
