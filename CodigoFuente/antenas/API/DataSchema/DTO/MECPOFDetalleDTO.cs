@@ -24,5 +24,6 @@ namespace API.DataSchema.DTO
         public string MecanizadaAnioAfeccion { get; set; }
         public string MecanizadaMesAfeccion { get; set; }
         public string MecanizadaCodigoLiquidacion { get; set; }
+        public string MecanizadaOrigen { get; set; }
     }
 }
