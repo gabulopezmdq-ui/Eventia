@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -96,22 +97,15 @@ namespace API.Controllers
         [HttpGet("ObtenerRegistrosPOFNoMecanizados")]
         public async Task<IActionResult> ObtenerRegistrosPOFNoMecanizados(int idCabecera, int idEstablecimiento)
         {
-            try
-            {
-                if (idCabecera <= 0)
-                    return BadRequest("El ID de la cabecera no puede ser menor o igual a cero.");
-                if (idEstablecimiento <= 0)
-                    return BadRequest("El ID del establecimiento no puede ser menor o igual a cero.");
+            if (idCabecera <= 0 || idEstablecimiento <= 0)
+                return BadRequest("IDs inválidos.");
 
-                var registros = await _consolidarMecanizadaService.ObtenerRegistrosPOFNoMecanizadosAsync(idCabecera, idEstablecimiento);
+            var registros = await _consolidarMecanizadaService.ObtenerRegistrosPOFNoMecanizadosAsync(idCabecera, idEstablecimiento);
 
-                return Ok(registros);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Error = "Ocurrió un error interno en el servidor.", Detalles = ex.Message });
-            }
+            return registros.Any() ? Ok(registros) : NotFound("No se encontraron registros.");
         }
+
+
         [HttpGet("ValidarExistenciaAntiguedad")]
         public async Task<IActionResult> ValidarExistenciaAntiguedad(int idPOF)
         {
