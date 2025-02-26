@@ -226,5 +226,31 @@ namespace API.Services
                 throw;
             }
         }
+
+        public async Task<bool> EliminarRegistroMECMecanizadaAsync(int idMecanizada)
+        {
+
+            var mecanizada = await _context.MEC_Mecanizadas.FirstOrDefaultAsync(m => m.IdMecanizada == idMecanizada);
+
+            if (mecanizada == null)
+            {
+                return false;
+            }    
+
+            _context.MEC_Mecanizadas.Remove(mecanizada);
+            await _context.SaveChangesAsync();
+            await ActualizarIndicesAsync();
+
+            return true;
+        }
+
+        private async Task ActualizarIndicesAsync()
+        {
+
+            // Usamos ExecuteSqlRawAsync para ejecutar el comando SQL directamente
+            await _context.Database.ExecuteSqlRawAsync(@"
+                  REINDEX TABLE ""MEC_Mecanizadas"";");
+        }
+
     }
 }

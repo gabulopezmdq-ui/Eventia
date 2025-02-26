@@ -18,5 +18,7 @@ namespace API.Services.ImportacionMecanizada
         Task<bool> ValidarExistenciaAntiguedadAsync(int idPOF);
 
         Task<bool> ProcesarAltaMecanizadaAsync(AltaMecanizadaDTO datos);
+
+        Task<bool> EliminarRegistroMECMecanizadaAsync(int idMecanizada);
     }
 }
