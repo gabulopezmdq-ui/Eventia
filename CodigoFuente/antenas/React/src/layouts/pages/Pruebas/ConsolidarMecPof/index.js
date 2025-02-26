@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
+import Icon from "@mui/material/Icon";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
@@ -23,6 +24,7 @@ function ConsolidarMecPOF() {
   const [selectedCabecera, setSelectedCabecera] = useState("");
   const [dataTableData, setDataTableData] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
+  const [mecData, setMecData] = useState([]);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -105,8 +107,33 @@ function ConsolidarMecPOF() {
 
   const displayValue = (value) => (value ? value : "N/A");
 
+  //Boton de consolidar tabla MEC
   const handleButtonClick = (row) => {
-    console.log("Consolidar", row);
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerRegistrosPOFNoMecanizados?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setMecData(response.data || []);
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al obtener datos de MED.", type: "error" });
+      });
+  };
+  // Boton delete de la tabla MEC
+  const handleDelete = (id) => {
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}MED/Delete?id=${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        setMecData((prevData) => prevData.filter((item) => item.id !== id));
+        setErrorAlert({ show: true, message: "Registro eliminado.", type: "success" });
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al eliminar registro.", type: "error" });
+      });
   };
 
   const handleChangeStatus = () => {
@@ -238,6 +265,47 @@ function ConsolidarMecPOF() {
             <MDButton size="small" color="info" variant="gradient" onClick={handleChangeStatus}>
               Cambiar Estado
             </MDButton>
+          </MDBox>
+        )}
+        {mecData.length > 0 && (
+          <MDBox my={3}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                MEC
+              </MDTypography>
+            </MDAlert>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "DNI", accessor: "persona.Apellido" },
+                    { Header: "Secuencia", accessor: "secuencia" },
+                    { Header: "Año", accessor: "anioAfeccion" },
+                    { Header: "Mes", accessor: "mes" },
+                    { Header: "CodLiq", accessor: "codLiq" },
+                    {
+                      Header: "Acción",
+                      accessor: "accion",
+                      Cell: ({ row }) =>
+                        row.original.tipoOrigen === "POF" && (
+                          <MDButton
+                            size="small"
+                            color="error"
+                            variant="gradient"
+                            onClick={() => handleDelete(row.original.id)}
+                          >
+                            Eliminar
+                          </MDButton>
+                        ),
+                    },
+                  ],
+                  rows: mecData,
+                }}
+                entriesPerPage={false}
+                canSearch
+              />
+            </Card>
           </MDBox>
         )}
       </DashboardLayout>
