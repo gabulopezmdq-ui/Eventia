@@ -139,5 +139,21 @@ namespace API.Controllers
             }
         }
 
+        [HttpDelete("EliminarMEC")]
+
+        public async Task<IActionResult> EliminarMecanizada(int idMecanizada)
+        {
+            var resultado = await _consolidarMecanizadaService.EliminarRegistroMECMecanizadaAsync(idMecanizada);
+
+            if (resultado)
+            {
+                return Ok(new { message = "Registro eliminado" });
+            }
+            else
+            {
+                return NotFound(new { message = "Error al intentar eliminar el registro" });
+            }
+        }
+
     }
 }
