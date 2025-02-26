@@ -80,23 +80,20 @@ namespace API.Services
             if (idCabecera <= 0 || idEstablecimiento <= 0)
                 throw new ArgumentException("Los IDs no pueden ser menores o iguales a cero.");
 
-            // Obtener los IdPOF que ya están en MEC_Mecanizadas
-            var idsMecanizados = await _context.MEC_Mecanizadas
-                .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
-                .Select(m => m.IdPOF)
+            var registrosNoMecanizados = await _context.MEC_POF
+                .Include(p => p.Establecimiento)
+                .Include(p => p.Persona)
+                .Include(p => p.Categoria)
+                .Include(p => p.CarRevista)
+                .Include(p => p.TipoFuncion)
+                .Where(p => p.IdEstablecimiento == idEstablecimiento
+                    && !p.Mecanizada.Any(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento))
                 .ToListAsync();
 
-            Console.WriteLine($"IDs en MEC_Mecanizadas: {string.Join(", ", idsMecanizados)}");
-
-            // Filtrar MEC_POF excluyendo los IdPOF ya mecanizados
-            var registros = await _context.MEC_POF
-                .Where(p => p.IdEstablecimiento == idEstablecimiento && !idsMecanizados.Contains(p.IdPOF))
-                .ToListAsync();
-
-            Console.WriteLine($"Registros finales obtenidos: {registros.Count}");
-
-            return registros;
+            return registrosNoMecanizados;
         }
+
+
 
         // Validar existencia de antigüedad
         public async Task<bool> ValidarExistenciaAntiguedadAsync(int idPOF)
