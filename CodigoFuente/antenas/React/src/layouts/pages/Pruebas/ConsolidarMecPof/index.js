@@ -280,13 +280,13 @@ function ConsolidarMecPOF() {
               <DataTable
                 table={{
                   columns: [
-                    { Header: "DNI", accessor: "personaDNI" },
                     {
                       Header: "Nombre Completo",
                       accessor: "nombreCompleto",
                       Cell: ({ row }) =>
                         `${row.original.personaNombre} ${row.original.personaApellido}`,
                     },
+                    { Header: "DNI", accessor: "personaDNI" },
                     { Header: "Secuencia", accessor: "secuencia" },
                     { Header: "Año Afec", accessor: "mecanizadaAnioAfeccion" },
                     { Header: "Mes Afec", accessor: "mecanizadaMesAfeccion" },
@@ -294,17 +294,17 @@ function ConsolidarMecPOF() {
                     {
                       Header: "Acción",
                       accessor: "accion",
-                      Cell: ({ row }) =>
-                        row.original.tipoOrigen === "POF" && (
-                          <MDButton
-                            size="small"
-                            color="error"
-                            variant="gradient"
-                            onClick={() => handleDelete(row.original.id)}
-                          >
-                            Eliminar
-                          </MDButton>
-                        ),
+                      Cell: ({ row }) => (
+                        <MDButton
+                          size="small"
+                          color="error"
+                          variant="gradient"
+                          onClick={() => handleDelete(row.original.id)}
+                          disabled={row.original.mecanizadaOrigen !== "POF"}
+                        >
+                          Eliminar
+                        </MDButton>
+                      ),
                     },
                   ],
                   rows: mecData,
