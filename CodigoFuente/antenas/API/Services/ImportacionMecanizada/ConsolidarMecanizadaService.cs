@@ -77,23 +77,33 @@ namespace API.Services
         // Obtener registros POF que no están mecanizados
         public async Task<List<MEC_POF>> ObtenerRegistrosPOFNoMecanizadosAsync(int idCabecera, int idEstablecimiento)
         {
-            if (idCabecera <= 0 || idEstablecimiento <= 0)
-                throw new ArgumentException("Los IDs no pueden ser menores o iguales a cero.");
-
-            var registrosNoMecanizados = await _context.MEC_POF
-                .Include(p => p.Establecimiento)
-                .Include(p => p.Persona)
-                .Include(p => p.Categoria)
-                .Include(p => p.CarRevista)
-                .Include(p => p.TipoFuncion)
-                .Where(p => p.IdEstablecimiento == idEstablecimiento
-                    && !p.Mecanizada.Any(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento))
+            // Obtenemos los IdPOF que ya existen en la tabla MEC_Mecanizadas para el IdEstablecimiento y IdCabecera seleccionados
+            var mecanizadasIds = await _context.MEC_Mecanizadas
+                .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
+                .Select(m => m.IdPOF)
                 .ToListAsync();
 
-            return registrosNoMecanizados;
+            // Filtramos los registros de MEC_POF para el IdEstablecimiento seleccionado,
+            // Excluyendo aquellos cuyos IdPOF están en la lista de IdPOF de MEC_Mecanizadas
+            var result = await _context.MEC_POF
+                .Where(p => p.IdEstablecimiento == idEstablecimiento && !mecanizadasIds.Contains(p.IdPOF))
+                .Select(p => new MEC_POF
+                {
+                    IdPOF = p.IdPOF,
+                    IdEstablecimiento = p.IdEstablecimiento,
+                    IdPersona = p.IdPersona,
+                    IdFuncion = p.IdFuncion,
+                    IdCarRevista = p.IdCarRevista,
+                    Secuencia = p.Secuencia,
+                    Barra = p.Barra,
+                    IdCategoria = p.IdCategoria,
+                    TipoCargo = p.TipoCargo,
+                    Vigente = p.Vigente
+                })
+                .ToListAsync();
+
+            return result;
         }
-
-
 
         // Validar existencia de antigüedad
         public async Task<bool> ValidarExistenciaAntiguedadAsync(int idPOF)
