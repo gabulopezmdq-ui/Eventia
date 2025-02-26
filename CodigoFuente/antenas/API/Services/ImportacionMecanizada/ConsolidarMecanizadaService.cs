@@ -75,7 +75,7 @@ namespace API.Services
         }
 
         // Obtener registros POF que no están mecanizados
-        public async Task<List<MEC_POF>> ObtenerRegistrosPOFNoMecanizadosAsync(int idCabecera, int idEstablecimiento)
+        public async Task<List<MECPOFDetalleDTO>> ObtenerRegistrosPOFNoMecanizadosAsync(int idCabecera, int idEstablecimiento)
         {
             // Obtenemos los IdPOF que ya existen en la tabla MEC_Mecanizadas para el IdEstablecimiento y IdCabecera seleccionados
             var mecanizadasIds = await _context.MEC_Mecanizadas
@@ -83,27 +83,35 @@ namespace API.Services
                 .Select(m => m.IdPOF)
                 .ToListAsync();
 
-            // Filtramos los registros de MEC_POF para el IdEstablecimiento seleccionado,
-            // Excluyendo aquellos cuyos IdPOF están en la lista de IdPOF de MEC_Mecanizadas
+            // Realizamos la consulta incluyendo la información adicional de las entidades relacionadas
             var result = await _context.MEC_POF
                 .Where(p => p.IdEstablecimiento == idEstablecimiento && !mecanizadasIds.Contains(p.IdPOF))
-                .Select(p => new MEC_POF
+                .Select(p => new MECPOFDetalleDTO
                 {
                     IdPOF = p.IdPOF,
                     IdEstablecimiento = p.IdEstablecimiento,
                     IdPersona = p.IdPersona,
-                    IdFuncion = p.IdFuncion,
-                    IdCarRevista = p.IdCarRevista,
                     Secuencia = p.Secuencia,
                     Barra = p.Barra,
-                    IdCategoria = p.IdCategoria,
                     TipoCargo = p.TipoCargo,
-                    Vigente = p.Vigente
+                    Vigente = p.Vigente,
+
+                    // Incluir la información de la persona relacionada (MEC_Personas)
+                    PersonaDNI = p.Persona.DNI,
+                    PersonaApellido = p.Persona.Apellido,
+                    PersonaNombre = p.Persona.Nombre,
+
+                    // Incluir la información de MEC_Mecanizadas (si está relacionada con el POF)
+                    MecanizadaAnioAfeccion = p.Mecanizada.Select(m => m.AnioMesAfectacion).FirstOrDefault(),
+                    MecanizadaMesAfeccion = p.Mecanizada.Select(m => m.MesLiquidacion).FirstOrDefault(),
+                    MecanizadaCodigoLiquidacion = p.Mecanizada.Select(m => m.CodigoLiquidacion).FirstOrDefault()
                 })
                 .ToListAsync();
 
             return result;
         }
+
+
 
         // Validar existencia de antigüedad
         public async Task<bool> ValidarExistenciaAntiguedadAsync(int idPOF)
