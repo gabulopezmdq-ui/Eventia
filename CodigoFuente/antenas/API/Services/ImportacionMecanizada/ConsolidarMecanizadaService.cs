@@ -104,7 +104,8 @@ namespace API.Services
                     // Incluir la información de MEC_Mecanizadas (si está relacionada con el POF)
                     MecanizadaAnioAfeccion = p.Mecanizada.Select(m => m.AnioMesAfectacion).FirstOrDefault(),
                     MecanizadaMesAfeccion = p.Mecanizada.Select(m => m.MesLiquidacion).FirstOrDefault(),
-                    MecanizadaCodigoLiquidacion = p.Mecanizada.Select(m => m.CodigoLiquidacion).FirstOrDefault()
+                    MecanizadaCodigoLiquidacion = p.Mecanizada.Select(m => m.CodigoLiquidacion).FirstOrDefault(),
+                    MecanizadaOrigen = p.Mecanizada.Select(m => m.Origen).FirstOrDefault()
                 })
                 .ToListAsync();
 
