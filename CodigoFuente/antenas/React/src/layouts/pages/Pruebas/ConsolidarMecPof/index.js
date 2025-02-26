@@ -1,89 +1,187 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-// @mui material components
 import Card from "@mui/material/Card";
 import { Link, useNavigate, useParams } from "react-router-dom";
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
+import Icon from "@mui/material/Icon";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
-// Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import DataTableConsolidar from "examples/Tables/DataTableConsolidar";
-import "../../Pruebas/pruebas.css";
-function ConsolidarMecPof() {
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import DataTable from "examples/Tables/DataTable";
+function ConsolidarMecPOF() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState();
-  const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
-  const [idCabeceras, setIdCabeceras] = useState([]);
+  const [cabeceras, setCabeceras] = useState([]);
+  const [selectedCabecera, setSelectedCabecera] = useState("");
+  const [dataTableData, setDataTableData] = useState([]);
+  const [establecimientos, setEstablecimientos] = useState([]);
+  const [mecData, setMecData] = useState([]);
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_API_URL + "POF/GetAll", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Envía el token en los headers
-        },
+      .get(`${process.env.REACT_APP_API_URL}CabeceraLiquidacion/getall`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        setCabeceras(response.data ? response.data.filter((item) => item.estado === "R") : []);
+      })
       .catch((error) => {
+        let errorMessage = "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.";
+        let errorType = "error";
+
         if (error.response) {
           const statusCode = error.response.status;
-          let errorMessage = "";
-          let errorType = "error";
           if (statusCode >= 400 && statusCode < 500) {
             errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
           } else if (statusCode >= 500) {
             errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
           }
-          setErrorAlert({ show: true, message: errorMessage, type: errorType });
-        } else {
-          setErrorAlert({
-            show: true,
-            message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-            type: "error",
-          });
         }
-      });
-  }, []);
-  useEffect(() => {
-    axios
-      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        // Mapea los datos para crear los valores concatenados
-        const formattedCabeceras = response.data.map((item) => ({
-          id: item.idCabecera, // Sigue usando idCabecera como identificador único
-          displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`, // Concatenar los valores
-        }));
-        setIdCabeceras(formattedCabeceras);
-      })
-      .catch(() => {
-        setErrorAlert({ show: true, message: "Error al cargar los idCabecera.", type: "error" });
+
+        setErrorAlert({ show: true, message: errorMessage, type: errorType });
       });
   }, [token]);
 
-  const handleNuevoTipo = () => {
-    navigate("/ConsolidarMecPofFE/Nuevo");
+  useEffect(() => {
+    axios
+      .get(`${process.env.REACT_APP_API_URL}Establecimientos/GetAll`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setEstablecimientos(response.data || []);
+      })
+      .catch((error) => {
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los establecimientos.",
+          type: "error",
+        });
+      });
+  }, [token]);
+
+  useEffect(() => {
+    if (!selectedCabecera) return;
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerConteosConsolidado?idCabecera=${selectedCabecera}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        const data = Array.isArray(response.data.datos)
+          ? response.data.datos
+          : [response.data.datos];
+        const enrichedData = data.map((item) => {
+          const establecimiento = establecimientos.find(
+            (e) => e.idEstablecimiento === item.idEstablecimiento
+          );
+          return {
+            ...item,
+            nroEstablecimiento: establecimiento ? establecimiento.nroEstablecimiento : "N/A",
+          };
+        });
+
+        setDataTableData(enrichedData);
+      })
+      .catch((error) => {
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los conteos consolidados.",
+          type: "error",
+        });
+      });
+  }, [selectedCabecera, token, establecimientos]);
+
+  const allCountsZero = dataTableData.every((row) => row.countConsolidadoN === 0);
+
+  const displayValue = (value) => (value ? value : "N/A");
+
+  //Boton de consolidar tabla MEC
+  const handleButtonClick = (row) => {
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerRegistrosPOFNoMecanizados?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setMecData(response.data || []);
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al obtener datos de MED.", type: "error" });
+      });
+  };
+  // Boton delete de la tabla MEC
+  const handleDelete = (id) => {
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}MED/Delete?id=${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        setMecData((prevData) => prevData.filter((item) => item.id !== id));
+        setErrorAlert({ show: true, message: "Registro eliminado.", type: "success" });
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al eliminar registro.", type: "error" });
+      });
   };
 
-  //Funcion para que cuando el campo viene vacio muestre N/A
-  const displayValue = (value) => (value ? value : "N/A");
+  const handleChangeStatus = () => {
+    if (!selectedCabecera) return;
+    const today = new Date();
+    const formattedDate =
+      today.getFullYear() +
+      "/" +
+      (today.getMonth() + 1).toString().padStart(2, "0") +
+      "/" +
+      today.getDate().toString().padStart(2, "0");
+    axios
+      .put(
+        `${process.env.REACT_APP_API_URL}Consolidar/HabilitarCambiarEstadoCabecera`,
+        {
+          idCabecera: selectedCabecera,
+          fechaCambioEstado: formattedDate,
+          estado: "S",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then(() => {
+        setErrorAlert({
+          show: true,
+          message: "Estado cambiado exitosamente.",
+          type: "success",
+        });
+      })
+      .catch((error) => {
+        let errorMessage = "Ocurrió un error al cambiar el estado.";
+        if (error.response) {
+          const statusCode = error.response.status;
+          if (statusCode >= 400 && statusCode < 500) {
+            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
+          } else if (statusCode >= 500) {
+            errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
+          }
+        }
+        setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      });
+  };
 
   return (
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-          Agregar
-        </MDButton>
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -97,82 +195,136 @@ function ConsolidarMecPof() {
             </Grid>
           </Grid>
         )}
-        <MDBox my={3}>
-          <Card>
-            <Grid container spacing={2} sx={{ m: 3 }}>
-              <Grid item xs={6}>
-                <FormControl fullWidth>
-                  <InputLabel
-                    id="filter-label"
-                    sx={{
-                      "&.Mui-focused": { color: "#1A73E8" }, // Estilo al enfocar
-                    }}
-                  >
-                    Seleccionar Cabecera
-                  </InputLabel>
-                  <Select
-                    labelId="filter-label"
-                    value={selectedIdCabecera}
-                    onChange={(e) => setSelectedIdCabecera(e.target.value)}
-                    sx={{
-                      height: "40px",
-                      "& .MuiSelect-select": {
-                        height: "40px",
-                        padding: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#000", // Color del borde al pasar el mouse
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#000", // Color del borde al enfocar
-                      },
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Seleccionar Cabecera</em>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth>
+              <InputLabel id="cabecera-select-label">Cabecera</InputLabel>
+              <Select
+                labelId="cabecera-select-label"
+                value={selectedCabecera}
+                onChange={(e) => setSelectedCabecera(e.target.value)}
+                label="Cabecera"
+                style={{ height: "2.5rem", backgroundColor: "white" }}
+              >
+                {cabeceras.length > 0 ? (
+                  cabeceras.map((cabecera) => (
+                    <MenuItem key={cabecera.idCabecera} value={cabecera.idCabecera}>
+                      {cabecera.leyendaTipoLiqReporte}
                     </MenuItem>
-                    {idCabeceras.map((item, index) => (
-                      <MenuItem key={index} value={item.id}>
-                        {item.displayText}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={3}></Grid>
-            </Grid>
-            <DataTableConsolidar
-              table={{
-                columns: [
-                  { Header: "idTMP Mecanizada", accessor: "idTMPMecanizada" },
-                  {
-                    Header: "fecha Importacion",
-                    accessor: "fechaImportacion",
-                    Cell: ({ value }) =>
-                      value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
-                  },
-                  { Header: "mes Liquidacion", accessor: "mesLiquidacion" },
-                ],
-                rows: dataTableData,
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          </Card>
-        </MDBox>
+                  ))
+                ) : (
+                  <MenuItem disabled>No hay opciones disponibles</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+        {selectedCabecera && dataTableData.length > 0 ? (
+          <MDBox my={3}>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "ID Establecimiento", accessor: "nroEstablecimiento" },
+                    { Header: "Consolidado S", accessor: "countConsolidadoS" },
+                    { Header: "Consolidado N", accessor: "countConsolidadoN" },
+                    {
+                      Header: "Acción",
+                      accessor: "accion",
+                      Cell: ({ row }) => {
+                        const countConsolidadoN = row.original.countConsolidadoN;
+                        if (countConsolidadoN > 0) {
+                          return (
+                            <MDButton
+                              size="small"
+                              color="info"
+                              variant="gradient"
+                              onClick={() => handleButtonClick(row.original)}
+                            >
+                              Consolidar
+                            </MDButton>
+                          );
+                        }
+                        return null;
+                      },
+                    },
+                  ],
+                  rows: dataTableData,
+                }}
+                entriesPerPage={false}
+                canSearch
+                show
+              />
+            </Card>
+          </MDBox>
+        ) : (
+          selectedCabecera &&
+          dataTableData.length === 0 && <p>No hay datos disponibles para mostrar</p>
+        )}
+        {selectedCabecera && allCountsZero && (
+          <MDBox my={3} display="flex" justifyContent="center">
+            <MDButton size="small" color="info" variant="gradient" onClick={handleChangeStatus}>
+              Cambiar Estado
+            </MDButton>
+          </MDBox>
+        )}
+        {mecData.length > 0 && (
+          <MDBox my={3}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                MEC
+              </MDTypography>
+            </MDAlert>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    {
+                      Header: "Nombre Completo",
+                      accessor: "nombreCompleto",
+                      Cell: ({ row }) =>
+                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                    },
+                    { Header: "DNI", accessor: "personaDNI" },
+                    { Header: "Secuencia", accessor: "secuencia" },
+                    { Header: "Año Afec", accessor: "mecanizadaAnioAfeccion" },
+                    { Header: "Mes Afec", accessor: "mecanizadaMesAfeccion" },
+                    { Header: "CodLiq", accessor: "mecanizadaCodigoLiquidacion" },
+                    {
+                      Header: "Acción",
+                      accessor: "accion",
+                      Cell: ({ row }) => (
+                        <MDButton
+                          size="small"
+                          color="error"
+                          variant="gradient"
+                          onClick={() => handleDelete(row.original.id)}
+                          disabled={row.original.mecanizadaOrigen !== "POF"}
+                        >
+                          Eliminar
+                        </MDButton>
+                      ),
+                    },
+                  ],
+                  rows: mecData,
+                }}
+                entriesPerPage={false}
+                canSearch
+              />
+            </Card>
+          </MDBox>
+        )}
       </DashboardLayout>
     </>
   );
 }
 
-ConsolidarMecPof.propTypes = {
-  row: PropTypes.object, // Add this line for 'row' prop
+ConsolidarMecPOF.propTypes = {
+  row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default ConsolidarMecPof;
+export default ConsolidarMecPOF;
