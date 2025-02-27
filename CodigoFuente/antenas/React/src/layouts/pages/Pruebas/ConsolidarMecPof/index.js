@@ -16,6 +16,7 @@ import MenuItem from "@mui/material/MenuItem";
 import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
+import SupleAPopup from "./SupleAPopUp";
 function ConsolidarMecPOF() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -27,6 +28,9 @@ function ConsolidarMecPOF() {
   const [mecData, setMecData] = useState([]);
   const [docentesData, setDocentesData] = useState([]);
   const [suplentesData, setSuplentesData] = useState([]);
+  const [openPopup, setOpenPopup] = useState(false);
+  const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
+  const idEstablecimiento = 123;
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -120,7 +124,7 @@ function ConsolidarMecPOF() {
         setMecData(response.data || []);
       })
       .catch(() => {
-        setErrorAlert({ show: true, message: "Error al obtener datos de MED.", type: "error" });
+        setErrorAlert({ show: true, message: "Error al obtener datos de MEC.", type: "error" });
       });
     /*axios
       .get(
@@ -232,6 +236,14 @@ function ConsolidarMecPOF() {
       });
   };
 
+  const handlePopUP = (suplente) => {
+    setSuplenteSeleccionado(suplente);
+    setOpenPopup(true);
+  };
+  const handleSubmit = (data) => {
+    console.log("Enviando datos al backend:", data);
+    // Aquí haces la petición al backend con fetch o axios
+  };
   return (
     <>
       <DashboardLayout>
@@ -449,7 +461,7 @@ function ConsolidarMecPOF() {
                           size="small"
                           color="warning"
                           variant="gradient"
-                          onClick={() => handleButtonClick(row.original)}
+                          onClick={() => handlePopUP(row.original)}
                         >
                           Suple A
                         </MDButton>
@@ -465,6 +477,13 @@ function ConsolidarMecPOF() {
             </Card>
           </MDBox>
         )}
+        <SupleAPopup
+          open={openPopup}
+          handleClose={() => setOpenPopup(false)}
+          suplente={suplenteSeleccionado}
+          idEstablecimiento={idEstablecimiento}
+          onSubmit={handleSubmit}
+        />
       </DashboardLayout>
     </>
   );
