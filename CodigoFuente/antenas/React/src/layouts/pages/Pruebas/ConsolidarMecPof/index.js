@@ -16,6 +16,7 @@ import MenuItem from "@mui/material/MenuItem";
 import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
+import SupleAPopup from "./SupleAPopUp";
 function ConsolidarMecPOF() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -25,6 +26,11 @@ function ConsolidarMecPOF() {
   const [dataTableData, setDataTableData] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
   const [mecData, setMecData] = useState([]);
+  const [docentesData, setDocentesData] = useState([]);
+  const [suplentesData, setSuplentesData] = useState([]);
+  const [openPopup, setOpenPopup] = useState(false);
+  const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
+  const idEstablecimiento = 123;
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -118,8 +124,60 @@ function ConsolidarMecPOF() {
         setMecData(response.data || []);
       })
       .catch(() => {
-        setErrorAlert({ show: true, message: "Error al obtener datos de MED.", type: "error" });
+        setErrorAlert({ show: true, message: "Error al obtener datos de MEC.", type: "error" });
       });
+    /*axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/DocentesPOF?idCabecera=${selectedCabecera}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setDocentesData(response.data || []);
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al obtener los datos de Docentes.", type: "error" });
+      });*/
+    const simulatedDocentes = [
+      {
+        id: 1,
+        personaNombre: "Robertito",
+        personaApellido: "Funes",
+        documento: "30123456",
+        secuencia: "212",
+        funcion: "prueba",
+        carRevista: "S",
+        cargo: "MD",
+        horas: "10",
+        sinHaberes: true,
+        noSubvencionadas: false,
+      },
+    ];
+    setDocentesData(simulatedDocentes);
+
+    /*axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setSuplentesData(response.data || []);
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al obtener los datos de Docentes Suplentes.", type: "error" });
+      });*/
+
+    const simulatedSuplentes = [
+      {
+        id: 1,
+        personaNombre: "María",
+        personaApellido: "Garcia",
+        documento: "34123456",
+        suplea: "17132175/008 - PEPE OCHOA",
+        desde: "15/02/2024",
+        hasta: "30/10/2024",
+      },
+    ];
+    setSuplentesData(simulatedSuplentes);
   };
   // Boton delete de la tabla MEC
   const handleDelete = (id) => {
@@ -178,6 +236,14 @@ function ConsolidarMecPOF() {
       });
   };
 
+  const handlePopUP = (suplente) => {
+    setSuplenteSeleccionado(suplente);
+    setOpenPopup(true);
+  };
+  const handleSubmit = (data) => {
+    console.log("Enviando datos al backend:", data);
+    // Aquí haces la petición al backend con fetch o axios
+  };
   return (
     <>
       <DashboardLayout>
@@ -315,6 +381,109 @@ function ConsolidarMecPOF() {
             </Card>
           </MDBox>
         )}
+        {docentesData.length > 0 && (
+          <MDBox my={3}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                Docentes POF sin haberes ni subvenciones
+              </MDTypography>
+            </MDAlert>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "Documento", accessor: "documento" },
+                    {
+                      Header: "Nombre Completo",
+                      accessor: "nombreCompleto",
+                      Cell: ({ row }) =>
+                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                    },
+                    { Header: "Secuencia", accessor: "secuencia" },
+                    { Header: "Función", accessor: "funcion" },
+                    { Header: "Car. Revista", accessor: "carRevista" },
+                    { Header: "Cargo", accessor: "cargo" },
+                    { Header: "Horas", accessor: "horas" },
+                    { Header: "Sin Haberes", accessor: "sinHaberes" },
+                    { Header: "No Subvencionadas", accessor: "noSubvencionadas" },
+                    {
+                      Header: "Acción",
+                      accessor: "accion",
+                      Cell: ({ row }) => (
+                        <MDButton
+                          size="small"
+                          color="success"
+                          variant="gradient"
+                          onClick={() => handleButtonClick(row.original)}
+                        >
+                          Agregar MEC
+                        </MDButton>
+                      ),
+                    },
+                  ],
+                  rows: docentesData,
+                }}
+                entriesPerPage={false}
+                canSearch
+                show
+              />
+            </Card>
+          </MDBox>
+        )}
+        {suplentesData.length > 0 && (
+          <MDBox my={3}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                Docentes Suplentes
+              </MDTypography>
+            </MDAlert>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "Documento", accessor: "documento" },
+                    {
+                      Header: "Nombre Completo",
+                      accessor: "nombreCompleto",
+                      Cell: ({ row }) =>
+                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                    },
+                    { Header: "Suple A", accessor: "suplea" },
+                    { Header: "Desde", accessor: "desde" },
+                    { Header: "Hasta", accessor: "hasta" },
+                    {
+                      Header: "Acción",
+                      accessor: "accion",
+                      Cell: ({ row }) => (
+                        <MDButton
+                          size="small"
+                          color="warning"
+                          variant="gradient"
+                          onClick={() => handlePopUP(row.original)}
+                        >
+                          Suple A
+                        </MDButton>
+                      ),
+                    },
+                  ],
+                  rows: suplentesData,
+                }}
+                entriesPerPage={false}
+                canSearch
+                show
+              />
+            </Card>
+          </MDBox>
+        )}
+        <SupleAPopup
+          open={openPopup}
+          handleClose={() => setOpenPopup(false)}
+          suplente={suplenteSeleccionado}
+          idEstablecimiento={idEstablecimiento}
+          onSubmit={handleSubmit}
+        />
       </DashboardLayout>
     </>
   );

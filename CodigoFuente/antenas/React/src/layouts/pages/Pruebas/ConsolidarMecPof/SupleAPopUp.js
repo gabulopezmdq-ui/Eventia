@@ -1,0 +1,144 @@
+import React from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import PropTypes from "prop-types";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  CircularProgress,
+  MenuItem,
+} from "@mui/material";
+
+const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit }) => {
+  const [docentes, setDocentes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedDocente, setSelectedDocente] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
+
+  useEffect(() => {
+    if (open && idEstablecimiento) {
+      setLoading(true);
+      axios
+        .get(`docentesPOF?idEstablecimiento=${idEstablecimiento}`)
+        .then((response) => {
+          setDocentes(response.data);
+        })
+        .catch((error) => {
+          console.error("Error obteniendo docentes:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [open, idEstablecimiento]);
+
+  const handleEnviar = () => {
+    const data = {
+      suplenteId: suplente.id,
+      docenteId: selectedDocente,
+      desde: fechaDesde,
+      hasta: fechaHasta,
+    };
+    onSubmit(data); // Enviar datos al backend
+    handleClose(); // Cerrar el popup
+  };
+
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Asignar Suplente</DialogTitle>
+      <DialogContent>
+        <TextField
+          label="Nombre del Suplente"
+          fullWidth
+          margin="dense"
+          value={suplente ? `${suplente.personaNombre} ${suplente.personaApellido}` : ""}
+          disabled
+        />
+        <TextField
+          label="Documento"
+          fullWidth
+          margin="dense"
+          value={suplente ? suplente.documento : ""}
+          disabled
+        />
+        <FormControl fullWidth>
+          <InputLabel>Suple A</InputLabel>
+          <Select
+            value={selectedDocente}
+            onChange={(e) => setSelectedDocente(e.target.value)}
+            disabled={loading}
+            label="Suple A"
+            style={{ height: "2.8rem", backgroundColor: "white" }}
+          >
+            {loading ? (
+              <MenuItem disabled>
+                <CircularProgress size={24} />
+              </MenuItem>
+            ) : (
+              docentes.map((docente) => (
+                <MenuItem key={docente.id} value={docente.id}>
+                  {docente.nombreCompleto}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+        <TextField
+          label="Fecha Desde"
+          type="date"
+          fullWidth
+          margin="dense"
+          value={fechaDesde}
+          onChange={(e) => setFechaDesde(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label="Fecha Hasta"
+          type="date"
+          fullWidth
+          margin="dense"
+          value={fechaHasta}
+          onChange={(e) => setFechaHasta(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} color="secondary">
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleEnviar}
+          color="primary"
+          variant="contained"
+          disabled={!selectedDocente}
+        >
+          Enviar
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+SupleAPopup.propTypes = {
+  open: PropTypes.bool.isRequired,
+  handleClose: PropTypes.func.isRequired,
+  suplente: PropTypes.shape({
+    id: PropTypes.number,
+    documento: PropTypes.string,
+    personaNombre: PropTypes.string,
+    personaApellido: PropTypes.string,
+  }),
+  idEstablecimiento: PropTypes.number.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+};
+
+export default SupleAPopup;
