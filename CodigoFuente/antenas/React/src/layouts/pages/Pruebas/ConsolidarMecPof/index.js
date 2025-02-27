@@ -25,6 +25,7 @@ function ConsolidarMecPOF() {
   const [dataTableData, setDataTableData] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
   const [mecData, setMecData] = useState([]);
+  const [docentesData, setDocentesData] = useState([]);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -102,6 +103,52 @@ function ConsolidarMecPOF() {
         });
       });
   }, [selectedCabecera, token, establecimientos]);
+
+  /*Docentes sin haberes 
+  useEffect(() => {
+    if (!selectedCabecera) return;
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/DocentesPOF?idCabecera=${selectedCabecera}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        const data = response.data || [];
+        setDocentesData(data);
+      })
+      .catch(() => {
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los datos de Docentes.",
+          type: "error",
+        });
+      });
+  }, [selectedCabecera, token]);*/
+
+  /* Docentes Suplentes
+    useEffect(() => {
+    if (!selectedCabecera) return;
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((response) => {
+        const data = response.data || [];
+        setDocentesData(data);
+      })
+      .catch(() => {
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los datos de Docentes.",
+          type: "error",
+        });
+      });
+  }, [selectedCabecera, token]);*/
 
   const allCountsZero = dataTableData.every((row) => row.countConsolidadoN === 0);
 
@@ -311,6 +358,102 @@ function ConsolidarMecPOF() {
                 }}
                 entriesPerPage={false}
                 canSearch
+              />
+            </Card>
+          </MDBox>
+        )}
+        {mecData.length > 0 && (
+          <MDBox my={3}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                Docentes POF sin haberes ni subvenciones
+              </MDTypography>
+            </MDAlert>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "Documento", accessor: "documento" },
+                    {
+                      Header: "Nombre Completo",
+                      accessor: "nombreCompleto",
+                      Cell: ({ row }) =>
+                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                    },
+                    { Header: "Secuencia", accessor: "secuencia" },
+                    { Header: "Función", accessor: "funcion" },
+                    { Header: "Car. Revista", accessor: "carRevista" },
+                    { Header: "Cargo", accessor: "cargo" },
+                    { Header: "Horas", accessor: "horas" },
+                    { Header: "Sin Haberes", accessor: "sinHaberes" },
+                    { Header: "No Subvencionadas", accessor: "noSubvencionadas" },
+                    {
+                      Header: "Acción",
+                      accessor: "accion",
+                      Cell: ({ row }) => (
+                        <MDButton
+                          size="small"
+                          color="info"
+                          variant="gradient"
+                          onClick={() => handleButtonClick(row.original)}
+                        >
+                          Agregar MEC
+                        </MDButton>
+                      ),
+                    },
+                  ],
+                  rows: docentesData,
+                }}
+                entriesPerPage={false}
+                canSearch
+                show
+              />
+            </Card>
+          </MDBox>
+        )}
+        {mecData.length > 0 && (
+          <MDBox my={3}>
+            <MDAlert className="custom-alert">
+              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+              <MDTypography ml={1} variant="button">
+                Docentes Suplentes
+              </MDTypography>
+            </MDAlert>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "Documento", accessor: "documento" },
+                    {
+                      Header: "Nombre Completo",
+                      accessor: "nombreCompleto",
+                      Cell: ({ row }) =>
+                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                    },
+                    { Header: "Suple A", accessor: "secuencia" },
+                    { Header: "Desde", accessor: "funcion" },
+                    { Header: "Hasta", accessor: "carRevista" },
+                    {
+                      Header: "Acción",
+                      accessor: "accion",
+                      Cell: ({ row }) => (
+                        <MDButton
+                          size="small"
+                          color="warning"
+                          variant="gradient"
+                          onClick={() => handleButtonClick(row.original)}
+                        >
+                          Suple A
+                        </MDButton>
+                      ),
+                    },
+                  ],
+                  rows: docentesData,
+                }}
+                entriesPerPage={false}
+                canSearch
+                show
               />
             </Card>
           </MDBox>
