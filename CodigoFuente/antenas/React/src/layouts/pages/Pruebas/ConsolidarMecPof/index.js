@@ -26,6 +26,7 @@ function ConsolidarMecPOF() {
   const [establecimientos, setEstablecimientos] = useState([]);
   const [mecData, setMecData] = useState([]);
   const [docentesData, setDocentesData] = useState([]);
+  const [suplentesData, setSuplentesData] = useState([]);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -104,52 +105,6 @@ function ConsolidarMecPOF() {
       });
   }, [selectedCabecera, token, establecimientos]);
 
-  /*Docentes sin haberes 
-  useEffect(() => {
-    if (!selectedCabecera) return;
-    axios
-      .get(
-        `${process.env.REACT_APP_API_URL}Consolidar/DocentesPOF?idCabecera=${selectedCabecera}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      .then((response) => {
-        const data = response.data || [];
-        setDocentesData(data);
-      })
-      .catch(() => {
-        setErrorAlert({
-          show: true,
-          message: "Error al obtener los datos de Docentes.",
-          type: "error",
-        });
-      });
-  }, [selectedCabecera, token]);*/
-
-  /* Docentes Suplentes
-    useEffect(() => {
-    if (!selectedCabecera) return;
-    axios
-      .get(
-        `${process.env.REACT_APP_API_URL}Consolidar/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      .then((response) => {
-        const data = response.data || [];
-        setDocentesData(data);
-      })
-      .catch(() => {
-        setErrorAlert({
-          show: true,
-          message: "Error al obtener los datos de Docentes.",
-          type: "error",
-        });
-      });
-  }, [selectedCabecera, token]);*/
-
   const allCountsZero = dataTableData.every((row) => row.countConsolidadoN === 0);
 
   const displayValue = (value) => (value ? value : "N/A");
@@ -167,6 +122,58 @@ function ConsolidarMecPOF() {
       .catch(() => {
         setErrorAlert({ show: true, message: "Error al obtener datos de MED.", type: "error" });
       });
+    /*axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/DocentesPOF?idCabecera=${selectedCabecera}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setDocentesData(response.data || []);
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al obtener los datos de Docentes.", type: "error" });
+      });*/
+    const simulatedDocentes = [
+      {
+        id: 1,
+        personaNombre: "Robertito",
+        personaApellido: "Funes",
+        documento: "30123456",
+        secuencia: "212",
+        funcion: "prueba",
+        carRevista: "S",
+        cargo: "MD",
+        horas: "10",
+        sinHaberes: true,
+        noSubvencionadas: false,
+      },
+    ];
+    setDocentesData(simulatedDocentes);
+
+    /*axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setSuplentesData(response.data || []);
+      })
+      .catch(() => {
+        setErrorAlert({ show: true, message: "Error al obtener los datos de Docentes Suplentes.", type: "error" });
+      });*/
+
+    const simulatedSuplentes = [
+      {
+        id: 1,
+        personaNombre: "María",
+        personaApellido: "Garcia",
+        documento: "34123456",
+        suplea: "17132175/008 - PEPE OCHOA",
+        desde: "15/02/2024",
+        hasta: "30/10/2024",
+      },
+    ];
+    setSuplentesData(simulatedSuplentes);
   };
   // Boton delete de la tabla MEC
   const handleDelete = (id) => {
@@ -362,7 +369,7 @@ function ConsolidarMecPOF() {
             </Card>
           </MDBox>
         )}
-        {mecData.length > 0 && (
+        {docentesData.length > 0 && (
           <MDBox my={3}>
             <MDAlert className="custom-alert">
               <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
@@ -394,7 +401,7 @@ function ConsolidarMecPOF() {
                       Cell: ({ row }) => (
                         <MDButton
                           size="small"
-                          color="info"
+                          color="success"
                           variant="gradient"
                           onClick={() => handleButtonClick(row.original)}
                         >
@@ -412,7 +419,7 @@ function ConsolidarMecPOF() {
             </Card>
           </MDBox>
         )}
-        {mecData.length > 0 && (
+        {suplentesData.length > 0 && (
           <MDBox my={3}>
             <MDAlert className="custom-alert">
               <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
@@ -431,9 +438,9 @@ function ConsolidarMecPOF() {
                       Cell: ({ row }) =>
                         `${row.original.personaNombre} ${row.original.personaApellido}`,
                     },
-                    { Header: "Suple A", accessor: "secuencia" },
-                    { Header: "Desde", accessor: "funcion" },
-                    { Header: "Hasta", accessor: "carRevista" },
+                    { Header: "Suple A", accessor: "suplea" },
+                    { Header: "Desde", accessor: "desde" },
+                    { Header: "Hasta", accessor: "hasta" },
                     {
                       Header: "Acción",
                       accessor: "accion",
@@ -449,7 +456,7 @@ function ConsolidarMecPOF() {
                       ),
                     },
                   ],
-                  rows: docentesData,
+                  rows: suplentesData,
                 }}
                 entriesPerPage={false}
                 canSearch
