@@ -16,6 +16,7 @@ import {
   CircularProgress,
   MenuItem,
 } from "@mui/material";
+import MDButton from "components/MDButton";
 
 const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit }) => {
   const [docentes, setDocentes] = useState([]);
@@ -48,8 +49,8 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
       desde: fechaDesde,
       hasta: fechaHasta,
     };
-    onSubmit(data); // Enviar datos al backend
-    handleClose(); // Cerrar el popup
+    onSubmit(data);
+    handleClose();
   };
 
   return (
@@ -112,17 +113,18 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="secondary">
+        <MDButton onClick={handleClose} size="small" color="secondary">
           Cancelar
-        </Button>
-        <Button
+        </MDButton>
+        <MDButton
           onClick={handleEnviar}
-          color="primary"
-          variant="contained"
+          color="info"
+          variant="gradient"
+          size="small"
           disabled={!selectedDocente}
         >
           Enviar
-        </Button>
+        </MDButton>
       </DialogActions>
     </Dialog>
   );

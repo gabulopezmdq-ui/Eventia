@@ -17,6 +17,7 @@ import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
 import SupleAPopup from "./SupleAPopUp";
+import MecPopup from "./MecPopUp";
 function ConsolidarMecPOF() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -30,6 +31,8 @@ function ConsolidarMecPOF() {
   const [suplentesData, setSuplentesData] = useState([]);
   const [openPopup, setOpenPopup] = useState(false);
   const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
+  const [openMecPopup, setOpenMecPopup] = useState(false);
+  const [selectedDocente, setSelectedDocente] = useState(null);
   const idEstablecimiento = 123;
   const token = sessionStorage.getItem("token");
 
@@ -148,8 +151,8 @@ function ConsolidarMecPOF() {
         carRevista: "S",
         cargo: "MD",
         horas: "10",
-        sinHaberes: true,
-        noSubvencionadas: false,
+        sinHaberes: "S",
+        noSubvencionadas: "N",
       },
     ];
     setDocentesData(simulatedDocentes);
@@ -243,6 +246,20 @@ function ConsolidarMecPOF() {
   const handleSubmit = (data) => {
     console.log("Enviando datos al backend:", data);
     // Aquí haces la petición al backend con fetch o axios
+  };
+  //POPUP MEC
+  const handleOpenMecPopup = (docente) => {
+    setSelectedDocente(docente);
+    setOpenMecPopup(true);
+  };
+
+  const handleCloseMecPopup = () => {
+    setOpenMecPopup(false);
+  };
+
+  const handleSubmitMec = (formData) => {
+    console.log("Enviando datos al backend:", formData);
+    // Aquí iría la petición al backend con fetch o axios
   };
   return (
     <>
@@ -415,7 +432,7 @@ function ConsolidarMecPOF() {
                           size="small"
                           color="success"
                           variant="gradient"
-                          onClick={() => handleButtonClick(row.original)}
+                          onClick={() => handleOpenMecPopup(row.original)}
                         >
                           Agregar MEC
                         </MDButton>
@@ -483,6 +500,13 @@ function ConsolidarMecPOF() {
           suplente={suplenteSeleccionado}
           idEstablecimiento={idEstablecimiento}
           onSubmit={handleSubmit}
+        />
+        <MecPopup
+          open={openMecPopup}
+          handleClose={handleCloseMecPopup}
+          docente={selectedDocente}
+          onSubmit={handleSubmitMec}
+          tieneAntiguedad={true}
         />
       </DashboardLayout>
     </>
