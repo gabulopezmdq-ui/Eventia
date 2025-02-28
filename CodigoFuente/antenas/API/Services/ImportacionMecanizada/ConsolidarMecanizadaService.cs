@@ -252,6 +252,8 @@ namespace API.Services
             await _context.Database.ExecuteSqlRawAsync(@"
                   REINDEX TABLE ""MEC_Mecanizadas"";");
         }
+
+
         //Obtener lista de los suplentes con cargo S
         public async Task<List<MEC_Mecanizadas>> ObtenerSuplentesAsync(int idCabecera, int idEstablecimiento)
         {
@@ -288,7 +290,7 @@ namespace API.Services
             alta.SupleDesde = desde ?? null;
             alta.SupleHasta = hasta ?? null;
 
-            _context.Update(alta);
+            _context.Add(alta);
             await _context.SaveChangesAsync();
         }
 
