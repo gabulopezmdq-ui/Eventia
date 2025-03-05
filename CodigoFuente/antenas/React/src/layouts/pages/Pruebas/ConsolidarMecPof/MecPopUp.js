@@ -15,6 +15,7 @@ import {
   InputLabel,
   Select,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
 
 const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => {
@@ -45,8 +46,8 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
         mesReferencia: "",
         cantHorasConSub: "",
         cantHorasSinSub: "",
-        sinHaberes: docente.sinHaberes || false,
-        noSubvencionado: docente.noSubvencionadas || false,
+        sinHaberes: docente.sinHaberes ? "S" : "N", // Convertir booleano a "S" o "N"
+        noSubvencionado: docente.noSubvencionadas ? "S" : "N", // Convertir booleano a "S" o "N"
         antiguedadAnioRef: "",
         antiguedadMesRef: "",
         cantAniosAntiguedad: "",
@@ -74,112 +75,48 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
       <DialogTitle>Agregar a MEC</DialogTitle>
       <DialogContent>
         {/* Datos del docente */}
-        <TextField
-          label="Nombre del Docente"
-          fullWidth
-          margin="dense"
-          value={formData.docenteNombre}
-          disabled
-        />
-        <TextField label="Documento" fullWidth margin="dense" value={formData.documento} disabled />
-        <TextField label="Cargo" fullWidth margin="dense" value={formData.cargo} disabled />
-
-        {/* Campos editables */}
-        <TextField
-          label="Año Referencia"
-          name="anioReferencia"
-          fullWidth
-          margin="dense"
-          value={formData.anioReferencia}
-          onChange={handleChange}
-        />
-        <FormControl fullWidth margin="dense">
-          <InputLabel>Mes Referencia</InputLabel>
-          <Select
-            value={formData.mesReferencia}
-            onChange={handleChange}
-            label="Mes Referencia"
-            style={{ height: "2.8rem", backgroundColor: "white" }}
-            name="mesReferencia"
-          >
-            {[
-              "Enero",
-              "Febrero",
-              "Marzo",
-              "Abril",
-              "Mayo",
-              "Junio",
-              "Julio",
-              "Agosto",
-              "Septiembre",
-              "Octubre",
-              "Noviembre",
-              "Diciembre",
-            ].map((mes, index) => (
-              <MenuItem key={index} value={mes}>
-                {mes}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          label="Cant. Horas con Subvención"
-          name="cantHorasConSub"
-          fullWidth
-          margin="dense"
-          type="number"
-          value={formData.cantHorasConSub}
-          onChange={handleChange}
-        />
-        <TextField
-          label="Cant. Horas sin Subvención"
-          name="cantHorasSinSub"
-          fullWidth
-          margin="dense"
-          type="number"
-          value={formData.cantHorasSinSub}
-          onChange={handleChange}
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              name="sinHaberes"
-              checked={formData.sinHaberes === "S"}
-              onChange={handleCheckboxChange}
-            />
-          }
-          label="Sin Haberes"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              name="noSubvencionado"
-              checked={formData.noSubvencionado === "S"}
-              onChange={handleCheckboxChange}
-            />
-          }
-          label="No Subvencionado"
-        />
-
-        {/* Sección de antigüedad (solo si no tiene registro) */}
-        {!tieneAntiguedad && (
-          <>
+        <Grid container spacing={3}>
+          {/* Datos del docente */}
+          <Grid item xs={6}>
             <TextField
-              label="Año Referencia (Antigüedad)"
-              name="antiguedadAnioRef"
+              label="Nombre del Docente"
+              margin="dense"
+              value={formData.docenteNombre}
+              disabled
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Documento"
+              margin="dense"
+              value={formData.documento}
+              disabled
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField label="Cargo" fullWidth margin="dense" value={formData.cargo} disabled />
+          </Grid>
+          {/* Campos editables en dos columnas */}
+          <Grid item xs={6}>
+            <TextField
+              label="Año Referencia"
+              name="anioReferencia"
               fullWidth
               margin="dense"
-              value={formData.antiguedadAnioRef}
+              value={formData.anioReferencia}
               onChange={handleChange}
             />
+          </Grid>
+          <Grid item xs={6}>
             <FormControl fullWidth margin="dense">
-              <InputLabel>Mes Ref. Antiguedad</InputLabel>
+              <InputLabel>Mes Referencia</InputLabel>
               <Select
-                value={formData.antiguedadMesRef}
+                name="mesReferencia"
+                value={formData.mesReferencia}
                 onChange={handleChange}
-                label="Mes Referencia"
-                style={{ height: "2.8rem", background: "white" }}
-                name="antiguedadMesRef"
+                style={{ height: "2.8rem", backgroundColor: "white" }}
               >
                 {[
                   "Enero",
@@ -201,26 +138,121 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
                 ))}
               </Select>
             </FormControl>
+          </Grid>
+          <Grid item xs={6}>
             <TextField
-              label="Cant. Años Antigüedad"
-              name="cantAniosAntiguedad"
+              label="Cant. Horas con Subvención"
+              name="cantHorasConSub"
               fullWidth
               margin="dense"
               type="number"
-              value={formData.cantAniosAntiguedad}
+              value={formData.cantHorasConSub}
               onChange={handleChange}
             />
+          </Grid>
+          <Grid item xs={6}>
             <TextField
-              label="Cant. Meses Antigüedad"
-              name="cantMesesAntiguedad"
+              label="Cant. Horas sin Subvención"
+              name="cantHorasSinSub"
               fullWidth
               margin="dense"
               type="number"
-              value={formData.cantMesesAntiguedad}
+              value={formData.cantHorasSinSub}
               onChange={handleChange}
             />
-          </>
-        )}
+          </Grid>
+          <Grid item xs={6}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="sinHaberes"
+                  checked={formData.sinHaberes === "S"}
+                  onChange={handleCheckboxChange}
+                />
+              }
+              label="Sin Haberes"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="noSubvencionado"
+                  checked={formData.noSubvencionado === "S"}
+                  onChange={handleCheckboxChange}
+                />
+              }
+              label="No Subvencionado"
+            />
+          </Grid>
+          {/* Sección de antigüedad (solo si no tiene registro) */}
+          {!tieneAntiguedad && (
+            <>
+              <Grid item xs={6}>
+                <TextField
+                  label="Año Referencia (Antigüedad)"
+                  name="antiguedadAnioRef"
+                  fullWidth
+                  margin="dense"
+                  value={formData.antiguedadAnioRef}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Mes Ref. Antigüedad</InputLabel>
+                  <Select
+                    name="antiguedadMesRef"
+                    value={formData.antiguedadMesRef}
+                    onChange={handleChange}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {[
+                      "Enero",
+                      "Febrero",
+                      "Marzo",
+                      "Abril",
+                      "Mayo",
+                      "Junio",
+                      "Julio",
+                      "Agosto",
+                      "Septiembre",
+                      "Octubre",
+                      "Noviembre",
+                      "Diciembre",
+                    ].map((mes, index) => (
+                      <MenuItem key={index} value={mes}>
+                        {mes}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Cant. Años Antigüedad"
+                  name="cantAniosAntiguedad"
+                  fullWidth
+                  margin="dense"
+                  type="number"
+                  value={formData.cantAniosAntiguedad}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Cant. Meses Antigüedad"
+                  name="cantMesesAntiguedad"
+                  fullWidth
+                  margin="dense"
+                  type="number"
+                  value={formData.cantMesesAntiguedad}
+                  onChange={handleChange}
+                />
+              </Grid>
+            </>
+          )}
+        </Grid>
       </DialogContent>
       <DialogActions>
         <MDButton onClick={handleClose} size="small" color="secondary">
