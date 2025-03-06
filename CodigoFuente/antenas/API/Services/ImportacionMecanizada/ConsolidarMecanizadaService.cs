@@ -96,6 +96,14 @@ namespace API.Services
                     Barra = p.Barra,
                     TipoCargo = p.TipoCargo,
                     Vigente = p.Vigente,
+                    IdCategoria = p.IdCategoria,
+                    IdCarRevista = p.IdCarRevista,
+
+                    NoSubvencionado = p.POFDetalle.Select(d => d.NoSubvencionado).FirstOrDefault(),
+                    SinHaberes = p.POFDetalle.Select(d => d.SinHaberes).FirstOrDefault(),
+                    CantHorasCS = p.POFDetalle.Select( d => d.CantHorasCS).FirstOrDefault(),
+                    CantHorasSS = p.POFDetalle.Select( d => d.CantHorasSS).FirstOrDefault(),
+
 
                     // Incluir la información de la persona relacionada (MEC_Personas)
                     PersonaDNI = p.Persona.DNI,
@@ -290,6 +298,10 @@ namespace API.Services
                                 .Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
                 .ToListAsync();
         }
+
+        /*puede pasar que el metodo ObtenerSuplencesAsync genera una sobrecarga al tener varias conexiones con otras entidades.
+        en ese caso se podria utilizar un metodo <dynamic> con LINQ para evitarlo o utilizar un DTO para modificar el select
+        */
 
         //Obtener establecimientos por id
         public async Task<List<MEC_POF>> ObtenerEstablecimientoAsync(int idEstablecimiento)
