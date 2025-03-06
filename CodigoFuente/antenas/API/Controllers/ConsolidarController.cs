@@ -155,5 +155,12 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("Antiguedad")]
+        public async Task<IActionResult> GenerarRegistro([FromBody] AltaMecanizadaDTO datos)
+        {
+            await _consolidarMecanizadaService.CrearRegistroAntigDet(datos);
+            return Ok("Registro creado");
+        }
+
     }
 }
