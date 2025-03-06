@@ -29,13 +29,11 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
     cantHorasSinSub: "",
     sinHaberes: false,
     noSubvencionado: false,
-    // Sección de antigüedad (solo si no hay registro)
     antiguedadAnioRef: "",
     antiguedadMesRef: "",
     cantAniosAntiguedad: "",
     cantMesesAntiguedad: "",
   });
-  // Actualiza formData cuando cambie docente
   useEffect(() => {
     if (docente) {
       setFormData({
@@ -46,8 +44,8 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
         mesReferencia: "",
         cantHorasConSub: "",
         cantHorasSinSub: "",
-        sinHaberes: docente.sinHaberes ? "S" : "N", // Convertir booleano a "S" o "N"
-        noSubvencionado: docente.noSubvencionadas ? "S" : "N", // Convertir booleano a "S" o "N"
+        sinHaberes: docente.sinHaberes ? "S" : "N",
+        noSubvencionado: docente.noSubvencionadas ? "S" : "N",
         antiguedadAnioRef: "",
         antiguedadMesRef: "",
         cantAniosAntiguedad: "",
@@ -62,11 +60,10 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
   };
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
-    // Convertir booleano a "S" o "N"
     setFormData({ ...formData, [name]: checked ? "S" : "N" });
   };
   const handleSubmit = () => {
-    onSubmit(formData); // Enviar datos al backend
+    onSubmit(formData);
     handleClose();
   };
 
@@ -74,9 +71,7 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Agregar a MEC</DialogTitle>
       <DialogContent>
-        {/* Datos del docente */}
         <Grid container spacing={3}>
-          {/* Datos del docente */}
           <Grid item xs={6}>
             <TextField
               label="Nombre del Docente"
@@ -98,7 +93,6 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
           <Grid item xs={12}>
             <TextField label="Cargo" fullWidth margin="dense" value={formData.cargo} disabled />
           </Grid>
-          {/* Campos editables en dos columnas */}
           <Grid item xs={6}>
             <TextField
               label="Año Referencia"
@@ -185,12 +179,11 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
               label="No Subvencionado"
             />
           </Grid>
-          {/* Sección de antigüedad (solo si no tiene registro) */}
           {!tieneAntiguedad && (
             <>
               <Grid item xs={6}>
                 <TextField
-                  label="Año Referencia (Antigüedad)"
+                  label="Año Referencia Antigüedad"
                   name="antiguedadAnioRef"
                   fullWidth
                   margin="dense"

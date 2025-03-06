@@ -371,6 +371,7 @@ function ConsolidarMecPOF() {
                     },
                     { Header: "DNI", accessor: "personaDNI" },
                     { Header: "Secuencia", accessor: "secuencia" },
+                    { Header: "Tipo Cargo", accessor: "tipoCargo" },
                     { Header: "Año Afec", accessor: "mecanizadaAnioAfeccion" },
                     { Header: "Mes Afec", accessor: "mecanizadaMesAfeccion" },
                     { Header: "CodLiq", accessor: "mecanizadaCodigoLiquidacion" },
