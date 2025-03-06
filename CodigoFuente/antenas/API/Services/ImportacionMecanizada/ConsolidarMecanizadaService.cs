@@ -318,6 +318,13 @@ namespace API.Services
             await _context.SaveChangesAsync();
         }
 
+        // Obtener Mecanizadas
+
+        public async Task <List<MEC_Mecanizadas>>ObtenerMecanizadas(int idCabecera, int idEstablecimiento)
+        {
+            return await _context.MEC_Mecanizadas.Where(m => m.IdEstablecimiento == idEstablecimiento && idCabecera == idCabecera).ToListAsync();
+        }
+
 
     }
 }
