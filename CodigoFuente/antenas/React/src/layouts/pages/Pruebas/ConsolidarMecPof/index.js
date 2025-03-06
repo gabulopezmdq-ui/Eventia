@@ -120,7 +120,8 @@ function ConsolidarMecPOF() {
   const handleButtonClick = (row) => {
     axios
       .get(
-        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerRegistrosPOFNoMecanizados?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
+        /*Endpoint TABLA MEC */
+        `${process.env.REACT_APP_API_URL}Consolidar/Mecanizadas?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
@@ -129,18 +130,23 @@ function ConsolidarMecPOF() {
       .catch(() => {
         setErrorAlert({ show: true, message: "Error al obtener datos de MEC.", type: "error" });
       });
-    /*axios
+    /*Endpoint TABLA Docentes POF sin Haberes ni Subvenciones */
+    axios
       .get(
-        `${process.env.REACT_APP_API_URL}Consolidar/DocentesPOF?idCabecera=${selectedCabecera}`,
+        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerRegistrosPOFNoMecanizados?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
         setDocentesData(response.data || []);
       })
       .catch(() => {
-        setErrorAlert({ show: true, message: "Error al obtener los datos de Docentes.", type: "error" });
-      });*/
-    const simulatedDocentes = [
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los datos de Docentes.",
+          type: "error",
+        });
+      });
+    /*const simulatedDocentes = [
       {
         id: 1,
         personaNombre: "Robertito",
@@ -154,22 +160,24 @@ function ConsolidarMecPOF() {
         sinHaberes: "S",
         noSubvencionadas: "N",
       },
-    ];
-    setDocentesData(simulatedDocentes);
-
-    /*axios
+    ];*/
+    /*Endpoint TABLA Suplentes */
+    axios
       .get(
-        `${process.env.REACT_APP_API_URL}Consolidar/?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
+        `${process.env.REACT_APP_API_URL}Consolidar/Suplentes?idCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
         setSuplentesData(response.data || []);
       })
       .catch(() => {
-        setErrorAlert({ show: true, message: "Error al obtener los datos de Docentes Suplentes.", type: "error" });
-      });*/
-
-    const simulatedSuplentes = [
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los datos de Docentes Suplentes.",
+          type: "error",
+        });
+      });
+    /*const simulatedSuplentes = [
       {
         id: 1,
         personaNombre: "María",
@@ -180,7 +188,7 @@ function ConsolidarMecPOF() {
         hasta: "30/10/2024",
       },
     ];
-    setSuplentesData(simulatedSuplentes);
+    setSuplentesData(simulatedSuplentes);*/
   };
   // Boton delete de la tabla MEC
   const handleDelete = (id) => {
@@ -367,14 +375,14 @@ function ConsolidarMecPOF() {
                       Header: "Nombre Completo",
                       accessor: "nombreCompleto",
                       Cell: ({ row }) =>
-                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                        `${row.original.pof?.persona?.nombre} ${row.original.pof?.persona?.apellido}`,
                     },
                     { Header: "DNI", accessor: "personaDNI" },
-                    { Header: "Secuencia", accessor: "secuencia" },
-                    { Header: "Tipo Cargo", accessor: "tipoCargo" },
-                    { Header: "Año Afec", accessor: "mecanizadaAnioAfeccion" },
-                    { Header: "Mes Afec", accessor: "mecanizadaMesAfeccion" },
-                    { Header: "CodLiq", accessor: "mecanizadaCodigoLiquidacion" },
+                    { Header: "Secuencia", accessor: "pof.secuencia" },
+                    { Header: "Tipo Cargo", accessor: "pof.tipoCargo" },
+                    { Header: "Año/Mes Afec", accessor: "anioMesAfectacion" },
+                    { Header: "CodLiq", accessor: "codigoLiquidacion" },
+                    { Header: "Origen", accessor: "origen" },
                     {
                       Header: "Acción",
                       accessor: "accion",
@@ -411,7 +419,7 @@ function ConsolidarMecPOF() {
               <DataTable
                 table={{
                   columns: [
-                    { Header: "Documento", accessor: "documento" },
+                    { Header: "Documento", accessor: "personaDNI" },
                     {
                       Header: "Nombre Completo",
                       accessor: "nombreCompleto",
@@ -419,12 +427,19 @@ function ConsolidarMecPOF() {
                         `${row.original.personaNombre} ${row.original.personaApellido}`,
                     },
                     { Header: "Secuencia", accessor: "secuencia" },
-                    { Header: "Función", accessor: "funcion" },
                     { Header: "Car. Revista", accessor: "carRevista" },
                     { Header: "Cargo", accessor: "cargo" },
-                    { Header: "Horas", accessor: "horas" },
-                    { Header: "Sin Haberes", accessor: "sinHaberes" },
-                    { Header: "No Subvencionadas", accessor: "noSubvencionadas" },
+                    { Header: "Horas", accessor: "cantHorasCS" },
+                    {
+                      Header: "Sin Haberes",
+                      accessor: "sinHaberes",
+                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                    },
+                    {
+                      Header: "No Subvencionadas",
+                      accessor: "noSubvencionado",
+                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                    },
                     {
                       Header: "Acción",
                       accessor: "accion",
@@ -461,12 +476,12 @@ function ConsolidarMecPOF() {
               <DataTable
                 table={{
                   columns: [
-                    { Header: "Documento", accessor: "documento" },
+                    { Header: "Documento", accessor: "pof.persona.dni" },
                     {
                       Header: "Nombre Completo",
                       accessor: "nombreCompleto",
                       Cell: ({ row }) =>
-                        `${row.original.personaNombre} ${row.original.personaApellido}`,
+                        `${row.original.pof.persona.nombre} ${row.original.pof.persona.apellido}`,
                     },
                     { Header: "Suple A", accessor: "suplea" },
                     { Header: "Desde", accessor: "desde" },
