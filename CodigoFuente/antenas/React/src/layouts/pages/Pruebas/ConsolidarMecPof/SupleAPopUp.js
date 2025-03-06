@@ -64,7 +64,11 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
               label="Nombre del Suplente"
               fullWidth
               margin="dense"
-              value={suplente ? `${suplente.personaNombre} ${suplente.personaApellido}` : ""}
+              value={
+                suplente
+                  ? `${suplente.pof?.persona?.nombre} ${suplente.pof?.persona?.apellido}`
+                  : ""
+              }
               disabled
             />
           </Grid>
@@ -73,7 +77,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
               label="Documento"
               fullWidth
               margin="dense"
-              value={suplente ? suplente.documento : ""}
+              value={suplente ? suplente.pof?.persona?.dni : ""}
               disabled
             />
           </Grid>
@@ -148,9 +152,13 @@ SupleAPopup.propTypes = {
   handleClose: PropTypes.func.isRequired,
   suplente: PropTypes.shape({
     id: PropTypes.number,
-    documento: PropTypes.string,
-    personaNombre: PropTypes.string,
-    personaApellido: PropTypes.string,
+    pof: PropTypes.shape({
+      persona: PropTypes.shape({
+        nombre: PropTypes.string,
+        apellido: PropTypes.string,
+        dni: PropTypes.string,
+      }),
+    }),
   }),
   idEstablecimiento: PropTypes.number.isRequired,
   onSubmit: PropTypes.func.isRequired,
