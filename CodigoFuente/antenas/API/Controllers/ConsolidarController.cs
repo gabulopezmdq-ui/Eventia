@@ -162,5 +162,15 @@ namespace API.Controllers
             return Ok("Registro creado");
         }
 
+        [HttpGet ("Suplentes")]
+        
+        public async Task<IActionResult> ObtenerSuplentes(int idCabecera, int idEstablecimiento)
+        {
+            var suplentes = await _consolidarMecanizadaService.ObtenerSuplentesAsync(idCabecera, idEstablecimiento);
+            return Ok(suplentes);
+
+        }
+
+
     }
 }
