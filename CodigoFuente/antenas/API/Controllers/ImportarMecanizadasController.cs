@@ -15,8 +15,8 @@ using API.Services.ImportacionMecanizada;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SuperAdmin, Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class ImportarMecanizadasController : ControllerBase
     {
@@ -73,12 +73,7 @@ namespace API.Controllers
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
         {
-            var query = _serviceGenerico.GetAll().AsQueryable();
-
-            var totalItems = query.Count();
-            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            return Ok(items); // Devuelve solo el array
+            return Ok(_serviceGenerico.GetAll().ToList());
         }
 
         [HttpPost("PreprocesarArchivo")]

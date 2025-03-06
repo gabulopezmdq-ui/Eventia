@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace API.Services
@@ -30,7 +31,7 @@ namespace API.Services
                     IdEstablecimiento = g.Key,
                     CountConsolidadoS = g.Count(m => m.Consolidado == "S"),
                     CountConsolidadoN = g.Count(m => m.Consolidado == "N")
-                    }).ToListAsync();
+                }).ToListAsync();
 
             var resultado = await query;
 
@@ -186,6 +187,29 @@ namespace API.Services
             await _context.MEC_POFDetalle.AddAsync(nuevoDetalle);
         }
 
+        //Crear registro antiguedad y detalle
+        
+        public async Task CrearRegistroAntigDet(AltaMecanizadaDTO datos)
+        {
+            try
+            {
+                await CrearPOFDetalleAsync(datos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error con el detalle: {ex.Message}");
+            }
+
+            try
+            {
+                await VerificarYCrearAntiguedadAsync(datos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error con la antiguedad: {ex.Message}");
+            }
+        }
+
         // Crear registro en MEC_Mecanizadas
         private async Task CrearMecanizadaAsync(AltaMecanizadaDTO datos)
         {
@@ -226,5 +250,73 @@ namespace API.Services
                 throw;
             }
         }
+
+        public async Task<bool> EliminarRegistroMECMecanizadaAsync(int idMecanizada)
+        {
+
+            var mecanizada = await _context.MEC_Mecanizadas.FirstOrDefaultAsync(m => m.IdMecanizada == idMecanizada);
+
+            if (mecanizada == null)
+            {
+                return false;
+            }
+
+            _context.MEC_Mecanizadas.Remove(mecanizada);
+            await _context.SaveChangesAsync();
+            await ActualizarIndicesAsync();
+
+            return true;
+        }
+
+        private async Task ActualizarIndicesAsync()
+        {
+
+            // Usamos ExecuteSqlRawAsync para ejecutar el comando SQL directamente
+            await _context.Database.ExecuteSqlRawAsync(@"
+                  REINDEX TABLE ""MEC_Mecanizadas"";");
+        }
+
+
+        //Obtener lista de los suplentes con cargo S
+        public async Task<List<MEC_Mecanizadas>> ObtenerSuplentesAsync(int idCabecera, int idEstablecimiento)
+        {
+            if (idCabecera <= 0 || idEstablecimiento <= 0)
+                throw new ArgumentException("El ID de la cabecera y el ID del establecimiento deben ser mayores a cero.");
+
+            return await _context.MEC_Mecanizadas
+                .Where(m => m.IdCabecera == idCabecera
+                            && m.IdEstablecimiento == idEstablecimiento
+                            && _context.MEC_POF
+                                .Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
+                .ToListAsync();
+        }
+        //Obtener establecimientos por id
+        public async Task<List<MEC_POF>> ObtenerEstablecimientoAsync(int idEstablecimiento)
+        {
+            if (idEstablecimiento <= 0)
+                throw new ArgumentException("El ID de establecimiento debe ser mayor a cero.");
+
+            return await _context.MEC_POF
+                .Where(m => m.IdEstablecimiento == idEstablecimiento)
+                .ToListAsync();
+        }
+
+        // Actualizar MEC_POFDetalle 
+        public async Task ActualizarMEC_POFDetalle(MEC_POFDetalle alta, int idCabecera, DateTime? desde, DateTime? hasta)
+        {
+            if (desde == DateTime.MinValue || hasta == DateTime.MinValue)
+            {
+                throw new ArgumentException("Las fechas de suplencia no pueden ser valores predeterminados.");
+            }
+
+            alta.IdCabecera = idCabecera;
+            alta.SupleDesde = desde ?? null;
+            alta.SupleHasta = hasta ?? null;
+
+            _context.Add(alta);
+            await _context.SaveChangesAsync();
+        }
+
+
     }
 }
