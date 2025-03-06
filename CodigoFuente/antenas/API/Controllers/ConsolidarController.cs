@@ -171,6 +171,14 @@ namespace API.Controllers
 
         }
 
+        [HttpGet ("Mecanizadas")]
+
+        public async Task<IActionResult> ObtenerMecanizadas(int idCabecera, int idEstablecimiento)
+        {
+            var mecanizadas = await _consolidarMecanizadaService.ObtenerMecanizadas(idCabecera, idEstablecimiento);
+            return Ok(mecanizadas);
+        }
+
 
     }
 }
