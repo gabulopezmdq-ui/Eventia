@@ -290,6 +290,7 @@ namespace API.Services
                                 .Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
                 .ToListAsync();
         }
+
         //Obtener establecimientos por id
         public async Task<List<MEC_POF>> ObtenerEstablecimientoAsync(int idEstablecimiento)
         {
