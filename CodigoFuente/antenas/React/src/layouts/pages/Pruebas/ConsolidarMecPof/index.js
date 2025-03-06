@@ -506,7 +506,7 @@ function ConsolidarMecPOF() {
           handleClose={handleCloseMecPopup}
           docente={selectedDocente}
           onSubmit={handleSubmitMec}
-          tieneAntiguedad={true}
+          tieneAntiguedad={false}
         />
       </DashboardLayout>
     </>
