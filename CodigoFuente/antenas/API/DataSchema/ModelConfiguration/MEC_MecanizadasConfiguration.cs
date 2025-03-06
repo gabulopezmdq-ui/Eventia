@@ -81,7 +81,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.CodigoLiquidacion)
             .HasColumnType("char(4)")
             .IsFixedLength(true)
-            .IsRequired(true);
+            .IsRequired(false);
 
             builder.Property(e => e.Importe)
            .IsRequired(true);

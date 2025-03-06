@@ -15,7 +15,7 @@ namespace API.DataSchema
         public int IdEstablecimiento { get; set; }
         public int IdPOF { get; set; }
         public decimal Importe { get; set; }
-        public string CodigoLiquidacion { get; set; }
+        public string? CodigoLiquidacion { get; set; }
         public string Signo { get; set; }
         public string MarcaTransferido { get; set; }
         public string Moneda { get; set; }
