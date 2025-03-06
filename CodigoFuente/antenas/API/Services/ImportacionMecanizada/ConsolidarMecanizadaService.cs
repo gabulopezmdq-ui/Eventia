@@ -187,6 +187,29 @@ namespace API.Services
             await _context.MEC_POFDetalle.AddAsync(nuevoDetalle);
         }
 
+        //Crear registro antiguedad y detalle
+        
+        public async Task CrearRegistroAntigDet(AltaMecanizadaDTO datos)
+        {
+            try
+            {
+                await CrearPOFDetalleAsync(datos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error con el detalle: {ex.Message}");
+            }
+
+            try
+            {
+                await VerificarYCrearAntiguedadAsync(datos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error con la antiguedad: {ex.Message}");
+            }
+        }
+
         // Crear registro en MEC_Mecanizadas
         private async Task CrearMecanizadaAsync(AltaMecanizadaDTO datos)
         {

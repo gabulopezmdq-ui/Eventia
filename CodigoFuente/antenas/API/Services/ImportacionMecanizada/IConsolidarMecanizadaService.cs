@@ -20,5 +20,7 @@ namespace API.Services.ImportacionMecanizada
         Task<bool> ProcesarAltaMecanizadaAsync(AltaMecanizadaDTO datos);
 
         Task<bool> EliminarRegistroMECMecanizadaAsync(int idMecanizada);
+
+        Task CrearRegistroAntigDet(AltaMecanizadaDTO datos);
     }
 }
