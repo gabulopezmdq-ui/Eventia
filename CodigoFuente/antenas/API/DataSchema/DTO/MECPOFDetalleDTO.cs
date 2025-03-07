@@ -33,5 +33,12 @@ namespace API.DataSchema.DTO
         public string MecanizadaMesAfeccion { get; set; }
         public string MecanizadaCodigoLiquidacion { get; set; }
         public string MecanizadaOrigen { get; set; }
+
+        public bool TieneAntiguedad { get; set; }
+
+        public int? MesReferencia { get; set; }
+        public int? AnioReferencia { get; set; }
+        public int? MesAntiguedad { get; set; }
+        public int? AnioAntiguedad { get; set; }
     }
 }
