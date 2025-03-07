@@ -25,14 +25,25 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
   const [selectedDocente, setSelectedDocente] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
-
+  const token = sessionStorage.getItem("token");
+  console.log("ID Establecimiento : ", idEstablecimiento);
   useEffect(() => {
     if (open && idEstablecimiento) {
       setLoading(true);
       axios
-        .get(`docentesPOF?idEstablecimiento=${idEstablecimiento}`)
+        .get(
+          `${process.env.REACT_APP_API_URL}Consolidar/Docentes?idestablecimiento=${idEstablecimiento}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
         .then((response) => {
-          setDocentes(response.data);
+          // Mapear los datos antes de guardarlos
+          const formattedData = response.data.map((docente) => ({
+            id: docente.idPersona, // Usamos idPersona como identificador
+            nombreCompleto: `${docente.nombre} ${docente.apellido}`, // Concatenamos nombre + apellido
+          }));
+          setDocentes(formattedData);
         })
         .catch((error) => {
           console.error("Error obteniendo docentes:", error);
@@ -42,7 +53,6 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
         });
     }
   }, [open, idEstablecimiento]);
-
   const handleEnviar = () => {
     const data = {
       suplenteId: suplente.id,
