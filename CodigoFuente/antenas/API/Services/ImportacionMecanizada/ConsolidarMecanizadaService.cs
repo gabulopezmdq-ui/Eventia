@@ -338,20 +338,17 @@ namespace API.Services
         }
 
         // Actualizar MEC_POFDetalle 
-        public async Task ActualizarMEC_POFDetalle(MEC_POFDetalle alta, int idCabecera, DateTime? desde, DateTime? hasta)
+        public async Task ActualizarMEC_POFDetalle(MEC_POFDetalle detalle)
         {
-            if (desde == DateTime.MinValue || hasta == DateTime.MinValue)
+            if (detalle.SupleDesde == DateTime.MinValue || detalle.SupleHasta == DateTime.MinValue)
             {
                 throw new ArgumentException("Las fechas de suplencia no pueden ser valores predeterminados.");
             }
 
-            alta.IdCabecera = idCabecera;
-            alta.SupleDesde = desde ?? null;
-            alta.SupleHasta = hasta ?? null;
-
-            _context.Add(alta);
+            _context.Add(detalle);
             await _context.SaveChangesAsync();
         }
+
 
         // Obtener Mecanizadas
 
