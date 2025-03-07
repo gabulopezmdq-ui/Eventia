@@ -317,6 +317,8 @@ namespace API.Services
                             && m.IdEstablecimiento == idEstablecimiento
                             && _context.MEC_POF
                                 .Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
+                .Include(m => m.POF)
+                .ThenInclude(p => p.POFDetalle)
                 .ToListAsync();
         }
 

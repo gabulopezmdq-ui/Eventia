@@ -24,13 +24,15 @@ namespace API.Controllers
         private readonly IPOFService _pofService;
         private readonly ICRUDService<MEC_POF> _serviceGenerico;
         private readonly ICRUDService<MEC_Personas> _personasGenerico;
+        private readonly ICRUDService<MEC_POFDetalle> _pofDetalleGenerico;
 
-        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService, ICRUDService<MEC_Personas> personasGenerico)
+        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService, ICRUDService<MEC_Personas> personasGenerico, ICRUDService<MEC_POFDetalle> pofDetalleGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _pofService = pofService;
             _personasGenerico = personasGenerico;
+            _pofDetalleGenerico = pofDetalleGenerico;
         }
 
         [HttpGet("GetAll")]
@@ -153,5 +155,6 @@ namespace API.Controllers
 
             return Ok("POF registrada correctamente.");
         }
+
     }
 }
