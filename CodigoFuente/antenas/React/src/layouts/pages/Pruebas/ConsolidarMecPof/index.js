@@ -32,8 +32,8 @@ function ConsolidarMecPOF() {
   const [openPopup, setOpenPopup] = useState(false);
   const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
   const [openMecPopup, setOpenMecPopup] = useState(false);
+  const [selectedIdEstablecimiento, setSelectedIdEstablecimiento] = useState(null);
   const [selectedDocente, setSelectedDocente] = useState(null);
-  const idEstablecimiento = 123;
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -118,6 +118,7 @@ function ConsolidarMecPOF() {
 
   //Boton de consolidar tabla MEC
   const handleButtonClick = (row) => {
+    setSelectedIdEstablecimiento(row.idEstablecimiento);
     axios
       .get(
         /*Endpoint TABLA MEC */
@@ -456,9 +457,21 @@ function ConsolidarMecPOF() {
                       Cell: ({ row }) =>
                         `${row.original.pof.persona.nombre} ${row.original.pof.persona.apellido}`,
                     },
-                    { Header: "Suple A", accessor: "suplea" },
-                    { Header: "Desde", accessor: "desde" },
-                    { Header: "Hasta", accessor: "hasta" },
+                    {
+                      Header: "Suple A",
+                      accessor: "suplea",
+                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                    },
+                    {
+                      Header: "Desde",
+                      accessor: "desde",
+                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                    },
+                    {
+                      Header: "Hasta",
+                      accessor: "hasta",
+                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                    },
                     {
                       Header: "Acción",
                       accessor: "accion",
@@ -487,7 +500,7 @@ function ConsolidarMecPOF() {
           open={openPopup}
           handleClose={() => setOpenPopup(false)}
           suplente={suplenteSeleccionado}
-          idEstablecimiento={idEstablecimiento}
+          idEstablecimiento={selectedIdEstablecimiento}
           onSubmit={handleSubmit}
         />
         <MecPopup
@@ -495,7 +508,7 @@ function ConsolidarMecPOF() {
           handleClose={handleCloseMecPopup}
           docente={selectedDocente}
           onSubmit={handleSubmitMec}
-          tieneAntiguedad={false}
+          tieneAntiguedad={selectedDocente?.tieneAntiguedad ?? false}
         />
       </DashboardLayout>
     </>
