@@ -78,13 +78,11 @@ namespace API.Services
         // Obtener registros POF que no están mecanizados
         public async Task<List<MECPOFDetalleDTO>> ObtenerRegistrosPOFNoMecanizadosAsync(int idCabecera, int idEstablecimiento)
         {
-            // Obtenemos los IdPOF que ya existen en la tabla MEC_Mecanizadas para el IdEstablecimiento y IdCabecera seleccionados
             var mecanizadasIds = await _context.MEC_Mecanizadas
                 .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
                 .Select(m => m.IdPOF)
                 .ToListAsync();
 
-            // Realizamos la consulta incluyendo la información adicional de las entidades relacionadas
             var result = await _context.MEC_POF
                 .Where(p => p.IdEstablecimiento == idEstablecimiento && !mecanizadasIds.Contains(p.IdPOF))
                 .Select(p => new MECPOFDetalleDTO
@@ -101,22 +99,45 @@ namespace API.Services
 
                     NoSubvencionado = p.POFDetalle.Select(d => d.NoSubvencionado).FirstOrDefault(),
                     SinHaberes = p.POFDetalle.Select(d => d.SinHaberes).FirstOrDefault(),
-                    CantHorasCS = p.POFDetalle.Select( d => d.CantHorasCS).FirstOrDefault(),
-                    CantHorasSS = p.POFDetalle.Select( d => d.CantHorasSS).FirstOrDefault(),
+                    CantHorasCS = p.POFDetalle.Select(d => d.CantHorasCS).FirstOrDefault(),
+                    CantHorasSS = p.POFDetalle.Select(d => d.CantHorasSS).FirstOrDefault(),
 
-
-                    // Incluir la información de la persona relacionada (MEC_Personas)
                     PersonaDNI = p.Persona.DNI,
                     PersonaApellido = p.Persona.Apellido,
                     PersonaNombre = p.Persona.Nombre,
 
-                    // Incluir la información de MEC_Mecanizadas (si está relacionada con el POF)
                     MecanizadaAnioAfeccion = p.Mecanizada.Select(m => m.AnioMesAfectacion).FirstOrDefault(),
                     MecanizadaMesAfeccion = p.Mecanizada.Select(m => m.MesLiquidacion).FirstOrDefault(),
                     MecanizadaCodigoLiquidacion = p.Mecanizada.Select(m => m.CodigoLiquidacion).FirstOrDefault(),
                     MecanizadaOrigen = p.Mecanizada.Select(m => m.Origen).FirstOrDefault()
                 })
                 .ToListAsync();
+
+            // Ejecutamos la validación de antigüedad de manera secuencial
+            foreach (var registro in result)
+            {
+                registro.TieneAntiguedad = await ValidarExistenciaAntiguedadAsync(registro.IdPOF);
+
+                if(registro.TieneAntiguedad)
+                {
+                    var antiguedad = await _context.MEC_POF_Antiguedades.Where(a => a.IdPersona == registro.IdPersona)
+                        .Select(a => new
+                        {
+                            a.MesReferencia,
+                            a.AnioReferencia,
+                            a.MesAntiguedad,
+                            a.AnioAntiguedad
+                        }).FirstOrDefaultAsync();
+
+                    if (antiguedad != null)
+                    {
+                        registro.MesReferencia = antiguedad.MesReferencia;
+                        registro.AnioReferencia = antiguedad.AnioReferencia;
+                        registro.MesAntiguedad = antiguedad.MesAntiguedad;
+                        registro.AnioAntiguedad = antiguedad.AnioAntiguedad;
+                    }
+                }
+            }
 
             return result;
         }
@@ -337,6 +358,22 @@ namespace API.Services
             return await _context.MEC_Mecanizadas.Where(m => m.IdEstablecimiento == idEstablecimiento && idCabecera == idCabecera).ToListAsync();
         }
 
+        public async Task<List<object>> ObtenerPOFsSimplificadoAsync(int idEstablecimiento)
+        {
+            var result=  await _context.MEC_POF
+                .Where(p => p.IdEstablecimiento == idEstablecimiento && p.Vigente == "S")
+                .Select(p => new
+                {
+                    p.IdPOF,
+                    p.IdPersona,
+                    p.Persona.Nombre,
+                    p.Persona.Apellido,
+                    p.Persona.DNI,
+                })
+                .ToListAsync();
+
+            return result.Cast<object>().ToList();
+        }
 
     }
 }
