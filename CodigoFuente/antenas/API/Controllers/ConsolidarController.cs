@@ -179,6 +179,13 @@ namespace API.Controllers
             return Ok(mecanizadas);
         }
 
+        [HttpGet("Docentes")]
+
+        public async Task<IActionResult> ObtenerDocentes(int idEstablecimiento)
+        {
+            var docentes = await _consolidarMecanizadaService.ObtenerPOFsSimplificadoAsync(idEstablecimiento);
+            return Ok(docentes);
+        }
 
     }
 }
