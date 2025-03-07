@@ -146,21 +146,6 @@ function ConsolidarMecPOF() {
           type: "error",
         });
       });
-    /*const simulatedDocentes = [
-      {
-        id: 1,
-        personaNombre: "Robertito",
-        personaApellido: "Funes",
-        documento: "30123456",
-        secuencia: "212",
-        funcion: "prueba",
-        carRevista: "S",
-        cargo: "MD",
-        horas: "10",
-        sinHaberes: "S",
-        noSubvencionadas: "N",
-      },
-    ];*/
     /*Endpoint TABLA Suplentes */
     axios
       .get(
@@ -177,23 +162,11 @@ function ConsolidarMecPOF() {
           type: "error",
         });
       });
-    /*const simulatedSuplentes = [
-      {
-        id: 1,
-        personaNombre: "María",
-        personaApellido: "Garcia",
-        documento: "34123456",
-        suplea: "17132175/008 - PEPE OCHOA",
-        desde: "15/02/2024",
-        hasta: "30/10/2024",
-      },
-    ];
-    setSuplentesData(simulatedSuplentes);*/
   };
   // Boton delete de la tabla MEC
   const handleDelete = (id) => {
     axios
-      .delete(`${process.env.REACT_APP_API_URL}MED/Delete?id=${id}`, {
+      .delete(`${process.env.REACT_APP_API_URL}EliminarMEC/Delete?idMecanizada=${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
@@ -207,19 +180,19 @@ function ConsolidarMecPOF() {
 
   const handleChangeStatus = () => {
     if (!selectedCabecera) return;
-    const today = new Date();
+    /*const today = new Date();
     const formattedDate =
       today.getFullYear() +
       "/" +
       (today.getMonth() + 1).toString().padStart(2, "0") +
       "/" +
-      today.getDate().toString().padStart(2, "0");
+      today.getDate().toString().padStart(2, "0");*/
     axios
       .put(
         `${process.env.REACT_APP_API_URL}Consolidar/HabilitarCambiarEstadoCabecera`,
         {
           idCabecera: selectedCabecera,
-          fechaCambioEstado: formattedDate,
+          /*fechaCambioEstado: formattedDate,*/
           estado: "S",
         },
         {
