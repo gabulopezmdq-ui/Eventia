@@ -243,6 +243,12 @@ function ConsolidarMecPOF() {
     console.log("Enviando datos al backend:", formData);
     // Aquí iría la petición al backend con fetch o axios
   };
+  const formatISODate = (isoString) => {
+    if (!isoString) return "N/A";
+    const [fecha] = isoString.split("T");
+    const [anio, mes, dia] = fecha.split("-");
+    return `${anio}/${mes}/${dia}`;
+  };
   return (
     <>
       <DashboardLayout>
@@ -459,18 +465,22 @@ function ConsolidarMecPOF() {
                     },
                     {
                       Header: "Suple A",
-                      accessor: "suplea",
-                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                      accessor: "",
+                      Cell: ({ row }) =>
+                        `${row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.nombre || ""} 
+                         ${row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.apellido || ""}`,
                     },
                     {
                       Header: "Desde",
                       accessor: "desde",
-                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                      Cell: ({ row }) =>
+                        formatISODate(row.original.pof.pofDetalle?.[0]?.supleDesde),
                     },
                     {
                       Header: "Hasta",
                       accessor: "hasta",
-                      Cell: ({ value }) => (value === null ? "N/A" : value),
+                      Cell: ({ row }) =>
+                        formatISODate(row.original.pof.pofDetalle?.[0]?.supleHasta),
                     },
                     {
                       Header: "Acción",

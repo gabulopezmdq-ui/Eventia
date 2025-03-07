@@ -7,8 +7,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  Typography,
   TextField,
   FormControl,
   InputLabel,
@@ -26,7 +24,6 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const token = sessionStorage.getItem("token");
-  console.log("ID Establecimiento : ", idEstablecimiento);
   useEffect(() => {
     if (open && idEstablecimiento) {
       setLoading(true);
@@ -38,10 +35,9 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
           }
         )
         .then((response) => {
-          // Mapear los datos antes de guardarlos
           const formattedData = response.data.map((docente) => ({
-            id: docente.idPersona, // Usamos idPersona como identificador
-            nombreCompleto: `${docente.nombre} ${docente.apellido}`, // Concatenamos nombre + apellido
+            id: docente.idPersona,
+            nombreCompleto: `${docente.nombre} ${docente.apellido}`,
           }));
           setDocentes(formattedData);
         })
