@@ -187,5 +187,19 @@ namespace API.Controllers
             return Ok(docentes);
         }
 
+        [HttpPost("CrearMEC")]
+
+        public async Task<IActionResult> CrearMec (AltaMecanizadaDTO datos)
+        {
+            await _consolidarMecanizadaService.ProcesarAltaMecanizadaAsync(datos);
+            return Ok();
+        }
+
+        [HttpPut("POFDetalle")]
+        public async Task<ActionResult<MEC_POFDetalle>> Update([FromBody] MEC_POFDetalle detalle)
+        {
+            await _consolidarMecanizadaService.ActualizarMEC_POFDetalle(detalle);
+            return Ok(detalle);
+        }
     }
 }

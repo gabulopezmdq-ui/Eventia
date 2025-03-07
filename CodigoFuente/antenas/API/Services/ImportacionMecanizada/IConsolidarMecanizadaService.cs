@@ -2,6 +2,7 @@
 using API.DataSchema;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 
 namespace API.Services.ImportacionMecanizada
 {
@@ -22,8 +23,9 @@ namespace API.Services.ImportacionMecanizada
         Task<bool> EliminarRegistroMECMecanizadaAsync(int idMecanizada);
 
         Task CrearRegistroAntigDet(AltaMecanizadaDTO datos);
-        Task <List<MEC_Mecanizadas>>ObtenerSuplentesAsync(int idCabecera, int idEstablecimiento);
+        Task<List<MEC_Mecanizadas>> ObtenerSuplentesAsync(int idCabecera, int idEstablecimiento);
         Task<List<MEC_Mecanizadas>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento);
         Task<List<object>> ObtenerPOFsSimplificadoAsync(int idEstablecimiento);
+        Task ActualizarMEC_POFDetalle(MEC_POFDetalle detalle);
     }
 }
