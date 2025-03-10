@@ -30,9 +30,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
       axios
         .get(
           `${process.env.REACT_APP_API_URL}Consolidar/Docentes?idestablecimiento=${idEstablecimiento}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         )
         .then((response) => {
           const formattedData = response.data.map((docente) => ({
@@ -40,21 +38,34 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
             nombreCompleto: `${docente.nombre} ${docente.apellido}`,
           }));
           setDocentes(formattedData);
+          // Inicializar datos existentes si existen
+          if (suplente?.pof?.pofDetalle?.[0]) {
+            const detalle = suplente.pof.pofDetalle[0];
+            setSelectedDocente(detalle.suplencia?.persona?.idPersona || "");
+            setFechaDesde(detalle.supleDesde?.split("T")[0] || "");
+            setFechaHasta(detalle.supleHasta?.split("T")[0] || "");
+          }
         })
-        .catch((error) => {
-          console.error("Error obteniendo docentes:", error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+        .catch((error) => console.error("Error obteniendo docentes:", error))
+        .finally(() => setLoading(false));
     }
-  }, [open, idEstablecimiento]);
+  }, [open, idEstablecimiento, suplente]);
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedDocente("");
+      setFechaDesde("");
+      setFechaHasta("");
+    }
+  }, [open]);
+
   const handleEnviar = () => {
     const data = {
-      suplenteId: suplente.id,
-      docenteId: selectedDocente,
-      desde: fechaDesde,
-      hasta: fechaHasta,
+      idPOF: suplente.idPOF,
+      idSupleA: selectedDocente,
+      supleDesde: fechaDesde,
+      supleHasta: fechaHasta,
+      idCabecera: suplente.cabecera.idCabecera,
     };
     onSubmit(data);
     handleClose();
@@ -157,13 +168,28 @@ SupleAPopup.propTypes = {
   open: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   suplente: PropTypes.shape({
-    id: PropTypes.number,
+    idPOF: PropTypes.number.isRequired,
+    cabecera: PropTypes.shape({
+      idCabecera: PropTypes.number.isRequired,
+    }),
     pof: PropTypes.shape({
+      idPersona: PropTypes.number.isRequired,
       persona: PropTypes.shape({
         nombre: PropTypes.string,
         apellido: PropTypes.string,
         dni: PropTypes.string,
       }),
+      pofDetalle: PropTypes.arrayOf(
+        PropTypes.shape({
+          suplencia: PropTypes.shape({
+            persona: PropTypes.shape({
+              idPersona: PropTypes.number,
+            }),
+          }),
+          supleDesde: PropTypes.string,
+          supleHasta: PropTypes.string,
+        })
+      ),
     }),
   }),
   idEstablecimiento: PropTypes.number.isRequired,
