@@ -206,7 +206,7 @@ namespace API.Controllers
             return Ok(detalle);
         }
 
-        [HttpPost("consolidar")]
+        [HttpPost("Consolidar")]
         public async Task<IActionResult> Consolidar(int idCabecera, int idEstablecimiento)
         {
             if (idCabecera <= 0 || idEstablecimiento <= 0)
