@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -18,13 +19,16 @@ namespace API.Controllers
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConsolidarMecanizadaService _consolidarMecanizadaService;
+        private readonly ICRUDService<MEC_POFDetalle> _servicePOFDetalle;
 
         public ConsolidarController(
             IConsolidarMecanizadaService consolidarMecanizadaService,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ICRUDService<MEC_POFDetalle> servicePOFDetalle)
         {
             _consolidarMecanizadaService = consolidarMecanizadaService;
             _httpContextAccessor = httpContextAccessor;
+            _servicePOFDetalle = servicePOFDetalle;
         }
 
         [HttpGet("ObtenerConteosConsolidado")]
@@ -187,5 +191,65 @@ namespace API.Controllers
             return Ok(docentes);
         }
 
+        [HttpPost("CrearMEC")]
+
+        public async Task<IActionResult> CrearMec (AltaMecanizadaDTO datos)
+        {
+            await _consolidarMecanizadaService.ProcesarAltaMecanizadaAsync(datos);
+            return Ok();
+        }
+
+        [HttpPut("POFDetalle")]
+        public async Task<ActionResult<MEC_POFDetalle>> Update([FromBody] MEC_POFDetalle detalle)
+        {
+            await _consolidarMecanizadaService.ActualizarMEC_POFDetalle(detalle);
+            return Ok(detalle);
+        }
+
+        [HttpPost("consolidar")]
+        public async Task<IActionResult> Consolidar(int idCabecera, int idEstablecimiento)
+        {
+            if (idCabecera <= 0 || idEstablecimiento <= 0)
+            {
+                return BadRequest("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
+            }
+
+            try
+            {
+                // Obtener el usuario logueado desde el contexto de la petición (ejemplo con claims de JWT)
+                var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
+                int usuario = int.Parse(idUsuario.Value);
+
+                await _consolidarMecanizadaService.ConsolidarRegistrosAsync(idCabecera, idEstablecimiento, usuario);
+                return Ok("Registros consolidados exitosamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al consolidar registros: {ex.Message}");
+            }
+        }
+
+        [HttpPost("CambiarEstado")]
+        public async Task<IActionResult> CambiarEstado(int idCabecera)
+        {
+            if (idCabecera <= 0)
+            {
+                return BadRequest("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
+            }
+
+            try
+            {
+                // Obtener el usuario logueado desde el contexto de la petición (ejemplo con claims de JWT)
+                var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
+                int usuario = int.Parse(idUsuario.Value);
+
+                await _consolidarMecanizadaService.CambiarEstadoCabeceraAsync(idCabecera, usuario);
+                return Ok("Registros consolidados exitosamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al consolidar registros: {ex.Message}");
+            }
+        }
     }
 }
