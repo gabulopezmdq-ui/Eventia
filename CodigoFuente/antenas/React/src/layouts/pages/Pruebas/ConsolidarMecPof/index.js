@@ -7,6 +7,7 @@ import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import MDAlert from "components/MDAlert";
+import CircularProgress from "@mui/material/CircularProgress";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -34,6 +35,9 @@ function ConsolidarMecPOF() {
   const [openMecPopup, setOpenMecPopup] = useState(false);
   const [selectedIdEstablecimiento, setSelectedIdEstablecimiento] = useState(null);
   const [selectedDocente, setSelectedDocente] = useState(null);
+  const [loadingMec, setLoadingMec] = useState(false);
+  const [loadingDocentes, setLoadingDocentes] = useState(false);
+  const [loadingSuplentes, setLoadingSuplentes] = useState(false);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -119,6 +123,12 @@ function ConsolidarMecPOF() {
   //Boton de consolidar tabla MEC
   const handleButtonClick = (row) => {
     setSelectedIdEstablecimiento(row.idEstablecimiento);
+    setMecData([]);
+    setDocentesData([]);
+    setSuplentesData([]);
+    setLoadingMec(true);
+    setLoadingDocentes(true);
+    setLoadingSuplentes(true);
     axios
       .get(
         /*Endpoint TABLA MEC */
@@ -127,10 +137,12 @@ function ConsolidarMecPOF() {
       )
       .then((response) => {
         setMecData(response.data || []);
+        setLoadingMec(false);
       })
       .catch(() => {
         setErrorAlert({ show: true, message: "Error al obtener datos de MEC.", type: "error" });
-      });
+      })
+      .finally(() => setLoadingMec(false));
     /*Endpoint TABLA Docentes POF sin Haberes ni Subvenciones */
     axios
       .get(
@@ -139,6 +151,7 @@ function ConsolidarMecPOF() {
       )
       .then((response) => {
         setDocentesData(response.data || []);
+        setLoadingDocentes(false);
       })
       .catch(() => {
         setErrorAlert({
@@ -146,7 +159,8 @@ function ConsolidarMecPOF() {
           message: "Error al obtener los datos de Docentes.",
           type: "error",
         });
-      });
+      })
+      .finally(() => setLoadingDocentes(false));
     /*Endpoint TABLA Suplentes */
     axios
       .get(
@@ -155,6 +169,7 @@ function ConsolidarMecPOF() {
       )
       .then((response) => {
         setSuplentesData(response.data || []);
+        setLoadingSuplentes(false);
       })
       .catch(() => {
         setErrorAlert({
@@ -162,7 +177,8 @@ function ConsolidarMecPOF() {
           message: "Error al obtener los datos de Docentes Suplentes.",
           type: "error",
         });
-      });
+      })
+      .finally(() => setLoadingSuplentes(false));
   };
   // Boton delete de la tabla MEC
   const handleDelete = (id) => {
@@ -225,9 +241,16 @@ function ConsolidarMecPOF() {
     setSuplenteSeleccionado(suplente);
     setOpenPopup(true);
   };
+
   const handleSubmit = (data) => {
-    console.log("Enviando datos al backend:", data);
-    // Aquí haces la petición al backend con fetch o axios
+    const url = suplenteSeleccionado.pof.pofDetalle?.[0]
+      ? `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`
+      : `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`;
+
+    axios
+      .put(url, data, { headers: { Authorization: `Bearer ${token}` } })
+      .then(() => {})
+      .catch((error) => console.error("Error:", error));
   };
   //POPUP MEC
   const handleOpenMecPopup = (docente) => {
@@ -239,9 +262,17 @@ function ConsolidarMecPOF() {
     setOpenMecPopup(false);
   };
 
-  const handleSubmitMec = (formData) => {
-    console.log("Enviando datos al backend:", formData);
-    // Aquí iría la petición al backend con fetch o axios
+  const handleSubmitMec = async (formData) => {
+    try {
+      console.log("Enviando datos al backend:", formData);
+
+      const response = await axios.post("consolidar/MECPOF", formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Respuesta del backend:", response.data);
+    } catch (error) {
+      console.error("Error al enviar datos:", error);
+    }
   };
   const formatISODate = (isoString) => {
     if (!isoString) return "N/A";
@@ -339,7 +370,12 @@ function ConsolidarMecPOF() {
             </MDButton>
           </MDBox>
         )}
-        {mecData.length > 0 && (
+        {(loadingMec || loadingDocentes || loadingSuplentes) && (
+          <MDBox display="flex" justifyContent="center" my={3}>
+            <CircularProgress color="info" />
+          </MDBox>
+        )}
+        {mecData.length > 0 && !loadingMec && (
           <MDBox my={3}>
             <MDAlert className="custom-alert">
               <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
@@ -357,7 +393,7 @@ function ConsolidarMecPOF() {
                       Cell: ({ row }) =>
                         `${row.original.pof?.persona?.nombre} ${row.original.pof?.persona?.apellido}`,
                     },
-                    { Header: "DNI", accessor: "personaDNI" },
+                    { Header: "Documento", accessor: "pof.persona.dni" },
                     { Header: "Secuencia", accessor: "pof.secuencia" },
                     { Header: "Tipo Cargo", accessor: "pof.tipoCargo" },
                     { Header: "Año/Mes Afec", accessor: "anioMesAfectacion" },
@@ -387,7 +423,7 @@ function ConsolidarMecPOF() {
             </Card>
           </MDBox>
         )}
-        {docentesData.length > 0 && (
+        {docentesData.length > 0 && !loadingDocentes && (
           <MDBox my={3}>
             <MDAlert className="custom-alert">
               <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
@@ -444,7 +480,7 @@ function ConsolidarMecPOF() {
             </Card>
           </MDBox>
         )}
-        {suplentesData.length > 0 && (
+        {suplentesData.length > 0 && !loadingSuplentes && (
           <MDBox my={3}>
             <MDAlert className="custom-alert">
               <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>

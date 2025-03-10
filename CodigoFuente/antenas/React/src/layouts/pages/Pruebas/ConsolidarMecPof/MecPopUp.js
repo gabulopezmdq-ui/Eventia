@@ -37,33 +37,70 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
   useEffect(() => {
     if (docente) {
       setFormData({
-        docenteNombre: `${docente.personaNombre} ${docente.personaApellido}`,
+        docenteNombre: `${docente.personaNombre || ""} ${docente.personaApellido || ""}`,
         documento: docente.personaDNI || "",
         cargo: docente.tipoCargo || "",
-        anioReferencia: docente.mecanizadaAnioAfeccion || "",
-        mesReferencia: docente.mecanizadaMesAfeccion || "",
-        cantHorasConSub: docente.cantHorasCS ?? "",
-        cantHorasSinSub: docente.cantHorasSS ?? "",
+        anioReferencia: docente.mecanizadaAnioAfeccion ?? "",
+        mesReferencia: docente.mecanizadaMesAfeccion ?? "",
+        cantHorasConSub: docente.cantHorasCS ?? 0,
+        cantHorasSinSub: docente.cantHorasSS ?? 0,
         sinHaberes: docente.sinHaberes ? "S" : "N",
         noSubvencionado: docente.noSubvencionado ?? docente.noSubvencionadas ? "S" : "N",
-        antiguedadAnioRef: "",
-        antiguedadMesRef: "",
-        cantAniosAntiguedad: "",
-        cantMesesAntiguedad: "",
+        antiguedadAnioRef: docente.anioAntiguedad ?? "",
+        antiguedadMesRef: docente.mesAntiguedad ?? "",
+        cantAniosAntiguedad: docente.anioAntiguedad ?? "",
+        cantMesesAntiguedad: docente.mesAntiguedad ?? "",
       });
     }
   }, [docente]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const camposNumericos = [
+      "mesReferencia",
+      "antiguedadMesRef",
+      "cantAniosAntiguedad",
+      "cantMesesAntiguedad",
+    ];
+    setFormData({
+      ...formData,
+      [name]: camposNumericos.includes(name) ? Number(value) || value : value,
+    });
   };
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
     setFormData({ ...formData, [name]: checked ? "S" : "N" });
   };
   const handleSubmit = () => {
-    onSubmit(formData);
+    const submitData = tieneAntiguedad
+      ? {
+          idCabecera: formData.idCabecera,
+          idPof: formData.idPof,
+          cantHorasCs: formData.cantHorasConSub,
+          cantHorasSs: formData.cantHorasSinSub,
+          anioReferencia: formData.anioReferencia,
+          mesReferencia: formData.mesReferencia,
+          sinHaberes: formData.sinHaberes,
+          noSubvencionado: formData.noSubvencionado,
+        }
+      : {
+          idCabecera: formData.idCabecera,
+          idPof: formData.idPof,
+          cantHorasCs: formData.cantHorasConSub,
+          cantHorasSs: formData.cantHorasSinSub,
+          anioReferencia: formData.anioReferencia,
+          mesReferencia: formData.mesReferencia,
+          sinHaberes: formData.sinHaberes,
+          noSubvencionado: formData.noSubvencionado,
+          mesRefAntiguedad: formData.antiguedadMesRef,
+          anioRefAntiguedad: formData.antiguedadAnioRef,
+          cantAnioAntiguedad: formData.cantAniosAntiguedad,
+          cantMesAntiguedad: formData.cantMesesAntiguedad,
+          idEstablecimiento: formData.idEstablecimiento,
+          anioAfeccion: formData.anioReferencia,
+          mesAfeccion: formData.mesReferencia,
+        };
+    onSubmit(submitData);
     handleClose();
   };
 
@@ -108,6 +145,7 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
               <InputLabel>Mes Referencia</InputLabel>
               <Select
                 name="mesReferencia"
+                label="Mes Referencia"
                 value={formData.mesReferencia}
                 onChange={handleChange}
                 style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -126,7 +164,7 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
                   "Noviembre",
                   "Diciembre",
                 ].map((mes, index) => (
-                  <MenuItem key={index} value={mes}>
+                  <MenuItem key={index} value={index + 1}>
                     {mes}
                   </MenuItem>
                 ))}
@@ -196,6 +234,7 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
                   <InputLabel>Mes Ref. Antigüedad</InputLabel>
                   <Select
                     name="antiguedadMesRef"
+                    label="Mes Ref. Antigüedad"
                     value={formData.antiguedadMesRef}
                     onChange={handleChange}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -214,7 +253,7 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
                       "Noviembre",
                       "Diciembre",
                     ].map((mes, index) => (
-                      <MenuItem key={index} value={mes}>
+                      <MenuItem key={index} value={index + 1}>
                         {mes}
                       </MenuItem>
                     ))}
@@ -277,6 +316,8 @@ MecPopup.propTypes = {
     cantHorasCS: PropTypes.number,
     cantHorasSS: PropTypes.number,
     noSubvencionado: PropTypes.bool,
+    anioAntiguedad: PropTypes.number,
+    mesAntiguedad: PropTypes.number,
   }),
   tieneAntiguedad: PropTypes.bool.isRequired,
 };
