@@ -338,20 +338,17 @@ namespace API.Services
         }
 
         // Actualizar MEC_POFDetalle 
-        public async Task ActualizarMEC_POFDetalle(MEC_POFDetalle alta, int idCabecera, DateTime? desde, DateTime? hasta)
+        public async Task ActualizarMEC_POFDetalle(MEC_POFDetalle detalle)
         {
-            if (desde == DateTime.MinValue || hasta == DateTime.MinValue)
+            if (detalle.SupleDesde == DateTime.MinValue || detalle.SupleHasta == DateTime.MinValue)
             {
                 throw new ArgumentException("Las fechas de suplencia no pueden ser valores predeterminados.");
             }
 
-            alta.IdCabecera = idCabecera;
-            alta.SupleDesde = desde ?? null;
-            alta.SupleHasta = hasta ?? null;
-
-            _context.Add(alta);
+            _context.Add(detalle);
             await _context.SaveChangesAsync();
         }
+
 
         // Obtener Mecanizadas
 
@@ -377,5 +374,56 @@ namespace API.Services
             return result.Cast<object>().ToList();
         }
 
+
+        public async Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario)
+        {
+            if (idCabecera <= 0 || idEstablecimiento <= 0)
+                throw new ArgumentException("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
+
+            // Obtener los registros de MEC_Mecanizada que coincidan con la cabecera y el establecimiento
+            var registros = await _context.MEC_Mecanizadas
+                .Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
+                .ToListAsync();
+
+            if (!registros.Any())
+                throw new InvalidOperationException("No hay registros para consolidar.");
+
+            // Actualizar los campos requeridos
+            foreach (var registro in registros)
+            {
+                registro.FechaConsolidacion = DateTime.Now;
+                registro.IdUsuario = usuario;
+                registro.Consolidado = "S";
+            }
+
+            // Guardar los cambios en la base de datos
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CambiarEstadoCabeceraAsync(int idCabecera, int usuario)
+        {
+            var cabecera = await _context.MEC_CabeceraLiquidacion
+                .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
+            if (cabecera == null)
+                throw new Exception("Cabecera no encontrada");
+
+            // Cambiar estado
+            cabecera.Estado = "S";
+
+            // Registrar cambio en MEC_CabeceraLiquidacionEstados
+            var nuevoEstado = new MEC_CabeceraLiquidacionEstados
+            {
+                IdCabecera = idCabecera,
+                FechaCambioEstado = DateTime.Today,
+                IdUsuario = usuario,
+                Estado = "S"
+            };
+
+            _context.MEC_CabeceraLiquidacionEstados.Add(nuevoEstado);
+
+            await _context.SaveChangesAsync();
+        }
     }
+
 }
