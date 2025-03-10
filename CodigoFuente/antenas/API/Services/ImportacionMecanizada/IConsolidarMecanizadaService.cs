@@ -27,5 +27,7 @@ namespace API.Services.ImportacionMecanizada
         Task<List<MEC_Mecanizadas>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento);
         Task<List<object>> ObtenerPOFsSimplificadoAsync(int idEstablecimiento);
         Task ActualizarMEC_POFDetalle(MEC_POFDetalle detalle);
+        Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario);
+        Task CambiarEstadoCabeceraAsync(int idCabecera, int usuario);
     }
 }
