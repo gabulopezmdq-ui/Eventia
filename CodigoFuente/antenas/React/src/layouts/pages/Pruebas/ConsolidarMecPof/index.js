@@ -225,9 +225,16 @@ function ConsolidarMecPOF() {
     setSuplenteSeleccionado(suplente);
     setOpenPopup(true);
   };
+
   const handleSubmit = (data) => {
-    console.log("Enviando datos al backend:", data);
-    // Aquí haces la petición al backend con fetch o axios
+    const url = suplenteSeleccionado.pof.pofDetalle?.[0]
+      ? `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`
+      : `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`;
+
+    axios
+      .put(url, data, { headers: { Authorization: `Bearer ${token}` } })
+      .then(() => {})
+      .catch((error) => console.error("Error:", error));
   };
   //POPUP MEC
   const handleOpenMecPopup = (docente) => {
@@ -241,7 +248,6 @@ function ConsolidarMecPOF() {
 
   const handleSubmitMec = (formData) => {
     console.log("Enviando datos al backend:", formData);
-    // Aquí iría la petición al backend con fetch o axios
   };
   const formatISODate = (isoString) => {
     if (!isoString) return "N/A";
