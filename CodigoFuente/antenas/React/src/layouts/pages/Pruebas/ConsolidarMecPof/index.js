@@ -242,15 +242,21 @@ function ConsolidarMecPOF() {
     setOpenPopup(true);
   };
 
-  const handleSubmit = (data) => {
-    const url = suplenteSeleccionado.pof.pofDetalle?.[0]
-      ? `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`
-      : `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`;
+  const handleSubmit = async (data) => {
+    try {
+      const url = suplenteSeleccionado.pof.pofDetalle?.[0]
+        ? `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`
+        : `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`;
 
-    axios
-      .put(url, data, { headers: { Authorization: `Bearer ${token}` } })
-      .then(() => {})
-      .catch((error) => console.error("Error:", error));
+      const response = await axios.put(url, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Error en la operación";
+      throw new Error(errorMessage);
+    }
   };
   //POPUP MEC
   const handleOpenMecPopup = (docente) => {
@@ -264,14 +270,14 @@ function ConsolidarMecPOF() {
 
   const handleSubmitMec = async (formData) => {
     try {
-      console.log("Enviando datos al backend:", formData);
-
       const response = await axios.post("consolidar/MECPOF", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Respuesta del backend:", response.data);
+      return response.data;
     } catch (error) {
       console.error("Error al enviar datos:", error);
+      throw error;
     }
   };
   const formatISODate = (isoString) => {
@@ -554,6 +560,7 @@ function ConsolidarMecPOF() {
           handleClose={handleCloseMecPopup}
           docente={selectedDocente}
           onSubmit={handleSubmitMec}
+          idCabecera={selectedCabecera}
           tieneAntiguedad={selectedDocente?.tieneAntiguedad ?? false}
         />
       </DashboardLayout>
