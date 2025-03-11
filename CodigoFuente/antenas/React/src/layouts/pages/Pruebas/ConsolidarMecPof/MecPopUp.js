@@ -2,6 +2,9 @@ import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
+import MDAlert from "components/MDAlert";
+import MDTypography from "components/MDTypography";
+import MDBox from "components/MDBox";
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +21,10 @@ import {
 import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
 
-const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => {
+const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad, idCabecera }) => {
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertType, setAlertType] = useState("success");
+  const [alertMessage, setAlertMessage] = useState("");
   const [formData, setFormData] = useState({
     docenteNombre: "",
     documento: "",
@@ -33,6 +39,8 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
     antiguedadMesRef: "",
     cantAniosAntiguedad: "",
     cantMesesAntiguedad: "",
+    idCabecera: "",
+    idEstablecimiento: "",
   });
   useEffect(() => {
     if (docente) {
@@ -50,6 +58,9 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
         antiguedadMesRef: docente.mesAntiguedad ?? "",
         cantAniosAntiguedad: docente.anioAntiguedad ?? "",
         cantMesesAntiguedad: docente.mesAntiguedad ?? "",
+        idPOF: docente.idPOF ?? "",
+        idCabecera: idCabecera ?? "",
+        idEstablecimiento: docente.idEstablecimiento ?? "",
       });
     }
   }, [docente]);
@@ -71,43 +82,76 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad }) => 
     const { name, checked } = e.target;
     setFormData({ ...formData, [name]: checked ? "S" : "N" });
   };
-  const handleSubmit = () => {
-    const submitData = tieneAntiguedad
-      ? {
-          idCabecera: formData.idCabecera,
-          idPof: formData.idPof,
-          cantHorasCs: formData.cantHorasConSub,
-          cantHorasSs: formData.cantHorasSinSub,
-          anioReferencia: formData.anioReferencia,
-          mesReferencia: formData.mesReferencia,
-          sinHaberes: formData.sinHaberes,
-          noSubvencionado: formData.noSubvencionado,
-        }
-      : {
-          idCabecera: formData.idCabecera,
-          idPof: formData.idPof,
-          cantHorasCs: formData.cantHorasConSub,
-          cantHorasSs: formData.cantHorasSinSub,
-          anioReferencia: formData.anioReferencia,
-          mesReferencia: formData.mesReferencia,
-          sinHaberes: formData.sinHaberes,
-          noSubvencionado: formData.noSubvencionado,
-          mesRefAntiguedad: formData.antiguedadMesRef,
-          anioRefAntiguedad: formData.antiguedadAnioRef,
-          cantAnioAntiguedad: formData.cantAniosAntiguedad,
-          cantMesAntiguedad: formData.cantMesesAntiguedad,
-          idEstablecimiento: formData.idEstablecimiento,
-          anioAfeccion: formData.anioReferencia,
-          mesAfeccion: formData.mesReferencia,
-        };
-    onSubmit(submitData);
-    handleClose();
+  const handleSubmit = async () => {
+    try {
+      const submitData = tieneAntiguedad
+        ? {
+            idCabecera: formData.idCabecera,
+            idPOF: formData.idPOF,
+            cantHorasCs: formData.cantHorasConSub,
+            cantHorasSs: formData.cantHorasSinSub,
+            anioReferencia: formData.anioReferencia,
+            mesReferencia: formData.mesReferencia,
+            sinHaberes: formData.sinHaberes,
+            noSubvencionado: formData.noSubvencionado,
+          }
+        : {
+            idCabecera: formData.idCabecera,
+            idPOF: formData.idPOF,
+            cantHorasCs: formData.cantHorasConSub,
+            cantHorasSs: formData.cantHorasSinSub,
+            anioReferencia: formData.anioReferencia,
+            mesReferencia: formData.mesReferencia,
+            sinHaberes: formData.sinHaberes,
+            noSubvencionado: formData.noSubvencionado,
+            mesRefAntiguedad: formData.antiguedadMesRef,
+            anioRefAntiguedad: formData.antiguedadAnioRef,
+            cantAnioAntiguedad: formData.cantAniosAntiguedad,
+            cantMesAntiguedad: formData.cantMesesAntiguedad,
+            idEstablecimiento: formData.idEstablecimiento,
+            anioAfeccion: formData.anioReferencia,
+            mesAfeccion: formData.mesReferencia,
+            idEstablecimiento: formData.idEstablecimiento,
+          };
+      await onSubmit(submitData);
+      setAlertType("success");
+      setAlertMessage("Operación realizada con éxito!");
+      setShowAlert(true);
+      setTimeout(() => {
+        handleClose();
+        setShowAlert(false);
+      }, 3500);
+    } catch (error) {
+      setAlertType("error");
+      setAlertMessage(error.response?.data?.message || "Error en la operación");
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 4500);
+    }
   };
+
+  useEffect(() => {
+    if (open) {
+      setShowAlert(false);
+      setAlertType("success");
+      setAlertMessage("");
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Agregar a MEC</DialogTitle>
       <DialogContent>
+        {showAlert && (
+          <MDBox mt={1} mb={2}>
+            <MDAlert color={alertType} dismissible onClose={() => setShowAlert(false)}>
+              <MDTypography variant="body2" color="white">
+                {alertMessage}
+              </MDTypography>
+            </MDAlert>
+          </MDBox>
+        )}
         <Grid container spacing={3}>
           <Grid item xs={6}>
             <TextField
@@ -302,6 +346,7 @@ MecPopup.propTypes = {
   open: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  idCabecera: PropTypes.number,
   docente: PropTypes.shape({
     personaNombre: PropTypes.string,
     personaApellido: PropTypes.string,
@@ -317,7 +362,9 @@ MecPopup.propTypes = {
     cantHorasSS: PropTypes.number,
     noSubvencionado: PropTypes.bool,
     anioAntiguedad: PropTypes.number,
+    idPOF: PropTypes.number,
     mesAntiguedad: PropTypes.number,
+    idEstablecimiento: PropTypes.number,
   }),
   tieneAntiguedad: PropTypes.bool.isRequired,
 };
