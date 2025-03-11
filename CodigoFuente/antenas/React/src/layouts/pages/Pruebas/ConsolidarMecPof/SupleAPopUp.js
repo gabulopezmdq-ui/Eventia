@@ -2,6 +2,9 @@ import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
+import MDAlert from "components/MDAlert";
+import MDTypography from "components/MDTypography";
+import MDBox from "components/MDBox";
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +26,9 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
   const [selectedDocente, setSelectedDocente] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertType, setAlertType] = useState("success");
+  const [alertMessage, setAlertMessage] = useState("");
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     if (open && idEstablecimiento) {
@@ -38,7 +44,6 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
             nombreCompleto: `${docente.nombre} ${docente.apellido}`,
           }));
           setDocentes(formattedData);
-          // Inicializar datos existentes si existen
           if (suplente?.pof?.pofDetalle?.[0]) {
             const detalle = suplente.pof.pofDetalle[0];
             setSelectedDocente(detalle.suplencia?.persona?.idPersona || "");
@@ -52,6 +57,14 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
   }, [open, idEstablecimiento, suplente]);
 
   useEffect(() => {
+    if (open) {
+      setShowAlert(false);
+      setAlertType("success");
+      setAlertMessage("");
+    }
+  }, [open]);
+
+  useEffect(() => {
     if (!open) {
       setSelectedDocente("");
       setFechaDesde("");
@@ -59,22 +72,46 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
     }
   }, [open]);
 
-  const handleEnviar = () => {
-    const data = {
-      idPOF: suplente.idPOF,
-      idSupleA: selectedDocente,
-      supleDesde: fechaDesde,
-      supleHasta: fechaHasta,
-      idCabecera: suplente.cabecera.idCabecera,
-    };
-    onSubmit(data);
-    handleClose();
+  const handleEnviar = async () => {
+    try {
+      const data = {
+        idPOF: suplente.idPOF,
+        idSupleA: selectedDocente,
+        supleDesde: fechaDesde,
+        supleHasta: fechaHasta,
+        idCabecera: suplente.cabecera.idCabecera,
+      };
+
+      await onSubmit(data);
+
+      setAlertType("success");
+      setAlertMessage("Suplente asignado correctamente!");
+      setShowAlert(true);
+
+      setTimeout(() => {
+        handleClose();
+        setShowAlert(false);
+      }, 2000);
+    } catch (error) {
+      setAlertType("error");
+      setAlertMessage(error.response?.data?.message || "Error al asignar suplente");
+      setShowAlert(true);
+    }
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Asignar Suplente</DialogTitle>
       <DialogContent>
+        {showAlert && (
+          <MDBox mt={1} mb={2}>
+            <MDAlert color={alertType} dismissible onClose={() => setShowAlert(false)}>
+              <MDTypography variant="body2" color="white">
+                {alertMessage}
+              </MDTypography>
+            </MDAlert>
+          </MDBox>
+        )}
         <Grid container spacing={3}>
           <Grid item xs={6}>
             <TextField
