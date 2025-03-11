@@ -251,11 +251,31 @@ function ConsolidarMecPOF() {
       const response = await axios.put(url, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      fetchSuplentesData(selectedIdEstablecimiento);
 
       return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error en la operación";
       throw new Error(errorMessage);
+    }
+  };
+
+  const fetchSuplentesData = async (idEstablecimiento) => {
+    setLoadingSuplentes(true);
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}Consolidar/Suplentes?idCabecera=${selectedCabecera}&idEstablecimiento=${idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSuplentesData(response.data || []);
+    } catch (error) {
+      setErrorAlert({
+        show: true,
+        message: "Error al obtener los datos de Docentes Suplentes.",
+        type: "error",
+      });
+    } finally {
+      setLoadingSuplentes(false);
     }
   };
   //POPUP MEC
@@ -273,11 +293,26 @@ function ConsolidarMecPOF() {
       const response = await axios.post("consolidar/MECPOF", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       console.log("Respuesta del backend:", response.data);
-      return response.data;
+
+      setLoadingDocentes(true);
+      const docentesResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerRegistrosPOFNoMecanizados?idCabecera=${selectedCabecera}&idEstablecimiento=${formData.idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setDocentesData(docentesResponse.data || []);
     } catch (error) {
       console.error("Error al enviar datos:", error);
+      setErrorAlert({
+        show: true,
+        message: "Error al enviar datos o actualizar docentes.",
+        type: "error",
+      });
       throw error;
+    } finally {
+      setLoadingDocentes(false);
     }
   };
   const formatISODate = (isoString) => {
