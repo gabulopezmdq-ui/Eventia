@@ -290,9 +290,13 @@ function ConsolidarMecPOF() {
 
   const handleSubmitMec = async (formData) => {
     try {
-      const response = await axios.post("consolidar/MECPOF", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}Consolidar/ProcesarAltaMecanizada`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       console.log("Respuesta del backend:", response.data);
 
