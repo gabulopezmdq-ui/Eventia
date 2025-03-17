@@ -319,6 +319,7 @@ namespace API.Services
                                 .Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
                 .Include(m => m.POF)
                 .ThenInclude(p => p.POFDetalle)
+                .ThenInclude(s => s.SupleA)
                 .ToListAsync();
         }
 
@@ -409,7 +410,7 @@ namespace API.Services
                 throw new Exception("Cabecera no encontrada");
 
             // Cambiar estado
-            cabecera.Estado = "S";
+            cabecera.Estado = "S";  
 
             // Registrar cambio en MEC_CabeceraLiquidacionEstados
             var nuevoEstado = new MEC_CabeceraLiquidacionEstados
