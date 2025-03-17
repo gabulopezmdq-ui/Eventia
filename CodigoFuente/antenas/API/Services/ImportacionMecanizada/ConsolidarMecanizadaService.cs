@@ -319,7 +319,7 @@ namespace API.Services
                                 .Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
                 .Include(m => m.POF)
                 .ThenInclude(p => p.POFDetalle)
-                .ThenInclude(s => s.SupleA)
+                .ThenInclude(s => s.Suplencia)
                 .ToListAsync();
         }
 
@@ -339,15 +339,28 @@ namespace API.Services
         }
 
         // Actualizar MEC_POFDetalle 
-        public async Task ActualizarMEC_POFDetalle(MEC_POFDetalle detalle)
+        public async Task ActualizarMEC_POFDetalle(int idPOF, int supleAId, DateTime supleDesde, DateTime supleHasta)
         {
-            if (detalle.SupleDesde == DateTime.MinValue || detalle.SupleHasta == DateTime.MinValue)
-            {
-                throw new ArgumentException("Las fechas de suplencia no pueden ser valores predeterminados.");
-            }
+            
 
-            _context.Add(detalle);
-            await _context.SaveChangesAsync();
+            // Buscar el registro correspondiente
+            var detalle = await _context.MEC_POFDetalle.FirstOrDefaultAsync(d => d.IdPOF == idPOF);
+
+            if (detalle != null)
+            {
+                // Actualizar los campos
+                detalle.SupleA = supleAId;
+                detalle.SupleDesde = supleDesde;
+                detalle.SupleHasta = supleHasta;
+
+                // Guardar los cambios
+                _context.Update(detalle);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new ArgumentException("No se encontró el registro con el IdPOF especificado.");
+            }
         }
 
 

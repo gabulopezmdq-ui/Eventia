@@ -200,10 +200,22 @@ namespace API.Controllers
         }
 
         [HttpPut("POFDetalle")]
-        public async Task<ActionResult<MEC_POFDetalle>> Update([FromBody] MEC_POFDetalle detalle)
+        public async Task<ActionResult> Update(int idPOF, int supleAId, DateTime supleDesde, DateTime supleHasta)
         {
-            await _consolidarMecanizadaService.ActualizarMEC_POFDetalle(detalle);
-            return Ok(detalle);
+            try
+            {
+                // Llamar al servicio para actualizar el detalle
+                await _consolidarMecanizadaService.ActualizarMEC_POFDetalle(idPOF, supleAId, supleDesde, supleHasta);
+                return Ok(new { message = "Detalle actualizado correctamente." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Ocurrió un error al actualizar el detalle.", error = ex.Message });
+            }
         }
 
         [HttpPost("Consolidar")]
