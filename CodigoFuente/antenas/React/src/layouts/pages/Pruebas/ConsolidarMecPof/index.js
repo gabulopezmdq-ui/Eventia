@@ -325,6 +325,7 @@ function ConsolidarMecPOF() {
     const [anio, mes, dia] = fecha.split("-");
     return `${anio}/${mes}/${dia}`;
   };
+  const shouldHideTables = allCountsZero;
   return (
     <>
       <DashboardLayout>
@@ -420,172 +421,178 @@ function ConsolidarMecPOF() {
             <CircularProgress color="info" />
           </MDBox>
         )}
-        {mecData.length > 0 && !loadingMec && (
-          <MDBox my={3}>
-            <MDAlert className="custom-alert">
-              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
-              <MDTypography ml={1} variant="button">
-                MEC
-              </MDTypography>
-            </MDAlert>
-            <Card>
-              <DataTable
-                table={{
-                  columns: [
-                    {
-                      Header: "Nombre Completo",
-                      accessor: "nombreCompleto",
-                      Cell: ({ row }) =>
-                        `${row.original.pof?.persona?.nombre} ${row.original.pof?.persona?.apellido}`,
-                    },
-                    { Header: "Documento", accessor: "pof.persona.dni" },
-                    { Header: "Secuencia", accessor: "pof.secuencia" },
-                    { Header: "Tipo Cargo", accessor: "pof.tipoCargo" },
-                    { Header: "Año/Mes Afec", accessor: "anioMesAfectacion" },
-                    { Header: "CodLiq", accessor: "codigoLiquidacion" },
-                    { Header: "Origen", accessor: "origen" },
-                    {
-                      Header: "Acción",
-                      accessor: "accion",
-                      Cell: ({ row }) => (
-                        <MDButton
-                          size="small"
-                          color="error"
-                          variant="gradient"
-                          onClick={() => handleDelete(row.original.id)}
-                          disabled={row.original.mecanizadaOrigen !== "POF"}
-                        >
-                          Eliminar
-                        </MDButton>
-                      ),
-                    },
-                  ],
-                  rows: mecData,
-                }}
-                entriesPerPage={false}
-                canSearch
-              />
-            </Card>
-          </MDBox>
-        )}
-        {docentesData.length > 0 && !loadingDocentes && (
-          <MDBox my={3}>
-            <MDAlert className="custom-alert">
-              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
-              <MDTypography ml={1} variant="button">
-                Docentes POF sin haberes ni subvenciones
-              </MDTypography>
-            </MDAlert>
-            <Card>
-              <DataTable
-                table={{
-                  columns: [
-                    { Header: "Documento", accessor: "personaDNI" },
-                    {
-                      Header: "Nombre Completo",
-                      accessor: "nombreCompleto",
-                      Cell: ({ row }) =>
-                        `${row.original.personaNombre} ${row.original.personaApellido}`,
-                    },
-                    { Header: "Secuencia", accessor: "secuencia" },
-                    { Header: "Car. Revista", accessor: "carRevista" },
-                    { Header: "Cargo", accessor: "cargo" },
-                    { Header: "Horas", accessor: "cantHorasCS" },
-                    {
-                      Header: "Sin Haberes",
-                      accessor: "sinHaberes",
-                      Cell: ({ value }) => (value === null ? "N/A" : value),
-                    },
-                    {
-                      Header: "No Subvencionadas",
-                      accessor: "noSubvencionado",
-                      Cell: ({ value }) => (value === null ? "N/A" : value),
-                    },
-                    {
-                      Header: "Acción",
-                      accessor: "accion",
-                      Cell: ({ row }) => (
-                        <MDButton
-                          size="small"
-                          color="success"
-                          variant="gradient"
-                          onClick={() => handleOpenMecPopup(row.original)}
-                        >
-                          Agregar MEC
-                        </MDButton>
-                      ),
-                    },
-                  ],
-                  rows: docentesData,
-                }}
-                entriesPerPage={false}
-                canSearch
-                show
-              />
-            </Card>
-          </MDBox>
-        )}
-        {suplentesData.length > 0 && !loadingSuplentes && (
-          <MDBox my={3}>
-            <MDAlert className="custom-alert">
-              <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
-              <MDTypography ml={1} variant="button">
-                Docentes Suplentes
-              </MDTypography>
-            </MDAlert>
-            <Card>
-              <DataTable
-                table={{
-                  columns: [
-                    { Header: "Documento", accessor: "pof.persona.dni" },
-                    {
-                      Header: "Nombre Completo",
-                      accessor: "nombreCompleto",
-                      Cell: ({ row }) =>
-                        `${row.original.pof.persona.nombre} ${row.original.pof.persona.apellido}`,
-                    },
-                    {
-                      Header: "Suple A",
-                      accessor: "",
-                      Cell: ({ row }) =>
-                        `${row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.nombre || ""} 
-                         ${row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.apellido || ""}`,
-                    },
-                    {
-                      Header: "Desde",
-                      accessor: "desde",
-                      Cell: ({ row }) =>
-                        formatISODate(row.original.pof.pofDetalle?.[0]?.supleDesde),
-                    },
-                    {
-                      Header: "Hasta",
-                      accessor: "hasta",
-                      Cell: ({ row }) =>
-                        formatISODate(row.original.pof.pofDetalle?.[0]?.supleHasta),
-                    },
-                    {
-                      Header: "Acción",
-                      accessor: "accion",
-                      Cell: ({ row }) => (
-                        <MDButton
-                          size="small"
-                          color="warning"
-                          variant="gradient"
-                          onClick={() => handlePopUP(row.original)}
-                        >
-                          Suple A
-                        </MDButton>
-                      ),
-                    },
-                  ],
-                  rows: suplentesData,
-                }}
-                entriesPerPage={false}
-                canSearch
-                show
-              />
-            </Card>
-          </MDBox>
+        {!shouldHideTables && (
+          <>
+            {mecData.length > 0 && !loadingMec && (
+              <MDBox my={3}>
+                <MDAlert className="custom-alert">
+                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+                  <MDTypography ml={1} variant="button">
+                    MEC
+                  </MDTypography>
+                </MDAlert>
+                <Card>
+                  <DataTable
+                    table={{
+                      columns: [
+                        {
+                          Header: "Nombre Completo",
+                          accessor: "nombreCompleto",
+                          Cell: ({ row }) =>
+                            `${row.original.pof?.persona?.nombre} ${row.original.pof?.persona?.apellido}`,
+                        },
+                        { Header: "Documento", accessor: "pof.persona.dni" },
+                        { Header: "Secuencia", accessor: "pof.secuencia" },
+                        { Header: "Tipo Cargo", accessor: "pof.tipoCargo" },
+                        { Header: "Año/Mes Afec", accessor: "anioMesAfectacion" },
+                        { Header: "CodLiq", accessor: "codigoLiquidacion" },
+                        { Header: "Origen", accessor: "origen" },
+                        {
+                          Header: "Acción",
+                          accessor: "accion",
+                          Cell: ({ row }) => (
+                            <MDButton
+                              size="small"
+                              color="error"
+                              variant="gradient"
+                              onClick={() => handleDelete(row.original.id)}
+                              disabled={row.original.mecanizadaOrigen !== "POF"}
+                            >
+                              Eliminar
+                            </MDButton>
+                          ),
+                        },
+                      ],
+                      rows: mecData,
+                    }}
+                    entriesPerPage={false}
+                    canSearch
+                  />
+                </Card>
+              </MDBox>
+            )}
+            {docentesData.length > 0 && !loadingDocentes && (
+              <MDBox my={3}>
+                <MDAlert className="custom-alert">
+                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+                  <MDTypography ml={1} variant="button">
+                    Docentes POF sin haberes ni subvenciones
+                  </MDTypography>
+                </MDAlert>
+                <Card>
+                  <DataTable
+                    table={{
+                      columns: [
+                        { Header: "Documento", accessor: "personaDNI" },
+                        {
+                          Header: "Nombre Completo",
+                          accessor: "nombreCompleto",
+                          Cell: ({ row }) =>
+                            `${row.original.personaNombre} ${row.original.personaApellido}`,
+                        },
+                        { Header: "Secuencia", accessor: "secuencia" },
+                        { Header: "Car. Revista", accessor: "carRevista" },
+                        { Header: "Cargo", accessor: "cargo" },
+                        { Header: "Horas", accessor: "cantHorasCS" },
+                        {
+                          Header: "Sin Haberes",
+                          accessor: "sinHaberes",
+                          Cell: ({ value }) => (value === null ? "N/A" : value),
+                        },
+                        {
+                          Header: "No Subvencionadas",
+                          accessor: "noSubvencionado",
+                          Cell: ({ value }) => (value === null ? "N/A" : value),
+                        },
+                        {
+                          Header: "Acción",
+                          accessor: "accion",
+                          Cell: ({ row }) => (
+                            <MDButton
+                              size="small"
+                              color="success"
+                              variant="gradient"
+                              onClick={() => handleOpenMecPopup(row.original)}
+                            >
+                              Agregar MEC
+                            </MDButton>
+                          ),
+                        },
+                      ],
+                      rows: docentesData,
+                    }}
+                    entriesPerPage={false}
+                    canSearch
+                    show
+                  />
+                </Card>
+              </MDBox>
+            )}
+            {suplentesData.length > 0 && !loadingSuplentes && (
+              <MDBox my={3}>
+                <MDAlert className="custom-alert">
+                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+                  <MDTypography ml={1} variant="button">
+                    Docentes Suplentes
+                  </MDTypography>
+                </MDAlert>
+                <Card>
+                  <DataTable
+                    table={{
+                      columns: [
+                        { Header: "Documento", accessor: "pof.persona.dni" },
+                        {
+                          Header: "Nombre Completo",
+                          accessor: "nombreCompleto",
+                          Cell: ({ row }) =>
+                            `${row.original.pof.persona.nombre} ${row.original.pof.persona.apellido}`,
+                        },
+                        {
+                          Header: "Suple A",
+                          accessor: "",
+                          Cell: ({ row }) =>
+                            `${row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.nombre || ""} 
+                            ${
+                              row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.apellido || ""
+                            }`,
+                        },
+                        {
+                          Header: "Desde",
+                          accessor: "desde",
+                          Cell: ({ row }) =>
+                            formatISODate(row.original.pof.pofDetalle?.[0]?.supleDesde),
+                        },
+                        {
+                          Header: "Hasta",
+                          accessor: "hasta",
+                          Cell: ({ row }) =>
+                            formatISODate(row.original.pof.pofDetalle?.[0]?.supleHasta),
+                        },
+                        {
+                          Header: "Acción",
+                          accessor: "accion",
+                          Cell: ({ row }) => (
+                            <MDButton
+                              size="small"
+                              color="warning"
+                              variant="gradient"
+                              onClick={() => handlePopUP(row.original)}
+                            >
+                              Suple A
+                            </MDButton>
+                          ),
+                        },
+                      ],
+                      rows: suplentesData,
+                    }}
+                    entriesPerPage={false}
+                    canSearch
+                    show
+                  />
+                </Card>
+              </MDBox>
+            )}
+          </>
         )}
         <SupleAPopup
           open={openPopup}
