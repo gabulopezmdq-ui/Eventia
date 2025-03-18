@@ -1,4 +1,5 @@
 ﻿using API.DataSchema;
+using API.DataSchema.DTO;
 using API.Services;
 using API.Services.ImportacionMecanizada;
 using Microsoft.AspNetCore.Authorization;
@@ -200,12 +201,15 @@ namespace API.Controllers
         }
 
         [HttpPut("POFDetalle")]
-        public async Task<ActionResult> Update(int idPOF, int supleAId, DateTime supleDesde, DateTime supleHasta)
+        public async Task<ActionResult> Update([FromBody] POFDetalleRequestDTO request)
         {
             try
             {
                 // Llamar al servicio para actualizar el detalle
-                await _consolidarMecanizadaService.ActualizarMEC_POFDetalle(idPOF, supleAId, supleDesde, supleHasta);
+                await _consolidarMecanizadaService.ActualizarMEC_POFDetalle(
+                    request.IdPOF, request.SupleA, request.IdCabecera, request.SupleDesde, request.SupleHasta
+                );
+
                 return Ok(new { message = "Detalle actualizado correctamente." });
             }
             catch (ArgumentException ex)
@@ -217,6 +221,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Ocurrió un error al actualizar el detalle.", error = ex.Message });
             }
         }
+
 
         [HttpPost("Consolidar")]
         public async Task<IActionResult> Consolidar(int idCabecera, int idEstablecimiento)
