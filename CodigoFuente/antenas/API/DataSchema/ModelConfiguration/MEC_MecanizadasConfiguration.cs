@@ -29,7 +29,7 @@ namespace API.DataSchema.ModelConfiguration
                 .HasOne(p => p.Usuario) 
                 .WithMany(t => t.Mecanizadas)
                 .HasForeignKey(p => p.IdUsuario)
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder
                 .Navigation(e => e.Usuario)
