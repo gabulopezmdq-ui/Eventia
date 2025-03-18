@@ -339,17 +339,17 @@ namespace API.Services
         }
 
         // Actualizar MEC_POFDetalle 
-        public async Task ActualizarMEC_POFDetalle(int idPOF, int supleAId, DateTime supleDesde, DateTime supleHasta)
+        public async Task ActualizarMEC_POFDetalle(int idPOF, int supleA, int idCabecera, DateTime supleDesde, DateTime supleHasta)
         {
             
 
             // Buscar el registro correspondiente
-            var detalle = await _context.MEC_POFDetalle.FirstOrDefaultAsync(d => d.IdPOF == idPOF);
+            var detalle = await _context.MEC_POFDetalle.FirstOrDefaultAsync(d => d.IdPOF == idPOF && d.IdCabecera == idCabecera);
 
             if (detalle != null)
             {
                 // Actualizar los campos
-                detalle.SupleA = supleAId;
+                detalle.SupleA = supleA;
                 detalle.SupleDesde = supleDesde;
                 detalle.SupleHasta = supleHasta;
 
