@@ -210,7 +210,8 @@ namespace API.Services
                 AntiguedadAnios = datos.AntiguedadAnios,
                 AntiguedadMeses = datos.AntiguedadMeses,
                 SinHaberes = datos.SinHaberes,
-                NoSubvencionado = datos.NoSubvencionado
+                NoSubvencionado = datos.NoSubvencionado,
+                SupleA = null,
             };
 
             await _context.MEC_POFDetalle.AddAsync(nuevoDetalle);
@@ -339,7 +340,7 @@ namespace API.Services
         }
 
         // Actualizar MEC_POFDetalle 
-        public async Task ActualizarMEC_POFDetalle(int idPOF, int supleA, int idCabecera, DateTime supleDesde, DateTime supleHasta)
+        public async Task ActualizarMEC_POFDetalle(int idPOF, int supleAId, int idCabecera, DateTime supleDesde, DateTime supleHasta)
         {
             
 
@@ -349,7 +350,7 @@ namespace API.Services
             if (detalle != null)
             {
                 // Actualizar los campos
-                detalle.SupleA = supleA;
+                detalle.SupleA = supleAId;
                 detalle.SupleDesde = supleDesde;
                 detalle.SupleHasta = supleHasta;
 

@@ -61,7 +61,7 @@ namespace API.DataSchema.ModelConfiguration
 
 
             builder.Property(e => e.FechaConsolidacion)
-                .IsRequired(true); 
+                .IsRequired(false); 
 
             builder.Property(e => e.MesLiquidacion)
                 .HasColumnType("char(6)")
@@ -71,12 +71,12 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.OrdenPago)
                 .HasColumnType("char(5)")
                 .IsFixedLength(true)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.AnioMesAfectacion)
                 .HasColumnType("char(4)")
                 .IsFixedLength(true)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.CodigoLiquidacion)
             .HasColumnType("char(4)")
@@ -84,52 +84,52 @@ namespace API.DataSchema.ModelConfiguration
             .IsRequired(false);
 
             builder.Property(e => e.Importe)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.Signo)
            .HasColumnType("char(1)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.MarcaTransferido)
            .HasColumnType("char(1)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.Moneda)
            .HasColumnType("char(1)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.RegimenEstatutario)
            .HasColumnType("char(1)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.Dependencia)
            .HasColumnType("char(1)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.Distrito)
            .HasColumnType("char(3)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.Subvencion)
            .HasColumnType("char(3)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.Origen)
            .HasColumnType("char(3)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
 
             builder.Property(e => e.Consolidado)
            .HasColumnType("char(1)")
            .IsFixedLength(true)
-           .IsRequired(true);
+           .IsRequired(false);
         }
     }
 }
