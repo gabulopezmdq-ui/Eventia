@@ -76,7 +76,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
     try {
       const data = {
         idPOF: suplente.idPOF,
-        idSupleA: selectedDocente,
+        SupleA: selectedDocente,
         supleDesde: fechaDesde,
         supleHasta: fechaHasta,
         idCabecera: suplente.cabecera.idCabecera,
