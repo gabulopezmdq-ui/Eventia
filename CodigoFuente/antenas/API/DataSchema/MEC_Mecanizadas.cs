@@ -7,7 +7,7 @@ namespace API.DataSchema
     {
         public int IdMecanizada { get; set; }
         public DateTime? FechaConsolidacion { get; set; }
-        public int IdUsuario { get; set; }
+        public int? IdUsuario { get; set; }
         public int IdCabecera { get; set; }
         public string MesLiquidacion { get; set; }
         public string? OrdenPago { get; set; }
