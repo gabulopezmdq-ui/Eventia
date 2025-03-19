@@ -260,23 +260,28 @@ namespace API.Services
                 var persona = await _context.MEC_Personas.AsNoTracking()
                                             .FirstOrDefaultAsync(x => x.DNI == registro.Documento);
 
+                var establecimiento = await _context.MEC_Establecimientos
+                    .Where(e => e.NroDiegep == registro.NroEstab).Select(e => e.IdEstablecimiento).FirstOrDefaultAsync();
+
                 if (persona == null)
                 {
-                    RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
+                    RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
                     continue;
                 }
 
-                var establecimiento = await _context.MEC_Establecimientos
-                    .Where(e => e.NroDiegep == registro.NroEstab).Select(e => e.IdEstablecimiento).FirstOrDefaultAsync();
 
                 var POF = await _context.MEC_POF
                                          .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
                                                                    p.IdPersona == persona.IdPersona &&
                                                                    p.Secuencia == registro.Secuencia);
 
-                if (POF == null)
+
+                //guardar idEstablecimiento en TMPErroresMecanizadas 
+
+
+                if (POF == null )
                 {
-                    RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N");
+                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
                     continue;
                 }
 
@@ -325,7 +330,9 @@ namespace API.Services
 
             return nuevoDetallePOF;
         }
-        private void RegistroErrorMecAsync(int idCabecera, MEC_TMPMecanizadas registro, string documentoError, string pofError, string registroValido)
+        private async Task RegistroErrorMecAsync(int idCabecera, MEC_TMPMecanizadas registro, string documentoError, string pofError, string registroValido, 
+            int? establecimiento
+            )
         {
             // Reattach solo si es necesario
             if (_context.Entry(registro).State == EntityState.Detached)
@@ -336,12 +343,15 @@ namespace API.Services
             registro.RegistroValido = registroValido;
             _context.Entry(registro).Property(x => x.RegistroValido).IsModified = true;
 
+            var estId = await _context.MEC_Establecimientos.AsNoTracking().FirstOrDefaultAsync(x => x.IdEstablecimiento == establecimiento);
+
             _context.MEC_TMPErroresMecanizadas.Add(new MEC_TMPErroresMecanizadas
             {
                 IdCabecera = idCabecera,
                 Documento = documentoError,
                 IdTMPMecanizada = registro.idTMPMecanizada,
-                POF = pofError
+                POF = pofError, 
+                IdEstablecimiento = estId.IdEstablecimiento,
             });
 
             // Eliminar await _context.SaveChangesAsync();
