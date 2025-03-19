@@ -15,6 +15,12 @@ namespace API.DataSchema.ModelConfiguration
                 .ValueGeneratedOnAdd();
 
             builder
+.HasMany(e => e.TMPErroresMecanizadas)
+.WithOne(e => e.Establecimientos)
+.HasForeignKey(e => e.IdTMPMecanizada)
+.IsRequired(true);
+
+            builder
                 .HasOne(e => e.TipoEstablecimientos)
                 .WithMany(e => e.Establecimientos)
                 .HasForeignKey(e => e.IdTipoEstablecimiento)

@@ -25,6 +25,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DataTableProcesar from "examples/Tables/DataTableProcesar";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import Establecimiento from "../Establecimiento";
 
 function ProcesarArchivoImportado() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -478,7 +479,7 @@ function ProcesarArchivoImportado() {
               columns: [
                 { Header: "Documento (Nivel Principal)", accessor: "documento" },
                 { Header: "Pof", accessor: "pof" },
-                { Header: "Documento (Anidado)", accessor: "tmpMecanizadaDocumento" }, // Usando el campo transformado
+                { Header: "Documento", accessor: "tmpMecanizadaDocumento" },
               ],
               rows: dataTableData,
             }}
