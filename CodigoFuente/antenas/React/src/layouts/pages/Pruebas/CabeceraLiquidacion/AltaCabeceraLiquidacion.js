@@ -17,7 +17,11 @@ function AltaCabeceraLiquidacion() {
   if (id) {
     labelTitulo = "Editar Cabecera Liquidacion";
   }
-  const [formData, setFormData] = useState({});
+
+  // Configuración inicial de formData para incluir "vigente" como "S" si es una alta
+  const [formData, setFormData] = useState({
+    vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
+  });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -102,11 +106,20 @@ function AltaCabeceraLiquidacion() {
           customValidation: (value, field) => validateChar(value, field, 4),
           required: true,
         },
-        {
+        /*{
           type: "text",
           label: "Usuario Liquidacion",
-          name: "usuarioLiquidacion",
+          name: "idUsuario",
           customValidation: (value, field) => validateVarchar(value, field, 50),
+          required: true,
+        },*/
+        {
+          type: "select",
+          label: "Usuario Liquidación",
+          name: "idUsuario",
+          apiUrl: process.env.REACT_APP_API_URL + "Usuarios/getall",
+          valueField: "idUsuario",
+          optionField: "nombre",
           required: true,
         },
         {
@@ -116,34 +129,18 @@ function AltaCabeceraLiquidacion() {
           customValidation: (value, field) => validateVarchar(value, field, 1000),
           required: true,
         },
-        {
+        /*{
           type: "text",
           label: "Observaciones Inasistencias",
           name: "observacionesInasistencias",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
-          required: true,
-        },
-        {
+        },*/
+        /*{
           type: "text",
           label: "Observaciones Bajas",
           name: "observacionesBajas",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
-          required: true,
-        },
-        {
-          type: "number",
-          label: "Cant. Docentes",
-          name: "cantDocentes",
-          customValidation: validateNumber,
-          required: true,
-        },
-        {
-          type: "number",
-          label: "RetenDeno7",
-          name: "retenDeno7",
-          customValidation: validateDecimal,
-          required: true,
-        },
+        },*/
         {
           type: "select",
           label: "Estado",
@@ -175,7 +172,7 @@ function AltaCabeceraLiquidacion() {
         {
           type: "select",
           label: "Calcula Bajas",
-          name: "CalculaBajas",
+          name: "calculaBajas",
           customOptions: [
             { value: "S", label: "Si" },
             { value: "N", label: "No" },
@@ -185,22 +182,46 @@ function AltaCabeceraLiquidacion() {
           required: true,
         },
         {
-          type: "select",
-          label: "Vigente",
-          name: "vigente",
-          customOptions: [
-            { value: "S", label: "Si" },
-            { value: "N", label: "No" },
-          ],
-          valueField: "value",
-          optionField: "label",
-          required: true,
+          type: "number",
+          label: "Cant. Docentes",
+          name: "cantDocentes",
+          customValidation: validateNumber,
         },
+        {
+          type: "number",
+          label: "RetenDeno7",
+          name: "retenDeno7",
+          customValidation: validateDecimal,
+        },
+        // Solo incluimos el campo "Vigente" si estamos en modo edición (id está presente)
+        ...(id
+          ? [
+              {
+                type: "select",
+                label: "Vigente",
+                name: "vigente",
+                customOptions: [
+                  { value: "S", label: "Si" },
+                  { value: "N", label: "No" },
+                ],
+                valueField: "value",
+                optionField: "label",
+                required: true,
+              },
+            ]
+          : []),
       ],
     },
   ];
 
   const apiUrl = process.env.REACT_APP_API_URL + `CabeceraLiquidacion`;
+  const handleSubmit = () => {
+    const dataToSubmit = { ...formData };
+    if (!id && !dataToSubmit.vigente) {
+      dataToSubmit.vigente = "S"; // Aseguramos que "vigente" se envíe como "S" en el alta
+    }
+    // Llamar a Formulario con dataToSubmit
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
