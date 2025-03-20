@@ -95,21 +95,22 @@ function CabeceraLiquidacion() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "mes Liquidación", accessor: "mesLiquidacion" },
                   { Header: "año Liquidacion", accessor: "anioLiquidacion" },
-                  { Header: "observaciones", accessor: "observaciones" },
+                  { Header: "mes Liquidación", accessor: "mesLiquidacion" },
+                  { Header: "Tipo Liquidacion", accessor: "tipoLiquidacion.descripcion" },
+                  { Header: "estado", accessor: "estado" },
                   {
                     Header: "inicio Liquidacion",
                     accessor: "inicioLiquidacion",
                     Cell: ({ value }) =>
                       value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
                   },
-                  {
+                  /*{
                     Header: "finLiquidacion",
                     accessor: "finLiquidacion",
                     Cell: ({ value }) =>
                       value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
-                  },
+                  },*/
                   {
                     Header: "Editar",
                     accessor: "edit",
