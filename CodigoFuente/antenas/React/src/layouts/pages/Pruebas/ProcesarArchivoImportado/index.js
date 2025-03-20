@@ -298,6 +298,7 @@ function ProcesarArchivoImportado() {
       const formattedData = getResponse.data.map((item) => ({
         ...item,
         tmpMecanizadaDocumento: item.tmpMecanizada?.documento || "Sin datos",
+        nroEstablecimiento: item.establecimientos?.nroEstablecimiento || "Sin datos",
       }));
 
       setDataTableData(formattedData);
@@ -327,11 +328,13 @@ function ProcesarArchivoImportado() {
       { header: "DNI", dataKey: "documento" }, // Se usa dataKey en lugar de accessorKey
       { header: "POF", dataKey: "pof" },
       { header: "NÚMERO DNI", dataKey: "tmpMecanizadaDocumento" },
+      { header: "Establecimiento", dataKey: "nroEstablecimiento" },
     ];
     const processedData = dataTableData.map((row) => ({
       documento: row.documento === "NE" ? "NO EXISTE" : row.documento,
       pof: row.pof === "NE" ? "NO EXISTE" : row.pof,
       tmpMecanizadaDocumento: row.tmpMecanizadaDocumento,
+      nroEstablecimiento: row.nroEstablecimiento || "Sin datos", // ✅ Agregar nroEstablecimiento
     }));
 
     doc.autoTable({
@@ -480,6 +483,7 @@ function ProcesarArchivoImportado() {
                 { Header: "Documento (Nivel Principal)", accessor: "documento" },
                 { Header: "Pof", accessor: "pof" },
                 { Header: "Documento", accessor: "tmpMecanizadaDocumento" },
+                { Header: "Establecimiento", accessor: "nroEstablecimiento" },
               ],
               rows: dataTableData,
             }}
