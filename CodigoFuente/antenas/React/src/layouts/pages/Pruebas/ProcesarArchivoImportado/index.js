@@ -357,6 +357,7 @@ function ProcesarArchivoImportado() {
         documento: { halign: "center", fontStyle: "normal" },
         pof: { halign: "center" },
         tmpMecanizadaDocumento: { halign: "center" },
+        nroEstablecimiento: { halign: "center" },
       },
       didDrawPage: function (data) {
         doc.setFontSize(7);
