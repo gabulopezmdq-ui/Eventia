@@ -89,5 +89,11 @@ namespace API.Controllers
         //    return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
         //}
 
+        [HttpPut]
+        public async Task<ActionResult<MEC_Conceptos>> Update([FromBody] MEC_CabeceraLiquidacion cabecera)
+        {
+            await _serviceGenerico.Update(cabecera);
+            return Ok(cabecera);
+        }
     }
 }

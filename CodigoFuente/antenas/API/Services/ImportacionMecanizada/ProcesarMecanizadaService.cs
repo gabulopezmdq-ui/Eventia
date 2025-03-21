@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using EFCore.BulkExtensions;
 
 namespace API.Services
 {
@@ -255,15 +256,25 @@ namespace API.Services
             var detallesPOF = new List<MEC_POFDetalle>();
             var erroresMec = new List<MEC_TMPErroresMecanizadas>();
 
+            // Asegúrate de que los valores sean int (como ya están en la base de datos)
+            var secuencias = registros.Select(r => r.Secuencia).ToList();
+            var establecimientos = registros.Select(r => r.NroEstab).ToList();
+
+            // Realiza la consulta en la base de datos sin necesidad de AsEnumerable
+            var pofList = await _context.MEC_POF
+                                         .Where(p => secuencias.Contains(p.Secuencia) &&
+                                                     establecimientos.Contains(p.IdEstablecimiento.ToString())) // Ahora las listas son int
+                                         .ToListAsync(); // Esto es ejecutado en la base de datos, no en memoria
+
             foreach (var registro in registros)
             {
                 var persona = await _context.MEC_Personas.AsNoTracking()
-                                                .FirstOrDefaultAsync(x => x.DNI == registro.Documento);
+                                                         .FirstOrDefaultAsync(x => x.DNI == registro.Documento);
 
                 var establecimiento = await _context.MEC_Establecimientos
-                    .Where(e => e.NroDiegep == registro.NroEstab)
-                    .Select(e => e.IdEstablecimiento)
-                    .FirstOrDefaultAsync();
+                                                     .Where(e => e.NroDiegep == registro.NroEstab)
+                                                     .Select(e => e.IdEstablecimiento)
+                                                     .FirstOrDefaultAsync();
 
                 if (persona == null)
                 {
@@ -279,10 +290,9 @@ namespace API.Services
                     continue;
                 }
 
-                var POF = await _context.MEC_POF
-                                         .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
-                                                                   p.IdPersona == persona.IdPersona &&
-                                                                   p.Secuencia == registro.Secuencia);
+                var POF = pofList.FirstOrDefault(p => p.IdEstablecimiento == establecimiento &&
+                                                      p.IdPersona == persona.IdPersona &&
+                                                      p.Secuencia == registro.Secuencia);
 
                 if (POF == null)
                 {
@@ -312,6 +322,9 @@ namespace API.Services
             // Guardar cambios una sola vez al final
             await _context.SaveChangesAsync();
         }
+
+
+
 
         private async Task<MEC_POFDetalle> ProcesarDetallePOFAsync(int idCabecera, MEC_POF POF, MEC_TMPMecanizadas registro)
         {
