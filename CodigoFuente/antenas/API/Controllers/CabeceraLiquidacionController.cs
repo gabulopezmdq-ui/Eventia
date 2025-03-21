@@ -90,7 +90,7 @@ namespace API.Controllers
         //}
 
         [HttpPut]
-        public async Task<ActionResult<MEC_Conceptos>> Update([FromBody] MEC_CabeceraLiquidacion cabecera)
+        public async Task<ActionResult<MEC_CabeceraLiquidacion>> Update([FromBody] MEC_CabeceraLiquidacion cabecera)
         {
             await _serviceGenerico.Update(cabecera);
             return Ok(cabecera);
