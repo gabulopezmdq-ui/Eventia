@@ -15,8 +15,8 @@ using API.Services.ImportacionMecanizada;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin")]
-    //[AllowAnonymous]
+    //[Authorize(Roles = "SuperAdmin, Admin")]
+    [AllowAnonymous]
     [Route("[controller]")]
     public class ImportarMecanizadasController : ControllerBase
     {
@@ -69,6 +69,13 @@ namespace API.Controllers
         //{
         //    return Ok(_serviceGenerico.GetAll());
         //}
+
+        [HttpGet("GetByCabecera)")]
+        public async Task<IActionResult> GetCabecera(int? idCabecera)
+        {
+            var cabecera = idCabecera;
+            return Ok(_serviceGenerico.GetByParam(e => e.idCabecera == idCabecera));
+        }
 
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
