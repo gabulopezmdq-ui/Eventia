@@ -61,13 +61,13 @@ function AltaCabeceraLiquidacion() {
   }
 
   function validateDecimal(value, field) {
-    if (value === undefined || value === null || value === "" || field.name === undefined) {
-      return null;
-    }
-    const decimalRegex = /^(\d+(\.\d{1,2})?)$/;
+    if (!value || field.name === undefined) return null;
+
+    const decimalRegex = /^(\d+([.,]\d{1,2})?)$/; // Acepta punto o coma como separador decimal
     if (!decimalRegex.test(value)) {
       return `${field.label} debe ser un número decimal válido con hasta 2 decimales.`;
     }
+
     return null;
   }
   //--------------------FIN VALIDACIONES----------------------//
@@ -113,7 +113,7 @@ function AltaCabeceraLiquidacion() {
           customValidation: (value, field) => validateVarchar(value, field, 50),
           required: true,
         },*/
-        {
+        /*{
           type: "select",
           label: "Usuario Liquidación",
           name: "idUsuario",
@@ -121,7 +121,7 @@ function AltaCabeceraLiquidacion() {
           valueField: "idUsuario",
           optionField: "nombre",
           required: true,
-        },
+        },*/
         {
           type: "text",
           label: "Observaciones",
@@ -141,7 +141,7 @@ function AltaCabeceraLiquidacion() {
           name: "observacionesBajas",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
         },*/
-        {
+        /*{
           type: "select",
           label: "Estado",
           name: "estado",
@@ -156,7 +156,7 @@ function AltaCabeceraLiquidacion() {
           valueField: "value",
           optionField: "label",
           required: true,
-        },
+        },*/
         {
           type: "select",
           label: "Calcula Inasistencias",
@@ -179,7 +179,6 @@ function AltaCabeceraLiquidacion() {
           ],
           valueField: "value",
           optionField: "label",
-          required: true,
         },
         {
           type: "number",

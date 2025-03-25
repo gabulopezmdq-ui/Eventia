@@ -267,7 +267,11 @@ function Formulario({
     setFormData((prevFormData) => ({
       ...prevFormData,
       [name]:
-        name === "descripcion" ? value : typeof value === "string" ? value.toUpperCase() : value,
+        name === "descripcion" || name === "leyendaTipoLiqReporte"
+          ? value
+          : typeof value === "string"
+          ? value.toUpperCase()
+          : value,
     }));
   };
   return (
