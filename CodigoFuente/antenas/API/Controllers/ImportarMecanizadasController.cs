@@ -70,7 +70,7 @@ namespace API.Controllers
         //    return Ok(_serviceGenerico.GetAll());
         //}
 
-        [HttpGet("GetByCabecera)")]
+        [HttpGet("GetByCabecera")]
         public async Task<IActionResult> GetCabecera(int? idCabecera)
         {
             var cabecera = idCabecera;
