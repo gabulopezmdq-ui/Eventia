@@ -15,8 +15,8 @@ using API.Services.ImportacionMecanizada;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SuperAdmin, Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class ImportarMecanizadasController : ControllerBase
     {
@@ -71,10 +71,17 @@ namespace API.Controllers
         //}
 
         [HttpGet("GetByCabecera")]
-        public async Task<IActionResult> GetCabecera(int? idCabecera)
+        public async Task<IActionResult> GetCabecera([FromQuery] int? idCabecera)
         {
-            var cabecera = idCabecera;
-            return Ok(_serviceGenerico.GetByParam(e => e.idCabecera == idCabecera));
+            if (!idCabecera.HasValue)
+                return BadRequest("El parámetro idCabecera es obligatorio.");
+
+            var resultado = await _serviceGenerico.GetByParam(e => e.idCabecera == idCabecera);
+
+            if (resultado == null || !resultado.Any())
+                return NotFound("No se encontraron registros.");
+
+            return Ok(resultado.ToList()); // Convierte a lista aquí
         }
 
         [HttpGet("GetAll")]
