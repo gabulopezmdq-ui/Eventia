@@ -290,7 +290,7 @@ namespace API.Services
                 }
 
                 // 🔍 Depuración: Verificar persona obtenida
-                Console.WriteLine($"👤 Persona encontrada: DNI {registro.Documento}, ID {persona.IdPersona}");
+                Console.WriteLine($"Persona encontrada");
 
                 // Buscar la POF directamente en la base de datos
                 var POF = await _context.MEC_POF
@@ -300,7 +300,7 @@ namespace API.Services
 
                 if (POF == null)
                 {
-                    Console.WriteLine($"⚠️ No se encontró POF para Persona {persona.IdPersona} en Establecimiento {establecimiento}");
+                    Console.WriteLine($" No se encontró POF para Persona ");
 
                     // Si no se encuentra la POF, se registra el error solo para este establecimiento
                     erroresMec.Add(new MEC_TMPErroresMecanizadas
@@ -317,7 +317,7 @@ namespace API.Services
                 }
 
                 // 🔍 Depuración: Verificar POF obtenida
-                Console.WriteLine($"✅ POF encontrada: IdEstablecimiento {POF.IdEstablecimiento}, IdPersona {POF.IdPersona}, Secuencia {POF.Secuencia}");
+                Console.WriteLine($"POF encontrada: IdEstablecimiento");
 
                 // Si la POF es encontrada, se procesa el detalle
                 var detalle = await ProcesarDetallePOFAsync(idCabecera, POF, registro);
