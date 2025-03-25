@@ -265,11 +265,11 @@ namespace API.Services
                                                     .FirstOrDefaultAsync();
 
                 // 🔍 Depuración: Verificar establecimiento obtenido
-                Console.WriteLine($"📌 Registro: {registro.NroEstab} -> Establecimiento ID: {establecimiento}");
+                Console.WriteLine($"Registro: {registro.NroEstab} -> Establecimiento ID: {establecimiento}");
 
                 if (establecimiento == 0) // Si no encontró el establecimiento, continuar con el siguiente
                 {
-                    Console.WriteLine($"⚠️ No se encontró el establecimiento para NroDiegep {registro.NroEstab}");
+                    Console.WriteLine($"No se encontró el establecimiento para NroDiegep {registro.NroEstab}");
                     continue;
                 }
 
