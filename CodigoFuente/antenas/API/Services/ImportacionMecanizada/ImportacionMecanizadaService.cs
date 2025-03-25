@@ -146,10 +146,10 @@ namespace API.Services
             }
 
             // Eliminar registros directamente con SQL crudo
-            string deleteSql = @"
-                DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};
-                ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;";
-            await _context.Database.ExecuteSqlRawAsync(deleteSql, idCabecera);
+            await _context.Database.ExecuteSqlRawAsync(@"TRUNCATE TABLE ""MEC_TMPMecanizadas"" RESTART IDENTITY CASCADE;");
+
+
+
 
             // Cambiar el estado de la cabecera de "I" a "P"
             estadoCabecera.Estado = "P";

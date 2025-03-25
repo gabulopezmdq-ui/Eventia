@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using EFCore.BulkExtensions;
 
 namespace API.Services
 {
@@ -246,7 +245,6 @@ namespace API.Services
                 await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(erroresTiposEstablecimientos);
             }
         }
-
         private async Task ValidarMecAsync(int idCabecera)
         {
             var registros = await _context.MEC_TMPMecanizadas
@@ -256,47 +254,28 @@ namespace API.Services
             var detallesPOF = new List<MEC_POFDetalle>();
             var erroresMec = new List<MEC_TMPErroresMecanizadas>();
 
-            // Asegúrate de que los valores sean int (como ya están en la base de datos)
-            var secuencias = registros.Select(r => r.Secuencia).ToList();
-            var establecimientos = registros.Select(r => r.NroEstab).ToList();
-
-            // Realiza la consulta en la base de datos sin necesidad de AsEnumerable
-            var pofList = await _context.MEC_POF
-                                         .Where(p => secuencias.Contains(p.Secuencia) &&
-                                                     establecimientos.Contains(p.IdEstablecimiento.ToString())) // Ahora las listas son int
-                                         .ToListAsync(); // Esto es ejecutado en la base de datos, no en memoria
-
             foreach (var registro in registros)
             {
                 var persona = await _context.MEC_Personas.AsNoTracking()
                                                          .FirstOrDefaultAsync(x => x.DNI == registro.Documento);
 
                 var establecimiento = await _context.MEC_Establecimientos
-                                                     .Where(e => e.NroDiegep == registro.NroEstab)
-                                                     .Select(e => e.IdEstablecimiento)
-                                                     .FirstOrDefaultAsync();
+                                                    .Where(e => e.NroDiegep == registro.NroEstab)
+                                                    .Select(e => e.IdEstablecimiento)
+                                                    .FirstOrDefaultAsync();
 
-                if (persona == null)
+                // 🔍 Depuración: Verificar establecimiento obtenido
+                Console.WriteLine($"📌 Registro: {registro.NroEstab} -> Establecimiento ID: {establecimiento}");
+
+                if (establecimiento == 0) // Si no encontró el establecimiento, continuar con el siguiente
                 {
-                    // Agregar error directamente a la lista sin guardar aún
-                    erroresMec.Add(new MEC_TMPErroresMecanizadas
-                    {
-                        IdCabecera = idCabecera,
-                        Documento = "NE", // Este es el valor de error
-                        POF = "NE",
-                        IdTMPMecanizada = registro.idTMPMecanizada,
-                        IdEstablecimiento = establecimiento,
-                    });
+                    Console.WriteLine($"⚠️ No se encontró el establecimiento para NroDiegep {registro.NroEstab}");
                     continue;
                 }
 
-                var POF = pofList.FirstOrDefault(p => p.IdEstablecimiento == establecimiento &&
-                                                      p.IdPersona == persona.IdPersona &&
-                                                      p.Secuencia == registro.Secuencia);
-
-                if (POF == null)
+                if (persona == null)
                 {
-                    // Agregar error directamente a la lista sin guardar aún
+                    // La persona no existe, se registra el error
                     erroresMec.Add(new MEC_TMPErroresMecanizadas
                     {
                         IdCabecera = idCabecera,
@@ -305,13 +284,46 @@ namespace API.Services
                         IdTMPMecanizada = registro.idTMPMecanizada,
                         IdEstablecimiento = establecimiento,
                     });
+
+                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
                     continue;
                 }
 
+                // 🔍 Depuración: Verificar persona obtenida
+                Console.WriteLine($"👤 Persona encontrada: DNI {registro.Documento}, ID {persona.IdPersona}");
+
+                // Buscar la POF directamente en la base de datos
+                var POF = await _context.MEC_POF
+                    .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
+                                              p.IdPersona == persona.IdPersona &&
+                                              p.Secuencia == registro.Secuencia);
+
+                if (POF == null)
+                {
+                    Console.WriteLine($"⚠️ No se encontró POF para Persona {persona.IdPersona} en Establecimiento {establecimiento}");
+
+                    // Si no se encuentra la POF, se registra el error solo para este establecimiento
+                    erroresMec.Add(new MEC_TMPErroresMecanizadas
+                    {
+                        IdCabecera = idCabecera,
+                        Documento = "NE",
+                        POF = "NE",
+                        IdTMPMecanizada = registro.idTMPMecanizada,
+                        IdEstablecimiento = establecimiento,
+                    });
+
+                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
+                    continue;
+                }
+
+                // 🔍 Depuración: Verificar POF obtenida
+                Console.WriteLine($"✅ POF encontrada: IdEstablecimiento {POF.IdEstablecimiento}, IdPersona {POF.IdPersona}, Secuencia {POF.Secuencia}");
+
+                // Si la POF es encontrada, se procesa el detalle
                 var detalle = await ProcesarDetallePOFAsync(idCabecera, POF, registro);
                 detallesPOF.Add(detalle);
 
-                // Modificar directamente el registro sin guardar aún
+                // Marcar el registro como válido
                 registro.RegistroValido = "S";
             }
 
@@ -322,8 +334,6 @@ namespace API.Services
             // Guardar cambios una sola vez al final
             await _context.SaveChangesAsync();
         }
-
-
 
 
         private async Task<MEC_POFDetalle> ProcesarDetallePOFAsync(int idCabecera, MEC_POF POF, MEC_TMPMecanizadas registro)
@@ -375,10 +385,7 @@ namespace API.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.IdEstablecimiento == establecimiento);
 
-            if (estId == null)
-            {
-                throw new Exception($"No se encontró el establecimiento con Id {establecimiento}");
-            }
+            
 
             // Crear nuevo registro de error mecanizado sin guardar inmediatamente
             _context.MEC_TMPErroresMecanizadas.Add(new MEC_TMPErroresMecanizadas
