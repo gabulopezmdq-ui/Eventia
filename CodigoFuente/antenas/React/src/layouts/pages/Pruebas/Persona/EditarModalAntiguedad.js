@@ -85,7 +85,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
 
     switch (name) {
       case "mesReferencia":
-        if (value < 1 || value > 12) error = "Debe estar entre 1 y 12.";
+        if (value < 0 || value > 12) error = "Debe estar entre 1 y 12.";
         break;
       case "anioReferencia":
         if (value < 2024 || value > 3000) error = "Debe estar entre 2024 y 3000.";
@@ -157,12 +157,22 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
     }
   };
 
-  const handleInputChange = (e) => {
+  /*const handleInputChange = (e) => {
     const { name, value } = e.target;
     const numericValue = parseInt(value, 10);
     if (isNaN(numericValue) && value !== "") return;
 
     setFormData((prevState) => ({ ...prevState, [name]: numericValue || "" }));
+    const error = validateInput(name, numericValue);
+    setErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
+  };*/
+  const handleInputChange = (e) => {
+    // permite agregar 0
+    const { name, value } = e.target;
+    const numericValue = value === "" ? "" : parseInt(value, 10);
+
+    setFormData((prevState) => ({ ...prevState, [name]: numericValue }));
+
     const error = validateInput(name, numericValue);
     setErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
   };
