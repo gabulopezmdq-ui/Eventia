@@ -246,7 +246,7 @@ namespace API.Services
             }
         }
         private async Task ValidarMecAsync(int idCabecera)
-        {
+            {
             var registros = await _context.MEC_TMPMecanizadas
                                           .Where(e => e.idCabecera == idCabecera)
                                           .ToListAsync();
@@ -275,52 +275,42 @@ namespace API.Services
 
                 if (persona == null)
                 {
-                    // La persona no existe, se registra el error
-                    erroresMec.Add(new MEC_TMPErroresMecanizadas
-                    {
-                        IdCabecera = idCabecera,
-                        Documento = "NE",
-                        POF = "NE",
-                        IdTMPMecanizada = registro.idTMPMecanizada,
-                        IdEstablecimiento = establecimiento,
-                    });
 
                     await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
                     continue;
-                }
-
-                // 🔍 Depuración: Verificar persona obtenida
-                Console.WriteLine($"Persona encontrada");
-
-                // Buscar la POF directamente en la base de datos
-                var POF = await _context.MEC_POF
-                    .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
-                                              p.IdPersona == persona.IdPersona &&
-                                              p.Secuencia == registro.Secuencia);
-
-                if (POF == null)
+                } else
                 {
-                    Console.WriteLine($" No se encontró POF para Persona ");
+                    // 🔍 Depuración: Verificar persona obtenida
+                    Console.WriteLine($"Persona encontrada");
 
-                    // Si no se encuentra la POF, se registra el error solo para este establecimiento
-                    erroresMec.Add(new MEC_TMPErroresMecanizadas
+                    // Buscar la POF directamente en la base de datos
+                    var POF = await _context.MEC_POF
+                        .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
+                                                  p.IdPersona == persona.IdPersona &&
+                                                  p.Secuencia == registro.Secuencia);
+
+                    if (POF == null)
                     {
-                        IdCabecera = idCabecera,
-                        Documento = "NE",
-                        POF = "NE",
-                        IdTMPMecanizada = registro.idTMPMecanizada,
-                        IdEstablecimiento = establecimiento,
-                    });
+                        Console.WriteLine($" No se encontró POF para Persona ");
 
-                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
-                    continue;
+
+                        await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
+                        
+                        continue;
+                    }
                 }
+
+                var POF1 = await _context.MEC_POF
+                       .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
+                                                 p.IdPersona == persona.IdPersona &&
+                                                 p.Secuencia == registro.Secuencia);
+
 
                 // 🔍 Depuración: Verificar POF obtenida
                 Console.WriteLine($"POF encontrada: IdEstablecimiento");
 
                 // Si la POF es encontrada, se procesa el detalle
-                var detalle = await ProcesarDetallePOFAsync(idCabecera, POF, registro);
+                var detalle = await ProcesarDetallePOFAsync(idCabecera, POF1, registro);
                 detallesPOF.Add(detalle);
 
                 // Marcar el registro como válido
