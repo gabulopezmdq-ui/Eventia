@@ -30,10 +30,10 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
           const dataAntig = await responseAntig.json();
           if (responseAntig.ok && dataAntig !== false) {
             setFormData({
-              mesReferencia: dataAntig.mesReferencia || "",
-              anioReferencia: dataAntig.anioReferencia || "",
-              mesAntiguedad: dataAntig.mesAntiguedad || "",
-              anioAntiguedad: dataAntig.anioAntiguedad || "",
+              mesReferencia: dataAntig.mesReferencia ?? "",
+              anioReferencia: dataAntig.anioReferencia ?? "",
+              mesAntiguedad: dataAntig.mesAntiguedad ?? "",
+              anioAntiguedad: dataAntig.anioAntiguedad ?? "",
             });
             setidPOFAntig(dataAntig.idPOFAntig || null);
             setNombre(dataAntig.persona?.nombre || "");
@@ -169,7 +169,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
   const handleInputChange = (e) => {
     // permite agregar 0
     const { name, value } = e.target;
-    const numericValue = value === "" ? "" : parseInt(value, 10);
+    const numericValue = value === "" ? "" : Number(value);
 
     setFormData((prevState) => ({ ...prevState, [name]: numericValue }));
 
