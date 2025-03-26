@@ -85,7 +85,7 @@ const EditarModalAntiguedad = ({ isOpen, onClose, idPersona, token, onEditSucces
 
     switch (name) {
       case "mesReferencia":
-        if (value < 0 || value > 12) error = "Debe estar entre 1 y 12.";
+        if (value < 1 || value > 12) error = "Debe estar entre 1 y 12.";
         break;
       case "anioReferencia":
         if (value < 2024 || value > 3000) error = "Debe estar entre 2024 y 3000.";
