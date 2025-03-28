@@ -246,7 +246,7 @@ namespace API.Services
             }
         }
         private async Task ValidarMecAsync(int idCabecera)
-            {
+                {
             var registros = await _context.MEC_TMPMecanizadas
                                           .Where(e => e.idCabecera == idCabecera)
                                           .ToListAsync();

@@ -438,12 +438,11 @@ function ConsolidarMecPOF() {
                         {
                           Header: "Nombre Completo",
                           accessor: "nombreCompleto",
-                          Cell: ({ row }) =>
-                            `${row.original.pof?.persona?.nombre} ${row.original.pof?.persona?.apellido}`,
+                          Cell: ({ row }) => `${row.original.nombre} ${row.original.apellido}`,
                         },
-                        { Header: "Documento", accessor: "pof.persona.dni" },
-                        { Header: "Secuencia", accessor: "pof.secuencia" },
-                        { Header: "Tipo Cargo", accessor: "pof.tipoCargo" },
+                        { Header: "Documento", accessor: "dni" },
+                        { Header: "Secuencia", accessor: "secuencia" },
+                        { Header: "Tipo Cargo", accessor: "tipoCargo" },
                         { Header: "Año/Mes Afec", accessor: "anioMesAfectacion" },
                         { Header: "CodLiq", accessor: "codigoLiquidacion" },
                         { Header: "Origen", accessor: "origen" },

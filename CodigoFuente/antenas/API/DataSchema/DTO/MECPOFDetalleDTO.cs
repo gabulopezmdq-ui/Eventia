@@ -16,6 +16,8 @@ namespace API.DataSchema.DTO
         public string Barra { get; set; }
         public string TipoCargo { get; set; }
         public string Vigente { get; set; }
+        public string CarRevista { get; set; }
+        public string Cargo { get; set; }
 
         // Datos MEC_POF_Detalle
         public string? SinHaberes { get; set; }
