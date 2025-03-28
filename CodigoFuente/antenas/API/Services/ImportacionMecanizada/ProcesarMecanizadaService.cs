@@ -505,6 +505,7 @@ namespace API.Services
                         RegimenEstatutario = registro.RegimenEstatutario,
                         Dependencia = registro.Dependencia,
                         Distrito = registro.Distrito,
+                        CodigoLiquidacion = registro.CodigoLiquidacion,
                         Subvencion = registro.Subvencion,
                         Origen = "MEC",
                         Consolidado = "N",
