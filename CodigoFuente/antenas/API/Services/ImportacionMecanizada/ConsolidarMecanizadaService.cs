@@ -96,6 +96,8 @@ namespace API.Services
                     Vigente = p.Vigente,
                     IdCategoria = p.IdCategoria,
                     IdCarRevista = p.IdCarRevista,
+                    CarRevista = p.CarRevista.Descripcion,
+                    Cargo = p.Categoria.CodCategoria,
 
                     NoSubvencionado = p.POFDetalle.Select(d => d.NoSubvencionado).FirstOrDefault(),
                     SinHaberes = p.POFDetalle.Select(d => d.SinHaberes).FirstOrDefault(),
@@ -367,9 +369,39 @@ namespace API.Services
 
         // Obtener Mecanizadas
 
-        public async Task <List<MEC_Mecanizadas>>ObtenerMecanizadas(int idCabecera, int idEstablecimiento)
+        public async Task<List<MecanizadasDTO>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento)
         {
-            return await _context.MEC_Mecanizadas.Where(m => m.IdEstablecimiento == idEstablecimiento && idCabecera == idCabecera).ToListAsync();
+            return await _context.MEC_Mecanizadas
+                .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
+                .Select(p => new MecanizadasDTO
+                {
+                    IdMecanizada = p.IdMecanizada,
+                    FechaConsolidacion = p.FechaConsolidacion,
+                    IdUsuario = p.IdUsuario,
+                    IdCabecera = p.IdCabecera,
+                    MesLiquidacion = p.MesLiquidacion,
+                    OrdenPago = p.OrdenPago,
+                    AnioMesAfectacion = p.AnioMesAfectacion,
+                    IdEstablecimiento = p.IdEstablecimiento,
+                    IdPOF = p.IdPOF,
+                    Importe = p.Importe,
+                    Signo = p.Signo,
+                    MarcaTransferido = p.MarcaTransferido,
+                    Moneda = p.Moneda,
+                    RegimenEstatutario = p.RegimenEstatutario,
+                    Dependencia = p.Dependencia,
+                    Distrito = p.Distrito,
+                    Subvencion = p.Subvencion,
+                    Origen = p.Origen,
+                    Consolidado = p.Consolidado,
+                    CodigoLiquidacion = p.CodigoLiquidacion,
+                    DNI = p.POF.Persona.DNI,
+                    Secuencia = p.POF.Secuencia,
+                    TipoCargo = p.POF.TipoCargo,
+                    Nombre = p.POF.Persona.Nombre,
+                    Apellido = p.POF.Persona.Apellido,
+                })
+                .ToListAsync();
         }
 
         public async Task<List<object>> ObtenerPOFsSimplificadoAsync(int idEstablecimiento)
