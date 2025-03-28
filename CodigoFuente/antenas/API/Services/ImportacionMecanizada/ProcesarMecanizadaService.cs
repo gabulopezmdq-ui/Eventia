@@ -488,28 +488,31 @@ namespace API.Services
 
                 if (POF != null)
                 {
-                    mecanizadas.Add(new MEC_Mecanizadas
+                    if (!mecanizadas.Any(m => m.IdPOF == POF.IdPOF && m.CodigoLiquidacion == registro.CodigoLiquidacion))
                     {
-                        FechaConsolidacion = DateTime.Now,
-                        IdUsuario = usuario,
-                        IdCabecera = idCabecera,
-                        IdPOF = POF.IdPOF,
-                        IdEstablecimiento = POF.IdEstablecimiento,
-                        MesLiquidacion = registro.MesLiquidacion,
-                        OrdenPago = registro.OrdenPago,
-                        AnioMesAfectacion = registro.AnioMesAfectacion,
-                        Importe = registro.Importe,
-                        Signo = registro.Signo,
-                        MarcaTransferido = registro.MarcaTransferido,
-                        Moneda = registro.Moneda,
-                        RegimenEstatutario = registro.RegimenEstatutario,
-                        Dependencia = registro.Dependencia,
-                        Distrito = registro.Distrito,
-                        CodigoLiquidacion = registro.CodigoLiquidacion,
-                        Subvencion = registro.Subvencion,
-                        Origen = "MEC",
-                        Consolidado = "N",
-                    });
+                        mecanizadas.Add(new MEC_Mecanizadas
+                        {
+                            FechaConsolidacion = DateTime.Now,
+                            IdUsuario = usuario,
+                            IdCabecera = idCabecera,
+                            IdPOF = POF.IdPOF,
+                            IdEstablecimiento = POF.IdEstablecimiento,
+                            MesLiquidacion = registro.MesLiquidacion,
+                            OrdenPago = registro.OrdenPago,
+                            AnioMesAfectacion = registro.AnioMesAfectacion,
+                            Importe = registro.Importe,
+                            Signo = registro.Signo,
+                            MarcaTransferido = registro.MarcaTransferido,
+                            Moneda = registro.Moneda,
+                            RegimenEstatutario = registro.RegimenEstatutario,
+                            Dependencia = registro.Dependencia,
+                            Distrito = registro.Distrito,
+                            CodigoLiquidacion = registro.CodigoLiquidacion,
+                            Subvencion = registro.Subvencion,
+                            Origen = "MEC",
+                            Consolidado = "N",
+                        });
+                    }
                 }
             }
 
