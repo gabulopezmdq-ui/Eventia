@@ -24,6 +24,7 @@ function ConsolidarMecPOF() {
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [cabeceras, setCabeceras] = useState([]);
+  const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
   const [dataTableData, setDataTableData] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
@@ -33,6 +34,7 @@ function ConsolidarMecPOF() {
   const [openPopup, setOpenPopup] = useState(false);
   const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
   const [openMecPopup, setOpenMecPopup] = useState(false);
+  const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const [selectedIdEstablecimiento, setSelectedIdEstablecimiento] = useState(null);
   const [selectedDocente, setSelectedDocente] = useState(null);
   const [loadingMec, setLoadingMec] = useState(false);
@@ -42,29 +44,21 @@ function ConsolidarMecPOF() {
 
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}CabeceraLiquidacion/getall`, {
+      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setCabeceras(response.data ? response.data.filter((item) => item.estado === "R") : []);
+        const filteredCabeceras = response.data.filter((item) => item.estado === "R") || [];
+        const formattedCabeceras = filteredCabeceras.map((item) => ({
+          id: item.idCabecera,
+          displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
+        }));
+        setIdCabeceras(formattedCabeceras);
       })
       .catch((error) => {
-        let errorMessage = "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.";
-        let errorType = "error";
-
-        if (error.response) {
-          const statusCode = error.response.status;
-          if (statusCode >= 400 && statusCode < 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
-          } else if (statusCode >= 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
-          }
-        }
-
-        setErrorAlert({ show: true, message: errorMessage, type: errorType });
+        setErrorAlert({ show: true, message: "Error al cargar las cabeceras.", type: "error" });
       });
   }, [token]);
-
   useEffect(() => {
     axios
       .get(`${process.env.REACT_APP_API_URL}Establecimientos/GetAll`, {
@@ -348,21 +342,33 @@ function ConsolidarMecPOF() {
             <FormControl fullWidth>
               <InputLabel id="cabecera-select-label">Cabecera</InputLabel>
               <Select
-                labelId="cabecera-select-label"
-                value={selectedCabecera}
+                labelId="filter-label"
+                value={selectedIdCabecera}
                 onChange={(e) => setSelectedCabecera(e.target.value)}
-                label="Cabecera"
-                style={{ height: "2.5rem", backgroundColor: "white" }}
+                sx={{
+                  height: "40px",
+                  "& .MuiSelect-select": {
+                    height: "40px",
+                    padding: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#000",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#000",
+                  },
+                }}
               >
-                {cabeceras.length > 0 ? (
-                  cabeceras.map((cabecera) => (
-                    <MenuItem key={cabecera.idCabecera} value={cabecera.idCabecera}>
-                      {cabecera.leyendaTipoLiqReporte}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No hay opciones disponibles</MenuItem>
-                )}
+                <MenuItem value="">
+                  <em>Seleccionar Cabecera</em>
+                </MenuItem>
+                {idCabeceras.map((item, index) => (
+                  <MenuItem key={index} value={item.id}>
+                    {item.displayText}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
