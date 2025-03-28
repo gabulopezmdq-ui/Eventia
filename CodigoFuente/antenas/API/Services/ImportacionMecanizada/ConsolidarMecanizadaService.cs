@@ -250,8 +250,8 @@ namespace API.Services
                 IdCabecera = datos.IdCabecera,
                 IdEstablecimiento = datos.IdEstablecimiento,
                 IdPOF = datos.IdPOF,
-                MesLiquidacion = $"{datos.AnioAfectacion}{datos.MesAfectacion:D2}",
-                AnioMesAfectacion = $"{datos.AnioAfectacion % 100}{datos.MesAfectacion:D2}",
+                MesLiquidacion = $"{datos.AnioReferencia}{datos.MesReferencia:D2}",
+                AnioMesAfectacion = $"{datos.AnioReferencia % 100:D2}{datos.MesReferencia:D2}",
                 Importe = 0,
                 Signo = "+",
                 Origen = "POF"
