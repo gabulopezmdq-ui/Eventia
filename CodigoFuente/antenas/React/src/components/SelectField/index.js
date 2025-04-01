@@ -14,6 +14,7 @@ function SelectField({
   formData,
   handleChange,
   customOptions,
+  disabled,
 }) {
   const [options, setOptions] = useState([]);
   const token = sessionStorage.getItem("token");
@@ -80,6 +81,7 @@ function SelectField({
           handleChange({ target: { name, value: newValue ? newValue[valueField] : null } });
         }}
         renderInput={(params) => <FormField {...params} label={label} />}
+        disabled={disabled}
       />
     </div>
   );
@@ -94,11 +96,13 @@ SelectField.propTypes = {
   formData: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   customOptions: PropTypes.array,
+  disabled: PropTypes.bool,
 };
 
 SelectField.defaultProps = {
   apiUrl: null,
   customOptions: [],
+  disabled: false,
 };
 
 export default SelectField;
