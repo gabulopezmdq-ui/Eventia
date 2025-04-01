@@ -131,7 +131,7 @@ function CabeceraLiquidacion() {
                     accessor: "finLiquidacion",
                     Cell: ({ value }) =>
                       value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
-                  },*/
+                  },
                   {
                     Header: "Editar",
                     accessor: "edit",
