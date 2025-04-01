@@ -1,12 +1,7 @@
-// @mui material components
 import Grid from "@mui/material/Grid";
-
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
-
-// Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Formulario from "components/Formulario";
