@@ -124,7 +124,7 @@ function AltaCabeceraLiquidacion() {
         },*/
         {
           type: "text",
-          label: "Observaciones",
+          label: "Nombre Cabecera",
           name: "observaciones",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
           required: true,
@@ -134,14 +134,27 @@ function AltaCabeceraLiquidacion() {
           label: "Observaciones Inasistencias",
           name: "observacionesInasistencias",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
-        },*/
-        /*{
+        },
+        {
           type: "text",
           label: "Observaciones Bajas",
           name: "observacionesBajas",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
-        },*/
-        /*{
+          required: true,
+        },
+        {
+          type: "number",
+          label: "Cant. Docentes",
+          name: "cantDocentes",
+          customValidation: validateNumber,
+        },
+        {
+          type: "number",
+          label: "RetenDeno7",
+          name: "retenDeno7",
+          customValidation: validateDecimal,
+        },
+        {
           type: "select",
           label: "Estado",
           name: "estado",
@@ -155,8 +168,8 @@ function AltaCabeceraLiquidacion() {
           ],
           valueField: "value",
           optionField: "label",
-          required: true,
-        },*/
+          disabled: true,
+        },
         {
           type: "select",
           label: "Calcula Inasistencias",

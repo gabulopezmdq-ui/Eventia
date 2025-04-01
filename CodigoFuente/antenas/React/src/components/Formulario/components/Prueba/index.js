@@ -67,6 +67,7 @@ function Prueba({ formData = {}, handleChange, fields = [] }) {
                     handleChange={handleChange}
                     customOptions={field.customOptions || []}
                     multiple={field.multiple}
+                    disabled={field.disabled || false}
                   />
                 ) : field.type === "date" ? (
                   <div className="flex">
