@@ -94,6 +94,7 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad, idCab
             mesReferencia: formData.mesReferencia,
             sinHaberes: formData.sinHaberes,
             noSubvencionado: formData.noSubvencionado,
+            idEstablecimiento: formData.idEstablecimiento,
           }
         : {
             idCabecera: formData.idCabecera,
@@ -111,7 +112,6 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad, idCab
             idEstablecimiento: formData.idEstablecimiento,
             anioAfeccion: formData.anioReferencia,
             mesAfeccion: formData.mesReferencia,
-            idEstablecimiento: formData.idEstablecimiento,
           };
       await onSubmit(submitData);
       setAlertType("success");

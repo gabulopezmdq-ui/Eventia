@@ -183,7 +183,7 @@ function ConsolidarMecPOF() {
   // Boton delete de la tabla MEC
   const handleDelete = (id) => {
     axios
-      .delete(`${process.env.REACT_APP_API_URL}EliminarMEC/Delete?idMecanizada=${id}`, {
+      .delete(`${process.env.REACT_APP_API_URL}Consolidar/EliminarMEC?IdMecanizada=${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
@@ -455,8 +455,8 @@ function ConsolidarMecPOF() {
                               size="small"
                               color="error"
                               variant="gradient"
-                              onClick={() => handleDelete(row.original.id)}
-                              disabled={row.original.mecanizadaOrigen !== "POF"}
+                              onClick={() => handleDelete(row.original.idMecanizada)}
+                              disabled={row.original.origen !== "POF"}
                             >
                               Eliminar
                             </MDButton>

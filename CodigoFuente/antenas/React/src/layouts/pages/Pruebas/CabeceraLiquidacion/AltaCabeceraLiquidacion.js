@@ -111,7 +111,7 @@ function AltaCabeceraLiquidacion() {
         },
         {
           type: "text",
-          label: "Observaciones",
+          label: "Nombre Cabecera",
           name: "observaciones",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
           required: true,
@@ -121,7 +121,6 @@ function AltaCabeceraLiquidacion() {
           label: "Observaciones Inasistencias",
           name: "observacionesInasistencias",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
-          required: true,
         },
         {
           type: "text",
@@ -135,14 +134,12 @@ function AltaCabeceraLiquidacion() {
           label: "Cant. Docentes",
           name: "cantDocentes",
           customValidation: validateNumber,
-          required: true,
         },
         {
           type: "number",
           label: "RetenDeno7",
           name: "retenDeno7",
           customValidation: validateDecimal,
-          required: true,
         },
         {
           type: "select",
@@ -158,7 +155,7 @@ function AltaCabeceraLiquidacion() {
           ],
           valueField: "value",
           optionField: "label",
-          required: true,
+          disabled: true,
         },
         {
           type: "select",
