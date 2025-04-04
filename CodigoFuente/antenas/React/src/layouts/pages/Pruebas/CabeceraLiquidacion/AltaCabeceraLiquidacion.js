@@ -12,7 +12,7 @@ function AltaCabeceraLiquidacion() {
   if (id) {
     labelTitulo = "Editar Cabecera Liquidacion";
   }
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({ value: "S", label: "Si" });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -98,11 +98,13 @@ function AltaCabeceraLiquidacion() {
           required: true,
         },
         {
-          type: "text",
+          type: "select",
           label: "Usuario Liquidacion",
-          name: "usuarioLiquidacion",
-          customValidation: (value, field) => validateVarchar(value, field, 50),
-          required: true,
+          name: "idUsuario",
+          apiUrl: process.env.REACT_APP_API_URL + "Usuarios/GetByActivo?usuario=true",
+          valueField: "idUsuario",
+          optionField: "nombre",
+          disabled: true,
         },
         {
           type: "text",
@@ -122,7 +124,6 @@ function AltaCabeceraLiquidacion() {
           label: "Observaciones Bajas",
           name: "observacionesBajas",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
-          required: true,
         },
         {
           type: "number",
@@ -167,7 +168,7 @@ function AltaCabeceraLiquidacion() {
         {
           type: "select",
           label: "Calcula Bajas",
-          name: "CalculaBajas",
+          name: "calculaBajas",
           customOptions: [
             { value: "S", label: "Si" },
             { value: "N", label: "No" },
@@ -186,7 +187,7 @@ function AltaCabeceraLiquidacion() {
           ],
           valueField: "value",
           optionField: "label",
-          required: true,
+          disabled: true,
         },
       ],
     },
