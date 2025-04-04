@@ -63,7 +63,7 @@ function CabeceraLiquidacion() {
   const handleNuevoTipo = () => {
     navigate("/CabeceraLiquidacionFE/Nuevo");
   };
-  const handleVer = (rowData) => {
+  /*const handleVer = (rowData) => {
     if (rowData && rowData.idCabecera) {
       const productId = rowData.idCabecera;
       const url = `/VerCabeceraLiquidacionFE/${productId}`;
@@ -71,7 +71,7 @@ function CabeceraLiquidacion() {
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
-  };
+  };*/
   const handleEditarCabeceraLiquidacion = (idCabecera) => {
     const url = `/CabeceraLiquidacionFE/Edit/${idCabecera}`;
     navigate(url);
