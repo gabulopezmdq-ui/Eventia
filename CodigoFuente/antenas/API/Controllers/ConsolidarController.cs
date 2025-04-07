@@ -171,10 +171,11 @@ namespace API.Controllers
         
         public async Task<IActionResult> ObtenerSuplentes(int idCabecera, int idEstablecimiento)
         {
-            var suplentes = await _consolidarMecanizadaService.ObtenerSuplentesAsync(idCabecera, idEstablecimiento);
+            var suplentes = await _consolidarMecanizadaService.ObtenerSuplentesDTOAsync(idCabecera, idEstablecimiento);
             return Ok(suplentes);
 
         }
+
 
         [HttpGet ("Mecanizadas")]
 

@@ -310,21 +310,40 @@ namespace API.Services
 
 
         //Obtener lista de los suplentes con cargo S
-        public async Task<List<MEC_Mecanizadas>> ObtenerSuplentesAsync(int idCabecera, int idEstablecimiento)
+        public async Task<List<SuplentesDTO>> ObtenerSuplentesDTOAsync(int idCabecera, int idEstablecimiento)
         {
             if (idCabecera <= 0 || idEstablecimiento <= 0)
                 throw new ArgumentException("El ID de la cabecera y el ID del establecimiento deben ser mayores a cero.");
 
-            return await _context.MEC_Mecanizadas
+            var mecanizadas = await _context.MEC_Mecanizadas
                 .Where(m => m.IdCabecera == idCabecera
                             && m.IdEstablecimiento == idEstablecimiento
-                            && _context.MEC_POF
-                                .Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
+                            && _context.MEC_POF.Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
                 .Include(m => m.POF)
-                .ThenInclude(p => p.POFDetalle)
-                .ThenInclude(s => s.Suplencia)
+                    .ThenInclude(p => p.POFDetalle)
+                        .ThenInclude(d => d.Suplencia)
+                            .ThenInclude(s => s.Persona)
                 .ToListAsync();
+
+            return mecanizadas.Select(m =>
+            {
+                var detalle = m.POF?.POFDetalle?.FirstOrDefault();
+
+                return new SuplentesDTO
+                {
+                    IdPofDetalle = detalle?.IdPOFDetalle,
+                    IdMecanizada = m.IdMecanizada,
+                    IdPOF = m.IdPOF,
+                    IdSuplenciaPOF = detalle?.SupleA,
+                    SupleDesde = detalle?.SupleDesde,
+                    SupleHasta = detalle?.SupleHasta,
+                    NombreSuplencia = detalle?.Suplencia?.Persona?.Nombre,
+                    ApellidoSuplencia = detalle?.Suplencia?.Persona?.Apellido
+                };
+            }).ToList();
         }
+
+
 
         /*puede pasar que el metodo ObtenerSuplencesAsync genera una sobrecarga al tener varias conexiones con otras entidades.
         en ese caso se podria utilizar un metodo <dynamic> con LINQ para evitarlo o utilizar un DTO para modificar el select
