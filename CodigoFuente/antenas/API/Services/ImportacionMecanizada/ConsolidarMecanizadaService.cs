@@ -339,14 +339,18 @@ namespace API.Services
                 SupleHasta = s.Detalle?.SupleHasta,
                 NombreSuplente = s.Detalle?.Suplencia?.Persona?.Nombre,
                 ApellidoSuplente = s.Detalle?.Suplencia?.Persona?.Apellido,
-                NombreSuplantado = _context.MEC_POFDetalle
+                DNI = _context.MEC_POF
+                    .Where(p => p.IdPOF == s.IdPOF)
+                    .Select(p => p.Persona.DNI)
+                    .FirstOrDefault(),
+                            NombreSuplantado = _context.MEC_POFDetalle
                     .Where(p => p.IdPOFDetalle == s.SuplenciaPOF)
                     .Select(p => p.Suplencia.Persona.Nombre)
-                    .FirstOrDefault() ?? null,
-                ApellidoSuplantado = _context.MEC_POFDetalle
+                    .FirstOrDefault(),
+                            ApellidoSuplantado = _context.MEC_POFDetalle
                     .Where(p => p.IdPOFDetalle == s.SuplenciaPOF)
                     .Select(p => p.Suplencia.Persona.Apellido)
-                    .FirstOrDefault() ?? null
+                    .FirstOrDefault()
             }).ToList();
 
             return result;

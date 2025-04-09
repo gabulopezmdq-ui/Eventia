@@ -11,6 +11,7 @@ namespace API.DataSchema.DTO
         public int IdPOF { get; set; }
         public int? IdPOFDetalle { get; set; }
         public int? IdSuplenciaPOF { get; set; }
+        public string? DNI { get; set; }
         public DateTime? SupleDesde { get; set; }
         public DateTime? SupleHasta { get; set; }
 
