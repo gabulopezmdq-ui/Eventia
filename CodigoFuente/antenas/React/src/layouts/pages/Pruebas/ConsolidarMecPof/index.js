@@ -550,28 +550,7 @@ function ConsolidarMecPOF() {
                           Header: "Nombre Completo",
                           accessor: "nombreCompleto",
                           Cell: ({ row }) =>
-                            `${row.original.pof.persona.nombre} ${row.original.pof.persona.apellido}`,
-                        },
-                        {
-                          Header: "Suple A",
-                          accessor: "",
-                          Cell: ({ row }) =>
-                            `${row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.nombre || ""} 
-                            ${
-                              row.original.pof.pofDetalle?.[0]?.suplencia?.persona?.apellido || ""
-                            }`,
-                        },
-                        {
-                          Header: "Desde",
-                          accessor: "desde",
-                          Cell: ({ row }) =>
-                            formatISODate(row.original.pof.pofDetalle?.[0]?.supleDesde),
-                        },
-                        {
-                          Header: "Hasta",
-                          accessor: "hasta",
-                          Cell: ({ row }) =>
-                            formatISODate(row.original.pof.pofDetalle?.[0]?.supleHasta),
+                            `${row.original.nombreSuplantado} ${row.original.apellidoSuplantado}`,
                         },
                         {
                           Header: "Acción",

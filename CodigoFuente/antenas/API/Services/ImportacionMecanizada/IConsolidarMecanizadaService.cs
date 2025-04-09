@@ -23,7 +23,7 @@ namespace API.Services.ImportacionMecanizada
         Task<bool> EliminarRegistroMECMecanizadaAsync(int idMecanizada);
 
         Task CrearRegistroAntigDet(AltaMecanizadaDTO datos);
-        Task<List<SuplentesDTO>> ObtenerSuplentesDTOAsync(int idCabecera, int idEstablecimiento);
+        Task<List<SuplentesDTO>> ObtenerSuplentesAsync(int idCabecera, int idEstablecimiento);
         Task<List<MecanizadasDTO>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento);
         Task<List<object>> ObtenerPOFsSimplificadoAsync(int idEstablecimiento);
         Task ActualizarMEC_POFDetalle(int idPOF, int supleAId, int idCabecera, DateTime supleDesde, DateTime supleHasta);

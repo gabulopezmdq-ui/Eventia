@@ -7,13 +7,17 @@ namespace API.DataSchema.DTO
 {
     public class SuplentesDTO
     {
-        public int? IdPofDetalle { get; set; }
         public int IdMecanizada { get; set; }
         public int IdPOF { get; set; }
+        public int? IdPOFDetalle { get; set; }
         public int? IdSuplenciaPOF { get; set; }
         public DateTime? SupleDesde { get; set; }
         public DateTime? SupleHasta { get; set; }
-        public string? NombreSuplencia { get; set; }
-        public string? ApellidoSuplencia { get; set; }
+
+        public string NombreSuplente { get; set; }
+        public string ApellidoSuplente { get; set; }
+        public string NombreSuplantado { get; set; }
+        public string ApellidoSuplantado { get; set; }
     }
+
 }
