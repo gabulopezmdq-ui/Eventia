@@ -11,6 +11,10 @@ namespace API.DataSchema.DTO
         public string Apellido { get; set; }
         public string Nombre { get; set; }
         public int? IdCabecera { get; set; }
+        public int? IdPOF { get; set; }
+        public int? IdPOFDetalle { get; set; }
+        public int? IdPersona { get; set; }
+        public int? IdMecanizada { get; set; }
 
         // Datos del POF
         public string Secuencia { get; set; }
