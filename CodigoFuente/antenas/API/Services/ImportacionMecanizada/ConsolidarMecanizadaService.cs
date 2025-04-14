@@ -1,5 +1,6 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
+using API.Migrations;
 using API.Services.ImportacionMecanizada;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -324,58 +325,74 @@ namespace API.Services
             // Paso 2: Consulta optimizada en un solo DbContext
             var query = _context.MEC_POF
                 .Where(pof => idsPOF.Contains(pof.IdPOF))
-                .Select(pof => new SuplentesDTO
+                .Select(pof => new
+                {
+                    Pof = pof,
+                    PrimerDetalle = pof.POFDetalle
+                .Where(pd => pd.SupleDesde != null || pd.SupleHasta != null)
+                .OrderBy(pd => pd.IdPOFDetalle)
+                .FirstOrDefault()
+                })
+                .Select(x => new SuplentesDTO
                 {
                     IdCabecera = idCabecera,
-                    DNI = pof.Persona.DNI,
-                    Apellido = pof.Persona.Apellido,
-                    Nombre = pof.Persona.Nombre,
-                    Secuencia = pof.Secuencia,
-                    Funcion = pof.TipoFuncion.CodFuncion,
-                    CarRevista = pof.CarRevista.CodPcia,
-                    Cargo = pof.TipoCargo,
+                    DNI = x.Pof.Persona.DNI,
+                    Apellido = x.Pof.Persona.Apellido,
+                    Nombre = x.Pof.Persona.Nombre,
+                    Secuencia = x.Pof.Secuencia,
+                    Funcion = x.Pof.TipoFuncion.CodFuncion,
+                    CarRevista = x.Pof.CarRevista.CodPcia,
+                    Cargo = x.Pof.TipoCargo,
+                    IdPersona = x.Pof.Persona.IdPersona,
+                    IdPOF = x.Pof.IdPOF,
+                    IdPOFDetalle = x.Pof.POFDetalle
+                        .OrderBy(pd => pd.IdPOFDetalle)
+                        .Select(pd => (int?)pd.IdPOFDetalle)
+                        .FirstOrDefault(),
+                    IdMecanizada = x.Pof.Mecanizada.Any() ? x.Pof.Mecanizada.FirstOrDefault().IdMecanizada : null,
+
 
                     // Datos de suplencia desde el primer POFDetalle relacionado
-                    SupleDesde = pof.POFDetalle
+                    SupleDesde = x.Pof.POFDetalle
                         .Where(pd => pd.SupleDesde != null)
                         .OrderBy(pd => pd.IdPOFDetalle)
                         .Select(pd => pd.SupleDesde)
                         .FirstOrDefault(),
 
-                    SupleHasta = pof.POFDetalle
+                    SupleHasta = x.Pof.POFDetalle
                         .Where(pd => pd.SupleHasta != null)
                         .OrderBy(pd => pd.IdPOFDetalle)
                         .Select(pd => pd.SupleHasta)
                         .FirstOrDefault(),
 
                     // Información del docente titular (a través de SupleA)
-                    SupleA = pof.POFDetalle
+                    SupleA = x.Pof.POFDetalle
                         .Where(pd => pd.SupleA != null)
                         .OrderBy(pd => pd.IdPOFDetalle)
                         .Select(pd => pd.SupleA)
                         .FirstOrDefault(),
 
-                    SupleASecuencia = pof.POFDetalle
+                    SupleASecuencia = x.Pof.POFDetalle
                         .Where(pd => pd.Suplencia != null)
                         .OrderBy(pd => pd.IdPOFDetalle)
                         .Select(pd => pd.Suplencia.Secuencia)
                         .FirstOrDefault(),
 
-                    SupleAApellido = pof.POFDetalle
+                    SupleAApellido = x.Pof.POFDetalle
                         .Where(pd => pd.Suplencia != null && pd.Suplencia.Persona != null)
                         .OrderBy(pd => pd.IdPOFDetalle)
                         .Select(pd => pd.Suplencia.Persona.Apellido)
                         .FirstOrDefault(),
 
-                    SupleANombre = pof.POFDetalle
+                    SupleANombre = x.Pof.POFDetalle
                         .Where(pd => pd.Suplencia != null && pd.Suplencia.Persona != null)
                         .OrderBy(pd => pd.IdPOFDetalle)
                         .Select(pd => pd.Suplencia.Persona.Nombre)
                         .FirstOrDefault(),
 
                     // Datos de Mecanizada
-                    Importe = pof.Mecanizada.FirstOrDefault().Importe,
-                    CodigoLiquidacion = pof.Mecanizada.FirstOrDefault().CodigoLiquidacion
+                    Importe = x.Pof.Mecanizada.FirstOrDefault().Importe,
+                    CodigoLiquidacion = x.Pof.Mecanizada.FirstOrDefault().CodigoLiquidacion
                 })
                 .AsNoTracking();
 
