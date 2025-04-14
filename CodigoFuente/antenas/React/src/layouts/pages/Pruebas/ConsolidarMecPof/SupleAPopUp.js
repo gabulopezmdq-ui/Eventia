@@ -41,12 +41,12 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
         )
         .then((response) => {
           const formattedData = response.data.map((docente) => ({
-            id: docente.idPersona,
+            id: docente.idPOF,
             nombreCompleto: `${docente.nombre} ${docente.apellido}`,
           }));
           setDocentes(formattedData);
           if (suplente) {
-            setSelectedDocente(suplente.idSuplenciaPOF || "");
+            setSelectedDocente(suplente.supleA?.toString() || "");
             setFechaDesde(suplente.supleDesde?.split("T")[0] || "");
             setFechaHasta(suplente.supleHasta?.split("T")[0] || "");
           }
@@ -203,7 +203,7 @@ SupleAPopup.propTypes = {
     idMecanizada: PropTypes.number,
     idPOF: PropTypes.number.isRequired,
     idPOFDetalle: PropTypes.number,
-    idSuplenciaPOF: PropTypes.number,
+    supleA: PropTypes.number,
     supleDesde: PropTypes.string,
     supleHasta: PropTypes.string,
     nombre: PropTypes.string,
