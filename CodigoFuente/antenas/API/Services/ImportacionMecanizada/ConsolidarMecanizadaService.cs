@@ -4,6 +4,7 @@ using API.Services.ImportacionMecanizada;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
@@ -312,49 +313,76 @@ namespace API.Services
         //Obtener lista de los suplentes con cargo S
         public async Task<List<SuplentesDTO>> ObtenerSuplentesAsync(int idCabecera, int idEstablecimiento)
         {
-            if (idCabecera <= 0 || idEstablecimiento <= 0)
-                throw new ArgumentException("El ID de la cabecera y el ID del establecimiento deben ser mayores a cero.");
-
-            var suplentes = await _context.MEC_Mecanizadas
-                .Where(m => m.IdCabecera == idCabecera
-                            && m.IdEstablecimiento == idEstablecimiento
-                            && _context.MEC_POF.Any(p => p.IdPOF == m.IdPOF && p.CarRevista.CodPcia == "S"))
-                .Select(m => new
-                {
-                    m.IdMecanizada,
-                    m.IdPOF,
-                    Detalle = m.POF.POFDetalle.FirstOrDefault(d => d.IdPOF != null),
-                    SuplenciaPOF = m.POF.POFDetalle.FirstOrDefault(d => d.SupleA != null).SupleA
-                })
+            // Paso 1: Obtener solo los IDs necesarios
+            var idsPOF = await _context.MEC_Mecanizadas
+                .Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
+                .Where(m => m.POF.CarRevista.Vigente == "S")
+                .Select(m => m.IdPOF)
+                .Distinct()
                 .ToListAsync();
 
-            // Evitamos loops al proyectar después
-            var result = suplentes.Select(s => new SuplentesDTO
-            {
-                IdMecanizada = s.IdMecanizada,
-                IdPOF = s.IdPOF,
-                IdPOFDetalle = s.Detalle?.IdPOFDetalle,
-                IdSuplenciaPOF = s.Detalle?.SupleA,
-                SupleDesde = s.Detalle?.SupleDesde,
-                SupleHasta = s.Detalle?.SupleHasta,
-                NombreSuplente = s.Detalle?.Suplencia?.Persona?.Nombre,
-                ApellidoSuplente = s.Detalle?.Suplencia?.Persona?.Apellido,
-                DNI = _context.MEC_POF
-                    .Where(p => p.IdPOF == s.IdPOF)
-                    .Select(p => p.Persona.DNI)
-                    .FirstOrDefault(),
-                            NombreSuplantado = _context.MEC_POFDetalle
-                    .Where(p => p.IdPOFDetalle == s.SuplenciaPOF)
-                    .Select(p => p.Suplencia.Persona.Nombre)
-                    .FirstOrDefault(),
-                            ApellidoSuplantado = _context.MEC_POFDetalle
-                    .Where(p => p.IdPOFDetalle == s.SuplenciaPOF)
-                    .Select(p => p.Suplencia.Persona.Apellido)
-                    .FirstOrDefault()
-            }).ToList();
+            // Paso 2: Consulta optimizada en un solo DbContext
+            var query = _context.MEC_POF
+                .Where(pof => idsPOF.Contains(pof.IdPOF))
+                .Select(pof => new SuplentesDTO
+                {
+                    IdCabecera = idCabecera,
+                    DNI = pof.Persona.DNI,
+                    Apellido = pof.Persona.Apellido,
+                    Nombre = pof.Persona.Nombre,
+                    Secuencia = pof.Secuencia,
+                    Funcion = pof.TipoFuncion.CodFuncion,
+                    CarRevista = pof.CarRevista.CodPcia,
+                    Cargo = pof.TipoCargo,
 
-            return result;
+                    // Datos de suplencia desde el primer POFDetalle relacionado
+                    SupleDesde = pof.POFDetalle
+                        .Where(pd => pd.SupleDesde != null)
+                        .OrderBy(pd => pd.IdPOFDetalle)
+                        .Select(pd => pd.SupleDesde)
+                        .FirstOrDefault(),
+
+                    SupleHasta = pof.POFDetalle
+                        .Where(pd => pd.SupleHasta != null)
+                        .OrderBy(pd => pd.IdPOFDetalle)
+                        .Select(pd => pd.SupleHasta)
+                        .FirstOrDefault(),
+
+                    // Información del docente titular (a través de SupleA)
+                    SupleA = pof.POFDetalle
+                        .Where(pd => pd.SupleA != null)
+                        .OrderBy(pd => pd.IdPOFDetalle)
+                        .Select(pd => pd.SupleA)
+                        .FirstOrDefault(),
+
+                    SupleASecuencia = pof.POFDetalle
+                        .Where(pd => pd.Suplencia != null)
+                        .OrderBy(pd => pd.IdPOFDetalle)
+                        .Select(pd => pd.Suplencia.Secuencia)
+                        .FirstOrDefault(),
+
+                    SupleAApellido = pof.POFDetalle
+                        .Where(pd => pd.Suplencia != null && pd.Suplencia.Persona != null)
+                        .OrderBy(pd => pd.IdPOFDetalle)
+                        .Select(pd => pd.Suplencia.Persona.Apellido)
+                        .FirstOrDefault(),
+
+                    SupleANombre = pof.POFDetalle
+                        .Where(pd => pd.Suplencia != null && pd.Suplencia.Persona != null)
+                        .OrderBy(pd => pd.IdPOFDetalle)
+                        .Select(pd => pd.Suplencia.Persona.Nombre)
+                        .FirstOrDefault(),
+
+                    // Datos de Mecanizada
+                    Importe = pof.Mecanizada.FirstOrDefault().Importe,
+                    CodigoLiquidacion = pof.Mecanizada.FirstOrDefault().CodigoLiquidacion
+                })
+                .AsNoTracking();
+
+            return await query.ToListAsync();
         }
+
+
 
 
         /*puede pasar que el metodo ObtenerSuplencesAsync genera una sobrecarga al tener varias conexiones con otras entidades.
