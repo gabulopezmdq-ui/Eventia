@@ -117,12 +117,18 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
               label="Nombre del Suplente"
               fullWidth
               margin="dense"
-              value={suplente ? `${suplente.nombreSuplente} ${suplente.apellidoSuplente}` : ""}
+              value={suplente ? `${suplente.nombre} ${suplente.apellido}` : ""}
               disabled
             />
           </Grid>
           <Grid item xs={6}>
-            <TextField label="Documento" fullWidth margin="dense" value={suplente.dni} disabled />
+            <TextField
+              label="Documento"
+              fullWidth
+              margin="dense"
+              value={suplente?.dni || ""}
+              disabled
+            />
           </Grid>
           <Grid item xs={12}>
             <FormControl fullWidth>
@@ -200,8 +206,8 @@ SupleAPopup.propTypes = {
     idSuplenciaPOF: PropTypes.number,
     supleDesde: PropTypes.string,
     supleHasta: PropTypes.string,
-    nombreSuplente: PropTypes.string,
-    apellidoSuplente: PropTypes.string,
+    nombre: PropTypes.string,
+    apellido: PropTypes.string,
     nombreSuplantado: PropTypes.string,
     apellidoSuplantado: PropTypes.string,
     idCabecera: PropTypes.number,
