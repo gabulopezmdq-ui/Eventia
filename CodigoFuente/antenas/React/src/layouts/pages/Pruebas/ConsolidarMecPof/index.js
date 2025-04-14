@@ -427,7 +427,11 @@ function ConsolidarMecPOF() {
                           accessor: "nombreCompleto",
                           Cell: ({ row }) => `${row.original.nombre} ${row.original.apellido}`,
                         },
-                        { Header: "Documento", accessor: "dni" },
+                        {
+                          Header: "Documento",
+                          accessor: "dni",
+                          Cell: ({ row }) => row.original?.dni || "N/A",
+                        },
                         { Header: "Secuencia", accessor: "secuencia" },
                         { Header: "Tipo Cargo", accessor: "tipoCargo" },
                         { Header: "Año/Mes Afec", accessor: "anioMesAfectacion" },
@@ -526,12 +530,15 @@ function ConsolidarMecPOF() {
                   <DataTable
                     table={{
                       columns: [
-                        { Header: "Documento", accessor: "dni" },
+                        {
+                          Header: "Documento",
+                          accessor: "dni",
+                          Cell: ({ row }) => row.original?.dni || "N/A",
+                        },
                         {
                           Header: "Nombre Completo",
                           accessor: "nombreCompleto",
-                          Cell: ({ row }) =>
-                            `${row.original.nombreSuplente} ${row.original.apellidoSuplente}`,
+                          Cell: ({ row }) => `${row.original.nombre} ${row.original.apellido}`,
                         },
                         {
                           Header: "Acción",
