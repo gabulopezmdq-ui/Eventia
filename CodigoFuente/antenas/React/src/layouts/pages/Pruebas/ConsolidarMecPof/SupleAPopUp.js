@@ -30,6 +30,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
   const [alertType, setAlertType] = useState("success");
   const [alertMessage, setAlertMessage] = useState("");
   const token = sessionStorage.getItem("token");
+  console.log("Suplente: ", suplente);
   useEffect(() => {
     if (open && idEstablecimiento) {
       setLoading(true);
@@ -44,11 +45,10 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
             nombreCompleto: `${docente.nombre} ${docente.apellido}`,
           }));
           setDocentes(formattedData);
-          if (suplente?.pof?.pofDetalle?.[0]) {
-            const detalle = suplente.pof.pofDetalle[0];
-            setSelectedDocente(detalle.suplencia?.persona?.idPersona || "");
-            setFechaDesde(detalle.supleDesde?.split("T")[0] || "");
-            setFechaHasta(detalle.supleHasta?.split("T")[0] || "");
+          if (suplente) {
+            setSelectedDocente(suplente.idSuplenciaPOF || "");
+            setFechaDesde(suplente.supleDesde?.split("T")[0] || "");
+            setFechaHasta(suplente.supleHasta?.split("T")[0] || "");
           }
         })
         .catch((error) => console.error("Error obteniendo docentes:", error))
@@ -79,9 +79,8 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
         SupleA: selectedDocente,
         supleDesde: fechaDesde,
         supleHasta: fechaHasta,
-        idCabecera: suplente.cabecera.idCabecera,
+        idCabecera: suplente.idCabecera,
       };
-
       await onSubmit(data);
 
       setAlertType("success");
@@ -118,11 +117,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
               label="Nombre del Suplente"
               fullWidth
               margin="dense"
-              value={
-                suplente
-                  ? `${suplente.pof?.persona?.nombre} ${suplente.pof?.persona?.apellido}`
-                  : ""
-              }
+              value={suplente ? `${suplente.nombre} ${suplente.apellido}` : ""}
               disabled
             />
           </Grid>
@@ -131,7 +126,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
               label="Documento"
               fullWidth
               margin="dense"
-              value={suplente ? suplente.pof?.persona?.dni : ""}
+              value={suplente?.dni || ""}
               disabled
             />
           </Grid>
@@ -205,29 +200,18 @@ SupleAPopup.propTypes = {
   open: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   suplente: PropTypes.shape({
+    idMecanizada: PropTypes.number,
     idPOF: PropTypes.number.isRequired,
-    cabecera: PropTypes.shape({
-      idCabecera: PropTypes.number.isRequired,
-    }),
-    pof: PropTypes.shape({
-      idPersona: PropTypes.number.isRequired,
-      persona: PropTypes.shape({
-        nombre: PropTypes.string,
-        apellido: PropTypes.string,
-        dni: PropTypes.string,
-      }),
-      pofDetalle: PropTypes.arrayOf(
-        PropTypes.shape({
-          suplencia: PropTypes.shape({
-            persona: PropTypes.shape({
-              idPersona: PropTypes.number,
-            }),
-          }),
-          supleDesde: PropTypes.string,
-          supleHasta: PropTypes.string,
-        })
-      ),
-    }),
+    idPOFDetalle: PropTypes.number,
+    idSuplenciaPOF: PropTypes.number,
+    supleDesde: PropTypes.string,
+    supleHasta: PropTypes.string,
+    nombre: PropTypes.string,
+    apellido: PropTypes.string,
+    nombreSuplantado: PropTypes.string,
+    apellidoSuplantado: PropTypes.string,
+    idCabecera: PropTypes.number,
+    dni: PropTypes.string,
   }),
   idEstablecimiento: PropTypes.number.isRequired,
   onSubmit: PropTypes.func.isRequired,

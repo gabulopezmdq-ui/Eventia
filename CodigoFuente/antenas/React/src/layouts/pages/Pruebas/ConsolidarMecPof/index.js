@@ -238,10 +238,7 @@ function ConsolidarMecPOF() {
 
   const handleSubmit = async (data) => {
     try {
-      const url = suplenteSeleccionado.pof.pofDetalle?.[0]
-        ? `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`
-        : `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`;
-
+      const url = `${process.env.REACT_APP_API_URL}Consolidar/POFDetalle`;
       const response = await axios.put(url, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -340,30 +337,14 @@ function ConsolidarMecPOF() {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6} md={4}>
             <FormControl fullWidth>
-              <InputLabel id="cabecera-select-label">Cabecera</InputLabel>
+              <InputLabel id="cabecera-select-label">Seleccione Cabecera</InputLabel>
               <Select
                 labelId="filter-label"
-                value={selectedIdCabecera}
+                label="Seleccione Cabecera"
+                value={selectedCabecera}
                 onChange={(e) => setSelectedCabecera(e.target.value)}
-                sx={{
-                  height: "40px",
-                  "& .MuiSelect-select": {
-                    height: "40px",
-                    padding: "10px",
-                    display: "flex",
-                    alignItems: "center",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#000",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#000",
-                  },
-                }}
+                style={{ height: "2.5rem", backgroundColor: "white" }}
               >
-                <MenuItem value="">
-                  <em>Seleccionar Cabecera</em>
-                </MenuItem>
                 {idCabeceras.map((item, index) => (
                   <MenuItem key={index} value={item.id}>
                     {item.displayText}
@@ -446,7 +427,11 @@ function ConsolidarMecPOF() {
                           accessor: "nombreCompleto",
                           Cell: ({ row }) => `${row.original.nombre} ${row.original.apellido}`,
                         },
-                        { Header: "Documento", accessor: "dni" },
+                        {
+                          Header: "Documento",
+                          accessor: "dni",
+                          Cell: ({ row }) => row.original?.dni || "N/A",
+                        },
                         { Header: "Secuencia", accessor: "secuencia" },
                         { Header: "Tipo Cargo", accessor: "tipoCargo" },
                         { Header: "Año/Mes Afec", accessor: "anioMesAfectacion" },
@@ -545,12 +530,15 @@ function ConsolidarMecPOF() {
                   <DataTable
                     table={{
                       columns: [
-                        { Header: "Documento", accessor: "pof.persona.dni" },
+                        {
+                          Header: "Documento",
+                          accessor: "dni",
+                          Cell: ({ row }) => row.original?.dni || "N/A",
+                        },
                         {
                           Header: "Nombre Completo",
                           accessor: "nombreCompleto",
-                          Cell: ({ row }) =>
-                            `${row.original.nombreSuplantado} ${row.original.apellidoSuplantado}`,
+                          Cell: ({ row }) => `${row.original.nombre} ${row.original.apellido}`,
                         },
                         {
                           Header: "Acción",
