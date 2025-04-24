@@ -324,7 +324,7 @@ namespace API.Services
 
             // Paso 2: Consulta optimizada en un solo DbContext
             var query = _context.MEC_POF
-                .Where(pof => idsPOF.Contains(pof.IdPOF))
+                .Where(pof => idsPOF.Contains(pof.IdPOF) && pof.TipoCargo == "S")
                 .Select(pof => new
                 {
                     Pof = pof,
