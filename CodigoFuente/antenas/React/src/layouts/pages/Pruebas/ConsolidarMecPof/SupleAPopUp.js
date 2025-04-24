@@ -30,7 +30,6 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
   const [alertType, setAlertType] = useState("success");
   const [alertMessage, setAlertMessage] = useState("");
   const token = sessionStorage.getItem("token");
-  console.log("Suplente: ", suplente);
   useEffect(() => {
     if (open && idEstablecimiento) {
       setLoading(true);
