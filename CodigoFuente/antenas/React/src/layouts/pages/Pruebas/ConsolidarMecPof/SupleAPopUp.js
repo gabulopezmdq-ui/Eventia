@@ -30,7 +30,6 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
   const [alertType, setAlertType] = useState("success");
   const [alertMessage, setAlertMessage] = useState("");
   const token = sessionStorage.getItem("token");
-  console.log("Suplente: ", suplente);
   useEffect(() => {
     if (open && idEstablecimiento) {
       setLoading(true);
@@ -46,7 +45,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
           }));
           setDocentes(formattedData);
           if (suplente) {
-            setSelectedDocente(suplente.idSuplenciaPOF || "");
+            setSelectedDocente(suplente.supleA?.toString() || "");
             setFechaDesde(suplente.supleDesde?.split("T")[0] || "");
             setFechaHasta(suplente.supleHasta?.split("T")[0] || "");
           }
@@ -203,7 +202,7 @@ SupleAPopup.propTypes = {
     idMecanizada: PropTypes.number,
     idPOF: PropTypes.number.isRequired,
     idPOFDetalle: PropTypes.number,
-    idSuplenciaPOF: PropTypes.number,
+    supleA: PropTypes.number,
     supleDesde: PropTypes.string,
     supleHasta: PropTypes.string,
     nombre: PropTypes.string,
