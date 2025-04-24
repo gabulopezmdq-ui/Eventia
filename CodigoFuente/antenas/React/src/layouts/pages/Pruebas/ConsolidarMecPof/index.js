@@ -130,7 +130,11 @@ function ConsolidarMecPOF() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        setMecData(response.data || []);
+        const dataWithFullName = (response.data || []).map((item) => ({
+          ...item,
+          nombreCompleto: `${item.apellido} ${item.nombre}`,
+        }));
+        setMecData(dataWithFullName);
         setLoadingMec(false);
       })
       .catch(() => {
@@ -162,7 +166,11 @@ function ConsolidarMecPOF() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        setSuplentesData(response.data || []);
+        const dataWithFullName = (response.data || []).map((item) => ({
+          ...item,
+          nombreCompleto: `${item.apellido} ${item.nombre} `,
+        }));
+        setSuplentesData(dataWithFullName);
         setLoadingSuplentes(false);
       })
       .catch(() => {
@@ -422,11 +430,7 @@ function ConsolidarMecPOF() {
                   <DataTable
                     table={{
                       columns: [
-                        {
-                          Header: "Nombre Completo",
-                          accessor: "nombreCompleto",
-                          Cell: ({ row }) => `${row.original.nombre} ${row.original.apellido}`,
-                        },
+                        { Header: "Nombre Completo", accessor: "nombreCompleto" },
                         {
                           Header: "Documento",
                           accessor: "dni",
@@ -535,11 +539,7 @@ function ConsolidarMecPOF() {
                           accessor: "dni",
                           Cell: ({ row }) => row.original?.dni || "N/A",
                         },
-                        {
-                          Header: "Nombre Completo",
-                          accessor: "nombreCompleto",
-                          Cell: ({ row }) => `${row.original.nombre} ${row.original.apellido}`,
-                        },
+                        { Header: "Nombre Completo", accessor: "nombreCompleto" },
                         {
                           Header: "Acción",
                           accessor: "accion",
