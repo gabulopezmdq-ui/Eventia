@@ -104,11 +104,13 @@ namespace API.Services
                 throw new KeyNotFoundException("El registro no existe.");
             }
 
-            bool tieneEntidadAsociada = await _genericRepo.HasRelatedEntities(Id);
+            // Verificar si hay entidades relacionadas con Vigente = "S"
+            bool tieneRelacionesActivas = await TieneRelacionesActivas(Id);
 
-            if (tieneEntidadAsociada)
+            if (tieneRelacionesActivas)
             {
-                throw new InvalidOperationException("No se puede eliminar el registro");
+                throw new InvalidOperationException(
+                    "No se puede desactivar el registro porque existen entidades relacionadas activas (Vigente = 'S').");
             }
 
             // Cambia el estado 'Vigente' a "N" en lugar de eliminar físicamente
