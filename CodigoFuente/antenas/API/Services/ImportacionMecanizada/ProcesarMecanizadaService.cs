@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using Microsoft.AspNetCore.Http;
 using System;
+using API.DataSchema.DTO;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -244,6 +245,25 @@ namespace API.Services
 
                 await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(erroresTiposEstablecimientos);
             }
+        }
+
+        public List<ErroresPOFDTO> ErroresPOFAgrupados ()
+        {
+            var resultado = (from a in _context.MEC_TMPErroresMecanizadas
+                             join e in _context.MEC_Establecimientos
+                                 on a.IdEstablecimiento equals e.IdEstablecimiento
+                             join m in _context.MEC_TMPMecanizadas
+                                 on a.IdTMPMecanizada equals m.idTMPMecanizada
+                             group new { e, m } by new { e.NroEstablecimiento, m.Documento, m.Secuencia } into g
+                             orderby g.Key.NroEstablecimiento, g.Key.Documento, g.Key.Secuencia
+                             select new ErroresPOFDTO
+                             {
+                                 Documento = g.Key.Documento,
+                                 Secuencia = g.Key.Secuencia,
+                                 NroEstablecimiento = g.Key.NroEstablecimiento
+                             }).ToList();
+
+            return resultado;
         }
         private async Task ValidarMecAsync(int idCabecera)
                 {

@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using API.Services;
 using DocumentFormat.OpenXml.Wordprocessing;
+using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -23,11 +24,13 @@ namespace API.Controllers
         private readonly ICRUDService<MEC_TMPErroresFuncion> _funcion;
         private readonly ICRUDService<MEC_TMPErroresMecanizadas> _mecanizada;
         private readonly ICRUDService<MEC_TMPErroresTiposEstablecimientos> _tiposEstablecimiento;
+        private readonly IProcesarMecanizadaService<MEC_TMPMecanizadas> _procesarMecanizadaService;
 
         public TMPErroresController(DataContext context, ILogger<MEC_Establecimientos> logger, ICRUDService<MEC_TMPErroresCarRevista> carRevista, 
                                     ICRUDService<MEC_TMPErroresConceptos> concepto, ICRUDService<MEC_TMPErroresEstablecimientos> establecimiento,
                                     ICRUDService<MEC_TMPErroresFuncion> funcion, ICRUDService<MEC_TMPErroresMecanizadas> mecanizada, 
-                                    ICRUDService<MEC_TMPErroresTiposEstablecimientos> tiposEstablecimientos)
+                                    ICRUDService<MEC_TMPErroresTiposEstablecimientos> tiposEstablecimientos,
+                                    IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService)
         {
             _context = context;
             _carRevista = carRevista;
@@ -36,6 +39,7 @@ namespace API.Controllers
             _funcion = funcion;
             _mecanizada = mecanizada;
             _tiposEstablecimiento = tiposEstablecimientos;
+            _procesarMecanizadaService = procesarMecanizadaService;
         }
         
         [HttpGet("GetAllCarRevista")]
@@ -76,7 +80,12 @@ namespace API.Controllers
         }
 
 
-
+        [HttpGet("GetErroresAgrupados")]
+        public IActionResult GetErroresAgrupados()
+        {
+            var resultado = _procesarMecanizadaService.ErroresPOFAgrupados();
+            return Ok(resultado);
+        }
 
 
     }
