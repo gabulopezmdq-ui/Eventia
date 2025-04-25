@@ -117,6 +117,9 @@ function ProcesarArchivoImportado() {
         axios.get("https://localhost:44382/TMPErrores/GetAllTipoEst", {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        axios.get("https://localhost:44382/TMPErrores/GetErroresAgrupados", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       // Configurar qué campos incluir para cada sección
@@ -158,7 +161,62 @@ function ProcesarArchivoImportado() {
           })),
         },
       ];
-
+      const handleGenerateGroupedErrorsPDF = async () => {
+        setLoadingErrors(true);
+        try {
+          const response = await axios.get(
+            "https://localhost:44382/TMPErrores/GetErroresAgrupados",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (response.data.length === 0) {
+            setErrorAlert({
+              show: true,
+              message: "No hay errores agrupados para mostrar.",
+              type: "warning",
+            });
+            return;
+          }
+          const doc = new jsPDF();
+          doc.setFontSize(14);
+          doc.text("Resumen de Errores Agrupados", 10, 10);
+          // Preparar los datos para la tabla
+          const tableData = response.data.map((item) => [
+            item.tipoError,
+            item.cantidad,
+            item.descripcion,
+          ]);
+          doc.autoTable({
+            head: [["Tipo de Error", "Cantidad", "Descripción"]],
+            body: tableData,
+            startY: 20,
+            styles: {
+              fontSize: 10,
+              cellPadding: 4,
+              overflow: "linebreak",
+            },
+            headStyles: {
+              fillColor: [41, 128, 185],
+              textColor: [255, 255, 255],
+            },
+            columnStyles: {
+              0: { cellWidth: 40 }, // Tipo de Error
+              1: { cellWidth: 30, halign: "center" }, // Cantidad
+              2: { cellWidth: 120 }, // Descripción
+            },
+          });
+          doc.save("ErroresAgrupados.pdf");
+        } catch (error) {
+          setErrorAlert({
+            show: true,
+            message: "Error al generar el PDF de errores agrupados.",
+            type: "error",
+          });
+        } finally {
+          setLoadingErrors(false);
+        }
+      };
       // Crear el PDF
       const doc = new jsPDF();
       doc.setFontSize(14);
@@ -309,6 +367,76 @@ function ProcesarArchivoImportado() {
   };
 
   //.......................... imprimir grilla.........................s
+  const handleGenerateGroupedErrorsPDF = async () => {
+    try {
+      // 1. Obtener los datos directamente desde la API
+      const response = await axios.get("https://localhost:44382/TMPErrores/GetErroresAgrupados", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const apiData = response.data;
+      // 2. Verificar si hay datos
+      if (!apiData || apiData.length === 0) {
+        setErrorAlert({
+          show: true,
+          message: "No hay datos de errores agrupados para exportar.",
+          type: "warning",
+        });
+        return;
+      }
+      // 3. Crear el documento PDF
+      const doc = new jsPDF("landscape");
+      doc.setFontSize(10);
+      doc.text("Errores Agrupados Detectados", 14, 10);
+      // 4. Definir columnas basadas en los datos reales recibidos
+      const columns = [
+        { header: "Documento", dataKey: "documento" },
+        { header: "Secuencia", dataKey: "secuencia" },
+        { header: "Establecimiento", dataKey: "nroEstablecimiento" },
+      ];
+      // 5. Procesar los datos exactamente como vienen de la API
+      const processedData = apiData.map((row) => ({
+        documento: row.documento || "Sin dato",
+        secuencia: row.secuencia || "Sin dato",
+        nroEstablecimiento: row.nroEstablecimiento || "Sin dato",
+      }));
+      // 6. Generar la tabla
+      doc.autoTable({
+        columns,
+        body: processedData,
+        startY: 20,
+        margin: { top: 20 },
+        styles: {
+          fontSize: 9,
+          cellPadding: 1.2,
+          overflow: "linebreak",
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontSize: 10,
+          halign: "center",
+        },
+        columnStyles: {
+          documento: { halign: "center", fontStyle: "normal" },
+          secuencia: { halign: "center" },
+          nroEstablecimiento: { halign: "center" },
+        },
+        didDrawPage: function (data) {
+          doc.setFontSize(7);
+          doc.text(`Página ${doc.internal.getNumberOfPages()}`, 280, 200);
+        },
+      });
+      // 7. Guardar el PDF
+      doc.save("ErroresAgrupados.pdf");
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      setErrorAlert({
+        show: true,
+        message: "Error al generar el PDF de errores agrupados",
+        type: "error",
+      });
+    }
+  };
   const handleGenerateGridPDF = () => {
     if (dataTableData.length === 0) {
       setErrorAlert({
@@ -500,6 +628,9 @@ function ProcesarArchivoImportado() {
           <Grid container justifyContent="center" sx={{ mt: 2 }}>
             <MDButton variant="contained" color="warning" onClick={handleGenerateGridPDF}>
               {loadingErrors ? "Cargando..." : "Ver errores"}
+            </MDButton>
+            <MDButton variant="contained" color="warning" onClick={handleGenerateGroupedErrorsPDF}>
+              {loadingErrors ? "Cargando..." : "Ver errores agrupados"}
             </MDButton>
           </Grid>
         </Card>
