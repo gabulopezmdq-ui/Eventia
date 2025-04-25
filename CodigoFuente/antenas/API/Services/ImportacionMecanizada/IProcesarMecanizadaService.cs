@@ -1,4 +1,5 @@
 ﻿using API.DataSchema;
+using API.DataSchema.DTO;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace API.Services
         Task<string> HandlePreprocesarArchivoAsync(int idCabecera);
         Task PreprocesarAsync(int idCabecera);
         Task<string> ProcesarSiEsValidoAsync(int idCabecera, int usuario);
+        public List<ErroresPOFDTO> ErroresPOFAgrupados();
     }
 
 }
