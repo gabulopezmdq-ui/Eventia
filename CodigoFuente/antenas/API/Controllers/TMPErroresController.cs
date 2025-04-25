@@ -63,7 +63,7 @@ namespace API.Controllers
         [HttpGet("GetAllFunciones")]
         public async Task<ActionResult<IEnumerable<MEC_TMPErroresFuncion>>> GetErroresFunciones() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
-            return Ok(_funcion  .GetAll());
+            return Ok(_funcion.GetAll());
         }
 
         [HttpGet("GetAllMecanizadas")]
