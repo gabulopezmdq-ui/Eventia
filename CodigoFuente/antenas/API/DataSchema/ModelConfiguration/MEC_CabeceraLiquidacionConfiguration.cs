@@ -88,6 +88,9 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.RetenDeno7)
                 .IsRequired(false);
 
+            builder.Property(e => e.OrdenPago)
+                .IsRequired(true);
+
             builder.Property(e => e.Vigente)
                 .HasColumnType("char(1)")
                 .IsFixedLength(true)

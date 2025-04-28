@@ -21,6 +21,7 @@ namespace API.DataSchema
         public string? CalculaBajas { get; set; }
         public int? CantDocentes { get; set; }
         public decimal? RetenDeno7 { get; set; }
+        public string OrdenPago { get; set; }
         public string Vigente { get; set; }
         public virtual MEC_TiposLiquidaciones? TipoLiquidacion { get; set; }
         public virtual MEC_Usuarios? Usuarios { get; set; }
