@@ -84,6 +84,12 @@ function Formulario({
     event.preventDefault();
 
     const dataToSubmit = { ...formData };
+    if (dataToSubmit.ordenPago) {
+      dataToSubmit.ordenPago = dataToSubmit.ordenPago
+        .replace(/\D/g, "")
+        .padStart(5, "0")
+        .slice(0, 5);
+    }
     Object.keys(dataToSubmit).forEach((key) => {
       if (dataToSubmit[key] === null || dataToSubmit[key] === undefined) {
         dataToSubmit[key] = "";
