@@ -126,6 +126,13 @@ function AltaCabeceraLiquidacion() {
           customValidation: (value, field) => validateVarchar(value, field, 1000),
         },
         {
+          type: "text",
+          label: "Orden de Pago",
+          name: "ordenPago",
+          maxLength: 5,
+          required: true,
+        },
+        {
           type: "number",
           label: "Cant. Docentes",
           name: "cantDocentes",
