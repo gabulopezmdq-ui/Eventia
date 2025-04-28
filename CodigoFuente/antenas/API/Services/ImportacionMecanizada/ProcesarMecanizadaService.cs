@@ -45,12 +45,23 @@ namespace API.Services
                 throw new Exception("La cabecera no existe o no está en estado 'I'.");
             }
 
+            // 2. Filtrar registros MEC_TMPMecanizadas que coinciden en OrdenPago
+            var mecanizadasFiltradas = await _context.MEC_TMPMecanizadas
+                .Where(m => m.idCabecera == idCabecera && m.OrdenPago == cabecera.OrdenPago)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (!mecanizadasFiltradas.Any())
+            {
+                throw new Exception("No se encontraron registros en MEC_TMPMecanizadas que coincidan con el OrdenPago de la cabecera.");
+            }
+
             // 2. Ejecutar validaciones secuencialmente con ConfigureAwait(false)
-            await ValidarNroEstabAsync(idCabecera).ConfigureAwait(false);
-            await ValidarCodFuncionAsync(idCabecera).ConfigureAwait(false);
-            await ValidarCodLiquidacionAsync(idCabecera).ConfigureAwait(false);
-            await ValidarCarRevistaAsync(idCabecera).ConfigureAwait(false);
-            await ValidarTipoOrgAsync(idCabecera).ConfigureAwait(false);
+            await ValidarNroEstabAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarCodFuncionAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarCodLiquidacionAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarCarRevistaAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarTipoOrgAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
             // 3. Guardar cambios acumulados
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -67,7 +78,7 @@ namespace API.Services
             }
 
             // 5. Validación MEC con operaciones secuenciales
-            await ValidarMecAsync(idCabecera).ConfigureAwait(false);
+            await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
             // 6. Verificar registros inválidos
             var registrosInvalidos = await _context.MEC_TMPMecanizadas
@@ -135,14 +146,13 @@ namespace API.Services
             }
         }
 
-        private async Task ValidarNroEstabAsync(int idCabecera)
+        private async Task ValidarNroEstabAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
         {
-            var nroEstabInvalidos = await _context.MEC_TMPMecanizadas
-                .Where(m => m.idCabecera == idCabecera)
+            var nroEstabInvalidos = mecanizadasFiltradas
                 .Select(m => m.NroEstab)
                 .Distinct()
                 .Where(nro => !_context.MEC_Establecimientos.Any(e => e.NroDiegep == nro))
-                .ToListAsync();
+                .ToList();
 
             if (nroEstabInvalidos.Any())
             {
@@ -154,18 +164,16 @@ namespace API.Services
                     });
 
                 _context.MEC_TMPErroresEstablecimientos.AddRange(erroresEstablecimientos);
-
             }
         }
 
-        private async Task ValidarCodFuncionAsync(int idCabecera)
+        private async Task ValidarCodFuncionAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
         {
-            var codFuncionInvalidos = await _context.MEC_TMPMecanizadas
-                .Where(m => m.idCabecera == idCabecera)
+            var codFuncionInvalidos = mecanizadasFiltradas
                 .Select(m => m.Funcion)
                 .Distinct()
                 .Where(cod => !_context.MEC_TiposFunciones.Any(f => f.CodFuncion == cod))
-                .ToListAsync();
+                .ToList();
 
             if (codFuncionInvalidos.Any())
             {
@@ -180,14 +188,13 @@ namespace API.Services
             }
         }
 
-        private async Task ValidarCodLiquidacionAsync(int idCabecera)
+        private async Task ValidarCodLiquidacionAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
         {
-            var codLiquidacionInvalidos = await _context.MEC_TMPMecanizadas
-                .Where(m => m.idCabecera == idCabecera)
+            var codLiquidacionInvalidos = mecanizadasFiltradas
                 .Select(m => m.CodigoLiquidacion)
                 .Distinct()
                 .Where(cod => !_context.MEC_Conceptos.Any(f => f.CodConcepto == cod))
-                .ToListAsync();
+                .ToList();
 
             if (codLiquidacionInvalidos.Any())
             {
@@ -199,18 +206,16 @@ namespace API.Services
                     });
 
                 _context.MEC_TMPErroresConceptos.AddRange(erroresConceptos);
-
             }
         }
 
-        private async Task ValidarCarRevistaAsync(int idCabecera)
+        private async Task ValidarCarRevistaAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
         {
-            var carRevistaInvalidos = await _context.MEC_TMPMecanizadas
-                .Where(m => m.idCabecera == idCabecera)
+            var carRevistaInvalidos = mecanizadasFiltradas
                 .Select(m => m.CaracterRevista)
                 .Distinct()
                 .Where(cod => !_context.MEC_CarRevista.Any(f => f.CodPcia == cod))
-                .ToListAsync();
+                .ToList();
 
             if (carRevistaInvalidos.Any())
             {
@@ -225,14 +230,13 @@ namespace API.Services
             }
         }
 
-        private async Task ValidarTipoOrgAsync(int idCabecera)
+        private async Task ValidarTipoOrgAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
         {
-            var tipoOrgInvalidos = await _context.MEC_TMPMecanizadas
-                .Where(m => m.idCabecera == idCabecera)
+            var tipoOrgInvalidos = mecanizadasFiltradas
                 .Select(m => m.TipoOrganizacion)
                 .Distinct()
                 .Where(cod => !_context.MEC_TiposEstablecimientos.Any(f => f.CodTipoEstablecimiento == cod))
-                .ToListAsync();
+                .ToList();
 
             if (tipoOrgInvalidos.Any())
             {
@@ -265,11 +269,9 @@ namespace API.Services
 
             return resultado;
         }
-        private async Task ValidarMecAsync(int idCabecera)
+        private async Task ValidarMecAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
                 {
-            var registros = await _context.MEC_TMPMecanizadas
-                                          .Where(e => e.idCabecera == idCabecera)
-                                          .ToListAsync();
+            var registros = mecanizadasFiltradas;
 
             var detallesPOF = new List<MEC_POFDetalle>();
             var erroresMec = new List<MEC_TMPErroresMecanizadas>();
@@ -456,27 +458,38 @@ namespace API.Services
             return int.TryParse(valor, out var result) ? result : (int?)null;
         }
 
-        public async Task<bool> VerificarTodosRegistrosValidosAsync(int idCabecera)
+        public async Task<bool> VerificarTodosRegistrosValidosAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
         {
-            return await _context.MEC_TMPMecanizadas
-                .Where(m => m.idCabecera == idCabecera)
-                .AllAsync(m => m.RegistroValido == "S");
+            return mecanizadasFiltradas.All(m => m.RegistroValido == "S");
         }
 
         public async Task<string> ProcesarSiEsValidoAsync(int idCabecera, int usuario)
-        {
+        { 
+            // 1. Usar AsNoTracking para la cabecera (operación de solo lectura)
+            var cabeceras = await _context.MEC_CabeceraLiquidacion
+                                        .AsNoTracking()
+                                        .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera)
+                                        .ConfigureAwait(false);
+
+            // 2. Filtrar registros MEC_TMPMecanizadas que coinciden en OrdenPago
+            var mecanizadasFiltradas = await _context.MEC_TMPMecanizadas
+                .Where(m => m.idCabecera == idCabecera && m.OrdenPago == cabeceras.OrdenPago)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            if (!mecanizadasFiltradas.Any())
+            {
+                throw new Exception("No se encontraron registros en MEC_TMPMecanizadas que coincidan con el OrdenPago de la cabecera.");
+            }
+
             // Verificar si todos los registros son válidos
-            bool todosValidos = await VerificarTodosRegistrosValidosAsync(idCabecera)
+            bool todosValidos = await VerificarTodosRegistrosValidosAsync(idCabecera, mecanizadasFiltradas)
                 .ConfigureAwait(false);
 
             if (!todosValidos) return "No todos los registros tienen RegistroValido = 'S'.";
 
             // Obtener registros de MEC_TMPMecanizadas (solo lectura)
-            var registros = await _context.MEC_TMPMecanizadas
-                .AsNoTracking()
-                .Where(m => m.idCabecera == idCabecera)
-                .ToListAsync()
-                .ConfigureAwait(false);
+            var registros = mecanizadasFiltradas;
 
             var mecanizadas = new List<MEC_Mecanizadas>();
 
