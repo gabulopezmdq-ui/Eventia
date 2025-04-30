@@ -53,7 +53,7 @@ namespace API.Services
 
             if (!mecanizadasFiltradas.Any())
             {
-                throw new Exception("No se encontraron registros en MEC_TMPMecanizadas que coincidan con el OrdenPago de la cabecera.");
+                throw new Exception("No se encontraron registros en MEC_TMPMecanizadas que coincidan con la Orden de Pago de la cabecera.");
             }
 
             // 2. Ejecutar validaciones secuencialmente con ConfigureAwait(false)
