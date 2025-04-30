@@ -99,25 +99,25 @@ function ProcesarArchivoImportado() {
 
     try {
       const responses = await Promise.all([
-        axios.get("https://localhost:44382/TMPErrores/GetAllCarRevista", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllCarRevista", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllConceptos", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllConceptos", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllEstablecimientos", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllEstablecimientos", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllFunciones", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllFunciones", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllMecanizadas", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllMecanizadas", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllTipoEst", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllTipoEst", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetErroresAgrupados", {
+        axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -164,12 +164,9 @@ function ProcesarArchivoImportado() {
       const handleGenerateGroupedErrorsPDF = async () => {
         setLoadingErrors(true);
         try {
-          const response = await axios.get(
-            "https://localhost:44382/TMPErrores/GetErroresAgrupados",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          const response = await axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           if (response.data.length === 0) {
             setErrorAlert({
               show: true,
@@ -267,7 +264,7 @@ function ProcesarArchivoImportado() {
     const expectedTMPesitosamente = "Preprocesamiento y validación completados exitosamente.";
 
     try {
-      const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
+      const url = `process.env.REACT_APP_API_URL + "ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
       console.log("📢 URL de la solicitud:", url);
 
       const response = await axios.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
@@ -287,9 +284,12 @@ function ProcesarArchivoImportado() {
       // 🟢 Si el backend devuelve el mensaje esperado en el éxito
       if (backendMessage.includes(expectedTMPMessage)) {
         console.log("✅ Mensaje de registros faltantes recibido:", backendMessage);
-        const getResponse = await axios.get("https://localhost:44382/TMPMecanizadas/GetAll", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const getResponse = await axios.get(
+          process.env.REACT_APP_API_URL + "TMPMecanizadas/GetAll",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setDataTableData(getResponse.data);
       } else {
         setShowDataTable(false);
@@ -340,7 +340,7 @@ function ProcesarArchivoImportado() {
   const fetchDataForTable = async () => {
     try {
       console.log("📢 Haciendo la llamada GET a TMPErrores/GetAllMecanizadas...");
-      const getResponse = await axios.get("https://localhost:44382/TMPErrores/GetAllMecanizadas", {
+      const getResponse = await axios.get(process.env.REACT_APP_API_URL + "GetAllMecanizadas", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -370,7 +370,7 @@ function ProcesarArchivoImportado() {
   const handleGenerateGroupedErrorsPDF = async () => {
     try {
       // 1. Obtener los datos directamente desde la API
-      const response = await axios.get("https://localhost:44382/TMPErrores/GetErroresAgrupados", {
+      const response = await axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const apiData = response.data;
@@ -513,7 +513,7 @@ function ProcesarArchivoImportado() {
     setIsProcessing(true); // Deshabilitar el botón mientras se procesa
 
     try {
-      const processUrl = `https://localhost:44382/ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
+      const processUrl = `process.env.REACT_APP_API_URL + ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
       const processResponse = await axios.post(processUrl, null, {
         headers: { Authorization: `Bearer ${token}` },
       });

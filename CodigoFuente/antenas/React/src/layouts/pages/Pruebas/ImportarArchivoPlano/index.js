@@ -64,7 +64,7 @@ function ImportarArchivo() {
 
   useEffect(() => {
     axios
-      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -113,16 +113,12 @@ function ImportarArchivo() {
     setIsButtonDisabled(true); // Deshabilita el botón al iniciar la petición
 
     try {
-      const response = await axios.post(
-        "https://localhost:44382/ImportarMecanizadas/ImportarExcel",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(process.env.REACT_APP_API_URL + "ImportarExcel", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       // Comprueba si la respuesta es "Importación exitosa."
       if (response.data === "Importación exitosa.") {
         setErrorAlert(true); // Muestra el alert
