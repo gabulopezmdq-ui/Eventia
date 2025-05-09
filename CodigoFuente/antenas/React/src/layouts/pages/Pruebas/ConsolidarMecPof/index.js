@@ -26,6 +26,7 @@ function ConsolidarMecPOF() {
   const [cabeceras, setCabeceras] = useState([]);
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
+  const [nombreEstablecimiento, setNombreEstablecimiento] = useState("");
   const [dataTableData, setDataTableData] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
   const [mecData, setMecData] = useState([]);
@@ -116,6 +117,7 @@ function ConsolidarMecPOF() {
 
   //Boton de consolidar tabla MEC
   const handleButtonClick = (row) => {
+    setNombreEstablecimiento(row.nroEstablecimiento);
     setSelectedIdEstablecimiento(row.idEstablecimiento);
     setMecData([]);
     setDocentesData([]);
@@ -130,10 +132,12 @@ function ConsolidarMecPOF() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        const dataWithFullName = (response.data || []).map((item) => ({
-          ...item,
-          nombreCompleto: `${item.apellido} ${item.nombre}`,
-        }));
+        const dataWithFullName = (response.data || [])
+          .sort((a, b) => a.dni - b.dni)
+          .map((item) => ({
+            ...item,
+            nombreCompleto: `${item.apellido} ${item.nombre}`,
+          }));
         setMecData(dataWithFullName);
         setLoadingMec(false);
       })
@@ -148,7 +152,13 @@ function ConsolidarMecPOF() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => {
-        setDocentesData(response.data || []);
+        const sortResponse = (response.data || [])
+          .sort((a, b) => a.personaDNI - b.personaDNI)
+          .map((item) => ({
+            ...item,
+            nombreCompleto: `${item.personaApellido} ${item.personaNombre}`,
+          }));
+        setDocentesData(sortResponse);
         setLoadingDocentes(false);
       })
       .catch(() => {
@@ -411,6 +421,14 @@ function ConsolidarMecPOF() {
             </MDButton>
           </MDBox>
         )}
+        {nombreEstablecimiento && (
+          <MDAlert className="custom-alert" sx={{ color: "#b1d1eea6" }}>
+            <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+            <MDTypography ml={1} variant="button">
+              Establecimiento {nombreEstablecimiento}
+            </MDTypography>
+          </MDAlert>
+        )}
         {(loadingMec || loadingDocentes || loadingSuplentes) && (
           <MDBox display="flex" justifyContent="center" my={3}>
             <CircularProgress color="info" />
@@ -478,12 +496,7 @@ function ConsolidarMecPOF() {
                     table={{
                       columns: [
                         { Header: "Documento", accessor: "personaDNI" },
-                        {
-                          Header: "Nombre Completo",
-                          accessor: "nombreCompleto",
-                          Cell: ({ row }) =>
-                            `${row.original.personaNombre} ${row.original.personaApellido}`,
-                        },
+                        { Header: "Nombre Completo", accessor: "nombreCompleto" },
                         { Header: "Secuencia", accessor: "secuencia" },
                         { Header: "Car. Revista", accessor: "carRevista" },
                         { Header: "Cargo", accessor: "cargo" },
