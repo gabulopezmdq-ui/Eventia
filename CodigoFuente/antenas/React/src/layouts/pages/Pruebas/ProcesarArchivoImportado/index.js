@@ -264,7 +264,9 @@ function ProcesarArchivoImportado() {
     const expectedTMPesitosamente = "Preprocesamiento y validación completados exitosamente.";
 
     try {
-      const url = `process.env.REACT_APP_API_URL + "ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
+      const url =
+        process.env.REACT_APP_API_URL +
+        `ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
       console.log("📢 URL de la solicitud:", url);
 
       const response = await axios.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
