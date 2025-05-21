@@ -64,7 +64,7 @@ function ImportarArchivo() {
 
   useEffect(() => {
     axios
-      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -114,7 +114,7 @@ function ImportarArchivo() {
 
     try {
       const response = await axios.post(
-        "https://localhost:44382/ImportarMecanizadas/ImportarExcel",
+        process.env.REACT_APP_API_URL + "ImportarMecanizadas/ImportarExcel",
         formData,
         {
           headers: {

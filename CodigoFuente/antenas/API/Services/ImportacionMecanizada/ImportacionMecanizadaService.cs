@@ -1,12 +1,4 @@
-﻿//using  API.DataSchema;
-//using  API.Repositories;
-//using Microsoft.EntityFrameworkCore;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Linq.Expressions;
-//using System.Threading.Tasks;
-using API.DataSchema;
+﻿using API.DataSchema;
 using Microsoft.AspNetCore.Http;
 using ClosedXML.Excel;
 using System;
@@ -174,7 +166,7 @@ namespace API.Services
                 ALTER SEQUENCE ""MEC_TMPErroresConceptos_IdTMPErrorConcepto_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresCarRevista_IdTMPErrorCarRevista_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresTiposEstablecim_IdTMPErrorTipoEstablecimiento_seq"" RESTART WITH 1;
-                ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq1"" RESTART WITH 1;
+                ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq"" RESTART WITH 1;
                 ", idCabecera);
 
             //await _context.Database.ExecuteSqlRawAsync(@"
