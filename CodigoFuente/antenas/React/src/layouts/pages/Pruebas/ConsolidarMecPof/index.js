@@ -314,8 +314,14 @@ function ConsolidarMecPOF() {
         `${process.env.REACT_APP_API_URL}Consolidar/ObtenerRegistrosPOFNoMecanizados?idCabecera=${selectedCabecera}&idEstablecimiento=${formData.idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      const sortedData = (docentesResponse.data || [])
+        .sort((a, b) => a.personaDNI - b.personaDNI)
+        .map((item) => ({
+          ...item,
+          nombreCompleto: `${item.personaApellido} ${item.personaNombre}`,
+        }));
 
-      setDocentesData(docentesResponse.data || []);
+      setDocentesData(sortedData);
     } catch (error) {
       console.error("Error al enviar datos:", error);
       setErrorAlert({

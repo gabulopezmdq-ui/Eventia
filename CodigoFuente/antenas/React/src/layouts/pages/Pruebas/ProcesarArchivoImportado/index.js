@@ -515,7 +515,9 @@ function ProcesarArchivoImportado() {
     setIsProcessing(true); // Deshabilitar el botón mientras se procesa
 
     try {
-      const processUrl = `process.env.REACT_APP_API_URL + ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
+      const processUrl =
+        process.env.REACT_APP_API_URL +
+        `ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
       const processResponse = await axios.post(processUrl, null, {
         headers: { Authorization: `Bearer ${token}` },
       });
