@@ -57,7 +57,7 @@ function ImportarArchivo() {
     try {
       const idCabecera = Number(selectedIdCabecera);
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}ImportarMecanizadas/RevertirExcel?idCabecera=${idCabecera}`,
+        `${process.env.REACT_APP_API_URL} + ImportarMecanizadas/RevertirExcel?idCabecera=${idCabecera}`,
         {},
         {
           headers: {
