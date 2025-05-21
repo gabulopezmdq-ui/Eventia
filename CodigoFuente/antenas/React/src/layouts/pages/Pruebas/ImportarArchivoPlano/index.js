@@ -113,12 +113,16 @@ function ImportarArchivo() {
     setIsButtonDisabled(true); // Deshabilita el botón al iniciar la petición
 
     try {
-      const response = await axios.post(process.env.REACT_APP_API_URL + "ImportarExcel", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.post(
+        process.env.REACT_APP_API_URL + "ImportarMecanizadas/ImportarExcel",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       // Comprueba si la respuesta es "Importación exitosa."
       if (response.data === "Importación exitosa.") {
         setErrorAlert(true); // Muestra el alert
