@@ -45,7 +45,7 @@ function ConsolidarMecPOF() {
 
   useEffect(() => {
     axios
-      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
