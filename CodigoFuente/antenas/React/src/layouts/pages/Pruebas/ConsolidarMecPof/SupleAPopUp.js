@@ -42,6 +42,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
           const formattedData = response.data.map((docente) => ({
             id: docente.idPOF,
             nombreCompleto: `${docente.nombre} ${docente.apellido}`,
+            dni: docente.dni,
           }));
           setDocentes(formattedData);
           if (suplente) {
@@ -146,7 +147,7 @@ const SupleAPopup = ({ open, handleClose, suplente, idEstablecimiento, onSubmit 
                 ) : (
                   docentes.map((docente) => (
                     <MenuItem key={docente.id} value={docente.id}>
-                      {docente.nombreCompleto}
+                      {`${docente.dni} / ${docente.nombreCompleto}`}
                     </MenuItem>
                   ))
                 )}
