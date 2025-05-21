@@ -45,7 +45,7 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad, idCab
   useEffect(() => {
     if (docente) {
       setFormData({
-        docenteNombre: `${docente.personaNombre || ""} ${docente.personaApellido || ""}`,
+        docenteNombre: `${docente.personaApellido || ""} ${docente.personaNombre || ""}`,
         documento: docente.personaDNI || "",
         cargo: docente.tipoCargo || "",
         anioReferencia: docente.mecanizadaAnioAfeccion ?? "",
