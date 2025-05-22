@@ -317,7 +317,7 @@ namespace API.Services
             // Paso 1: Obtener solo los IDs necesarios
             var idsPOF = await _context.MEC_Mecanizadas
                 .Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
-                .Where(m => m.POF.CarRevista.Vigente == "S")
+                .Where(m => m.POF.CarRevista.IdCarRevista == 2)
                 .Select(m => m.IdPOF)
                 .Distinct()
                 .ToListAsync();
