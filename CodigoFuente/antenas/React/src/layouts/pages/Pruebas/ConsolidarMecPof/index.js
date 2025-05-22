@@ -28,7 +28,6 @@ function ConsolidarMecPOF() {
     message: "",
     type: "error",
   });
-  const [cabeceras, setCabeceras] = useState([]);
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
   const [nombreEstablecimiento, setNombreEstablecimiento] = useState("");
@@ -40,7 +39,6 @@ function ConsolidarMecPOF() {
   const [openPopup, setOpenPopup] = useState(false);
   const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
   const [openMecPopup, setOpenMecPopup] = useState(false);
-  const [selectedIdCabecera, setSelectedIdCabecera] = useState("");
   const [selectedIdEstablecimiento, setSelectedIdEstablecimiento] = useState(null);
   const [selectedDocente, setSelectedDocente] = useState(null);
   const [loadingMec, setLoadingMec] = useState(false);
@@ -359,13 +357,31 @@ function ConsolidarMecPOF() {
       setLoadingMec(false);
     }
   };
-  const formatISODate = (isoString) => {
-    if (!isoString) return "N/A";
-    const [fecha] = isoString.split("T");
-    const [anio, mes, dia] = fecha.split("-");
-    return `${anio}/${mes}/${dia}`;
-  };
   const shouldHideTables = allCountsZero;
+
+  const handleConsolidarFinal = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}Consolidar/Consolidar`,
+        null, // Si no hay body
+        {
+          params: {
+            idCabecera: selectedCabecera,
+            idEstablecimiento: selectedIdEstablecimiento, // Corregir aquí
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Consolidación exitosa:", response.data);
+      // Opcional: Mostrar mensaje de éxito o redirigir
+    } catch (error) {
+      console.error("Error al consolidar:", error);
+      // Opcional: Mostrar mensaje de error
+    }
+  };
+
   return (
     <>
       <DashboardLayout>
@@ -452,7 +468,7 @@ function ConsolidarMecPOF() {
             </MDButton>
           </MDBox>
         )}
-        {nombreEstablecimiento && (
+        {nombreEstablecimiento && dataTableData.length > 0 && (
           <MDAlert className="custom-alert" sx={{ color: "#b1d1eea6" }}>
             <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
             <MDTypography ml={1} variant="button">
@@ -622,6 +638,16 @@ function ConsolidarMecPOF() {
               </MDBox>
             )}
           </>
+        )}
+        {nombreEstablecimiento && dataTableData.length > 0 && (
+          <MDButton
+            size="small"
+            color="info"
+            variant="gradient"
+            onClick={() => handleConsolidarFinal()}
+          >
+            Finalizar Consolidacion
+          </MDButton>
         )}
         <SupleAPopup
           open={openPopup}
