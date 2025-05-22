@@ -23,6 +23,11 @@ function ConsolidarMecPOF() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
+  const [errorAlertDelete, setErrorAlertDelete] = useState({
+    show: false,
+    message: "",
+    type: "error",
+  });
   const [cabeceras, setCabeceras] = useState([]);
   const [idCabeceras, setIdCabeceras] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
@@ -199,11 +204,14 @@ function ConsolidarMecPOF() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        setMecData((prevData) => prevData.filter((item) => item.id !== id));
-        setErrorAlert({ show: true, message: "Registro eliminado.", type: "success" });
+        setMecData((prevData) => prevData.filter((item) => item.idMecanizada !== id));
+        setErrorAlertDelete({ show: true, message: "Registro eliminado.", type: "success" });
+        setTimeout(() => {
+          setErrorAlertDelete({ show: false, message: "", type: "" });
+        }, 3000);
       })
       .catch(() => {
-        setErrorAlert({ show: true, message: "Error al eliminar registro.", type: "error" });
+        setErrorAlertDelete({ show: true, message: "Error al eliminar registro.", type: "error" });
       });
   };
 
@@ -260,7 +268,7 @@ function ConsolidarMecPOF() {
       const response = await axios.put(url, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchSuplentesData(selectedIdEstablecimiento);
+      await fetchSuplentesData(selectedIdEstablecimiento);
 
       return response.data;
     } catch (error) {
@@ -276,7 +284,11 @@ function ConsolidarMecPOF() {
         `${process.env.REACT_APP_API_URL}Consolidar/Suplentes?idCabecera=${selectedCabecera}&idEstablecimiento=${idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuplentesData(response.data || []);
+      const dataWithFullName = (response.data || []).map((item) => ({
+        ...item,
+        nombreCompleto: `${item.apellido} ${item.nombre} `,
+      }));
+      setSuplentesData(dataWithFullName);
     } catch (error) {
       setErrorAlert({
         show: true,
@@ -310,6 +322,7 @@ function ConsolidarMecPOF() {
       console.log("Respuesta del backend:", response.data);
 
       setLoadingDocentes(true);
+      setLoadingMec(true);
       const docentesResponse = await axios.get(
         `${process.env.REACT_APP_API_URL}Consolidar/ObtenerRegistrosPOFNoMecanizados?idCabecera=${selectedCabecera}&idEstablecimiento=${formData.idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -322,16 +335,28 @@ function ConsolidarMecPOF() {
         }));
 
       setDocentesData(sortedData);
+      const mecResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL}Consolidar/Mecanizadas?idCabecera=${selectedCabecera}&idEstablecimiento=${formData.idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const updatedMecData = (mecResponse.data || [])
+        .sort((a, b) => a.dni - b.dni)
+        .map((item) => ({
+          ...item,
+          nombreCompleto: `${item.apellido} ${item.nombre}`,
+        }));
+      setMecData(updatedMecData);
     } catch (error) {
       console.error("Error al enviar datos:", error);
       setErrorAlert({
         show: true,
-        message: "Error al enviar datos o actualizar docentes.",
+        message: error.response?.data?.message || "Error al procesar la operación",
         type: "error",
       });
       throw error;
     } finally {
       setLoadingDocentes(false);
+      setLoadingMec(false);
     }
   };
   const formatISODate = (isoString) => {
@@ -450,6 +475,19 @@ function ConsolidarMecPOF() {
                     MEC
                   </MDTypography>
                 </MDAlert>
+                {errorAlertDelete.show && (
+                  <Grid container justifyContent="center">
+                    <Grid item xs={12} lg={12}>
+                      <MDBox pt={2}>
+                        <MDAlert color={errorAlertDelete.type} dismissible>
+                          <MDTypography variant="body2" color="white">
+                            {errorAlertDelete.message}
+                          </MDTypography>
+                        </MDAlert>
+                      </MDBox>
+                    </Grid>
+                  </Grid>
+                )}
                 <Card>
                   <DataTable
                     table={{
