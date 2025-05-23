@@ -223,8 +223,8 @@ function ConsolidarMecPOF() {
       "/" +
       today.getDate().toString().padStart(2, "0");*/
     axios
-      .put(
-        `${process.env.REACT_APP_API_URL}Consolidar/HabilitarCambiarEstadoCabecera`,
+      .post(
+        `${process.env.REACT_APP_API_URL}Consolidar/CambiarEstado?idCabecera=${selectedCabecera}`,
         {
           idCabecera: selectedCabecera,
           /*fechaCambioEstado: formattedDate,*/
