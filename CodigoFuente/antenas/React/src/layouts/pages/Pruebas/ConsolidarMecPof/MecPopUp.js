@@ -21,7 +21,16 @@ import {
 import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
 
-const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad, idCabecera }) => {
+const MecPopup = ({
+  open,
+  handleClose,
+  docente,
+  onSubmit,
+  tieneAntiguedad,
+  idCabecera,
+  anioLiquidacion,
+  mesLiquidacion,
+}) => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertType, setAlertType] = useState("success");
   const [alertMessage, setAlertMessage] = useState("");
@@ -61,9 +70,11 @@ const MecPopup = ({ open, handleClose, docente, onSubmit, tieneAntiguedad, idCab
         idPOF: docente.idPOF ?? "",
         idCabecera: idCabecera ?? "",
         idEstablecimiento: docente.idEstablecimiento ?? "",
+        anioReferencia: docente.mecanizadaAnioAfeccion || anioLiquidacion || "",
+        mesReferencia: Number(docente.mecanizadaMesAfeccion) || Number(mesLiquidacion) || "",
       });
     }
-  }, [docente]);
+  }, [docente, anioLiquidacion, mesLiquidacion]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -347,6 +358,8 @@ MecPopup.propTypes = {
   handleClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   idCabecera: PropTypes.number,
+  anioLiquidacion: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  mesLiquidacion: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   docente: PropTypes.shape({
     personaNombre: PropTypes.string,
     personaApellido: PropTypes.string,
@@ -365,6 +378,8 @@ MecPopup.propTypes = {
     idPOF: PropTypes.number,
     mesAntiguedad: PropTypes.number,
     idEstablecimiento: PropTypes.number,
+    anioLiquidacion: PropTypes.string,
+    mesLiquidacion: PropTypes.string,
   }),
   tieneAntiguedad: PropTypes.bool.isRequired,
 };

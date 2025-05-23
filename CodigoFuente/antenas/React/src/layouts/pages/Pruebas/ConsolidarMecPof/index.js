@@ -44,6 +44,7 @@ function ConsolidarMecPOF() {
   const [loadingMec, setLoadingMec] = useState(false);
   const [loadingDocentes, setLoadingDocentes] = useState(false);
   const [loadingSuplentes, setLoadingSuplentes] = useState(false);
+  const [selectedCabeceraData, setSelectedCabeceraData] = useState(null);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -56,6 +57,8 @@ function ConsolidarMecPOF() {
         const formattedCabeceras = filteredCabeceras.map((item) => ({
           id: item.idCabecera,
           displayText: `${item.tipoLiquidacion.descripcion} - ${item.mesLiquidacion}/${item.anioLiquidacion}`,
+          anioLiquidacion: item.anioLiquidacion,
+          mesLiquidacion: item.mesLiquidacion,
         }));
         setIdCabeceras(formattedCabeceras);
       })
@@ -254,7 +257,14 @@ function ConsolidarMecPOF() {
         setErrorAlert({ show: true, message: errorMessage, type: "error" });
       });
   };
-
+  // En tu handleChange para seleccionar cabecera:
+  const handleCabeceraChange = (e) => {
+    const cabeceraId = e.target.value;
+    setSelectedCabecera(cabeceraId);
+    // Encuentra la cabecera seleccionada completa
+    const cabeceraSeleccionada = idCabeceras.find((item) => item.id === cabeceraId);
+    setSelectedCabeceraData(cabeceraSeleccionada);
+  };
   const handlePopUP = (suplente) => {
     setSuplenteSeleccionado(suplente);
     setOpenPopup(true);
@@ -663,6 +673,8 @@ function ConsolidarMecPOF() {
           onSubmit={handleSubmitMec}
           idCabecera={selectedCabecera}
           tieneAntiguedad={selectedDocente?.tieneAntiguedad ?? false}
+          anioLiquidacion={idCabeceras.find((c) => c.id === selectedCabecera)?.anioLiquidacion}
+          mesLiquidacion={idCabeceras.find((c) => c.id === selectedCabecera)?.mesLiquidacion}
         />
       </DashboardLayout>
     </>
