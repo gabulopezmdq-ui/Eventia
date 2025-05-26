@@ -155,6 +155,7 @@ function AltaCabeceraLiquidacion() {
             { value: "B", label: "Inasistencias / Bajas Procesado" },
             { value: "L", label: "En Liquidación" },
             { value: "C", label: "Liquidación cerrada" },
+            { value: "S", label: "Archivo Consolidado" },
           ],
           valueField: "value",
           optionField: "label",
