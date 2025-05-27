@@ -14,6 +14,8 @@ namespace API.DataSchema
         public string? AnioLiquidacion { get; set; }
         public int IdUsuario { get; set; }
         public string? Observaciones { get; set; }
+        public string? ObservacionesInasistencias { get; set; }
+        public string? ObservacionesBajas { get; set; }
         public DateTime? InicioLiquidacion { get; set; }
         public DateTime? FinLiquidacion { get; set; }
         public string? Estado { get; set; }

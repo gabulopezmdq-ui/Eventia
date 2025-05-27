@@ -26,7 +26,7 @@ namespace API.Services
             int userId = GetUserIdFromToken();
 
             // Validar duplicados
-            bool existe = await CheckIfExists(cabecera.AnioLiquidacion, cabecera.MesLiquidacion, cabecera.idTipoLiquidacion);
+            bool existe = await CheckIfExists(cabecera.AnioLiquidacion, cabecera.MesLiquidacion, cabecera.idTipoLiquidacion, cabecera.OrdenPago);
             if (existe)
             {
                 throw new InvalidOperationException("Ya existe una Cabecera de Liquidación para el Mes/Año y Tipo de Liquidación.");
@@ -70,10 +70,10 @@ namespace API.Services
         }
 
         // Método para verificar si ya existe un registro con el mismo Año, Mes y Tipo de Liquidación
-        public async Task<bool> CheckIfExists(string anio, string mes, int idTipo)
+        public async Task<bool> CheckIfExists(string anio, string mes, int idTipo, string ordenPago)
         {
             return await _context.MEC_CabeceraLiquidacion
-                .AnyAsync(c => c.AnioLiquidacion == anio && c.MesLiquidacion == mes && c.idTipoLiquidacion == idTipo);
+                .AnyAsync(c => c.AnioLiquidacion == anio && c.MesLiquidacion == mes && c.idTipoLiquidacion == idTipo && c.OrdenPago == ordenPago);
         }
 
         // Crear cabecera principal
@@ -195,5 +195,52 @@ namespace API.Services
             _context.AddRange(obj);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<string> UpdateCabeceraAsync(MEC_CabeceraLiquidacion cabecera)
+        {
+            int userId = GetUserIdFromToken();
+
+            // Validar duplicados, excluyendo el ID actual
+            bool existe = await _context.MEC_CabeceraLiquidacion
+                .AnyAsync(c => c.AnioLiquidacion == cabecera.AnioLiquidacion
+                            && c.MesLiquidacion == cabecera.MesLiquidacion
+                            && c.idTipoLiquidacion == cabecera.idTipoLiquidacion
+                            && c.OrdenPago == cabecera.OrdenPago
+                            && c.IdCabecera != cabecera.IdCabecera); // Excluir el actual
+
+            if (existe)
+            {
+                throw new InvalidOperationException("Ya existe una Cabecera de Liquidación para el Mes/Año y Tipo de Liquidación con esos datos.");
+            }
+
+            // Buscar el registro actual
+            var existente = await _context.MEC_CabeceraLiquidacion.FindAsync(cabecera.IdCabecera);
+            if (existente == null)
+            {
+                throw new KeyNotFoundException("La cabecera a actualizar no fue encontrada.");
+            }
+
+            // Modificar propiedades necesarias
+            existente.AnioLiquidacion = cabecera.AnioLiquidacion;
+            existente.MesLiquidacion = cabecera.MesLiquidacion;
+            existente.idTipoLiquidacion = cabecera.idTipoLiquidacion;
+            existente.OrdenPago = cabecera.OrdenPago;
+            existente.CalculaBajas = cabecera.CalculaBajas;
+            existente.CalculaInasistencias = cabecera.CalculaInasistencias;
+            existente.LeyendaTipoLiqReporte = cabecera.LeyendaTipoLiqReporte;
+            existente.Observaciones = cabecera.Observaciones;
+            existente.RetenDeno7 = cabecera.RetenDeno7;
+            existente.CalculaBajas = cabecera.CalculaBajas;
+            existente.CalculaInasistencias = cabecera.CalculaInasistencias;
+            existente.CantDocentes = cabecera.CantDocentes;
+            existente.ObservacionesInasistencias = cabecera.ObservacionesInasistencias;
+            existente.ObservacionesBajas = cabecera.ObservacionesBajas;
+
+
+            await _context.SaveChangesAsync();
+
+            return "Cabecera actualizada exitosamente.";
+        }
+
     }
 }

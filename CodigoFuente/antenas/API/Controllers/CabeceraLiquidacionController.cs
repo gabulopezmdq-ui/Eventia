@@ -28,12 +28,12 @@ namespace API.Controllers
         }
 
         [HttpGet("CheckIfExists")]
-        public async Task<ActionResult<bool>> CheckIfExists([FromQuery] string anio, [FromQuery] string mes, [FromQuery] int idTipo)
+        public async Task<ActionResult<bool>> CheckIfExists([FromQuery] string anio, [FromQuery] string mes, [FromQuery] int idTipo, [FromQuery] string ordenPago)
         {
             if (string.IsNullOrEmpty(anio) || string.IsNullOrEmpty(mes))
                 return BadRequest("El año y el mes son obligatorios.");
 
-            var exists = await _cabeceraService.CheckIfExists(anio, mes, idTipo);
+            var exists = await _cabeceraService.CheckIfExists(anio, mes, idTipo, ordenPago);
             return Ok(new { exists });
         }
 
@@ -92,7 +92,8 @@ namespace API.Controllers
         [HttpPut]
         public async Task<ActionResult<MEC_CabeceraLiquidacion>> Update([FromBody] MEC_CabeceraLiquidacion cabecera)
         {
-            await _serviceGenerico.Update(cabecera);
+            await _cabeceraService.UpdateCabeceraAsync(cabecera);
+            //await _serviceGenerico.Update(cabecera);
             return Ok(cabecera);
         }
     }
