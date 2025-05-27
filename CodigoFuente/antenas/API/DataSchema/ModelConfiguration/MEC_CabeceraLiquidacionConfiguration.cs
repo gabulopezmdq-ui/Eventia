@@ -58,7 +58,17 @@ namespace API.DataSchema.ModelConfiguration
                 .HasColumnType("varchar(1000)")
                 .IsFixedLength(true)
                 .IsRequired(true);
-            
+
+            builder.Property(e => e.ObservacionesInasistencias)
+                .HasColumnType("varchar(1000)")
+                .IsFixedLength(true)
+                .IsRequired(false);
+
+            builder.Property(e => e.ObservacionesBajas)
+                .HasColumnType("varchar(1000)")
+                .IsFixedLength(true)
+                .IsRequired(false);
+
             builder.Property(e => e.InicioLiquidacion)
                 .HasColumnType("DateTime")
                 .IsFixedLength(true);
