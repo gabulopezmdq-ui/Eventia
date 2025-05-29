@@ -96,7 +96,7 @@ function AltaConceptos() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `MotivoBaja`;
+  const apiUrl = process.env.REACT_APP_API_URL + `MotivoBajasDoc`;
   const handleSubmit = () => {
     const dataToSubmit = { ...formData };
     if (!id && !dataToSubmit.vigente) {

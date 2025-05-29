@@ -23,7 +23,7 @@ function VerConcepto() {
   useEffect(() => {
     // Realizar la petición GET al servidor
     axios
-      .get(process.env.REACT_APP_API_URL + `MotivoBaja/getbyid?id=${id}`, {
+      .get(process.env.REACT_APP_API_URL + `MotivosBajaDoc/getbyid?id=${id}`, {
         headers: {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
