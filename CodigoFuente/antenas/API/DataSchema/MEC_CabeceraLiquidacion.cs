@@ -14,6 +14,8 @@ namespace API.DataSchema
         public string? AnioLiquidacion { get; set; }
         public int IdUsuario { get; set; }
         public string? Observaciones { get; set; }
+        public string? ObservacionesInasistencias { get; set; }
+        public string? ObservacionesBajas { get; set; }
         public DateTime? InicioLiquidacion { get; set; }
         public DateTime? FinLiquidacion { get; set; }
         public string? Estado { get; set; }
@@ -21,6 +23,7 @@ namespace API.DataSchema
         public string? CalculaBajas { get; set; }
         public int? CantDocentes { get; set; }
         public decimal? RetenDeno7 { get; set; }
+        public string OrdenPago { get; set; }
         public string Vigente { get; set; }
         public virtual MEC_TiposLiquidaciones? TipoLiquidacion { get; set; }
         public virtual MEC_Usuarios? Usuarios { get; set; }
@@ -28,5 +31,6 @@ namespace API.DataSchema
         public virtual ICollection<MEC_Mecanizadas>? Mecanizadas { get; set; } = new List<MEC_Mecanizadas>();
         public virtual ICollection<MEC_CabeceraLiquidacionEstados>? EstadoCabecera { get; set; } = new List<MEC_CabeceraLiquidacionEstados>();
         public virtual ICollection<MEC_BajasCabecera>? BajaCabecera { get; set; } = new List<MEC_BajasCabecera>();
+        public virtual ICollection<MEC_POFDetalle>? POFDetalle { get; set; } = new List<MEC_POFDetalle>();
     }
 }

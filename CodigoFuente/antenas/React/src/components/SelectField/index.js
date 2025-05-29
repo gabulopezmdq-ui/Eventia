@@ -14,6 +14,7 @@ function SelectField({
   formData,
   handleChange,
   customOptions,
+  disabled,
 }) {
   const [options, setOptions] = useState([]);
   const token = sessionStorage.getItem("token");
@@ -29,7 +30,10 @@ function SelectField({
           },
         })
         .then((response) => {
-          setOptions(response.data);
+          const sortedOptions = response.data.sort((a, b) =>
+            a[optionField].localeCompare(b[optionField])
+          );
+          setOptions(sortedOptions);
         })
         .catch((error) => {
           console.error("Error al cargar las opciones:", error);
@@ -48,7 +52,10 @@ function SelectField({
             }
             return true;
           });
-          setOptions(filteredOptions);
+          const sortedOptions = filteredOptions.sort((a, b) =>
+            a[optionField].localeCompare(b[optionField])
+          );
+          setOptions(sortedOptions);
         })
         .catch((error) => {
           console.error("Error al cargar las opciones:", error);
@@ -56,7 +63,9 @@ function SelectField({
     }
   }, [apiUrl, formData.idConservadora, token]);
 
-  const combinedOptions = [...customOptions, ...options];
+  const combinedOptions = [...customOptions, ...options].sort((a, b) =>
+    a[optionField].localeCompare(b[optionField])
+  );
 
   return (
     <div>
@@ -72,6 +81,7 @@ function SelectField({
           handleChange({ target: { name, value: newValue ? newValue[valueField] : null } });
         }}
         renderInput={(params) => <FormField {...params} label={label} />}
+        disabled={disabled}
       />
     </div>
   );
@@ -86,11 +96,13 @@ SelectField.propTypes = {
   formData: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
   customOptions: PropTypes.array,
+  disabled: PropTypes.bool,
 };
 
 SelectField.defaultProps = {
   apiUrl: null,
   customOptions: [],
+  disabled: false,
 };
 
 export default SelectField;

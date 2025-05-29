@@ -7,9 +7,12 @@ namespace API.DataSchema
         public int IdTMPErrorMecanizada { get; set; }
         public int IdCabecera { get; set; }
         public int IdTMPMecanizada { get; set; }
+        public int? IdEstablecimiento { get; set; }
         public string Documento { get; set; }
         public string POF { get; set; }
         public string Antiguedad { get; set; }
         public virtual MEC_CabeceraLiquidacion? Cabecera { get; set; }
+        public virtual MEC_TMPMecanizadas? TMPMecanizada { get; set; }
+        public virtual MEC_Establecimientos? Establecimientos { get; set; }
     }
 }

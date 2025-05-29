@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-
 namespace API.DataSchema
 {
     public class MEC_POF
@@ -22,8 +21,11 @@ namespace API.DataSchema
         public virtual MEC_CarRevista? CarRevista { get; set; }
         public virtual MEC_TiposFunciones? TipoFuncion { get; set; }
 
-        public virtual ICollection<MEC_POF_Antiguedades>? POFAntiguedad { get; set; }
         public virtual ICollection<MEC_Mecanizadas>? Mecanizada { get; set; }
         public virtual ICollection<MEC_BajasDetalle>? BajasDetalle { get; set; }
+
+        public virtual ICollection<MEC_POFDetalle>? POFDetalle { get; set; } = new List<MEC_POFDetalle>();
+
+        public virtual ICollection<MEC_POFDetalle>? POFSuplencia { get; set; } = new List<MEC_POFDetalle>();
     }
 }

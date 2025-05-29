@@ -30,7 +30,15 @@ function CabeceraLiquidacion() {
           Authorization: `Bearer ${token}`,
         },
       })
-      .then((response) => setDataTableData(response.data))
+      .then((response) => {
+        const sortedData = response.data.sort((a, b) => {
+          if (b.anioLiquidacion !== a.anioLiquidacion) {
+            return b.anioLiquidacion - a.anioLiquidacion;
+          }
+          return b.mesLiquidacion - a.mesLiquidacion;
+        });
+        setDataTableData(sortedData);
+      })
       .catch((error) => {
         if (error.response) {
           const statusCode = error.response.status;
@@ -55,7 +63,7 @@ function CabeceraLiquidacion() {
   const handleNuevoTipo = () => {
     navigate("/CabeceraLiquidacionFE/Nuevo");
   };
-  const handleVer = (rowData) => {
+  /*const handleVer = (rowData) => {
     if (rowData && rowData.idCabecera) {
       const productId = rowData.idCabecera;
       const url = `/VerCabeceraLiquidacionFE/${productId}`;
@@ -63,12 +71,21 @@ function CabeceraLiquidacion() {
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
-  };
+  };*/
   const handleEditarCabeceraLiquidacion = (idCabecera) => {
     const url = `/CabeceraLiquidacionFE/Edit/${idCabecera}`;
     navigate(url);
   };
   const displayValue = (value) => (value ? value : "N/A");
+
+  const estadoMapping = {
+    P: "Pendiente Importación",
+    I: "Archivo Importado",
+    R: "Archivo Procesado",
+    B: "Inasistencias / Bajas Procesado",
+    L: "En Liquidación",
+    C: "Liquidación cerrada",
+  };
 
   return (
     <>
@@ -95,17 +112,22 @@ function CabeceraLiquidacion() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "mes Liquidación", accessor: "mesLiquidacion" },
-                  { Header: "año Liquidacion", accessor: "anioLiquidacion" },
-                  { Header: "observaciones", accessor: "observaciones" },
+                  { Header: "Año Liquidacion", accessor: "anioLiquidacion" },
+                  { Header: "Mes Liquidación", accessor: "mesLiquidacion" },
+                  { Header: "Tipo Liquidacion", accessor: "tipoLiquidacion.descripcion" },
                   {
-                    Header: "inicio Liquidacion",
+                    Header: "Estado",
+                    accessor: "estado",
+                    Cell: ({ value }) => estadoMapping[value] || "Desconocido",
+                  },
+                  {
+                    Header: "Inicio Liquidacion",
                     accessor: "inicioLiquidacion",
                     Cell: ({ value }) =>
                       value ? new Date(value).toLocaleDateString("es-ES") : "N/A",
                   },
                   {
-                    Header: "finLiquidacion",
+                    Header: "Fin Liquidacion",
                     accessor: "finLiquidacion",
                     Cell: ({ value }) =>
                       value ? new Date(value).toLocaleDateString("es-ES") : "N/A",

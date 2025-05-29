@@ -1,4 +1,5 @@
 ﻿using API.DataSchema.Interfaz;
+using System;
 using System.Collections.Generic;
 
 namespace API.DataSchema
@@ -26,5 +27,9 @@ namespace API.DataSchema
         public virtual ICollection<MEC_InasistenciasCabecera>? Inasistencias { get; set; } = new List<MEC_InasistenciasCabecera>();
         public virtual ICollection<MEC_Mecanizadas>? Mecanizada { get; set; } = new List<MEC_Mecanizadas>();
         public virtual ICollection<MEC_BajasCabecera>? BajaCabecera { get; set; } = new List<MEC_BajasCabecera>();
+
+        public List<MEC_TMPErroresMecanizadas>? TMPErroresMecanizadas { get; set; } = new();
+
+
     }
 }

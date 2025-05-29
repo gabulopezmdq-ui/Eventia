@@ -1,12 +1,7 @@
-// @mui material components
 import Grid from "@mui/material/Grid";
-
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
-
-// Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Formulario from "components/Formulario";
@@ -17,7 +12,7 @@ function AltaCabeceraLiquidacion() {
   if (id) {
     labelTitulo = "Editar Cabecera Liquidacion";
   }
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({ value: "S", label: "Si" });
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -103,15 +98,17 @@ function AltaCabeceraLiquidacion() {
           required: true,
         },
         {
-          type: "text",
+          type: "select",
           label: "Usuario Liquidacion",
-          name: "usuarioLiquidacion",
-          customValidation: (value, field) => validateVarchar(value, field, 50),
-          required: true,
+          name: "idUsuario",
+          apiUrl: process.env.REACT_APP_API_URL + "Usuarios/GetByActivo?usuario=true",
+          valueField: "idUsuario",
+          optionField: "nombre",
+          disabled: true,
         },
         {
           type: "text",
-          label: "Observaciones",
+          label: "Nombre Cabecera",
           name: "observaciones",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
           required: true,
@@ -121,13 +118,18 @@ function AltaCabeceraLiquidacion() {
           label: "Observaciones Inasistencias",
           name: "observacionesInasistencias",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
-          required: true,
         },
         {
           type: "text",
           label: "Observaciones Bajas",
           name: "observacionesBajas",
           customValidation: (value, field) => validateVarchar(value, field, 1000),
+        },
+        {
+          type: "text",
+          label: "Orden de Pago",
+          name: "ordenPago",
+          maxLength: 5,
           required: true,
         },
         {
@@ -135,14 +137,12 @@ function AltaCabeceraLiquidacion() {
           label: "Cant. Docentes",
           name: "cantDocentes",
           customValidation: validateNumber,
-          required: true,
         },
         {
           type: "number",
           label: "RetenDeno7",
           name: "retenDeno7",
           customValidation: validateDecimal,
-          required: true,
         },
         {
           type: "select",
@@ -155,10 +155,11 @@ function AltaCabeceraLiquidacion() {
             { value: "B", label: "Inasistencias / Bajas Procesado" },
             { value: "L", label: "En Liquidación" },
             { value: "C", label: "Liquidación cerrada" },
+            { value: "S", label: "Archivo Consolidado" },
           ],
           valueField: "value",
           optionField: "label",
-          required: true,
+          disabled: true,
         },
         {
           type: "select",
@@ -175,7 +176,7 @@ function AltaCabeceraLiquidacion() {
         {
           type: "select",
           label: "Calcula Bajas",
-          name: "CalculaBajas",
+          name: "calculaBajas",
           customOptions: [
             { value: "S", label: "Si" },
             { value: "N", label: "No" },
@@ -194,7 +195,7 @@ function AltaCabeceraLiquidacion() {
           ],
           valueField: "value",
           optionField: "label",
-          required: true,
+          disabled: true,
         },
       ],
     },

@@ -565,17 +565,19 @@ function PlantaFuncional() {
                         ),
                       },
                       {
-                        Header: "Mas Info",
+                        Header: "Acciones",
                         accessor: "edit",
                         Cell: ({ row }) => (
-                          <MDButton
-                            variant="gradient"
-                            color="info"
-                            size="small"
-                            onClick={() => handleEditar(row.original.idPof)}
-                          >
-                            Editar
-                          </MDButton>
+                          <>
+                            <MDButton
+                              variant="gradient"
+                              color="info"
+                              size="small"
+                              onClick={() => handleEditar(row.original.idPof)}
+                            >
+                              Editar
+                            </MDButton>
+                          </>
                         ),
                       },
                     ],

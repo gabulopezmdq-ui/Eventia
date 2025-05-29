@@ -8,13 +8,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SuperAdmin, Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class POFController : ControllerBase
     {
@@ -23,19 +24,21 @@ namespace API.Controllers
         private readonly IPOFService _pofService;
         private readonly ICRUDService<MEC_POF> _serviceGenerico;
         private readonly ICRUDService<MEC_Personas> _personasGenerico;
+        private readonly ICRUDService<MEC_POFDetalle> _pofDetalleGenerico;
 
-        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService, ICRUDService<MEC_Personas> personasGenerico)
+        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService, ICRUDService<MEC_Personas> personasGenerico, ICRUDService<MEC_POFDetalle> pofDetalleGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _pofService = pofService;
             _personasGenerico = personasGenerico;
+            _pofDetalleGenerico = pofDetalleGenerico;
         }
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_POF>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
-            return Ok(_serviceGenerico.GetAll());
+            return Ok(_serviceGenerico.GetAll().ToList());
         }
 
         [HttpGet("GetByVigente")]
@@ -152,5 +155,6 @@ namespace API.Controllers
 
             return Ok("POF registrada correctamente.");
         }
+
     }
 }

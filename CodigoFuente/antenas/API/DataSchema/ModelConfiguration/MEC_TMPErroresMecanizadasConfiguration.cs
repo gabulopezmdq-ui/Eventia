@@ -25,6 +25,28 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder
+                .HasOne(e => e.Establecimientos)
+                .WithMany(e => e.TMPErroresMecanizadas)
+                .HasForeignKey(e => e.IdEstablecimiento)
+                .IsRequired(false);
+
+            builder
+    .Navigation(e => e.Establecimientos)
+    .AutoInclude()
+    .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder
+     .HasOne(e => e.TMPMecanizada)
+     .WithMany(e => e.TMPErroresMecanizadas)
+     .HasForeignKey(e => e.IdTMPMecanizada)
+     .IsRequired(true);
+
+            builder
+                .Navigation(e => e.TMPMecanizada)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
             builder.Property(e => e.Documento)
                 .HasColumnType("char(2)")
                 .IsFixedLength(true)
