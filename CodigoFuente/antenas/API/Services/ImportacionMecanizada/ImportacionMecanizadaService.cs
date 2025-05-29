@@ -1,12 +1,4 @@
-﻿//using  API.DataSchema;
-//using  API.Repositories;
-//using Microsoft.EntityFrameworkCore;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Linq.Expressions;
-//using System.Threading.Tasks;
-using API.DataSchema;
+﻿using API.DataSchema;
 using Microsoft.AspNetCore.Http;
 using ClosedXML.Excel;
 using System;
@@ -59,7 +51,7 @@ namespace API.Services
                                 Documento = line.Substring(15, 8).Trim(),
                                 Secuencia = line.Substring(23, 3).Trim(),
                                 Funcion = line.Substring(26, 1).Trim(),
-                                CodigoLiquidacion = line.Substring(27, 5).Trim(),
+                                CodigoLiquidacion = line.Substring(28, 4).Trim(),
                                 Importe = ParseDecimal(line.Substring(32, 9).Trim()) / 100,
                                 Signo = line.Substring(41, 1).Trim(),
                                 MarcaTransferido = line.Substring(42, 1).Trim(),
@@ -72,9 +64,10 @@ namespace API.Services
                                 NroEstab = line.Substring(52, 4).Trim(),
                                 Categoria = line.Substring(56, 2).Trim(),
                                 TipoCargo = line.Substring(58, 1).Trim(),
-                                HorasDesignadas = ParseDecimal(line.Substring(60, 3).Trim()) / 100, 
+                                HorasDesignadas = ParseDecimal(line.Substring(60, 3).Trim()) / 100,
                                 Subvencion = line.Substring(63, 3).Trim(),
                                 RegistroValido = "X"
+
                             };
 
                             // Agregar a la base de datos
@@ -145,10 +138,10 @@ namespace API.Services
             }
 
             // Eliminar registros directamente con SQL crudo
-            string deleteSql = @"
-                DELETE FROM ""MEC_TMPMecanizadas"" WHERE ""idCabecera"" = {0};
-                ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;";
-            await _context.Database.ExecuteSqlRawAsync(deleteSql, idCabecera);
+            await _context.Database.ExecuteSqlRawAsync(@"TRUNCATE TABLE ""MEC_TMPMecanizadas"" RESTART IDENTITY CASCADE;");
+
+
+
 
             // Cambiar el estado de la cabecera de "I" a "P"
             estadoCabecera.Estado = "P";
@@ -161,12 +154,12 @@ namespace API.Services
         private async Task EliminarTMPErrores(int idCabecera)
         {
             await _context.Database.ExecuteSqlRawAsync(@"
-                DELETE FROM ""MEC_TMPErroresEstablecimientos"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresFuncion"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresConceptos"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresCarRevista"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"" WHERE ""IdCabecera"" = {0};
-                DELETE FROM ""MEC_TMPErroresMecanizadas"" WHERE ""IdCabecera"" = {0};
+                  DELETE FROM ""MEC_TMPErroresEstablecimientos"";
+                    DELETE FROM ""MEC_TMPErroresFuncion"";
+                    DELETE FROM ""MEC_TMPErroresConceptos"";
+                    DELETE FROM ""MEC_TMPErroresCarRevista"";
+                    DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"";
+                    DELETE FROM ""MEC_TMPErroresMecanizadas"";
 
                 ALTER SEQUENCE ""MEC_TMPErroresEstablecimientos_IdTMPErrorEstablecimiento_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresFuncion_IdTMPErrorFuncion_seq"" RESTART WITH 1;
@@ -175,6 +168,22 @@ namespace API.Services
                 ALTER SEQUENCE ""MEC_TMPErroresTiposEstablecim_IdTMPErrorTipoEstablecimiento_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq"" RESTART WITH 1;
                 ", idCabecera);
+
+            //await _context.Database.ExecuteSqlRawAsync(@"
+            //    DELETE FROM ""MEC_TMPErroresEstablecimientos"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresFuncion"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresConceptos"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresCarRevista"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"" WHERE ""IdCabecera"" = {0};
+            //    DELETE FROM ""MEC_TMPErroresMecanizadas"" WHERE ""IdCabecera"" = {0};
+
+            //    ALTER SEQUENCE ""MEC_TMPErroresEstablecimientos_IdTMPErrorEstablecimiento_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresFuncion_IdTMPErrorFuncion_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresConceptos_IdTMPErrorConcepto_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresCarRevista_IdTMPErrorCarRevista_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresTiposEstablecim_IdTMPErrorTipoEstablecimiento_seq"" RESTART WITH 1;
+            //    ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq"" RESTART WITH 1;
+            //    ", idCabecera);
         }
 
 

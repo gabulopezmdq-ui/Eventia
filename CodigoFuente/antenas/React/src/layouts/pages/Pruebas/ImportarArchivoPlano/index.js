@@ -22,6 +22,7 @@ function ImportarArchivo() {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false); // Nuevo estado para habilitar/deshabilitar el botón
   const token = sessionStorage.getItem("token");
   const [filterIdCabecera, setFilterIdCabecera] = useState("");
+  const [grillaActiva, setGrillaActiva] = useState(false); // Estado para activar/desactivar la grilla
 
   useEffect(() => {
     axios
@@ -63,7 +64,7 @@ function ImportarArchivo() {
 
   useEffect(() => {
     axios
-      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -80,6 +81,12 @@ function ImportarArchivo() {
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
+  };
+  const handleFilterChange = (event) => {
+    const selectedFilter = event.target.value;
+    setFilterIdCabecera(selectedFilter);
+    // Activamos la grilla solo cuando se selecciona un idCabecera
+    setGrillaActiva(selectedFilter !== ""); // Si no hay un valor de filtro, la grilla no se mostrará
   };
 
   const filteredData = filterIdCabecera
@@ -107,7 +114,7 @@ function ImportarArchivo() {
 
     try {
       const response = await axios.post(
-        "https://localhost:44382/ImportarMecanizadas/ImportarExcel",
+        process.env.REACT_APP_API_URL + "ImportarMecanizadas/ImportarExcel",
         formData,
         {
           headers: {

@@ -1,9 +1,12 @@
 ﻿using API.DataSchema;
 using API.Services;
+using DocumentFormat.OpenXml.Wordprocessing;
+using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -21,11 +24,13 @@ namespace API.Controllers
         private readonly ICRUDService<MEC_TMPErroresFuncion> _funcion;
         private readonly ICRUDService<MEC_TMPErroresMecanizadas> _mecanizada;
         private readonly ICRUDService<MEC_TMPErroresTiposEstablecimientos> _tiposEstablecimiento;
+        private readonly IProcesarMecanizadaService<MEC_TMPMecanizadas> _procesarMecanizadaService;
 
         public TMPErroresController(DataContext context, ILogger<MEC_Establecimientos> logger, ICRUDService<MEC_TMPErroresCarRevista> carRevista, 
                                     ICRUDService<MEC_TMPErroresConceptos> concepto, ICRUDService<MEC_TMPErroresEstablecimientos> establecimiento,
                                     ICRUDService<MEC_TMPErroresFuncion> funcion, ICRUDService<MEC_TMPErroresMecanizadas> mecanizada, 
-                                    ICRUDService<MEC_TMPErroresTiposEstablecimientos> tiposEstablecimientos)
+                                    ICRUDService<MEC_TMPErroresTiposEstablecimientos> tiposEstablecimientos,
+                                    IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService)
         {
             _context = context;
             _carRevista = carRevista;
@@ -34,6 +39,7 @@ namespace API.Controllers
             _funcion = funcion;
             _mecanizada = mecanizada;
             _tiposEstablecimiento = tiposEstablecimientos;
+            _procesarMecanizadaService = procesarMecanizadaService;
         }
         
         [HttpGet("GetAllCarRevista")]
@@ -57,13 +63,14 @@ namespace API.Controllers
         [HttpGet("GetAllFunciones")]
         public async Task<ActionResult<IEnumerable<MEC_TMPErroresFuncion>>> GetErroresFunciones() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
-            return Ok(_funcion  .GetAll());
+            return Ok(_funcion.GetAll());
         }
 
         [HttpGet("GetAllMecanizadas")]
-        public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec()
         {
-            return Ok(_mecanizada.GetAll());
+            return Ok(_mecanizada.GetAll().ToList()); //trae todos los registros. De la forma anterior generaba un problema por el volumen de la solicitud
+        
         }
 
         [HttpGet("GetAllTipoEst")]
@@ -73,7 +80,12 @@ namespace API.Controllers
         }
 
 
-
+        [HttpGet("GetErroresAgrupados")]
+        public IActionResult GetErroresAgrupados()
+        {
+            var resultado = _procesarMecanizadaService.ErroresPOFAgrupados();
+            return Ok(resultado);
+        }
 
 
     }

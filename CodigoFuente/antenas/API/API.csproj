@@ -130,6 +130,7 @@
     <Compile Remove="Services\ICF_ProcesoxGrupoService - Copy.cs" />
     <Compile Remove="Startup.cs" />
     <Compile Remove="Test\ImportacionMecanizadaServiceTests.cs" />
+    <Compile Remove="Test\ProcesarMecanizadaControllerTests.cs" />
     <Compile Remove="Utility\ImageTools.cs" />
     <Compile Remove="Utility\LdapConnectionProvider.cs" />
   </ItemGroup>
@@ -142,6 +143,7 @@
   <ItemGroup>
     <PackageReference Include="Bogus" Version="34.0.2" />
     <PackageReference Include="ClosedXML" Version="0.104.1" />
+    <PackageReference Include="EFCore.BulkExtensions" Version="7.0.1" />
     <PackageReference Include="EPPlus" Version="7.3.1" />
     <PackageReference Include="FluentAssertions" Version="7.0.0-alpha.3" />
     <PackageReference Include="IdentityModel" Version="6.2.0" />
@@ -181,6 +183,7 @@
   <ItemGroup>
     <Folder Include="DataSchema\Extensions\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Test\" />
   </ItemGroup>
 
 

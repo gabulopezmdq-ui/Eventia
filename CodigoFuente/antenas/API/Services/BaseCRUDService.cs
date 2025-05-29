@@ -104,11 +104,13 @@ namespace API.Services
                 throw new KeyNotFoundException("El registro no existe.");
             }
 
-            bool tieneEntidadAsociada = await _genericRepo.HasRelatedEntities(Id);
+            // Verificar si hay entidades relacionadas con Vigente = "S"
+            bool tieneRelacionesActivas = await TieneRelacionesActivas(Id);
 
-            if (tieneEntidadAsociada)
+            if (tieneRelacionesActivas)
             {
-                throw new InvalidOperationException("No se puede eliminar el registro");
+                throw new InvalidOperationException(
+                    "No se puede desactivar el registro porque existen entidades relacionadas activas (Vigente = 'S').");
             }
 
             // Cambia el estado 'Vigente' a "N" en lugar de eliminar físicamente
@@ -167,44 +169,126 @@ namespace API.Services
 
                 // Obtener los valores de 'Vigente'
                 var vigenteProperty = typeof(T).GetProperty("Vigente");
-                var originalVigente = vigenteProperty?.GetValue(originalEntity);
-                var newVigente = vigenteProperty?.GetValue(genericClass);
+                var originalVigente = vigenteProperty?.GetValue(originalEntity)?.ToString();
+                var newVigente = vigenteProperty?.GetValue(genericClass)?.ToString();
 
-                // Validar si el campo 'Vigente' ha cambiado
-                if (vigenteProperty != null && !Equals(originalVigente, newVigente))
+                // Validar si el campo 'Vigente' ha cambiado de "S" a "N"
+                if (vigenteProperty != null && originalVigente == "S" && newVigente == "N")
                 {
-                    // Verificar si hay entidades relacionadas
-                    bool tieneEntidadAsociada = await _genericRepo.HasRelatedEntities(Convert.ToInt32(id));
+                    // Verificar si hay entidades relacionadas con Vigente = "S"
+                    bool tieneRelacionesActivas = await TieneRelacionesActivas(Convert.ToInt32(id));
 
-                    // Si tiene relaciones asociadas, pero esas relaciones no tienen entidades, permitimos el cambio
-                    if (tieneEntidadAsociada)
+                    if (tieneRelacionesActivas)
                     {
-                        bool tieneRelacionVacía = await TieneRelacionVacia(Convert.ToInt32(id));
-
-                        if (tieneRelacionVacía)
-                        {
-                            // Si la relación está vacía, permitimos cambiar el valor de 'Vigente'
-                            return await _genericRepo.Update(genericClass);
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException("No se puede cambiar el estado 'Vigente' porque la entidad relacionada tiene elementos asociados.");
-                        }
-                    }
-                    else
-                    {
-                        // Si no tiene ninguna relación asociada, permitimos el cambio de 'Vigente'
-                        return await _genericRepo.Update(genericClass);
+                        throw new InvalidOperationException("No se puede cambiar el estado 'Vigente' a 'N' porque existen entidades relacionadas con 'Vigente' = 'S'.");
                     }
                 }
 
-                // Si no se modificó 'Vigente', simplemente actualizamos la entidad
+                // Actualizar la entidad
                 return await _genericRepo.Update(genericClass);
             }
             catch (Exception e)
             {
-                throw new Exception("Error al actualizar la entidad.", e); // Lanzar una excepción con más contexto
+                throw new Exception("Error al actualizar la entidad.", e);
             }
+        }
+
+        // Nuevo método para verificar relaciones activas
+        private async Task<bool> TieneRelacionesActivas(int id)
+        {
+            var entityType = typeof(T);
+            var navigationProperties = _context.Model.FindEntityType(entityType)?.GetNavigations();
+
+            if (navigationProperties == null)
+            {
+                return false;
+            }
+
+            foreach (var navigation in navigationProperties)
+            {
+                var relatedEntityType = navigation.TargetEntityType.ClrType;
+
+                // Verificar si la entidad relacionada tiene propiedad 'Vigente'
+                var vigenteProp = relatedEntityType.GetProperty("Vigente");
+                if (vigenteProp == null)
+                {
+                    continue; // Saltar relaciones que no tienen propiedad Vigente
+                }
+
+                // Obtener el DbSet de la entidad relacionada
+                var dbSetMethod = _context.GetType().GetMethods()
+                    .FirstOrDefault(m => m.Name == "Set" &&
+                                        m.IsGenericMethod &&
+                                        m.GetGenericArguments().Length == 1 &&
+                                        m.GetParameters().Length == 0);
+
+                if (dbSetMethod == null) continue;
+
+                var genericDbSetMethod = dbSetMethod.MakeGenericMethod(relatedEntityType);
+                var dbSet = genericDbSetMethod.Invoke(_context, null) as IQueryable;
+
+                if (dbSet == null) continue;
+
+                // Construir expresión para la consulta
+                var parameter = Expression.Parameter(relatedEntityType, "e");
+
+                // Expresión para la clave foránea
+                Expression foreignKeyProperty;
+                try
+                {
+                    foreignKeyProperty = Expression.Property(parameter, navigation.ForeignKey.Properties.First().Name);
+                }
+                catch
+                {
+                    foreignKeyProperty = Expression.Call(
+                        typeof(EF),
+                        nameof(EF.Property),
+                        new[] { typeof(int) },
+                        parameter,
+                        Expression.Constant(navigation.ForeignKey.Properties.First().Name)
+                    );
+                }
+
+                // Expresión para la propiedad Vigente
+                Expression vigentePropertyExpr;
+                try
+                {
+                    vigentePropertyExpr = Expression.Property(parameter, vigenteProp);
+                }
+                catch
+                {
+                    vigentePropertyExpr = Expression.Call(
+                        typeof(EF),
+                        nameof(EF.Property),
+                        new[] { typeof(string) },
+                        parameter,
+                        Expression.Constant("Vigente")
+                    );
+                }
+
+                // Condición: FK igual al ID Y Vigente = "S"
+                var equals = Expression.Equal(foreignKeyProperty, Expression.Constant(id));
+                var vigenteEqualsS = Expression.Equal(vigentePropertyExpr, Expression.Constant("S"));
+                var combinedCondition = Expression.AndAlso(equals, vigenteEqualsS);
+
+                var lambda = Expression.Lambda(combinedCondition, parameter);
+
+                // Usar Any para verificar si hay dependientes activos
+                var anyMethod = typeof(Queryable).GetMethods()
+                    .First(m => m.Name == "Any" &&
+                               m.GetParameters().Length == 2 &&
+                               m.GetParameters()[1].ParameterType.Name == "Expression`1")
+                    .MakeGenericMethod(relatedEntityType);
+
+                var hasActiveDependents = (bool)anyMethod.Invoke(null, new object[] { dbSet, lambda });
+
+                if (hasActiveDependents)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
         // Método para verificar si la entidad relacionada tiene alguna relación "vacía" (sin elementos asociados)
         public async Task<bool> TieneRelacionVacia(int id)
@@ -450,54 +534,88 @@ namespace API.Services
             var entity = await _context.Set<T>().FindAsync(entityId);
             if (entity == null)
             {
-                throw new Exception("Entidad no encontrada.");  // Lanzamos un error si no se encuentra la entidad
+                throw new Exception("Entidad no encontrada.");
             }
 
             // 2. Verificar si la entidad tiene la propiedad 'Vigente'
             var vigenteProperty = entity.GetType().GetProperty("Vigente");
             if (vigenteProperty == null)
             {
-                throw new Exception("La propiedad 'Vigente' no existe en la entidad.");  // Lanzamos un error si no tiene la propiedad 'Vigente'
+                throw new Exception("La propiedad 'Vigente' no existe en la entidad.");
             }
 
-            // 3. Recuperar el valor actual de 'Vigente' en la entidad original
+            // 3. Recuperar los valores de 'Vigente'
             var currentVigenteValue = vigenteProperty.GetValue(entity).ToString();
-            var newVigenteValue = vigenteProperty.GetValue(entityToUpdate).ToString();  // El valor de 'Vigente' en el objeto que se quiere actualizar
+            var newVigenteValue = vigenteProperty.GetValue(entityToUpdate).ToString();
 
-            // 4. Verificar si se intenta cambiar de 'S' a 'N' en la propiedad 'Vigente'
+            // 4. Verificar si se intenta cambiar de 'S' a 'N'
             if (currentVigenteValue == "S" && newVigenteValue == "N")
             {
-                // 5. Verificar si la entidad tiene relaciones hacia adelante (relaciones dependientes)
+                // 5. Verificar si la entidad tiene relaciones
                 var navigationProperties = _context.Model.FindEntityType(typeof(T)).GetNavigations();
 
                 foreach (var navigation in navigationProperties)
                 {
-                    // 6. Verificar si la relación es hacia adelante (la entidad actual es la principal en la relación)
+                    // 6. Verificar si la relación es hacia adelante (la entidad actual es la principal)
                     if (navigation.ForeignKey.PrincipalEntityType.IsAssignableFrom(navigation.TargetEntityType))
                     {
-                        // 7. Comprobar si hay registros dependientes que están activos
-                        var dependentEntities = await _context.Set<T>()
-                            .Where(e => EF.Property<int>(e, navigation.ForeignKey.PrincipalKey.Properties.First().Name) == entityId)
-                            .ToListAsync();
+                        // 7. Obtener el tipo de la entidad dependiente
+                        var dependentType = navigation.TargetEntityType.ClrType;
 
-                        // 8. Si hay entidades dependientes con 'Vigente' = "S", lanzamos un error
-                        foreach (var dependentEntity in dependentEntities)
+                        // 8. Obtener el DbSet de forma dinámica
+                        var dbSetMethod = typeof(DbContext).GetMethod("Set").MakeGenericMethod(dependentType);
+                        var dbSet = dbSetMethod.Invoke(_context, null) as IQueryable;
+
+                        // 9. Construir la expresión para verificar entidades dependientes
+                        var parameter = Expression.Parameter(dependentType, "e");
+                        var foreignKeyProperty = Expression.Property(parameter, navigation.ForeignKey.Properties.First().Name);
+                        var equals = Expression.Equal(foreignKeyProperty, Expression.Constant(entityId));
+
+                        // 10. Verificar si la entidad dependiente tiene propiedad 'Vigente'
+                        var vigenteProp = dependentType.GetProperty("Vigente");
+                        if (vigenteProp != null)
                         {
-                            var dependentVigenteValue = EF.Property<string>(dependentEntity, "Vigente");
-                            if (dependentVigenteValue == "S")
+                            // 11. Filtrar solo entidades dependientes con Vigente = "S"
+                            var vigentePropertyExpr = Expression.Property(parameter, vigenteProp);
+                            var vigenteEqualsS = Expression.Equal(vigentePropertyExpr, Expression.Constant("S"));
+                            var combinedCondition = Expression.AndAlso(equals, vigenteEqualsS);
+
+                            var lambda = Expression.Lambda(combinedCondition, parameter);
+
+                            // 12. Usar Any para verificar si hay dependientes activos
+                            var anyMethod = typeof(Queryable).GetMethods()
+                                .First(m => m.Name == "Any" && m.GetParameters().Length == 2)
+                                .MakeGenericMethod(dependentType);
+
+                            var hasActiveDependents = (bool)anyMethod.Invoke(null, new object[] { dbSet, lambda });
+
+                            if (hasActiveDependents)
                             {
-                                // Lanzamos un error indicando que no se puede cambiar el valor de 'Vigente' porque hay dependencias activas
-                                throw new Exception($"No se puede actualizar 'Vigente' de 'S' a 'N' porque hay registros dependientes con 'Vigente' = 'S'. Relación: {navigation.Name}.");
+                                throw new Exception($"No se puede actualizar 'Vigente' de 'S' a 'N' porque hay registros dependientes activos (Vigente = 'S') en la relación {navigation.Name}.");
+                            }
+                        }
+                        else
+                        {
+                            // Si la entidad dependiente no tiene propiedad 'Vigente', consideramos que está activa por defecto
+                            var lambda = Expression.Lambda(equals, parameter);
+
+                            var anyMethod = typeof(Queryable).GetMethods()
+                                .First(m => m.Name == "Any" && m.GetParameters().Length == 2)
+                                .MakeGenericMethod(dependentType);
+
+                            var hasDependents = (bool)anyMethod.Invoke(null, new object[] { dbSet, lambda });
+
+                            if (hasDependents)
+                            {
+                                throw new Exception($"No se puede actualizar 'Vigente' de 'S' a 'N' porque hay registros dependientes en la relación {navigation.Name}.");
                             }
                         }
                     }
                 }
             }
 
-            // 9. Si todo está bien, actualizamos la entidad con los nuevos valores
+            // 13. Si todo está bien, actualizar la entidad
             _context.Entry(entity).CurrentValues.SetValues(entityToUpdate);
-
-            // 10. Guardar los cambios en la base de datos
             await _context.SaveChangesAsync();
             return true;
         }

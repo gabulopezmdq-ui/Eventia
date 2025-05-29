@@ -19,11 +19,13 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
 import MDAlert from "components/MDAlert";
 import MDButton from "components/MDButton";
+import DataTable from "examples/Tables/DataTable";
 import Box from "@mui/material/Box";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DataTableProcesar from "examples/Tables/DataTableProcesar";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import Establecimiento from "../Establecimiento";
 
 function ProcesarArchivoImportado() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -33,13 +35,50 @@ function ProcesarArchivoImportado() {
   const [errorData, setErrorData] = useState([]); // Estado para almacenar los datos de los errores
   const [loadingErrors, setLoadingErrors] = useState(false); // Estado para indicar si se están cargando los errores
   const [isProcessing, setIsProcessing] = useState(false); // Nuevo estado
+  const [dataTableData, setDataTableData] = useState([]);
+  const [showDataTable, setShowDataTable] = useState(false);
+  const [isButtonVisible, setIsButtonVisible] = useState(false);
 
   const token = sessionStorage.getItem("token");
+
+  // Función para obtener datos desde la API
+  useEffect(() => {
+    if (token) {
+      // ✅ Evita ejecutarse si el token no está listo
+      fetchTMPMecanizadas();
+    }
+  }, [token]); // 🔹 Se ejecuta solo cuando el token cambia
+
+  // Función para obtener datos desde la API
+  const fetchTMPMecanizadas = () => {
+    axios
+      .get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllMecanizadas", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Datos recibidos:", response.data); // 📌 Debugging
+
+        // 🔥 Filtrar solo los registros con errores (registroValido = "N")
+        const registrosConErrores = response.data.filter((item) => item.registroValido === "N");
+
+        setDataTableData(registrosConErrores); // ✅ ACTUALIZA EL ESTADO SOLO CON ERRORES
+      })
+      .catch((error) => {
+        console.error("Error al obtener TMPMecanizadas:", error);
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener TMPMecanizadas.",
+          type: "error",
+        });
+      });
+  };
 
   // Obtener las cabeceras al cargar el componente
   useEffect(() => {
     axios
-      .get("https://localhost:44382/CabeceraLiquidacion/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
@@ -60,22 +99,25 @@ function ProcesarArchivoImportado() {
 
     try {
       const responses = await Promise.all([
-        axios.get("https://localhost:44382/TMPErrores/GetAllCarRevista", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllCarRevista", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllConceptos", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllConceptos", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllEstablecimientos", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllEstablecimientos", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllFunciones", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllFunciones", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllMecanizadas", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllMecanizadas", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://localhost:44382/TMPErrores/GetAllTipoEst", {
+        axios.get(process.env.REACT_APP_API_URL + "GetAllTipoEst", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -109,7 +151,7 @@ function ProcesarArchivoImportado() {
         {
           title: "Paramétricas - Mecanizadas",
           data: responses[4].data.map((item) => ({
-            MECANIZADAS: item.codigoLiquidacion,
+            MECANIZADAS: item.TMPMecanizada.documento,
           })),
         },
         {
@@ -119,7 +161,59 @@ function ProcesarArchivoImportado() {
           })),
         },
       ];
-
+      const handleGenerateGroupedErrorsPDF = async () => {
+        setLoadingErrors(true);
+        try {
+          const response = await axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.data.length === 0) {
+            setErrorAlert({
+              show: true,
+              message: "No hay errores agrupados para mostrar.",
+              type: "warning",
+            });
+            return;
+          }
+          const doc = new jsPDF();
+          doc.setFontSize(14);
+          doc.text("Resumen de Errores Agrupados", 10, 10);
+          // Preparar los datos para la tabla
+          const tableData = response.data.map((item) => [
+            item.tipoError,
+            item.cantidad,
+            item.descripcion,
+          ]);
+          doc.autoTable({
+            head: [["Tipo de Error", "Cantidad", "Descripción"]],
+            body: tableData,
+            startY: 20,
+            styles: {
+              fontSize: 10,
+              cellPadding: 4,
+              overflow: "linebreak",
+            },
+            headStyles: {
+              fillColor: [41, 128, 185],
+              textColor: [255, 255, 255],
+            },
+            columnStyles: {
+              0: { cellWidth: 40 }, // Tipo de Error
+              1: { cellWidth: 30, halign: "center" }, // Cantidad
+              2: { cellWidth: 120 }, // Descripción
+            },
+          });
+          doc.save("ErroresAgrupados.pdf");
+        } catch (error) {
+          setErrorAlert({
+            show: true,
+            message: "Error al generar el PDF de errores agrupados.",
+            type: "error",
+          });
+        } finally {
+          setLoadingErrors(false);
+        }
+      };
       // Crear el PDF
       const doc = new jsPDF();
       doc.setFontSize(14);
@@ -161,36 +255,286 @@ function ProcesarArchivoImportado() {
       });
       return;
     }
-    setIsProcessing(true); // Deshabilitar el botón antes de iniciar el proceso
+
+    setIsProcessing(true);
+
+    const expectedErrorMessage =
+      "El archivo contiene errores. Debe corregir el archivo y volver a importarlo.";
+    const expectedTMPMessage = "Existen Personas que no están registradas en el sistema...";
+    const expectedTMPesitosamente = "Preprocesamiento y validación completados exitosamente.";
 
     try {
-      const url = `https://localhost:44382/ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
-      const response = await axios.post(url, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const url =
+        process.env.REACT_APP_API_URL +
+        `ImportarMecanizadas/PreprocesarArchivo?idCabecera=${selectedIdCabecera}`;
+      console.log("📢 URL de la solicitud:", url);
 
-      // Si el procesamiento es exitoso, ocultamos el botón de errores
-      setShowErrorButton(false);
-      setErrorAlert({
-        show: true,
-        message: "Archivo procesado exitosamente.",
-        type: "success",
-      });
+      const response = await axios.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
+
+      let backendMessage = response.data?.trim().replace(/\n/g, " ") || ""; // 🔹 Tomar response.data directamente
+
+      console.log("📢 Mensaje del backend procesado:", backendMessage);
+
+      // 🔹 Verificar si el mensaje es el esperado y mostrar el botón
+      if (backendMessage === expectedTMPesitosamente) {
+        console.log("✅ Preprocesamiento exitoso, mostrando botón.");
+        setIsButtonVisible(true);
+      } else {
+        setIsButtonVisible(false);
+      }
+
+      // 🟢 Si el backend devuelve el mensaje esperado en el éxito
+      if (backendMessage.includes(expectedTMPMessage)) {
+        console.log("✅ Mensaje de registros faltantes recibido:", backendMessage);
+        const getResponse = await axios.get(
+          process.env.REACT_APP_API_URL + "TMPMecanizadas/GetAll",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setDataTableData(getResponse.data);
+      } else {
+        setShowDataTable(false);
+      }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.mensaje || "Error inesperado al procesar el archivo.";
-      setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      console.log("❌ Error en la respuesta del backend:", error.response?.data);
 
-      // Mostrar siempre el botón de "Ver errores" cuando ocurre un error
-      setShowErrorButton(true);
+      // 🔹 Extraer el mensaje de error correctamente
+      const errorData = error.response?.data;
+      const errorMessage =
+        typeof errorData === "string"
+          ? errorData // Si el backend envía un string directo
+          : errorData?.mensaje ||
+            JSON.stringify(errorData) ||
+            "Error inesperado al procesar el archivo.";
+
+      console.log("📢 Mensaje recibido en error:", errorMessage);
+
+      // 🔴 Activar el botón de error si el mensaje coincide
+      if (errorMessage.includes("El archivo contiene errores")) {
+        console.log("🔴 Activando botón de error");
+        setShowErrorButton(true);
+      } else {
+        setShowErrorButton(false);
+      }
+
+      if (errorMessage.includes(expectedTMPMessage)) {
+        console.log("✅ Mensaje de registros faltantes detectado en error 400.");
+        setShowDataTable(true);
+        await fetchDataForTable();
+      } else {
+        setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      }
+
+      // 🔹 Mostrar botón si el mensaje llega en el error
+      if (errorMessage.includes(expectedTMPesitosamente)) {
+        console.log("✅ Preprocesamiento exitoso detectado en error, mostrando botón.");
+        setIsButtonVisible(true);
+      } else {
+        setIsButtonVisible(false);
+      }
     } finally {
-      setIsProcessing(false); // Habilitar el botón después de completar el proceso
+      setIsProcessing(false);
     }
   };
 
-  // Obtener los datos de errores
+  // Nueva función para traer datos cuando hay registros faltantes
+  const fetchDataForTable = async () => {
+    try {
+      console.log("📢 Haciendo la llamada GET a TMPErrores/GetAllMecanizadas...");
+      const getResponse = await axios.get(process.env.REACT_APP_API_URL + "GetAllMecanizadas", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("📢 Respuesta completa de la API:", getResponse);
+
+      if (!getResponse?.data || getResponse.data.length === 0) {
+        console.log("❌ No se recibieron datos o la respuesta está vacía.");
+        return;
+      }
+
+      console.log("📢 Datos para la tabla:", getResponse.data);
+
+      const formattedData = getResponse.data.map((item) => ({
+        ...item,
+        tmpMecanizadaDocumento: item.tmpMecanizada?.documento || "Sin datos",
+        tmpMecanizadaSecuencia: item.tmpMecanizada?.secuencia || "Sin datos",
+        nroEstablecimiento: item.establecimientos?.nroEstablecimiento || "Sin datos",
+      }));
+
+      setDataTableData(formattedData);
+    } catch (getError) {
+      console.log("❌ Error en la llamada GET:", getError.response?.data || getError.message);
+    }
+  };
+
+  //.......................... imprimir grilla.........................s
+  const handleGenerateGroupedErrorsPDF = async () => {
+    try {
+      // 1. Obtener los datos directamente desde la API
+      const response = await axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const apiData = response.data;
+      // 2. Verificar si hay datos
+      if (!apiData || apiData.length === 0) {
+        setErrorAlert({
+          show: true,
+          message: "No hay datos de errores agrupados para exportar.",
+          type: "warning",
+        });
+        return;
+      }
+      // 3. Crear el documento PDF
+      const doc = new jsPDF("landscape");
+      doc.setFontSize(10);
+      doc.text("Errores Agrupados Detectados", 14, 10);
+      // 4. Definir columnas basadas en los datos reales recibidos
+      const columns = [
+        { header: "Documento", dataKey: "documento" },
+        { header: "Secuencia", dataKey: "secuencia" },
+        { header: "Establecimiento", dataKey: "nroEstablecimiento" },
+      ];
+      // 5. Procesar los datos exactamente como vienen de la API
+      const processedData = apiData.map((row) => ({
+        documento: row.documento || "Sin dato",
+        secuencia: row.secuencia || "Sin dato",
+        nroEstablecimiento: row.nroEstablecimiento || "Sin dato",
+      }));
+      // 6. Generar la tabla
+      doc.autoTable({
+        columns,
+        body: processedData,
+        startY: 20,
+        margin: { top: 20 },
+        styles: {
+          fontSize: 9,
+          cellPadding: 1.2,
+          overflow: "linebreak",
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontSize: 10,
+          halign: "center",
+        },
+        columnStyles: {
+          documento: { halign: "center", fontStyle: "normal" },
+          secuencia: { halign: "center" },
+          nroEstablecimiento: { halign: "center" },
+        },
+        didDrawPage: function (data) {
+          doc.setFontSize(7);
+          doc.text(`Página ${doc.internal.getNumberOfPages()}`, 280, 200);
+        },
+      });
+      // 7. Guardar el PDF
+      doc.save("ErroresAgrupados.pdf");
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      setErrorAlert({
+        show: true,
+        message: "Error al generar el PDF de errores agrupados",
+        type: "error",
+      });
+    }
+  };
+  const handleGenerateGridPDF = () => {
+    if (dataTableData.length === 0) {
+      setErrorAlert({
+        show: true,
+        message: "No hay datos en la grilla para exportar.",
+        type: "warning",
+      });
+      return;
+    }
+
+    const doc = new jsPDF("landscape");
+    doc.setFontSize(10);
+    doc.text("Errores Detectados en Mecanizadas", 14, 10);
+
+    // Transformar los datos antes de pasarlos a autoTable
+
+    const columns = [
+      { header: "DNI", dataKey: "documento" }, // Se usa dataKey en lugar de accessorKey
+      { header: "POF", dataKey: "pof" },
+      { header: "NÚMERO DNI", dataKey: "tmpMecanizadaDocumento" },
+      { header: "Establecimiento", dataKey: "nroEstablecimiento" },
+      { header: "Secuencia", dataKey: "tmpMecanizadaSecuencia" },
+    ];
+    const processedData = dataTableData.map((row) => ({
+      documento: row.documento === "NE" ? "NO EXISTE" : row.documento,
+      pof: row.pof === "NE" ? "NO EXISTE" : row.pof,
+      tmpMecanizadaDocumento: row.tmpMecanizadaDocumento,
+      nroEstablecimiento: row.nroEstablecimiento || "Sin datos", // ✅ Agregar nroEstablecimiento
+      tmpMecanizadaSecuencia: row.tmpMecanizadaSecuencia || "Sin datos",
+    }));
+
+    doc.autoTable({
+      columns,
+      body: processedData, // Usamos los datos modificados
+      startY: 20,
+      margin: { top: 20 },
+      styles: {
+        fontSize: 9,
+        cellPadding: 1.2,
+        overflow: "linebreak",
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontSize: 10,
+        halign: "center",
+      },
+      columnStyles: {
+        documento: { halign: "center", fontStyle: "normal" },
+        pof: { halign: "center" },
+        tmpMecanizadaDocumento: { halign: "center" },
+        nroEstablecimiento: { halign: "center" },
+        tmpMecanizadaSecuencia: { halign: "center" },
+      },
+      didDrawPage: function (data) {
+        doc.setFontSize(7);
+        doc.text(`Página ${doc.internal.getNumberOfPages()}`, 280, 200);
+      },
+    });
+
+    doc.save("ErroresMecanizadas.pdf");
+  };
+
+  const handleProcessData = async () => {
+    if (!selectedIdCabecera) {
+      setErrorAlert({
+        show: true,
+        message: "Por favor, selecciona una cabecera antes de continuar.",
+        type: "error",
+      });
+      return;
+    }
+
+    setIsProcessing(true); // Deshabilitar el botón mientras se procesa
+
+    try {
+      const processUrl =
+        process.env.REACT_APP_API_URL +
+        `ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
+      const processResponse = await axios.post(processUrl, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("✅ Procesamiento completado:", processResponse.data);
+      setErrorAlert({ show: true, message: "Archivo procesado exitosamente.", type: "success" });
+    } catch (error) {
+      console.log("❌ Error en el procesamiento:", error.response?.data);
+      setErrorAlert({
+        show: true,
+        message: error.response?.data || "Error al procesar los registros.",
+        type: "error",
+      });
+    } finally {
+      setIsProcessing(false); // Reactivar el botón
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -257,7 +601,7 @@ function ProcesarArchivoImportado() {
         </Grid>
         {showErrorButton && (
           <Grid container justifyContent="center" sx={{ mt: 2 }}>
-            <MDButton
+            <MDButton // Boton de pdf de errores de codigos
               variant="contained"
               color="warning"
               onClick={handleGeneratePDF}
@@ -268,6 +612,47 @@ function ProcesarArchivoImportado() {
           </Grid>
         )}
       </Card>
+      {showDataTable && (
+        <Card sx={{ marginTop: 1 }}>
+          <DataTable
+            table={{
+              columns: [
+                { Header: "Documento (Nivel Principal)", accessor: "documento" },
+                { Header: "Pof", accessor: "pof" },
+                { Header: "Documento", accessor: "tmpMecanizadaDocumento" },
+                { Header: "Establecimiento", accessor: "nroEstablecimiento" },
+                { Header: "Secuencia", accessor: "tmpMecanizadaSecuencia" },
+              ],
+              rows: dataTableData,
+            }}
+            entriesPerPage={false}
+            canSearch
+            show
+          />
+          <Grid container justifyContent="center" sx={{ mt: 2 }}>
+            <MDButton variant="contained" color="warning" onClick={handleGenerateGridPDF}>
+              {loadingErrors ? "Cargando..." : "Ver errores"}
+            </MDButton>
+            <MDButton variant="contained" color="warning" onClick={handleGenerateGroupedErrorsPDF}>
+              {loadingErrors ? "Cargando..." : "Ver errores agrupados"}
+            </MDButton>
+          </Grid>
+        </Card>
+      )}
+      <Grid container justifyContent="center" sx={{ mt: 2 }}>
+        {isButtonVisible && (
+          <Grid container justifyContent="center" sx={{ mt: 2 }}>
+            <MDButton
+              variant="contained"
+              color="primary"
+              onClick={handleProcessData}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Procesando..." : "Procesar"}
+            </MDButton>
+          </Grid>
+        )}
+      </Grid>
     </DashboardLayout>
   );
 }

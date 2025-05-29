@@ -8,25 +8,32 @@ using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
+using FluentAssertions.Common;
+using System.Linq;
+using API.Services.ImportacionMecanizada;
 
 namespace API.Controllers
 {
-    [ApiController]  
-    //[Authorize(Roles = "SuperAdmin, Admin")]
-    [AllowAnonymous]
+    [ApiController]
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    //[AllowAnonymous]
     [Route("[controller]")]
-
     public class ImportarMecanizadasController : ControllerBase
     {
         private readonly IImportacionMecanizadaService<MEC_TMPMecanizadas> _importacionMecanizadaService;
         private readonly IProcesarMecanizadaService<MEC_TMPMecanizadas> _procesarMecanizadaService;
         private readonly ICRUDService<MEC_TMPMecanizadas> _serviceGenerico;
-
-        public ImportarMecanizadasController(IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService, ICRUDService<MEC_TMPMecanizadas> serviceGenerico, IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public ImportarMecanizadasController(
+            IImportacionMecanizadaService<MEC_TMPMecanizadas> importacionService,
+            ICRUDService<MEC_TMPMecanizadas> serviceGenerico,
+            IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService,
+            IHttpContextAccessor httpContextAccessor)
         {
             _importacionMecanizadaService = importacionService;
             _serviceGenerico = serviceGenerico;
             _procesarMecanizadaService = procesarMecanizadaService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost("ImportarExcel")]
@@ -57,15 +64,35 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get()
+        //[HttpGet("GetAll")]
+        //public async Task<ActionResult<IEnumerable<MEC_TMPMecanizadas>>> Get()
+        //{
+        //    return Ok(_serviceGenerico.GetAll());
+        //}
+
+        [HttpGet("GetByCabecera")]
+        public async Task<IActionResult> GetCabecera([FromQuery] int? idCabecera)
         {
-            return Ok(_serviceGenerico.GetAll());
+            if (!idCabecera.HasValue)
+                return BadRequest("El parámetro idCabecera es obligatorio.");
+
+            var resultado = await _serviceGenerico.GetByParam(e => e.idCabecera == idCabecera);
+
+            if (resultado == null || !resultado.Any())
+                return NotFound("No se encontraron registros.");
+
+            return Ok(resultado.ToList()); // Convierte a lista aquí
+        }
+
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 100)
+        {
+            return Ok(_serviceGenerico.GetAll().ToList());
         }
 
         [HttpPost("PreprocesarArchivo")]
         public async Task<IActionResult> PreprocesarArchivo(int idCabecera)
-         {
+        {
             try
             {
                 await _procesarMecanizadaService.PreprocesarAsync(idCabecera);
@@ -73,7 +100,6 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                // Verificar si el error se debe a problemas en las validaciones
                 if (ex.Message.Contains("El archivo contiene errores"))
                 {
                     return BadRequest(new
@@ -84,6 +110,29 @@ namespace API.Controllers
                     });
                 }
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("Procesar")]
+        public async Task<IActionResult> ProcesarRegistros(int idCabecera)
+        {
+            try
+            {
+                var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
+                int usuario = int.Parse(idUsuario.Value);
+
+                string resultado = await _procesarMecanizadaService.ProcesarSiEsValidoAsync(idCabecera, usuario);
+
+                if (resultado.StartsWith("No"))
+                {
+                    return BadRequest(resultado);
+                }
+
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al procesar registros: {ex.Message}");
             }
         }
     }
