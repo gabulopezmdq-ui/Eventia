@@ -18,7 +18,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder
-               .Property(p => p.vigente)
+               .Property(p => p.Vigente)
                .HasColumnType("char(1)")
                .IsFixedLength(true);
         }
