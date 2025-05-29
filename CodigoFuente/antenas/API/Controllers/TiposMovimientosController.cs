@@ -48,7 +48,7 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<MEC_MotivosBajasDoc>> Update([FromBody] MEC_TiposMovimientos tipoMovimiento)
+        public async Task<ActionResult<MEC_TiposMovimientos>> Update([FromBody] MEC_TiposMovimientos tipoMovimiento)
         {
             await _serviceGenerico.Update(tipoMovimiento);
             return Ok(tipoMovimiento);
