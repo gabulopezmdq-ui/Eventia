@@ -9,12 +9,12 @@ namespace API.Controllers
 {
     [ApiController]
 
-    public class MotivosBajasDocController : ControllerBase
+    public class TiposMovimientosController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly ICRUDService<MEC_MotivosBajasDoc> _serviceGenerico;
+        private readonly ICRUDService<MEC_TiposMovimientos> _serviceGenerico;
 
-        public MotivosBajasDocController(DataContext context,ICRUDService<MEC_MotivosBajasDoc> serviceGenerico)
+        public TiposMovimientosController(DataContext context,ICRUDService<MEC_TiposMovimientos> serviceGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
@@ -22,22 +22,22 @@ namespace API.Controllers
 
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_MotivosBajasDoc>>> Get()
+        public async Task<ActionResult<IEnumerable<MEC_TiposMovimientos>>> Get()
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<MEC_MotivosBajasDoc>> Get(int Id)
+        public async Task<ActionResult<MEC_TiposMovimientos>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromBody] MEC_MotivosBajasDoc motivobaja)
+        public async Task<ActionResult> Post([FromBody] MEC_TiposMovimientos tipoMovimiento)
         {
-            await _serviceGenerico.Add(motivobaja);
-            return Ok(motivobaja);
+            await _serviceGenerico.Add(tipoMovimiento);
+            return Ok(tipoMovimiento);
         }
 
         [HttpDelete]
@@ -48,10 +48,10 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<MEC_MotivosBajasDoc>> Update([FromBody] MEC_MotivosBajasDoc motivobaja)
+        public async Task<ActionResult<MEC_MotivosBajasDoc>> Update([FromBody] MEC_TiposMovimientos tipoMovimiento)
         {
-            await _serviceGenerico.Update(motivobaja);
-            return Ok(motivobaja);
+            await _serviceGenerico.Update(tipoMovimiento);
+            return Ok(tipoMovimiento);
         }
     }
 }
