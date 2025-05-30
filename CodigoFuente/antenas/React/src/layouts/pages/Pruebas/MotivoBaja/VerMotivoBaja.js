@@ -10,11 +10,11 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Card from "@mui/material/Card";
 
 // Función principal del componente
-function VerConcepto() {
+function VerMotivoBaja() {
   // Obtener el ID desde los parámetros de la URL
   const { id } = useParams();
   // Estado para almacenar los datos de la empresa
-  const [idConceptoData, setidConceptoData] = useState(null);
+  const [idMotivoBajaData, setidMotivoBajaData] = useState(null);
   // Hook de navegación para redirigir a otras páginas
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token");
@@ -23,15 +23,15 @@ function VerConcepto() {
   useEffect(() => {
     // Realizar la petición GET al servidor
     axios
-      .get(process.env.REACT_APP_API_URL + `MotivosBajaDoc/getbyid?id=${id}`, {
+      .get(process.env.REACT_APP_API_URL + `MotivosBajasDoc/getbyid?id=${id}`, {
         headers: {
           Authorization: `Bearer ${token}`, // Envía el token en los headers
         },
       })
       .then((response) => {
         // Guardar los datos recibidos en el estado
-        setidConceptoData(response.data);
-        console.log("Respuesta by ID:", idConceptoData);
+        setidMotivoBajaData(response.data);
+        console.log("Respuesta by ID:", idMotivoBajaData);
       })
       .catch((error) => {
         console.error("Error al obtener los datos:", error);
@@ -39,13 +39,13 @@ function VerConcepto() {
   }, [id]);
 
   // Función para manejar la navegación a la página de crear nueva inspección (o cualquier otra funcionalidad)
-  const handleNuevoConcepto = () => {
-    navigate("/VerConceptoFE/Nuevo");
+  const handleNuevoMotivoBaja = () => {
+    navigate("/VerMotivoBajaFE/Nuevo");
   };
 
   // Función para manejar la navegación a la página de editar
-  const handleEditarConcepto = (idConcepto) => {
-    const url = `/AltaConceptosFE/Edit/${idConcepto}`;
+  const handleEditarMotivoBaja = (idMotivoBaja) => {
+    const url = `/AltaMotivoBajaFE/Edit/${idMotivoBaja}`;
     console.log(url);
     navigate(url);
   };
@@ -53,37 +53,25 @@ function VerConcepto() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      {idConceptoData && (
+      {idMotivoBajaData && (
         <>
           <MDBox>
             <Card>
-              <p className="tituloModal">{"Conceptos"}</p>
+              <p className="tituloModal">{"Motivos Bajas"}</p>
               <div className="contenidoCard">
                 <p>
-                  <b>Con Aporte: </b>
-                  {idConceptoData?.conAporte === "S"
-                    ? "SI"
-                    : idConceptoData?.conAporte === "N"
-                    ? "NO"
-                    : "N/A"}
-                </p>
-                <p>
-                  <b>Patronal: </b>
-                  {idConceptoData?.patronal === "S"
-                    ? "SI"
-                    : idConceptoData?.patronal === "N"
-                    ? "NO"
-                    : "N/A"}
+                 <b>Motivo Baja: </b>
+                  {idMotivoBajaData?.motivoBaja ?? "N/A"}
                 </p>
                 <p>
                   <b>Vigente: </b>
-                  {idConceptoData?.vigente === "S"
+                  {idMotivoBajaData?.vigente === "S"
                     ? "SI"
-                    : idConceptoData?.vigente === "N"
+                    : idMotivoBajaData?.vigente === "N"
                     ? "NO"
                     : "N/A"}
                 </p>
-                <MDButton onClick={() => handleEditarConcepto(idConceptoData?.idConcepto)}>
+                <MDButton onClick={() => handleEditarMotivoBaja(idMotivoBajaData?.idMotivoBaja)}>
                   Editar
                 </MDButton>
               </div>
@@ -95,4 +83,4 @@ function VerConcepto() {
   );
 }
 
-export default VerConcepto;
+export default VerMotivoBaja;
