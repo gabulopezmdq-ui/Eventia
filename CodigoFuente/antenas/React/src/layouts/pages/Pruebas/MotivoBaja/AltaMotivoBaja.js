@@ -14,7 +14,7 @@ import Formulario from "components/Formulario";
 import { Field } from "formik";
 import MDDropzone from "components/MDDropzone";
 
-function AltaConceptos() {
+function AltaMotivosBajas() {
   const { id } = useParams();
   let labelTitulo = "Motivo de baja";
   if (id) {
@@ -34,30 +34,12 @@ function AltaConceptos() {
   };
 
   //------------------------Validaciones Especificas-------------------------------------
-  function validateConcepto(value, field) {
+  function validateMotivoBaja(value, field) {
     if (value === undefined || value === null || value === "" || field.name === undefined) {
       return null;
     }
-    if (value.length > 4) {
-      return "Los Conceptos no pueden tener más de 4 caracteres.";
-    }
-    return null;
-  }
-  function validateCodMGP(value, field) {
-    if (value === undefined || value === null || value === "" || field.name === undefined) {
-      return null;
-    }
-    if (value.length > 10) {
-      return "Los Códigos MGP no pueden tener más de 10 caracteres.";
-    }
-    return null;
-  }
-  function validateDevSalario(value, field) {
-    if (value === undefined || value === null || value === "" || field.name === undefined) {
-      return null;
-    }
-    if (value.length > 1) {
-      return "Los Códigos MGP no pueden tener más de 10 caracteres.";
+    if (value.length > 500) {
+      return "Los Motivos de baja no pueden tener más de 500 caracteres.";
     }
     return null;
   }
@@ -70,11 +52,10 @@ function AltaConceptos() {
       fields: [
         {
           type: "text",
-          label: "Motivo",
+          label: "Motivo Baja",
           name: "motivobaja",
           required: true,
-        }
-        ,
+        },
         // Solo incluimos el campo "Vigente" si estamos en modo edición (id está presente)
         ...(id
           ? [
@@ -96,7 +77,7 @@ function AltaConceptos() {
     },
   ];
 
-  const apiUrl = process.env.REACT_APP_API_URL + `MotivoBajasDoc`;
+  const apiUrl = process.env.REACT_APP_API_URL + `MotivosBajasDoc`;
   const handleSubmit = () => {
     const dataToSubmit = { ...formData };
     if (!id && !dataToSubmit.vigente) {
@@ -119,4 +100,4 @@ function AltaConceptos() {
   );
 }
 
-export default AltaConceptos;
+export default AltaMotivosBajas;

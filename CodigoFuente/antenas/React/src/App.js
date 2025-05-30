@@ -48,6 +48,10 @@ import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
 import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImportado";
 import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
 import AltaUsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/AltaUsuariosEstablecimientos";
+import MotivoBaja from "layouts/pages/Pruebas/MotivoBaja";
+import AltaMotivoBaja from "layouts/pages/Pruebas/MotivoBaja/AltaMotivoBaja";
+import TipoMovimiento from "layouts/pages/Pruebas/TiposMovimientos";
+import AltaTipoMovimiento from "layouts/pages/Pruebas/TiposMovimientos/AltaTipoMovimientos";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -251,6 +255,14 @@ export default function App() {
       component: TipoCategorias,
     },
     {
+      path: "/MotivoBajaFE",
+      component: MotivoBaja,
+    },
+    {
+      path: "/TipoMovimientoFE",
+      component: TipoMovimiento,
+    },
+    {
       path: "/ImportarFE",
       component: Importar,
     },
@@ -321,6 +333,14 @@ export default function App() {
       component: AltaTipoCategorias,
     },
     {
+      path: "/MotivoBajaFE/Edit/:id",
+      component: AltaMotivoBaja,
+    },
+    {
+      path: "/TipoMovimientoFE/Edit/:id",
+      component: AltaTipoMovimiento,
+    },
+    {
       path: "/EstablecimientoFE/Edit/:id",
       component: AltaEstablecimiento,
     },
@@ -376,6 +396,14 @@ export default function App() {
     {
       path: "/TipoCategoriasFE/Nuevo",
       component: AltaTipoCategorias,
+    },
+    {
+      path: "/MotivoBajaFE/Nuevo",
+      component: AltaMotivoBaja,
+    },
+    {
+      path: "/TipoMovimientoFE/Nuevo",
+      component: AltaTipoMovimiento,
     },
   ];
 

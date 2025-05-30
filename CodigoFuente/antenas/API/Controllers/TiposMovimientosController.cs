@@ -1,5 +1,6 @@
 ﻿using API.DataSchema;
 using API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -8,7 +9,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-
+    [AllowAnonymous]
+    [Route("[controller]")]
     public class TiposMovimientosController : ControllerBase
     {
         private readonly DataContext _context;

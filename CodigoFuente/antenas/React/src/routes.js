@@ -17,6 +17,8 @@ import RevertirImportacion from "layouts/pages/Pruebas/RevertirImportacion/index
 import ConsolidarMecPof from "layouts/pages/Pruebas/ConsolidarMecPof";
 import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImportado";
 import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
+import ListadoMotivosBajas from "layouts/pages/Pruebas/MotivoBaja/index";
+import ListadoTiposMovimientos from "layouts/pages/Pruebas/TiposMovimientos/index";
 
 const routes = [
   {
@@ -153,6 +155,18 @@ const routes = [
         key: "TipoCategorias",
         route: "/TipoCategoriasFE",
         component: <TipoCategorias />,
+      },
+      {
+        name: "Motivos de Baja",
+        key: "MotivoBaja",
+        route: "/MotivoBajaFE",
+        component: <ListadoMotivosBajas />,
+      },
+      {
+        name: "Tipo de Movimientos",
+        key: "TipoMovimiento",
+        route: "/TipoMovimientoFE",
+        component: <ListadoTiposMovimientos />,
       },
       /*{
         name: "Importar",

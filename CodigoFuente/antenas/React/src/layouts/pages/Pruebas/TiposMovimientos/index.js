@@ -18,7 +18,7 @@ import DataTable from "examples/Tables/DataTable";
 
 import "../../Pruebas/pruebas.css";
 
-function MotivoBaja() {
+function TipoMovimiento() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -28,13 +28,13 @@ function MotivoBaja() {
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    fetchMotivosBajas(); // Cargar los datos al montar el componente
+    fetchTipoMovimiento(); // Cargar los datos al montar el componente
   }, []);
 
   // Función para obtener los datos desde la API
-  const fetchMotivosBajas = () => {
+  const fetchTipoMovimiento = () => {
     axios
-      .get(process.env.REACT_APP_API_URL + "MotivosBajasDoc/getall", {
+      .get(process.env.REACT_APP_API_URL + "TiposMovimientos/getall", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -87,20 +87,20 @@ function MotivoBaja() {
   };
 
   const handleNuevoTipo = () => {
-    navigate("/MotivoBajaFE/Nuevo");
+    navigate("/TipoMovimientoFE/Nuevo");
   };
 
   const handleVer = (rowData) => {
-    if (rowData && rowData.idMotivoBaja) {
-      const productId = rowData.idMotivoBaja;
-      const url = `/MotivoBajaFE/${productId}`;
+    if (rowData && rowData.idTipoMovimiento) {
+      const productId = rowData.idTipoMovimiento;
+      const url = `/TipoMovimienotFE/${productId}`;
       navigate(url);
     } else {
-      console.error("El objeto rowData o su propiedad 'idMotivoBaja' no están definidos.");
+      console.error("El objeto rowData o su propiedad 'idTipoMovimiento' no están definidos.");
     }
   };
-  const handleEditarMotivosBajas = (idMotivoBaja) => {
-    const url = `/MotivoBajaFE/Edit/${idMotivoBaja}`;
+  const handleEditarTipoMovimiento = (idTipoMovimiento) => {
+    const url = `/TipoMovimientoFE/Edit/${idTipoMovimiento}`;
     navigate(url);
   };
 
@@ -152,7 +152,23 @@ function MotivoBaja() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Motivo de Baja", accessor: "motivoBaja" },
+                  {
+                    Header: "TIPO MOVIMIENTOS",
+                    accessor: (row) => (
+                      <p>
+                        {row.tipoMovimiento === "A"
+                          ? "ALTAS"
+                          : row.vigente === "B"
+                          ? "BAJA"
+                          : row.vigente === "M"
+                          ? "MODIFICACIONES"
+                          : row.vigente === "D"
+                          ? "ADICIONALES"
+                          : "N/A"}
+                      </p>
+                    ),
+                  },
+                  { Header: "LEYENDA", accessor: "leyenda" },
                   {
                     Header: "VIGENTE",
                     accessor: (row) => (
@@ -166,7 +182,7 @@ function MotivoBaja() {
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleEditarMotivosBajas(row.original.idMotivoBaja)}
+                        onClick={() => handleEditarTipoMovimiento(row.original.idTipoMovimiento)}
                       >
                         Editar
                       </MDButton>
@@ -186,11 +202,11 @@ function MotivoBaja() {
   );
 }
 
-MotivoBaja.propTypes = {
+TipoMovimiento.propTypes = {
   row: PropTypes.object,
   "row.original": PropTypes.shape({
     id: PropTypes.number,
   }),
 };
 
-export default MotivoBaja;
+export default TipoMovimiento;
