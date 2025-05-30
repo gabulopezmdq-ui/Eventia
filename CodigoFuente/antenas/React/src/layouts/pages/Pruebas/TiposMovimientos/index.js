@@ -158,11 +158,11 @@ function TipoMovimiento() {
                       <p>
                         {row.tipoMovimiento === "A"
                           ? "ALTAS"
-                          : row.vigente === "B"
+                          : row.tipoMovimiento === "B"
                           ? "BAJA"
-                          : row.vigente === "M"
+                          : row.tipoMovimiento === "M"
                           ? "MODIFICACIONES"
-                          : row.vigente === "D"
+                          : row.tipoMovimiento === "D"
                           ? "ADICIONALES"
                           : "N/A"}
                       </p>

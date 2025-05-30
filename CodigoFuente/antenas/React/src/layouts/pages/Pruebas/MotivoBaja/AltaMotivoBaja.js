@@ -53,7 +53,7 @@ function AltaMotivosBajas() {
         {
           type: "text",
           label: "Motivo Baja",
-          name: "motivobaja",
+          name: "motivoBaja",
           required: true,
         },
         // Solo incluimos el campo "Vigente" si estamos en modo edición (id está presente)
