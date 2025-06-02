@@ -13,5 +13,6 @@ namespace API.DataSchema
         public string[] UniqueProperties => new[] { "CodFuncion"}; //  CodCategoria es unico
         public virtual ICollection<MEC_POF>? POFs { get; set; } = new List<MEC_POF>();
 
+        public virtual ICollection<MEC_MovimientosDetalle> MovimientosDetalle { get; set; }
     }
 }

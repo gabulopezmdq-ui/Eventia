@@ -27,5 +27,6 @@ namespace API.DataSchema
         public virtual ICollection<MEC_POFDetalle>? POFDetalle { get; set; } = new List<MEC_POFDetalle>();
 
         public virtual ICollection<MEC_POFDetalle>? POFSuplencia { get; set; } = new List<MEC_POFDetalle>();
+        public virtual ICollection<MEC_MovimientosDetalle> MovimientosDetalle { get; set; }
     }
 }
