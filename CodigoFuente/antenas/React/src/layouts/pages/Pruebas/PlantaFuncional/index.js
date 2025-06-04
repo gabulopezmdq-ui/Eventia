@@ -228,7 +228,7 @@ function PlantaFuncional() {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}pof/POFPersona`,
+        `${process.env.REACT_APP_API_URL}POF/POFPersona`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -302,7 +302,7 @@ function PlantaFuncional() {
     }
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}pof/RegistrarPOF`,
+        `${process.env.REACT_APP_API_URL}POF/RegistrarPOF`,
         {
           ...pofFormData,
           idEstablecimiento: selectedEstablecimiento,
