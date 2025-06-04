@@ -372,9 +372,12 @@ function ProcesarArchivoImportado() {
   const handleGenerateGroupedErrorsPDF = async () => {
     try {
       // 1. Obtener los datos directamente desde la API
-      const response = await axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        process.env.REACT_APP_API_URL + "TMPErrores/GetErroresAgrupados",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const apiData = response.data;
       // 2. Verificar si hay datos
       if (!apiData || apiData.length === 0) {
