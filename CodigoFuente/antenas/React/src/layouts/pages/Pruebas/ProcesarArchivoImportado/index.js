@@ -99,25 +99,25 @@ function ProcesarArchivoImportado() {
 
     try {
       const responses = await Promise.all([
-        axios.get(process.env.REACT_APP_API_URL + "GetAllCarRevista", {
+        axios.get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllCarRevista", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(process.env.REACT_APP_API_URL + "GetAllConceptos", {
+        axios.get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllConceptos", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(process.env.REACT_APP_API_URL + "GetAllEstablecimientos", {
+        axios.get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllEstablecimientos", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(process.env.REACT_APP_API_URL + "GetAllFunciones", {
+        axios.get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllFunciones", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(process.env.REACT_APP_API_URL + "GetAllMecanizadas", {
+        axios.get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllMecanizadas", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(process.env.REACT_APP_API_URL + "GetAllTipoEst", {
+        axios.get(process.env.REACT_APP_API_URL + "TMPErrores/GetAllTipoEst", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(process.env.REACT_APP_API_URL + "GetErroresAgrupados", {
+        axios.get(process.env.REACT_APP_API_URL + "TMPErrores/GetErroresAgrupados", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
