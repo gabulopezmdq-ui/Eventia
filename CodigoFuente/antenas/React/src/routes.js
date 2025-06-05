@@ -19,6 +19,7 @@ import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImpor
 import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
 import ListadoMotivosBajas from "layouts/pages/Pruebas/MotivoBaja/index";
 import ListadoTiposMovimientos from "layouts/pages/Pruebas/TiposMovimientos/index";
+import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
 
 const routes = [
   {
@@ -77,6 +78,21 @@ const routes = [
         key: "plantaFuncional",
         route: "/PlantaFuncionalFE",
         component: <PlantaFuncional />,
+      },
+    ],
+  },
+  { type: "divider", key: "divider-3" },
+  {
+    type: "collapse",
+    icon: <Icon>sync_alt</Icon>,
+    name: "Movimientos",
+    key: "movimientos",
+    collapse: [
+      {
+        name: "Cabeceras Movimientos",
+        key: "cabecerasMovimientos",
+        route: "/CabeceraMovimientos",
+        component: <CabeceraMovimientos />,
       },
     ],
   },
