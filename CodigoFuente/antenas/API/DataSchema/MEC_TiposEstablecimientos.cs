@@ -11,5 +11,6 @@ namespace API.DataSchema
         public string Vigente { get; set; }
         public string[] UniqueProperties => new[] { "CodTipoEstablecimiento" }; //  CodCategoria es unico
         public virtual ICollection<MEC_Establecimientos>? Establecimientos { get; set; } = new List<MEC_Establecimientos>();
+        public virtual ICollection<MEC_MovimientosBaja>? MovimientosBaja { get; set; } = new List<MEC_MovimientosBaja>();
     }
 }
