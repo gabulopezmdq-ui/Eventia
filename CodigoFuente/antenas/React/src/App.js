@@ -52,6 +52,8 @@ import MotivoBaja from "layouts/pages/Pruebas/MotivoBaja";
 import AltaMotivoBaja from "layouts/pages/Pruebas/MotivoBaja/AltaMotivoBaja";
 import TipoMovimiento from "layouts/pages/Pruebas/TiposMovimientos";
 import AltaTipoMovimiento from "layouts/pages/Pruebas/TiposMovimientos/AltaTipoMovimientos";
+import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
+import AltaCabeceraMovimiento from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -266,6 +268,10 @@ export default function App() {
       path: "/ImportarFE",
       component: Importar,
     },
+    {
+      path: "/CabeceraMovimientos",
+      component: CabeceraMovimientos,
+    },
     //----------------------------------Rutas de Ver mas
     {
       path: "/VerCabeceraLiquidacionFE/:id",
@@ -404,6 +410,10 @@ export default function App() {
     {
       path: "/TipoMovimientoFE/Nuevo",
       component: AltaTipoMovimiento,
+    },
+    {
+      path: "/CabeceraMovimientos/Nuevo",
+      component: AltaCabeceraMovimiento,
     },
   ];
 
