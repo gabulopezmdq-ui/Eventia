@@ -7,7 +7,7 @@ namespace API.Services
 {
     public interface IMovimientosService
     {
-        Task<SuplenteResultadoDTO?> BuscarSuplente(string numDoc);
+        Task<MEC_MovimientosDetalle> BuscarSuplente(string numDoc);
 
     }
 }

@@ -20,7 +20,7 @@ namespace API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<SuplenteResultadoDTO?> BuscarSuplente(string numDoc)
+        public async Task<MEC_MovimientosDetalle> BuscarSuplente(string numDoc)
         {
             if (string.IsNullOrWhiteSpace(numDoc))
                 return null;
@@ -32,11 +32,10 @@ namespace API.Services
             if (suplente == null)
                 return null;
 
-            return new SuplenteResultadoDTO
+            return new MEC_MovimientosDetalle
             {
                 Apellido = suplente.Apellido,
-                Nombre = suplente.Nombre,
-                SoloLectura = true
+                Nombre = suplente.Nombre
             };
         }
     }
