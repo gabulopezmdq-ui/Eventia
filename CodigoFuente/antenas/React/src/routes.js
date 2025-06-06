@@ -19,6 +19,7 @@ import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImpor
 import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
 import ListadoMotivosBajas from "layouts/pages/Pruebas/MotivoBaja/index";
 import ListadoTiposMovimientos from "layouts/pages/Pruebas/TiposMovimientos/index";
+import Bajas from "layouts/pages/Pruebas/Bajas";
 
 const routes = [
   {
@@ -104,6 +105,12 @@ const routes = [
         key: "UsuariosEstablecimientos",
         route: "/UsuariosEstablecimientosFE",
         component: <UsuariosEstablecimientos />,
+      },
+      {
+        name: "Bajas",
+        key: "Bajas",
+        route: "/BajasFE",
+        component: <Bajas />,
       },
     ],
   },
