@@ -16,13 +16,32 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_MovimientosCabecera> _serviceGenerico;
+        private readonly IMovimientosService _movimientosDetalle;
 
-        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosCabecera> logger, ICRUDService<MEC_MovimientosCabecera> serviceGenerico)
+        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosCabecera> logger, ICRUDService<MEC_MovimientosCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
+            _movimientosDetalle = movimientosDetalle;
         }
-        
+
+        [HttpGet("BuscarSuplente")]
+        public async Task<IActionResult> BuscarSuplente([FromQuery] string numDoc)
+        {
+            var resultado = await _movimientosDetalle.BuscarSuplente(numDoc);
+
+            if (resultado == null)
+            {
+                return Conflict(new
+                {
+                    status = 404,
+                    mensaje = "No se encontró un suplente con SitRevista 21. No se puede continuar con el proceso."
+                });
+            }
+
+            return Ok(resultado);
+        }
+
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_MovimientosCabecera>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
