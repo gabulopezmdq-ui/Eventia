@@ -12,23 +12,30 @@ import {
   FormControlLabel,
   TextField,
 } from "@mui/material";
+import DataTable from "examples/Tables/DataTable";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
+import AgregarDetalle from "./AgregarDetalle";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 function AltaCabeceraMovimientos() {
   const { id } = useParams();
   const [establecimientos, setEstablecimientos] = useState([]);
+  const [detalles, setDetalles] = useState([]);
+  const [mostrarFormularioDetalle, setMostrarFormularioDetalle] = useState(true);
   const [formData, setFormData] = useState({
-    Area: "",
+    Area: "L",
     Mes: "",
     Anio: new Date().getFullYear().toString(),
     EstablecimientoId: "",
     Accion: [],
-    Estado: "",
+    Estado: "P",
   });
+  const [mostrarDetalle, setMostrarDetalle] = useState(false);
+  const [formDeshabilitado, setFormDeshabilitado] = useState(false);
+  const token = sessionStorage.getItem("token");
 
   const areaOptions = [
     { label: "LIQUIDACIONES", value: "L" },
@@ -61,16 +68,13 @@ function AltaCabeceraMovimientos() {
 
   const estados = [
     { label: "Pendiente", value: "P" },
-    { label: "Cancelado", value: "C" },
-    { label: "Success", value: "S" },
+    { label: "Enviado", value: "E" },
   ];
-
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
-        const res = await axios.get("/Establecimientos", {
+        const res = await axios.get(process.env.REACT_APP_API_URL + "Establecimientos/GetAll", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setEstablecimientos(res.data);
@@ -95,23 +99,134 @@ function AltaCabeceraMovimientos() {
     }));
   };
 
-  const handleSubmit = async () => {
+  /*const handleSubmit = async () => {
+    const { Accion, ...resto } = formData;
+
+    const payload = {
+      ...resto,
+      Altas: Accion.includes("A") ? "A" : null,
+      Bajas: Accion.includes("B") ? "B" : null,
+      Modificaciones: Accion.includes("M") ? "M" : null,
+      Adicionales: Accion.includes("D") ? "D" : null,
+    };
+
     try {
-      const payload = {
-        ...formData,
-        Accion: formData.Accion.join(""),
-      };
+      const response = await axios.post(
+        process.env.REACT_APP_API_URL + "MovimientosCabecera",
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      await axios.post("/CabeceraMovimientos", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      alert("Enviado correctamente");
+      alert("Alta exitosa");
+      setFormDeshabilitado(true);
+      setMostrarDetalle(true);
     } catch (err) {
-      console.error("Error al guardar", err);
+      if (err.response?.status === 404) {
+        alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
+      } else {
+        console.error("Error al guardar", err);
+        alert("Error al guardar");
+      }
+    }
+  };*/
+  const handleSubmit = async () => {
+    const { Accion, ...resto } = formData;
+
+    const payload = {
+      ...resto,
+      Altas: Accion.includes("A") ? "A" : null,
+      Bajas: Accion.includes("B") ? "B" : null,
+      Modificaciones: Accion.includes("M") ? "M" : null,
+      Adicionales: Accion.includes("D") ? "D" : null,
+    };
+
+    try {
+      // Simulación de espera y éxito
+      await new Promise((res) => setTimeout(res, 500)); // simulás el "delay"
+      const response = { status: 200, data: false }; // falso: no existe repetido
+
+      if (response.status === 200) {
+        if (response.data === true) {
+          alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
+          return;
+        }
+
+        alert("Alta exitosa");
+        setFormDeshabilitado(true);
+        setMostrarDetalle(true);
+      }
+    } catch (err) {
+      console.error("Error al guardar (mock)", err);
       alert("Error al guardar");
     }
   };
+
+  /*const handleDetalleSubmit = async (detalleData) => {
+    try {
+      const payload = {
+        ...detalleData,
+        idCabecera: formData,
+      };
+
+      const response = await axios.post(
+        process.env.REACT_APP_API_URL + "Movimientos/AgregoDetalle",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Detalle guardado correctamente");
+      } else {
+        alert("No se pudo guardar el detalle");
+      }
+    } catch (error) {
+      console.error("Error al guardar el detalle:", error);
+      alert("Ocurrió un error al guardar el detalle");
+    }
+  };*/
+  const handleDetalleSubmit = async (detalleData) => {
+    try {
+      const payload = {
+        ...detalleData,
+        idCabecera: formData, // esto depende de cómo el backend espera el ID
+      };
+
+      // Simulás el post o hacés la petición real
+      // const response = await axios.post(...);
+
+      // Simulación de éxito
+      console.log("Simulando guardado exitoso:", payload);
+      setDetalles((prev) => [...prev, payload]); // lo agregás a la tabla
+
+      alert("Detalle guardado correctamente");
+
+      // ✅ Ocultás el formulario
+      setMostrarFormularioDetalle(false);
+    } catch (error) {
+      console.error("Error al guardar el detalle:", error);
+      alert("Ocurrió un error al guardar el detalle");
+    }
+  };
+
+  useEffect(() => {
+    const fetchDetalles = async () => {
+      try {
+        // const res = await axios.get(process.env.REACT_APP_API_URL + "MovimientosCabecera/GetByVigente", {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // });
+        // setDetalles(res.data);
+        // Simulación temporal:
+      } catch (err) {
+        console.error("Error al cargar detalles", err);
+      }
+    };
+
+    fetchDetalles();
+  }, []);
 
   return (
     <DashboardLayout>
@@ -120,7 +235,7 @@ function AltaCabeceraMovimientos() {
         <Card>
           <Grid container spacing={3} p={2}>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Área</InputLabel>
                 <Select
                   name="Area"
@@ -138,7 +253,8 @@ function AltaCabeceraMovimientos() {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={formDeshabilitado}>
+                <InputLabel>Mes</InputLabel>
                 <Select
                   name="Mes"
                   value={formData.Mes}
@@ -158,26 +274,25 @@ function AltaCabeceraMovimientos() {
               <TextField
                 fullWidth
                 name="Anio"
-                label="Año"
                 type="number"
-                inputProps={{ min: 1900, max: 2100 }}
+                disabled={formDeshabilitado}
                 value={formData.Anio}
                 onChange={handleInputChange}
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={formDeshabilitado}>
+                <InputLabel>Establecimiento</InputLabel>
                 <Select
-                  name="Establecimiento"
-                  label="Establecimiento"
+                  name="EstablecimientoId"
                   value={formData.EstablecimientoId}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
                   {establecimientos.map((e) => (
-                    <MenuItem key={e.id} value={e.id}>
-                      {e.nombre}
+                    <MenuItem key={e.idEstablecimiento} value={e.idEstablecimiento}>
+                      {e.nombrePcia}
                     </MenuItem>
                   ))}
                 </Select>
@@ -192,6 +307,7 @@ function AltaCabeceraMovimientos() {
                     control={
                       <Checkbox
                         value={accion.value}
+                        disabled={formDeshabilitado}
                         checked={formData.Accion.includes(accion.value)}
                         onChange={handleCheckboxChange}
                       />
@@ -208,8 +324,8 @@ function AltaCabeceraMovimientos() {
                 <Select
                   name="Estado"
                   value={formData.Estado}
-                  onChange={handleInputChange}
-                  style={{ height: "2.8rem", backgroundColor: "white" }}
+                  style={{ height: "2.8rem", backgroundColor: "#e9e9e9" }}
+                  disabled
                 >
                   {estados.map((e) => (
                     <MenuItem key={e.value} value={e.value}>
@@ -221,15 +337,62 @@ function AltaCabeceraMovimientos() {
             </Grid>
           </Grid>
 
-          <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
-            <MDButton variant="contained" color="info" size="small" onClick={handleSubmit}>
-              Guardar Cambios
+          {!formDeshabilitado && (
+            <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
+              <MDButton variant="contained" color="info" size="small" onClick={handleSubmit}>
+                Guardar
+              </MDButton>
+            </MDBox>
+          )}
+        </Card>
+        {mostrarDetalle && mostrarFormularioDetalle && (
+          <MDBox mt={3} px={3}>
+            <AgregarDetalle idCabecera={formData} onSubmit={handleDetalleSubmit} />
+          </MDBox>
+        )}
+        {!mostrarFormularioDetalle && (
+          <MDBox mt={2} px={3} display="flex" justifyContent="flex-end">
+            <MDButton
+              variant="contained"
+              color="success"
+              size="small"
+              onClick={() => setMostrarFormularioDetalle(true)}
+            >
+              Nuevo Detalle
             </MDButton>
           </MDBox>
-        </Card>
+        )}
+        {detalles.length > 0 && (
+          <MDBox mt={3}>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "DNI", accessor: "dni" },
+                    { Header: "SEC", accessor: "sec" },
+                    { Header: "Apellido", accessor: "apellido" },
+                    { Header: "Nombre", accessor: "nombre" },
+                    { Header: "SitRev", accessor: "situacionRevista" },
+                    { Header: "T Doc", accessor: "tipoDocumento" },
+                    { Header: "Función", accessor: "funcion" },
+                    { Header: "Rural", accessor: "rural" },
+                    { Header: "Turno", accessor: "turno" },
+                    { Header: "Cat", accessor: "categoria" },
+                    { Header: "Hs", accessor: "horas" },
+                    { Header: "Años", accessor: "antigAnos" },
+                    { Header: "Meses", accessor: "antigMeses" },
+                  ],
+                  rows: detalles,
+                }}
+                entriesPerPage={false}
+                canSearch
+                showTotalEntries={false}
+              />
+            </Card>
+          </MDBox>
+        )}
       </MDBox>
     </DashboardLayout>
   );
 }
-
 export default AltaCabeceraMovimientos;
