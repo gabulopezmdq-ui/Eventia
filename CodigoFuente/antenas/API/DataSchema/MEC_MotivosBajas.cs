@@ -10,5 +10,6 @@ namespace API.DataSchema
         public string MotivoBaja { get; set; }
         public string Vigente { get; set; }
         public virtual ICollection<MEC_BajasDetalle>? BajasDetalle { get; set; } = new List<MEC_BajasDetalle>();
+        public virtual ICollection<MEC_MovimientosBaja>? MovimientosBaja { get; set; } = new List<MEC_MovimientosBaja>();
     }
 }

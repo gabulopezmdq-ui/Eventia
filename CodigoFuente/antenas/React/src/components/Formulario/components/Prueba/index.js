@@ -90,6 +90,8 @@ function Prueba({ formData = {}, handleChange, fields = [] }) {
                     name={field.name}
                     formData={formData}
                     handleChange={handleChange}
+                    readOnly={field.readOnly || false}
+                    disabled={field.disabled || false}
                   />
                 )}
               </Grid>
