@@ -11,6 +11,7 @@ import PropTypes from "prop-types";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
+import GeneradorPDF from "./GeneradorPDF";
 import "../../Pruebas/pruebas.css";
 
 function CabeceraMovimientos() {
@@ -20,7 +21,7 @@ function CabeceraMovimientos() {
   const [dataTableData, setDataTableData] = useState([]);
   const token = sessionStorage.getItem("token");
 
-  useEffect(() => {
+  /*useEffect(() => {
     fetchConceptos();
   }, []);
 
@@ -54,10 +55,57 @@ function CabeceraMovimientos() {
           });
         }
       });
-  };
+  };*/
+  useEffect(() => {
+    // Simulación de datos en lugar del fetch
+    const fakeData = [
+      {
+        area: "Recursos Humanos",
+        año: 2024,
+        mes: "Junio",
+        establecimiento: "Hospital Central",
+        estado: "Enviado",
+      },
+      {
+        area: "Contabilidad",
+        año: 2023,
+        mes: "Mayo",
+        establecimiento: "Clínica Sur",
+        estado: "Pendiente",
+      },
+      {
+        area: "Mantenimiento",
+        año: 2024,
+        mes: "Abril",
+        establecimiento: "Centro de Salud Norte",
+        estado: "Enviado",
+      },
+      {
+        area: "Administración",
+        año: 2022,
+        mes: "Diciembre",
+        establecimiento: "Hospital Este",
+        estado: "Finalizado",
+      },
+    ];
+    setDataTableData(fakeData);
+  }, []);
 
   const handleNuevoMovimiento = () => {
     navigate("/CabeceraMovimientos/Nuevo");
+  };
+
+  const handleImprimir = async (movimiento) => {
+    try {
+      console.log("Entre a handleImprimir");
+      await GeneradorPDF.generar(movimiento);
+    } catch (error) {
+      setErrorAlert({
+        show: true,
+        message: "Error al generar el PDF",
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -87,23 +135,24 @@ function CabeceraMovimientos() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Area", accessor: "" },
-                  { Header: "Año", accessor: "" },
-                  { Header: "Mes", accessor: "" },
-                  { Header: "Establecimiento", accessor: "" },
-                  { Header: "Estado", accessor: "" },
+                  { Header: "Area", accessor: "area" },
+                  { Header: "Año", accessor: "año" },
+                  { Header: "Mes", accessor: "mes" },
+                  { Header: "Establecimiento", accessor: "establecimiento" },
+                  { Header: "Estado", accessor: "estado" },
                   {
-                    Header: "Editar",
-                    accessor: "edit",
-                    Cell: ({ row }) => (
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        onClick={() => handleEditarConceptos(row.original.idConcepto)}
-                      >
-                        Editar
-                      </MDButton>
-                    ),
+                    Header: "Acciones",
+                    accessor: "acciones",
+                    Cell: ({ row }) =>
+                      row.original.estado === "Enviado" && (
+                        <MDButton
+                          variant="gradient"
+                          color="info"
+                          onClick={() => handleImprimir(row.original)}
+                        >
+                          Imprimir
+                        </MDButton>
+                      ),
                   },
                 ],
                 rows: dataTableData,
