@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class MEC_MovimientosBajaConfiguration : IEntityTypeConfiguration<MEC_MovimientosBaja>
+    public class MEC_MovimientosBajasConfiguration : IEntityTypeConfiguration<MEC_MovimientosBajas>
     {
-        public void Configure(EntityTypeBuilder<MEC_MovimientosBaja> builder)
+        public void Configure(EntityTypeBuilder<MEC_MovimientosBajas> builder)
         {
             builder
                 .HasKey(k => k.IdMovimientoBaja);

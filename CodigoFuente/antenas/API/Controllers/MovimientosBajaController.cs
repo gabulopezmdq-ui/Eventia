@@ -9,41 +9,41 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin")]
-    //[AllowAnonymous]
+    //[Authorize(Roles = "SuperAdmin, Admin")]
+    [AllowAnonymous]
     [Route("[controller]")]
     public class MovimientosBajaController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly ICRUDService<MEC_MovimientosBaja> _serviceGenerico;
+        private readonly ICRUDService<MEC_MovimientosBajas> _serviceGenerico;
 
-        public MovimientosBajaController(DataContext context, ILogger<MEC_MovimientosBaja> logger, ICRUDService<MEC_MovimientosBaja> serviceGenerico)
+        public MovimientosBajaController(DataContext context, ILogger<MEC_MovimientosBajas> logger, ICRUDService<MEC_MovimientosBajas> serviceGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_MovimientosBaja>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_MovimientosBajas>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
         [HttpGet("GetByVigente")]
-        public async Task<ActionResult<IEnumerable<MEC_MovimientosBaja>>> GetByVigente([FromQuery] string vigente = null)
+        public async Task<ActionResult<IEnumerable<MEC_MovimientosBajas>>> GetByVigente([FromQuery] string vigente = null)
         {
             var result = await _serviceGenerico.GetByVigente(vigente);
             return Ok(result);
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<MEC_MovimientosBaja>> Get(int Id)
+        public async Task<ActionResult<MEC_MovimientosBajas>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromBody] MEC_MovimientosBaja baja)
+        public async Task<ActionResult> Post([FromBody] MEC_MovimientosBajas baja)
         {
             await _serviceGenerico.Add(baja);
             return Ok(baja);
@@ -57,7 +57,7 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<MEC_MovimientosBaja>> Update([FromBody] MEC_MovimientosBaja baja)
+        public async Task<ActionResult<MEC_MovimientosBajas>> Update([FromBody] MEC_MovimientosBajas baja)
         {
             await _serviceGenerico.Update(baja);
             return Ok(baja);
