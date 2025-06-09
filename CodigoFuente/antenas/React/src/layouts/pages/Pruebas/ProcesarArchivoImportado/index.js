@@ -633,9 +633,9 @@ function ProcesarArchivoImportado() {
             show
           />
           <Grid container justifyContent="center" sx={{ mt: 2 }}>
-            <MDButton variant="contained" color="warning" onClick={handleGenerateGridPDF}>
+            {/*<MDButton variant="contained" color="warning" onClick={handleGenerateGridPDF}>
               {loadingErrors ? "Cargando..." : "Ver errores"}
-            </MDButton>
+            </MDButton>*/}
             <MDButton variant="contained" color="warning" onClick={handleGenerateGroupedErrorsPDF}>
               {loadingErrors ? "Cargando..." : "Ver errores agrupados"}
             </MDButton>
