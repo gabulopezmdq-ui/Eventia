@@ -48,7 +48,7 @@ namespace API.DataSchema
         public DbSet<MEC_MotivosBajasDoc> MEC_TiposMovimientos { get; set; }
         public DbSet<MEC_MovimientosCabecera> MEC_MovimientosCabecera { get; set; }
         public DbSet<MEC_MovimientosDetalle> MEC_MovimientosDetalle { get; set; }
-        public DbSet<MEC_MovimientosBaja> MEC_MovimientosBaja { get; set; }
+        public DbSet<MEC_MovimientosBajas> MEC_MovimientosBajas { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
@@ -85,7 +85,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_TiposMovimientosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_MovimientosCabeceraConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_MovimientosDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosBajaConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_MovimientosBajasConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }
