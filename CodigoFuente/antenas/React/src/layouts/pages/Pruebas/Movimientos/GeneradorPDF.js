@@ -10,16 +10,12 @@ const generar = async () => {
   const { width, height } = page.getSize();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontSize = 8;
-  // 1. AGREGAR EL LOGO (NUEVO)
-  // Cargar la imagen y convertirla a Uint8Array
+  //AGREGAR EL LOGO (NUEVO)
   const response = await fetch(logo);
   const imageBytes = await response.arrayBuffer();
   const image = await pdfDoc.embedPng(imageBytes);
-  // Reducir la imagen al 50%
   const logoWidth = image.width * 0.7;
   const logoHeight = image.height * 0.7;
-
-  // Dibujar el logo centrado en la parte superior
   page.drawImage(image, {
     x: width - logoWidth - 40, // eje horizontal
     y: height - 50, // Posición vertical (ajustar según necesidad)
@@ -178,11 +174,75 @@ const generar = async () => {
     font,
   });
 
+  const DocumentoTitulo = "Documento de Identidad";
+  page.drawText(DocumentoTitulo, {
+    x: 65,
+    y: infoBoxY - 105,
+    size: fontSize,
+    font,
+  });
+
+  const LeyendaTitulo = "Según anterior planilla de haberes.";
+  page.drawText(LeyendaTitulo, {
+    x: 57,
+    y: infoBoxY - 83,
+    size: fontSize,
+    font,
+  });
+
+  const TituloSitRevista = "Sit. Revista";
+  const fontSit = 7;
+  page.drawText(TituloSitRevista, {
+    x: regionBoxX + 3,
+    y: infoBoxY - 113,
+    size: fontSit,
+    font,
+    rotate: degrees(90),
+  });
+
+  const TituloRow2 = "Apelido y Nombres.";
+  page.drawText(TituloRow2, {
+    x: 215,
+    y: infoBoxY - 98,
+    size: fontSize,
+    font,
+  });
+
   page.drawText("DIEGEP", {
     x: 480,
     y: infoBoxY - 25,
     size: fontSize,
     font,
+  });
+
+  page.drawText("FUNCION", {
+    x: 468,
+    y: infoBoxY - 113,
+    size: fontSize,
+    font,
+    rotate: degrees(90),
+  });
+  page.drawText("RURAL", {
+    x: 490,
+    y: infoBoxY - 108,
+    size: fontSize,
+    font,
+    rotate: degrees(90),
+  });
+  page.drawText("TURNO", {
+    x: 512,
+    y: infoBoxY - 108,
+    size: fontSize,
+    font,
+    rotate: degrees(90),
+  });
+  const fontCat = 6;
+  page.drawText("CATEGORIA", {
+    x: 533,
+    y: infoBoxY - 112,
+    size: fontCat,
+    font,
+    rotate: degrees(90),
   });
 
   page.drawText("Porcentaje: 100%", {
