@@ -17,10 +17,10 @@ namespace API.Controllers
     public class CabeceraLiquidacionController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly IMovimientosService _cabeceraService;
+        private readonly ICabeceraLiquidacionService _cabeceraService;
         private readonly ICRUDService<MEC_CabeceraLiquidacion> _serviceGenerico;
 
-        public CabeceraLiquidacionController(DataContext context, ILogger<CabeceraLiquidacionController> logger, IMovimientosService cabeceraService, ICRUDService<MEC_CabeceraLiquidacion> serviceGenerico)
+        public CabeceraLiquidacionController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraLiquidacionService cabeceraService, ICRUDService<MEC_CabeceraLiquidacion> serviceGenerico)
         {
             _context = context;
             _cabeceraService = cabeceraService;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace API.DataSchema
 {
-    public class MEC_MovimientosBaja
+    public class MEC_MovimientosBajas
     {
     
         public int IdMovimientoBaja { get; set; }
