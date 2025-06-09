@@ -52,6 +52,8 @@ import MotivoBaja from "layouts/pages/Pruebas/MotivoBaja";
 import AltaMotivoBaja from "layouts/pages/Pruebas/MotivoBaja/AltaMotivoBaja";
 import TipoMovimiento from "layouts/pages/Pruebas/TiposMovimientos";
 import AltaTipoMovimiento from "layouts/pages/Pruebas/TiposMovimientos/AltaTipoMovimientos";
+import Bajas from "layouts/pages/Pruebas/Bajas";
+import AltaRegistroBaja from "layouts/pages/Pruebas/Bajas/AltaRegistroBaja";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -266,6 +268,10 @@ export default function App() {
       path: "/ImportarFE",
       component: Importar,
     },
+    {
+      path: "/BajasFE",
+      component: Bajas,
+    },
     //----------------------------------Rutas de Ver mas
     {
       path: "/VerCabeceraLiquidacionFE/:id",
@@ -404,6 +410,10 @@ export default function App() {
     {
       path: "/TipoMovimientoFE/Nuevo",
       component: AltaTipoMovimiento,
+    },
+    {
+      path: "/BajasFE/Nuevo",
+      component: AltaRegistroBaja,
     },
   ];
 
