@@ -296,9 +296,10 @@ const generar = async () => {
     currentX += columnWidths[i];
   }
 
-  /*ROW DE LA TABLA*/
+  // Primera row
   const rowBoxHeight = 40;
   const rowBoxY = columnBoxY - columnBoxHeight;
+
   page.drawRectangle({
     x: 50,
     y: rowBoxY - rowBoxHeight,
@@ -307,6 +308,8 @@ const generar = async () => {
     borderColor: rgb(0, 0, 0),
     borderWidth: 0.3,
   });
+
+  // Líneas verticales entre columnas
   currentX = 50;
   for (let i = 0; i < columnWidths.length - 1; i++) {
     currentX += columnWidths[i];
@@ -317,6 +320,39 @@ const generar = async () => {
       color: rgb(0, 0, 0),
     });
   }
+
+  // 🔹 División horizontal en columna 1 (20% / 80%)
+  const col1Width = columnWidths[0];
+  const col1X = 50;
+  const divisionY = rowBoxY - rowBoxHeight * 0.3;
+
+  page.drawLine({
+    start: { x: col1X, y: divisionY },
+    end: { x: col1X + col1Width, y: divisionY },
+    thickness: 0.3,
+    color: rgb(0, 0, 0),
+  });
+
+  // 🔹 División vertical dentro del 80% (parte inferior de la celda)
+  const verticalSplitX = col1X + col1Width * 0.85; // mitad de la columna
+  page.drawLine({
+    start: { x: verticalSplitX, y: rowBoxY - rowBoxHeight },
+    end: { x: verticalSplitX, y: divisionY },
+    thickness: 0.3,
+    color: rgb(0, 0, 0),
+  });
+  const col3StartX = 50 + columnWidths.slice(0, 2).reduce((acc, val) => acc + val, 0); // Inicio de columna 3
+  const col3Width = columnWidths[2];
+  const divisionCol3X = col3StartX + col3Width * 0.2;
+
+  page.drawLine({
+    start: { x: divisionCol3X, y: rowBoxY },
+    end: { x: divisionCol3X, y: rowBoxY - rowBoxHeight },
+    thickness: 0.3,
+    color: rgb(0, 0, 0),
+  });
+
+  //3 Row "finita con numeros"
   const secondRowBoxHeight = 15;
   const secondRowBoxY = rowBoxY - rowBoxHeight;
   page.drawLine({
@@ -325,16 +361,12 @@ const generar = async () => {
     thickness: 0.3,
     color: rgb(0, 0, 0),
   });
-
-  // Línea izquierda del recuadro
   page.drawLine({
     start: { x: 50, y: secondRowBoxY },
     end: { x: 50, y: secondRowBoxY - secondRowBoxHeight },
     thickness: 0.3,
     color: rgb(0, 0, 0),
   });
-
-  // Línea derecha del recuadro
   page.drawLine({
     start: { x: 50 + columnBoxWidth, y: secondRowBoxY },
     end: { x: 50 + columnBoxWidth, y: secondRowBoxY - secondRowBoxHeight },
@@ -351,13 +383,137 @@ const generar = async () => {
       color: rgb(0, 0, 0),
     });
   }
+  // Divisiones internas en la columna 3 (Altas y Adicionales)
+  const columna3InicioX = 50 + columnWidths.slice(0, 2).reduce((acc, val) => acc + val, 0);
+  const columna3Ancho = columnWidths[2];
+
+  // Proporciones: 40% (mediano), 20% (chico), 40% (resto)
+  const proporciones = [0.2, 0.1, 0.7];
+  const subdivisionesX = [
+    columna3InicioX + columna3Ancho * proporciones[0],
+    columna3InicioX + columna3Ancho * (proporciones[0] + proporciones[1]),
+  ];
+
+  for (let x of subdivisionesX) {
+    page.drawLine({
+      start: { x, y: secondRowBoxY },
+      end: { x, y: secondRowBoxY - secondRowBoxHeight },
+      thickness: 0.3,
+      color: rgb(0, 0, 0),
+    });
+  }
+  // --- Aquí agregamos la división vertical para la columna 1 ---
+  const columna1InicioX = 50;
+  const columna1Ancho = columnWidths[0];
+  const division75 = columna1InicioX + columna1Ancho * 0.85;
+
+  page.drawLine({
+    start: { x: division75, y: secondRowBoxY },
+    end: { x: division75, y: secondRowBoxY - secondRowBoxHeight },
+    thickness: 0.3,
+    color: rgb(0, 0, 0),
+  });
+  //Rows 3,4,5,6
+  const col4StartX = 50 + columnWidths.slice(0, 3).reduce((a, b) => a + b, 0);
+  const col4Width = columnWidths[3];
+  const numSubdivisiones = 8;
+  const subWidth = col4Width / numSubdivisiones;
+
+  const row1TopY = rowBoxY;
+  const row1BottomY = rowBoxY - rowBoxHeight;
+
+  const row2TopY = secondRowBoxY;
+  const row2BottomY = secondRowBoxY - secondRowBoxHeight;
+
+  for (let i = 1; i < numSubdivisiones; i++) {
+    const x = col4StartX + subWidth * i;
+
+    // Subdivisiones fila 1 (recuadro principal)
+    page.drawLine({
+      start: { x, y: row1TopY },
+      end: { x, y: row1BottomY },
+      thickness: 0.3,
+      color: rgb(0, 0, 0),
+    });
+
+    // Subdivisiones fila 2 (debajo del recuadro)
+    page.drawLine({
+      start: { x, y: row2TopY },
+      end: { x, y: row2BottomY },
+      thickness: 0.3,
+      color: rgb(0, 0, 0),
+    });
+  }
   const numExtraRows = 4;
   const rowHeight = 50;
 
   // Empezamos desde la segunda fila, bajamos fila por fila
   for (let i = 1; i <= numExtraRows; i++) {
     const y = secondRowBoxY - rowHeight * i + 35;
-    // Línea inferior de la fila (para que quede como borde entre filas)
+    const columna1InicioX = 50;
+    const columna1Ancho = columnWidths[0];
+
+    // División vertical en columna 1: 75% y 25%
+    const division75 = columna1InicioX + columna1Ancho * 0.85;
+
+    // Dibujo línea vertical para dividir la columna 1
+    page.drawLine({
+      start: { x: division75, y: y },
+      end: { x: division75, y: y - rowHeight },
+      thickness: 0.3,
+      color: rgb(0, 0, 0),
+    });
+
+    // --- División horizontal en columna 2 ---
+    const columna2InicioX = 50 + columnWidths[0]; // Inicio columna 2
+    const columna2Ancho = columnWidths[1];
+    const mitadRowHeight = rowHeight / 2;
+    const yMitad = y - mitadRowHeight;
+
+    page.drawLine({
+      start: { x: columna2InicioX, y: yMitad },
+      end: { x: columna2InicioX + columna2Ancho, y: yMitad },
+      thickness: 0.3,
+      color: rgb(0, 0, 0),
+    });
+
+    // --- División vertical columna 3 ---
+    const columna3InicioX = 50 + columnWidths.slice(0, 2).reduce((acc, val) => acc + val, 0);
+    const columna3Ancho = columnWidths[2]; // Ancho de columna 3
+
+    const proporciones = [0.2, 0.1, 0.7];
+    const subdivisionesX = [
+      columna3InicioX + columna3Ancho * proporciones[0],
+      columna3InicioX + columna3Ancho * (proporciones[0] + proporciones[1]),
+    ];
+
+    for (let x of subdivisionesX) {
+      page.drawLine({
+        start: { x, y: y },
+        end: { x, y: y - rowHeight },
+        thickness: 0.3,
+        color: rgb(0, 0, 0),
+      });
+    }
+
+    // --- División vertical columna 4 ---
+    const columna4InicioX = 50 + columnWidths.slice(0, 3).reduce((acc, val) => acc + val, 0);
+    const columna4Ancho = columnWidths[3]; // 175
+    const subColumnas = 8;
+    const subAncho = columna4Ancho / subColumnas;
+
+    for (let k = 1; k < subColumnas; k++) {
+      const xSub = columna4InicioX + subAncho * k;
+
+      page.drawLine({
+        start: { x: xSub, y: y },
+        end: { x: xSub, y: y - rowHeight },
+        thickness: 0.3,
+        color: rgb(0, 0, 0),
+      });
+    }
+
+    // Línea inferior de la fila (borde entre filas)
     page.drawLine({
       start: { x: 50, y: y - rowHeight },
       end: { x: 50 + columnBoxWidth, y: y - rowHeight },
@@ -365,7 +521,7 @@ const generar = async () => {
       color: rgb(0, 0, 0),
     });
 
-    // Líneas laterales izquierda y derecha
+    // Líneas laterales izquierda y derecha de la fila
     page.drawLine({
       start: { x: 50, y: y },
       end: { x: 50, y: y - rowHeight },
@@ -379,7 +535,7 @@ const generar = async () => {
       color: rgb(0, 0, 0),
     });
 
-    // Divisiones internas verticales
+    // Líneas verticales entre columnas
     let currentX = 50;
     for (let j = 0; j < columnWidths.length - 1; j++) {
       currentX += columnWidths[j];
