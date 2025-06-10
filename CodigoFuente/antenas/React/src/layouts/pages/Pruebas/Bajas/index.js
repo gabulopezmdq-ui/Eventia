@@ -26,27 +26,43 @@ function Bajas() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
-  const [dataTableData, setDataTableData] = useState([]); // Arreglo vacío para evitar errores iniciales
+  const [dataTableBajaData, setDataTableBajaData] = useState([]); // Arreglo vacío para evitar errores iniciales
   const [activoFilter, setActivoFilter] = useState("S"); // Estado inicial para mostrar solo los vigentes
   const [allData, setAllData] = useState([]); // Almacena todos los datos sin filtrar
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    fetchMotivosBajass(); // Cargar los datos al montar el componente
+    fetchMotivosBajas(); // Cargar los datos al montar el componente
   }, []);
 
   // Función para obtener los datos desde la API
-  const fetchMotivosBajass = () => {
+  const fetchMotivosBajas = () => {
     axios
-      .get(process.env.REACT_APP_API_URL + "", {
+      .get(process.env.REACT_APP_API_URL + "MovimientosBaja/getall", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Datos recibidos del backend:", response.data); // Depuración: ver datos originales
-        setAllData(response.data); // Guardar todos los datos
-        filterData(response.data, "S"); // Filtrar solo vigentes al inicio
+        // Mapeo para adaptar los datos a lo que espera el DataTable
+        const mappedData = response.data.map((item) => ({
+          idMovimientoBaja: item.idMovimientoBaja,
+          descripcion: item.tipoEstablecimiento.descripcion, // Nivel
+          secuencia: item.pof.secuencia || "N/A", // Secuencia
+          apellido: `${item.pof.persona.apellido}, ${item.pof.persona.nombre}`,
+          dni: item.pof.persona.dni, // DNI
+          nroEstablecimiento: item.establecimiento.nroEstablecimiento, // Establecimiento
+          fechaInicio: item.fechaInicio ? item.fechaInicio.split("T")[0] : "N/A", //Inicio
+          fechaFin: item.fechaFin ? item.fechaFin.split("T")[0] : "N/A", //fin
+          cantHoras: item.cantHoras, //Cantidad horas
+          motivoBaja: item.motivoBajaDoc.motivoBaja, //Motivo baja
+          estado: item.estado,
+          ingreso: item.ingreso,
+          vigente: item.tipoEstablecimiento?.vigente ?? "S", // Para filtrar por vigentes/no vigentes
+        }));
+
+        setAllData(mappedData);
+        filterData(mappedData, "S"); // Mostrar solo vigentes al cargar
       })
       .catch((error) => {
         if (error.response) {
@@ -79,15 +95,14 @@ function Bajas() {
     } else {
       filteredData = data; // Todos los datos
     }
-    console.log("Datos filtrados:", filteredData); // Depuración: ver datos filtrados
-    setDataTableData(filteredData);
+    setDataTableBajaData(filteredData);
   };
 
-  // Maneja el cambio en el filtro de activo
+  // Maneja el cambio de filtro
   const handleFilterChange = (event) => {
     const filter = event.target.value;
-    setActivoFilter(filter); // Actualizar el estado del filtro
-    filterData(allData, filter); // Filtrar los datos según el valor seleccionado
+    setActivoFilter(filter);
+    filterData(allData, filter); // Aplicar el filtro a todos los datos
   };
 
   const handleNuevoRegistroBaja = () => {
@@ -95,18 +110,20 @@ function Bajas() {
   };
 
   const handleVer = (rowData) => {
-    if (rowData && rowData.idBajas) {
-      const productId = rowData.idBajas;
+    if (rowData && rowData.idMovimientoBaja) {
+      const productId = rowData.idMovimientoBaja;
       const url = `/BajasFE/${productId}`;
       navigate(url);
     } else {
-      console.error("El objeto rowData o su propiedad 'idBajas' no están definidos.");
+      console.error("El objeto rowData o su propiedad 'idMovimientoBaja' no están definidos.");
     }
   };
-  const handleEditarMotivosBajass = (idBajas) => {
-    const url = `/BajasFE/Edit/${idBajas}`;
+  const handleEditarMotivosBajass = (idMovimientoBaja) => {
+    const url = `/BajasFE/Edit/${idMovimientoBaja}`;
     navigate(url);
   };
+  {
+    /*}
   useEffect(() => {
     // Datos de prueba (mockData)
     const mockData = [
@@ -121,7 +138,7 @@ function Bajas() {
         motivo: "Licencia médica",
         estado: "Activo",
         ingreso: "2023-02-20",
-        idBajas: 1,
+        idMovimientoBaja: 1,
       },
       {
         Establec: "Escuela Nº 22",
@@ -134,12 +151,13 @@ function Bajas() {
         motivo: "Renuncia",
         estado: "Inactivo",
         ingreso: "2024-01-10",
-        idBajas: 2,
+        idMovimientoBaja: 2,
       },
     ];
 
     setDataTableData(mockData); // Cargar los datos mockeados
-  }, []);
+  }, []);*/
+  }
 
   const displayValue = (value) => (value ? value : "N/A");
 
@@ -147,8 +165,8 @@ function Bajas() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        {/*<MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
-          <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+        {/*Box display="flex" justifyContent="space-between" alignItems="center" my={2}>
+          <MDButton variant="gradient" color="success" onClick={handleNuevoRegistroBaja}>
             Agregar
           </MDButton>
           <MDBox
@@ -260,18 +278,15 @@ function Bajas() {
             <DataTableBaja
               table={{
                 columns: [
-                  {
-                    Header: "Nivel",
-                    Cell: () => "Secundario", // Mostrará "Secundario" en todas las filas
-                  },
-                  { Header: "Establec.", accessor: "Establec" },
-                  { Header: "DNI", accessor: "DNI" },
-                  { Header: "SEC", accessor: "SEC" },
-                  { Header: "Appellido, Nombre", accessor: "apellido" },
-                  { Header: "Inicio", accessor: "Inicio" },
-                  { Header: "Fin", accessor: "Fin" },
-                  { Header: "HS", accessor: "HS" },
-                  { Header: "Motivo", accessor: "motivo" },
+                  { Header: "Nivel", accessor: "descripcion" },
+                  { Header: "Establec.", accessor: "nroEstablecimiento" },
+                  { Header: "DNI", accessor: "dni" },
+                  { Header: "SEC", accessor: "secuencia" },
+                  { Header: "Apellido, Nombre", accessor: "apellido" },
+                  { Header: "Inicio", accessor: "fechaInicio" },
+                  { Header: "Fin", accessor: "fechaFin" },
+                  { Header: "HS", accessor: "cantHoras" },
+                  { Header: "Motivo", accessor: "motivoBaja" },
                   { Header: "Estado", accessor: "estado" },
                   { Header: "Ingreso", accessor: "ingreso" },
                   {
@@ -281,14 +296,14 @@ function Bajas() {
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleEditarMotivosBajass(row.original.idBajas)}
+                        onClick={() => handleEditarMotivosBajass(row.original.idMovimientoBaja)}
                       >
                         Editar
                       </MDButton>
                     ),
                   },
                 ],
-                rows: dataTableData,
+                rows: dataTableBajaData,
               }}
               entriesPerPage={false}
               canSearch
