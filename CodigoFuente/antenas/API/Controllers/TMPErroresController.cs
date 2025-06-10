@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-nfronamespace API.Controllers
+namespace API.Controllers
 {
     [ApiController]
     //[Authorize(Roles = "SuperAdmin, Admin")]
