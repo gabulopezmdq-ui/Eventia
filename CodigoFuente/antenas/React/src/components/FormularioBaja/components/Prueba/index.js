@@ -8,7 +8,7 @@
 
 Coded by www.creative-tim.com
 
- =========================================================
+=========================================================
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
@@ -18,21 +18,12 @@ import FormField from "../FormField";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import MDBox from "components/MDBox";
-import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
 import SelectField from "components/SelectField";
 import MDDatePicker from "components/MDDatePicker";
 import MDTypography from "components/MDTypography";
+
 function Prueba({ formData = {}, handleChange, fields = [] }) {
-  const initialFormData = { ...formData };
-
-  // Configurar los valores iniciales de los checkboxes si no existen en formData
-  fields.forEach((field) => {
-    if (field.type === "checkbox" && typeof initialFormData[field.name] === "undefined") {
-      initialFormData[field.name] = false;
-    }
-  });
-
   const handleCheckboxChange = (event) => {
     const { name, checked } = event.target;
     handleChange({ target: { name, value: checked } });
@@ -49,7 +40,7 @@ function Prueba({ formData = {}, handleChange, fields = [] }) {
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={initialFormData[field.name]}
+                        checked={formData[field.name] || false}
                         onChange={handleCheckboxChange}
                         name={field.name}
                       />
@@ -65,15 +56,11 @@ function Prueba({ formData = {}, handleChange, fields = [] }) {
                     optionField={field.optionField}
                     formData={formData}
                     handleChange={(e) => {
-                      // Interceptar cambio en idEstablecimiento
+                      // Lógica personalizada para ciertos campos
                       if (field.name === "idEstablecimiento") {
                         console.log("Establecimiento seleccionado:", e.target.value);
-
-                        // Aquí podés ejecutar lógica adicional
-                        // ejemplo: cargarDatosDependientes(e.target.value);
+                        // Acá podés cargar datos dependientes si hace falta
                       }
-
-                      // Siempre pasar el cambio al handler original
                       handleChange(e);
                     }}
                     customOptions={field.customOptions || []}
@@ -113,6 +100,7 @@ function Prueba({ formData = {}, handleChange, fields = [] }) {
     </MDBox>
   );
 }
+
 Prueba.propTypes = {
   formData: PropTypes.object.isRequired,
   handleChange: PropTypes.func.isRequired,
@@ -124,4 +112,5 @@ Prueba.propTypes = {
     })
   ).isRequired,
 };
+
 export default Prueba;

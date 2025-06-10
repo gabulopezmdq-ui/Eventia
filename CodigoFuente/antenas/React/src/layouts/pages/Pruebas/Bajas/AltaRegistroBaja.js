@@ -4,13 +4,14 @@ import Grid from "@mui/material/Grid";
 // Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Material Dashboard 2 PRO React examples
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import Formulario from "components/Formulario";
+import axios from "axios";
 import { Field } from "formik";
 import MDDropzone from "components/MDDropzone";
 
@@ -25,6 +26,7 @@ function AltaRegistroBaja() {
   }
   const [formData, setFormData] = useState({
     vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
+    nroDiegep: "",
   });
 
   const handleChange = (e) => {
@@ -34,6 +36,33 @@ function AltaRegistroBaja() {
     }));
   };
 
+  useEffect(() => {
+    const fetchEstablecimiento = async () => {
+      if (formData.idEstablecimiento) {
+        try {
+          const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}Establecimientos/GetById/${formData.idEstablecimiento}`
+          );
+          const diegep = response.data.nroDiegep || "";
+
+          setFormData((prev) => ({
+            ...prev,
+            nroDiegep: diegep,
+          }));
+        } catch (err) {
+          console.error("Error cargando nroDiegep", err);
+        }
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          nroDiegep: "",
+        }));
+      }
+    };
+
+    fetchEstablecimiento();
+  }, [formData.idEstablecimiento]);
+
   const steps = [
     {
       label: labelTitulo,
@@ -41,9 +70,9 @@ function AltaRegistroBaja() {
         {
           type: "select",
           label: "Nivel",
-          name: "idTipoCategoria",
-          apiUrl: process.env.REACT_APP_API_URL + "TiposCategorias/GetAll",
-          valueField: "idTipoCategoria",
+          name: "idTipoEstablecimiento",
+          apiUrl: process.env.REACT_APP_API_URL + "TiposEstablecimientos/GetAll",
+          valueField: "idTipoEstablecimiento",
           optionField: "descripcion",
           required: true,
         },
@@ -51,13 +80,18 @@ function AltaRegistroBaja() {
         {
           type: "select",
           label: "Establecimiento",
-          name: "idTipoCategoria",
-          apiUrl: process.env.REACT_APP_API_URL + "TiposCategorias/GetAll",
-          valueField: "idTipoCategoria",
-          optionField: "descripcion",
+          name: "idEstablecimiento",
+          apiUrl: process.env.REACT_APP_API_URL + "Establecimientos/GetAll",
+          valueField: "idEstablecimiento",
+          optionField: "nombreMgp",
           required: true,
         },
-        { type: "text", label: "Nro DIEGEP", name: "descripcion", required: true },
+        {
+          type: "text",
+          label: "Nro DIEGEP",
+          name: "nroDiegep",
+          readOnly: true,
+        },
         {
           type: "select",
           label: "Docente",
@@ -128,7 +162,14 @@ function AltaRegistroBaja() {
       <MDBox py={3} mb={20} height="65vh">
         <Grid container justifyContent="center" alignItems="center" sx={{ height: "100%", mt: 8 }}>
           <Grid item xs={12} lg={10}>
-            <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
+            <Formulario
+              steps={steps}
+              apiUrl={apiUrl}
+              productId={id}
+              formData={formData}
+              setFormData={setFormData}
+              handleChange={handleChange}
+            />
           </Grid>
         </Grid>
       </MDBox>
