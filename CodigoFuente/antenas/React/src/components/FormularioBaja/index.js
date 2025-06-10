@@ -8,11 +8,11 @@
 
 Coded by www.creative-tim.com
 
- =========================================================
+==========================================================
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import axios from "axios";
@@ -26,7 +26,6 @@ import MDAlert from "components/MDAlert";
 import StepLabel from "@mui/material/StepLabel";
 import MDButton from "components/MDButton";
 import Prueba from "../Formulario/components/Prueba";
-import { red } from "@mui/material/colors";
 
 function Formulario({
   steps,
@@ -36,26 +35,27 @@ function Formulario({
   includeIdRepTecnico,
   idAdministracion,
   idConservadora,
+  formData,
+  setFormData,
+  handleChange, // viene del padre
 }) {
   const navigate = useNavigate();
-  const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({});
+  const [activeStep, setActiveStep] = React.useState(0);
   const currentStep = steps[activeStep];
   const isLastStep = activeStep === steps.length - 1;
   const token = sessionStorage.getItem("token");
-  const [alertData, setAlertData] = useState({
+  const [alertData, setAlertData] = React.useState({
     show: false,
     message: "",
     type: "info",
   });
 
-  const handleNext = () => setActiveStep(activeStep + 1);
-  const handleBack = () => setActiveStep(activeStep - 1);
-  const handleCancel = () => navigate(activeStep - 1);
   includeIdRepTecnico = includeIdRepTecnico || false;
+
   let apiGetbyId = includeIdRepTecnico
     ? process.env.REACT_APP_API_URL + `RespTecById?idEVConsEVRespTec=${productId}`
     : `${apiUrl}/getbyid?id=${productId}`;
+
   useEffect(() => {
     if (productId) {
       axios
@@ -65,20 +65,24 @@ function Formulario({
           },
         })
         .then((response) => {
-          // Normaliza los datos, reemplazando null o undefined por un valor predeterminado
+          // Normaliza los datos, reemplazando null o undefined por ""
           const normalizedData = Object.fromEntries(
             Object.entries(response.data || {}).map(([key, value]) => [
               key,
-              value !== null && value !== undefined ? value : "", // Usa un valor predeterminado como "" o 0
+              value !== null && value !== undefined ? value : "",
             ])
           );
-          setFormData(normalizedData);
+          setFormData(normalizedData); // actualiza estado en el padre
         })
         .catch((error) => {
           console.error("Error al cargar los datos del producto:", error);
         });
     }
-  }, [apiUrl, productId]);
+  }, [apiGetbyId, productId, setFormData, token]);
+
+  const handleNext = () => setActiveStep(activeStep + 1);
+  const handleBack = () => setActiveStep(activeStep - 1);
+  const handleCancel = () => navigate(-1);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -96,7 +100,7 @@ function Formulario({
       }
     });
     if (!productId && !dataToSubmit.vigente) {
-      dataToSubmit.vigente = "S"; // Asegura que "vigente" se envíe como "S" en el alta
+      dataToSubmit.vigente = "S";
     }
 
     const requiredFields = currentStep.fields.filter((field) => field.required);
@@ -151,6 +155,7 @@ function Formulario({
       dataToSubmit.idAdmin = idAdministracion;
       dataToSubmit.idCons = formData?.idConservadora || null;
     }
+
     if (!isFormValid) {
       alert("Por favor complete los campos");
       console.error("Por favor complete los campos requeridos.");
@@ -191,13 +196,11 @@ function Formulario({
             Authorization: `Bearer ${token}`,
           },
         })
-        .then((response) => {
+        .then(() => {
           navigate(-1);
         })
         .catch((error) => {
-          console.error("Error en la respuesta del backend:", error); // Agregado para depuración
-
-          // Verificar si el error es por registro duplicado
+          console.error("Error en la respuesta del backend:", error);
           if (error.response && error.response.status === 400) {
             const errorMessage = error.response.data.error;
             if (errorMessage && errorMessage.includes("El registro ya existe.")) {
@@ -228,13 +231,11 @@ function Formulario({
             Authorization: `Bearer ${token}`,
           },
         })
-        .then((response) => {
+        .then(() => {
           navigate(-1);
         })
         .catch((error) => {
-          console.error("Error en la respuesta del backend:", error); // Agregado para depuración
-
-          // Verificar si el error es por registro duplicado
+          console.error("Error en la respuesta del backend:", error);
           if (error.response && error.response.status === 400) {
             const errorMessage = error.response.data.error;
             if (errorMessage && errorMessage.includes("El registro ya existe.")) {
@@ -259,26 +260,6 @@ function Formulario({
           }
         });
     }
-  };
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    // Limita el valor a un solo carácter si el campo es "codPcia" o "codFuncion"
-    if ((name === "codPcia" || name === "codFuncion") && value.length > 1) {
-      return; // Cancela el cambio si el usuario intenta ingresar más de un carácter
-    }
-
-    // Actualiza el estado, convirtiendo el valor a mayúsculas si es una cadena
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]:
-        name === "descripcion" || name === "leyendaTipoLiqReporte"
-          ? value
-          : typeof value === "string"
-          ? value.toUpperCase()
-          : value,
-    }));
   };
 
   return (
@@ -316,7 +297,7 @@ function Formulario({
               <MDBox>
                 <Prueba
                   formData={formData}
-                  handleChange={handleChange}
+                  handleChange={handleChange} // uso de handleChange desde padre
                   fields={currentStep.fields}
                 />
               </MDBox>
@@ -358,6 +339,8 @@ Formulario.propTypes = {
           type: PropTypes.string.isRequired,
           label: PropTypes.string.isRequired,
           name: PropTypes.string.isRequired,
+          required: PropTypes.bool,
+          customValidation: PropTypes.func,
         })
       ).isRequired,
     })
@@ -368,5 +351,9 @@ Formulario.propTypes = {
   idConservadora: PropTypes.number,
   idAdministracion: PropTypes.number,
   includeIdRepTecnico: PropTypes.bool,
+  formData: PropTypes.object.isRequired,
+  setFormData: PropTypes.func.isRequired,
+  handleChange: PropTypes.func.isRequired,
 };
+
 export default Formulario;

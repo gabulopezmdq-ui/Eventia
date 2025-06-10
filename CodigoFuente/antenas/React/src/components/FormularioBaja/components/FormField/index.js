@@ -17,7 +17,7 @@ function FormField({
       label={label}
       name={name}
       value={formData[name] || ""}
-      onChange={handleChange}
+      onChange={!readOnly ? handleChange : undefined} // 👈 así evitás errores
       variant="standard"
       fullWidth
       InputProps={{
