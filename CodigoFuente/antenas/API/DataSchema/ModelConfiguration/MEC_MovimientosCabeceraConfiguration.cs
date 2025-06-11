@@ -25,6 +25,9 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder.Property(e => e.Area)
+                .IsRequired(true);
+
             builder.Property(e => e.Mes)
                 .IsRequired(true);
 
