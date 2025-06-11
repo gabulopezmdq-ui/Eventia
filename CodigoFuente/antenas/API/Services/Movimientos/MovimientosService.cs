@@ -38,5 +38,41 @@ namespace API.Services
                 Nombre = suplente.Nombre
             };
         }
+
+
+        //Nueva Cabecera Movimientos
+        public async Task<(bool Success, string Message)> CrearMovimientoCabeceraAsync(MEC_MovimientosCabecera movimiento)
+        {
+            // Validar campos obligatorios
+            if (movimiento.IdEstablecimiento <= 0 ||
+                movimiento.Mes < 1 || movimiento.Mes > 12 ||
+                movimiento.Anio < 1900 ||
+                string.IsNullOrWhiteSpace(movimiento.Area))
+            {
+                return (false, "Debe completar todos los datos obligatorios: Establecimiento, Mes, Año y Área.");
+            }
+
+            // Validar existencia del registro para esa combinación
+            var existe = await _context.MEC_MovimientosCabecera
+                .AnyAsync(m => m.IdEstablecimiento == movimiento.IdEstablecimiento
+                               && m.Mes == movimiento.Mes
+                               && m.Anio == movimiento.Anio
+                               && m.Area == movimiento.Area);
+
+            if (existe)
+            {
+                return (false, "Ya existe un registro para esta combinación de Establecimiento, Mes, Año y Área.");
+            }
+
+            // Setear campos por default y valores
+            movimiento.Fecha = DateTime.Now;
+            movimiento.Estado = "A";
+
+
+            _context.MEC_MovimientosCabecera.Add(movimiento);
+            await _context.SaveChangesAsync();
+
+            return (true, "Registro creado correctamente.");
+        }
     }
 }

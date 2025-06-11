@@ -62,10 +62,10 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromBody] MEC_MovimientosCabecera estab)
+        public async Task<ActionResult> Post([FromBody] MEC_MovimientosCabecera movimientos)
         {
-            await _serviceGenerico.Add(estab);
-            return Ok(estab);
+            await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
+            return Ok(movimientos);
         }
 
         [HttpDelete]
