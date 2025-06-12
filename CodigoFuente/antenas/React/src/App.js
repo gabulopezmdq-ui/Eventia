@@ -350,6 +350,14 @@ export default function App() {
       path: "/EstablecimientoFE/Edit/:id",
       component: AltaEstablecimiento,
     },
+    {
+      path: "/UsuariosEstablecimientosFE/Edit/:id",
+      component: AltaEstablecimiento,
+    },
+    {
+      path: "/BajasFE/Edit/:id",
+      component: AltaEstablecimiento,
+    },
     //----------------------------------Rutas de Alta
     {
       path: "/CabeceraLiquidacionFE/Nuevo",
