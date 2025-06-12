@@ -98,8 +98,8 @@ function UsuariosEstablecimientos() {
     }
   };
 
-  const handleEditarUsuariosEstablecimientos = (IdUsuarioEstablecimiento) => {
-    const url = `/UsuariosEstablecimientosFE/Edit/${IdUsuarioEstablecimiento}`;
+  const handleEditarUsuariosEstablecimientos = (idUsuarioEstablecimiento) => {
+    const url = `/UsuariosEstablecimientosFE/Edit/${idUsuarioEstablecimiento}`;
     navigate(url);
   };
 
@@ -169,7 +169,7 @@ function UsuariosEstablecimientos() {
                         color="info"
                         onClick={() =>
                           handleEditarUsuariosEstablecimientos(
-                            row.original.IdUsuarioEstablecimiento
+                            row.original.idUsuarioEstablecimiento
                           )
                         }
                       >
