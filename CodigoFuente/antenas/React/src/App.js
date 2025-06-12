@@ -352,11 +352,11 @@ export default function App() {
     },
     {
       path: "/UsuariosEstablecimientosFE/Edit/:id",
-      component: AltaEstablecimiento,
+      component: AltaUsuariosEstablecimientos,
     },
     {
       path: "/BajasFE/Edit/:id",
-      component: AltaEstablecimiento,
+      component: AltaRegistroBaja,
     },
     //----------------------------------Rutas de Alta
     {
