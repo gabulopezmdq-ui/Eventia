@@ -152,7 +152,10 @@ function UsuariosEstablecimientos() {
               table={{
                 columns: [
                   { Header: "USUARIO.", accessor: "usuario.nombre" },
-                  { Header: "COD: TIPO ESTABLECIMIENTO.", accessor: "establecimiento.nombreMgp" },
+                  {
+                    Header: "NRO. ESTABLECIMIENTO",
+                    accessor: "establecimiento.nroEstablecimiento",
+                  },
                   { Header: "DESCRIPCIÓN", accessor: "cargo.descripcion" },
                   {
                     Header: "VIGENTE",
