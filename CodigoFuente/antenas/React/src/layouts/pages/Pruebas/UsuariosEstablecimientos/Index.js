@@ -91,7 +91,7 @@ function UsuariosEstablecimientos() {
   const handleVer = (rowData) => {
     if (rowData && rowData.IdUsuarioEstablecimiento) {
       const productId = rowData.IdUsuarioEstablecimiento;
-      const url = `/TiposEstablecimientoFE/${productId}`;
+      const url = `/UsuariosEstablecimientosFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
@@ -99,7 +99,7 @@ function UsuariosEstablecimientos() {
   };
 
   const handleEditarUsuariosEstablecimientos = (IdUsuarioEstablecimiento) => {
-    const url = `/TiposEstablecimientoFE/Edit/${IdUsuarioEstablecimiento}`;
+    const url = `/UsuariosEstablecimientosFE/Edit/${IdUsuarioEstablecimiento}`;
     navigate(url);
   };
 
