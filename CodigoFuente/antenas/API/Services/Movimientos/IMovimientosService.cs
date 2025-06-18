@@ -9,5 +9,7 @@ namespace API.Services
     {
         Task<MEC_MovimientosDetalle> BuscarSuplente(string numDoc);
         Task<(bool Success, string Message)> CrearMovimientoCabeceraAsync(MEC_MovimientosCabecera movimiento);
+        Task<bool> CalcularAntiguedadAsync(MEC_MovimientosCabecera movimiento);
+        Task<bool> EnviarProv(MEC_MovimientosCabecera movimientos);
     }
 }

@@ -16,13 +16,15 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_MovimientosCabecera> _serviceGenerico;
+        private readonly ICRUDService<MEC_MovimientosDetalle> _serviceDetalle;
         private readonly IMovimientosService _movimientosDetalle;
 
-        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosCabecera> logger, ICRUDService<MEC_MovimientosCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle)
+        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosCabecera> logger, ICRUDService<MEC_MovimientosCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle, ICRUDService<MEC_MovimientosDetalle> serviceDetalle)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _movimientosDetalle = movimientosDetalle;
+            _serviceDetalle = serviceDetalle;
         }
 
         [HttpGet("BuscarSuplente")]
@@ -40,6 +42,24 @@ namespace API.Controllers
             }
 
             return Ok(resultado);
+        }
+
+        [HttpPost("Antiguedad")]
+        public async Task<IActionResult> CalcularAntiguedad([FromBody] MEC_MovimientosCabecera movimiento)
+        {
+            if (movimiento == null)
+                return BadRequest("Datos inválidos.");
+
+            var exito = await _movimientosDetalle.CalcularAntiguedadAsync(movimiento);
+
+            if (!exito)
+                return BadRequest("No se pudo calcular la antigüedad (verifique datos o existencia).");
+
+            return Ok(new
+            {
+                AntigAnios = movimiento.Anio,
+                AntigMeses = movimiento.Mes
+            });
         }
 
         [HttpGet("GetAll")]
@@ -68,6 +88,23 @@ namespace API.Controllers
             return Ok(movimientos);
         }
 
+        [HttpPost("AddDetalle")]
+        public async Task<ActionResult> Post([FromBody] MEC_MovimientosDetalle movimientos)
+        {
+            await _serviceDetalle.Add(movimientos);
+            return Ok(movimientos);
+        }
+
+        [HttpPost("EnviarProv")]
+        public async Task<ActionResult> EnviarProv([FromBody] MEC_MovimientosCabecera movimiento)
+        {
+            var resultado = await _movimientosDetalle.EnviarProv(movimiento);
+
+            if (!resultado)
+                return NotFound("Movimiento no encontrado");
+
+            return Ok("Movimiento enviado correctamente.");
+        }
         [HttpDelete]
         public async Task<IActionResult> Delete(int Id)
         {
