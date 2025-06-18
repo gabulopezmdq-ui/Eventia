@@ -58,6 +58,17 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder
+              .HasOne(p => p.MotivosBajasDoc)
+              .WithMany(t => t.MovimientosDetalle)
+              .HasForeignKey(p => p.IdMotivoBaja)
+              .IsRequired(true);
+
+            builder
+                .Navigation(e => e.MotivosBajasDoc)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
             builder.Property(e => e.TipoDoc)
                 .HasColumnType("char(1)")
                 .IsRequired(true);
@@ -102,6 +113,12 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.Horas)
               .HasColumnType("int")
+              .IsRequired(true);
+
+            builder.Property(e => e.FechaFinBaja)
+              .IsRequired(true);
+
+            builder.Property(e => e.FechaInicioBaja)
               .IsRequired(true);
 
             builder.Property(e => e.Observaciones)

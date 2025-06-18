@@ -74,5 +74,75 @@ namespace API.Services
 
             return (true, "Registro creado correctamente.");
         }
+
+        //Calculo de antiguedades
+        public async Task<bool> CalcularAntiguedadAsync(MEC_MovimientosCabecera movimiento)
+        {
+            if (movimiento == null)
+                return false;
+
+            // Obtener el registro de antigüedad correspondiente (esto se puede adaptar si hay que filtrar por docente)
+            var antig = await _context.MEC_POF_Antiguedades
+                .AsNoTracking()
+                .FirstOrDefaultAsync(); // Aquí deberías filtrar según corresponda (por docente, cargo, etc.)
+
+            if (antig == null)
+                return false;
+
+            int? antigAnios = antig.AnioAntiguedad;
+            int? antigMeses = antig.MesAntiguedad;
+
+            int? mesMovimiento = movimiento.Mes;
+            int? anioMovimiento = movimiento.Anio;
+
+            // Caso 2.1 - Mismo año
+            if (anioMovimiento == antig.AnioReferencia)
+            {
+                int? diferenciaMeses = antigMeses + (mesMovimiento - antig.MesReferencia);
+
+                if (diferenciaMeses >= 12)
+                {
+                    movimiento.Anio = antigAnios + 1;
+                    movimiento.Mes = diferenciaMeses - 12;
+                }
+                else
+                {
+                    movimiento.Anio = antigAnios;
+                    movimiento.Mes = diferenciaMeses;
+                }
+            }
+            // Caso 2.2 - Año posterior
+            else if (anioMovimiento > antig.AnioReferencia)
+            {
+                int? totalMeses = (anioMovimiento - antig.AnioReferencia) * 12 + (mesMovimiento - antig.MesReferencia);
+
+                movimiento.Anio = antigAnios + (totalMeses / 12);
+                movimiento.Mes = (antigMeses + (totalMeses % 12)) % 12;
+            }
+            else
+            {
+                // Caso no contemplado: el movimiento es anterior al registro de referencia, lo ignoramos por ahora
+                return false;
+            }
+
+            return true;
+        }
+
+        //ENVIAR A PROVINCIA
+        public async Task<bool> EnviarProv(MEC_MovimientosCabecera movimientos)
+        {
+            var movimiento = await _context.MEC_MovimientosCabecera.FindAsync(movimientos.IdMovimientoCabecera);
+
+            if (movimiento == null)
+                return false;
+
+            movimiento.Estado = "V";
+            movimiento.Fecha = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
+    
 }
