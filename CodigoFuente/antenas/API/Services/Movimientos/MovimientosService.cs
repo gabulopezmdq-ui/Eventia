@@ -20,6 +20,7 @@ namespace API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+        //Busqueda de suplentes para Movimientos Bajas
         public async Task<MEC_MovimientosDetalle> BuscarSuplente(string numDoc)
         {
             if (string.IsNullOrWhiteSpace(numDoc))
