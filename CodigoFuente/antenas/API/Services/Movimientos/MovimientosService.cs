@@ -77,18 +77,19 @@ namespace API.Services
         }
 
         //Calculo de antiguedades
-        public async Task<bool> CalcularAntiguedadAsync(MEC_MovimientosCabecera movimiento)
+        public async Task<(bool Success, string Message, int? Anio, int? Mes)> CalcularAntiguedadAsync(int idMovimientoCabecera)
         {
-            if (movimiento == null)
-                return false;
+            var movimiento = await _context.MEC_MovimientosCabecera.FindAsync(idMovimientoCabecera);
 
-            // Obtener el registro de antigüedad correspondiente (esto se puede adaptar si hay que filtrar por docente)
+            if (movimiento == null)
+                return (false, "Movimiento no encontrado.", null, null);
+
             var antig = await _context.MEC_POF_Antiguedades
                 .AsNoTracking()
-                .FirstOrDefaultAsync(); // Aquí deberías filtrar según corresponda (por docente, cargo, etc.)
+                .FirstOrDefaultAsync(); // Adaptar filtros según necesidad
 
             if (antig == null)
-                return false;
+                return (false, "Registro de antigüedad no encontrado.", null, null);
 
             int? antigAnios = antig.AnioAntiguedad;
             int? antigMeses = antig.MesAntiguedad;
@@ -96,7 +97,6 @@ namespace API.Services
             int? mesMovimiento = movimiento.Mes;
             int? anioMovimiento = movimiento.Anio;
 
-            // Caso 2.1 - Mismo año
             if (anioMovimiento == antig.AnioReferencia)
             {
                 int? diferenciaMeses = antigMeses + (mesMovimiento - antig.MesReferencia);
@@ -112,7 +112,6 @@ namespace API.Services
                     movimiento.Mes = diferenciaMeses;
                 }
             }
-            // Caso 2.2 - Año posterior
             else if (anioMovimiento > antig.AnioReferencia)
             {
                 int? totalMeses = (anioMovimiento - antig.AnioReferencia) * 12 + (mesMovimiento - antig.MesReferencia);
@@ -122,11 +121,12 @@ namespace API.Services
             }
             else
             {
-                // Caso no contemplado: el movimiento es anterior al registro de referencia, lo ignoramos por ahora
-                return false;
+                return (false, "El movimiento es anterior al registro de antigüedad.", null, null);
             }
 
-            return true;
+            await _context.SaveChangesAsync();
+
+            return (true, "Cálculo exitoso.", movimiento.Anio, movimiento.Mes);
         }
 
         //ENVIAR A PROVINCIA
