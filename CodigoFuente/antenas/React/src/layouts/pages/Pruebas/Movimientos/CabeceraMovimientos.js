@@ -21,13 +21,13 @@ function CabeceraMovimientos() {
   const [dataTableData, setDataTableData] = useState([]);
   const token = sessionStorage.getItem("token");
 
-  /*useEffect(() => {
+  useEffect(() => {
     fetchConceptos();
   }, []);
 
   const fetchConceptos = () => {
     axios
-      .get(process.env.REACT_APP_API_URL + "", {
+      .get(process.env.REACT_APP_API_URL + "MovimientosCabecera/GetAll", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -55,8 +55,8 @@ function CabeceraMovimientos() {
           });
         }
       });
-  };*/
-  useEffect(() => {
+  };
+  /*useEffect(() => {
     // Simulación de datos en lugar del fetch
     const fakeData = [
       {
@@ -248,7 +248,7 @@ function CabeceraMovimientos() {
       },
     ];
     setDataTableData(fakeData);
-  }, []);
+  }, []);*/
 
   const handleNuevoMovimiento = () => {
     navigate("/CabeceraMovimientos/Nuevo");
@@ -294,15 +294,15 @@ function CabeceraMovimientos() {
               table={{
                 columns: [
                   { Header: "Area", accessor: "area" },
-                  { Header: "Año", accessor: "año" },
+                  { Header: "Año", accessor: "anio" },
                   { Header: "Mes", accessor: "mes" },
-                  { Header: "Establecimiento", accessor: "establecimiento" },
+                  { Header: "Establecimiento", accessor: "establecimientos.nroEstablecimiento" },
                   { Header: "Estado", accessor: "estado" },
                   {
                     Header: "Acciones",
                     accessor: "acciones",
                     Cell: ({ row }) =>
-                      row.original.estado === "Enviado" && (
+                      row.original.estado === "E" && (
                         <MDButton
                           variant="gradient"
                           color="info"
