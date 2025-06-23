@@ -81,7 +81,7 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
-        [HttpPost]
+        [HttpPost("CabeceraMovimiento")]
         public async Task<ActionResult> Post([FromBody] MEC_MovimientosCabecera movimientos)
         {
             await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
