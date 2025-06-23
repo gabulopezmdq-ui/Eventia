@@ -10,16 +10,17 @@ export default function AgregarDetalle({ onSubmit }) {
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
-    situacionRevista: "",
+    SitRevista: "",
     funcion: "",
     rural: "",
     turno: "",
+    NumDoc: "",
     categoria: "",
     horas: "",
     antigAnos: "",
     antigMeses: "",
     observaciones: "",
-    tipoDocumento: "",
+    TipoDoc: "",
     apellido: "",
     nombre: "",
     docente: "",
@@ -55,7 +56,7 @@ export default function AgregarDetalle({ onSubmit }) {
     <MDBox pb={3} px={3}>
       <Card>
         <Grid container spacing={3} p={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth>
               <InputLabel>Tipo Movimiento</InputLabel>
               <Select
@@ -75,11 +76,14 @@ export default function AgregarDetalle({ onSubmit }) {
             <>
               <Grid item xs={12} sm={4}>
                 <TextField
-                  name="tipoDocumento"
+                  name="TipoDoc"
                   label="Tipo Documento"
                   fullWidth
                   onChange={handleChange}
                 />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField name="NumDoc" label="Nro" fullWidth onChange={handleChange} />
               </Grid>
               <Grid item xs={12} sm={4}>
                 <TextField name="apellido" label="Apellido" fullWidth onChange={handleChange} />
@@ -95,12 +99,7 @@ export default function AgregarDetalle({ onSubmit }) {
             </Grid>
           )}
           <Grid item xs={12} sm={6}>
-            <TextField
-              name="situacionRevista"
-              label="Sit. Revista"
-              fullWidth
-              onChange={handleChange}
-            />
+            <TextField name="SitRevista" label="Sit. Revista" fullWidth onChange={handleChange} />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField name="funcion" label="Función" fullWidth onChange={handleChange} />

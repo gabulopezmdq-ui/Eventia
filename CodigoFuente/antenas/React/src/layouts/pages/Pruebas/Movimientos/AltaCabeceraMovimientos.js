@@ -99,7 +99,7 @@ function AltaCabeceraMovimientos() {
     }));
   };
 
-  /*const handleSubmit = async () => {
+  const handleSubmit = async () => {
     const { Accion, ...resto } = formData;
 
     const payload = {
@@ -112,12 +112,12 @@ function AltaCabeceraMovimientos() {
 
     try {
       const response = await axios.post(
-        process.env.REACT_APP_API_URL + "MovimientosCabecera",
+        process.env.REACT_APP_API_URL + "MovimientosCabecera/CabeceraMovimiento",
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("Alta exitosa");
+      alert("Alta exitosa de la Cabecera");
       setFormDeshabilitado(true);
       setMostrarDetalle(true);
     } catch (err) {
@@ -128,8 +128,8 @@ function AltaCabeceraMovimientos() {
         alert("Error al guardar");
       }
     }
-  };*/
-  const handleSubmit = async () => {
+  };
+  /*const handleSubmit = async () => {
     const { Accion, ...resto } = formData;
 
     const payload = {
@@ -159,17 +159,17 @@ function AltaCabeceraMovimientos() {
       console.error("Error al guardar (mock)", err);
       alert("Error al guardar");
     }
-  };
+  };*/
 
-  /*const handleDetalleSubmit = async (detalleData) => {
+  const handleDetalleSubmit = async (detalleData) => {
     try {
       const payload = {
         ...detalleData,
-        idCabecera: formData,
+        IdMovimientoCabecera: formData,
       };
 
-      const response = await axios.post(
-        process.env.REACT_APP_API_URL + "Movimientos/AgregoDetalle",
+      const response = await axios.put(
+        process.env.REACT_APP_API_URL + "MovimientosCabecera",
         payload,
         {
           headers: {
@@ -179,16 +179,16 @@ function AltaCabeceraMovimientos() {
       );
 
       if (response.status === 200) {
-        alert("Detalle guardado correctamente");
+        alert("Detalle guardado correctamente NUEVO JUAN");
       } else {
         alert("No se pudo guardar el detalle");
       }
     } catch (error) {
       console.error("Error al guardar el detalle:", error);
-      alert("Ocurrió un error al guardar el detalle");
+      alert("Ocurrió un error al guardar el detalle JUAN");
     }
-  };*/
-  const handleDetalleSubmit = async (detalleData) => {
+  };
+  /*const handleDetalleSubmit = async (detalleData) => {
     try {
       const payload = {
         ...detalleData,
@@ -210,7 +210,7 @@ function AltaCabeceraMovimientos() {
       console.error("Error al guardar el detalle:", error);
       alert("Ocurrió un error al guardar el detalle");
     }
-  };
+  };*/
 
   useEffect(() => {
     const fetchDetalles = async () => {
