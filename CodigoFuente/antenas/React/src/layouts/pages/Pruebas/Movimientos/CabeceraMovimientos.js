@@ -227,7 +227,7 @@ function CabeceraMovimientos() {
         mes: "Diciembre",
         diegep: "2341",
         establecimiento: "Hospital Este",
-        estado: "Finalizado",
+        estado: "Enviado",
         docente: {
           nDNI: 41307725,
           secuencia: "004",
