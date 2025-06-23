@@ -44,23 +44,20 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
-        [HttpPost("Antiguedad")]
-        public async Task<IActionResult> CalcularAntiguedad([FromBody] MEC_MovimientosCabecera movimiento)
+        public async Task<IActionResult> CalcularAntiguedad(int id)
         {
-            if (movimiento == null)
-                return BadRequest("Datos inválidos.");
+            var resultado = await _movimientosDetalle.CalcularAntiguedadAsync(id);
 
-            var exito = await _movimientosDetalle.CalcularAntiguedadAsync(movimiento);
-
-            if (!exito)
-                return BadRequest("No se pudo calcular la antigüedad (verifique datos o existencia).");
+            if (!resultado.Success)
+                return BadRequest(resultado.Message);
 
             return Ok(new
             {
-                AntigAnios = movimiento.Anio,
-                AntigMeses = movimiento.Mes
+                AntigAnios = resultado.Anio,
+                AntigMeses = resultado.Mes
             });
         }
+
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_MovimientosCabecera>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
