@@ -26,12 +26,12 @@ function AltaCabeceraMovimientos() {
   const [detalles, setDetalles] = useState([]);
   const [mostrarFormularioDetalle, setMostrarFormularioDetalle] = useState(true);
   const [formData, setFormData] = useState({
-    Area: "L",
-    Mes: "",
-    Anio: new Date().getFullYear().toString(),
-    EstablecimientoId: "",
+    area: "L",
+    mes: "",
+    anio: new Date().getFullYear().toString(),
+    idEstablecimiento: "",
     Accion: [],
-    Estado: "P",
+    estado: "P",
   });
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [formDeshabilitado, setFormDeshabilitado] = useState(false);
@@ -68,7 +68,8 @@ function AltaCabeceraMovimientos() {
 
   const estados = [
     { label: "Pendiente", value: "P" },
-    { label: "Enviado", value: "E" },
+    { label: "Enviado a Educación", value: "E" },
+    { label: "Enviado a Provincia", value: "V" },
   ];
 
   useEffect(() => {
@@ -104,10 +105,10 @@ function AltaCabeceraMovimientos() {
 
     const payload = {
       ...resto,
-      Altas: Accion.includes("A") ? "A" : null,
-      Bajas: Accion.includes("B") ? "B" : null,
-      Modificaciones: Accion.includes("M") ? "M" : null,
-      Adicionales: Accion.includes("D") ? "D" : null,
+      altas: Accion.includes("A") ? "A" : null,
+      bajas: Accion.includes("B") ? "B" : null,
+      modificaciones: Accion.includes("M") ? "M" : null,
+      adicionales: Accion.includes("D") ? "D" : null,
     };
 
     try {
@@ -129,37 +130,6 @@ function AltaCabeceraMovimientos() {
       }
     }
   };
-  /*const handleSubmit = async () => {
-    const { Accion, ...resto } = formData;
-
-    const payload = {
-      ...resto,
-      Altas: Accion.includes("A") ? "A" : null,
-      Bajas: Accion.includes("B") ? "B" : null,
-      Modificaciones: Accion.includes("M") ? "M" : null,
-      Adicionales: Accion.includes("D") ? "D" : null,
-    };
-
-    try {
-      // Simulación de espera y éxito
-      await new Promise((res) => setTimeout(res, 500)); // simulás el "delay"
-      const response = { status: 200, data: false }; // falso: no existe repetido
-
-      if (response.status === 200) {
-        if (response.data === true) {
-          alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
-          return;
-        }
-
-        alert("Alta exitosa");
-        setFormDeshabilitado(true);
-        setMostrarDetalle(true);
-      }
-    } catch (err) {
-      console.error("Error al guardar (mock)", err);
-      alert("Error al guardar");
-    }
-  };*/
 
   const handleDetalleSubmit = async (detalleData) => {
     try {
@@ -238,8 +208,8 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Área</InputLabel>
                 <Select
-                  name="Area"
-                  value={formData.Area}
+                  name="area"
+                  value={formData.area}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
@@ -256,8 +226,8 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Mes</InputLabel>
                 <Select
-                  name="Mes"
-                  value={formData.Mes}
+                  name="mes"
+                  value={formData.mes}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
@@ -273,10 +243,10 @@ function AltaCabeceraMovimientos() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="Anio"
+                name="anio"
                 type="number"
                 disabled={formDeshabilitado}
-                value={formData.Anio}
+                value={formData.anio}
                 onChange={handleInputChange}
               />
             </Grid>
@@ -285,8 +255,8 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Establecimiento</InputLabel>
                 <Select
-                  name="EstablecimientoId"
-                  value={formData.EstablecimientoId}
+                  name="idEstablecimiento"
+                  value={formData.idEstablecimiento}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
@@ -322,8 +292,8 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth>
                 <InputLabel>Estado</InputLabel>
                 <Select
-                  name="Estado"
-                  value={formData.Estado}
+                  name="estado"
+                  value={formData.estado}
                   style={{ height: "2.8rem", backgroundColor: "#e9e9e9" }}
                   disabled
                 >
