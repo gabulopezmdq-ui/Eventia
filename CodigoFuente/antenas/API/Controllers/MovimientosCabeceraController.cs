@@ -3,6 +3,7 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -79,10 +80,10 @@ namespace API.Controllers
         }
 
         [HttpPost("CabeceraMovimiento")]
-        public async Task<ActionResult> Post([FromBody] MEC_MovimientosCabecera movimientos)
+        public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosCabecera movimientos)
         {
-            await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
-            return Ok(movimientos);
+            var (success, _) = await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
+            return success;
         }
 
         [HttpPost("AddDetalle")]
@@ -116,5 +117,18 @@ namespace API.Controllers
             return Ok(estab);
         }
 
+        [HttpPut("MovimientoAlta")]
+        public async Task<IActionResult> ActualizarYCrearDetalle([FromBody] MovimientosDetalleDTO dto)
+        {
+            try
+            {
+                await _movimientosDetalle.MovimientoAlta(dto);
+                return Ok("Movimiento actualizado y detalle agregado.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al procesar la operación: {ex.Message}");
+            }
+        }
     }
 }
