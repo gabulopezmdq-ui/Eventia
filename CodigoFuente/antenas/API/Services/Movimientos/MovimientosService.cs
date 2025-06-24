@@ -144,6 +144,61 @@ namespace API.Services
 
             return true;
         }
+
+        public async Task MovimientoAlta(MovimientosDetalleDTO dto)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var cabecera = await _context.MEC_MovimientosCabecera
+                    .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == dto.IdMovimientoCabecera);
+
+                if (cabecera == null)
+                    throw new Exception("Movimiento cabecera no encontrado.");
+
+                // Actualizar cabecera
+                cabecera.Observaciones = dto.Observaciones;
+                cabecera.Estado = dto.Estado;
+                cabecera.Fecha = DateTime.Now;
+
+                _context.MEC_MovimientosCabecera.Update(cabecera);
+                await _context.SaveChangesAsync();
+
+                // Agregar detalle
+                var detalle = new MEC_MovimientosDetalle
+                {
+                    IdMovimientoCabecera = cabecera.IdMovimientoCabecera,
+                    IdTipoFuncion = dto.IdTipoFuncion,
+                    IdPOF = dto.IdPOF,
+                    IdTipoCategoria = dto.IdTipoCategoria,
+                    IdMotivoBaja = dto.IdMotivoBaja,
+                    TipoDoc = dto.TipoDoc,
+                    TipoMovimiento = dto.TipoMovimiento,
+                    NumDoc = dto.NumDoc,
+                    Apellido = dto.Apellido,
+                    Nombre = dto.Nombre,
+                    SitRevista = dto.SitRevista,
+                    Turno = dto.Turno,
+                    Observaciones = dto.ObservacionDetalle,
+                    AntigAnios = dto.AntigAnios,
+                    AntigMeses = dto.AntigMeses,
+                    Horas = dto.Horas,
+                    FechaInicioBaja = dto.FechaInicioBaja,
+                    FechaFinBaja = dto.FechaFinBaja
+                };
+
+                await _context.MEC_MovimientosDetalle.AddAsync(detalle);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
-    
 }
+    

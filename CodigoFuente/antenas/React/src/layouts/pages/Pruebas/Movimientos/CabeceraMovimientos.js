@@ -56,199 +56,6 @@ function CabeceraMovimientos() {
         }
       });
   };
-  /*useEffect(() => {
-    // Simulación de datos en lugar del fetch
-    const fakeData = [
-      {
-        area: "Recursos Humanos",
-        año: 2024,
-        mes: "Junio",
-        diegep: "6952",
-        establecimiento: "Hospital Central",
-        estado: "Pendiente",
-        docente: {
-          nDNI: 41307725,
-          secuencia: "004",
-          apellido: "CARDARELLI",
-          nombre: "MARIA CECILIA",
-          sitRevista: 2,
-          tipoDocumento: "DNI",
-          Funcion: "E",
-          Rural: 0,
-          Turno: "M/T",
-          Categoria: 20121,
-          nHoras: 5,
-          años: 14,
-          meses: 1,
-          observaciones: "MODIFICA FUNCION A PARTIR DEL 05/03/2025",
-        },
-      },
-      {
-        area: "Contabilidad",
-        año: 2023,
-        mes: "Mayo",
-        establecimiento: "Clínica Sur",
-        diegep: "6923",
-        estado: "Enviado",
-        docente: [
-          {
-            nDNI: 41307725,
-            secuencia: "004",
-            apellido: "CARDARELLI",
-            nombre: "MARIA CECILIA",
-            sitRevista: 24,
-            tipoDocumento: "DNI",
-            cargoSec: "042",
-            funcion: "E",
-            rural: 0,
-            turno: "M/T",
-            categoria: "SV",
-            nHoras: 5,
-            anos: 14,
-            meses: 1,
-            observaciones:
-              "MODIFICA FUNCION A PARTIR DEL 05/03/2025 ACTIVA SECUENCIA POR SIN DE LICENCIA SIN HABERES",
-          },
-          {
-            nDNI: 212351132,
-            secuencia: "052",
-            apellido: "GARCIA",
-            nombre: "LAURA",
-            sitRevista: 21,
-            tipoDocumento: "DNI",
-            funcion: "J",
-            rural: 5,
-            turno: "M",
-            cargoSec: "009",
-            categoria: "D2",
-            nHoras: 10,
-            anos: 20,
-            meses: 5,
-            observaciones: "ASIGNACIONES FAMILIARES",
-          },
-          {
-            nDNI: 30544912,
-            secuencia: "060",
-            apellido: "PEREZ",
-            nombre: "JUAN MANUEL",
-            sitRevista: 22,
-            tipoDocumento: "DNI",
-            cargoSec: "010",
-            funcion: "P",
-            rural: 1,
-            turno: "T",
-            categoria: "C1",
-            nHoras: 12,
-            anos: 10,
-            meses: 3,
-            observaciones: "CUBRE LICENCIA POR MATERNIDAD",
-          },
-          {
-            nDNI: 27893456,
-            secuencia: "073",
-            apellido: "LOPEZ",
-            nombre: "CAROLINA",
-            sitRevista: 20,
-            tipoDocumento: "DNI",
-            cargoSec: "015",
-            funcion: "E",
-            rural: 0,
-            turno: "V",
-            categoria: "B2",
-            nHoras: 8,
-            anos: 5,
-            meses: 6,
-            observaciones: "NUEVA DESIGNACIÓN A PARTIR DEL 01/04/2025",
-          },
-          {
-            nDNI: 32987123,
-            secuencia: "081",
-            apellido: "MARTINEZ",
-            nombre: "ROBERTO",
-            sitRevista: 23,
-            tipoDocumento: "DNI",
-            cargoSec: "007",
-            funcion: "J",
-            rural: 2,
-            turno: "N",
-            categoria: "D1",
-            nHoras: 15,
-            anos: 18,
-            meses: 9,
-            observaciones: "TOMA INTERINATO TEMPORAL",
-          },
-          {
-            nDNI: 23987456,
-            secuencia: "088",
-            apellido: "FERNANDEZ",
-            nombre: "LORENA",
-            sitRevista: 25,
-            tipoDocumento: "DNI",
-            cargoSec: "022",
-            funcion: "P",
-            rural: 3,
-            turno: "M/T",
-            categoria: "A3",
-            nHoras: 6,
-            anos: 12,
-            meses: 2,
-            observaciones: "RENOVACIÓN CONTRATO ANUAL",
-          },
-        ],
-      },
-      {
-        area: "Mantenimiento",
-        año: 2024,
-        mes: "Abril",
-        diegep: "3255",
-        establecimiento: "Centro de Salud Norte",
-        estado: "Finalizado",
-        docente: {
-          nDNI: 41307725,
-          secuencia: "004",
-          apellido: "CARDARELLI",
-          nombre: "MARIA CECILIA",
-          sitRevista: 2,
-          tipoDocumento: "DNI",
-          funcion: "E",
-          rural: 0,
-          turno: "M/T",
-          categoria: 20121,
-          nHoras: 5,
-          años: 14,
-          meses: 1,
-          observaciones:
-            "MODIFICA FUNCION A PARTIR DEL 05/03/2025 ACTIVA SECUENCIA POR SIN DE LICENCIA SIN HABERES",
-        },
-      },
-      {
-        area: "Administración",
-        año: 2022,
-        mes: "Diciembre",
-        diegep: "2341",
-        establecimiento: "Hospital Este",
-        estado: "Enviado",
-        docente: {
-          nDNI: 41307725,
-          secuencia: "004",
-          apellido: "CARDARELLI",
-          nombre: "MARIA CECILIA",
-          sitRevista: 2,
-          tipoDocumento: "DNI",
-          funcion: "E",
-          rural: 0,
-          turno: "M/T",
-          categoria: 20121,
-          nHoras: 5,
-          años: 14,
-          meses: 1,
-          observaciones:
-            "MODIFICA FUNCION A PARTIR DEL 05/03/2025 ACTIVA SECUENCIA POR SIN DE LICENCIA SIN HABERES",
-        },
-      },
-    ];
-    setDataTableData(fakeData);
-  }, []);*/
 
   const handleNuevoMovimiento = () => {
     navigate("/CabeceraMovimientos/Nuevo");
@@ -271,7 +78,7 @@ function CabeceraMovimientos() {
       <DashboardLayout>
         <DashboardNavbar />
         <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
-          <MDButton variant="gradient" color="success" onClick={handleNuevoMovimiento}>
+          <MDButton variant="gradient" size="small" color="success" onClick={handleNuevoMovimiento}>
             Agregar
           </MDButton>
         </MDBox>
@@ -297,20 +104,63 @@ function CabeceraMovimientos() {
                   { Header: "Año", accessor: "anio" },
                   { Header: "Mes", accessor: "mes" },
                   { Header: "Establecimiento", accessor: "establecimientos.nroEstablecimiento" },
-                  { Header: "Estado", accessor: "estado" },
+                  {
+                    Header: "Estado",
+                    accessor: "estado",
+                    Cell: ({ value }) => {
+                      const estados = [
+                        { label: "Pendiente", value: "P" },
+                        { label: "Enviado a Educación", value: "E" },
+                        { label: "Enviado a Provincia", value: "V" },
+                      ];
+
+                      const estadoEncontrado = estados.find((e) => e.value === value);
+                      return estadoEncontrado ? estadoEncontrado.label : value;
+                    },
+                  },
                   {
                     Header: "Acciones",
                     accessor: "acciones",
-                    Cell: ({ row }) =>
-                      row.original.estado === "E" && (
-                        <MDButton
-                          variant="gradient"
-                          color="info"
-                          onClick={() => handleImprimir(row.original)}
-                        >
-                          Imprimir
-                        </MDButton>
-                      ),
+                    Cell: ({ row }) => {
+                      const estado = row.original.estado;
+
+                      return (
+                        <MDBox display="flex" gap={1}>
+                          {estado === "E" && (
+                            <MDButton
+                              variant="gradient"
+                              color="warning"
+                              size="small"
+                              onClick={() =>
+                                navigate(`/CabeceraMovimientos/Editar/${row.original.id}`)
+                              }
+                            >
+                              Editar
+                            </MDButton>
+                          )}
+                          {estado === "E" && (
+                            <MDButton
+                              variant="gradient"
+                              size="small"
+                              color="secondary"
+                              onClick={() => handleEnviarProvincia(row.original)}
+                            >
+                              Enviar a Provincia
+                            </MDButton>
+                          )}
+                          {estado === "V" && (
+                            <MDButton
+                              variant="gradient"
+                              size="small"
+                              color="info"
+                              onClick={() => handleImprimir(row.original)}
+                            >
+                              Imprimir
+                            </MDButton>
+                          )}
+                        </MDBox>
+                      );
+                    },
                   },
                 ],
                 rows: dataTableData,
