@@ -80,10 +80,10 @@ namespace API.Controllers
         }
 
         [HttpPost("CabeceraMovimiento")]
-        public async Task<ActionResult> Post([FromBody] MEC_MovimientosCabecera movimientos)
+        public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosCabecera movimientos)
         {
-            await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
-            return Ok(movimientos);
+            var (success, _) = await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
+            return success;
         }
 
         [HttpPost("AddDetalle")]
