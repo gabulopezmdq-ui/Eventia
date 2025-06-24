@@ -11,5 +11,6 @@ namespace API.Services
         Task<(bool Success, string Message)> CrearMovimientoCabeceraAsync(MEC_MovimientosCabecera movimiento);
         Task<(bool Success, string Message, int? Anio, int? Mes)> CalcularAntiguedadAsync(int idMovimientoCabecera);
         Task<bool> EnviarProv(MEC_MovimientosCabecera movimientos);
+        Task MovimientoAlta (MovimientosDetalleDTO dto);
     }
 }
