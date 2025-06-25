@@ -257,11 +257,9 @@ function ConsolidarMecPOF() {
         setErrorAlert({ show: true, message: errorMessage, type: "error" });
       });
   };
-  // En tu handleChange para seleccionar cabecera:
   const handleCabeceraChange = (e) => {
     const cabeceraId = e.target.value;
     setSelectedCabecera(cabeceraId);
-    // Encuentra la cabecera seleccionada completa
     const cabeceraSeleccionada = idCabeceras.find((item) => item.id === cabeceraId);
     setSelectedCabeceraData(cabeceraSeleccionada);
   };
@@ -307,7 +305,6 @@ function ConsolidarMecPOF() {
       setLoadingSuplentes(false);
     }
   };
-  //POPUP MEC
   const handleOpenMecPopup = (docente) => {
     setSelectedDocente(docente);
     setOpenMecPopup(true);
@@ -373,11 +370,11 @@ function ConsolidarMecPOF() {
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}Consolidar/Consolidar`,
-        null, // Si no hay body
+        null,
         {
           params: {
             idCabecera: selectedCabecera,
-            idEstablecimiento: selectedIdEstablecimiento, // Corregir aquí
+            idEstablecimiento: selectedIdEstablecimiento,
           },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -385,10 +382,8 @@ function ConsolidarMecPOF() {
         }
       );
       console.log("Consolidación exitosa:", response.data);
-      // Opcional: Mostrar mensaje de éxito o redirigir
     } catch (error) {
       console.error("Error al consolidar:", error);
-      // Opcional: Mostrar mensaje de error
     }
   };
 

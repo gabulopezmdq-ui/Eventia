@@ -25,11 +25,11 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
-            builder.Property(e => e.Mes)
-                .IsRequired(true);
+            builder.Property(e => e.Area);
 
-            builder.Property(e => e.Anio)
-                .IsRequired(true);
+            builder.Property(e => e.Mes);
+
+            builder.Property(e => e.Anio);
 
             builder.Property(e => e.Fecha)
                 .IsRequired(true);
@@ -54,13 +54,11 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.Observaciones)
             .HasColumnType("char(1000)")
-            .IsFixedLength(true)
-            .IsRequired(true);
+            .IsFixedLength(true);
 
             builder.Property(e => e.Estado)
            .HasColumnType("char(1)")
-           .IsFixedLength(true)
-           .IsRequired(true);
+           .IsFixedLength(true);
 
         }
     }
