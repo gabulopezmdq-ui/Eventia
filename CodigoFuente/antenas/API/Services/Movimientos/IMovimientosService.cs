@@ -12,5 +12,9 @@ namespace API.Services
         Task<(bool Success, string Message, int? Anio, int? Mes)> CalcularAntiguedadAsync(int idMovimientoCabecera);
         Task<bool> EnviarProv(MEC_MovimientosCabecera movimientos);
         Task MovimientoAlta (MovimientosDetalleDTO dto);
+        Task<List<MovimientosDetalleDTO>> ObtenerDetallesPorCabeceraAsync(int idCabecera);
+
+        //SERVICIOS BAJAS
+        Task<List<MECPOFDetalleDTO>> ObtenerPOFPorEstablecimientoAsync(int idEstablecimiento);
     }
 }

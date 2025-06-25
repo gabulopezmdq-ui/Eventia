@@ -67,7 +67,7 @@ namespace API.Services
 
             // Setear campos por default y valores
             movimiento.Fecha = DateTime.Now;
-            movimiento.Estado = "A";
+            movimiento.Estado = "P";
 
 
             _context.MEC_MovimientosCabecera.Add(movimiento);
@@ -199,6 +199,70 @@ namespace API.Services
                 throw;
             }
         }
+
+        //detalles agrupados por cabecera
+
+        public async Task<List<MovimientosDetalleDTO>> ObtenerDetallesPorCabeceraAsync(int idCabecera)
+        {
+            var detalles = await _context.MEC_MovimientosDetalle
+                .Where(d => d.IdMovimientoCabecera == idCabecera)
+                .Select(d => new MovimientosDetalleDTO
+                {
+                    IdMovimientoCabecera = d.IdMovimientoCabecera,
+                    IdTipoFuncion = d.IdTipoFuncion,
+                    IdPOF = d.IdPOF,
+                    IdTipoCategoria = d.IdTipoCategoria,
+                    IdMotivoBaja = d.IdMotivoBaja,
+                    TipoDoc = d.TipoDoc,
+                    TipoMovimiento = d.TipoMovimiento,
+                    NumDoc = d.NumDoc,
+                    Apellido = d.Apellido,
+                    Nombre = d.Nombre,
+                    SitRevista = d.SitRevista,
+                    Turno = d.Turno,
+                    Observaciones = d.Observaciones,
+                    AntigAnios = d.AntigAnios,
+                    AntigMeses = d.AntigMeses,
+                    Horas = d.Horas,
+                    FechaInicioBaja = d.FechaInicioBaja,
+                    FechaFinBaja = d.FechaFinBaja
+                })
+                .ToListAsync();
+
+            return detalles;
+        }
+
+
+        //SERVICIOS BAJAS
+
+        //puede ser que se necesite un DTO para mejorar el rendimiento
+        public async Task<List<MECPOFDetalleDTO>> ObtenerPOFPorEstablecimientoAsync(int idEstablecimiento)
+        {
+            var resultado = await _context.MEC_POF
+         .Where(p => p.IdEstablecimiento == idEstablecimiento)
+         .Select(p => new MECPOFDetalleDTO
+         {
+             IdPOF = p.IdPOF,
+             IdEstablecimiento = p.IdEstablecimiento,
+             IdPersona = p.IdPersona,
+             IdCategoria = p.IdCategoria,
+             IdCarRevista = p.IdCarRevista,
+             Secuencia = p.Secuencia,
+             Barra = p.Barra,
+             TipoCargo = p.TipoCargo,
+             Vigente = p.Vigente,
+             CarRevista = p.CarRevista.Descripcion,
+             Cargo = p.TipoFuncion.Descripcion,
+
+             // Persona
+             PersonaDNI = p.Persona.DNI,
+             PersonaApellido = p.Persona.Apellido,
+             PersonaNombre = p.Persona.Nombre,
+
+         })
+         .ToListAsync();
+
+            return resultado;
+        }
     }
 }
-    

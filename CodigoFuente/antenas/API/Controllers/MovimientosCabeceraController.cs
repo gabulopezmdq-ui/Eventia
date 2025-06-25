@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -129,6 +130,17 @@ namespace API.Controllers
             {
                 return StatusCode(500, $"Error al procesar la operación: {ex.Message}");
             }
+        }
+
+        [HttpGet("DetallesCabecera")]
+        public async Task<IActionResult> ObtenerDetalles(int idCabecera)
+        {
+            var detalles = await _movimientosDetalle.ObtenerDetallesPorCabeceraAsync(idCabecera);
+
+            if (detalles == null || !detalles.Any())
+                return NotFound("No se encontraron detalles para la cabecera.");
+
+            return Ok(detalles);
         }
     }
 }
