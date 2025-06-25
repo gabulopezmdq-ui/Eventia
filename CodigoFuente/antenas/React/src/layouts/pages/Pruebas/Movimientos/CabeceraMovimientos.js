@@ -126,13 +126,15 @@ function CabeceraMovimientos() {
 
                       return (
                         <MDBox display="flex" gap={1}>
-                          {estado === "E" && (
+                          {(estado === "E" || estado === "P") && (
                             <MDButton
                               variant="gradient"
                               color="warning"
                               size="small"
                               onClick={() =>
-                                navigate(`/CabeceraMovimientos/Editar/${row.original.id}`)
+                                navigate(
+                                  `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`
+                                )
                               }
                             >
                               Editar
