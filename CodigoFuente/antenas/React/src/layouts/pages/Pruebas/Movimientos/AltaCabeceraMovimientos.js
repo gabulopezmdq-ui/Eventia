@@ -26,6 +26,7 @@ function AltaCabeceraMovimientos() {
   const [detalles, setDetalles] = useState([]);
   const [mostrarFormularioDetalle, setMostrarFormularioDetalle] = useState(false);
   const [idCabecera, setIdCabecera] = useState(null); // Nuevo estado para ID de cabecera
+  const [detallesCargados, setDetallesCargados] = useState(false);
   const [formData, setFormData] = useState({
     area: "L",
     mes: "",
@@ -129,12 +130,20 @@ function AltaCabeceraMovimientos() {
     try {
       const res = await axios.get(
         process.env.REACT_APP_API_URL +
-          `MovimientosCabecera/GetDetallesByCabecera?id=${cabeceraId}`,
+          `MovimientosCabecera/DetallesCabecera?IdCabecera=${cabeceraId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDetalles(res.data);
+      setDetallesCargados(true); // Indica que se cargaron detalles
     } catch (err) {
-      console.error("Error al cargar detalles", err);
+      if (err.response?.status === 404) {
+        console.log("Entre al error 404 - No hay detalles cargados aún");
+        setDetalles([]); // No hay detalles
+        setMostrarDetalle(true); // 🔑 Esto activa la sección de detalle igual
+        setIdCabecera(cabeceraId); // Por si no se había seteado
+      } else {
+        console.error("Error al cargar detalles", err);
+      }
     }
   };
 
@@ -177,7 +186,8 @@ function AltaCabeceraMovimientos() {
       }
       if (response.data && response.data.id) {
         setIdCabecera(response.data.id);
-        fetchDetalles(response.data.id); // Cargar detalles después de guardar
+        fetchDetalles(response.data.id);
+        setDetallesCargados(false); // Resetear estado mientras se cargan
       }
 
       alert("Alta exitosa de la Cabecera");
@@ -351,7 +361,6 @@ function AltaCabeceraMovimientos() {
         </Card>
         {mostrarDetalle && idCabecera && (
           <>
-            {/* Botón PERMANENTE - siempre visible */}
             <MDBox mt={2} px={3} display="flex" justifyContent="flex-end">
               <MDButton
                 variant="contained"
@@ -363,14 +372,13 @@ function AltaCabeceraMovimientos() {
               </MDButton>
             </MDBox>
 
-            {/* Formulario de detalles (solo visible cuando se activa) */}
             {mostrarFormularioDetalle && (
               <MDBox mt={3} px={3}>
                 <AgregarDetalle
                   idCabecera={idCabecera}
                   onSubmit={(data) => {
                     handleDetalleSubmit(data);
-                    setMostrarFormularioDetalle(false); // Cerrar después de enviar
+                    setMostrarFormularioDetalle(false);
                   }}
                   onCancel={() => setMostrarFormularioDetalle(false)}
                 />
