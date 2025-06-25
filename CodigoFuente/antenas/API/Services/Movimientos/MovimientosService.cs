@@ -231,5 +231,38 @@ namespace API.Services
 
             return detalles;
         }
+
+
+        //SERVICIOS BAJAS
+
+        //puede ser que se necesite un DTO para mejorar el rendimiento
+        public async Task<List<MECPOFDetalleDTO>> ObtenerPOFPorEstablecimientoAsync(int idEstablecimiento)
+        {
+            var resultado = await _context.MEC_POF
+         .Where(p => p.IdEstablecimiento == idEstablecimiento)
+         .Select(p => new MECPOFDetalleDTO
+         {
+             IdPOF = p.IdPOF,
+             IdEstablecimiento = p.IdEstablecimiento,
+             IdPersona = p.IdPersona,
+             IdCategoria = p.IdCategoria,
+             IdCarRevista = p.IdCarRevista,
+             Secuencia = p.Secuencia,
+             Barra = p.Barra,
+             TipoCargo = p.TipoCargo,
+             Vigente = p.Vigente,
+             CarRevista = p.CarRevista.Descripcion,
+             Cargo = p.TipoFuncion.Descripcion,
+
+             // Persona
+             PersonaDNI = p.Persona.DNI,
+             PersonaApellido = p.Persona.Apellido,
+             PersonaNombre = p.Persona.Nombre,
+
+         })
+         .ToListAsync();
+
+            return resultado;
+        }
     }
 }

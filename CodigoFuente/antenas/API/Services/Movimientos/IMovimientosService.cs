@@ -13,5 +13,8 @@ namespace API.Services
         Task<bool> EnviarProv(MEC_MovimientosCabecera movimientos);
         Task MovimientoAlta (MovimientosDetalleDTO dto);
         Task<List<MovimientosDetalleDTO>> ObtenerDetallesPorCabeceraAsync(int idCabecera);
+
+        //SERVICIOS BAJAS
+        Task<List<MECPOFDetalleDTO>> ObtenerPOFPorEstablecimientoAsync(int idEstablecimiento);
     }
 }
