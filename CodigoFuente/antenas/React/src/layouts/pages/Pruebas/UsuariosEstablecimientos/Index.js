@@ -91,15 +91,15 @@ function UsuariosEstablecimientos() {
   const handleVer = (rowData) => {
     if (rowData && rowData.IdUsuarioEstablecimiento) {
       const productId = rowData.IdUsuarioEstablecimiento;
-      const url = `/TiposEstablecimientoFE/${productId}`;
+      const url = `/UsuariosEstablecimientosFE/${productId}`;
       navigate(url);
     } else {
       console.error("El objeto rowData o su propiedad 'id' no están definidos.");
     }
   };
 
-  const handleEditarUsuariosEstablecimientos = (IdUsuarioEstablecimiento) => {
-    const url = `/TiposEstablecimientoFE/Edit/${IdUsuarioEstablecimiento}`;
+  const handleEditarUsuariosEstablecimientos = (idUsuarioEstablecimiento) => {
+    const url = `/UsuariosEstablecimientosFE/Edit/${idUsuarioEstablecimiento}`;
     navigate(url);
   };
 
@@ -152,7 +152,10 @@ function UsuariosEstablecimientos() {
               table={{
                 columns: [
                   { Header: "USUARIO.", accessor: "usuario.nombre" },
-                  { Header: "COD: TIPO ESTABLECIMIENTO.", accessor: "establecimiento.nombreMgp" },
+                  {
+                    Header: "NRO. ESTABLECIMIENTO",
+                    accessor: "establecimiento.nroEstablecimiento",
+                  },
                   { Header: "DESCRIPCIÓN", accessor: "cargo.descripcion" },
                   {
                     Header: "VIGENTE",
@@ -169,7 +172,7 @@ function UsuariosEstablecimientos() {
                         color="info"
                         onClick={() =>
                           handleEditarUsuariosEstablecimientos(
-                            row.original.IdUsuarioEstablecimiento
+                            row.original.idUsuarioEstablecimiento
                           )
                         }
                       >

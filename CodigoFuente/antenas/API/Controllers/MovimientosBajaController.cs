@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -16,11 +17,24 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_MovimientosBajas> _serviceGenerico;
+        private readonly IMovimientosService _movimientosDetalle;
 
-        public MovimientosBajaController(DataContext context, ILogger<MEC_MovimientosBajas> logger, ICRUDService<MEC_MovimientosBajas> serviceGenerico)
+        public MovimientosBajaController(DataContext context, ILogger<MEC_MovimientosBajas> logger, ICRUDService<MEC_MovimientosBajas> serviceGenerico, IMovimientosService movimientosDetalle)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
+            _movimientosDetalle = movimientosDetalle;
+        }
+
+        [HttpGet("GetPOF")]
+        public async Task<ActionResult> ObtenerPOF(int idEstablecimiento)
+        {
+            var pofList = await _movimientosDetalle.ObtenerPOFPorEstablecimientoAsync(idEstablecimiento);
+
+            if (pofList == null || !pofList.Any())
+                return NotFound("No se encontraron cargos POF para el establecimiento.");
+
+            return Ok(pofList);
         }
 
         [HttpGet("GetAll")]

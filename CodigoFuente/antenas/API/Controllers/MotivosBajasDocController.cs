@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -22,6 +23,7 @@ namespace API.Controllers
             _serviceGenerico = serviceGenerico;
         }
 
+        
 
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_MotivosBajasDoc>>> Get()
