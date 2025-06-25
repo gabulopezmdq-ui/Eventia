@@ -199,6 +199,37 @@ namespace API.Services
                 throw;
             }
         }
+
+        //detalles agrupados por cabecera
+
+        public async Task<List<MovimientosDetalleDTO>> ObtenerDetallesPorCabeceraAsync(int idCabecera)
+        {
+            var detalles = await _context.MEC_MovimientosDetalle
+                .Where(d => d.IdMovimientoCabecera == idCabecera)
+                .Select(d => new MovimientosDetalleDTO
+                {
+                    IdMovimientoCabecera = d.IdMovimientoCabecera,
+                    IdTipoFuncion = d.IdTipoFuncion,
+                    IdPOF = d.IdPOF,
+                    IdTipoCategoria = d.IdTipoCategoria,
+                    IdMotivoBaja = d.IdMotivoBaja,
+                    TipoDoc = d.TipoDoc,
+                    TipoMovimiento = d.TipoMovimiento,
+                    NumDoc = d.NumDoc,
+                    Apellido = d.Apellido,
+                    Nombre = d.Nombre,
+                    SitRevista = d.SitRevista,
+                    Turno = d.Turno,
+                    Observaciones = d.Observaciones,
+                    AntigAnios = d.AntigAnios,
+                    AntigMeses = d.AntigMeses,
+                    Horas = d.Horas,
+                    FechaInicioBaja = d.FechaInicioBaja,
+                    FechaFinBaja = d.FechaFinBaja
+                })
+                .ToListAsync();
+
+            return detalles;
+        }
     }
 }
-    
