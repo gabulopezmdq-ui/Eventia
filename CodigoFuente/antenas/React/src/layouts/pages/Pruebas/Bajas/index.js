@@ -4,21 +4,21 @@ import axios from "axios";
 // Componentes de Material-UI
 import Card from "@mui/material/Card";
 import { useNavigate, useParams } from "react-router-dom";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem, Grid } from "@mui/material";
 
 // Componentes de Material Dashboard 2 PRO React
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
-import Grid from "@mui/material/Grid";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
-import PropTypes from "prop-types";
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTableBaja from "examples/Tables/DataTableBaja";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import MDInput from "components/MDInput";
+
+// Otros imports
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import PropTypes from "prop-types";
 
 import "../../Pruebas/pruebas.css";
 
@@ -27,12 +27,20 @@ function Bajas() {
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [dataTableBajaData, setDataTableBajaData] = useState([]); // Arreglo vacío para evitar errores iniciales
-  const [activoFilter, setActivoFilter] = useState("S"); // Estado inicial para mostrar solo los vigentes
   const [allData, setAllData] = useState([]); // Almacena todos los datos sin filtrar
+
+  // Estados para los filtros de Nivel y Año
+  const [nivelSeleccionado, setNivelSeleccionado] = useState("");
+  const [anioSeleccionado, setAnioSeleccionado] = useState("");
+  const [niveles, setNiveles] = useState([]);
+  const [añosDisponibles, setAñosDisponibles] = useState([]);
+
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    fetchMotivosBajas(); // Cargar los datos al montar el componente
+    fetchMotivosBajas();
+    fetchNiveles();
+    generarAniosDisponibles();
   }, []);
 
   // Función para obtener los datos desde la API
@@ -52,17 +60,18 @@ function Bajas() {
           apellido: `${item.pof.persona.apellido}, ${item.pof.persona.nombre}`,
           dni: item.pof.persona.dni, // DNI
           nroEstablecimiento: item.establecimiento.nroEstablecimiento, // Establecimiento
-          fechaInicio: item.fechaInicio ? item.fechaInicio.split("T")[0] : "N/A", //Inicio
-          fechaFin: item.fechaFin ? item.fechaFin.split("T")[0] : "N/A", //fin
-          cantHoras: item.cantHoras, //Cantidad horas
-          motivoBaja: item.motivoBajaDoc.motivoBaja, //Motivo baja
+          fechaInicio: item.fechaInicio ? item.fechaInicio.split("T")[0] : "N/A", // Inicio
+          fechaFin: item.fechaFin ? item.fechaFin.split("T")[0] : "N/A", // Fin
+          cantHoras: item.cantHoras, // Cantidad de horas
+          motivoBaja: item.motivoBajaDoc.motivoBaja, // Motivo baja
           estado: item.estado,
           ingreso: item.ingreso,
-          vigente: item.tipoEstablecimiento?.vigente ?? "S", // Para filtrar por vigentes/no vigentes
+          // Se eliminó el campo 'vigente' ya que no se utilizará
         }));
 
         setAllData(mappedData);
-        filterData(mappedData, "S"); // Mostrar solo vigentes al cargar
+        // Al cargar, mostramos todos los datos sin aplicar filtros adicionales
+        setDataTableBajaData(mappedData);
       })
       .catch((error) => {
         if (error.response) {
@@ -85,110 +94,83 @@ function Bajas() {
       });
   };
 
-  // Función para filtrar los datos según el filtro seleccionado
-  const filterData = (data, filter) => {
-    let filteredData;
-    if (filter === "S") {
-      filteredData = data.filter((item) => item.vigente === "S" || item.vigente === true);
-    } else if (filter === "N") {
-      filteredData = data.filter((item) => item.vigente === "N" || item.vigente === false);
-    } else {
-      filteredData = data; // Todos los datos
+  // Función para obtener los niveles desde la API
+  const fetchNiveles = () => {
+    axios
+      .get(process.env.REACT_APP_API_URL + "TiposEstablecimientos/getall", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        // Se espera que cada objeto tenga id y descripción
+        const nivelesDescripcion = response.data.map((item) => ({
+          id: item.idTipoEstablecimiento,
+          descripcion: item.descripcion,
+        }));
+        setNiveles(nivelesDescripcion);
+      })
+      .catch((error) => {
+        console.error("Error al obtener niveles:", error);
+      });
+  };
+
+  // Función para generar la lista de años dinámicamente
+  const generarAniosDisponibles = () => {
+    const anioActual = new Date().getFullYear();
+    const años = [];
+
+    // 5 años anteriores
+    for (let i = 5; i >= 1; i--) {
+      años.push((anioActual - i).toString());
     }
-    setDataTableBajaData(filteredData);
+    // Año actual y 1 año posterior
+    años.push(anioActual.toString());
+    años.push((anioActual + 1).toString());
+
+    setAñosDisponibles(años);
   };
 
-  // Maneja el cambio de filtro
-  const handleFilterChange = (event) => {
-    const filter = event.target.value;
-    setActivoFilter(filter);
-    filterData(allData, filter); // Aplicar el filtro a todos los datos
+  // Función para filtrar los datos según Nivel y Año, se ejecuta al presionar el botón "Buscar"
+  const filtrarDatos = () => {
+    let filtrado = [...allData];
+
+    if (nivelSeleccionado) {
+      filtrado = filtrado.filter((item) => item.descripcion === nivelSeleccionado);
+    }
+
+    if (anioSeleccionado) {
+      filtrado = filtrado.filter((item) => {
+        const anioInicio = item.fechaInicio ? item.fechaInicio.split("-")[0] : "";
+        return anioInicio === anioSeleccionado;
+      });
+    }
+
+    setDataTableBajaData(filtrado);
   };
 
+  // Función para navegar a nuevo registro
   const handleNuevoRegistroBaja = () => {
     navigate("/BajasFE/Nuevo");
   };
 
+  // Función para navegar a ver el detalle
   const handleVer = (rowData) => {
     if (rowData && rowData.idMovimientoBaja) {
       const productId = rowData.idMovimientoBaja;
-      const url = `/BajasFE/${productId}`;
-      navigate(url);
+      navigate(`/BajasFE/${productId}`);
     } else {
       console.error("El objeto rowData o su propiedad 'idMovimientoBaja' no están definidos.");
     }
   };
+
+  // Función para navegar a editar registro
   const handleEditarMotivosBajass = (idMovimientoBaja) => {
-    const url = `/BajasFE/Edit/${idMovimientoBaja}`;
-    navigate(url);
+    navigate(`/BajasFE/Edit/${idMovimientoBaja}`);
   };
-  {
-    /*}
-  useEffect(() => {
-    // Datos de prueba (mockData)
-    const mockData = [
-      {
-        Establec: "Escuela Nº 15",
-        DNI: "12345678",
-        SEC: "004",
-        apellido: "González, María",
-        Inicio: "2023-03-01",
-        Fin: "2023-12-15",
-        HS: "20",
-        motivo: "Licencia médica",
-        estado: "Activo",
-        ingreso: "2023-02-20",
-        idMovimientoBaja: 1,
-      },
-      {
-        Establec: "Escuela Nº 22",
-        DNI: "87654321",
-        SEC: "003",
-        apellido: "Pérez, Juan",
-        Inicio: "2024-03-01",
-        Fin: "2024-12-15",
-        HS: "18",
-        motivo: "Renuncia",
-        estado: "Inactivo",
-        ingreso: "2024-01-10",
-        idMovimientoBaja: 2,
-      },
-    ];
-
-    setDataTableData(mockData); // Cargar los datos mockeados
-  }, []);*/
-  }
-
-  const displayValue = (value) => (value ? value : "N/A");
 
   return (
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        {/*Box display="flex" justifyContent="space-between" alignItems="center" my={2}>
-          <MDButton variant="gradient" color="success" onClick={handleNuevoRegistroBaja}>
-            Agregar
-          </MDButton>
-          <MDBox
-            component="select"
-            onChange={handleFilterChange} // Llamar a la función al cambiar el filtro
-            value={activoFilter} // Vincular el estado del filtro al valor del `select`
-            sx={{
-              padding: "10px 20px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              backgroundColor: "#fff",
-              "&:focus": {
-                borderColor: "#4caf50",
-              },
-            }}
-          >
-            <option value="">Todos</option>
-            <option value="S">Vigente</option>
-            <option value="N">No Vigente</option>
-          </MDBox>
-        </MDBox>*/}
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -206,49 +188,55 @@ function Bajas() {
           <Card sx={{ padding: 2 }}>
             <MDBox display="flex" justifyContent="center">
               <Grid container spacing={2} mb={2} justifyContent="center">
-                {/* Filtro por Nivel */}
+                {/* Combo de Nivel */}
                 <Grid item xs={12} sm={6} md={5}>
                   <FormControl fullWidth>
                     <InputLabel>NIVEL</InputLabel>
                     <Select
+                      value={nivelSeleccionado}
+                      onChange={(e) => setNivelSeleccionado(e.target.value)}
                       sx={{
                         height: "2.5rem",
                         backgroundColor: "white",
-                        minWidth: "100%", // Ocupa todo el ancho del contenedor Grid
-                        fontSize: "0.9rem", // Opcional: tamaño de texto un poco más claro
+                        fontSize: "0.9rem",
                       }}
                     >
                       <MenuItem value="">Todos</MenuItem>
-                      <MenuItem value="Primario">Primario</MenuItem>
-                      <MenuItem value="Secundario">Secundario</MenuItem>
+                      {niveles.map((nivel) => (
+                        <MenuItem key={nivel.id} value={nivel.descripcion}>
+                          {nivel.descripcion}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
 
-                {/* Filtro por Año */}
+                {/* Combo de Año */}
                 <Grid item xs={12} sm={6} md={5}>
                   <FormControl fullWidth>
                     <InputLabel>AÑO</InputLabel>
                     <Select
+                      value={anioSeleccionado}
+                      onChange={(e) => setAnioSeleccionado(e.target.value)}
                       sx={{
                         height: "2.5rem",
                         backgroundColor: "white",
-                        minWidth: "100%", // Ocupa todo el ancho del contenedor Grid
-                        fontSize: "0.9rem", // Opcional: tamaño de texto un poco más claro
+                        fontSize: "0.9rem",
                       }}
                     >
                       <MenuItem value="">Todos</MenuItem>
-                      <MenuItem value="2023">2023</MenuItem>
-                      <MenuItem value="2024">2024</MenuItem>
-                      <MenuItem value="2025">2025</MenuItem>
+                      {añosDisponibles.map((anio) => (
+                        <MenuItem key={anio} value={anio}>
+                          {anio}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
               </Grid>
             </MDBox>
-            {/*....................................................*/}
             <Grid container spacing={2} mb={2} justifyContent="center">
-              {/* Filtro por Nivel */}
+              {/* Botón para agregar nuevo registro */}
               <Grid item xs={12} sm={6} md={5}>
                 <MDButton
                   size="small"
@@ -261,12 +249,13 @@ function Bajas() {
                 </MDButton>
               </Grid>
 
-              {/* Filtro por Año */}
+              {/* Botón Buscar que aplica el filtrado */}
               <Grid item xs={12} sm={6} md={5}>
                 <MDButton
                   size="small"
                   component="span"
                   color="info"
+                  onClick={filtrarDatos}
                   endIcon={<SearchOutlinedIcon />}
                 >
                   Buscar

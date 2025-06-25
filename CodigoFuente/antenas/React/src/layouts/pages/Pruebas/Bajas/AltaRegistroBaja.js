@@ -1,175 +1,269 @@
 // @mui material components
 import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import TextField from "@mui/material/TextField";
 
-// Material Dashboard 2 PRO React components
+// Material Dashboard components
 import MDBox from "components/MDBox";
-import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import MDButton from "components/MDButton";
 
-// Material Dashboard 2 PRO React examples
+// Material Dashboard layout components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
-import Formulario from "components/Formulario";
+
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { Field } from "formik";
-import MDDropzone from "components/MDDropzone";
 
-//Para que el form se pueda utilizar de edicion se tiene que pasar "steps" "apiUrl" "productId" ej: <Formulario steps={steps} apiUrl={apiUrl} productId={id} />
-//Para que sea de crear ej: <Formulario steps={steps} apiUrl={apiUrl} />
-
+// dentro de tu componente:
 function AltaRegistroBaja() {
-  const { id } = useParams();
-  let labelTitulo = "Nuevo Registro de Baja";
-  if (id) {
-    labelTitulo = "Editar Tipo Categoria";
-  }
-  const [formData, setFormData] = useState({
-    vigente: id ? "" : "S", // "vigente" es "S" solo si es alta (id no está presente)
-    nroDiegep: "",
-  });
+  const token = sessionStorage.getItem("token");
+  // Selecccionar Nivel
+  const [niveles, setNiveles] = useState([]);
+  const [nivelSeleccionado, setNivelSeleccionado] = useState("");
 
-  const handleChange = (e) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [e.target.name]: e.target.value,
-    }));
+  const fetchNiveles = async () => {
+    try {
+      const response = await axios.get("https://localhost:44382/TiposEstablecimientos/GetAll", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNiveles(response.data);
+    } catch (error) {
+      console.error("Error al obtener los niveles:", error);
+    }
   };
 
   useEffect(() => {
-    const fetchEstablecimiento = async () => {
-      if (formData.idEstablecimiento) {
-        try {
-          const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}Establecimientos/GetById/${formData.idEstablecimiento}`
-          );
-          const diegep = response.data.nroDiegep || "";
+    if (token) {
+      fetchNiveles();
+    } else {
+      console.warn("No token found, user might not be logged in.");
+    }
+  }, [token]);
+  // Selecccionar Año
+  const [aniosDisponibles, setAniosDisponibles] = useState([]);
+  const [anioSeleccionado, setAnioSeleccionado] = useState("");
 
-          setFormData((prev) => ({
-            ...prev,
-            nroDiegep: diegep,
-          }));
-        } catch (err) {
-          console.error("Error cargando nroDiegep", err);
-        }
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          nroDiegep: "",
-        }));
-      }
-    };
+  useEffect(() => {
+    const anioActual = new Date().getFullYear();
+    const anios = [];
+    for (let i = anioActual - 5; i <= anioActual + 1; i++) {
+      anios.push(i);
+    }
+    setAniosDisponibles(anios.reverse()); // opcional: muestra el año más reciente primero
+  }, []);
+  // Establecimientos / Nro DIEGEP
+  const [establecimientos, setEstablecimientos] = useState([]);
+  const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState(null);
+  const fetchEstablecimientos = async () => {
+    try {
+      const response = await axios.get("https://localhost:44382/Establecimientos/GetAll", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setEstablecimientos(response.data);
+    } catch (error) {
+      console.error("Error al obtener establecimientos:", error);
+    }
+  };
+  useEffect(() => {
+    if (token) {
+      fetchEstablecimientos();
+    }
+  }, [token]);
 
-    fetchEstablecimiento();
-  }, [formData.idEstablecimiento]);
-
-  const steps = [
-    {
-      label: labelTitulo,
-      fields: [
-        {
-          type: "select",
-          label: "Nivel",
-          name: "idTipoEstablecimiento",
-          apiUrl: process.env.REACT_APP_API_URL + "TiposEstablecimientos/GetAll",
-          valueField: "idTipoEstablecimiento",
-          optionField: "descripcion",
-          required: true,
-        },
-        { type: "date", label: "Año", name: "codCategoriaMGP", required: true },
-        {
-          type: "select",
-          label: "Establecimiento",
-          name: "idEstablecimiento",
-          apiUrl: process.env.REACT_APP_API_URL + "Establecimientos/GetAll",
-          valueField: "idEstablecimiento",
-          optionField: "nombreMgp",
-          required: true,
-        },
-        {
-          type: "text",
-          label: "Nro DIEGEP",
-          name: "nroDiegep",
-          readOnly: true,
-        },
-        {
-          type: "select",
-          label: "Docente",
-          name: "idTipoCategoria",
-          apiUrl: process.env.REACT_APP_API_URL + "TiposCategorias/GetAll",
-          valueField: "idTipoCategoria",
-          optionField: "descripcion",
-          required: true,
-        },
-        { type: "number", label: "Suplente Nro Documento", name: "descripcion", required: true },
-        { type: "text", label: "Apellido/s", name: "descripcion", required: true },
-        { type: "text", label: "Nombre/s", name: "descripcion", required: true },
-        { type: "date", label: "Inicio", name: "descripcion", required: true },
-        { type: "date", label: "Fin", name: "descripcion", required: true },
-        { type: "number", label: "Cant Hs.", name: "descripcion", required: true },
-        {
-          type: "select",
-          label: "Motivo",
-          name: "idTipoCategoria",
-          apiUrl: process.env.REACT_APP_API_URL + "TiposCategorias/GetAll",
-          valueField: "idTipoCategoria",
-          optionField: "descripcion",
-          required: true,
-        },
-        {
-          type: "select",
-          label: "Estado",
-          name: "idTipoCategoria",
-          apiUrl: process.env.REACT_APP_API_URL + "TiposCategorias/GetAll",
-          valueField: "idTipoCategoria",
-          optionField: "descripcion",
-          required: true,
-        },
-        {
-          type: "select",
-          label: "Ingreso",
-          name: "idTipoCategoria",
-          apiUrl: process.env.REACT_APP_API_URL + "TiposCategorias/GetAll",
-          valueField: "idTipoCategoria",
-          optionField: "descripcion",
-          required: true,
-        },
-        { type: "text-area", label: "Observaciones", name: "descripcion", required: true },
-        ...(id
-          ? [
-              {
-                type: "select",
-                label: "Vigente",
-                name: "vigente",
-                customOptions: [
-                  { value: "S", label: "Si" },
-                  { value: "N", label: "No" },
-                ],
-                valueField: "value",
-                optionField: "label",
-                required: true,
-              },
-            ]
-          : []),
-      ],
-    },
-  ];
-
-  const apiUrl = process.env.REACT_APP_API_URL + `TiposCategorias`;
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox py={3} mb={20} height="65vh">
-        <Grid container justifyContent="center" alignItems="center" sx={{ height: "100%", mt: 8 }}>
+      <MDBox py={3}>
+        <Grid container justifyContent="center">
           <Grid item xs={12} lg={10}>
-            <Formulario
-              steps={steps}
-              apiUrl={apiUrl}
-              productId={id}
-              formData={formData}
-              setFormData={setFormData}
-              handleChange={handleChange}
-            />
+            <Card sx={{ p: 3 }}>
+              <Grid container spacing={2}>
+                {/* Nivel */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Nivel</InputLabel>
+                    <Select
+                      value={nivelSeleccionado}
+                      onOpen={fetchNiveles} // ⚡️ llama al GET al abrir el select
+                      onChange={(e) => setNivelSeleccionado(e.target.value)}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      {niveles.map((nivel) => (
+                        <MenuItem
+                          key={nivel.idTipoEstablecimiento}
+                          value={nivel.idTipoEstablecimiento}
+                        >
+                          {nivel.descripcion}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Año */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Año</InputLabel>
+                    <Select
+                      value={anioSeleccionado}
+                      onChange={(e) => setAnioSeleccionado(e.target.value)}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      {aniosDisponibles.map((anio) => (
+                        <MenuItem key={anio} value={anio}>
+                          {anio}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Establecimiento */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Establecimiento</InputLabel>
+                    <Select
+                      value={establecimientoSeleccionado?.idEstablecimiento || ""}
+                      onChange={(e) => {
+                        const est = establecimientos.find(
+                          (est) => est.idEstablecimiento === e.target.value
+                        );
+                        setEstablecimientoSeleccionado(est);
+                      }}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      {establecimientos.map((est) => (
+                        <MenuItem key={est.idEstablecimiento} value={est.idEstablecimiento}>
+                          {est.nombrePcia}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Nro DIEGEP"
+                    value={establecimientoSeleccionado?.nroDiegep || ""}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+
+                {/* Docente */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Docente</InputLabel>
+                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
+                      <MenuItem value="1">Primario</MenuItem>
+                      <MenuItem value="2">Secundario</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Suplente */}
+                <Grid item xs={6}>
+                  <TextField fullWidth type="number" label="Suplente Nro Documento" />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField fullWidth label="Apellido" />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField fullWidth label="Nombre" />
+                </Grid>
+
+                {/* Fechas */}
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Inicio"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField fullWidth type="date" label="Fin" InputLabelProps={{ shrink: true }} />
+                </Grid>
+
+                {/* Cant Hs */}
+                <Grid item xs={6}>
+                  <TextField fullWidth type="number" label="Cant Hs" />
+                </Grid>
+
+                {/* Motivo */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Motivo</InputLabel>
+                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
+                      <MenuItem value="1">Primario</MenuItem>
+                      <MenuItem value="2">Secundario</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Estado */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Estado</InputLabel>
+                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
+                      <MenuItem value="1">Primario</MenuItem>
+                      <MenuItem value="2">Secundario</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Ingreso */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Ingreso</InputLabel>
+                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
+                      <MenuItem value="1">Primario</MenuItem>
+                      <MenuItem value="2">Secundario</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField fullWidth label="Ingreso Descripción" />
+                </Grid>
+
+                {/* Observaciones */}
+                <Grid item xs={12}>
+                  <TextField fullWidth multiline rows={3} label="Observaciones" />
+                </Grid>
+
+                {/* Vigente */}
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Vigente</InputLabel>
+                    <Select>
+                      <MenuItem value="1">Primario</MenuItem>
+                      <MenuItem value="2">Secundario</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+
+              <MDBox mt={2} sx={{ display: "flex" }}>
+                <MDBox mr={2}>
+                  <MDButton variant="gradient" color="success" size="small">
+                    Aceptar
+                  </MDButton>
+                </MDBox>
+                <MDBox>
+                  <MDButton variant="gradient" color="light" size="small">
+                    Cancelar
+                  </MDButton>
+                </MDBox>
+              </MDBox>
+            </Card>
           </Grid>
         </Grid>
       </MDBox>
