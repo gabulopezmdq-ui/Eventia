@@ -67,7 +67,7 @@ namespace API.Services
 
             // Setear campos por default y valores
             movimiento.Fecha = DateTime.Now;
-            movimiento.Estado = "A";
+            movimiento.Estado = "P";
 
 
             _context.MEC_MovimientosCabecera.Add(movimiento);
