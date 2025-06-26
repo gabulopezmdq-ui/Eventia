@@ -56,6 +56,8 @@ namespace API.Services
                     Barra = p.Barra,
                     TipoCargo = p.TipoCargo,
                     Vigente = p.Vigente,
+                    Funcion = p.TipoFuncion.CodFuncion,
+                    Categoria = p.Categoria.CodCategoria,
 
                     // relaciones simples ----------------------
                     CarRevista = p.CarRevista.Descripcion,
