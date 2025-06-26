@@ -21,6 +21,7 @@ import axios from "axios";
 // dentro de tu componente:
 function AltaRegistroBaja() {
   const token = sessionStorage.getItem("token");
+  const [docenteSeleccionado, setDocenteSeleccionado] = useState(null);
   // Selecccionar Nivel
   const [niveles, setNiveles] = useState([]);
   const [nivelSeleccionado, setNivelSeleccionado] = useState("");
@@ -58,6 +59,7 @@ function AltaRegistroBaja() {
     setAniosDisponibles(anios.reverse()); // opcional: muestra el año más reciente primero
   }, []);
   // Establecimientos / Nro DIEGEP
+  const [diegep, setDiegep] = useState("");
   const [establecimientos, setEstablecimientos] = useState([]);
   const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState(null);
   const fetchEstablecimientos = async () => {
@@ -77,6 +79,24 @@ function AltaRegistroBaja() {
       fetchEstablecimientos();
     }
   }, [token]);
+  // Obtener docentes
+  const [docentes, setDocentes] = useState([]);
+  const [datosDocenteSeleccionado, setDatosDocenteSeleccionado] = useState(null);
+  const fetchDocentesPOF = async (idEstablecimiento) => {
+    try {
+      const response = await axios.get(
+        `https://localhost:44382/MovimientosBaja/GetPOF?idEstablecimiento=${idEstablecimiento}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setDocentes(response.data);
+    } catch (error) {
+      console.error("Error al obtener docentes de la POF:", error);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -137,6 +157,8 @@ function AltaRegistroBaja() {
                           (est) => est.idEstablecimiento === e.target.value
                         );
                         setEstablecimientoSeleccionado(est);
+                        setDiegep(est?.nroDiegep || ""); // si usás un estado para el campo diegep
+                        fetchDocentesPOF(est.idEstablecimiento); // ⚡️ Traer docentes POF
                       }}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
@@ -162,9 +184,21 @@ function AltaRegistroBaja() {
                 <Grid item xs={6}>
                   <FormControl fullWidth>
                     <InputLabel>Docente</InputLabel>
-                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
-                      <MenuItem value="1">Primario</MenuItem>
-                      <MenuItem value="2">Secundario</MenuItem>
+                    <Select
+                      value={docenteSeleccionado ?? ""} // docenteSeleccionado será string o null
+                      onChange={(e) => {
+                        const id = e.target.value; // es string
+                        setDocenteSeleccionado(id);
+                        const seleccionado = docentes.find((d) => String(d.id) === id);
+                        setDatosDocenteSeleccionado(seleccionado);
+                      }}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      {docentes.map((doc) => (
+                        <MenuItem key={doc.id} value={String(doc.id)}>
+                          {`${doc.personaDNI} - ${doc.secuencia} - ${doc.personaApellido}, ${doc.personaNombre}`}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
