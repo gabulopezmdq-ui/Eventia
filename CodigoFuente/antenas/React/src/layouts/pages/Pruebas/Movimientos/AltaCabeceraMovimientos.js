@@ -25,7 +25,8 @@ function AltaCabeceraMovimientos() {
   const [establecimientos, setEstablecimientos] = useState([]);
   const [detalles, setDetalles] = useState([]);
   const [mostrarFormularioDetalle, setMostrarFormularioDetalle] = useState(false);
-  const [idCabecera, setIdCabecera] = useState(null); // Nuevo estado para ID de cabecera
+  const [idCabecera, setIdCabecera] = useState(null);
+  const [ruralidadCabecera, setRuralidadCabecera] = useState("");
   const [detallesCargados, setDetallesCargados] = useState(false);
   const [formData, setFormData] = useState({
     area: "L",
@@ -89,7 +90,6 @@ function AltaCabeceraMovimientos() {
 
     fetchEstablecimientos();
 
-    // Modo Edición: Cargar datos existentes si hay ID
     if (id) {
       const fetchCabecera = async () => {
         try {
@@ -98,7 +98,6 @@ function AltaCabeceraMovimientos() {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           const cabecera = res.data;
-          // Reconstruir array de acciones
           const accionesSeleccionadas = [];
           if (cabecera.altas === "A") accionesSeleccionadas.push("A");
           if (cabecera.bajas === "B") accionesSeleccionadas.push("B");
@@ -114,8 +113,11 @@ function AltaCabeceraMovimientos() {
             estado: cabecera.estado,
           });
           setIdCabecera(cabecera.id);
-          setFormDeshabilitado(true); // Deshabilitar campos
+          setFormDeshabilitado(true);
           setMostrarDetalle(true);
+          if (cabecera.establecimientos?.ruralidad) {
+            setRuralidadCabecera(cabecera.establecimientos.ruralidad);
+          }
           fetchDetalles(cabecera.idMovimientoCabecera);
         } catch (err) {
           console.error("Error al cargar cabecera", err);
@@ -134,13 +136,13 @@ function AltaCabeceraMovimientos() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDetalles(res.data);
-      setDetallesCargados(true); // Indica que se cargaron detalles
+      setDetallesCargados(true);
     } catch (err) {
       if (err.response?.status === 404) {
         console.log("Entre al error 404 - No hay detalles cargados aún");
-        setDetalles([]); // No hay detalles
-        setMostrarDetalle(true); // 🔑 Esto activa la sección de detalle igual
-        setIdCabecera(cabeceraId); // Por si no se había seteado
+        setDetalles([]);
+        setMostrarDetalle(true);
+        setIdCabecera(cabeceraId);
       } else {
         console.error("Error al cargar detalles", err);
       }
@@ -177,8 +179,6 @@ function AltaCabeceraMovimientos() {
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // Suponiendo que el backend devuelve un objeto con una propiedad "success"
       if (response.data === false || response.data?.success === false) {
         alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
         navigate(-1);
@@ -187,7 +187,7 @@ function AltaCabeceraMovimientos() {
       if (response.data && response.data.id) {
         setIdCabecera(response.data.id);
         fetchDetalles(response.data.id);
-        setDetallesCargados(false); // Resetear estado mientras se cargan
+        setDetallesCargados(false);
       }
 
       alert("Alta exitosa de la Cabecera");
@@ -206,7 +206,7 @@ function AltaCabeceraMovimientos() {
     try {
       const payload = {
         ...detalleData,
-        IdMovimientoCabecera: idCabecera, // Usar el ID almacenado
+        IdMovimientoCabecera: idCabecera,
       };
 
       const response = await axios.put(
@@ -217,8 +217,8 @@ function AltaCabeceraMovimientos() {
 
       if (response.status === 200) {
         alert("Detalle guardado correctamente");
-        fetchDetalles(idCabecera); // Recargar detalles
-        setMostrarFormularioDetalle(false); // Ocultar formulario de detalle
+        fetchDetalles(idCabecera);
+        setMostrarFormularioDetalle(false);
       }
     } catch (error) {
       console.error("Error al guardar el detalle:", error);
@@ -253,6 +253,7 @@ function AltaCabeceraMovimientos() {
                 <InputLabel>Área</InputLabel>
                 <Select
                   name="area"
+                  label="Área"
                   value={formData.area}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -271,6 +272,7 @@ function AltaCabeceraMovimientos() {
                 <InputLabel>Mes</InputLabel>
                 <Select
                   name="mes"
+                  label="Mes"
                   value={formData.mes}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -300,6 +302,7 @@ function AltaCabeceraMovimientos() {
                 <InputLabel>Establecimiento</InputLabel>
                 <Select
                   name="idEstablecimiento"
+                  label="Establecimiento"
                   value={formData.idEstablecimiento}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -337,8 +340,9 @@ function AltaCabeceraMovimientos() {
                 <InputLabel>Estado</InputLabel>
                 <Select
                   name="estado"
+                  label="Estado"
                   value={formData.estado}
-                  style={{ height: "2.8rem", backgroundColor: "#e9e9e9" }}
+                  style={{ height: "2.8rem" }}
                   disabled
                 >
                   {estados.map((e) => (
@@ -376,6 +380,7 @@ function AltaCabeceraMovimientos() {
               <MDBox mt={3} px={3}>
                 <AgregarDetalle
                   idCabecera={idCabecera}
+                  ruralidad={ruralidadCabecera}
                   onSubmit={(data) => {
                     handleDetalleSubmit(data);
                     setMostrarFormularioDetalle(false);

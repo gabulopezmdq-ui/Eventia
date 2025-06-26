@@ -5,8 +5,9 @@ import MDButton from "components/MDButton";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 
-export default function AgregarDetalle({ onSubmit }) {
+export default function AgregarDetalle({ onSubmit, ruralidad }) {
   const [observacionSeleccionada, setObservacionSeleccionada] = useState("");
+  const [observacionesFiltradas, setObservacionesFiltradas] = useState([]);
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
@@ -43,7 +44,7 @@ export default function AgregarDetalle({ onSubmit }) {
       try {
         const response = await fetch(process.env.REACT_APP_API_URL + "TiposMovimientos/GetAll");
         const data = await response.json();
-        setObservacionesOpciones(data); // asumimos que `data` es un array de strings
+        setObservacionesOpciones(data);
       } catch (error) {
         console.error("Error al cargar observaciones:", error);
       }
@@ -51,6 +52,23 @@ export default function AgregarDetalle({ onSubmit }) {
 
     fetchObservaciones();
   }, []);
+  useEffect(() => {
+    if (ruralidad) {
+      setForm((prev) => ({
+        ...prev,
+        rural: ruralidad,
+      }));
+    }
+  }, [ruralidad]);
+  useEffect(() => {
+    const filtradas = observacionesOpciones.filter(
+      (obs) => obs.tipoMovimiento === form.tipoMovimiento
+    );
+    setObservacionesFiltradas(filtradas);
+    // Limpiar selección anterior si cambia el tipo
+    setObservacionSeleccionada("");
+    setForm((prev) => ({ ...prev, observaciones: "" }));
+  }, [form.tipoMovimiento, observacionesOpciones]);
 
   return (
     <MDBox pb={3} px={3}>
@@ -61,6 +79,7 @@ export default function AgregarDetalle({ onSubmit }) {
               <InputLabel>Tipo Movimiento</InputLabel>
               <Select
                 name="tipoMovimiento"
+                label="Tipo Movimiento"
                 value={form.tipoMovimiento}
                 style={{ height: "2.8rem", backgroundColor: "white" }}
                 onChange={handleChange}
@@ -105,7 +124,13 @@ export default function AgregarDetalle({ onSubmit }) {
             <TextField name="funcion" label="Función" fullWidth onChange={handleChange} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField name="rural" label="Rural" fullWidth onChange={handleChange} />
+            <TextField
+              name="rural"
+              label="Rural"
+              fullWidth
+              value={form.rural}
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField name="turno" label="Turno" fullWidth onChange={handleChange} />
@@ -141,6 +166,7 @@ export default function AgregarDetalle({ onSubmit }) {
               <InputLabel>Observaciones predefinidas</InputLabel>
               <Select
                 value={observacionSeleccionada}
+                label="Observaciones predefinidas"
                 style={{ height: "2.8rem", backgroundColor: "white" }}
                 onChange={(e) => {
                   const seleccion = e.target.value;
@@ -148,11 +174,17 @@ export default function AgregarDetalle({ onSubmit }) {
                   setForm((prev) => ({ ...prev, observaciones: seleccion }));
                 }}
               >
-                {observacionesOpciones.map((opcion) => (
-                  <MenuItem key={opcion.idTipoMovimiento} value={opcion.leyenda}>
-                    {opcion.leyenda}
+                {observacionesFiltradas.length > 0 ? (
+                  observacionesFiltradas.map((opcion) => (
+                    <MenuItem key={opcion.idTipoMovimiento} value={opcion.leyenda}>
+                      {opcion.leyenda}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay observaciones para este tipo de movimiento
                   </MenuItem>
-                ))}
+                )}
               </Select>
             </FormControl>
           </Grid>
@@ -180,4 +212,5 @@ export default function AgregarDetalle({ onSubmit }) {
 AgregarDetalle.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   idCabecera: PropTypes.object,
+  ruralidad: PropTypes.string,
 };
