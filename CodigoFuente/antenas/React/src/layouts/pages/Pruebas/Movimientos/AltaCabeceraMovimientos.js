@@ -27,6 +27,7 @@ function AltaCabeceraMovimientos() {
   const [mostrarFormularioDetalle, setMostrarFormularioDetalle] = useState(false);
   const [idCabecera, setIdCabecera] = useState(null);
   const [ruralidadCabecera, setRuralidadCabecera] = useState("");
+  const [idEstablecimiento, setIdEstablecimiento] = useState("");
   const [detallesCargados, setDetallesCargados] = useState(false);
   const [formData, setFormData] = useState({
     area: "L",
@@ -118,6 +119,7 @@ function AltaCabeceraMovimientos() {
           if (cabecera.establecimientos?.ruralidad) {
             setRuralidadCabecera(cabecera.establecimientos.ruralidad);
           }
+          setIdEstablecimiento(cabecera.idEstablecimiento);
           fetchDetalles(cabecera.idMovimientoCabecera);
         } catch (err) {
           console.error("Error al cargar cabecera", err);
@@ -380,6 +382,7 @@ function AltaCabeceraMovimientos() {
               <MDBox mt={3} px={3}>
                 <AgregarDetalle
                   idCabecera={idCabecera}
+                  idEstablecimiento={idEstablecimiento}
                   ruralidad={ruralidadCabecera}
                   onSubmit={(data) => {
                     handleDetalleSubmit(data);
