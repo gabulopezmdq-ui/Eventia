@@ -46,6 +46,17 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
+        [HttpGet("POF")]
+        public async Task<IActionResult> ObtenerPOF(int idEstablecimiento)
+        {
+            var pofs = await _movimientosDetalle.BuscarPOFAsync(idEstablecimiento);
+
+            if (pofs == null || !pofs.Any())          // solo para la versión “lista”
+                return NotFound("No se encontraron POFs para el establecimiento.");
+
+            return Ok(pofs);
+        }
+
         public async Task<IActionResult> CalcularAntiguedad(int id)
         {
             var resultado = await _movimientosDetalle.CalcularAntiguedadAsync(id);
