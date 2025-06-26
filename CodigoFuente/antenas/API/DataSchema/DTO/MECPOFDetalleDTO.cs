@@ -19,6 +19,9 @@ namespace API.DataSchema.DTO
         public string CarRevista { get; set; }
         public string Cargo { get; set; }
 
+        public string Funcion { get; set; }
+        public string Categoria { get; set; }
+
         // Datos MEC_POF_Detalle
         public string? SinHaberes { get; set; }
         public string? NoSubvencionado { get; set; }
