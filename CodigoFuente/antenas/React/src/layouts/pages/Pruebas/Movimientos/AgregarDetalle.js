@@ -5,10 +5,11 @@ import MDButton from "components/MDButton";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 
-export default function AgregarDetalle({ onSubmit, ruralidad }) {
+export default function AgregarDetalle({ onSubmit, ruralidad, idEstablecimiento }) {
   const [observacionSeleccionada, setObservacionSeleccionada] = useState("");
   const [observacionesFiltradas, setObservacionesFiltradas] = useState([]);
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
+  const [docentesOpciones, setDocentesOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
     SitRevista: "",
@@ -52,6 +53,25 @@ export default function AgregarDetalle({ onSubmit, ruralidad }) {
 
     fetchObservaciones();
   }, []);
+
+  useEffect(() => {
+    const fetchDocentes = async () => {
+      try {
+        if (!idEstablecimiento) return;
+
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}movimientosCabecera/POF?Idestablecimiento=${idEstablecimiento}`
+        );
+        const data = await response.json();
+        setDocentesOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar docentes:", error);
+      }
+    };
+
+    fetchDocentes();
+  }, [idEstablecimiento]);
+
   useEffect(() => {
     if (ruralidad) {
       setForm((prev) => ({
@@ -60,6 +80,7 @@ export default function AgregarDetalle({ onSubmit, ruralidad }) {
       }));
     }
   }, [ruralidad]);
+
   useEffect(() => {
     const filtradas = observacionesOpciones.filter(
       (obs) => obs.tipoMovimiento === form.tipoMovimiento
@@ -69,6 +90,19 @@ export default function AgregarDetalle({ onSubmit, ruralidad }) {
     setObservacionSeleccionada("");
     setForm((prev) => ({ ...prev, observaciones: "" }));
   }, [form.tipoMovimiento, observacionesOpciones]);
+
+  useEffect(() => {
+    if (form.docente && docentesOpciones.length > 0) {
+      const docenteSeleccionado = docentesOpciones.find((doc) => doc.idPersona === form.docente);
+      if (docenteSeleccionado) {
+        setForm((prev) => ({
+          ...prev,
+          funcion: docenteSeleccionado.funcion || "",
+          categoria: docenteSeleccionado.categoria || "",
+        }));
+      }
+    }
+  }, [form.docente, docentesOpciones]);
 
   return (
     <MDBox pb={3} px={3}>
@@ -114,14 +148,53 @@ export default function AgregarDetalle({ onSubmit, ruralidad }) {
           )}
           {isBajaOModifOAdic && (
             <Grid item xs={12}>
-              <TextField name="docente" label="Docente" fullWidth onChange={handleChange} />
+              <FormControl fullWidth>
+                <InputLabel>Docente</InputLabel>
+                <Select
+                  name="docente"
+                  label="Docente"
+                  value={form.docente}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const docenteSeleccionado = docentesOpciones.find(
+                      (doc) => doc.idPersona === selectedId
+                    );
+
+                    setForm((prev) => ({
+                      ...prev,
+                      docente: selectedId,
+                      funcion: docenteSeleccionado?.funcion || "",
+                      categoria: docenteSeleccionado?.categoria || "",
+                    }));
+                  }}
+                  style={{ height: "2.8rem", backgroundColor: "white" }}
+                >
+                  {docentesOpciones.length > 0 ? (
+                    docentesOpciones.map((doc) => (
+                      <MenuItem key={doc.idPersona} value={doc.idPersona}>
+                        {`${doc.personaDNI} - ${doc.secuencia} - ${doc.personaApellido} ${doc.personaNombre}`}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled value="">
+                      No hay docentes disponibles
+                    </MenuItem>
+                  )}
+                </Select>
+              </FormControl>
             </Grid>
           )}
           <Grid item xs={12} sm={6}>
             <TextField name="SitRevista" label="Sit. Revista" fullWidth onChange={handleChange} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField name="funcion" label="Función" fullWidth onChange={handleChange} />
+            <TextField
+              name="funcion"
+              label="Función"
+              fullWidth
+              value={form.funcion}
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -136,7 +209,13 @@ export default function AgregarDetalle({ onSubmit, ruralidad }) {
             <TextField name="turno" label="Turno" fullWidth onChange={handleChange} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField name="categoria" label="Categoría" fullWidth onChange={handleChange} />
+            <TextField
+              name="categoria"
+              label="Categoría"
+              fullWidth
+              value={form.categoria}
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField name="horas" label="Horas" fullWidth onChange={handleChange} />
@@ -212,5 +291,6 @@ export default function AgregarDetalle({ onSubmit, ruralidad }) {
 AgregarDetalle.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   idCabecera: PropTypes.object,
+  idEstablecimiento: PropTypes.object,
   ruralidad: PropTypes.string,
 };
