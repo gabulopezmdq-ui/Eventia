@@ -140,14 +140,14 @@ function CabeceraMovimientos() {
                               Editar
                             </MDButton>
                           )}
-                          {estado === "E" && (
+                          {estado === "P" && (
                             <MDButton
                               variant="gradient"
                               size="small"
                               color="secondary"
-                              onClick={() => handleEnviarProvincia(row.original)}
+                              onClick={() => handleEnviarEducacion(row.original)}
                             >
-                              Enviar a Provincia
+                              Enviar a Educacion
                             </MDButton>
                           )}
                           {estado === "V" && (
