@@ -56,6 +56,7 @@ import Bajas from "layouts/pages/Pruebas/Bajas";
 import AltaRegistroBaja from "layouts/pages/Pruebas/Bajas/AltaRegistroBaja";
 import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
 import AltaCabeceraMovimiento from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
+import AltaCabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -305,6 +306,10 @@ export default function App() {
     {
       path: "/CabeceraLiquidacionFe/Edit/:id",
       component: AltaCabeceraLiquidacion,
+    },
+    {
+      path: "/CabeceraMovimientos/Edit/:id",
+      component: AltaCabeceraMovimientos,
     },
     {
       path: "/PersonaFE/Edit/:id",

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Grid,
@@ -24,18 +24,23 @@ function AltaCabeceraMovimientos() {
   const { id } = useParams();
   const [establecimientos, setEstablecimientos] = useState([]);
   const [detalles, setDetalles] = useState([]);
-  const [mostrarFormularioDetalle, setMostrarFormularioDetalle] = useState(true);
+  const [mostrarFormularioDetalle, setMostrarFormularioDetalle] = useState(false);
+  const [idCabecera, setIdCabecera] = useState(null);
+  const [ruralidadCabecera, setRuralidadCabecera] = useState("");
+  const [idEstablecimiento, setIdEstablecimiento] = useState("");
+  const [detallesCargados, setDetallesCargados] = useState(false);
   const [formData, setFormData] = useState({
-    Area: "L",
-    Mes: "",
-    Anio: new Date().getFullYear().toString(),
-    EstablecimientoId: "",
+    area: "L",
+    mes: "",
+    anio: new Date().getFullYear().toString(),
+    idEstablecimiento: "",
     Accion: [],
-    Estado: "P",
+    estado: "P",
   });
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [formDeshabilitado, setFormDeshabilitado] = useState(false);
   const token = sessionStorage.getItem("token");
+  const navigate = useNavigate();
 
   const areaOptions = [
     { label: "LIQUIDACIONES", value: "L" },
@@ -45,18 +50,18 @@ function AltaCabeceraMovimientos() {
   ];
 
   const meses = [
-    { label: "Enero", value: "01" },
-    { label: "Febrero", value: "02" },
-    { label: "Marzo", value: "03" },
-    { label: "Abril", value: "04" },
-    { label: "Mayo", value: "05" },
-    { label: "Junio", value: "06" },
-    { label: "Julio", value: "07" },
-    { label: "Agosto", value: "08" },
-    { label: "Septiembre", value: "09" },
-    { label: "Octubre", value: "10" },
-    { label: "Noviembre", value: "11" },
-    { label: "Diciembre", value: "12" },
+    { label: "Enero", value: 1 },
+    { label: "Febrero", value: 2 },
+    { label: "Marzo", value: 3 },
+    { label: "Abril", value: 4 },
+    { label: "Mayo", value: 5 },
+    { label: "Junio", value: 6 },
+    { label: "Julio", value: 7 },
+    { label: "Agosto", value: 8 },
+    { label: "Septiembre", value: 9 },
+    { label: "Octubre", value: 10 },
+    { label: "Noviembre", value: 11 },
+    { label: "Diciembre", value: 12 },
   ];
 
   const acciones = [
@@ -68,7 +73,8 @@ function AltaCabeceraMovimientos() {
 
   const estados = [
     { label: "Pendiente", value: "P" },
-    { label: "Enviado", value: "E" },
+    { label: "Enviado a Educación", value: "E" },
+    { label: "Enviado a Provincia", value: "V" },
   ];
 
   useEffect(() => {
@@ -84,7 +90,66 @@ function AltaCabeceraMovimientos() {
     };
 
     fetchEstablecimientos();
-  }, [token]);
+
+    if (id) {
+      const fetchCabecera = async () => {
+        try {
+          const res = await axios.get(
+            process.env.REACT_APP_API_URL + `MovimientosCabecera/GetById?id=${id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const cabecera = res.data;
+          const accionesSeleccionadas = [];
+          if (cabecera.altas === "A") accionesSeleccionadas.push("A");
+          if (cabecera.bajas === "B") accionesSeleccionadas.push("B");
+          if (cabecera.modificaciones === "M") accionesSeleccionadas.push("M");
+          if (cabecera.adicionales === "D") accionesSeleccionadas.push("D");
+
+          setFormData({
+            area: cabecera.area,
+            mes: cabecera.mes,
+            anio: cabecera.anio,
+            idEstablecimiento: cabecera.idEstablecimiento,
+            Accion: accionesSeleccionadas,
+            estado: cabecera.estado,
+          });
+          setIdCabecera(cabecera.id);
+          setFormDeshabilitado(true);
+          setMostrarDetalle(true);
+          if (cabecera.establecimientos?.ruralidad) {
+            setRuralidadCabecera(cabecera.establecimientos.ruralidad);
+          }
+          setIdEstablecimiento(cabecera.idEstablecimiento);
+          fetchDetalles(cabecera.idMovimientoCabecera);
+        } catch (err) {
+          console.error("Error al cargar cabecera", err);
+          alert("Error al cargar los datos de la cabecera");
+        }
+      };
+      fetchCabecera();
+    }
+  }, [id, token]);
+
+  const fetchDetalles = async (cabeceraId) => {
+    try {
+      const res = await axios.get(
+        process.env.REACT_APP_API_URL +
+          `MovimientosCabecera/DetallesCabecera?IdCabecera=${cabeceraId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setDetalles(res.data);
+      setDetallesCargados(true);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        console.log("Entre al error 404 - No hay detalles cargados aún");
+        setDetalles([]);
+        setMostrarDetalle(true);
+        setIdCabecera(cabeceraId);
+      } else {
+        console.error("Error al cargar detalles", err);
+      }
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -99,25 +164,35 @@ function AltaCabeceraMovimientos() {
     }));
   };
 
-  /*const handleSubmit = async () => {
+  const handleSubmit = async () => {
     const { Accion, ...resto } = formData;
 
     const payload = {
       ...resto,
-      Altas: Accion.includes("A") ? "A" : null,
-      Bajas: Accion.includes("B") ? "B" : null,
-      Modificaciones: Accion.includes("M") ? "M" : null,
-      Adicionales: Accion.includes("D") ? "D" : null,
+      altas: Accion.includes("A") ? "A" : null,
+      bajas: Accion.includes("B") ? "B" : null,
+      modificaciones: Accion.includes("M") ? "M" : null,
+      adicionales: Accion.includes("D") ? "D" : null,
     };
 
     try {
       const response = await axios.post(
-        process.env.REACT_APP_API_URL + "MovimientosCabecera",
+        process.env.REACT_APP_API_URL + "MovimientosCabecera/CabeceraMovimiento",
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      if (response.data === false || response.data?.success === false) {
+        alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
+        navigate(-1);
+        return;
+      }
+      if (response.data && response.data.id) {
+        setIdCabecera(response.data.id);
+        fetchDetalles(response.data.id);
+        setDetallesCargados(false);
+      }
 
-      alert("Alta exitosa");
+      alert("Alta exitosa de la Cabecera");
       setFormDeshabilitado(true);
       setMostrarDetalle(true);
     } catch (err) {
@@ -128,87 +203,28 @@ function AltaCabeceraMovimientos() {
         alert("Error al guardar");
       }
     }
-  };*/
-  const handleSubmit = async () => {
-    const { Accion, ...resto } = formData;
-
-    const payload = {
-      ...resto,
-      Altas: Accion.includes("A") ? "A" : null,
-      Bajas: Accion.includes("B") ? "B" : null,
-      Modificaciones: Accion.includes("M") ? "M" : null,
-      Adicionales: Accion.includes("D") ? "D" : null,
-    };
-
-    try {
-      // Simulación de espera y éxito
-      await new Promise((res) => setTimeout(res, 500)); // simulás el "delay"
-      const response = { status: 200, data: false }; // falso: no existe repetido
-
-      if (response.status === 200) {
-        if (response.data === true) {
-          alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
-          return;
-        }
-
-        alert("Alta exitosa");
-        setFormDeshabilitado(true);
-        setMostrarDetalle(true);
-      }
-    } catch (err) {
-      console.error("Error al guardar (mock)", err);
-      alert("Error al guardar");
-    }
   };
-
-  /*const handleDetalleSubmit = async (detalleData) => {
-    try {
-      const payload = {
-        ...detalleData,
-        idCabecera: formData,
-      };
-
-      const response = await axios.post(
-        process.env.REACT_APP_API_URL + "Movimientos/AgregoDetalle",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        alert("Detalle guardado correctamente");
-      } else {
-        alert("No se pudo guardar el detalle");
-      }
-    } catch (error) {
-      console.error("Error al guardar el detalle:", error);
-      alert("Ocurrió un error al guardar el detalle");
-    }
-  };*/
   const handleDetalleSubmit = async (detalleData) => {
     try {
       const payload = {
         ...detalleData,
-        idCabecera: formData, // esto depende de cómo el backend espera el ID
+        IdMovimientoCabecera: idCabecera,
       };
 
-      // Simulás el post o hacés la petición real
-      // const response = await axios.post(...);
+      const response = await axios.put(
+        process.env.REACT_APP_API_URL + "MovimientosCabecera",
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      // Simulación de éxito
-      console.log("Simulando guardado exitoso:", payload);
-      setDetalles((prev) => [...prev, payload]); // lo agregás a la tabla
-
-      alert("Detalle guardado correctamente");
-
-      // ✅ Ocultás el formulario
-      setMostrarFormularioDetalle(false);
+      if (response.status === 200) {
+        alert("Detalle guardado correctamente");
+        fetchDetalles(idCabecera);
+        setMostrarFormularioDetalle(false);
+      }
     } catch (error) {
       console.error("Error al guardar el detalle:", error);
-      alert("Ocurrió un error al guardar el detalle");
+      alert("Error al guardar el detalle");
     }
   };
 
@@ -238,8 +254,9 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Área</InputLabel>
                 <Select
-                  name="Area"
-                  value={formData.Area}
+                  name="area"
+                  label="Área"
+                  value={formData.area}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
@@ -256,8 +273,9 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Mes</InputLabel>
                 <Select
-                  name="Mes"
-                  value={formData.Mes}
+                  name="mes"
+                  label="Mes"
+                  value={formData.mes}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
@@ -273,10 +291,10 @@ function AltaCabeceraMovimientos() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="Anio"
+                name="anio"
                 type="number"
                 disabled={formDeshabilitado}
-                value={formData.Anio}
+                value={formData.anio}
                 onChange={handleInputChange}
               />
             </Grid>
@@ -285,8 +303,9 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Establecimiento</InputLabel>
                 <Select
-                  name="EstablecimientoId"
-                  value={formData.EstablecimientoId}
+                  name="idEstablecimiento"
+                  label="Establecimiento"
+                  value={formData.idEstablecimiento}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
@@ -322,9 +341,10 @@ function AltaCabeceraMovimientos() {
               <FormControl fullWidth>
                 <InputLabel>Estado</InputLabel>
                 <Select
-                  name="Estado"
-                  value={formData.Estado}
-                  style={{ height: "2.8rem", backgroundColor: "#e9e9e9" }}
+                  name="estado"
+                  label="Estado"
+                  value={formData.estado}
+                  style={{ height: "2.8rem" }}
                   disabled
                 >
                   {estados.map((e) => (
@@ -337,7 +357,7 @@ function AltaCabeceraMovimientos() {
             </Grid>
           </Grid>
 
-          {!formDeshabilitado && (
+          {!id && !formDeshabilitado && (
             <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
               <MDButton variant="contained" color="info" size="small" onClick={handleSubmit}>
                 Guardar
@@ -345,22 +365,35 @@ function AltaCabeceraMovimientos() {
             </MDBox>
           )}
         </Card>
-        {mostrarDetalle && mostrarFormularioDetalle && (
-          <MDBox mt={3} px={3}>
-            <AgregarDetalle idCabecera={formData} onSubmit={handleDetalleSubmit} />
-          </MDBox>
-        )}
-        {!mostrarFormularioDetalle && (
-          <MDBox mt={2} px={3} display="flex" justifyContent="flex-end">
-            <MDButton
-              variant="contained"
-              color="success"
-              size="small"
-              onClick={() => setMostrarFormularioDetalle(true)}
-            >
-              Nuevo Detalle
-            </MDButton>
-          </MDBox>
+        {mostrarDetalle && idCabecera && (
+          <>
+            <MDBox mt={2} px={3} display="flex" justifyContent="flex-end">
+              <MDButton
+                variant="contained"
+                color="success"
+                size="small"
+                onClick={() => setMostrarFormularioDetalle(true)}
+              >
+                Nuevo Detalle
+              </MDButton>
+            </MDBox>
+
+            {mostrarFormularioDetalle && (
+              <MDBox mt={3} px={3}>
+                <AgregarDetalle
+                  idCabecera={idCabecera}
+                  idEstablecimiento={idEstablecimiento}
+                  accionesDisponibles={formData.Accion}
+                  ruralidad={ruralidadCabecera}
+                  onSubmit={(data) => {
+                    handleDetalleSubmit(data);
+                    setMostrarFormularioDetalle(false);
+                  }}
+                  onCancel={() => setMostrarFormularioDetalle(false)}
+                />
+              </MDBox>
+            )}
+          </>
         )}
         {detalles.length > 0 && (
           <MDBox mt={3}>

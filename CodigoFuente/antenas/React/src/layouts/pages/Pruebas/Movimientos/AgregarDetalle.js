@@ -5,26 +5,38 @@ import MDButton from "components/MDButton";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 
-export default function AgregarDetalle({ onSubmit }) {
+export default function AgregarDetalle({
+  onSubmit,
+  ruralidad,
+  idEstablecimiento,
+  accionesDisponibles = [],
+}) {
   const [observacionSeleccionada, setObservacionSeleccionada] = useState("");
+  const [observacionesFiltradas, setObservacionesFiltradas] = useState([]);
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
+  const [docentesOpciones, setDocentesOpciones] = useState([]);
+  const [motivosOpciones, setMotivosOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
-    situacionRevista: "",
+    SitRevista: "",
     funcion: "",
     rural: "",
     turno: "",
+    NumDoc: "",
     categoria: "",
     horas: "",
     antigAnos: "",
     antigMeses: "",
     observaciones: "",
-    tipoDocumento: "",
+    TipoDoc: "",
     apellido: "",
     nombre: "",
     docente: "",
+    inicio: "",
+    fin: "",
+    motivos: "",
   });
-
+  const isBaja = form.tipoMovimiento === "B";
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -42,7 +54,7 @@ export default function AgregarDetalle({ onSubmit }) {
       try {
         const response = await fetch(process.env.REACT_APP_API_URL + "TiposMovimientos/GetAll");
         const data = await response.json();
-        setObservacionesOpciones(data); // asumimos que `data` es un array de strings
+        setObservacionesOpciones(data);
       } catch (error) {
         console.error("Error al cargar observaciones:", error);
       }
@@ -51,23 +63,104 @@ export default function AgregarDetalle({ onSubmit }) {
     fetchObservaciones();
   }, []);
 
+  useEffect(() => {
+    const fetchDocentes = async () => {
+      try {
+        if (!idEstablecimiento) return;
+
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}movimientosCabecera/POF?Idestablecimiento=${idEstablecimiento}`
+        );
+        const data = await response.json();
+        setDocentesOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar docentes:", error);
+      }
+    };
+
+    fetchDocentes();
+  }, [idEstablecimiento]);
+
+  useEffect(() => {
+    if (ruralidad) {
+      setForm((prev) => ({
+        ...prev,
+        rural: ruralidad,
+      }));
+    }
+  }, [ruralidad]);
+
+  useEffect(() => {
+    const filtradas = observacionesOpciones.filter(
+      (obs) => obs.tipoMovimiento === form.tipoMovimiento
+    );
+    setObservacionesFiltradas(filtradas);
+    // Limpiar selección anterior si cambia el tipo
+    setObservacionSeleccionada("");
+    setForm((prev) => ({ ...prev, observaciones: "" }));
+  }, [form.tipoMovimiento, observacionesOpciones]);
+
+  useEffect(() => {
+    if (form.docente && docentesOpciones.length > 0) {
+      const docenteSeleccionado = docentesOpciones.find((doc) => doc.idPersona === form.docente);
+      if (docenteSeleccionado) {
+        setForm((prev) => ({
+          ...prev,
+          funcion: docenteSeleccionado.funcion || "",
+          categoria: docenteSeleccionado.categoria || "",
+        }));
+      }
+    }
+  }, [form.docente, docentesOpciones]);
+
+  useEffect(() => {
+    const fetchMotivos = async () => {
+      if (form.tipoMovimiento !== "B") return;
+
+      try {
+        const response = await fetch(process.env.REACT_APP_API_URL + "MotivosBajasDoc/Getall");
+        const data = await response.json();
+        setMotivosOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar motivos de baja:", error);
+      }
+    };
+
+    fetchMotivos();
+  }, [form.tipoMovimiento]);
+
+  const tipoMovimientoLabels = {
+    A: "Alta",
+    B: "Baja",
+    M: "Modificación",
+    D: "Adicional",
+  };
+
   return (
     <MDBox pb={3} px={3}>
       <Card>
         <Grid container spacing={3} p={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth>
               <InputLabel>Tipo Movimiento</InputLabel>
               <Select
                 name="tipoMovimiento"
+                label="Tipo Movimiento"
                 value={form.tipoMovimiento}
                 style={{ height: "2.8rem", backgroundColor: "white" }}
                 onChange={handleChange}
               >
-                <MenuItem value="A">Alta</MenuItem>
-                <MenuItem value="B">Baja</MenuItem>
-                <MenuItem value="M">Modificación</MenuItem>
-                <MenuItem value="D">Adicional</MenuItem>
+                {accionesDisponibles.length > 0 ? (
+                  accionesDisponibles.map((accion) => (
+                    <MenuItem key={accion} value={accion}>
+                      {tipoMovimientoLabels[accion] || accion}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay acciones disponibles
+                  </MenuItem>
+                )}
               </Select>
             </FormControl>
           </Grid>
@@ -75,11 +168,14 @@ export default function AgregarDetalle({ onSubmit }) {
             <>
               <Grid item xs={12} sm={4}>
                 <TextField
-                  name="tipoDocumento"
+                  name="TipoDoc"
                   label="Tipo Documento"
                   fullWidth
                   onChange={handleChange}
                 />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField name="NumDoc" label="Nro" fullWidth onChange={handleChange} />
               </Grid>
               <Grid item xs={12} sm={4}>
                 <TextField name="apellido" label="Apellido" fullWidth onChange={handleChange} />
@@ -91,28 +187,75 @@ export default function AgregarDetalle({ onSubmit }) {
           )}
           {isBajaOModifOAdic && (
             <Grid item xs={12}>
-              <TextField name="docente" label="Docente" fullWidth onChange={handleChange} />
+              <FormControl fullWidth>
+                <InputLabel>Docente</InputLabel>
+                <Select
+                  name="docente"
+                  label="Docente"
+                  value={form.docente}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const docenteSeleccionado = docentesOpciones.find(
+                      (doc) => doc.idPersona === selectedId
+                    );
+
+                    setForm((prev) => ({
+                      ...prev,
+                      docente: selectedId,
+                      funcion: docenteSeleccionado?.funcion || "",
+                      categoria: docenteSeleccionado?.categoria || "",
+                    }));
+                  }}
+                  style={{ height: "2.8rem", backgroundColor: "white" }}
+                >
+                  {docentesOpciones.length > 0 ? (
+                    docentesOpciones.map((doc) => (
+                      <MenuItem key={doc.idPersona} value={doc.idPersona}>
+                        {`${doc.personaDNI} - ${doc.secuencia} - ${doc.personaApellido} ${doc.personaNombre}`}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled value="">
+                      No hay docentes disponibles
+                    </MenuItem>
+                  )}
+                </Select>
+              </FormControl>
             </Grid>
           )}
           <Grid item xs={12} sm={6}>
+            <TextField name="SitRevista" label="Sit. Revista" fullWidth onChange={handleChange} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
             <TextField
-              name="situacionRevista"
-              label="Sit. Revista"
+              name="funcion"
+              label="Función"
               fullWidth
+              value={form.funcion}
               onChange={handleChange}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField name="funcion" label="Función" fullWidth onChange={handleChange} />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField name="rural" label="Rural" fullWidth onChange={handleChange} />
+            <TextField
+              name="rural"
+              label="Rural"
+              fullWidth
+              value={form.rural}
+              onChange={handleChange}
+              disabled
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField name="turno" label="Turno" fullWidth onChange={handleChange} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField name="categoria" label="Categoría" fullWidth onChange={handleChange} />
+            <TextField
+              name="categoria"
+              label="Categoría"
+              fullWidth
+              value={form.categoria}
+              onChange={handleChange}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField name="horas" label="Horas" fullWidth onChange={handleChange} />
@@ -142,6 +285,7 @@ export default function AgregarDetalle({ onSubmit }) {
               <InputLabel>Observaciones predefinidas</InputLabel>
               <Select
                 value={observacionSeleccionada}
+                label="Observaciones predefinidas"
                 style={{ height: "2.8rem", backgroundColor: "white" }}
                 onChange={(e) => {
                   const seleccion = e.target.value;
@@ -149,11 +293,17 @@ export default function AgregarDetalle({ onSubmit }) {
                   setForm((prev) => ({ ...prev, observaciones: seleccion }));
                 }}
               >
-                {observacionesOpciones.map((opcion) => (
-                  <MenuItem key={opcion.idTipoMovimiento} value={opcion.leyenda}>
-                    {opcion.leyenda}
+                {observacionesFiltradas.length > 0 ? (
+                  observacionesFiltradas.map((opcion) => (
+                    <MenuItem key={opcion.idTipoMovimiento} value={opcion.leyenda}>
+                      {opcion.leyenda}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay observaciones para este tipo de movimiento
                   </MenuItem>
-                ))}
+                )}
               </Select>
             </FormControl>
           </Grid>
@@ -168,6 +318,56 @@ export default function AgregarDetalle({ onSubmit }) {
               onChange={handleChange}
             />
           </Grid>
+          {isBaja && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="inicio"
+                  label="Inicio"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={form.inicio}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="fin"
+                  label="Fin"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={form.fin}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Motivo de Baja</InputLabel>
+                  <Select
+                    name="motivos"
+                    value={form.motivos}
+                    label="Motivo de Baja"
+                    onChange={handleChange}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {motivosOpciones.length > 0 ? (
+                      motivosOpciones.map((motivo) => (
+                        <MenuItem key={motivo.idMotivoBaja} value={motivo.idMotivoBaja}>
+                          {motivo.motivoBaja}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled value="">
+                        No hay motivos disponibles
+                      </MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </>
+          )}
           <Grid item xs={12} display="flex" justifyContent="flex-end">
             <MDButton onClick={handleSubmit} size="small" color="info" variant="contained">
               Agregar Detalle
@@ -181,4 +381,7 @@ export default function AgregarDetalle({ onSubmit }) {
 AgregarDetalle.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   idCabecera: PropTypes.object,
+  idEstablecimiento: PropTypes.object,
+  ruralidad: PropTypes.string,
+  accionesDisponibles: PropTypes.arrayOf(PropTypes.string),
 };
