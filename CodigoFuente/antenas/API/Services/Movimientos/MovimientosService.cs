@@ -39,6 +39,37 @@ namespace API.Services
                 Nombre = suplente.Nombre
             };
         }
+        public async Task<List<MECPOFDetalleDTO>> BuscarPOFAsync(int idEstablecimiento)
+        {
+            return await _context.MEC_POF
+                .AsNoTracking()                               // lectura sin tracking
+                .Where(p => p.IdEstablecimiento == idEstablecimiento)
+                .Select(p => new MECPOFDetalleDTO
+                {
+                    // --- datos de MEC_POF --------------------
+                    IdPOF = p.IdPOF,
+                    IdEstablecimiento = p.IdEstablecimiento,
+                    IdPersona = p.IdPersona,
+                    IdCategoria = p.IdCategoria,
+                    IdCarRevista = p.IdCarRevista,
+                    Secuencia = p.Secuencia,
+                    Barra = p.Barra,
+                    TipoCargo = p.TipoCargo,
+                    Vigente = p.Vigente,
+
+                    // relaciones simples ----------------------
+                    CarRevista = p.CarRevista.Descripcion,
+                    Cargo = p.TipoFuncion.Descripcion,
+
+
+                    // --- datos de Persona --------------------
+                    PersonaDNI = p.Persona.DNI,
+                    PersonaApellido = p.Persona.Apellido,
+                    PersonaNombre = p.Persona.Nombre,
+                })
+                .ToListAsync();
+        }
+
 
 
         //Nueva Cabecera Movimientos
