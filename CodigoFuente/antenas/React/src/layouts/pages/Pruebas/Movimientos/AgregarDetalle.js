@@ -5,11 +5,17 @@ import MDButton from "components/MDButton";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 
-export default function AgregarDetalle({ onSubmit, ruralidad, idEstablecimiento }) {
+export default function AgregarDetalle({
+  onSubmit,
+  ruralidad,
+  idEstablecimiento,
+  accionesDisponibles = [],
+}) {
   const [observacionSeleccionada, setObservacionSeleccionada] = useState("");
   const [observacionesFiltradas, setObservacionesFiltradas] = useState([]);
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
   const [docentesOpciones, setDocentesOpciones] = useState([]);
+  const [motivosOpciones, setMotivosOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
     SitRevista: "",
@@ -26,8 +32,11 @@ export default function AgregarDetalle({ onSubmit, ruralidad, idEstablecimiento 
     apellido: "",
     nombre: "",
     docente: "",
+    inicio: "",
+    fin: "",
+    motivos: "",
   });
-
+  const isBaja = form.tipoMovimiento === "B";
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -104,6 +113,29 @@ export default function AgregarDetalle({ onSubmit, ruralidad, idEstablecimiento 
     }
   }, [form.docente, docentesOpciones]);
 
+  useEffect(() => {
+    const fetchMotivos = async () => {
+      if (form.tipoMovimiento !== "B") return;
+
+      try {
+        const response = await fetch(process.env.REACT_APP_API_URL + "MotivosBajasDoc/Getall");
+        const data = await response.json();
+        setMotivosOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar motivos de baja:", error);
+      }
+    };
+
+    fetchMotivos();
+  }, [form.tipoMovimiento]);
+
+  const tipoMovimientoLabels = {
+    A: "Alta",
+    B: "Baja",
+    M: "Modificación",
+    D: "Adicional",
+  };
+
   return (
     <MDBox pb={3} px={3}>
       <Card>
@@ -118,10 +150,17 @@ export default function AgregarDetalle({ onSubmit, ruralidad, idEstablecimiento 
                 style={{ height: "2.8rem", backgroundColor: "white" }}
                 onChange={handleChange}
               >
-                <MenuItem value="A">Alta</MenuItem>
-                <MenuItem value="B">Baja</MenuItem>
-                <MenuItem value="M">Modificación</MenuItem>
-                <MenuItem value="D">Adicional</MenuItem>
+                {accionesDisponibles.length > 0 ? (
+                  accionesDisponibles.map((accion) => (
+                    <MenuItem key={accion} value={accion}>
+                      {tipoMovimientoLabels[accion] || accion}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay acciones disponibles
+                  </MenuItem>
+                )}
               </Select>
             </FormControl>
           </Grid>
@@ -203,6 +242,7 @@ export default function AgregarDetalle({ onSubmit, ruralidad, idEstablecimiento 
               fullWidth
               value={form.rural}
               onChange={handleChange}
+              disabled
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -278,6 +318,56 @@ export default function AgregarDetalle({ onSubmit, ruralidad, idEstablecimiento 
               onChange={handleChange}
             />
           </Grid>
+          {isBaja && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="inicio"
+                  label="Inicio"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={form.inicio}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="fin"
+                  label="Fin"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={form.fin}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Motivo de Baja</InputLabel>
+                  <Select
+                    name="motivos"
+                    value={form.motivos}
+                    label="Motivo de Baja"
+                    onChange={handleChange}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {motivosOpciones.length > 0 ? (
+                      motivosOpciones.map((motivo) => (
+                        <MenuItem key={motivo.idMotivoBaja} value={motivo.idMotivoBaja}>
+                          {motivo.motivoBaja}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled value="">
+                        No hay motivos disponibles
+                      </MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </>
+          )}
           <Grid item xs={12} display="flex" justifyContent="flex-end">
             <MDButton onClick={handleSubmit} size="small" color="info" variant="contained">
               Agregar Detalle
@@ -293,4 +383,5 @@ AgregarDetalle.propTypes = {
   idCabecera: PropTypes.object,
   idEstablecimiento: PropTypes.object,
   ruralidad: PropTypes.string,
+  accionesDisponibles: PropTypes.arrayOf(PropTypes.string),
 };

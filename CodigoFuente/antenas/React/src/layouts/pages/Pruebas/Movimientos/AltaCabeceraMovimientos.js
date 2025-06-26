@@ -383,6 +383,7 @@ function AltaCabeceraMovimientos() {
                 <AgregarDetalle
                   idCabecera={idCabecera}
                   idEstablecimiento={idEstablecimiento}
+                  accionesDisponibles={formData.Accion}
                   ruralidad={ruralidadCabecera}
                   onSubmit={(data) => {
                     handleDetalleSubmit(data);
