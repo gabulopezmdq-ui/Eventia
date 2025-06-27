@@ -52,6 +52,7 @@ namespace API.Services
                     IdPersona = p.IdPersona,
                     IdCategoria = p.IdCategoria,
                     IdCarRevista = p.IdCarRevista,
+                    IdTipoFuncion = p.IdFuncion,
                     Secuencia = p.Secuencia,
                     Barra = p.Barra,
                     TipoCargo = p.TipoCargo,
