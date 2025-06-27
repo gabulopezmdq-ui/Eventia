@@ -20,8 +20,8 @@ namespace API.DataSchema
         public string SitRevista { get; set; }
         public string Turno { get; set; }
         public string? Observaciones { get; set; }
-        public int AntigAnios { get; set; }
-        public int AntigMeses { get; set; }
+        public int? AntigAnios { get; set; }
+        public int? AntigMeses { get; set; }
         public int Horas { get; set; }
         public DateTime FechaInicioBaja { get; set; }
         public DateTime FechaFinBaja { get; set; }
