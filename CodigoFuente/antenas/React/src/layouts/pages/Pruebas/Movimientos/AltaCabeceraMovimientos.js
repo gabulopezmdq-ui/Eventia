@@ -208,11 +208,11 @@ function AltaCabeceraMovimientos() {
     try {
       const payload = {
         ...detalleData,
-        IdMovimientoCabecera: idCabecera,
+        idMovimientoCabecera: idCabecera,
       };
 
-      const response = await axios.put(
-        process.env.REACT_APP_API_URL + "MovimientosCabecera",
+      const response = await axios.post(
+        process.env.REACT_APP_API_URL + "MovimientosCabecera/AddDetalle",
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -227,22 +227,6 @@ function AltaCabeceraMovimientos() {
       alert("Error al guardar el detalle");
     }
   };
-
-  useEffect(() => {
-    const fetchDetalles = async () => {
-      try {
-        // const res = await axios.get(process.env.REACT_APP_API_URL + "MovimientosCabecera/GetByVigente", {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
-        // setDetalles(res.data);
-        // Simulación temporal:
-      } catch (err) {
-        console.error("Error al cargar detalles", err);
-      }
-    };
-
-    fetchDetalles();
-  }, []);
 
   return (
     <DashboardLayout>

@@ -18,23 +18,24 @@ export default function AgregarDetalle({
   const [motivosOpciones, setMotivosOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
-    SitRevista: "",
+    sitRevista: "",
     funcion: "",
     rural: "",
     turno: "",
-    NumDoc: "",
+    numDoc: "",
     categoria: "",
     horas: "",
     antigAnos: "",
     antigMeses: "",
     observaciones: "",
-    TipoDoc: "",
+    tipoDoc: "",
     apellido: "",
     nombre: "",
     docente: "",
+    idPOF: "", // Nuevo campo agregado
     inicio: "",
     fin: "",
-    motivos: "",
+    idMotivos: "",
   });
   const isBaja = form.tipoMovimiento === "B";
   const handleChange = (e) => {
@@ -43,7 +44,21 @@ export default function AgregarDetalle({
   };
 
   const handleSubmit = () => {
-    onSubmit(form);
+    // Preparar objeto para enviar
+    const formData = { ...form };
+    if (isBajaOModifOAdic) {
+      // Para Baja, Modificación o Adicional
+      formData.idPOF = form.idPOF; // Enviar idPOF
+      // Eliminar campos que no deben enviarse
+      delete formData.docente;
+      delete formData.tipoDoc;
+      delete formData.numDoc;
+    } else if (isAlta) {
+      // Para Alta
+      delete formData.idPOF;
+      delete formData.docente;
+    }
+    onSubmit(formData);
   };
 
   const isAlta = form.tipoMovimiento === "A";
@@ -95,7 +110,6 @@ export default function AgregarDetalle({
       (obs) => obs.tipoMovimiento === form.tipoMovimiento
     );
     setObservacionesFiltradas(filtradas);
-    // Limpiar selección anterior si cambia el tipo
     setObservacionSeleccionada("");
     setForm((prev) => ({ ...prev, observaciones: "" }));
   }, [form.tipoMovimiento, observacionesOpciones]);
@@ -135,6 +149,13 @@ export default function AgregarDetalle({
     M: "Modificación",
     D: "Adicional",
   };
+
+  const situacionRevistaOpciones = [
+    { value: "11", label: "Docente Titular" },
+    { value: "P", label: "Provisorio" },
+    { value: "21", label: "Docente Suplente" },
+    { value: "31", label: "Docente suplente de titular en licencia por maternidad" },
+  ];
 
   return (
     <MDBox pb={3} px={3}>
@@ -178,10 +199,22 @@ export default function AgregarDetalle({
                 <TextField name="NumDoc" label="Nro" fullWidth onChange={handleChange} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField name="apellido" label="Apellido" fullWidth onChange={handleChange} />
+                <TextField
+                  name="apellido"
+                  label="Apellido"
+                  fullWidth
+                  value={form.apellido}
+                  onChange={handleChange}
+                />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField name="nombre" label="Nombre" fullWidth onChange={handleChange} />
+                <TextField
+                  name="nombre"
+                  label="Nombre"
+                  fullWidth
+                  value={form.nombre}
+                  onChange={handleChange}
+                />
               </Grid>
             </>
           )}
@@ -202,6 +235,9 @@ export default function AgregarDetalle({
                     setForm((prev) => ({
                       ...prev,
                       docente: selectedId,
+                      idPOF: docenteSeleccionado.idPOF, // Guardar idPOF
+                      nombre: docenteSeleccionado.personaNombre, // Cargar nombre
+                      apellido: docenteSeleccionado.personaApellido, // Cargar apellido
                       funcion: docenteSeleccionado?.funcion || "",
                       categoria: docenteSeleccionado?.categoria || "",
                     }));
@@ -224,7 +260,22 @@ export default function AgregarDetalle({
             </Grid>
           )}
           <Grid item xs={12} sm={6}>
-            <TextField name="SitRevista" label="Sit. Revista" fullWidth onChange={handleChange} />
+            <FormControl fullWidth>
+              <InputLabel>Sit.Revista</InputLabel>
+              <Select
+                name="sitRevista"
+                label="Sit.Revista"
+                value={form.sitRevista}
+                onChange={handleChange}
+                style={{ height: "2.8rem", backgroundColor: "white" }}
+              >
+                {situacionRevistaOpciones.map((opcion) => (
+                  <MenuItem key={opcion.value} value={opcion.value}>
+                    {opcion.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -346,8 +397,8 @@ export default function AgregarDetalle({
                 <FormControl fullWidth>
                   <InputLabel>Motivo de Baja</InputLabel>
                   <Select
-                    name="motivos"
-                    value={form.motivos}
+                    name="idMotivos"
+                    value={form.idMotivos}
                     label="Motivo de Baja"
                     onChange={handleChange}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
