@@ -12,6 +12,7 @@ namespace API.DataSchema.DTO
         public int IdPersona { get; set; }
         public int IdCategoria { get; set; }
         public int IdCarRevista { get; set; }
+        public int IdTipoFuncion { get; set; }
         public string Secuencia { get; set; }
         public string Barra { get; set; }
         public string TipoCargo { get; set; }

@@ -33,9 +33,9 @@ export default function AgregarDetalle({
     nombre: "",
     docente: "",
     idPOF: "", // Nuevo campo agregado
-    inicio: "",
-    fin: "",
-    idMotivos: "",
+    fechaInicioBaja: "",
+    fechaFinBaja: "",
+    idMotivoBaja: "",
   });
   const isBaja = form.tipoMovimiento === "B";
   const handleChange = (e) => {
@@ -373,23 +373,23 @@ export default function AgregarDetalle({
             <>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  name="inicio"
+                  name="fechaInicioBaja"
                   label="Inicio"
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
-                  value={form.inicio}
+                  value={form.fechaInicioBaja}
                   onChange={handleChange}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  name="fin"
+                  name="fechaFinBaja"
                   label="Fin"
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
-                  value={form.fin}
+                  value={form.fechaFinBaja}
                   onChange={handleChange}
                 />
               </Grid>
@@ -397,8 +397,8 @@ export default function AgregarDetalle({
                 <FormControl fullWidth>
                   <InputLabel>Motivo de Baja</InputLabel>
                   <Select
-                    name="idMotivos"
-                    value={form.idMotivos}
+                    name="idMotivoBaja"
+                    value={form.idMotivoBaja}
                     label="Motivo de Baja"
                     onChange={handleChange}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
