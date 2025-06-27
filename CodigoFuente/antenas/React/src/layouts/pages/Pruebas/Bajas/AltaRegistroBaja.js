@@ -6,6 +6,7 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
+import { Snackbar, Alert } from "@mui/material";
 
 // Material Dashboard components
 import MDBox from "components/MDBox";
@@ -97,6 +98,127 @@ function AltaRegistroBaja() {
       console.error("Error al obtener docentes de la POF:", error);
     }
   };
+
+  //Suplente DNI
+  const [suplenteDni, setSuplenteDni] = useState("");
+  const [suplenteApellido, setSuplenteApellido] = useState("");
+  const [suplenteNombre, setSuplenteNombre] = useState("");
+  const [camposSuplenteReadonly, setCamposSuplenteReadonly] = useState(false);
+
+  const buscarSuplentePorDNI = async (dni) => {
+    try {
+      const response = await axios.get("https://localhost:44382/MovimientosBaja/GetAll", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const registros = response.data;
+      const coincidencia = registros.find((mov) => mov.suplenteDNI.trim() === dni.trim());
+
+      if (coincidencia) {
+        setSuplenteApellido(coincidencia.suplenteApellido);
+        setSuplenteNombre(coincidencia.suplenteNombre);
+        setCamposSuplenteReadonly(true);
+      } else {
+        setSuplenteApellido("");
+        setSuplenteNombre("");
+        setCamposSuplenteReadonly(false);
+      }
+    } catch (error) {
+      console.error("Error al buscar suplente:", error);
+    }
+  };
+
+  const handleDniChange = (e) => {
+    const nuevoDni = e.target.value;
+    setSuplenteDni(nuevoDni);
+
+    if (nuevoDni.length >= 7) {
+      buscarSuplentePorDNI(nuevoDni);
+    }
+  };
+
+  // Fecha Inicio
+  const [fechaInicio, setFechaInicio] = useState("");
+  // Fecha Fin
+  const [fechaFin, setFechaFin] = useState("");
+  // Cantidad de horas
+  const [cantHoras, setCantHoras] = useState("");
+  // Buscar Motivos Baja
+  const [motivos, setMotivos] = useState([]);
+  const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
+
+  useEffect(() => {
+    axios
+      .get("https://localhost:44382/MotivosBajasDoc/GetAll")
+      .then((response) => {
+        setMotivos(response.data);
+      })
+      .catch((error) => {
+        console.error("Error al obtener motivos:", error);
+      });
+  }, []);
+
+  //Estado
+  const [estado, setEstado] = useState("PENDIENTE"); // Valor por defecto
+
+  //Ingreso meses
+  const [ingreso, setIngreso] = useState(null); // Por defecto null
+  const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
+
+  const handleSubmit = async () => {
+    if (!suplenteDni || !suplenteApellido || !suplenteNombre) {
+      alert("Completa los campos obligatorios.");
+      return;
+    }
+
+    const nuevoMovimiento = {
+      suplenteDNI: suplenteDni,
+      suplenteApellido: suplenteApellido,
+      suplenteNombre: suplenteNombre,
+      fechaInicio,
+      fechaFin,
+      cantHoras,
+      estado,
+      ingreso,
+      ingresoDescripcion,
+      idMotivoBaja: motivoSeleccionado,
+    };
+
+    try {
+      const response = await fetch("https://localhost:44382/MovimientosBaja/Create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nuevoMovimiento),
+      });
+
+      if (response.ok) {
+        setSuccessAlert(true);
+        // Limpiar campos
+        setSuplenteDni("");
+        setSuplenteApellido("");
+        setSuplenteNombre("");
+        setFechaInicio("");
+        setFechaFin("");
+        setCantHoras("");
+        setEstado("PENDIENTE");
+        setIngreso(null);
+        setIngresoDescripcion("NE");
+        setMotivoSeleccionado("");
+      } else {
+        const error = await response.text();
+        alert("Error al registrar: " + error);
+      }
+    } catch (error) {
+      alert("Error de conexión: " + error.message);
+    }
+  };
+
+  // Aler y limpiar
+  const [successAlert, setSuccessAlert] = useState(false);
 
   return (
     <DashboardLayout>
@@ -205,13 +327,33 @@ function AltaRegistroBaja() {
 
                 {/* Suplente */}
                 <Grid item xs={6}>
-                  <TextField fullWidth type="number" label="Suplente Nro Documento" />
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Suplente Nro Documento"
+                    value={suplenteDni}
+                    onChange={handleDniChange}
+                  />
                 </Grid>
+
                 <Grid item xs={6}>
-                  <TextField fullWidth label="Apellido" />
+                  <TextField
+                    fullWidth
+                    label="Apellido"
+                    value={suplenteApellido}
+                    onChange={(e) => setSuplenteApellido(e.target.value)}
+                    InputProps={{ readOnly: camposSuplenteReadonly }}
+                  />
                 </Grid>
+
                 <Grid item xs={6}>
-                  <TextField fullWidth label="Nombre" />
+                  <TextField
+                    fullWidth
+                    label="Nombre"
+                    value={suplenteNombre}
+                    onChange={(e) => setSuplenteNombre(e.target.value)}
+                    InputProps={{ readOnly: camposSuplenteReadonly }}
+                  />
                 </Grid>
 
                 {/* Fechas */}
@@ -220,25 +362,48 @@ function AltaRegistroBaja() {
                     fullWidth
                     type="date"
                     label="Inicio"
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.target.value)}
                     InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={6}>
-                  <TextField fullWidth type="date" label="Fin" InputLabelProps={{ shrink: true }} />
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Fin"
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                  />
                 </Grid>
 
                 {/* Cant Hs */}
                 <Grid item xs={6}>
-                  <TextField fullWidth type="number" label="Cant Hs" />
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Cant. Hs."
+                    value={cantHoras}
+                    onChange={(e) => setCantHoras(e.target.value)}
+                    inputProps={{ min: 0 }} // Opcional: evita valores negativos
+                  />
                 </Grid>
 
                 {/* Motivo */}
                 <Grid item xs={6}>
                   <FormControl fullWidth>
                     <InputLabel>Motivo</InputLabel>
-                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
-                      <MenuItem value="1">Primario</MenuItem>
-                      <MenuItem value="2">Secundario</MenuItem>
+                    <Select
+                      value={motivoSeleccionado}
+                      onChange={(e) => setMotivoSeleccionado(e.target.value)}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      {motivos.map((motivo) => (
+                        <MenuItem key={motivo.idMotivoBaja} value={motivo.idMotivoBaja}>
+                          {motivo.motivoBaja}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -247,9 +412,13 @@ function AltaRegistroBaja() {
                 <Grid item xs={6}>
                   <FormControl fullWidth>
                     <InputLabel>Estado</InputLabel>
-                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
-                      <MenuItem value="1">Primario</MenuItem>
-                      <MenuItem value="2">Secundario</MenuItem>
+                    <Select
+                      value={estado}
+                      onChange={(e) => setEstado(e.target.value)}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      <MenuItem value="PENDIENTE">PENDIENTE</MenuItem>
+                      <MenuItem value="HECHO">HECHO</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -258,36 +427,50 @@ function AltaRegistroBaja() {
                 <Grid item xs={6}>
                   <FormControl fullWidth>
                     <InputLabel>Ingreso</InputLabel>
-                    <Select style={{ height: "2.5rem", backgroundColor: "white" }}>
-                      <MenuItem value="1">Primario</MenuItem>
-                      <MenuItem value="2">Secundario</MenuItem>
+                    <Select
+                      value={ingreso}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setIngreso(value);
+                        setIngresoDescripcion(value !== null ? null : "NE");
+                      }}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      <MenuItem value={null}>
+                        <em>Ninguno</em>
+                      </MenuItem>
+                      <MenuItem value="ENERO">ENERO</MenuItem>
+                      <MenuItem value="FEBRERO">FEBRERO</MenuItem>
+                      <MenuItem value="MARZO">MARZO</MenuItem>
+                      <MenuItem value="ABRIL">ABRIL</MenuItem>
+                      <MenuItem value="MAYO">MAYO</MenuItem>
+                      <MenuItem value="JUNIO">JUNIO</MenuItem>
+                      <MenuItem value="JULIO">JULIO</MenuItem>
+                      <MenuItem value="AGOSTO">AGOSTO</MenuItem>
+                      <MenuItem value="SEPTIEMBRE">SEPTIEMBRE</MenuItem>
+                      <MenuItem value="OCTUBRE">OCTUBRE</MenuItem>
+                      <MenuItem value="NOVIEMBRE">NOVIEMBRE</MenuItem>
+                      <MenuItem value="DICIEMBRE">DICIEMBRE</MenuItem>
+                      <MenuItem value="SIN HABERES">SIN HABERES</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={6}>
-                  <TextField fullWidth label="Ingreso Descripción" />
-                </Grid>
 
-                {/* Observaciones */}
-                <Grid item xs={12}>
-                  <TextField fullWidth multiline rows={3} label="Observaciones" />
-                </Grid>
-
-                {/* Vigente */}
                 <Grid item xs={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Vigente</InputLabel>
-                    <Select>
-                      <MenuItem value="1">Primario</MenuItem>
-                      <MenuItem value="2">Secundario</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <TextField
+                    fullWidth
+                    label="Ingreso Descripción"
+                    value={ingresoDescripcion ?? ""}
+                    InputProps={{
+                      readOnly: true,
+                    }}
+                  />
                 </Grid>
               </Grid>
 
               <MDBox mt={2} sx={{ display: "flex" }}>
                 <MDBox mr={2}>
-                  <MDButton variant="gradient" color="success" size="small">
+                  <MDButton variant="gradient" color="success" size="small" onClick={handleSubmit}>
                     Aceptar
                   </MDButton>
                 </MDBox>
@@ -301,6 +484,16 @@ function AltaRegistroBaja() {
           </Grid>
         </Grid>
       </MDBox>
+      <Snackbar
+        open={successAlert}
+        autoHideDuration={3000}
+        onClose={() => setSuccessAlert(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSuccessAlert(false)} severity="success" sx={{ width: "100%" }}>
+          Enviado correctamente
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 }
