@@ -14,7 +14,9 @@ export default function AgregarDetalle({
   const [observacionSeleccionada, setObservacionSeleccionada] = useState("");
   const [observacionesFiltradas, setObservacionesFiltradas] = useState([]);
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
+  const [funcionesOpciones, setFuncionesOpciones] = useState([]);
   const [docentesOpciones, setDocentesOpciones] = useState([]);
+  const [categoriasOpciones, setCategoriasOpciones] = useState([]);
   const [motivosOpciones, setMotivosOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
@@ -28,11 +30,13 @@ export default function AgregarDetalle({
     antigAnos: "",
     antigMeses: "",
     observaciones: "",
+    idFuncion: "",
     tipoDoc: "",
     apellido: "",
     nombre: "",
+    idCategoria: "",
     docente: "",
-    idPOF: "", // Nuevo campo agregado
+    idPOF: "",
     fechaInicioBaja: "",
     fechaFinBaja: "",
     idMotivoBaja: "",
@@ -44,17 +48,12 @@ export default function AgregarDetalle({
   };
 
   const handleSubmit = () => {
-    // Preparar objeto para enviar
     const formData = { ...form };
     if (isBajaOModifOAdic) {
-      // Para Baja, Modificación o Adicional
-      formData.idPOF = form.idPOF; // Enviar idPOF
-      // Eliminar campos que no deben enviarse
+      formData.idPOF = form.idPOF;
+      formData.tipoDoc = "4";
       delete formData.docente;
-      delete formData.tipoDoc;
-      delete formData.numDoc;
     } else if (isAlta) {
-      // Para Alta
       delete formData.idPOF;
       delete formData.docente;
     }
@@ -142,6 +141,46 @@ export default function AgregarDetalle({
 
     fetchMotivos();
   }, [form.tipoMovimiento]);
+
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        const response = await fetch(process.env.REACT_APP_API_URL + "TiposCategorias/GetAll", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setCategoriasOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar categorías:", error);
+      }
+    };
+
+    fetchCategorias();
+  }, []);
+
+  useEffect(() => {
+    const fetchFunciones = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        const response = await fetch(process.env.REACT_APP_API_URL + "TiposFunciones/GetAll", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setFuncionesOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar funciones:", error);
+      }
+    };
+
+    fetchFunciones();
+  }, []);
 
   const tipoMovimientoLabels = {
     A: "Alta",
@@ -235,11 +274,20 @@ export default function AgregarDetalle({
                     setForm((prev) => ({
                       ...prev,
                       docente: selectedId,
-                      idPOF: docenteSeleccionado.idPOF, // Guardar idPOF
-                      nombre: docenteSeleccionado.personaNombre, // Cargar nombre
-                      apellido: docenteSeleccionado.personaApellido, // Cargar apellido
-                      funcion: docenteSeleccionado?.funcion || "",
-                      categoria: docenteSeleccionado?.categoria || "",
+                      idPOF: docenteSeleccionado.idPOF,
+                      nombre: docenteSeleccionado.personaNombre,
+                      apellido: docenteSeleccionado.personaApellido,
+                      idFuncion: docenteSeleccionado.idTipoFuncion || "",
+                      numDoc: docenteSeleccionado.personaDNI || "",
+                      funcion:
+                        funcionesOpciones.find(
+                          (f) => f.idTipoFuncion === docenteSeleccionado.idTipoFuncion
+                        )?.codFuncion || "",
+                      idCategoria: docenteSeleccionado.idCategoria || "",
+                      categoria:
+                        categoriasOpciones.find(
+                          (cat) => cat.idTipoCategoria === docenteSeleccionado.idCategoria
+                        )?.codCategoria || "",
                     }));
                   }}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -278,13 +326,36 @@ export default function AgregarDetalle({
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              name="funcion"
-              label="Función"
-              fullWidth
-              value={form.funcion}
-              onChange={handleChange}
-            />
+            <FormControl fullWidth>
+              <InputLabel>Función</InputLabel>
+              <Select
+                name="idFuncion"
+                label="Función"
+                value={form.idFuncion}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const funcionObj = funcionesOpciones.find((f) => f.idTipoFuncion === selectedId);
+                  setForm((prev) => ({
+                    ...prev,
+                    idFuncion: selectedId,
+                    funcion: funcionObj?.codFuncion || "",
+                  }));
+                }}
+                style={{ height: "2.8rem", backgroundColor: "white" }}
+              >
+                {funcionesOpciones.length > 0 ? (
+                  funcionesOpciones.map((funcion) => (
+                    <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
+                      {funcion.codFuncion}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay funciones disponibles
+                  </MenuItem>
+                )}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -300,13 +371,38 @@ export default function AgregarDetalle({
             <TextField name="turno" label="Turno" fullWidth onChange={handleChange} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              name="categoria"
-              label="Categoría"
-              fullWidth
-              value={form.categoria}
-              onChange={handleChange}
-            />
+            <FormControl fullWidth>
+              <InputLabel>Categoría</InputLabel>
+              <Select
+                name="idCategoria"
+                label="Categoría"
+                value={form.idCategoria}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const categoriaObj = categoriasOpciones.find(
+                    (cat) => cat.idTipoCategoria === selectedId
+                  );
+                  setForm((prev) => ({
+                    ...prev,
+                    idCategoria: selectedId,
+                    categoria: categoriaObj?.codCategoria || "",
+                  }));
+                }}
+                style={{ height: "2.8rem", backgroundColor: "white" }}
+              >
+                {categoriasOpciones.length > 0 ? (
+                  categoriasOpciones.map((cat) => (
+                    <MenuItem key={cat.idTipoCategoria} value={cat.idTipoCategoria}>
+                      {cat.codCategoria}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay categorías disponibles
+                  </MenuItem>
+                )}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField name="horas" label="Horas" fullWidth onChange={handleChange} />
