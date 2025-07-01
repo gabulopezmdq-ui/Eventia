@@ -255,8 +255,8 @@ namespace API.Services
                     SitRevista = d.SitRevista,
                     Turno = d.Turno,
                     Observaciones = d.Observaciones,
-                    AntigAnios = d.AntigAnios,
-                    AntigMeses = d.AntigMeses,
+                    AntigAnios = d.AntigAnios ?? null,
+                    AntigMeses = d.AntigMeses ?? null,
                     Horas = d.Horas,
                     FechaInicioBaja = d.FechaInicioBaja,
                     FechaFinBaja = d.FechaFinBaja
