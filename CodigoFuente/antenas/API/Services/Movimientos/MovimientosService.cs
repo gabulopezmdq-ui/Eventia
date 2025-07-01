@@ -76,39 +76,38 @@ namespace API.Services
 
 
         //Nueva Cabecera Movimientos
-        public async Task<(bool Success, string Message)> CrearMovimientoCabeceraAsync(MEC_MovimientosCabecera movimiento)
+        public async Task<(bool Success, string Message, int? IdMovimientoCabecera)>
+    CrearMovimientoCabeceraAsync(MEC_MovimientosCabecera movimiento)
         {
-            // Validar campos obligatorios
             if (movimiento.IdEstablecimiento <= 0 ||
-                movimiento.Mes < 1 || movimiento.Mes > 12 ||
+                movimiento.Mes is < 1 or > 12 ||
                 movimiento.Anio < 1900 ||
                 string.IsNullOrWhiteSpace(movimiento.Area))
             {
-                return (false, "Debe completar todos los datos obligatorios: Establecimiento, Mes, Año y Área.");
+                return (false, "Debe completar todos los campos obligatorios.", null);
             }
 
-            // Validar existencia del registro para esa combinación
-            var existe = await _context.MEC_MovimientosCabecera
-                .AnyAsync(m => m.IdEstablecimiento == movimiento.IdEstablecimiento
-                               && m.Mes == movimiento.Mes
-                               && m.Anio == movimiento.Anio
-                               && m.Area == movimiento.Area);
+            var existe = await _context.MEC_MovimientosCabecera.AnyAsync(m =>
+                m.IdEstablecimiento == movimiento.IdEstablecimiento &&
+                m.Mes == movimiento.Mes &&
+                m.Anio == movimiento.Anio &&
+                m.Area == movimiento.Area);
 
             if (existe)
             {
-                return (false, "Ya existe un registro para esta combinación de Establecimiento, Mes, Año y Área.");
+                return (false, "Ya existe un registro para esta combinación.", null);
             }
 
-            // Setear campos por default y valores
             movimiento.Fecha = DateTime.Now;
             movimiento.Estado = "P";
-
 
             _context.MEC_MovimientosCabecera.Add(movimiento);
             await _context.SaveChangesAsync();
 
-            return (true, "Registro creado correctamente.");
+            return (true, "Registro creado correctamente.", movimiento.IdMovimientoCabecera);
         }
+
+
 
         //Calculo de antiguedades
         public async Task<(bool Success, string Message, int? Anio, int? Mes)> CalcularAntiguedadAsync(int idMovimientoCabecera)
@@ -161,6 +160,21 @@ namespace API.Services
             await _context.SaveChangesAsync();
 
             return (true, "Cálculo exitoso.", movimiento.Anio, movimiento.Mes);
+        } 
+        
+        //ENVIAR A EDUCACION
+        public async Task<bool> EnviarEduc(MEC_MovimientosCabecera movimientos)
+        {
+            var movimiento = await _context.MEC_MovimientosCabecera.FindAsync(movimientos.IdMovimientoCabecera);
+
+            if (movimiento == null)
+                return false;
+
+            movimiento.Estado = "E";
+
+            await _context.SaveChangesAsync();
+
+            return true;
         }
 
         //ENVIAR A PROVINCIA
@@ -246,7 +260,7 @@ namespace API.Services
                     IdTipoFuncion = d.IdTipoFuncion,
                     IdPOF = d.IdPOF ?? null,
                     IdTipoCategoria = d.IdTipoCategoria,
-                    IdMotivoBaja = d.IdMotivoBaja,
+                    IdMotivoBaja = d.IdMotivoBaja ?? null,
                     TipoDoc = d.TipoDoc,
                     TipoMovimiento = d.TipoMovimiento,
                     NumDoc = d.NumDoc,
@@ -258,8 +272,8 @@ namespace API.Services
                     AntigAnios = d.AntigAnios ?? null,
                     AntigMeses = d.AntigMeses ?? null,
                     Horas = d.Horas,
-                    FechaInicioBaja = d.FechaInicioBaja,
-                    FechaFinBaja = d.FechaFinBaja
+                    FechaInicioBaja = d.FechaInicioBaja ?? null,
+                    FechaFinBaja = d.FechaFinBaja ?? null
                 })
                 .ToListAsync();
 

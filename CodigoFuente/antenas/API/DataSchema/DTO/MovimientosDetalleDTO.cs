@@ -14,7 +14,7 @@ public class MovimientosDetalleDTO
     public int IdTipoFuncion { get; set; }
     public int? IdPOF { get; set; }
     public int IdTipoCategoria { get; set; }
-    public int IdMotivoBaja { get; set; }
+    public int? IdMotivoBaja { get; set; }
     public string TipoDoc { get; set; }
     public string TipoMovimiento { get; set; }
     public string NumDoc { get; set; }
@@ -26,6 +26,6 @@ public class MovimientosDetalleDTO
     public int? AntigAnios { get; set; }
     public int? AntigMeses { get; set; }
     public int Horas { get; set; }
-    public DateTime FechaInicioBaja { get; set; }
-    public DateTime FechaFinBaja { get; set; }
+    public DateTime? FechaInicioBaja { get; set; }
+    public DateTime? FechaFinBaja { get; set; }
 }
