@@ -6,6 +6,7 @@ import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 
 export default function AgregarDetalle({
+  idCabecera,
   onSubmit,
   ruralidad,
   idEstablecimiento,
@@ -46,7 +47,6 @@ export default function AgregarDetalle({
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = () => {
     const formData = { ...form };
     if (isBajaOModifOAdic) {
@@ -56,13 +56,22 @@ export default function AgregarDetalle({
     } else if (isAlta) {
       delete formData.idPOF;
       delete formData.docente;
+      delete formData.idMotivoBaja;
+      delete formData.fechaFinBaja;
+      delete formData.fechaInicioBaja;
     }
+    if (isModiAdic) {
+      delete formData.idMotivoBaja;
+      delete formData.fechaFinBaja;
+      delete formData.fechaInicioBaja;
+    }
+    formData.idMovimientoCabecera = idCabecera;
     onSubmit(formData);
   };
 
   const isAlta = form.tipoMovimiento === "A";
   const isBajaOModifOAdic = ["B", "M", "D"].includes(form.tipoMovimiento);
-
+  const isModiAdic = ["M", "D"].includes(form.tipoMovimiento);
   useEffect(() => {
     const fetchObservaciones = async () => {
       try {
@@ -228,14 +237,14 @@ export default function AgregarDetalle({
             <>
               <Grid item xs={12} sm={4}>
                 <TextField
-                  name="TipoDoc"
+                  name="tipoDoc"
                   label="Tipo Documento"
                   fullWidth
                   onChange={handleChange}
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField name="NumDoc" label="Nro" fullWidth onChange={handleChange} />
+                <TextField name="numDoc" label="Nro" fullWidth onChange={handleChange} />
               </Grid>
               <Grid item xs={12} sm={4}>
                 <TextField
@@ -527,7 +536,7 @@ export default function AgregarDetalle({
 }
 AgregarDetalle.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  idCabecera: PropTypes.object,
+  idCabecera: PropTypes.number,
   idEstablecimiento: PropTypes.object,
   ruralidad: PropTypes.string,
   accionesDisponibles: PropTypes.arrayOf(PropTypes.string),

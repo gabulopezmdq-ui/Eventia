@@ -72,7 +72,53 @@ function CabeceraMovimientos() {
       });
     }
   };
+  const handleEnviarEducacion = (movimiento) => {
+    const confirmacion = window.confirm(
+      `¿Está seguro de enviar el movimiento ${movimiento.idMovimientoCabecera} a Educación?`
+    );
+    if (!confirmacion) {
+      return;
+    }
 
+    axios
+      .post(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/EnviarEduc`,
+        {
+          idMovimientoCabecera: movimiento.idMovimientoCabecera,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      .then(() => {
+        fetchConceptos();
+        setErrorAlert({
+          show: true,
+          message: "Movimiento enviado a Educación correctamente.",
+          type: "success",
+        });
+      })
+      .catch((error) => {
+        if (error.response) {
+          const statusCode = error.response.status;
+          let errorMessage = "";
+          if (statusCode >= 400 && statusCode < 500) {
+            errorMessage = `Error ${statusCode}: Problema en la solicitud.`;
+          } else if (statusCode >= 500) {
+            errorMessage = `Error ${statusCode}: Problema en el servidor.`;
+          }
+          setErrorAlert({ show: true, message: errorMessage, type: "error" });
+        } else {
+          setErrorAlert({
+            show: true,
+            message: "Ocurrió un error inesperado al enviar a Educación.",
+            type: "error",
+          });
+        }
+      });
+  };
   return (
     <>
       <DashboardLayout>
