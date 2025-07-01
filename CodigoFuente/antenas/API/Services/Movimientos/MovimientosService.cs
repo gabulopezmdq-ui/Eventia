@@ -244,7 +244,7 @@ namespace API.Services
                 {
                     IdMovimientoCabecera = d.IdMovimientoCabecera,
                     IdTipoFuncion = d.IdTipoFuncion,
-                    IdPOF = d.IdPOF,
+                    IdPOF = d.IdPOF ?? null,
                     IdTipoCategoria = d.IdTipoCategoria,
                     IdMotivoBaja = d.IdMotivoBaja,
                     TipoDoc = d.TipoDoc,
