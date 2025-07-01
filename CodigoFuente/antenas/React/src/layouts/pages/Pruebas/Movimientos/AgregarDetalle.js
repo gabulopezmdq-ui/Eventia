@@ -6,6 +6,7 @@ import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 
 export default function AgregarDetalle({
+  idCabecera,
   onSubmit,
   ruralidad,
   idEstablecimiento,
@@ -14,41 +15,63 @@ export default function AgregarDetalle({
   const [observacionSeleccionada, setObservacionSeleccionada] = useState("");
   const [observacionesFiltradas, setObservacionesFiltradas] = useState([]);
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
+  const [funcionesOpciones, setFuncionesOpciones] = useState([]);
   const [docentesOpciones, setDocentesOpciones] = useState([]);
+  const [categoriasOpciones, setCategoriasOpciones] = useState([]);
   const [motivosOpciones, setMotivosOpciones] = useState([]);
   const [form, setForm] = useState({
     tipoMovimiento: "",
-    SitRevista: "",
+    sitRevista: "",
     funcion: "",
     rural: "",
     turno: "",
-    NumDoc: "",
+    numDoc: "",
     categoria: "",
     horas: "",
     antigAnos: "",
     antigMeses: "",
     observaciones: "",
-    TipoDoc: "",
+    idTipoFuncion: "",
+    tipoDoc: "",
     apellido: "",
     nombre: "",
+    idTipoCategoria: "",
     docente: "",
-    inicio: "",
-    fin: "",
-    motivos: "",
+    idPOF: "",
+    fechaInicioBaja: "",
+    fechaFinBaja: "",
+    idMotivoBaja: "",
   });
   const isBaja = form.tipoMovimiento === "B";
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = () => {
-    onSubmit(form);
+    const formData = { ...form };
+    if (isBajaOModifOAdic) {
+      formData.idPOF = form.idPOF;
+      formData.tipoDoc = "4";
+      delete formData.docente;
+    } else if (isAlta) {
+      delete formData.idPOF;
+      delete formData.docente;
+      delete formData.idMotivoBaja;
+      delete formData.fechaFinBaja;
+      delete formData.fechaInicioBaja;
+    }
+    if (isModiAdic) {
+      delete formData.idMotivoBaja;
+      delete formData.fechaFinBaja;
+      delete formData.fechaInicioBaja;
+    }
+    formData.idMovimientoCabecera = idCabecera;
+    onSubmit(formData);
   };
 
   const isAlta = form.tipoMovimiento === "A";
   const isBajaOModifOAdic = ["B", "M", "D"].includes(form.tipoMovimiento);
-
+  const isModiAdic = ["M", "D"].includes(form.tipoMovimiento);
   useEffect(() => {
     const fetchObservaciones = async () => {
       try {
@@ -95,7 +118,6 @@ export default function AgregarDetalle({
       (obs) => obs.tipoMovimiento === form.tipoMovimiento
     );
     setObservacionesFiltradas(filtradas);
-    // Limpiar selección anterior si cambia el tipo
     setObservacionSeleccionada("");
     setForm((prev) => ({ ...prev, observaciones: "" }));
   }, [form.tipoMovimiento, observacionesOpciones]);
@@ -129,12 +151,59 @@ export default function AgregarDetalle({
     fetchMotivos();
   }, [form.tipoMovimiento]);
 
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        const response = await fetch(process.env.REACT_APP_API_URL + "TiposCategorias/GetAll", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setCategoriasOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar categorías:", error);
+      }
+    };
+
+    fetchCategorias();
+  }, []);
+
+  useEffect(() => {
+    const fetchFunciones = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        const response = await fetch(process.env.REACT_APP_API_URL + "TiposFunciones/GetAll", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setFuncionesOpciones(data);
+      } catch (error) {
+        console.error("Error al cargar funciones:", error);
+      }
+    };
+
+    fetchFunciones();
+  }, []);
+
   const tipoMovimientoLabels = {
     A: "Alta",
     B: "Baja",
     M: "Modificación",
     D: "Adicional",
   };
+
+  const situacionRevistaOpciones = [
+    { value: "11", label: "Docente Titular" },
+    { value: "P", label: "Provisorio" },
+    { value: "21", label: "Docente Suplente" },
+    { value: "31", label: "Docente suplente de titular en licencia por maternidad" },
+  ];
 
   return (
     <MDBox pb={3} px={3}>
@@ -168,20 +237,32 @@ export default function AgregarDetalle({
             <>
               <Grid item xs={12} sm={4}>
                 <TextField
-                  name="TipoDoc"
+                  name="tipoDoc"
                   label="Tipo Documento"
                   fullWidth
                   onChange={handleChange}
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField name="NumDoc" label="Nro" fullWidth onChange={handleChange} />
+                <TextField name="numDoc" label="Nro" fullWidth onChange={handleChange} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField name="apellido" label="Apellido" fullWidth onChange={handleChange} />
+                <TextField
+                  name="apellido"
+                  label="Apellido"
+                  fullWidth
+                  value={form.apellido}
+                  onChange={handleChange}
+                />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField name="nombre" label="Nombre" fullWidth onChange={handleChange} />
+                <TextField
+                  name="nombre"
+                  label="Nombre"
+                  fullWidth
+                  value={form.nombre}
+                  onChange={handleChange}
+                />
               </Grid>
             </>
           )}
@@ -202,8 +283,20 @@ export default function AgregarDetalle({
                     setForm((prev) => ({
                       ...prev,
                       docente: selectedId,
-                      funcion: docenteSeleccionado?.funcion || "",
-                      categoria: docenteSeleccionado?.categoria || "",
+                      idPOF: docenteSeleccionado.idPOF,
+                      nombre: docenteSeleccionado.personaNombre,
+                      apellido: docenteSeleccionado.personaApellido,
+                      idTipoFuncion: docenteSeleccionado.idTipoFuncion || "",
+                      numDoc: docenteSeleccionado.personaDNI || "",
+                      funcion:
+                        funcionesOpciones.find(
+                          (f) => f.idTipoFuncion === docenteSeleccionado.idTipoFuncion
+                        )?.codFuncion || "",
+                      idTipoCategoria: docenteSeleccionado.idCategoria || "",
+                      categoria:
+                        categoriasOpciones.find(
+                          (cat) => cat.idTipoCategoria === docenteSeleccionado.idCategoria
+                        )?.codCategoria || "",
                     }));
                   }}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -224,16 +317,54 @@ export default function AgregarDetalle({
             </Grid>
           )}
           <Grid item xs={12} sm={6}>
-            <TextField name="SitRevista" label="Sit. Revista" fullWidth onChange={handleChange} />
+            <FormControl fullWidth>
+              <InputLabel>Sit.Revista</InputLabel>
+              <Select
+                name="sitRevista"
+                label="Sit.Revista"
+                value={form.sitRevista}
+                onChange={handleChange}
+                style={{ height: "2.8rem", backgroundColor: "white" }}
+              >
+                {situacionRevistaOpciones.map((opcion) => (
+                  <MenuItem key={opcion.value} value={opcion.value}>
+                    {opcion.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              name="funcion"
-              label="Función"
-              fullWidth
-              value={form.funcion}
-              onChange={handleChange}
-            />
+            <FormControl fullWidth>
+              <InputLabel>Función</InputLabel>
+              <Select
+                name="idTipoFuncion"
+                label="Función"
+                value={form.idTipoFuncion}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const funcionObj = funcionesOpciones.find((f) => f.idTipoFuncion === selectedId);
+                  setForm((prev) => ({
+                    ...prev,
+                    idTipoFuncion: selectedId,
+                    funcion: funcionObj?.codFuncion || "",
+                  }));
+                }}
+                style={{ height: "2.8rem", backgroundColor: "white" }}
+              >
+                {funcionesOpciones.length > 0 ? (
+                  funcionesOpciones.map((funcion) => (
+                    <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
+                      {funcion.codFuncion}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay funciones disponibles
+                  </MenuItem>
+                )}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -249,13 +380,38 @@ export default function AgregarDetalle({
             <TextField name="turno" label="Turno" fullWidth onChange={handleChange} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              name="categoria"
-              label="Categoría"
-              fullWidth
-              value={form.categoria}
-              onChange={handleChange}
-            />
+            <FormControl fullWidth>
+              <InputLabel>Categoría</InputLabel>
+              <Select
+                name="idTipoCategoria"
+                label="Categoría"
+                value={form.idTipoCategoria}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const categoriaObj = categoriasOpciones.find(
+                    (cat) => cat.idTipoCategoria === selectedId
+                  );
+                  setForm((prev) => ({
+                    ...prev,
+                    idTipoCategoria: selectedId,
+                    categoria: categoriaObj?.codCategoria || "",
+                  }));
+                }}
+                style={{ height: "2.8rem", backgroundColor: "white" }}
+              >
+                {categoriasOpciones.length > 0 ? (
+                  categoriasOpciones.map((cat) => (
+                    <MenuItem key={cat.idTipoCategoria} value={cat.idTipoCategoria}>
+                      {cat.codCategoria}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled value="">
+                    No hay categorías disponibles
+                  </MenuItem>
+                )}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField name="horas" label="Horas" fullWidth onChange={handleChange} />
@@ -322,23 +478,23 @@ export default function AgregarDetalle({
             <>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  name="inicio"
+                  name="fechaInicioBaja"
                   label="Inicio"
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
-                  value={form.inicio}
+                  value={form.fechaInicioBaja}
                   onChange={handleChange}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  name="fin"
+                  name="fechaFinBaja"
                   label="Fin"
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
-                  value={form.fin}
+                  value={form.fechaFinBaja}
                   onChange={handleChange}
                 />
               </Grid>
@@ -346,8 +502,8 @@ export default function AgregarDetalle({
                 <FormControl fullWidth>
                   <InputLabel>Motivo de Baja</InputLabel>
                   <Select
-                    name="motivos"
-                    value={form.motivos}
+                    name="idMotivoBaja"
+                    value={form.idMotivoBaja}
                     label="Motivo de Baja"
                     onChange={handleChange}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -380,7 +536,7 @@ export default function AgregarDetalle({
 }
 AgregarDetalle.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  idCabecera: PropTypes.object,
+  idCabecera: PropTypes.number,
   idEstablecimiento: PropTypes.object,
   ruralidad: PropTypes.string,
   accionesDisponibles: PropTypes.arrayOf(PropTypes.string),
