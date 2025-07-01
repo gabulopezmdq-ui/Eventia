@@ -113,7 +113,7 @@ function AltaCabeceraMovimientos() {
             Accion: accionesSeleccionadas,
             estado: cabecera.estado,
           });
-          setIdCabecera(cabecera.id);
+          setIdCabecera(cabecera.idMovimientoCabecera);
           setFormDeshabilitado(true);
           setMostrarDetalle(true);
           if (cabecera.establecimientos?.ruralidad) {
@@ -186,9 +186,10 @@ function AltaCabeceraMovimientos() {
         navigate(-1);
         return;
       }
-      if (response.data && response.data.id) {
-        setIdCabecera(response.data.id);
-        fetchDetalles(response.data.id);
+      if (response.data && response.data.idMovimientoCabecera) {
+        setIdCabecera(response.data.idMovimientoCabecera);
+        fetchDetalles(response.data.idMovimientoCabecera);
+        setIdEstablecimiento(formData.idEstablecimiento);
         setDetallesCargados(false);
       }
 
@@ -208,11 +209,11 @@ function AltaCabeceraMovimientos() {
     try {
       const payload = {
         ...detalleData,
-        IdMovimientoCabecera: idCabecera,
+        idMovimientoCabecera: idCabecera,
       };
 
-      const response = await axios.put(
-        process.env.REACT_APP_API_URL + "MovimientosCabecera",
+      const response = await axios.post(
+        process.env.REACT_APP_API_URL + "MovimientosCabecera/AddDetalle",
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -227,22 +228,6 @@ function AltaCabeceraMovimientos() {
       alert("Error al guardar el detalle");
     }
   };
-
-  useEffect(() => {
-    const fetchDetalles = async () => {
-      try {
-        // const res = await axios.get(process.env.REACT_APP_API_URL + "MovimientosCabecera/GetByVigente", {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
-        // setDetalles(res.data);
-        // Simulación temporal:
-      } catch (err) {
-        console.error("Error al cargar detalles", err);
-      }
-    };
-
-    fetchDetalles();
-  }, []);
 
   return (
     <DashboardLayout>
@@ -395,34 +380,36 @@ function AltaCabeceraMovimientos() {
             )}
           </>
         )}
+
         {detalles.length > 0 && (
-          <MDBox mt={3}>
-            <Card>
-              <DataTable
-                table={{
-                  columns: [
-                    { Header: "DNI", accessor: "dni" },
-                    { Header: "SEC", accessor: "sec" },
-                    { Header: "Apellido", accessor: "apellido" },
-                    { Header: "Nombre", accessor: "nombre" },
-                    { Header: "SitRev", accessor: "situacionRevista" },
-                    { Header: "T Doc", accessor: "tipoDocumento" },
-                    { Header: "Función", accessor: "funcion" },
-                    { Header: "Rural", accessor: "rural" },
-                    { Header: "Turno", accessor: "turno" },
-                    { Header: "Cat", accessor: "categoria" },
-                    { Header: "Hs", accessor: "horas" },
-                    { Header: "Años", accessor: "antigAnos" },
-                    { Header: "Meses", accessor: "antigMeses" },
-                  ],
-                  rows: detalles,
-                }}
-                entriesPerPage={false}
-                canSearch
-                showTotalEntries={false}
-              />
-            </Card>
-          </MDBox>
+          <>
+            <MDBox mt={3}>
+              <Card>
+                <DataTable
+                  table={{
+                    columns: [
+                      { Header: "DNI", accessor: "numDoc" },
+                      { Header: "T Doc", accessor: "tipoDoc" },
+                      { Header: "Apellido", accessor: "apellido" },
+                      { Header: "Nombre", accessor: "nombre" },
+                      { Header: "SitRev", accessor: "sitRevista" },
+                      { Header: "Función", accessor: "idTipoFuncion" },
+                      { Header: "Rural", accessor: "rural" },
+                      { Header: "Turno", accessor: "turno" },
+                      { Header: "Cat", accessor: "idTipoCategoria" },
+                      { Header: "Hs", accessor: "horas" },
+                      { Header: "Años", accessor: "antigAnios" },
+                      { Header: "Meses", accessor: "antigMeses" },
+                    ],
+                    rows: detalles,
+                  }}
+                  entriesPerPage={false}
+                  canSearch
+                  showTotalEntries={false}
+                />
+              </Card>
+            </MDBox>
+          </>
         )}
       </MDBox>
     </DashboardLayout>
