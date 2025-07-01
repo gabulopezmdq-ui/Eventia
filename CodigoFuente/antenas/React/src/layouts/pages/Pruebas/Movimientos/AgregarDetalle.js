@@ -30,11 +30,11 @@ export default function AgregarDetalle({
     antigAnos: "",
     antigMeses: "",
     observaciones: "",
-    idFuncion: "",
+    idTipoFuncion: "",
     tipoDoc: "",
     apellido: "",
     nombre: "",
-    idCategoria: "",
+    idTipoCategoria: "",
     docente: "",
     idPOF: "",
     fechaInicioBaja: "",
@@ -277,13 +277,13 @@ export default function AgregarDetalle({
                       idPOF: docenteSeleccionado.idPOF,
                       nombre: docenteSeleccionado.personaNombre,
                       apellido: docenteSeleccionado.personaApellido,
-                      idFuncion: docenteSeleccionado.idTipoFuncion || "",
+                      idTipoFuncion: docenteSeleccionado.idTipoFuncion || "",
                       numDoc: docenteSeleccionado.personaDNI || "",
                       funcion:
                         funcionesOpciones.find(
                           (f) => f.idTipoFuncion === docenteSeleccionado.idTipoFuncion
                         )?.codFuncion || "",
-                      idCategoria: docenteSeleccionado.idCategoria || "",
+                      idTipoCategoria: docenteSeleccionado.idCategoria || "",
                       categoria:
                         categoriasOpciones.find(
                           (cat) => cat.idTipoCategoria === docenteSeleccionado.idCategoria
@@ -329,15 +329,15 @@ export default function AgregarDetalle({
             <FormControl fullWidth>
               <InputLabel>Función</InputLabel>
               <Select
-                name="idFuncion"
+                name="idTipoFuncion"
                 label="Función"
-                value={form.idFuncion}
+                value={form.idTipoFuncion}
                 onChange={(e) => {
                   const selectedId = e.target.value;
                   const funcionObj = funcionesOpciones.find((f) => f.idTipoFuncion === selectedId);
                   setForm((prev) => ({
                     ...prev,
-                    idFuncion: selectedId,
+                    idTipoFuncion: selectedId,
                     funcion: funcionObj?.codFuncion || "",
                   }));
                 }}
@@ -374,9 +374,9 @@ export default function AgregarDetalle({
             <FormControl fullWidth>
               <InputLabel>Categoría</InputLabel>
               <Select
-                name="idCategoria"
+                name="idTipoCategoria"
                 label="Categoría"
-                value={form.idCategoria}
+                value={form.idTipoCategoria}
                 onChange={(e) => {
                   const selectedId = e.target.value;
                   const categoriaObj = categoriasOpciones.find(
@@ -384,7 +384,7 @@ export default function AgregarDetalle({
                   );
                   setForm((prev) => ({
                     ...prev,
-                    idCategoria: selectedId,
+                    idTipoCategoria: selectedId,
                     categoria: categoriaObj?.codCategoria || "",
                   }));
                 }}
