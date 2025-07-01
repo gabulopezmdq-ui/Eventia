@@ -100,9 +100,9 @@ function CabeceraMovimientos() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Area", accessor: "area" },
-                  { Header: "Año", accessor: "anio" },
-                  { Header: "Mes", accessor: "mes" },
+                  { Header: "Area", accessor: "area", Cell: ({ value }) => value ?? "" },
+                  { Header: "Año", accessor: "anio", Cell: ({ value }) => value ?? "" },
+                  { Header: "Mes", accessor: "mes", Cell: ({ value }) => value ?? "" },
                   { Header: "Establecimiento", accessor: "establecimientos.nroEstablecimiento" },
                   {
                     Header: "Estado",
