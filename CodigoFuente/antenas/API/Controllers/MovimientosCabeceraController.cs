@@ -94,8 +94,16 @@ namespace API.Controllers
         [HttpPost("CabeceraMovimiento")]
         public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosCabecera movimientos)
         {
-            var (success, _) = await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
-            return success;
+            var (success, message, idCabecera) = await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
+
+            if (!success)
+                return BadRequest(new { message });
+
+            return Ok(new
+            {
+                idMovimientoCabecera = idCabecera,
+                message = message
+            });
         }
 
         [HttpPost("AddDetalle")]
@@ -122,11 +130,15 @@ namespace API.Controllers
             return Ok();
         }
 
-        [HttpPut]
-        public async Task<ActionResult<MEC_MovimientosCabecera>> Update([FromBody] MEC_MovimientosCabecera estab)
+        [HttpPost("EnviarEduc")]
+        public async Task<ActionResult<MEC_MovimientosCabecera>> Update([FromBody] MEC_MovimientosCabecera movimiento)
         {
-            await _serviceGenerico.Update(estab);
-            return Ok(estab);
+            var resultado = await _movimientosDetalle.EnviarEduc(movimiento);
+
+            if (!resultado)
+                return NotFound("Movimiento no encontrado");
+
+            return Ok("Movimiento enviado correctamente.");
         }
 
         [HttpPut("MovimientoAlta")]
