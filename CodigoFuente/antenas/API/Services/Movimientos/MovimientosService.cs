@@ -1,5 +1,6 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
+using API.Migrations;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static API.DataSchema.DTO.ReporteMovDTO;
 
 namespace API.Services
 {
@@ -312,5 +314,75 @@ namespace API.Services
 
             return resultado;
         }
+
+        //ARMAR REPORTE
+        public async Task<ReporteEstablecimientoDTO?> Reporte(int idMovimientoCabecera)
+        {
+            var cabecera = await _context.MEC_MovimientosCabecera
+                .AsNoTracking()
+                .Where(c => c.IdMovimientoCabecera == idMovimientoCabecera)
+                .Select(c => new ReporteEstablecimientoDTO
+                {
+                    IdEstablecimiento = c.IdEstablecimiento,
+                    NroDiegep = c.Establecimientos.NroDiegep,
+                    IdTipoEstablecimiento = c.Establecimientos.IdTipoEstablecimiento,
+                    NroEstablecimiento = c.Establecimientos.NroEstablecimiento,
+                    NombreMgp = c.Establecimientos.NombreMgp,
+                    NombrePcia = c.Establecimientos.NombrePcia,
+                    Ruralidad = c.Establecimientos.Ruralidad,
+                    Subvencion = c.Establecimientos.Subvencion,
+                    Mes = c.Mes,
+                    Anio = c.Anio,
+                    Area = c.Area
+                })
+                .FirstOrDefaultAsync();
+
+            if (cabecera is null) return null;
+
+            cabecera.Docentes = await _context.MEC_MovimientosDetalle
+                .AsNoTracking()
+                .Where(d => d.IdMovimientoCabecera == idMovimientoCabecera)
+                .Select(d => new ReporteDocenteDTO
+                {
+                    /* columna clave para evitar DISTINCT */
+                    IdMovimientoDetalle = d.IdMovimientoDetalle,
+
+                    NumDoc = d.NumDoc,
+                    Apellido = d.Apellido,
+                    Nombre = d.Nombre,
+                    SitRevista = d.SitRevista,
+                    Turno = d.Turno,
+                    Observaciones = d.Observaciones,
+                    AntigAnios = d.AntigAnios ?? null,
+                    AntigMeses = d.AntigMeses ?? null,
+                    Horas = d.Horas,
+
+                    // sub‑queries: si no hay registro, devuelven NULL (LEFT JOIN implícito)
+                    Secuencia = _context.MEC_POF
+                                 .Where(p => p.IdPOF == d.IdPOF)
+                                 .Select(p => p.Secuencia)
+                                 .FirstOrDefault(),
+
+                    Categoria = _context.MEC_TiposCategorias
+                                 .Where(tc => tc.IdTipoCategoria == d.IdTipoCategoria)
+                                 .Select(tc => tc.CodCategoria)
+                                 .FirstOrDefault(),
+
+                    Funcion = _context.MEC_TiposFunciones
+                                 .Where(tf => tf.IdTipoFuncion == d.IdTipoFuncion)
+                                 .Select(tf => tf.CodFuncion)
+                                 .FirstOrDefault(),
+
+                    TipoMovimiento = d.TipoMovimiento,
+                    TipoDoc = d.TipoDoc
+                })
+                .ToListAsync();
+
+
+
+            return cabecera;
+        }
+
+
     }
 }
