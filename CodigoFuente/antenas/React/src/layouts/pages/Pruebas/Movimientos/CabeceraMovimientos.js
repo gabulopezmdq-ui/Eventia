@@ -61,16 +61,86 @@ function CabeceraMovimientos() {
     navigate("/CabeceraMovimientos/Nuevo");
   };
 
+  const areaOptions = [
+    { label: "LIQUIDACIONES", value: "L" },
+    { label: "LICENCIAS POR ENFERMEDAD", value: "E" },
+    { label: "ASIGNACIONES FAMILIARES", value: "A" },
+    { label: "COORDINACION ADMINISTRATIVA", value: "C" },
+  ];
+
   const handleImprimir = async (movimiento) => {
     try {
-      await GeneradorPDF.generar(movimiento);
+      // 1. Obtener la cabecera con los docentes incluidos
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/Reporte?idcabecera=${movimiento.idMovimientoCabecera}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response.data;
+      const areaLabel = areaOptions.find((opt) => opt.value === data.area)?.label || data.area;
+      // 2. Armar el objeto unificado para el PDF
+      const movimientoConTodo = {
+        // estos datos vienen directo en el JSON
+        establecimiento: data.nombreMgp,
+        diegep: data.nroDiegep,
+        tipoEstablecimiento: data.idTipoEstablecimiento,
+        nroEstablecimiento: data.nroEstablecimiento,
+        subvencion: data.subvencion,
+        mes: convertirMes(data.mes),
+        anio: data.anio,
+        area: areaLabel,
+        // podés agregar más campos de cabecera si quisieras
+
+        // docentes
+        docentes: data.docentes.map((docente) => ({
+          nDNI: docente.numDoc,
+          nombre: docente.nombre,
+          apellido: docente.apellido,
+          turno: docente.turno, // si querés traducir "M" a "Mañana" lo podés hacer acá
+          nHoras: docente.horas?.toString() || "0",
+          anos: docente.antigAnios?.toString() || "0",
+          meses: docente.antigMeses?.toString() || "0",
+          sitRevista: docente.sitRevista,
+          secuencia: docente.secuencia != null ? docente.secuencia : "",
+          observaciones: docente.observaciones || "",
+          tipoMovimiento: docente.tipoMovimiento,
+          tipoDoc: docente.tipoDoc,
+          categoria: docente.categoria,
+          funcion: docente.funcion,
+          ruralidad: data.ruralidad,
+        })),
+      };
+
+      await GeneradorPDF.generar(movimientoConTodo);
     } catch (error) {
+      console.error(error);
       setErrorAlert({
         show: true,
-        message: "Error al generar el PDF",
+        message: "Error al obtener los datos para imprimir.",
         type: "error",
       });
     }
+  };
+  const convertirMes = (mesNumerico) => {
+    const meses = [
+      "ENERO",
+      "FEBRERO",
+      "MARZO",
+      "ABRIL",
+      "MAYO",
+      "JUNIO",
+      "JULIO",
+      "AGOSTO",
+      "SEPTIEMBRE",
+      "OCTUBRE",
+      "NOVIEMBRE",
+      "DICIEMBRE",
+    ];
+    return meses[mesNumerico - 1] || mesNumerico.toString();
   };
   const handleEnviarEducacion = (movimiento) => {
     const confirmacion = window.confirm(
@@ -196,7 +266,7 @@ function CabeceraMovimientos() {
                               Enviar a Educacion
                             </MDButton>
                           )}
-                          {estado === "V" && (
+                          {estado === "E" && (
                             <MDButton
                               variant="gradient"
                               size="small"

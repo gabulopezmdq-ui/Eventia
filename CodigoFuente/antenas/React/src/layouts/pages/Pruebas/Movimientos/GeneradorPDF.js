@@ -3,7 +3,7 @@ import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import logo from "../../../../assets/images/Logo1.png";
 
 const generar = async (movimiento) => {
-  console.log("Datos Cableados: ", movimiento);
+  console.log("movimientos: ", movimiento);
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -17,7 +17,7 @@ const generar = async (movimiento) => {
   const logoWidth = image.width * 0.7;
   const logoHeight = image.height * 0.7;
 
-  const posicionesPorCampo = {
+  const posicionesPorCampoBM = {
     nDNI: { x: 90, y: 0 },
     nombre: { x: 200, y: -18 },
     apellido: { x: 200, y: 5 },
@@ -28,8 +28,25 @@ const generar = async (movimiento) => {
     meses: { x: 616, y: 0 },
     sitRevista: { x: 323, y: 0 },
     funcion: { x: 463, y: 0 },
-    rural: { x: 483, y: 0 },
+    ruralidad: { x: 480, y: 0 },
     observaciones: { x: 635, y: 17 },
+    secuencia: { x: 173, y: -2 },
+  };
+
+  const posicionesPorCampoAD = {
+    nDNI: { x: 385, y: 0 },
+    nombre: { x: 200, y: -18 },
+    apellido: { x: 200, y: 5 },
+    turno: { x: 499, y: 0 },
+    categoria: { x: 520, y: 0 },
+    nHoras: { x: 574, y: 0 },
+    anos: { x: 593, y: 0 },
+    meses: { x: 616, y: 0 },
+    sitRevista: { x: 323, y: 0 },
+    funcion: { x: 463, y: 0 },
+    ruralidad: { x: 480, y: 0 },
+    observaciones: { x: 635, y: 17 },
+    tipoDoc: { x: 347, y: -2 },
   };
 
   const posicionesDocentes = [{ yBase: 300 }, { yBase: 250 }, { yBase: 200 }, { yBase: 150 }];
@@ -64,7 +81,7 @@ const generar = async (movimiento) => {
 
   // Paginación: 4 docentes por página
   const docentesPorPagina = 4;
-  const totalPaginas = Math.ceil(movimiento.docente.length / docentesPorPagina);
+  const totalPaginas = Math.ceil(movimiento.docentes.length / docentesPorPagina);
 
   for (let i = 0; i < totalPaginas; i++) {
     const page = pdfDoc.addPage([842, 595]); // A4 horizontal
@@ -180,7 +197,7 @@ const generar = async (movimiento) => {
     });
 
     // MES/AÑO (sobre el borde superior)
-    page.drawText(`MES / AÑO:  ${movimiento.mes} ${movimiento.año} `, {
+    page.drawText(`MES / AÑO:  ${movimiento.mes} ${movimiento.anio} `, {
       x: 550,
       y: infoBoxY + 2,
       size: fontSize,
@@ -318,6 +335,21 @@ const generar = async (movimiento) => {
       x: 528,
       y: infoBoxY - 112,
       size: fontCat,
+      font,
+      rotate: degrees(90),
+    });
+    const fontCargo = 7;
+    page.drawText("Cargo", {
+      x: 176,
+      y: infoBoxY - 112,
+      size: fontCargo,
+      font,
+      rotate: degrees(90),
+    });
+    page.drawText("o Sec.", {
+      x: 184,
+      y: infoBoxY - 112,
+      size: fontCargo,
       font,
       rotate: degrees(90),
     });
@@ -850,13 +882,18 @@ const generar = async (movimiento) => {
     });
 
     //Seccion Docentes Imprimo en la Hoja
-    const docentesPagina = movimiento.docente.slice(
+    const docentesPagina = movimiento.docentes.slice(
       i * docentesPorPagina,
       i * docentesPorPagina + docentesPorPagina
     );
 
     docentesPagina.forEach((docente, index) => {
       const yBase = posicionesDocentes[index].yBase;
+
+      // seleccionar posiciones según el tipoMovimiento
+      const posicionesPorCampo = ["B", "M"].includes(docente.tipoMovimiento)
+        ? posicionesPorCampoBM
+        : posicionesPorCampoAD;
 
       Object.entries(posicionesPorCampo).forEach(([campo, pos]) => {
         const texto = docente[campo] !== undefined ? String(docente[campo]) : "";
@@ -867,7 +904,7 @@ const generar = async (movimiento) => {
             texto,
             pos.x,
             yBase + pos.y,
-            175,
+            170,
             50,
             font,
             fontSize,
