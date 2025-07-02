@@ -11,9 +11,9 @@ public class MovimientosDetalleDTO
     public string? Estado { get; set; }
 
     // Campos del detalle 
-    public int IdTipoFuncion { get; set; }
+    public int? IdTipoFuncion { get; set; }
     public int? IdPOF { get; set; }
-    public int IdTipoCategoria { get; set; }
+    public int? IdTipoCategoria { get; set; }
     public int? IdMotivoBaja { get; set; }
     public string TipoDoc { get; set; }
     public string TipoMovimiento { get; set; }
