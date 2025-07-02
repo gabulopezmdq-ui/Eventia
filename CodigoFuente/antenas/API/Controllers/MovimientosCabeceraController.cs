@@ -171,12 +171,12 @@ namespace API.Controllers
         [HttpGet("Reporte")]
         public async Task<IActionResult> GenerarReporte(int idCabecera)
         {
-            var datos = await _movimientosDetalle.Reporte(idCabecera);
+            var reporte = await _movimientosDetalle.Reporte(idCabecera);
 
-            if (datos.Count == 0)
-                return NotFound("No hay movimientos para esa cabecera.");
+            if (reporte is null || !reporte.Docentes.Any())
+                return NotFound("No hay datos para esa cabecera.");
 
-            return Ok(datos);   // <- JSON listo para Excel, tabla, etc.
+            return Ok(reporte);
         }
     }
 }
