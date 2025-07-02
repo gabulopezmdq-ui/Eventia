@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using API.DataSchema;
 using API.DataSchema.DTO;
+using static API.DataSchema.DTO.ReporteMovDTO;
 
 namespace API.Services
 {
@@ -22,6 +23,6 @@ namespace API.Services
         Task<List<MECPOFDetalleDTO>> BuscarPOFAsync(int idEstablecimiento);
 
         // REPORTE
-        Task<List<ReporteMovDTO>> Reporte(int idMovimientoCabecera);
+        Task<ReporteEstablecimientoDTO?> Reporte(int idMovimientoCabecera);
     }
 }
