@@ -20,5 +20,8 @@ namespace API.Services
 
         //BUSCAR POF
         Task<List<MECPOFDetalleDTO>> BuscarPOFAsync(int idEstablecimiento);
+
+        // REPORTE
+        Task<List<ReporteMovDTO>> Reporte(int idMovimientoCabecera);
     }
 }

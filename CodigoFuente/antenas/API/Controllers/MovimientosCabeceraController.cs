@@ -165,5 +165,18 @@ namespace API.Controllers
 
             return Ok(detalles);
         }
+
+        //REPORTE
+
+        [HttpGet("Reporte")]
+        public async Task<IActionResult> GenerarReporte(int idCabecera)
+        {
+            var datos = await _movimientosDetalle.Reporte(idCabecera);
+
+            if (datos.Count == 0)
+                return NotFound("No hay movimientos para esa cabecera.");
+
+            return Ok(datos);   // <- JSON listo para Excel, tabla, etc.
+        }
     }
 }
