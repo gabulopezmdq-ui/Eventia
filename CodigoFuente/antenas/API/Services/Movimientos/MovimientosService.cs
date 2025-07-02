@@ -312,5 +312,38 @@ namespace API.Services
 
             return resultado;
         }
+
+        //ARMAR REPORTE
+        public async Task<List<ReporteMovDTO>> Reporte(int idMovimientoCabecera)
+        {
+            var reporte = await _context.MEC_MovimientosDetalle.AsNoTracking().Where(d => d.IdMovimientoCabecera == idMovimientoCabecera)
+                .Select(d => new ReporteMovDTO
+                {
+                    /* ---------- Datos de establecimiento ---------- */
+                    IdEstablecimiento = d.MovimientoCabecera.IdEstablecimiento,
+                    NroDiegep = d.MovimientoCabecera.Establecimientos.NroDiegep,
+                    IdTipoEstablecimiento = d.MovimientoCabecera.Establecimientos.IdTipoEstablecimiento,
+                    NroEstablecimiento = d.MovimientoCabecera.Establecimientos.NroEstablecimiento,
+                    NombreMgp = d.MovimientoCabecera.Establecimientos.NombreMgp,
+                    NombrePcia = d.MovimientoCabecera.Establecimientos.NombrePcia,
+                    Ruralidad = d.MovimientoCabecera.Establecimientos.Ruralidad,
+                    Subvencion = d.MovimientoCabecera.Establecimientos.Subvencion,
+
+                    /* ------------- Datos del docente -------------- */
+                    NumDoc = d.NumDoc,
+                    Apellido = d.Apellido,
+                    Nombre = d.Nombre,
+                    SitRevista = d.SitRevista,
+                    Turno = d.Turno,
+                    Observaciones = d.Observaciones,
+                    AntigAnios = d.AntigAnios ?? null,
+                    AntigMeses = d.AntigMeses ?? null,
+                    Horas = d.Horas
+
+                }).ToListAsync();
+
+
+                return reporte;
+        }
     }
 }
