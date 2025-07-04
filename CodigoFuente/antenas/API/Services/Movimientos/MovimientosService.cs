@@ -383,6 +383,51 @@ namespace API.Services
             return cabecera;
         }
 
+        public async Task<bool> DetalleBaja(MEC_MovimientosDetalle nuevoDetalle)
+        {
+            // ⚠️ Validaciones mínimas
+            if (nuevoDetalle.IdMovimientoCabecera <= 0 || string.IsNullOrWhiteSpace(nuevoDetalle.NumDoc))
+                return false;
 
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                /* 1) Alta en MEC_MovimientosDetalle */
+                _context.MEC_MovimientosDetalle.Add(nuevoDetalle);
+                await _context.SaveChangesAsync();
+
+                /* 2) Copia en tabla histórica (o de auditoría) */
+                var bajas = new MEC_MovimientosBajas
+                {
+                    IdTipoEstablecimiento = nuevoDetalle.MovimientoCabecera.Establecimientos.IdTipoEstablecimiento,
+                    Anio = nuevoDetalle.MovimientoCabecera.Anio,
+                    IdEstablecimiento = nuevoDetalle.MovimientoCabecera.Establecimientos.IdEstablecimiento,
+                    SuplenteDNI = null,
+                    SuplenteApellido = null,
+                    SuplenteNombre = null,
+                    CantHoras = nuevoDetalle.Horas,
+                    Estado = "H",
+                    Ingreso = null,
+                    IngresoDescripcion = null,
+                    Observaciones = null,
+                    IdPOF = nuevoDetalle.IdPOF,
+                    IdMotivoBaja = nuevoDetalle.IdMotivoBaja,
+                    FechaInicio = nuevoDetalle.FechaInicioBaja,
+                    FechaFin = nuevoDetalle.FechaFinBaja,
+                };
+
+                _context.MEC_MovimientosBajas.Add(bajas);
+                await _context.SaveChangesAsync();
+
+                await tx.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;   // o devolvé false, según tu política
+            }
+        }
     }
 }
