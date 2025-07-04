@@ -85,7 +85,7 @@ function CabeceraMovimientos() {
       // 2. Armar el objeto unificado para el PDF
       const movimientoConTodo = {
         // estos datos vienen directo en el JSON
-        establecimiento: data.nombreMgp,
+        establecimiento: data.nombrePcia,
         diegep: data.nroDiegep,
         tipoEstablecimiento: data.idTipoEstablecimiento,
         nroEstablecimiento: data.nroEstablecimiento,
