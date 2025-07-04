@@ -211,12 +211,14 @@ function AltaCabeceraMovimientos() {
         ...detalleData,
         idMovimientoCabecera: idCabecera,
       };
+      const url =
+        detalleData.tipoMovimiento === "B"
+          ? process.env.REACT_APP_API_URL + "MovimientosCabecera/MovimientosBajas"
+          : process.env.REACT_APP_API_URL + "MovimientosCabecera/AddDetalle";
 
-      const response = await axios.post(
-        process.env.REACT_APP_API_URL + "MovimientosCabecera/AddDetalle",
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.post(url, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.status === 200) {
         alert("Detalle guardado correctamente");
