@@ -274,9 +274,12 @@ export default function App() {
     {
       path: "/BajasFE",
       component: Bajas,
+    },
+    {
       path: "/CabeceraMovimientos",
       component: CabeceraMovimientos,
     },
+
     //----------------------------------Rutas de Ver mas
     {
       path: "/VerCabeceraLiquidacionFE/:id",
