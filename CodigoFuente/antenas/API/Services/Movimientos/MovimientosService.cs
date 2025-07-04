@@ -457,6 +457,15 @@ namespace API.Services
                 Roles = roles
             };
         }
+
+        public async Task<List<int>> ObtenerIdsPorUsuarioAsync(int idUsuario)
+        {
+            return await _context.MEC_UsuariosEstablecimientos
+                .Where(uxe => uxe.IdUsuario == idUsuario && uxe.Vigente == "S")
+                .Select(uxe => uxe.IdEstablecimiento)
+                .Distinct()
+                .ToListAsync();
+        }
     }
     
 }

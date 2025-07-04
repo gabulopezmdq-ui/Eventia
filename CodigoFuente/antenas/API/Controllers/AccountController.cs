@@ -68,11 +68,23 @@ namespace API.Controllers
             //guarda los roles en caso de que tenga mas de uno
             var roles = usuario.UsuariosXRoles.Select(ur => ur.Rol?.NombreRol).Where(r => !string.IsNullOrEmpty(r)).ToList();
 
+            // Obtener idEstablecimiento vigente (el primero que encuentre)
+            int? idEstablecimiento = _context.MEC_UsuariosEstablecimientos
+                .Where(uxe => uxe.IdUsuario == userId && uxe.Vigente == "S")
+                .Select(uxe => (int?)uxe.IdEstablecimiento)
+                .FirstOrDefault();
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, usuario.Nombre),
                 new Claim("id", usuario.IdUsuario.ToString())
             };
+
+            if (idEstablecimiento.HasValue)
+            {
+                claims.Add(new Claim("idEstablecimiento", idEstablecimiento.Value.ToString()));
+            }
+
             claims.AddRange(roles.Select(rol => new Claim(ClaimTypes.Role, rol)));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetValue<string>("Ldap:Key")));
