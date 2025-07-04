@@ -398,11 +398,16 @@ namespace API.Services
                 await _context.SaveChangesAsync();
 
                 /* 2) Copia en tabla histórica (o de auditoría) */
+                var cabecera = await _context.MEC_MovimientosCabecera
+                .Include(c => c.Establecimientos)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == nuevoDetalle.IdMovimientoCabecera);
+
                 var bajas = new MEC_MovimientosBajas
                 {
-                    IdTipoEstablecimiento = nuevoDetalle.MovimientoCabecera.Establecimientos.IdTipoEstablecimiento,
-                    Anio = nuevoDetalle.MovimientoCabecera.Anio,
-                    IdEstablecimiento = nuevoDetalle.MovimientoCabecera.Establecimientos.IdEstablecimiento,
+                    IdTipoEstablecimiento = cabecera.Establecimientos.IdTipoEstablecimiento,
+                    Anio = cabecera.Anio,
+                    IdEstablecimiento = cabecera.Establecimientos.IdEstablecimiento,
                     SuplenteDNI = null,
                     SuplenteApellido = null,
                     SuplenteNombre = null,
