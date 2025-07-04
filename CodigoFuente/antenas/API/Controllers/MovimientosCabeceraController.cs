@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using API.DataSchema.DTO;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace API.Controllers
 {
@@ -21,13 +23,15 @@ namespace API.Controllers
         private readonly ICRUDService<MEC_MovimientosCabecera> _serviceGenerico;
         private readonly ICRUDService<MEC_MovimientosDetalle> _serviceDetalle;
         private readonly IMovimientosService _movimientosDetalle;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosCabecera> logger, ICRUDService<MEC_MovimientosCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle, ICRUDService<MEC_MovimientosDetalle> serviceDetalle)
+        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosCabecera> logger, ICRUDService<MEC_MovimientosCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle, ICRUDService<MEC_MovimientosDetalle> serviceDetalle, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _movimientosDetalle = movimientosDetalle;
             _serviceDetalle = serviceDetalle;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet("BuscarSuplente")]
@@ -86,7 +90,7 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("GetById")]
+        [HttpGet("GetById/{Id}")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
@@ -190,14 +194,35 @@ namespace API.Controllers
 
         //ROLES Y EST
         [HttpGet("RolesEst")]
-        public async Task<ActionResult<UsuarioInfoDTO>> GetInfoUsuario(int idUsuario)
+        public async Task<ActionResult<UsuarioInfoDTO>> GetInfoUsuario()
         {
-            var info = await _movimientosDetalle.ObtenerEstablecimientosYRolesAsync(idUsuario);
+            try
+            {
+                var idClaim = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (idClaim == null)
+                    return Unauthorized("No hay claim de id");
 
-            if (!info.IdsEstablecimientos.Any() && !info.Roles.Any())
-                return NotFound("El usuario no posee establecimientos ni roles asignados.");
+                int usuario = int.Parse(idClaim.Value);
 
-            return Ok(info);
+                var roles = _httpContextAccessor.HttpContext.User.Claims
+                    .Where(c => c.Type == ClaimTypes.Role || c.Type == "role")
+                    .Select(c => c.Value)
+                    .Distinct()
+                    .ToList();
+
+                var establecimientos = await _movimientosDetalle.ObtenerIdsPorUsuarioAsync(usuario);
+
+                return Ok(new
+                {
+                    IdUsuario = usuario,
+                    Roles = roles,
+                    IdsEstablecimientos = establecimientos
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error obteniendo establecimientos: {ex.Message}");
+            }
         }
     }
 }

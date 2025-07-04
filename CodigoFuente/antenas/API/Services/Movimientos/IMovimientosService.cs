@@ -29,6 +29,6 @@ namespace API.Services
         Task<bool> DetalleBaja(MEC_MovimientosDetalle nuevoDetalle);
 
         //ROLES USUARIOS
-        Task<UsuarioInfoDTO> ObtenerEstablecimientosYRolesAsync(int idUsuario);
+        Task<List<int>> ObtenerIdsPorUsuarioAsync(int idUsuario);
     }
 }
