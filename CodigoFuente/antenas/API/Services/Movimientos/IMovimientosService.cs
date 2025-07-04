@@ -24,5 +24,8 @@ namespace API.Services
 
         // REPORTE
         Task<ReporteEstablecimientoDTO?> Reporte(int idMovimientoCabecera);
+
+        //MOVIMIENTO BAJAS DESDE MOVIMIENTOSDETALLE
+        Task<bool> DetalleBaja(MEC_MovimientosDetalle nuevoDetalle);
     }
 }

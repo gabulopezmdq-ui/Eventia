@@ -11,7 +11,7 @@ namespace API.DataSchema
         public int? IdTipoEstablecimiento { get; set; }
         public int? IdPOF { get; set; }
         public int? IdMotivoBaja { get; set; }
-        public string? Anio { get; set; }
+        public int? Anio { get; set; }
         public string? SuplenteDNI { get; set; }
         public string? SuplenteApellido { get; set; }
         public string? SuplenteNombre { get; set; }
