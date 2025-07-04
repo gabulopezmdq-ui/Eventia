@@ -166,6 +166,14 @@ namespace API.Controllers
             return Ok(detalles);
         }
 
+        //BAJA
+        [HttpPost("MovimientosBajas")]
+        public async Task<IActionResult> Baja ([FromBody] MEC_MovimientosDetalle movimientos)
+        {
+            await _movimientosDetalle.DetalleBaja(movimientos);
+            return Ok(movimientos);
+        }
+
         //REPORTE
 
         [HttpGet("Reporte")]
