@@ -162,8 +162,8 @@ namespace API.Services
             await _context.SaveChangesAsync();
 
             return (true, "Cálculo exitoso.", movimiento.Anio, movimiento.Mes);
-        } 
-        
+        }
+
         //ENVIAR A EDUCACION
         public async Task<bool> EnviarEduc(MEC_MovimientosCabecera movimientos)
         {
@@ -434,5 +434,29 @@ namespace API.Services
                 throw;   // o devolvé false, según tu política
             }
         }
+
+        public async Task<UsuarioInfoDTO> ObtenerEstablecimientosYRolesAsync(int idUsuario)
+        {
+            // Ids de establecimientos vigentes
+            var establecimientos = await _context.MEC_UsuariosEstablecimientos
+                .Where(uxe => uxe.IdUsuario == idUsuario && uxe.Vigente == "S")
+                .Select(uxe => uxe.IdEstablecimiento)
+                .Distinct()
+                .ToListAsync();
+
+            // Roles del usuario
+            var roles = await _context.MEC_RolesXUsuarios
+                .Where(rxu => rxu.IdUsuario == idUsuario)
+                .Select(rxu => rxu.Rol!.NombreRol)    // o CodRol, etc.
+                .ToListAsync();
+
+            // Devolvés el DTO
+            return new UsuarioInfoDTO
+            {
+                IdsEstablecimientos = establecimientos,
+                Roles = roles
+            };
+        }
     }
+    
 }

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using API.DataSchema.DTO;
 
 namespace API.Controllers
 {
@@ -168,7 +169,7 @@ namespace API.Controllers
 
         //BAJA
         [HttpPost("MovimientosBajas")]
-        public async Task<IActionResult> Baja ([FromBody] MEC_MovimientosDetalle movimientos)
+        public async Task<IActionResult> Baja([FromBody] MEC_MovimientosDetalle movimientos)
         {
             await _movimientosDetalle.DetalleBaja(movimientos);
             return Ok(movimientos);
@@ -185,6 +186,18 @@ namespace API.Controllers
                 return NotFound("No hay datos para esa cabecera.");
 
             return Ok(reporte);
+        }
+
+        //ROLES Y EST
+        [HttpGet("RolesEst")]
+        public async Task<ActionResult<UsuarioInfoDTO>> GetInfoUsuario(int idUsuario)
+        {
+            var info = await _movimientosDetalle.ObtenerEstablecimientosYRolesAsync(idUsuario);
+
+            if (!info.IdsEstablecimientos.Any() && !info.Roles.Any())
+                return NotFound("El usuario no posee establecimientos ni roles asignados.");
+
+            return Ok(info);
         }
     }
 }
