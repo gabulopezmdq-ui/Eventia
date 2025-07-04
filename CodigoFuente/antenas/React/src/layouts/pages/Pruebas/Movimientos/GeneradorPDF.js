@@ -904,7 +904,7 @@ const generar = async (movimiento) => {
             texto,
             pos.x,
             yBase + pos.y,
-            170,
+            165,
             50,
             font,
             fontSize,
