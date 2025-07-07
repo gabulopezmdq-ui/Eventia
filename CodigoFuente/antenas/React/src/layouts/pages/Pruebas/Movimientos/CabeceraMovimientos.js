@@ -19,42 +19,70 @@ function CabeceraMovimientos() {
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [dataTableData, setDataTableData] = useState([]);
+  const [userRoles, setUserRoles] = useState([]);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
     fetchConceptos();
   }, []);
 
-  const fetchConceptos = () => {
-    axios
-      .get(process.env.REACT_APP_API_URL + "MovimientosCabecera/GetAll", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        console.log("Datos recibidos del backend:", response.data);
-        setDataTableData(response.data);
-      })
-      .catch((error) => {
-        if (error.response) {
-          const statusCode = error.response.status;
-          let errorMessage = "";
-          let errorType = "error";
-          if (statusCode >= 400 && statusCode < 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
-          } else if (statusCode >= 500) {
-            errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
-          }
-          setErrorAlert({ show: true, message: errorMessage, type: errorType });
-        } else {
-          setErrorAlert({
-            show: true,
-            message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-            type: "error",
-          });
+  const fetchConceptos = async () => {
+    try {
+      // Primero traigo los roles y establecimientos
+      const rolesResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/RolesEst?id=7`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
+
+      console.log("RolesEst recibido:", rolesResponse.data);
+
+      const { idsEstablecimientos, roles } = rolesResponse.data;
+      setUserRoles(roles);
+
+      // Luego traigo todos los movimientos
+      const movimientosResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAll`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Movimientos recibidos:", movimientosResponse.data);
+
+      // filtro en base a idsEstablecimientos
+      const movimientosFiltrados = movimientosResponse.data.filter((movimiento) =>
+        idsEstablecimientos.includes(movimiento.idEstablecimiento)
+      );
+
+      console.log("Movimientos filtrados:", movimientosFiltrados);
+
+      setDataTableData(movimientosFiltrados);
+    } catch (error) {
+      console.error(error);
+      if (error.response) {
+        const statusCode = error.response.status;
+        let errorMessage = "";
+        let errorType = "error";
+        if (statusCode >= 400 && statusCode < 500) {
+          errorMessage = `Error ${statusCode}: Hubo un problema con la solicitud del cliente.`;
+        } else if (statusCode >= 500) {
+          errorMessage = `Error ${statusCode}: Hubo un problema en el servidor.`;
+        }
+        setErrorAlert({ show: true, message: errorMessage, type: errorType });
+      } else {
+        setErrorAlert({
+          show: true,
+          message: "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
+          type: "error",
+        });
+      }
+    }
   };
 
   const handleNuevoMovimiento = () => {
@@ -189,6 +217,53 @@ function CabeceraMovimientos() {
         }
       });
   };
+  const handleEnviarProvincia = (movimiento) => {
+    const confirmacion = window.confirm(
+      `¿Está seguro de enviar el movimiento ${movimiento.idMovimientoCabecera} a Provinvia?`
+    );
+    if (!confirmacion) {
+      return;
+    }
+
+    axios
+      .post(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/EnviarProv`,
+        {
+          idMovimientoCabecera: movimiento.idMovimientoCabecera,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      .then(() => {
+        fetchConceptos();
+        setErrorAlert({
+          show: true,
+          message: "Movimiento enviado a Provincia correctamente.",
+          type: "success",
+        });
+      })
+      .catch((error) => {
+        if (error.response) {
+          const statusCode = error.response.status;
+          let errorMessage = "";
+          if (statusCode >= 400 && statusCode < 500) {
+            errorMessage = `Error ${statusCode}: Problema en la solicitud.`;
+          } else if (statusCode >= 500) {
+            errorMessage = `Error ${statusCode}: Problema en el servidor.`;
+          }
+          setErrorAlert({ show: true, message: errorMessage, type: "error" });
+        } else {
+          setErrorAlert({
+            show: true,
+            message: "Ocurrió un error inesperado al enviar a Educación.",
+            type: "error",
+          });
+        }
+      });
+  };
   return (
     <>
       <DashboardLayout>
@@ -211,84 +286,101 @@ function CabeceraMovimientos() {
             </Grid>
           </Grid>
         )}
-        <MDBox my={3}>
-          <Card>
-            <DataTable
-              table={{
-                columns: [
-                  { Header: "Area", accessor: "area", Cell: ({ value }) => value ?? "" },
-                  { Header: "Año", accessor: "anio", Cell: ({ value }) => value ?? "" },
-                  { Header: "Mes", accessor: "mes", Cell: ({ value }) => value ?? "" },
-                  { Header: "Establecimiento", accessor: "establecimientos.nroEstablecimiento" },
-                  {
-                    Header: "Estado",
-                    accessor: "estado",
-                    Cell: ({ value }) => {
-                      const estados = [
-                        { label: "Pendiente", value: "P" },
-                        { label: "Enviado a Educación", value: "E" },
-                        { label: "Enviado a Provincia", value: "V" },
-                      ];
-
-                      const estadoEncontrado = estados.find((e) => e.value === value);
-                      return estadoEncontrado ? estadoEncontrado.label : value;
+        {dataTableData.length === 0 ? (
+          <MDBox my={3}>
+            <MDBox p={3} textAlign="center">
+              No tiene establecimientos asociados.
+            </MDBox>
+          </MDBox>
+        ) : (
+          <MDBox my={3}>
+            <Card>
+              <DataTable
+                table={{
+                  columns: [
+                    { Header: "Area", accessor: "area", Cell: ({ value }) => value ?? "" },
+                    { Header: "Año", accessor: "anio", Cell: ({ value }) => value ?? "" },
+                    { Header: "Mes", accessor: "mes", Cell: ({ value }) => value ?? "" },
+                    { Header: "Establecimiento", accessor: "establecimientos.nroEstablecimiento" },
+                    {
+                      Header: "Estado",
+                      accessor: "estado",
+                      Cell: ({ value }) => {
+                        const estados = [
+                          { label: "Pendiente", value: "P" },
+                          { label: "Enviado a Educación", value: "E" },
+                          { label: "Enviado a Provincia", value: "V" },
+                        ];
+                        const estadoEncontrado = estados.find((e) => e.value === value);
+                        return estadoEncontrado ? estadoEncontrado.label : value;
+                      },
                     },
-                  },
-                  {
-                    Header: "Acciones",
-                    accessor: "acciones",
-                    Cell: ({ row }) => {
-                      const estado = row.original.estado;
-
-                      return (
-                        <MDBox display="flex" gap={1}>
-                          {(estado === "E" || estado === "P") && (
-                            <MDButton
-                              variant="gradient"
-                              color="warning"
-                              size="small"
-                              onClick={() =>
-                                navigate(
-                                  `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`
-                                )
-                              }
-                            >
-                              Editar
-                            </MDButton>
-                          )}
-                          {estado === "P" && (
-                            <MDButton
-                              variant="gradient"
-                              size="small"
-                              color="secondary"
-                              onClick={() => handleEnviarEducacion(row.original)}
-                            >
-                              Enviar a Educacion
-                            </MDButton>
-                          )}
-                          {estado === "E" && (
-                            <MDButton
-                              variant="gradient"
-                              size="small"
-                              color="info"
-                              onClick={() => handleImprimir(row.original)}
-                            >
-                              Imprimir
-                            </MDButton>
-                          )}
-                        </MDBox>
-                      );
+                    {
+                      Header: "Acciones",
+                      accessor: "acciones",
+                      Cell: ({ row }) => {
+                        const estado = row.original.estado;
+                        return (
+                          <MDBox display="flex" gap={1}>
+                            {(estado === "E" || estado === "P") && (
+                              <MDButton
+                                variant="gradient"
+                                color="warning"
+                                size="small"
+                                onClick={() =>
+                                  navigate(
+                                    `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`
+                                  )
+                                }
+                              >
+                                Editar
+                              </MDButton>
+                            )}
+                            {estado === "P" && (
+                              <MDButton
+                                variant="gradient"
+                                size="small"
+                                color="secondary"
+                                onClick={() => handleEnviarEducacion(row.original)}
+                              >
+                                Enviar a Educacion
+                              </MDButton>
+                            )}
+                            {estado === "V" && (
+                              <MDButton
+                                variant="gradient"
+                                size="small"
+                                color="info"
+                                onClick={() => handleImprimir(row.original)}
+                              >
+                                Imprimir
+                              </MDButton>
+                            )}
+                            {(userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) &&
+                              estado !== "V" && (
+                                <MDButton
+                                  variant="gradient"
+                                  size="small"
+                                  color="success"
+                                  onClick={() => handleEnviarProvincia(row.original)}
+                                >
+                                  Enviar a Prov
+                                </MDButton>
+                              )}
+                          </MDBox>
+                        );
+                      },
                     },
-                  },
-                ],
-                rows: dataTableData,
-              }}
-              entriesPerPage={false}
-              canSearch
-              show
-            />
-          </Card>
-        </MDBox>
+                  ],
+                  rows: dataTableData,
+                }}
+                entriesPerPage={false}
+                canSearch
+                show
+              />
+            </Card>
+          </MDBox>
+        )}
       </DashboardLayout>
     </>
   );
