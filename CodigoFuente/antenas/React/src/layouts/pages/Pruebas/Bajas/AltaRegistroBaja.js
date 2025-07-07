@@ -107,7 +107,7 @@ function AltaRegistroBaja() {
 
   const buscarSuplentePorDNI = async (dni) => {
     try {
-      const response = await axios.get("https://localhost:44382/MovimientosBaja/GetAll", {
+      const response = await axios.get("https://localhost:44382/MovimientosBaja/Getall", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -168,29 +168,35 @@ function AltaRegistroBaja() {
   const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
 
   const handleSubmit = async () => {
-    if (!suplenteDni || !suplenteApellido || !suplenteNombre) {
+    if (!suplenteDni || !suplenteApellido || !suplenteNombre || !docenteSeleccionado) {
       alert("Completa los campos obligatorios.");
       return;
     }
 
     const nuevoMovimiento = {
-      suplenteDNI: suplenteDni,
-      suplenteApellido: suplenteApellido,
-      suplenteNombre: suplenteNombre,
-      fechaInicio,
-      fechaFin,
-      cantHoras,
-      estado,
-      ingreso,
-      ingresoDescripcion,
-      idMotivoBaja: motivoSeleccionado,
+      baja: {
+        suplenteDNI: suplenteDni,
+        suplenteApellido: suplenteApellido,
+        suplenteNombre: suplenteNombre,
+        fechaInicio,
+        fechaFin,
+        cantHoras,
+        estado,
+        ingreso,
+        ingresoDescripcion,
+        idMotivoBaja: motivoSeleccionado,
+        idEstablecimiento: establecimientoSeleccionado?.idEstablecimiento,
+        idTipoEstablecimiento: nivelSeleccionado,
+        idPOF: docenteSeleccionado,
+        anio: anioSeleccionado,
+      },
     };
-
     try {
-      const response = await fetch("https://localhost:44382/MovimientosBaja/Create", {
+      const response = await fetch("https://localhost:44382/MovimientosBaja", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(nuevoMovimiento),
       });
@@ -208,6 +214,8 @@ function AltaRegistroBaja() {
         setIngreso(null);
         setIngresoDescripcion("NE");
         setMotivoSeleccionado("");
+        setDocenteSeleccionado(null);
+        setDatosDocenteSeleccionado(null);
       } else {
         const error = await response.text();
         alert("Error al registrar: " + error);
