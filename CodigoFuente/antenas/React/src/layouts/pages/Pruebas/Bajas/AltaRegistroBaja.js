@@ -187,7 +187,7 @@ function AltaRegistroBaja() {
     };
 
     try {
-      const response = await fetch("https://localhost:44382/MovimientosBaja/Create", {
+      const response = await fetch("https://localhost:44382/MovimientosBaja", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
