@@ -11296,19 +11296,32 @@
     ]
   },
   "packageFolders": {
+<<<<<<< HEAD
     "C:\\Users\\jcgarcia\\.nuget\\packages\\": {}
+=======
+    "C:\\Users\\efrontera\\.nuget\\packages\\": {}
+>>>>>>> origin/nes
   },
   "project": {
     "version": "1.0.0",
     "restore": {
       "projectUniqueName": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "projectName": "CoreServices.Test",
+<<<<<<< HEAD
       "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
+=======
+      "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
+      "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
+>>>>>>> origin/nes
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -11379,7 +11392,11 @@
             "privateAssets": "all"
           }
         },
+<<<<<<< HEAD
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
+>>>>>>> origin/nes
       }
     }
   }
