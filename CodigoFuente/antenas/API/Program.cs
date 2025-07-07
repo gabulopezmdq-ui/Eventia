@@ -57,20 +57,22 @@ builder.Services.AddControllers().AddJsonOptions(option =>
     JsonIgnoreCondition.WhenWritingNull;
 }); */
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-             options.TokenValidationParameters = new TokenValidationParameters
-             {
-                ValidateIssuer = true,
-                 ValidateAudience = true,
-                 ValidateLifetime = true,
-                 ValidateIssuerSigningKey = true,
-                 ValidIssuer = builder.Configuration.GetValue<string>("Ldap:Dominio"),
-                 ValidAudience = builder.Configuration.GetValue<string>("Ldap:Dominio"),
-                 IssuerSigningKey = new SymmetricSecurityKey(
-                //Encoding.UTF8.GetBytes("_configuration[\"Llave_super_secreta\"]")),
-                Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Ldap:Key"))),//definida por nosotros patron al azar
-                 ClockSkew = TimeSpan.Zero
-        });
+            .AddJwtBearer(options => {
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+                    ValidAudience = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                   //Encoding.UTF8.GetBytes("_configuration[\"Llave_super_secreta\"]")),
+                   Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Ldap:Key"))),//definida por nosotros patron al azar
+                    ClockSkew = TimeSpan.Zero
+                };
+                });
 
 // adds an authorization policy to make sure the token is for scope 'api1'
 builder.Services.AddAuthorization(options =>

@@ -27,5 +27,8 @@ namespace API.Services
 
         //MOVIMIENTO BAJAS DESDE MOVIMIENTOSDETALLE
         Task<bool> DetalleBaja(MEC_MovimientosDetalle nuevoDetalle);
+
+        //ROLES USUARIOS
+        Task<List<int>> ObtenerIdsPorUsuarioAsync(int idUsuario);
     }
 }

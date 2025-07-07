@@ -35,4 +35,11 @@ namespace API.DataSchema.DTO
         public int IdUsuario { get; set; }
         public List<int> IdRoles { get; set; } = new List<int>();
     }
+
+    public class UsuarioInfoDTO
+    {
+        public List<int> IdsEstablecimientos { get; set; } = new();
+        public List<string> Roles { get; set; } = new();
+    }
+
 }
