@@ -15,6 +15,7 @@ import MDButton from "components/MDButton";
 // Material Dashboard layout components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import { useNavigate } from "react-router-dom";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -26,6 +27,7 @@ function AltaRegistroBaja() {
   // Selecccionar Nivel
   const [niveles, setNiveles] = useState([]);
   const [nivelSeleccionado, setNivelSeleccionado] = useState("");
+  const navigate = useNavigate();
 
   const fetchNiveles = async () => {
     try {
@@ -416,7 +418,7 @@ function AltaRegistroBaja() {
                   </FormControl>
                 </Grid>
 
-                {/* Estado */}
+                {/* Estado 
                 <Grid item xs={6}>
                   <FormControl fullWidth>
                     <InputLabel>Estado</InputLabel>
@@ -429,7 +431,7 @@ function AltaRegistroBaja() {
                       <MenuItem value="HECHO">HECHO</MenuItem>
                     </Select>
                   </FormControl>
-                </Grid>
+                </Grid>*/}
 
                 {/* Ingreso */}
                 <Grid item xs={6}>
@@ -483,7 +485,12 @@ function AltaRegistroBaja() {
                   </MDButton>
                 </MDBox>
                 <MDBox>
-                  <MDButton variant="gradient" color="light" size="small">
+                  <MDButton
+                    variant="gradient"
+                    color="light"
+                    size="small"
+                    onClick={() => navigate(-1)}
+                  >
                     Cancelar
                   </MDButton>
                 </MDBox>
