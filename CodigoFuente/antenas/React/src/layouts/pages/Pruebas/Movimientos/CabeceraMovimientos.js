@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
+import jwt_decode from "jwt-decode";
 import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import PropTypes from "prop-types";
@@ -28,41 +29,55 @@ function CabeceraMovimientos() {
 
   const fetchConceptos = async () => {
     try {
-      // Primero traigo los roles y establecimientos
-      const rolesResponse = await axios.get(
-        `${process.env.REACT_APP_API_URL}MovimientosCabecera/RolesEst?id=7`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const decodedToken = jwt_decode(token);
+      const userId = decodedToken.id;
 
-      console.log("RolesEst recibido:", rolesResponse.data);
+      const rolesKey = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+      const userRolesFromToken = decodedToken[rolesKey] || [];
 
-      const { idsEstablecimientos, roles } = rolesResponse.data;
-      setUserRoles(roles);
+      setUserRoles(userRolesFromToken);
+      if (userRolesFromToken.includes("SuperAdmin")) {
+        const movimientosResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAll`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setDataTableData(movimientosResponse.data);
+      } else {
+        // Traer ids de establecimientos asociados y roles
+        const rolesResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/RolesEst?id=${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      // Luego traigo todos los movimientos
-      const movimientosResponse = await axios.get(
-        `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAll`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        console.log("RolesEst recibido:", rolesResponse.data);
 
-      console.log("Movimientos recibidos:", movimientosResponse.data);
+        const { idsEstablecimientos, roles } = rolesResponse.data;
+        setUserRoles(roles);
 
-      // filtro en base a idsEstablecimientos
-      const movimientosFiltrados = movimientosResponse.data.filter((movimiento) =>
-        idsEstablecimientos.includes(movimiento.idEstablecimiento)
-      );
+        // Luego traigo todos los movimientos
+        const movimientosResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAll`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      console.log("Movimientos filtrados:", movimientosFiltrados);
-
-      setDataTableData(movimientosFiltrados);
+        // filtro en base a idsEstablecimientos
+        const movimientosFiltrados = movimientosResponse.data.filter((movimiento) =>
+          idsEstablecimientos.includes(movimiento.idEstablecimiento)
+        );
+        setDataTableData(movimientosFiltrados);
+      }
     } catch (error) {
       console.error(error);
       if (error.response) {
