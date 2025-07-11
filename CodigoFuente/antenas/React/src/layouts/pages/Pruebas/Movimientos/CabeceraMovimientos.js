@@ -357,7 +357,7 @@ function CabeceraMovimientos() {
                               </MDButton>
                             )}
                             {(userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) &&
-                              estado !== "V" && (
+                              estado == "E" && (
                                 <MDButton
                                   variant="gradient"
                                   size="small"
