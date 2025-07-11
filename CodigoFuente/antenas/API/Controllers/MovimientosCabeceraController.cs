@@ -90,7 +90,7 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("GetById/{Id}")]
+        [HttpGet("GetById")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
