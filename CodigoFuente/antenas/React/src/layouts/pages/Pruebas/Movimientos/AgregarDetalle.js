@@ -205,6 +205,19 @@ export default function AgregarDetalle({
     { value: "31", label: "Docente suplente de titular en licencia por maternidad" },
   ];
 
+  const turno = [
+    { value: "M", label: "Mañana" },
+    { value: "T", label: "Tarde" },
+    { value: "N", label: "Noche" },
+  ];
+
+  const documentoOpciones = [
+    { value: 1, label: "Enrolamiento" },
+    { value: 2, label: "Lib. Cívica" },
+    { value: 3, label: "Ced. Identidad" },
+    { value: 4, label: "DNI" },
+  ];
+
   return (
     <MDBox pb={3} px={3}>
       <Card>
@@ -236,12 +249,22 @@ export default function AgregarDetalle({
           {isAlta && (
             <>
               <Grid item xs={12} sm={4}>
-                <TextField
-                  name="tipoDoc"
-                  label="Tipo Documento"
-                  fullWidth
-                  onChange={handleChange}
-                />
+                <FormControl fullWidth>
+                  <InputLabel>Tipo Doc.</InputLabel>
+                  <Select
+                    name="tipDoc"
+                    label="TipoDoc"
+                    value={form.documentoOpciones}
+                    onChange={handleChange}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {documentoOpciones.map((opcion) => (
+                      <MenuItem key={opcion.value} value={opcion.value}>
+                        {opcion.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid item xs={12} sm={4}>
                 <TextField name="numDoc" label="Nro" fullWidth onChange={handleChange} />
@@ -377,7 +400,22 @@ export default function AgregarDetalle({
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField name="turno" label="Turno" fullWidth onChange={handleChange} />
+            <FormControl fullWidth>
+              <InputLabel>Turno</InputLabel>
+              <Select
+                name="turno"
+                label="Turno"
+                value={form.turno}
+                onChange={handleChange}
+                style={{ height: "2.8rem", backgroundColor: "white" }}
+              >
+                {turno.map((opcion) => (
+                  <MenuItem key={opcion.value} value={opcion.value}>
+                    {opcion.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
@@ -414,7 +452,7 @@ export default function AgregarDetalle({
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField name="horas" label="Horas" fullWidth onChange={handleChange} />
+            <TextField name="horas" label="Horas" type="number" fullWidth onChange={handleChange} />
           </Grid>
 
           <Grid item xs={6} sm={3}>
