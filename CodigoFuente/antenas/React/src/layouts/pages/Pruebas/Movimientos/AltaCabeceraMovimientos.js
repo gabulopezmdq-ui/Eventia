@@ -298,7 +298,7 @@ function AltaCabeceraMovimientos() {
                 >
                   {establecimientos.map((e) => (
                     <MenuItem key={e.idEstablecimiento} value={e.idEstablecimiento}>
-                      {e.nombrePcia}
+                      {e.nombrePcia.trim().replace(/"/g, "\\ ")}
                     </MenuItem>
                   ))}
                 </Select>

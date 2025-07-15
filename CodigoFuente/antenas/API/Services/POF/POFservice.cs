@@ -108,10 +108,6 @@ namespace API.Services
             return "Puede proceder a registrar la suplencia.";
         }
 
-        public async Task AddOrUpdateAsync(MEC_POF_Antiguedades antiguedades)
-        {
-
-        }
 
         public async Task<MEC_POF_Antiguedades?> GetByIdPOFAsync(int idPersona)
         {
