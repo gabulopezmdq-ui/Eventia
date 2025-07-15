@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin")]
     //[AllowAnonymous]
     [Route("[controller]")]
     public class TiposFuncionesController : ControllerBase
@@ -31,6 +30,7 @@ namespace API.Controllers
             return Ok(_serviceGenerico.GetAll());
         }
 
+        [Authorize(Roles = "SuperAdmin, Admin")]
         [HttpGet("GetByVigente")]
         public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetByVigente([FromQuery] string vigente = null)
         {

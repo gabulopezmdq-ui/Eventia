@@ -9,6 +9,7 @@ namespace API.DataSchema
         public string CodCategoria { get; set; }
         public string CodCategoriaMGP { get; set; }
         public string Descripcion { get; set; }
+        public string? TipoCargo { get; set; }
         public string Vigente { get; set; }
 
         public string[] UniqueProperties => new[] { "CodCategoria" }; //  CodCategoria es unico
