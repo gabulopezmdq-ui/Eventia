@@ -311,6 +311,8 @@ export default function AgregarDetalle({
                       apellido: docenteSeleccionado.personaApellido,
                       idTipoFuncion: docenteSeleccionado.idTipoFuncion || "",
                       numDoc: docenteSeleccionado.personaDNI || "",
+                      antigAnos: docenteSeleccionado.anioAntiguedad || "",
+                      antigMeses: docenteSeleccionado.mesAntiguedad || "",
                       funcion:
                         funcionesOpciones.find(
                           (f) => f.idTipoFuncion === docenteSeleccionado.idTipoFuncion
@@ -461,6 +463,7 @@ export default function AgregarDetalle({
               label="Antig. Años"
               fullWidth
               disabled={isBajaOModifOAdic}
+              value={form.antigAnos}
               onChange={handleChange}
             />
           </Grid>
@@ -469,6 +472,7 @@ export default function AgregarDetalle({
               name="antigMeses"
               label="Antig. Meses"
               fullWidth
+              value={form.antigMeses}
               disabled={isBajaOModifOAdic}
               onChange={handleChange}
             />

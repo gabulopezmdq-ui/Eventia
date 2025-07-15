@@ -65,6 +65,8 @@ namespace API.Services
                     // relaciones simples ----------------------
                     CarRevista = p.CarRevista.Descripcion,
                     Cargo = p.TipoFuncion.Descripcion,
+                    AnioAntiguedad = p.Persona.POFAntiguedad.Select( a => a.AnioAntiguedad).FirstOrDefault(),
+                    MesAntiguedad = p.Persona.POFAntiguedad.Select(a => a.MesAntiguedad).FirstOrDefault(),
 
 
                     // --- datos de Persona --------------------

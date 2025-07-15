@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin")]
+
+
     //[AllowAnonymous]
     [Route("[controller]")]
     public class TiposCategoriasController : ControllerBase
@@ -24,13 +25,14 @@ namespace API.Controllers
             _context = context;
             _serviceGenerico = serviceGenerico;
         }
-        
+
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_TiposCategorias>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
+        [Authorize(Roles = "SuperAdmin, Admin")]
         [HttpGet("GetByVigente")]
         public async Task<ActionResult<IEnumerable<MEC_CarRevista>>> GetByVigente([FromQuery] string vigente = null)
         {

@@ -21,6 +21,7 @@ using System.Text;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using API.Services.UsXRol;
 using API.Services.ImportacionMecanizada;
+using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -90,11 +91,38 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddHealthChecks();
 
 
+//Partes diarios
+builder.Services.AddHttpClient<PartesDiariosService>(client =>
+{
+    client.BaseAddress = new Uri("https://pd.mardelplata.gob.ar/");
+});
+
+// Configuración desde appsettings.json
+builder.Services.AddSingleton<PartesDiariosService>(provider =>
+{
+    var config = provider.GetRequiredService<IConfiguration>();
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+
+    return new PartesDiariosService(
+        httpClient,
+        config["PartesDiarios:ApiKey"],
+        config["PartesDiarios:SecretKey"]
+    );
+});
+
+//builder.Services.AddHttpClient<IPartesDiariosService, PartesDiariosService>(client =>
+//{
+//    client.BaseAddress = new Uri("https://pd.mardelplata.gob.ar/");
+//    client.DefaultRequestHeaders.Add("Accept", "application/json");
+//    client.Timeout = TimeSpan.FromSeconds(30);
+//});
+
 //Services
 
 builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
 builder.Services.AddScoped<IMovimientosService, MovimientosService>();
-builder.Services.AddScoped<ICabeceraLiquidacionService, CabeceraLiquidacionService>();
+builder.Services.AddScoped<ICabeceraLiquidacionService, DocentesHistoricoService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IProcesarMecanizadaService<>), typeof(ProcesarMecanizadaService<>));
 builder.Services.AddScoped<IPOFService, POFService>();
@@ -102,6 +130,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUsXRolService, UsXRolService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 builder.Services.AddScoped<IConsolidarMecanizadaService, ConsolidarMecanizadaService>();
+//builder.Services.AddSci<IPartesDiariosService, PartesDiariosService>().AddPolicyHandler(GetRetryPolicy());
 
 //Repositories
 
