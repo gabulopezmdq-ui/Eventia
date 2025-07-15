@@ -50,6 +50,7 @@ namespace API.DataSchema
         public DbSet<MEC_MovimientosDetalle> MEC_MovimientosDetalle { get; set; }
         public DbSet<MEC_MovimientosBajas> MEC_MovimientosBajas { get; set; }
         public DbSet<MEC_POF_Barras> MEC_POF_Barras { get; set; }
+        public DbSet<MEC_InasistenciasCodigos> MEC_Inasistencias { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
@@ -88,6 +89,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_MovimientosDetalleConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_MovimientosBajasConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_POF_BarrasConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_InasistenciasCodigosConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }
