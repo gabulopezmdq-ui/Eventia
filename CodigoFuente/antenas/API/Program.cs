@@ -32,7 +32,7 @@ IdentityModelEventSource.ShowPII = true;
 
 builder.Services.AddControllers().AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
-// Configuración de autenticación JWT
+// Configuraciï¿½n de autenticaciï¿½n JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
         options.MapInboundClaims = false;
@@ -50,7 +50,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Configuración de políticas de autorización
+// Configuraciï¿½n de polï¿½ticas de autorizaciï¿½n
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ApiScope", policy =>
@@ -59,7 +59,7 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
-// Configuración de la base de datos
+// Configuraciï¿½n de la base de datos
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"))
            .EnableSensitiveDataLogging()
@@ -79,11 +79,12 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUsXRolService, UsXRolService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 builder.Services.AddScoped<IConsolidarMecanizadaService, ConsolidarMecanizadaService>();
+//builder.Services.AddSci<IPartesDiariosService, PartesDiariosService>().AddPolicyHandler(GetRetryPolicy());
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
-// Configuración de servicios para Partes Diarios
+// Configuraciï¿½n de servicios para Partes Diarios
 builder.Services.AddHttpClient<IHistoricoDocentesClient, HistoricoDocentesClient>(client =>
 {
     client.BaseAddress = new Uri("https://pd.mardelplata.gob.ar/");
@@ -101,7 +102,7 @@ builder.Services.AddScoped<IPartesDiariosService>(provider =>
         builder.Configuration["PartesDiarios:ApiKey"]
     ));
 
-// Configuración de CORS
+// Configuraciï¿½n de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy",
@@ -110,20 +111,20 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader());
 });
 
-// Configuración de IIS
+// Configuraciï¿½n de IIS
 builder.Services.Configure<IISServerOptions>(options =>
 {
     options.MaxRequestBodySize = int.MaxValue;
 });
 
-// Configuración de Swagger
+// Configuraciï¿½n de Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Construcción de la aplicación
+// Construcciï¿½n de la aplicaciï¿½n
 var app = builder.Build();
 
-// Configuración del pipeline de solicitudes HTTP
+// Configuraciï¿½n del pipeline de solicitudes HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -142,7 +143,7 @@ app.MapControllers();
 app.MapControllers().RequireAuthorization("ApiScope");
 app.Map("/health", app => app.UseHealthChecks("/health"));
 
-// Definición de la política de reintentos (esto puede quedarse al final ya que es un método auxiliar)
+// Definiciï¿½n de la polï¿½tica de reintentos (esto puede quedarse al final ya que es un mï¿½todo auxiliar)
 static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
 {
     return HttpPolicyExtensions
