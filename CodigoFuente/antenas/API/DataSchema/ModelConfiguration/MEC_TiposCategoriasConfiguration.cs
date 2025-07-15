@@ -27,7 +27,12 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.Descripcion)
                 .HasColumnType("varchar(100)")
                 .IsFixedLength(false)
-                .IsRequired(true); 
+                .IsRequired(true);
+
+            builder.Property(e => e.TipoCargo)
+                .HasColumnType("char(1)")
+                .IsFixedLength(false)
+                .IsRequired(false);
 
             builder.Property(e => e.Vigente)
                 .HasColumnType("char(1)")

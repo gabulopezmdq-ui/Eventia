@@ -1,7 +1,7 @@
-using  API.DataSchema;
-using  API.Repositories;
-using  API.Services;
-using  API.Utility;
+using API.DataSchema;
+using API.Repositories;
+using API.Services;
+using API.Utility;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -21,80 +21,57 @@ using System.Text;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using API.Services.UsXRol;
 using API.Services.ImportacionMecanizada;
+using System.Net.Http;
+using Polly;
+using Polly.Extensions.Http;
 
 var builder = WebApplication.CreateBuilder(args);
+
 // Add services to the container.
 IdentityModelEventSource.ShowPII = true;
-/*
-builder.WebHost.UseKestrel(opt =>
-{
-   opt.ListenAnyIP(5000);
-   opt.ListenAnyIP(5001, listOpt =>
-    {
-        listOpt.UseHttps(builder.Configuration["CertPath"], builder.Configuration["CertPassword"]);
-    });
-});
-*/
-/*
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    });
-*/
-
 
 builder.Services.AddControllers().AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
-//builder.Services.AddControllers();
-//builder.Services.AddControllers();
-
-//builder.Services.AddControllersWithViews(o => o.SslPort = 5001);
-/*
-builder.Services.AddControllers().AddJsonOptions(option =>
-{
-    option.JsonSerializerOptions.DefaultIgnoreCondition =
-    JsonIgnoreCondition.WhenWritingNull;
-}); */
+// Configuración de autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options => {
-                options.MapInboundClaims = false;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration.GetValue<string>("Ldap:Dominio"),
-                    ValidAudience = builder.Configuration.GetValue<string>("Ldap:Dominio"),
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                   //Encoding.UTF8.GetBytes("_configuration[\"Llave_super_secreta\"]")),
-                   Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Ldap:Key"))),//definida por nosotros patron al azar
-                    ClockSkew = TimeSpan.Zero
-                };
-                });
+    .AddJwtBearer(options => {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+            ValidAudience = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Ldap:Key"))),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
-// adds an authorization policy to make sure the token is for scope 'api1'
+// Configuración de políticas de autorización
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ApiScope", policy =>
     {
         policy.RequireAuthenticatedUser();
-        //policy.RequireClaim("scope", "posts-api");
     });
 });
 
-builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")).EnableSensitiveDataLogging().LogTo(Console.WriteLine, LogLevel.Information));
+// Configuración de la base de datos
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"))
+           .EnableSensitiveDataLogging()
+           .LogTo(Console.WriteLine, LogLevel.Information));
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-//builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
 builder.Services.AddHealthChecks();
 
-
-//Services
-
+// Registro de servicios principales
 builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
 builder.Services.AddScoped<IMovimientosService, MovimientosService>();
-builder.Services.AddScoped<ICabeceraLiquidacionService, CabeceraLiquidacionService>();
+builder.Services.AddScoped<ICabeceraLiquidacionService, DocentesHistoricoService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IProcesarMecanizadaService<>), typeof(ProcesarMecanizadaService<>));
 builder.Services.AddScoped<IPOFService, POFService>();
@@ -103,12 +80,28 @@ builder.Services.AddScoped<IUsXRolService, UsXRolService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 builder.Services.AddScoped<IConsolidarMecanizadaService, ConsolidarMecanizadaService>();
 
-//Repositories
-
+// Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-//builder.Services.AddScoped<IRepository<EV_Conservadora>, EV_ConservadoraRepository>();
 
+// Configuración de servicios para Partes Diarios
+builder.Services.AddHttpClient<IHistoricoDocentesClient, HistoricoDocentesClient>(client =>
+{
+    client.BaseAddress = new Uri("https://pd.mardelplata.gob.ar/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
+builder.Services.AddSingleton<ITokenService>(new TokenService(
+    builder.Configuration["PartesDiarios:SecretKey"]
+));
+
+builder.Services.AddScoped<IPartesDiariosService>(provider =>
+    new PartesDiariosService(
+        provider.GetRequiredService<ITokenService>(),
+        provider.GetRequiredService<IHistoricoDocentesClient>(),
+        builder.Configuration["PartesDiarios:ApiKey"]
+    ));
+
+// Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy",
@@ -116,39 +109,46 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod()
         .AllowAnyHeader());
 });
+
+// Configuración de IIS
 builder.Services.Configure<IISServerOptions>(options =>
 {
     options.MaxRequestBodySize = int.MaxValue;
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Configuración de Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Construcción de la aplicación
 var app = builder.Build();
 
+// Configuración del pipeline de solicitudes HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware(typeof(GlobalErrorHandlingMiddleware));
+app.UseMiddleware<GlobalErrorHandlingMiddleware>();
 
 app.UseCors("CorsPolicy");
-app.UseAuthentication();
 app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.MapControllers().RequireAuthorization("ApiScope");
 app.Map("/health", app => app.UseHealthChecks("/health"));
 
-app.UseAuthorization();
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Definición de la política de reintentos (esto puede quedarse al final ya que es un método auxiliar)
+static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    return HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
 }
-//app.UseHttpsRedirection();
 
 app.Run();

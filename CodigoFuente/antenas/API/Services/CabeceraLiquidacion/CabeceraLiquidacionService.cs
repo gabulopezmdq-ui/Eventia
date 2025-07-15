@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace API.Services
 {
-    public class CabeceraLiquidacionService : ICabeceraLiquidacionService
+    public class DocentesHistoricoService : ICabeceraLiquidacionService
     {
         private readonly DataContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public CabeceraLiquidacionService(DataContext context, IHttpContextAccessor httpContextAccessor)
+        public DocentesHistoricoService(DataContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;

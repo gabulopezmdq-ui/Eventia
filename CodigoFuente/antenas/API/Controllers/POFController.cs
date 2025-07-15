@@ -2,6 +2,7 @@
 using API.DataSchema.DTO;
 using API.Migrations;
 using API.Services;
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,14 +26,16 @@ namespace API.Controllers
         private readonly ICRUDService<MEC_POF> _serviceGenerico;
         private readonly ICRUDService<MEC_Personas> _personasGenerico;
         private readonly ICRUDService<MEC_POFDetalle> _pofDetalleGenerico;
+        private readonly ICRUDService<MEC_POF_Barras> _pofBarrasGenerico;
 
-        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService, ICRUDService<MEC_Personas> personasGenerico, ICRUDService<MEC_POFDetalle> pofDetalleGenerico)
+        public POFController(DataContext context, ILogger<MEC_POF> logger, ICRUDService<MEC_POF> serviceGenerico, IPOFService pofService, ICRUDService<MEC_Personas> personasGenerico, ICRUDService<MEC_POFDetalle> pofDetalleGenerico, ICRUDService<MEC_POF_Barras> pofBarrasGenerico)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _pofService = pofService;
             _personasGenerico = personasGenerico;
             _pofDetalleGenerico = pofDetalleGenerico;
+            _pofBarrasGenerico = pofBarrasGenerico;
         }
 
         [HttpGet("GetAll")]
@@ -156,5 +159,14 @@ namespace API.Controllers
             return Ok("POF registrada correctamente.");
         }
 
+
+        //CREA LA BARRA
+        [HttpPost("Barras")]
+        public async Task<IActionResult> CreateBarra([FromBody] MEC_POF_Barras barra)
+        {
+            _context.MEC_POF_Barras.Add(barra);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
     }
 }
