@@ -79,28 +79,14 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUsXRolService, UsXRolService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 builder.Services.AddScoped<IConsolidarMecanizadaService, ConsolidarMecanizadaService>();
-//builder.Services.AddSci<IPartesDiariosService, PartesDiariosService>().AddPolicyHandler(GetRetryPolicy());
+builder.Services.AddHttpClient<IPartesDiariosService, PartesDiariosService>();
+builder.Services.AddScoped<IPartesDiariosService, PartesDiariosService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
 // Configuraci�n de servicios para Partes Diarios
-builder.Services.AddHttpClient<IHistoricoDocentesClient, HistoricoDocentesClient>(client =>
-{
-    client.BaseAddress = new Uri("https://pd.mardelplata.gob.ar/");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
 
-builder.Services.AddSingleton<ITokenService>(new TokenService(
-    builder.Configuration["PartesDiarios:SecretKey"]
-));
-
-builder.Services.AddScoped<IPartesDiariosService>(provider =>
-    new PartesDiariosService(
-        provider.GetRequiredService<ITokenService>(),
-        provider.GetRequiredService<IHistoricoDocentesClient>(),
-        builder.Configuration["PartesDiarios:ApiKey"]
-    ));
 
 // Configuraci�n de CORS
 builder.Services.AddCors(options =>

@@ -13,41 +13,56 @@ namespace API.Controllers
     {
         private readonly IPartesDiariosService _partesDiariosService;
         private readonly ILogger<DocentesController> _logger;
-
-        public DocentesController(
-            IPartesDiariosService partesDiariosService,
-            ILogger<DocentesController> logger)
+        private const string SecretKey = "RDm7uiRh9+Ozvv7tKwfYf9x8p3oYCUqU11Fl8Xiq1Bg=";
+        public DocentesController(IPartesDiariosService partesDiariosService)
         {
-            _partesDiariosService = partesDiariosService;
-            _logger = logger;
+            _partesDiariosService = partesDiariosService ?? throw new ArgumentNullException(nameof(partesDiariosService));
         }
 
-        [HttpGet("historico")]
-        public async Task<IActionResult> GetHistorico(
-            [FromQuery] DateTime desde,
-            [FromQuery] DateTime hasta)
+        [HttpGet]
+        public async Task<IActionResult> GetHistoricoDocentes(
+             [FromQuery] string desde,
+             [FromQuery] string hasta)
         {
             try
             {
-                _logger.LogInformation("Obteniendo histórico desde {Desde} hasta {Hasta}", desde, hasta);
+                // Validar fechas
+                if (!DateTime.TryParse(desde, out _) || !DateTime.TryParse(hasta, out _))
+                {
+                    return BadRequest("Formato de fecha inválido. Use yyyy-MM-dd");
+                }
 
-                var resultado = await _partesDiariosService.ObtenerHistoricoDocentesAsync(desde, hasta);
+                // Obtener los datos del servicio
+                var resultado = await _partesDiariosService.ObtenerHistoricoDocentesAsync(desde, hasta, SecretKey);
+
+                // Retornar el JSON obtenido del servicio externo
                 return Content(resultado, "application/json");
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "Error de validación en fechas");
                 return BadRequest(ex.Message);
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Error al comunicarse con Partes Diarios");
                 return StatusCode(502, $"Error al comunicarse con el servicio externo: {ex.Message}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error inesperado al obtener histórico");
-                return StatusCode(500, "Error interno del servidor");
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
+        [HttpGet("Token")]
+        public IActionResult GenerarToken([FromQuery] DateTime? timestamp = null)
+        {
+            try
+            {
+                var token = _partesDiariosService.GenerarApiKey(SecretKey, timestamp);
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al generar el token: {ex.Message}");
             }
         }
     }
