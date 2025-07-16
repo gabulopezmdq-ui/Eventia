@@ -24,74 +24,56 @@ using System.Threading.Tasks;
 
 namespace API.Services
 {
-    // Services/TokenService.cs
-    public class TokenService : ITokenService
-    {
-        private readonly string _secretKey;
-
-        public TokenService(string secretKey)
-        {
-            _secretKey = secretKey;
-        }
-
-        public string GenerarToken()
-        {
-            var timeString = DateTime.UtcNow.ToString("yyyyMMddHHmm");
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_secretKey));
-            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(timeString));
-            return Convert.ToBase64String(hash);
-        }
-    }
-
-    // Services/HistoricoDocentesClient.cs
-    public class HistoricoDocentesClient : IHistoricoDocentesClient
+    public class PartesDiariosService : IPartesDiariosService
     {
         private readonly HttpClient _httpClient;
+        private const string BaseUrl = "https://pd.mardelplata.gob.ar/";
 
-        public HistoricoDocentesClient(HttpClient httpClient)
+        public PartesDiariosService(HttpClient httpClient)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _httpClient.BaseAddress = new Uri(BaseUrl);
         }
 
-        public async Task<string> GetHistoricoDocentes(string url, string apiKey, string token)
+        public async Task<string> ObtenerHistoricoDocentesAsync(string desde, string hasta, string secretKey)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("X-API-Key", apiKey);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (string.IsNullOrWhiteSpace(desde))
+                throw new ArgumentException("La fecha 'desde' no puede estar vacía", nameof(desde));
 
-            var response = await _httpClient.SendAsync(request);
+            if (string.IsNullOrWhiteSpace(hasta))
+                throw new ArgumentException("La fecha 'hasta' no puede estar vacía", nameof(hasta));
+
+            if (string.IsNullOrWhiteSpace(secretKey))
+                throw new ArgumentException("La clave secreta no puede estar vacía", nameof(secretKey));
+
+            // Generar el token API Key
+            string apiKey = GenerarApiKey(secretKey);
+
+            // Configurar los headers de la solicitud
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+
+            // Construir la URL del endpoint actualizado
+            string endpoint = $"api/historicodocente/exportar/{desde}/{hasta}";
+
+            // Realizar la solicitud HTTP
+            HttpResponseMessage response = await _httpClient.GetAsync(endpoint);
+
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStringAsync();
         }
-    }
 
-    // Services/PartesDiariosService.cs
-    public class PartesDiariosService : IPartesDiariosService
-    {
-        private readonly ITokenService _tokenService;
-        private readonly IHistoricoDocentesClient _client;
-        private readonly string _apiKey;
-
-        public PartesDiariosService(
-            ITokenService tokenService,
-            IHistoricoDocentesClient client,
-            string apiKey)
+        public string GenerarApiKey(string secretKey, DateTime? timestamp = null)
         {
-            _tokenService = tokenService;
-            _client = client;
-            _apiKey = apiKey;
-        }
+            var time = timestamp ?? DateTime.Now;
+            var timeString = time.ToString("yyyyMMddHHmm");
 
-        public async Task<string> ObtenerHistoricoDocentesAsync(DateTime desde, DateTime hasta)
-        {
-            if (desde > hasta)
-                throw new ArgumentException("La fecha 'desde' no puede ser mayor a 'hasta'");
-
-            var token = _tokenService.GenerarToken();
-            var url = $"api/historicodocentes/{desde:yyyy-MM-dd}/{hasta:yyyy-MM-dd}";
-
-            return await _client.GetHistoricoDocentes(url, _apiKey, token);
+            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secretKey)))
+            {
+                var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(timeString));
+                return Convert.ToBase64String(hash);
+            }
         }
     }
 }
