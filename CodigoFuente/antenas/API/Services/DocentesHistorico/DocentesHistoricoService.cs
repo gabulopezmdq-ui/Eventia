@@ -21,6 +21,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace API.Services
 {
@@ -29,11 +30,16 @@ namespace API.Services
         private readonly HttpClient _httpClient;
         private const string BaseUrl = "https://pd.mardelplata.gob.ar/";
 
-        public PartesDiariosService(HttpClient httpClient)
+        private readonly DataContext _context;
+
+        public PartesDiariosService(HttpClient httpClient, DataContext context)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _httpClient.BaseAddress = new Uri(BaseUrl);
+
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
+
 
         public async Task<string> ObtenerHistoricoDocentesAsync(string desde, string hasta, string secretKey)
         {
@@ -74,6 +80,43 @@ namespace API.Services
                 var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(timeString));
                 return Convert.ToBase64String(hash);
             }
+        }
+
+        //GUARDAR REGISTROS
+        public async Task ImportarJSON(string json, int idCabecera, int idInasistenciasCabecera)
+        {
+            var opciones = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            var registros = JsonSerializer.Deserialize<List<InasistenciasDTO>>(json, opciones);
+
+            if (registros == null || !registros.Any())
+                throw new Exception("El JSON no contenía registros válidos.");
+
+            var entidades = registros.Select(dto => new MEC_TMPInasistenciasDetalle
+            {
+                IdCabecera = idCabecera,
+                IdInasistenciaCabecera = idInasistenciasCabecera,
+                DNI = dto.DNI.ToString("D8"),
+                NroLegajo = dto.NroLegajo,
+                NroCargo = dto.NroCargo,
+                UE = dto.CodDepend,
+                Grupo = dto.CodGrupo,
+                Nivel = dto.CodNivel,
+                Modulo = dto.Modulo,
+                Cargo = dto.Cargo,
+                FecNov = dto.FecNoved,
+                CodLicen = dto.CodLicen,
+                Cantidad = dto.Cantidad,
+                Hora = dto.Horas,
+                RegistroValido = "N",
+                RegistroProcesado = "N"
+            }).ToList();
+
+            _context.MEC_TMPInasistenciasDetalle.AddRange(entidades);
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -71,7 +71,7 @@ builder.Services.AddHealthChecks();
 // Registro de servicios principales
 builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
 builder.Services.AddScoped<IMovimientosService, MovimientosService>();
-builder.Services.AddScoped<ICabeceraLiquidacionService, DocentesHistoricoService>();
+builder.Services.AddScoped<ICabeceraInasistenciasService, CabeceraInasistenciasService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IProcesarMecanizadaService<>), typeof(ProcesarMecanizadaService<>));
 builder.Services.AddScoped<IPOFService, POFService>();
@@ -84,8 +84,6 @@ builder.Services.AddScoped<IPartesDiariosService, PartesDiariosService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-
-// Configuraci�n de servicios para Partes Diarios
 
 
 // Configuraci�n de CORS
