@@ -32,5 +32,7 @@ namespace API.DataSchema
         public virtual ICollection<MEC_CabeceraLiquidacionEstados>? EstadoCabecera { get; set; } = new List<MEC_CabeceraLiquidacionEstados>();
         public virtual ICollection<MEC_BajasCabecera>? BajaCabecera { get; set; } = new List<MEC_BajasCabecera>();
         public virtual ICollection<MEC_POFDetalle>? POFDetalle { get; set; } = new List<MEC_POFDetalle>();
+        public virtual ICollection<MEC_TMPInasistenciasDetalle>? TMPInasistenciasDetalle { get; set; } = new List<MEC_TMPInasistenciasDetalle>();
+        public virtual ICollection<MEC_TMPErroresInasistenciasDetalle>? ErroresTMPInasistenciasDetalle { get; set; } = new List<MEC_TMPErroresInasistenciasDetalle>();
     }
 }

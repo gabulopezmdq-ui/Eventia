@@ -1,4 +1,5 @@
 ﻿using API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -8,18 +9,19 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
+    [AllowAnonymous]
     [Route("[controller]")]
-    public class DocentesController : ControllerBase
+    public class DocentesHistoricoController : ControllerBase
     {
         private readonly IPartesDiariosService _partesDiariosService;
-        private readonly ILogger<DocentesController> _logger;
+        private readonly ILogger<DocentesHistoricoController> _logger;
         private const string SecretKey = "RDm7uiRh9+Ozvv7tKwfYf9x8p3oYCUqU11Fl8Xiq1Bg=";
-        public DocentesController(IPartesDiariosService partesDiariosService)
+        public DocentesHistoricoController(IPartesDiariosService partesDiariosService)
         {
             _partesDiariosService = partesDiariosService ?? throw new ArgumentNullException(nameof(partesDiariosService));
         }
 
-        [HttpGet]
+        [HttpGet("Historico")]
         public async Task<IActionResult> GetHistoricoDocentes(
              [FromQuery] string desde,
              [FromQuery] string hasta)
@@ -51,6 +53,30 @@ namespace API.Controllers
                 return StatusCode(500, $"Error interno del servidor: {ex.Message}");
             }
         }
+
+        [HttpPost("importar-desde-historico")]
+        public async Task<IActionResult> ImportarDesdeHistorico(
+            [FromQuery] string desde,
+            [FromQuery] string hasta,
+            [FromQuery] int idCabecera,
+            [FromQuery] int idInasistenciasCabecera)
+            {
+                try
+                {
+                    if (!DateTime.TryParse(desde, out _) || !DateTime.TryParse(hasta, out _))
+                        return BadRequest("Fechas inválidas");
+
+                    var json = await _partesDiariosService.ObtenerHistoricoDocentesAsync(desde, hasta, SecretKey);
+
+                    await _partesDiariosService.ImportarJSON(json, idCabecera, idInasistenciasCabecera);
+
+                    return Ok("Registros importados exitosamente");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Error: {ex.Message}");
+                }
+            }
 
         [HttpGet("Token")]
         public IActionResult GenerarToken([FromQuery] DateTime? timestamp = null)
