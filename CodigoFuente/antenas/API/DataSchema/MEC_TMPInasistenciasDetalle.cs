@@ -27,6 +27,7 @@ namespace API.DataSchema
         public virtual MEC_CabeceraLiquidacion CabeceraLiquidacion { get; set; }
         public virtual MEC_InasistenciasCabecera InasistenciasCabecera { get; set; }
         public virtual ICollection<MEC_TMPErroresInasistenciasDetalle>? ErroresTMPInasistenciasDetalle { get; set; } = new List<MEC_TMPErroresInasistenciasDetalle>();
+        public virtual ICollection<MEC_InasistenciasDetalle>? Detalle { get; set; } = new List<MEC_InasistenciasDetalle>();
 
     }
 }

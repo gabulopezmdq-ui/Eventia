@@ -8,71 +8,40 @@ namespace API.DataSchema.ModelConfiguration
         public void Configure(EntityTypeBuilder<MEC_InasistenciasDetalle> builder)
         {
             builder
-                .HasKey(k => k.IdInasistenciaDetalle);
+                .HasKey(k => k.IdInasistenciasDetalle);
 
             builder
-                .Property(p => p.IdInasistenciaDetalle)
+                .Property(p => p.IdInasistenciasDetalle)
                 .ValueGeneratedOnAdd();
 
-            builder
-                .HasOne(p => p.InasistenciaCabecera)
-                .WithMany(t => t.Detalle)
-                .HasForeignKey(p => p.IdInasistenciaCabecera)
-                .IsRequired(true);
+            builder.Property(p => p.IdInasistenciasCabecera).IsRequired();
+            builder.Property(p => p.IdEstablecimiento).IsRequired();
+            builder.Property(p => p.IdPOF).IsRequired();
+            builder.Property(p => p.IdPOFBarra).IsRequired();
+            builder.Property(p => p.Fecha).IsRequired();
+            builder.Property(p => p.IdTMPInasistenciasDetalle).IsRequired(false);
+            builder.Property(p => p.CodLicencia).IsRequired(false);
 
-           // builder
-           //     .Navigation(e => e.IdInasistenciaCabecera)
-           //     .AutoInclude()
-           //     .UsePropertyAccessMode(PropertyAccessMode.Property);
+            // Relaciones
+            builder.HasOne(p => p.Establecimiento)
+                .WithMany()
+                .HasForeignKey(p => p.IdEstablecimiento)
+                .OnDelete(DeleteBehavior.Restrict);
 
-           // builder
-           //     .HasOne(p => p.Usuarios)
-           //     .WithMany(t => t.Inasistencias)
-           //     .HasForeignKey(p => p.Confecciono)
-           //     .IsRequired(true);
+            builder.HasOne(p => p.POF)
+                .WithMany()
+                .HasForeignKey(p => p.IdPOF)
+                .OnDelete(DeleteBehavior.Restrict);
 
-           // builder
-           //     .Navigation(e => e.Usuarios)
-           //     .AutoInclude()
-           //     .UsePropertyAccessMode(PropertyAccessMode.Property);
+            builder.HasOne(p => p.POFBarra)
+                .WithMany()
+                .HasForeignKey(p => p.IdPOFBarra)
+                .OnDelete(DeleteBehavior.Restrict);
 
-           // builder
-           // .HasOne(p => p.Cabecera)
-           // .WithMany(t => t.Cabeceras)
-           // .HasForeignKey(p => p.IdCabecera)
-           // .IsRequired(true);
-
-           // builder
-           //     .Navigation(e => e.Cabecera)
-           //     .AutoInclude()
-           //     .UsePropertyAccessMode(PropertyAccessMode.Property);
-
-           // builder.Property(e => e.Mes)
-           //     .IsRequired(true);
-
-           // builder.Property(e => e.Anio)
-           //     .IsRequired(true);
-
-           // builder.Property(e => e.FechaApertura)
-           //     .IsRequired(true);
-
-           // builder.Property(e => e.FechaEntrega)
-           //    .IsRequired(true);
-
-           // builder.Property(e => e.SinNovedades)
-           //     .HasColumnType("char(1)")
-           //     .IsFixedLength(true)
-           //     .IsRequired(true);
-
-           // builder.Property(e => e.Observaciones)
-           // .HasColumnType("char(1000)")
-           // .IsFixedLength(true)
-           // .IsRequired(true);
-
-           // builder.Property(e => e.Estado)
-           //.HasColumnType("char(1)")
-           //.IsFixedLength(true)
-           //.IsRequired(true);
+            builder.HasOne(p => p.TMPInasistenciasDetalle)
+                .WithMany()
+                .HasForeignKey(p => p.IdTMPInasistenciasDetalle)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

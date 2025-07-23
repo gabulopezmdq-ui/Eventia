@@ -71,7 +71,7 @@ namespace API.Services
 
         public async Task ProcesarTMPInasistencias(int idCabeceraLiquidacion, int idCabeceraInasistencia, int idEstablecimiento, string UE)
         {
-            string varUE = UE.Replace("-", ""); // limpieza de guión
+            string varUE = UE.Replace("-", "");
 
             var registrosTMP = await _context.MEC_TMPInasistenciasDetalle
                 .Where(x => x.IdCabecera == idCabeceraLiquidacion
@@ -88,10 +88,9 @@ namespace API.Services
 
                 if (persona == null)
                 {
-                    // Insertar error: Documento NO existe
                     var error = new MEC_TMPErroresInasistenciasDetalle
                     {
-                        IdCabeceraInasistencia = idCabeceraLiquidacion, // fijate que va el idCabeceraInasistencia, no el de liquidación
+                        IdCabeceraInasistencia = idCabeceraLiquidacion,
                         IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
                         Documento = "NE",
                         Legajo = "NE",
@@ -179,7 +178,6 @@ namespace API.Services
                     continue;
                 }
 
-                // ✅ Registro válido
                 tmp.RegistroValido = "S";
                 tmp.RegistroProcesado = "S";
             }
@@ -187,6 +185,149 @@ namespace API.Services
             await _context.SaveChangesAsync();
         }
 
+
+
+        public async Task ProcesarInasistenciaAsync(int idCabeceraInasistencia, int idPOF, int idPOFBarra, int idTMPInasistenciasDetalle, int? codLicencia, DateTime fecha, int cantHs)
+        {
+            // 1. Validar que no exista el registro en MEC_InasistenciasDetalle
+            var yaExiste = await _context.MEC_InasistenciasDetalle
+                .AnyAsync(x => x.IdPOF == idPOF && x.IdPOFBarra == idPOFBarra && x.Fecha == fecha.Date);
+
+            if (yaExiste)
+            {
+                // Ya existe, no se inserta
+                return;
+            }
+
+            // 2. Insertar en MEC_InasistenciasDetalle
+            var nuevoDetalle = new MEC_InasistenciasDetalle
+            {
+                IdInasistenciasCabecera = idCabeceraInasistencia,
+                IdPOF = idPOF,
+                IdPOFBarra = idPOFBarra,
+                IdTMPInasistenciasDetalle = idTMPInasistenciasDetalle,
+                CodLicencia = codLicencia,
+                Fecha = fecha,
+                CantHs = cantHs,
+                EstadoRegistro = "P",
+            };
+
+            _context.MEC_InasistenciasDetalle.Add(nuevoDetalle);
+
+            // 3. Actualizar RegistroProcesado = "I" en MEC_TMPInasistenciasDetalle
+            var registroTMP = await _context.MEC_TMPInasistenciasDetalle
+                .FirstOrDefaultAsync(x => x.IdTMPInasistenciasDetalle == idTMPInasistenciasDetalle);
+
+            if (registroTMP != null)
+            {
+                registroTMP.RegistroProcesado = "I";
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+
+        public async Task<List<MEC_InasistenciasCabecera>> ObtenerCabecerasHabilitadasAsync()
+        {
+            return await _context.MEC_InasistenciasCabecera
+                .Where(c => c.Estado == "I")
+                .ToListAsync();
+        }
+
+        //VALIDACION DE REGISTRO MEC_INASISTENCIASDETALLE
+        public async Task<(bool Valido, string? Mensaje)> ValidarEstadoRegistro(int idCabecera)
+        {
+            var registrosIncompletos = await _context.MEC_InasistenciasDetalle
+                .Where(d => d.IdInasistenciasCabecera == idCabecera && string.IsNullOrEmpty(d.EstadoRegistro))
+                .AnyAsync();
+
+            if (registrosIncompletos)
+            {
+                return (false, "Para poder continuar, debe procesar todos los días de inasistencia como aprobados o rechazados");
+            }
+
+            return (true, null);
+        }
+
+
+        //BOTON "DEVOLVER A EST"
+        public async Task<(bool Exito, string? Mensaje)> DevolverAEstablecimientoAsync(
+                            int idCabecera,
+                            int usuario,
+                            string motivoRechazo)
+        {
+            // Validar que todos los registros esten procesados
+            var (valido, mensaje) = await ValidarEstadoRegistro(idCabecera);
+            if (!valido)
+            {
+                return (false, mensaje);
+            }
+
+            // Obtener la cabecera
+            var cabecera = await _context.MEC_InasistenciasCabecera
+                .FirstOrDefaultAsync(c => c.IdInasistenciaCabecera == idCabecera);
+
+            if (cabecera == null)
+            {
+                return (false, "No se encontró la cabecera de inasistencia");
+            }
+
+            // Cambiar estado a "R"
+            cabecera.Estado = "R";
+
+            // Obtener los registros a rechazar
+            var registrosRechazados = await _context.MEC_InasistenciasDetalle
+                .Where(d => d.IdInasistenciasCabecera == idCabecera && d.EstadoRegistro == "R")
+                .ToListAsync();
+
+            foreach (var registro in registrosRechazados)
+            {
+                var rechazo = new MEC_InasistenciasRechazo
+                {
+                    IdInasistenciaDetalle = registro.IdInasistenciasDetalle,
+                    UsuarioRechazo = usuario,
+                    MotivoRechazo = motivoRechazo,
+                    FechaEnvio = DateTime.Now
+                };
+
+                _context.MEC_InasistenciasRechazo.Add(rechazo);
+            }
+
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+
+        //BOTON "MARCAR CORREGIDO EDUCACION"
+        public async Task<(bool Exito, string? Mensaje)> MarcarComoCorregidoEducacionAsync(int idCabecera)
+        {
+            
+            // Validar que todos los registros esten procesados
+            var (valido, mensaje) = await ValidarEstadoRegistro(idCabecera);
+            if (!valido)
+            {
+                return (false, mensaje);
+            }
+
+            if (idCabecera == null || idCabecera <= 0)
+            {
+                return (false, "Debe seleccionar una Cabecera de Liquidación");
+            }
+
+            var cabecera = await _context.MEC_InasistenciasCabecera
+                .FirstOrDefaultAsync(c => c.IdInasistenciaCabecera == idCabecera);
+
+            if (cabecera == null)
+            {
+                return (false, "No se encontró la Cabecera de Inasistencia seleccionada");
+            }
+
+            
+            cabecera.Estado = "C";
+
+            await _context.SaveChangesAsync();
+
+            return (true, null);
+        }
 
     }
 }
