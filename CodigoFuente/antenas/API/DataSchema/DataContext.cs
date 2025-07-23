@@ -52,6 +52,7 @@ namespace API.DataSchema
         public DbSet<MEC_POF_Barras> MEC_POF_Barras { get; set; }
         public DbSet<MEC_InasistenciasCodigos> MEC_InasistenciasCodigos { get; set; }
         public DbSet<MEC_TMPInasistenciasDetalle> MEC_TMPInasistenciasDetalle { get; set; }
+        public DbSet<MEC_InasistenciasRechazo> MEC_InasistenciasRechazo { get; set; }
 
         public DbSet<MEC_TMPErroresInasistenciasDetalle> MEC_TMPErroresInasistenciasDetalle { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -95,6 +96,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_InasistenciasCodigosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TMPInasistenciasDetalleConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TMPErroresInasistenciasDetalleConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_InasistenciasRechazoConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }

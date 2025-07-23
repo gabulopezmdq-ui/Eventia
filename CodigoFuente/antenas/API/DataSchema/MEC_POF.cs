@@ -30,5 +30,6 @@ namespace API.DataSchema
         public virtual ICollection<MEC_MovimientosDetalle>? MovimientosDetalle { get; set; }
         public virtual ICollection<MEC_MovimientosBajas>? MovimientosBaja { get; set; } = new List<MEC_MovimientosBajas>();
         public virtual ICollection<MEC_POF_Barras>? POFBarras { get; set; } = new List<MEC_POF_Barras>();
+        public virtual ICollection<MEC_InasistenciasDetalle>? Detalle { get; set; } = new List<MEC_InasistenciasDetalle>();
     }
 }

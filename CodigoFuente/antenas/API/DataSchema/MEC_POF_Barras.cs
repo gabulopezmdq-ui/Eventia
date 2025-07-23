@@ -10,5 +10,6 @@ namespace API.DataSchema
 
         // Propiedades de navegación
         public virtual MEC_POF? POF { get; set; }
+        public virtual ICollection<MEC_InasistenciasDetalle>? Detalle { get; set; } = new List<MEC_InasistenciasDetalle>();
     }
 }
