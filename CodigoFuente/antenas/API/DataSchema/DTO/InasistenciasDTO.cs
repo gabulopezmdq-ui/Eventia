@@ -17,3 +17,10 @@ public class InasistenciasDTO
     public int Cantidad { get; set; }
     public int Horas { get; set; }
 }
+
+public class DevolverEst
+{
+    public int IdCabecera { get; set; }
+    public int Usuario { get; set; }
+    public string MotivoRechazo { get; set; }
+}

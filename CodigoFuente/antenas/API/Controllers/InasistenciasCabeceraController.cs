@@ -1,6 +1,8 @@
 ﻿using API.DataSchema;
+using API.DataSchema.DTO;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -19,12 +21,14 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICabeceraInasistenciasService _cabeceraService;
         private readonly ICRUDService<MEC_InasistenciasCabecera> _serviceGenerico;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public InasistenciasCabeceraController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraInasistenciasService cabeceraService, ICRUDService<MEC_InasistenciasCabecera> serviceGenerico)
+        public InasistenciasCabeceraController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraInasistenciasService cabeceraService, ICRUDService<MEC_InasistenciasCabecera> serviceGenerico, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _cabeceraService = cabeceraService;
             _serviceGenerico = serviceGenerico;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet("CheckIfExists")]
@@ -93,12 +97,37 @@ namespace API.Controllers
             await _cabeceraService.ProcesarTMPInasistencias(idCabeceraLiquidacion, idCabeceraInasistencia, idEstablecimiento, UE);
             return Ok("Procesamiento completado");
         }
-        //[HttpPut]
-        //public async Task<ActionResult<MEC_CabeceraLiquidacion>> Update([FromBody] MEC_CabeceraLiquidacion cabecera)
-        //{
-        //    //await _cabeceraService.UpdateCabeceraAsync(cabecera);
-        //    ////await _serviceGenerico.Update(cabecera);
-        //    //return Ok(cabecera);
-        //}
+
+        //BOTON DEVOLVER A EST
+        [HttpPost("Devolver")]
+        public async Task<IActionResult> DevolverEst([FromBody] DevolverEst request)
+        {
+            var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
+            int usuario = int.Parse(idUsuario.Value);
+
+            if (string.IsNullOrWhiteSpace(request.MotivoRechazo))
+                return BadRequest(new { mensaje = "Debe ingresar el motivo de rechazo." });
+
+            var resultado = await _cabeceraService.DevolverAEstablecimientoAsync(
+                request.IdCabecera,
+                usuario,
+                request.MotivoRechazo);
+
+            if (!resultado.Exito)
+                return BadRequest(new { mensaje = resultado.Mensaje });
+
+            return Ok(new { mensaje = "La cabecera fue devuelta al establecimiento correctamente." });
+        }
+
+        [HttpPost("Corregido")]
+        public async Task<IActionResult> MarcarCorregidoEducacion([FromBody] int? idCabecera)
+        {
+            var resultado = await _cabeceraService.CorregidoEducacion(idCabecera);
+
+            if (!resultado.Exito)
+                return BadRequest(resultado.Mensaje);
+
+            return Ok("Cabecera marcada como Corregida por Educación");
+        }
     }
 }
