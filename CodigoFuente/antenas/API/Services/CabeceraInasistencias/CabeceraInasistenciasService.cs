@@ -235,7 +235,7 @@ namespace API.Services
         }
 
         //VALIDACION DE REGISTRO MEC_INASISTENCIASDETALLE
-        public async Task<(bool Valido, string? Mensaje)> ValidarEstadoRegistro(int idCabecera)
+        public async Task<(bool Valido, string? Mensaje)> ValidarEstadoRegistro(int? idCabecera)
         {
             var registrosIncompletos = await _context.MEC_InasistenciasDetalle
                 .Where(d => d.IdInasistenciasCabecera == idCabecera && string.IsNullOrEmpty(d.EstadoRegistro))
@@ -298,7 +298,7 @@ namespace API.Services
         }
 
         //BOTON "MARCAR CORREGIDO EDUCACION"
-        public async Task<(bool Exito, string? Mensaje)> MarcarComoCorregidoEducacionAsync(int idCabecera)
+        public async Task<(bool Exito, string? Mensaje)> CorregidoEducacion(int? idCabecera)
         {
             
             // Validar que todos los registros esten procesados

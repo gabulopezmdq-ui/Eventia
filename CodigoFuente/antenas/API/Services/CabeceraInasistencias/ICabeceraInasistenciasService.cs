@@ -15,6 +15,8 @@ namespace API.Services
                                                                             int usuario,
                                                                             string motivoRechazo);
 
+        Task<(bool Exito, string? Mensaje)> CorregidoEducacion(int? idCabecera);
+
 
     }
 }
