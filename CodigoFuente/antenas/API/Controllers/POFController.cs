@@ -176,10 +176,10 @@ namespace API.Controllers
             return Ok(barra);
         }
 
-        [HttpGet("GetAllBarras")]
-        public async Task<ActionResult<IEnumerable<MEC_POF_Barras>>> GetBarras()
+        [HttpGet("GetPOFBarras")]
+        public async Task<ActionResult<IEnumerable<MEC_POF_Barras>>> GetBarras(int idPOF)
         { 
-            return Ok(_pofBarrasGenerico.GetAll().ToList());
+            return Ok(_pofService.GetBarrasPOF(idPOF));
         }
     }
 }
