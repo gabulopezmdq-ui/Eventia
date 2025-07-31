@@ -18,17 +18,27 @@ namespace API.DataSchema
                 .HasColumnType("date")
                 .IsRequired(false);
 
-            builder.Property(ir => ir.UsuarioRechazo)
+            builder.Property(ir => ir.IdUsuario)
                 .IsRequired(false);
 
-            builder.HasOne(ir => ir.Usuario)
-                .WithMany()
-                .HasForeignKey(ir => ir.UsuarioRechazo);
+            builder.HasOne(d => d.Usuario)
+     .WithMany(t => t.Rechazo)
+     .HasForeignKey(d => d.IdUsuario)
+     .HasPrincipalKey(u => u.IdUsuario);
+
+            builder
+               .Navigation(e => e.Usuario)
+               .AutoInclude()
+               .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder.HasOne(r => r.InasistenciaDetalle)
-                  .WithMany() 
+                  .WithMany()   
                   .HasForeignKey(r => r.IdInasistenciaDetalle)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(r => r.InasistenciaDetalle)
+                    .WithMany(d => d.InasistenciasRechazos)
+                    .HasForeignKey(r => r.IdInasistenciaDetalle);
         }
     }
 

@@ -129,5 +129,27 @@ namespace API.Controllers
 
             return Ok("Cabecera marcada como Corregida por Educación");
         }
+
+        //Correccion inasistencias
+        [HttpGet("EstCorrecciones")]
+        public async Task<IActionResult> FiltrarCabecera()
+        {
+            var claim = _httpContextAccessor.HttpContext?.User?.Claims
+                .FirstOrDefault(c => c.Type == "id");
+
+            if (claim == null || !int.TryParse(claim.Value, out int idUsuario))
+                return Unauthorized("No se pudo obtener el ID de usuario desde el token.");
+
+            var resultado = await _cabeceraService.ObtenerCabeceraInasistenciasAsync(idUsuario);
+
+            return Ok(resultado);
+        }
+
+        [HttpGet("Detalle")]
+        public async Task<ActionResult> ObtenerDetalleYRechazos(int idCabecera)
+        {
+            var resultado = await _cabeceraService.ObtenerDetalleYRechazosPorCabeceraAsync(idCabecera);
+            return Ok(resultado);
+        }
     }
 }

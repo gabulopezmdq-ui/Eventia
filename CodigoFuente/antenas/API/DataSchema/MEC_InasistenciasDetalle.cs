@@ -8,7 +8,7 @@ namespace API.DataSchema
     {
 
         public int IdInasistenciasDetalle { get; set; }
-        public int IdInasistenciasCabecera { get; set; }
+        public int IdInasistenciaCabecera { get; set; }
         public int IdEstablecimiento { get; set; }
         public int IdPOF { get; set; }
         public int IdPOFBarra { get; set; }
@@ -19,13 +19,14 @@ namespace API.DataSchema
         public int? CantMin { get; set; }
         public string? EstadoRegistro { get; set; }
         public string? MotivoRechazo { get; set; }
-        public string? UsuarioRechazo { get; set; }
+        public int? IdUsuario { get; set; }
         public virtual MEC_InasistenciasCabecera? InasistenciaCabecera { get; set; }  // Relación con una sola cabecera
-        public virtual MEC_Usuarios? Usuarios { get; set; }
+        public virtual MEC_Usuarios? Usuario { get; set; }
         public virtual MEC_POF? POF { get; set; }
         public virtual MEC_Establecimientos? Establecimiento { get; set; }
         public virtual MEC_POF_Barras? POFBarra { get; set; }
         public virtual MEC_TMPInasistenciasDetalle? TMPInasistenciasDetalle { get; set; }
-        public virtual MEC_InasistenciasRechazo? InasistenciaRechazo { get; set; }
+        public virtual ICollection<MEC_InasistenciasRechazo>? InasistenciasRechazos { get; set; }
+
     }
 }

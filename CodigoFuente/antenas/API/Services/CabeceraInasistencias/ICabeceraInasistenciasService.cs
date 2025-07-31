@@ -16,6 +16,8 @@ namespace API.Services
                                                                             string motivoRechazo);
 
         Task<(bool Exito, string? Mensaje)> CorregidoEducacion(int? idCabecera);
+        Task<List<InasistenciaCabeceraDTO>> ObtenerCabeceraInasistenciasAsync(int idUsuario);
+        Task<DetalleRechazos> ObtenerDetalleYRechazosPorCabeceraAsync(int idCabecera);
 
 
     }
