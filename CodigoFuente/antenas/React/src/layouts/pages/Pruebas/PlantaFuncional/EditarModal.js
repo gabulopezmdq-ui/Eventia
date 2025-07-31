@@ -19,7 +19,6 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
   const [formData, setFormData] = useState({
     secuencia: "",
     tipoCargo: "",
-    barra: "",
     idFuncion: "",
     idCategoria: "",
     idCarRevista: "",
@@ -45,7 +44,6 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
           setFormData({
             secuencia: data.secuencia || "",
             tipoCargo: data.tipoCargo || "",
-            barra: data.barra || "",
             idFuncion: data.idFuncion || "",
             idCategoria: data.idCategoria || "",
             idCarRevista: data.idCarRevista || "",
@@ -226,15 +224,6 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Barra"
-                  name="barra"
-                  value={formData.barra}
-                  onChange={handleInputChange}
-                />
               </Grid>
               <Grid item xs={6}>
                 <FormControl fullWidth>

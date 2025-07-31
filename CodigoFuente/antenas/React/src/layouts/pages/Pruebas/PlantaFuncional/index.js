@@ -439,7 +439,6 @@ function PlantaFuncional() {
       idCarRevista: "",
       idFuncion: "",
       tipoCargo: "",
-      barra: "",
       idCategoria: "",
       vigente: "S",
     });
@@ -597,11 +596,11 @@ function PlantaFuncional() {
                               </MDButton>
                               <MDButton
                                 variant="gradient"
-                                color="info"
+                                color="success"
                                 size="small"
                                 onClick={() => handleBarras(row.original.idPof)}
                               >
-                                Barras
+                                Agregar Barras
                               </MDButton>
                             </MDBox>
                           </>
