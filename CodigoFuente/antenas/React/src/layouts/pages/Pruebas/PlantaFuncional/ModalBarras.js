@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Box, Modal, TextField, Chip, Stack } from "@mui/material";
 import MDButton from "components/MDButton";
@@ -22,9 +22,35 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
     borderRadius: "0.5rem",
   };
 
+  useEffect(() => {
+    const fetchBarrasAsociadas = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}POF/GetPOFBarras?idPOF=${idPof}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Extraer solo los valores de 'barra' como número o string
+        const barrasExistentes = response.data.map((item) => item.barra?.toString());
+        setBarrasList(barrasExistentes || []);
+      } catch (error) {
+        console.error("Error al obtener las barras asociadas:", error);
+      }
+    };
+
+    if (isOpenBarras && idPof) {
+      fetchBarrasAsociadas();
+    }
+  }, [isOpenBarras, idPof]);
+
   const handleAgregarBarra = () => {
-    if (currentBarra.trim() !== "") {
-      setBarrasList([...barrasList, currentBarra.trim()]);
+    const nuevaBarra = currentBarra.trim();
+    if (nuevaBarra !== "" && !barrasList.includes(nuevaBarra)) {
+      setBarrasList([...barrasList, nuevaBarra]);
       setCurrentBarra("");
     }
   };
@@ -42,7 +68,7 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
     }
 
     try {
-      const response = await axios.post(
+      const response = await axios.put(
         "POF/Barras",
         {
           idPof,
