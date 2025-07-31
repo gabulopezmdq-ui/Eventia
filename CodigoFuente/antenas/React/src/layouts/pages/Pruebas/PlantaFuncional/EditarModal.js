@@ -10,6 +10,8 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  Chip,
+  Stack,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import MDButton from "components/MDButton";
@@ -30,6 +32,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
   const [establecimientoNombre, setEstablecimientoNombre] = useState("");
   const [carRevista, setCarRevista] = useState([]);
   const [funcion, setFuncion] = useState([]);
+  const [barras, setBarras] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -88,7 +91,20 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
           console.error("Error al cargar cargos de revista:", error);
         }
       };
-
+      const fetchBarras = async () => {
+        try {
+          const response = await fetch(
+            `${process.env.REACT_APP_API_URL}POF/GetPOFBarras?idPOF=${idPof}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const dataBarras = await response.json();
+          setBarras(dataBarras);
+        } catch (error) {
+          console.error("Error al cargar barras:", error);
+        }
+      };
       const fetchFuncion = async () => {
         try {
           const response = await fetch(`${process.env.REACT_APP_API_URL}TiposFunciones/getall`, {
@@ -106,6 +122,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
 
       fetchData();
       fetchFuncion();
+      fetchBarras();
       fetchCarRevistas();
       fetchCategorias();
     }
@@ -212,6 +229,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                   <InputLabel id="tipoCargo-select-label"> Tipo Cargo </InputLabel>
                   <Select
                     labelId="tipoCargo-select-label"
+                    label="tipoCargo"
                     value={formData.tipoCargo}
                     onChange={handleInputChange}
                     name="tipoCargo"
@@ -231,6 +249,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                   <Select
                     labelId="car-revista-select-label"
                     name="idCarRevista"
+                    label="Car. Revista"
                     value={formData.idCarRevista}
                     onChange={handleInputChange}
                     style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -249,6 +268,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                   <Select
                     labelId="funcion-select-label"
                     name="idFuncion"
+                    label="Funcion"
                     value={formData.idFuncion}
                     onChange={handleInputChange}
                     style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -267,6 +287,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                   <Select
                     labelId="categoria-select-label"
                     name="idCategoria"
+                    label="Categoria"
                     value={formData.idCategoria}
                     onChange={handleInputChange}
                     style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -287,6 +308,7 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                     value={formData.vigente}
                     onChange={handleInputChange}
                     name="vigente"
+                    label="Vigente"
                     style={{ height: "2.5rem", backgroundColor: "white" }}
                   >
                     {tipoVigenteOptions.map((option) => (
@@ -296,6 +318,27 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
                     ))}
                   </Select>
                 </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                {barras.length === 0 ? (
+                  <MDTypography variant="subtitle2">No hay barras disponibles</MDTypography>
+                ) : (
+                  <>
+                    <MDTypography variant="subtitle2">Barras disponibles : </MDTypography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {barras.map((barra) => (
+                        <Chip
+                          key={barra.idPOFBarra}
+                          label={barra.barra}
+                          variant="contained"
+                          size="small"
+                          color="info"
+                          disabled
+                        />
+                      ))}
+                    </Stack>
+                  </>
+                )}
               </Grid>
             </Grid>
             <Box mt={2} display="flex" justifyContent="flex-end">
