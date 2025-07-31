@@ -164,9 +164,19 @@ namespace API.Controllers
         [HttpPost("Barras")]
         public async Task<IActionResult> CreateBarra([FromBody] MEC_POF_Barras barra)
         {
+            if (barra == null)
+                return BadRequest();
+
+            bool existe = await _context.MEC_POF_Barras
+                .AnyAsync(b => b.IdPOF == barra.IdPOF && b.Barra == barra.Barra);
+
+            if (existe)
+                return Conflict("Ya existe una barra con ese IdPOF y Barra.");
+
             _context.MEC_POF_Barras.Add(barra);
             await _context.SaveChangesAsync();
-            return Ok();
+
+            return CreatedAtAction(nameof(GetBarras), new { idPOF = barra.IdPOF }, barra);
         }
 
         [HttpPut("EditarBarra")]
