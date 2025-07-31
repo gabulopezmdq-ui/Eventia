@@ -176,7 +176,7 @@ namespace API.Controllers
             return Ok(barra);
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet("GetAllBarras")]
         public async Task<ActionResult<IEnumerable<MEC_POF_Barras>>> GetBarras()
         { 
             return Ok(_pofBarrasGenerico.GetAll().ToList());
