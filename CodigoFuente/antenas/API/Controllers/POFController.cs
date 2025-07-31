@@ -118,7 +118,7 @@ namespace API.Controllers
         public async Task<IActionResult> RegistrarPOF([FromBody] MEC_POF POF)
         {
             var existe = await _pofService.ExisteRegistroEnPOFAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia);
-           
+
             if (!existe)
             {
                 await _serviceGenerico.Add(POF);
@@ -132,7 +132,7 @@ namespace API.Controllers
         public async Task<IActionResult> CreatePersona([FromBody] MEC_Personas persona)
         {
             int idPersona = await _pofService.AddPersona(persona);
-            return Ok(new { IdPersona = idPersona });                                               
+            return Ok(new { IdPersona = idPersona });
         }
 
         [HttpPost("RegistrarSuplencia")] //
@@ -144,7 +144,7 @@ namespace API.Controllers
             }
 
             // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
-            var mensajeValidacion = await _pofService.RegistrarSuplenciaAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia, POF.Barra, POF.IdCategoria, 
+            var mensajeValidacion = await _pofService.RegistrarSuplenciaAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia, POF.Barra, POF.IdCategoria,
                 POF.TipoCargo, POF.Vigente);
 
             if (mensajeValidacion.StartsWith("Ya existe"))
@@ -164,9 +164,32 @@ namespace API.Controllers
         [HttpPost("Barras")]
         public async Task<IActionResult> CreateBarra([FromBody] MEC_POF_Barras barra)
         {
+            if (barra == null)
+                return BadRequest();
+
+            bool existe = await _context.MEC_POF_Barras
+                .AnyAsync(b => b.IdPOF == barra.IdPOF && b.Barra == barra.Barra);
+
+            if (existe)
+                return Conflict("Ya existe una barra con ese IdPOF y Barra.");
+
             _context.MEC_POF_Barras.Add(barra);
             await _context.SaveChangesAsync();
-            return Ok();
+
+            return CreatedAtAction(nameof(GetBarras), new { idPOF = barra.IdPOF }, barra);
+        }
+
+        [HttpPut("EditarBarra")]
+        public async Task<ActionResult<MEC_POF>> Update([FromBody] MEC_POF_Barras barra)
+        {
+            await _pofBarrasGenerico.Update(barra);
+            return Ok(barra);
+        }
+
+        [HttpGet("GetPOFBarras")]
+        public async Task<ActionResult<IEnumerable<MEC_POF_Barras>>> GetBarras(int idPOF)
+        { 
+            return Ok(await _pofService.GetBarrasPOF(idPOF));
         }
     }
 }
