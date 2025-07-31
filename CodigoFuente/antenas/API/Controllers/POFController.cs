@@ -179,7 +179,7 @@ namespace API.Controllers
         [HttpGet("GetPOFBarras")]
         public async Task<ActionResult<IEnumerable<MEC_POF_Barras>>> GetBarras(int idPOF)
         { 
-            return Ok(_pofService.GetBarrasPOF(idPOF));
+            return Ok(await _pofService.GetBarrasPOF(idPOF));
         }
     }
 }
