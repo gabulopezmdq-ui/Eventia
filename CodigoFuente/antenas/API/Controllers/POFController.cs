@@ -118,7 +118,7 @@ namespace API.Controllers
         public async Task<IActionResult> RegistrarPOF([FromBody] MEC_POF POF)
         {
             var existe = await _pofService.ExisteRegistroEnPOFAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia);
-           
+
             if (!existe)
             {
                 await _serviceGenerico.Add(POF);
@@ -132,7 +132,7 @@ namespace API.Controllers
         public async Task<IActionResult> CreatePersona([FromBody] MEC_Personas persona)
         {
             int idPersona = await _pofService.AddPersona(persona);
-            return Ok(new { IdPersona = idPersona });                                               
+            return Ok(new { IdPersona = idPersona });
         }
 
         [HttpPost("RegistrarSuplencia")] //
@@ -144,7 +144,7 @@ namespace API.Controllers
             }
 
             // Verificar si ya existe un registro en MEC_POF para esta persona y establecimiento
-            var mensajeValidacion = await _pofService.RegistrarSuplenciaAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia, POF.Barra, POF.IdCategoria, 
+            var mensajeValidacion = await _pofService.RegistrarSuplenciaAsync(POF.IdPersona, POF.IdEstablecimiento, POF.Secuencia, POF.Barra, POF.IdCategoria,
                 POF.TipoCargo, POF.Vigente);
 
             if (mensajeValidacion.StartsWith("Ya existe"))
@@ -168,5 +168,13 @@ namespace API.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+
+        [HttpPut("EditarBarra")]
+        public async Task<ActionResult<MEC_POF>> Update([FromBody] MEC_POF_Barras barra)
+        {
+            await _pofBarrasGenerico.Update(barra);
+            return Ok(barra);
+        }
+
     }
 }
