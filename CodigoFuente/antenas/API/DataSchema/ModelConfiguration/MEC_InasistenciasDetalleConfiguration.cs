@@ -14,34 +14,57 @@ namespace API.DataSchema.ModelConfiguration
                 .Property(p => p.IdInasistenciasDetalle)
                 .ValueGeneratedOnAdd();
 
-            builder.Property(p => p.IdInasistenciasCabecera).IsRequired();
+            builder.Property(p => p.IdInasistenciaCabecera).IsRequired();
             builder.Property(p => p.IdEstablecimiento).IsRequired();
             builder.Property(p => p.IdPOF).IsRequired();
             builder.Property(p => p.IdPOFBarra).IsRequired();
             builder.Property(p => p.Fecha).IsRequired();
             builder.Property(p => p.IdTMPInasistenciasDetalle).IsRequired(false);
             builder.Property(p => p.CodLicencia).IsRequired(false);
+            builder.Property(p => p.IdUsuario).HasColumnName("IdUsuario");
 
             // Relaciones
             builder.HasOne(p => p.Establecimiento)
-                .WithMany()
-                .HasForeignKey(p => p.IdEstablecimiento)
-                .OnDelete(DeleteBehavior.Restrict);
+                .WithMany(t => t.Detalle)
+                .HasForeignKey(p => p.IdEstablecimiento);
 
             builder.HasOne(p => p.POF)
-                .WithMany()
-                .HasForeignKey(p => p.IdPOF)
-                .OnDelete(DeleteBehavior.Restrict);
+                .WithMany(t => t.Detalle)
+                .HasForeignKey(p => p.IdPOF);
 
             builder.HasOne(p => p.POFBarra)
-                .WithMany()
-                .HasForeignKey(p => p.IdPOFBarra)
-                .OnDelete(DeleteBehavior.Restrict);
+                .WithMany(t => t.Detalle)
+                .HasForeignKey(p => p.IdPOFBarra);
 
             builder.HasOne(p => p.TMPInasistenciasDetalle)
-                .WithMany()
-                .HasForeignKey(p => p.IdTMPInasistenciasDetalle)
-                .OnDelete(DeleteBehavior.Restrict);
+                .WithMany(t => t.Detalle)
+                .HasForeignKey(p => p.IdTMPInasistenciasDetalle);
+
+            builder.HasOne(d => d.Usuario)
+     .WithMany(t => t.Detalle) 
+     .HasForeignKey(d => d.IdUsuario)
+     .HasPrincipalKey(u => u.IdUsuario);
+
+
+            builder
+               .Navigation(e => e.Usuario)
+               .AutoInclude()
+               .UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            builder.HasMany(d => d.InasistenciasRechazos)
+                .WithOne(r => r.InasistenciaDetalle)
+                .HasForeignKey(r => r.IdInasistenciaDetalle);
+
+            builder
+              .HasOne(p => p.InasistenciaCabecera)
+              .WithMany(t => t.Detalle)
+              .HasForeignKey(p => p.IdInasistenciaCabecera)
+              .IsRequired(true);
+
+            builder
+                .Navigation(e => e.InasistenciaCabecera)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
 
         }
     }

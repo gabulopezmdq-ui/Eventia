@@ -9,7 +9,7 @@ namespace API.DataSchema
     {
         public int IdInasistenciaRechazo { get; set; }
 
-        public int? UsuarioRechazo { get; set; }
+        public int? IdUsuario { get; set; }
 
         public int IdInasistenciaDetalle { get; set; }
         public string? MotivoRechazo { get; set; }

@@ -1,4 +1,6 @@
 ﻿using API.DataSchema;
+using API.DataSchema.DTO;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -202,7 +204,7 @@ namespace API.Services
             // 2. Insertar en MEC_InasistenciasDetalle
             var nuevoDetalle = new MEC_InasistenciasDetalle
             {
-                IdInasistenciasCabecera = idCabeceraInasistencia,
+                IdInasistenciaCabecera = idCabeceraInasistencia,
                 IdPOF = idPOF,
                 IdPOFBarra = idPOFBarra,
                 IdTMPInasistenciasDetalle = idTMPInasistenciasDetalle,
@@ -238,7 +240,7 @@ namespace API.Services
         public async Task<(bool Valido, string? Mensaje)> ValidarEstadoRegistro(int? idCabecera)
         {
             var registrosIncompletos = await _context.MEC_InasistenciasDetalle
-                .Where(d => d.IdInasistenciasCabecera == idCabecera && string.IsNullOrEmpty(d.EstadoRegistro))
+                .Where(d => d.IdInasistenciaCabecera == idCabecera && string.IsNullOrEmpty(d.EstadoRegistro))
                 .AnyAsync();
 
             if (registrosIncompletos)
@@ -277,7 +279,7 @@ namespace API.Services
 
             // Obtener los registros a rechazar
             var registrosRechazados = await _context.MEC_InasistenciasDetalle
-                .Where(d => d.IdInasistenciasCabecera == idCabecera && d.EstadoRegistro == "R")
+                .Where(d => d.IdInasistenciaCabecera == idCabecera && d.EstadoRegistro == "R")
                 .ToListAsync();
 
             foreach (var registro in registrosRechazados)
@@ -285,7 +287,7 @@ namespace API.Services
                 var rechazo = new MEC_InasistenciasRechazo
                 {
                     IdInasistenciaDetalle = registro.IdInasistenciasDetalle,
-                    UsuarioRechazo = usuario,
+                    IdUsuario = usuario,
                     MotivoRechazo = motivoRechazo,
                     FechaEnvio = DateTime.Now
                 };
@@ -300,7 +302,7 @@ namespace API.Services
         //BOTON "MARCAR CORREGIDO EDUCACION"
         public async Task<(bool Exito, string? Mensaje)> CorregidoEducacion(int? idCabecera)
         {
-            
+
             // Validar que todos los registros esten procesados
             var (valido, mensaje) = await ValidarEstadoRegistro(idCabecera);
             if (!valido)
@@ -321,13 +323,94 @@ namespace API.Services
                 return (false, "No se encontró la Cabecera de Inasistencia seleccionada");
             }
 
-            
+
             cabecera.Estado = "C";
 
             await _context.SaveChangesAsync();
 
             return (true, null);
         }
+
+        public async Task<UsuarioInfoDTO> ObtenerEstablecimientosYRolesAsync(int idUsuario)
+        {
+            // Ids de establecimientos vigentes
+            var establecimientos = await _context.MEC_UsuariosEstablecimientos
+                .Where(uxe => uxe.IdUsuario == idUsuario && uxe.Vigente == "S")
+                .Select(uxe => uxe.IdEstablecimiento)
+                .Distinct()
+                .ToListAsync();
+
+            // Roles del usuario
+            var roles = await _context.MEC_RolesXUsuarios
+                .Where(rxu => rxu.IdUsuario == idUsuario)
+                .Select(rxu => rxu.Rol!.NombreRol)    // o CodRol, etc.
+                .ToListAsync();
+
+            // Devolvés el DTO
+            return new UsuarioInfoDTO
+            {
+                IdsEstablecimientos = establecimientos,
+                Roles = roles
+            };
+        }
+
+        public async Task<List<InasistenciaCabeceraDTO>> ObtenerCabeceraInasistenciasAsync(int idUsuario)
+        {
+            var establecimientos = await _context.MEC_UsuariosEstablecimientos
+       .Where(uxe => uxe.IdUsuario == idUsuario && uxe.Vigente == "S")
+       .Select(uxe => uxe.IdEstablecimiento)
+       .Distinct()
+       .ToListAsync();
+
+            if (!establecimientos.Any())
+                return new List<InasistenciaCabeceraDTO>();
+
+            var cabeceras = await _context.MEC_InasistenciasCabecera
+                .Where(c => c.Estado != null && c.Estado.Trim().ToUpper() == "R" && establecimientos.Contains(c.IdEstablecimiento))
+                .Select(c => new InasistenciaCabeceraDTO
+                {
+                    IdInasistenciaCabecera = c.IdInasistenciaCabecera,
+                    IdEstablecimiento = c.IdEstablecimiento,
+                    IdCabecera = c.IdCabecera,
+                    Confecciono = c.Confecciono,
+                    Mes = c.Mes,
+                    Anio = c.Anio,
+                    FechaApertura = c.FechaApertura,
+                    FechaEntrega = c.FechaEntrega,
+                    SinNovedades = c.SinNovedades,
+                    Observaciones = c.Observaciones,
+                    Estado = c.Estado
+                })
+                .ToListAsync();
+
+            return cabeceras;
+        }
+        public async Task<DetalleRechazos> ObtenerDetalleYRechazosPorCabeceraAsync(int idCabecera)
+        {
+            // 1) Obtengo la lista de detalles para la cabecera
+            var detalles = await _context.MEC_InasistenciasDetalle
+                .Where(d => d.IdInasistenciaCabecera == idCabecera)
+                .ToListAsync();
+
+            // 2) Extraigo los Ids de los detalles para buscar rechazos asociados
+            var detalleIds = detalles.Select(d => d.IdInasistenciasDetalle).ToList();
+
+            // 3) Obtengo todos los rechazos asociados a esos detalles
+            var rechazos = await _context.MEC_InasistenciasRechazo
+                .Where(r => detalleIds.Contains(r.IdInasistenciaDetalle))
+                .ToListAsync();
+
+            // 4) Retorno ambos datos en un objeto
+            return new DetalleRechazos
+            {
+                Detalles = detalles,
+                Rechazos = rechazos
+            };
+        }
+
+        //Se agregará un menú “Inasistencias” y una opción de submenú “Cargar Inasistencias”, a la que tendrán acceso los usuarios de los establecimientos.
+
+
 
     }
 }

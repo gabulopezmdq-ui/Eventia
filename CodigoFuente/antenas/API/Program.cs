@@ -25,7 +25,10 @@ using System.Net.Http;
 using Polly;
 using Polly.Extensions.Http;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 IdentityModelEventSource.ShowPII = true;
@@ -81,6 +84,7 @@ builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 builder.Services.AddScoped<IConsolidarMecanizadaService, ConsolidarMecanizadaService>();
 builder.Services.AddHttpClient<IPartesDiariosService, PartesDiariosService>();
 builder.Services.AddScoped<IPartesDiariosService, PartesDiariosService>();
+builder.Services.AddScoped<ICabeceraLiquidacionService, CabeceraLiquidacionService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

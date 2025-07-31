@@ -22,6 +22,8 @@ namespace API.DataSchema
                .Property(p => p.Activo)
                .HasColumnType("char(1)")
                .IsFixedLength(true);
+
+
         }
     }
 
