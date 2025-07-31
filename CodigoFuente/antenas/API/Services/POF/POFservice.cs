@@ -136,5 +136,28 @@ namespace API.Services
             await _context.SaveChangesAsync();
             return data;
         }
+
+        //getpof barras
+        public async Task<List<MEC_POF_Barras>> GetBarrasPOF(int idPOF)
+        {
+            return await _context.MEC_POF_Barras.Where(a => a.IdPOF == idPOF).ToListAsync();
+        }
+
+        public async Task<bool> AddBarraAsync(MEC_POF_Barras nuevaBarra)
+        {
+            bool existe = await _context.MEC_POF_Barras
+                .AnyAsync(b => b.IdPOF == nuevaBarra.IdPOF && b.Barra == nuevaBarra.Barra);
+
+            if (existe)
+            {
+                // Ya existe, no se guarda
+                return false;
+            }
+
+            _context.MEC_POF_Barras.Add(nuevaBarra);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
     }
 }
