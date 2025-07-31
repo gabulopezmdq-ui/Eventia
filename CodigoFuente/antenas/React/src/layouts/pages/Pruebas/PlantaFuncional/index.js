@@ -18,6 +18,7 @@ import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
 import EditarModal from "./EditarModal";
+import ModalBarras from "./ModalBarras";
 import FormField from "layouts/pages/account/components/FormField";
 
 function PlantaFuncional() {
@@ -43,6 +44,7 @@ function PlantaFuncional() {
   const [categoriasOptions, setCategoriasOptions] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalBarrasOpen, setIsModalBarrasOpen] = useState(false);
   const [selectedIdPof, setSelectedIdPof] = useState(null);
   const [formData, setFormData] = useState({
     apellido: "",
@@ -410,9 +412,24 @@ function PlantaFuncional() {
     }, 3000);
     handleCargar();
   };
+  const handleSuccessBarras = () => {
+    setShowAlert(true);
+    setAlertMessage("Se han actualizados las barras con éxito!");
+    setAlertType("success");
+    setTimeout(() => {
+      setShowAlert(false);
+      setAlertMessage("");
+    }, 3000);
+    handleCargar();
+  };
   const handleEditar = (idPof) => {
     setSelectedIdPof(idPof);
     setIsModalOpen(true);
+  };
+  const handleBarras = (idPof) => {
+    setSelectedIdPof(idPof);
+    setIsModalBarrasOpen(true);
+    console.log("Boton handleBarras");
   };
   const handleCancel = () => {
     setAlertPOF(false);
@@ -422,7 +439,6 @@ function PlantaFuncional() {
       idCarRevista: "",
       idFuncion: "",
       tipoCargo: "",
-      barra: "",
       idCategoria: "",
       vigente: "S",
     });
@@ -569,14 +585,24 @@ function PlantaFuncional() {
                         accessor: "edit",
                         Cell: ({ row }) => (
                           <>
-                            <MDButton
-                              variant="gradient"
-                              color="info"
-                              size="small"
-                              onClick={() => handleEditar(row.original.idPof)}
-                            >
-                              Editar
-                            </MDButton>
+                            <MDBox display="flex" gap={1}>
+                              <MDButton
+                                variant="gradient"
+                                color="info"
+                                size="small"
+                                onClick={() => handleEditar(row.original.idPof)}
+                              >
+                                Editar
+                              </MDButton>
+                              <MDButton
+                                variant="gradient"
+                                color="success"
+                                size="small"
+                                onClick={() => handleBarras(row.original.idPof)}
+                              >
+                                Agregar Barras
+                              </MDButton>
+                            </MDBox>
                           </>
                         ),
                       },
@@ -592,6 +618,13 @@ function PlantaFuncional() {
                   idPof={selectedIdPof}
                   token={token}
                   onEditSuccess={handleEditSuccess}
+                />
+                <ModalBarras
+                  isOpenBarras={isModalBarrasOpen}
+                  onCloseBarras={() => setIsModalBarrasOpen(false)}
+                  idPof={selectedIdPof}
+                  token={token}
+                  onEditSuccess={handleSuccessBarras}
                 />
               </Card>
               {alertaDNI && (
