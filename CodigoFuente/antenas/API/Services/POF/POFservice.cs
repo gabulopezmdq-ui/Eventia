@@ -136,5 +136,11 @@ namespace API.Services
             await _context.SaveChangesAsync();
             return data;
         }
+
+        //getpof barras
+        public async Task<List<MEC_POF_Barras>> GetBarrasPOF(int idPOF)
+        {
+            return await _context.MEC_POF_Barras.Where(a => a.IdPOF == idPOF).ToListAsync();
+        }
     }
 }

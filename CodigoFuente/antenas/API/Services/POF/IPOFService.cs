@@ -19,5 +19,6 @@ namespace API.Services
             int idCategoria, string tipoCargo, string vigente);
         Task<MEC_POF_Antiguedades?> GetByIdPOFAsync(int idPOF);
         Task<MEC_POF_Antiguedades> CreateOrUpdateAsync(MEC_POF_Antiguedades data);
+        Task<List<MEC_POF_Barras>> GetBarrasPOF(int idPOF);
     }
 }
