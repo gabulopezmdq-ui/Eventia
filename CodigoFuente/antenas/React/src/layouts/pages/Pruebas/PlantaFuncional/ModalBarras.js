@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Box, Modal, TextField, Chip, Stack } from "@mui/material";
 import MDButton from "components/MDButton";
+import ConfirmDialog from "./ConfirmDialog";
 import MDTypography from "components/MDTypography";
 import axios from "axios";
 
@@ -9,6 +10,9 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
   const token = sessionStorage.getItem("token");
   const [currentBarra, setCurrentBarra] = useState("");
   const [barrasList, setBarrasList] = useState([]);
+  const [barrasIniciales, setBarrasIniciales] = useState([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [barraAEliminar, setBarraAEliminar] = useState(null);
 
   const style = {
     position: "absolute",
@@ -34,9 +38,9 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
           }
         );
 
-        // Extraer solo los valores de 'barra' como número o string
         const barrasExistentes = response.data.map((item) => item.barra?.toString());
         setBarrasList(barrasExistentes || []);
+        setBarrasIniciales(barrasExistentes || []);
       } catch (error) {
         console.error("Error al obtener las barras asociadas:", error);
       }
@@ -56,9 +60,42 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
   };
 
   const handleEliminarBarra = (index) => {
-    const newList = [...barrasList];
-    newList.splice(index, 1);
-    setBarrasList(newList);
+    const barra = barrasList[index];
+    const esDelBackend = barrasIniciales.includes(barra);
+
+    if (esDelBackend) {
+      // Guardamos la barra que queremos eliminar y abrimos el modal de confirmación
+      setBarraAEliminar({ index, value: barra });
+      setConfirmOpen(true);
+    } else {
+      // Si no es del backend, la eliminamos directamente
+      const newList = [...barrasList];
+      newList.splice(index, 1);
+      setBarrasList(newList);
+    }
+  };
+  const confirmarEliminacion = async () => {
+    if (!barraAEliminar) return;
+
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}POF/DeleteBarra`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          idPof,
+          barra: barraAEliminar.value,
+        },
+      });
+
+      setBarrasList((prev) => prev.filter((b) => b !== barraAEliminar.value));
+      setBarrasIniciales((prev) => prev.filter((b) => b !== barraAEliminar.value));
+    } catch (error) {
+      console.error("Error al eliminar la barra del backend:", error);
+    } finally {
+      setConfirmOpen(false);
+      setBarraAEliminar(null);
+    }
   };
 
   const handleGuardar = async () => {
@@ -69,7 +106,7 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
 
     try {
       const response = await axios.put(
-        "POF/Barras",
+        `${process.env.REACT_APP_API_URL}POF/Barras`,
         {
           idPof,
           barra: barrasList,
@@ -92,77 +129,86 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
 
   const handleClose = () => {
     setBarrasList([]);
+    setBarrasIniciales([]);
     setCurrentBarra("");
     onCloseBarras();
   };
 
   return (
-    <Modal open={isOpenBarras} onClose={handleClose} aria-labelledby="modal-title">
-      <Box sx={style}>
-        <MDTypography id="modal-title" variant="h6" gutterBottom>
-          Agregar Barras
-        </MDTypography>
+    <>
+      <Modal open={isOpenBarras} onClose={handleClose} aria-labelledby="modal-title">
+        <Box sx={style}>
+          <MDTypography id="modal-title" variant="h6" gutterBottom>
+            Agregar Barras
+          </MDTypography>
 
-        <MDTypography variant="body2" mb={2}>
-          ID de la POF seleccionado: <strong>{idPof}</strong>
-        </MDTypography>
+          <MDTypography variant="body2" mb={2}>
+            ID de la POF seleccionado: <strong>{idPof}</strong>
+          </MDTypography>
 
-        <Box display="flex" alignItems="center" gap={1} mt={2}>
-          <TextField
-            fullWidth
-            label="Ingrese Barra"
-            variant="outlined"
-            value={currentBarra}
-            onChange={(e) => setCurrentBarra(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") handleAgregarBarra();
-            }}
-          />
-          <MDButton variant="contained" size="small" color="success" onClick={handleAgregarBarra}>
-            Agregar
-          </MDButton>
-        </Box>
-
-        {barrasList.length > 0 && (
-          <Box mt={2}>
-            <MDTypography variant="caption" color="textSecondary">
-              Barras agregadas:
-            </MDTypography>
-            <Stack direction="row" spacing={1} mt={1} flexWrap="wrap" useFlexGap>
-              {barrasList.map((barra, index) => (
-                <Chip
-                  key={index}
-                  label={barra}
-                  onDelete={() => handleEliminarBarra(index)}
-                  sx={{ mb: 1 }}
-                />
-              ))}
-            </Stack>
+          <Box display="flex" alignItems="center" gap={1} mt={2}>
+            <TextField
+              fullWidth
+              label="Ingrese Barra"
+              variant="outlined"
+              value={currentBarra}
+              onChange={(e) => setCurrentBarra(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") handleAgregarBarra();
+              }}
+            />
+            <MDButton variant="contained" size="small" color="success" onClick={handleAgregarBarra}>
+              Agregar
+            </MDButton>
           </Box>
-        )}
 
-        <Box display="flex" justifyContent="flex-end" mt={3}>
-          <MDButton
-            variant="contained"
-            size="small"
-            color="error"
-            onClick={handleClose}
-            style={{ marginRight: "10px" }}
-          >
-            Cancelar
-          </MDButton>
-          <MDButton
-            variant="contained"
-            size="small"
-            color="info"
-            onClick={handleGuardar}
-            disabled={barrasList.length === 0}
-          >
-            Guardar
-          </MDButton>
+          {barrasList.length > 0 && (
+            <Box mt={2}>
+              <MDTypography variant="caption" color="textSecondary">
+                Barras agregadas:
+              </MDTypography>
+              <Stack direction="row" spacing={1} mt={1} flexWrap="wrap" useFlexGap>
+                {barrasList.map((barra, index) => (
+                  <Chip
+                    key={index}
+                    label={barra}
+                    onDelete={() => handleEliminarBarra(index)}
+                    sx={{ mb: 1 }}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          <Box display="flex" justifyContent="flex-end" mt={3}>
+            <MDButton
+              variant="contained"
+              size="small"
+              color="error"
+              onClick={handleClose}
+              style={{ marginRight: "10px" }}
+            >
+              Cancelar
+            </MDButton>
+            <MDButton
+              variant="contained"
+              size="small"
+              color="info"
+              onClick={handleGuardar}
+              disabled={barrasList.length === 0}
+            >
+              Guardar
+            </MDButton>
+          </Box>
         </Box>
-      </Box>
-    </Modal>
+      </Modal>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmarEliminacion}
+        message={`¿Estás seguro que querés eliminar la barra "${barraAEliminar?.value}" de forma permanente?`}
+      />
+    </>
   );
 };
 
