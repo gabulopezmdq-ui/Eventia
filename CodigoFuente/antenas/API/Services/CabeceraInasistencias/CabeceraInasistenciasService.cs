@@ -21,6 +21,18 @@ namespace API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+
+        public async Task<List<MesAnioDTO?>> ObtenerFechas(int idCabecera)
+        {
+            var resultados = await _context.MEC_InasistenciasCabecera.Where(m => m.IdInasistenciaCabecera == idCabecera)
+                .Select(m => new MesAnioDTO
+                {
+                    Anio = m.Anio,
+                    Mes = m.Mes
+                }).Distinct().OrderBy(x => x.Anio).ThenBy(x => x.Mes).ToListAsync();
+
+            return resultados;
+        }
         public async Task<InasistenciaCabeceraDTO?> ObtenerInasistenciaPorPeriodoAsync(int idEstablecimiento, int anio, int mes)
         {
             // Buscar la cabecera de inasistencias que coincida con establecimiento, año y mes

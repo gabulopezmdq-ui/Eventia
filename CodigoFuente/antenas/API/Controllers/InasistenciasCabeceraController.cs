@@ -41,6 +41,19 @@ namespace API.Controllers
             return Ok(new { exists });
         }
 
+        [HttpGet("GetFechas")]
+        public async Task<IActionResult> GetFechas(int idCabecera)
+        {
+            var resultado = await _cabeceraService.ObtenerFechas(idCabecera);
+
+            if (resultado == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(resultado);
+        }
+
         [HttpGet("InasistenciasListado")]
         public async Task<IActionResult> GetInasistenciaPorPeriodo(int idEstablecimiento, int anio, int mes)
         {
