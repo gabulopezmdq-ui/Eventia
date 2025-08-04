@@ -43,15 +43,18 @@ public class InasistenciaCabeceraDTO
     public List<InasistenciaDetalleDto> Detalle { get; set; }
     public List<InasistenciaRechazoDto> Rechazos { get; set; }
 }
-
+public class MesAnioDTO
+{
+    public int? Anio { get; set; }
+    public int? Mes { get; set; }
+}
 public class InasistenciaDetalleDto
 {
-    public int IdDetalle { get; set; }
+    public int IdInasistenciaDetalle { get; set; }
     public int IdInasistenciaCabecera { get; set; }
-    // Agrega aquí los campos relevantes del detalle
-    public string Campo1 { get; set; }
-    public string Campo2 { get; set; }
-    // ...
+    public int IdPOF { get; set; } 
+    public DateTime FechaInasistencia { get; set; }
+    public string Estado { get; set; } 
 }
 
 public class InasistenciaRechazoDto

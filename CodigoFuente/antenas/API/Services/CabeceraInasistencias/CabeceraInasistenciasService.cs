@@ -21,6 +21,62 @@ namespace API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+
+        public async Task<List<MesAnioDTO?>> ObtenerFechas(int idEstablecimiento)
+        {
+            var resultados = await _context.MEC_InasistenciasCabecera.Where(m => m.IdEstablecimiento == idEstablecimiento)
+                .Select(m => new MesAnioDTO
+                {
+                    Anio = m.Anio,
+                    Mes = m.Mes
+                }).Distinct().OrderBy(x => x.Anio).ThenBy(x => x.Mes).ToListAsync();
+
+            return resultados;
+        }
+        public async Task<InasistenciaCabeceraDTO?> ObtenerInasistenciaPorPeriodoAsync(int idEstablecimiento, int anio, int mes)
+        {
+            // Buscar la cabecera de inasistencias que coincida con establecimiento, año y mes
+            var cabecera = await _context.MEC_InasistenciasCabecera
+                .Include(c => c.Detalle) // Cargar detalles relacionados
+                .FirstOrDefaultAsync(c => c.IdEstablecimiento == idEstablecimiento
+                                       && c.Anio == anio
+                                       && c.Mes == mes);
+
+            if (cabecera == null)
+            {
+                // No hay cabecera para ese periodo, devolver null o un DTO vacío
+                return null;
+            }
+
+            // Mapear entidad a DTO
+            var dto = new InasistenciaCabeceraDTO
+            {
+                IdInasistenciaCabecera = cabecera.IdInasistenciaCabecera,
+                IdEstablecimiento = cabecera.IdEstablecimiento,
+                IdCabecera = cabecera.IdCabecera,
+                Confecciono = cabecera.Confecciono,
+                Mes = cabecera.Mes,
+                Anio = cabecera.Anio,
+                FechaApertura = cabecera.FechaApertura,
+                FechaEntrega = cabecera.FechaEntrega,
+                SinNovedades = cabecera.SinNovedades,
+                Observaciones = cabecera.Observaciones,
+                Estado = cabecera.Estado,
+                Detalle = cabecera.Detalle.Select(d => new InasistenciaDetalleDto
+                {
+                    IdInasistenciaDetalle = d.IdInasistenciasDetalle,
+                    IdInasistenciaCabecera = d.IdInasistenciaCabecera,
+                    IdPOF = d.IdPOF,
+                    FechaInasistencia = d.Fecha ?? DateTime.MinValue,
+                    Estado = d.EstadoRegistro ?? ""
+                }).ToList(),
+                Rechazos = new List<InasistenciaRechazoDto>() // Podés cargar esto si querés
+            };
+
+            return dto;
+        }
+
+
         // Método principal para procesar la cabecera de liquidación
         public async Task<bool> AddCabeceraAsync(int idCabecera)
         {
@@ -410,7 +466,66 @@ namespace API.Services
 
         //Se agregará un menú “Inasistencias” y una opción de submenú “Cargar Inasistencias”, a la que tendrán acceso los usuarios de los establecimientos.
 
+        public async Task<List<MecanizadasDTO>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento)
+        {
+            var mecanizadas = await _context.MEC_Mecanizadas.Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
+                .Select(m => new MecanizadasDTO
+                {
+                    IdMecanizada = m.IdMecanizada,
+                    FechaConsolidacion = m.FechaConsolidacion,
+                    IdUsuario = m.IdUsuario,
+                    IdCabecera = m.IdCabecera,
+                    MesLiquidacion = m.MesLiquidacion,
+                    OrdenPago = m.OrdenPago,
+                    AnioMesAfectacion = m.AnioMesAfectacion,
+                    IdEstablecimiento = m.IdEstablecimiento,
+                    IdPOF = m.IdPOF,
+                    Importe = m.Importe,
+                    Signo = m.Signo,
+                    MarcaTransferido = m.MarcaTransferido,
+                    Moneda = m.Moneda,
+                    RegimenEstatutario = m.RegimenEstatutario,
+                    Dependencia = m.Dependencia,
+                    Distrito = m.Distrito,
+                    Subvencion = m.Subvencion,
+                    Origen = m.Origen,
+                    Consolidado = m.Consolidado,
+                    CodigoLiquidacion = m.CodigoLiquidacion,
+                    DNI = m.POF.Persona.DNI,
+                    Secuencia = m.POF.Secuencia,
+                    TipoCargo = m.POF.TipoCargo,
+                    Nombre = m.POF.Persona.Nombre,
+                    Apellido = m.POF.Persona.Apellido
+                }).ToListAsync();
 
+            return mecanizadas;
+        }
 
-    }
+        public async Task<(bool Exito, string? Mensaje)> GuardarInasistenciaAsync(MEC_InasistenciasDetalle inasistencia)
+        {
+
+            var existe = await _context.MEC_InasistenciasDetalle
+                .AnyAsync(x => x.IdPOF == inasistencia.IdPOF && x.Fecha == inasistencia.Fecha);
+
+            if (existe)
+            {
+                // Ya existe, no se inserta
+                return (false, "Ya existe un registro para esa POF y fecha");
+            }
+
+            inasistencia.EstadoRegistro = "P";
+
+            _context.MEC_InasistenciasDetalle.Add(inasistencia);
+            try
+            {
+                await _context.SaveChangesAsync();
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Error al guardar: {ex.Message}");
+            }
+
+        }
+    } 
 }
