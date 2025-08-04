@@ -21,6 +21,7 @@ import ListadoMotivosBajas from "layouts/pages/Pruebas/MotivoBaja/index";
 import ListadoTiposMovimientos from "layouts/pages/Pruebas/TiposMovimientos/index";
 import Bajas from "layouts/pages/Pruebas/Bajas";
 import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
+import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
 
 const routes = [
   {
@@ -94,6 +95,21 @@ const routes = [
         key: "cabecerasMovimientos",
         route: "/CabeceraMovimientos",
         component: <CabeceraMovimientos />,
+      },
+    ],
+  },
+  { type: "divider", key: "divider-4" },
+  {
+    type: "collapse",
+    icon: <Icon>assignmentIcon</Icon>,
+    name: "Inasistencia",
+    key: "inasistencia",
+    collapse: [
+      {
+        name: "Cargar Inasistencia",
+        key: "cargarInasistencia",
+        route: "/CargarInasistencia",
+        component: <CargarInasistencia />,
       },
     ],
   },
