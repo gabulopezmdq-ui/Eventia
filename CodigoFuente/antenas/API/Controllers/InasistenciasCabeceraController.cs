@@ -41,6 +41,19 @@ namespace API.Controllers
             return Ok(new { exists });
         }
 
+        [HttpGet("InasistenciasListado")]
+        public async Task<IActionResult> GetInasistenciaPorPeriodo(int idEstablecimiento, int anio, int mes)
+        {
+            var resultado = await _cabeceraService.ObtenerInasistenciaPorPeriodoAsync(idEstablecimiento, anio, mes);
+
+            if (resultado == null)
+            {
+                return NotFound($"No se encontró inasistencia para Establecimiento {idEstablecimiento}, {anio}-{mes}.");
+            }
+
+            return Ok(resultado);
+        }
+
         [HttpPost]
         public async Task<ActionResult<string>> AddCabecera([FromBody] int idCabecera)
         {
@@ -49,7 +62,7 @@ namespace API.Controllers
 
             try
             {
-                    var result = await _cabeceraService.AddCabeceraAsync(idCabecera);
+                var result = await _cabeceraService.AddCabeceraAsync(idCabecera);
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
@@ -150,6 +163,27 @@ namespace API.Controllers
         {
             var resultado = await _cabeceraService.ObtenerDetalleYRechazosPorCabeceraAsync(idCabecera);
             return Ok(resultado);
+        }
+
+        //Obtener detalles Mecanizadas/POF
+
+        [HttpGet("GetMecanizadas")]
+
+        public async Task<ActionResult> ObtenerMecanizadas(int idCabecera, int idEstablecimiento)
+        {
+            var resultado = await _cabeceraService.ObtenerMecanizadas(idCabecera, idEstablecimiento);
+            return Ok(resultado);
+        }
+
+        [HttpPost("AddMecanizadas")]
+
+        public async Task<ActionResult> AddMecanizadas([FromBody] MEC_InasistenciasDetalle inasistencias)
+        {
+            var resultado = await _cabeceraService.GuardarInasistenciaAsync(inasistencias);
+            if (!resultado.Exito)
+                return BadRequest(resultado.Mensaje);
+
+            return Ok("Guardado exitosamente.");
         }
     }
 }
