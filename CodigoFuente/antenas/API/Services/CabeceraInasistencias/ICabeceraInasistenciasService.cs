@@ -21,6 +21,7 @@ namespace API.Services
         Task<List<MecanizadasDTO>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento);
         Task<(bool Exito, string? Mensaje)> GuardarInasistenciaAsync(MEC_InasistenciasDetalle inasistencia);
         Task<InasistenciaCabeceraDTO?> ObtenerInasistenciaPorPeriodoAsync(int idEstablecimiento, int anio, int mes);
+        Task<List<MesAnioDTO?>> ObtenerFechas(int idCabecera);
 
 
     }

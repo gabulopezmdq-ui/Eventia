@@ -43,7 +43,11 @@ public class InasistenciaCabeceraDTO
     public List<InasistenciaDetalleDto> Detalle { get; set; }
     public List<InasistenciaRechazoDto> Rechazos { get; set; }
 }
-
+public class MesAnioDTO
+{
+    public int? Anio { get; set; }
+    public int? Mes { get; set; }
+}
 public class InasistenciaDetalleDto
 {
     public int IdInasistenciaDetalle { get; set; }
