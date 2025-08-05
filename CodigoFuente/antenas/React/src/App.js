@@ -57,6 +57,7 @@ import AltaRegistroBaja from "layouts/pages/Pruebas/Bajas/AltaRegistroBaja";
 import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
 import AltaCabeceraMovimiento from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
 import AltaCabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
+import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -178,6 +179,10 @@ export default function App() {
     {
       path: "/CabeceraLiquidacionFE",
       component: CabeceraLiquidacion,
+    },
+    {
+      path: "/CargarInasistencia",
+      component: CargarInasistencia,
     },
     {
       path: "/ImportarArchivoPlanoFE",
