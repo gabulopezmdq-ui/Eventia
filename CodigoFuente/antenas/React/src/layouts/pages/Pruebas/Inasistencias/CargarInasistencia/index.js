@@ -13,8 +13,9 @@ import axios from "axios";
 
 function CargarInasistencia() {
   const [cabeceras, setCabeceras] = useState([]);
-  const [inasistencias, setInasistencias] = useState(null); // null al inicio
-  const [ejecutoBusqueda, setEjecutoBusqueda] = useState(false);
+  const [inasistencias, setInasistencias] = useState(null);
+  const [anioSeleccionado, setAnioSeleccionado] = useState(null);
+  const [mesSeleccionado, setMesSeleccionado] = useState(null);
   const [cabecerasCargar, setCabeceraCargar] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
   const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState();
@@ -35,7 +36,6 @@ function CargarInasistencia() {
           }
         );
 
-        // Filtrar por estado "R" y calculaInasistencias "S"
         const filtrados = response.data.filter(
           (item) => item.estado === "R" && item.cabecera?.calculaInasistencias === "S"
         );
@@ -60,7 +60,6 @@ function CargarInasistencia() {
       return;
     }
 
-    // Buscar el objeto seleccionado
     const seleccionado = cabeceras.find((item) => item.idInasistenciaCabecera === selectedCabecera);
 
     if (!seleccionado) {
@@ -70,7 +69,6 @@ function CargarInasistencia() {
       return;
     }
 
-    // Extraer datos necesarios
     const idEstablecimiento = seleccionado.idEstablecimiento;
     setEstablecimientoSeleccionado(idEstablecimiento);
 
@@ -98,6 +96,7 @@ function CargarInasistencia() {
   const handleChangeCabecera = (event) => {
     setSelectedCabecera(event.target.value);
   };
+
   const handleInasistencias = async (anio, mes) => {
     if (!establecimientoSeleccionado) {
       setAlertMessage("No se ha seleccionado un establecimiento.");
@@ -105,6 +104,9 @@ function CargarInasistencia() {
       setShowAlert(true);
       return;
     }
+
+    setAnioSeleccionado(anio);
+    setMesSeleccionado(mes);
 
     try {
       const response = await axios.get(
@@ -121,9 +123,7 @@ function CargarInasistencia() {
         }
       );
 
-      console.log("Inasistencias:", response.data);
-      setInasistencias(response.data); // ya no es un array
-      setEjecutoBusqueda(true);
+      setInasistencias(response.data);
     } catch (error) {
       console.error("Error al obtener inasistencias:", error);
       setAlertMessage("Error al obtener las inasistencias.");
@@ -131,6 +131,46 @@ function CargarInasistencia() {
       setShowAlert(true);
     }
   };
+
+  const handleGenerarCabecera = async () => {
+    const seleccionado = cabeceras.find((item) => item.idInasistenciaCabecera === selectedCabecera);
+
+    if (!seleccionado) {
+      setAlertMessage("No se encontró la cabecera seleccionada.");
+      setAlertType("error");
+      setShowAlert(true);
+      return;
+    }
+
+    try {
+      const payload = {
+        anio: anioSeleccionado,
+        mes: mesSeleccionado,
+        idCabecera: seleccionado.idCabecera,
+        idEstablecimiento: seleccionado.idEstablecimiento,
+      };
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}InasistenciasCabecera/AddCabecera`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setAlertMessage("Cabecera de inasistencia generada correctamente.");
+      setAlertType("success");
+      setShowAlert(true);
+    } catch (error) {
+      console.error("Error al generar la cabecera:", error);
+      setAlertMessage("Error al generar la cabecera de inasistencia.");
+      setAlertType("error");
+      setShowAlert(true);
+    }
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -147,10 +187,7 @@ function CargarInasistencia() {
                 style={{ height: "2.5rem", backgroundColor: "white" }}
               >
                 {cabeceras.map((item) => (
-                  <MenuItem
-                    key={item.idInasistenciaCabecera}
-                    value={item.idInasistenciaCabecera} // o el valor que necesites capturar
-                  >
+                  <MenuItem key={item.idInasistenciaCabecera} value={item.idInasistenciaCabecera}>
                     {item.establecimientos?.nombrePcia || "Sin nombre"}
                   </MenuItem>
                 ))}
@@ -166,6 +203,7 @@ function CargarInasistencia() {
           </Grid>
         </Grid>
       </MDBox>
+
       {showAlert && (
         <MDAlert color={alertType} dismissible onClose={() => setShowAlert(false)}>
           <MDTypography variant="body2" color="white">
@@ -173,6 +211,7 @@ function CargarInasistencia() {
           </MDTypography>
         </MDAlert>
       )}
+
       {cabecerasCargar.length > 0 && (
         <Card>
           <DataTable
@@ -182,20 +221,33 @@ function CargarInasistencia() {
                 { Header: "Mes", accessor: "mes" },
                 {
                   Header: "Acciones",
-                  accessor: "edit",
+                  accessor: "acciones",
                   Cell: ({ row }) => (
-                    <>
-                      <MDBox display="flex" gap={1}>
-                        <MDButton
-                          variant="gradient"
-                          color="info"
-                          size="small"
-                          onClick={() => handleInasistencias(row.original.anio, row.original.mes)}
-                        >
-                          Cargar
-                        </MDButton>
-                      </MDBox>
-                    </>
+                    <MDBox display="flex" gap={1}>
+                      <MDButton
+                        variant="gradient"
+                        color="info"
+                        size="small"
+                        onClick={() => handleInasistencias(row.original.anio, row.original.mes)}
+                      >
+                        Cargar
+                      </MDButton>
+
+                      {inasistencias &&
+                        Array.isArray(inasistencias.detalle) &&
+                        inasistencias.detalle.length === 0 &&
+                        row.original.anio === anioSeleccionado &&
+                        row.original.mes === mesSeleccionado && (
+                          <MDButton
+                            variant="gradient"
+                            color="warning"
+                            size="small"
+                            onClick={handleGenerarCabecera}
+                          >
+                            Generar Cabecera Inasistencia
+                          </MDButton>
+                        )}
+                    </MDBox>
                   ),
                 },
               ],
@@ -206,24 +258,6 @@ function CargarInasistencia() {
           />
         </Card>
       )}
-      {ejecutoBusqueda &&
-        inasistencias &&
-        Array.isArray(inasistencias.detalle) &&
-        inasistencias.detalle.length === 0 && (
-          <MDBox mt={2} display="flex" justifyContent="center">
-            <MDButton
-              variant="gradient"
-              color="warning"
-              size="small"
-              onClick={() => {
-                console.log("Generar cabecera de inasistencia");
-                // Lógica aquí
-              }}
-            >
-              Generar Cabecera Inasistencia
-            </MDButton>
-          </MDBox>
-        )}
     </DashboardLayout>
   );
 }

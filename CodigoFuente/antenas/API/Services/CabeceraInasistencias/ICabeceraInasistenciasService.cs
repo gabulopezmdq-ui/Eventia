@@ -6,7 +6,7 @@ namespace API.Services
 {
     public interface ICabeceraInasistenciasService
     {
-        Task<bool> AddCabeceraAsync(int idCabecera);
+        Task<bool> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes);
         Task<bool> CheckIfExists(string anio, string mes, int idTipo, string ordenPago); // Método para verificar duplicados
         Task ProcesarTMPInasistencias(int idCabeceraLiquidacion, int idCabeceraInasistencia, int idEstablecimiento, string UE);
         Task<List<MEC_InasistenciasCabecera>> ObtenerCabecerasHabilitadasAsync();
@@ -22,6 +22,7 @@ namespace API.Services
         Task<(bool Exito, string? Mensaje)> GuardarInasistenciaAsync(MEC_InasistenciasDetalle inasistencia);
         Task<InasistenciaCabeceraDTO?> ObtenerInasistenciaPorPeriodoAsync(int idEstablecimiento, int anio, int mes);
         Task<List<MesAnioDTO?>> ObtenerFechas(int idEstablecimiento);
+        Task<List<CabeceraInasistenciaDTO>> ObtenerCabecerasInas(int idCabecera);
 
 
     }
