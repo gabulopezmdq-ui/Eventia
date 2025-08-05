@@ -29,7 +29,7 @@ namespace API.Services
                 {
                     Anio = m.Anio,
                     Mes = m.Mes
-                }).ToListAsync();
+                }).Distinct().OrderBy(x => x.Anio).ThenBy(x => x.Mes).ToListAsync();
 
             return resultados;
         }
