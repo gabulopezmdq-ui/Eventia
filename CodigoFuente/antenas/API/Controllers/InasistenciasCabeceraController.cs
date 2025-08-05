@@ -42,9 +42,9 @@ namespace API.Controllers
         }
 
         [HttpGet("GetFechas")]
-        public async Task<IActionResult> GetFechas(int idCabecera)
+        public async Task<IActionResult> GetFechas(int idEstablecimiento)
         {
-            var resultado = await _cabeceraService.ObtenerFechas(idCabecera);
+            var resultado = await _cabeceraService.ObtenerFechas(idEstablecimiento);
 
             if (resultado == null)
             {
