@@ -19,6 +19,13 @@ public class InasistenciasDTO
     public int Cantidad { get; set; }
     public int Horas { get; set; }
 }
+public class AddCabeceraRequestDTO
+{
+    public int IdCabecera { get; set; }
+    public int IdEstablecimiento { get; set; }
+    public int Anio { get; set; }
+    public int Mes { get; set; }
+}
 
 public class DevolverEst
 {
@@ -47,6 +54,15 @@ public class MesAnioDTO
 {
     public int? Anio { get; set; }
     public int? Mes { get; set; }
+}
+public class CabeceraInasistenciaDTO
+{
+    public int? IdInasistenciaCabecera { get; set; }
+    public int? IdEstablecimiento { get; set; }
+    public int? Anio { get; set; }
+    public int? Mes { get; set; }
+    public string? Estado { get; set; }
+
 }
 public class InasistenciaDetalleDto
 {

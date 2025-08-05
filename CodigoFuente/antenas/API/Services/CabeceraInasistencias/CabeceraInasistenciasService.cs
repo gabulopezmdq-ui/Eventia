@@ -78,19 +78,25 @@ namespace API.Services
 
 
         // Método principal para procesar la cabecera de liquidación
-        public async Task<bool> AddCabeceraAsync(int idCabecera)
+        public async Task<bool> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes)
         {
             // Obtener el userId desde el token
             int userId = GetUserIdFromToken();
 
             var cabeceraLiquidacion = await _context.MEC_CabeceraLiquidacion.AsNoTracking().FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
+            if (cabeceraLiquidacion == null)
+            {
+                throw new InvalidOperationException($"No se encontró la cabecera de liquidación con Id {idCabecera}.");
+            }
+
             var nuevaCabecera = new MEC_InasistenciasCabecera
             {
                 IdCabecera = idCabecera,
+                IdEstablecimiento = idEstablecimiento,
                 Estado = "H",
-                Anio = int.Parse(cabeceraLiquidacion.AnioLiquidacion),
-                Mes = int.Parse(cabeceraLiquidacion.MesLiquidacion),
+                Anio = año,
+                Mes = mes,
                 Confecciono = userId,
                 FechaApertura = DateTime.Now,
             };
@@ -387,6 +393,7 @@ namespace API.Services
             return (true, null);
         }
 
+        //OBTIENE LOS ESTABLECIMIENTOS A LOS QUE PERTENECE EL USUARIO
         public async Task<UsuarioInfoDTO> ObtenerEstablecimientosYRolesAsync(int idUsuario)
         {
             // Ids de establecimientos vigentes
@@ -526,6 +533,25 @@ namespace API.Services
                 return (false, $"Error al guardar: {ex.Message}");
             }
 
+        }
+
+        public async Task<List<CabeceraInasistenciaDTO>> ObtenerCabecerasInas(int idCabecera)
+        {
+            var idUsuario = GetUserIdFromToken();
+            var usuarioInfo = await ObtenerEstablecimientosYRolesAsync(idUsuario);
+            var idEst = usuarioInfo.IdsEstablecimientos;
+
+            var cabeceras = await _context.MEC_InasistenciasCabecera.Where(i => i.IdCabecera == idCabecera && idEst.Contains(i.IdEstablecimiento) && i.Estado == "H")
+                 .Select(m => new CabeceraInasistenciaDTO
+                 {
+                     IdInasistenciaCabecera = m.IdInasistenciaCabecera,
+                     IdEstablecimiento = m.IdEstablecimiento,
+                     Anio = m.Anio,
+                     Mes = m.Mes,
+                     Estado = m.Estado  
+                 }).Distinct().OrderBy(x => x.Anio).ThenBy(x => x.Mes).ToListAsync();
+
+            return cabeceras;
         }
     } 
 }

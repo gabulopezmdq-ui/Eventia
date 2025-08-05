@@ -54,7 +54,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired(true);
 
             builder.Property(e => e.FechaApertura)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.FechaEntrega)
                .IsRequired(false);
@@ -62,7 +62,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.SinNovedades)
                 .HasColumnType("char(1)")
                 .IsFixedLength(true)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.Observaciones)
             .HasColumnType("char(1000)")

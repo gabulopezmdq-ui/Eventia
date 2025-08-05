@@ -67,15 +67,18 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<string>> AddCabecera([FromBody] int idCabecera)
+        [HttpPost("AddCabecera")]
+        public async Task<ActionResult<string>> AddCabecera([FromBody] AddCabeceraRequestDTO request)
         {
-            if (idCabecera == null)
-                return BadRequest("La cabecera no puede ser nula.");
-
             try
             {
-                var result = await _cabeceraService.AddCabeceraAsync(idCabecera);
+                var result = await _cabeceraService.AddCabeceraAsync(
+                    request.IdCabecera,
+                    request.IdEstablecimiento,
+                    request.Anio,
+                    request.Mes
+                );
+
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
@@ -197,6 +200,15 @@ namespace API.Controllers
                 return BadRequest(resultado.Mensaje);
 
             return Ok("Guardado exitosamente.");
+        }
+
+        //ENVIO DE INASISTENCIAS
+        [HttpGet("GetCabecerasInas")]
+
+        public async Task<ActionResult> ObtenerCabeceras(int idCabecera)
+        {
+            var resultado = await _cabeceraService.ObtenerCabecerasInas(idCabecera);
+            return Ok(resultado);
         }
     }
 }
