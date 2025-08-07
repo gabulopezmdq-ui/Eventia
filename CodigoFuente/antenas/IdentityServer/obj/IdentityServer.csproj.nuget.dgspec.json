@@ -10,15 +10,11 @@
         "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
         "projectName": "API",
         "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
-        "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
         "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -178,7 +174,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
         }
       }
     },
@@ -188,15 +184,11 @@
         "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
         "projectName": "IdentityServer",
         "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-        "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
         "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -284,7 +276,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
         }
       }
     }
