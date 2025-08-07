@@ -16,4 +16,16 @@ namespace API.DataSchema.DTO
         public string DNI { get; set; }
         public string Legajo { get; set; }
     }
+
+    public class POFBarraDTO
+    {
+        public int IdPOF { get; set; }
+        public List<int> Barra { get; set; }
+    }
+
+    public class POFBarraResultado
+    {
+        public List<int> BarrasAgregadas { get; set; } = new();
+        public List<int> BarrasDuplicadas { get; set; } = new();
+    }
 }
