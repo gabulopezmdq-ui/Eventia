@@ -17,7 +17,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(p => p.IdInasistenciaCabecera).IsRequired();
             builder.Property(p => p.IdEstablecimiento).IsRequired();
             builder.Property(p => p.IdPOF).IsRequired();
-            builder.Property(p => p.IdPOFBarra).IsRequired();
+            builder.Property(p => p.IdPOFBarra).IsRequired(false);
             builder.Property(p => p.Fecha).IsRequired();
             builder.Property(p => p.IdTMPInasistenciasDetalle).IsRequired(false);
             builder.Property(p => p.CodLicencia).IsRequired(false);

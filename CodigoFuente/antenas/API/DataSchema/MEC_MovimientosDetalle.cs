@@ -22,7 +22,7 @@ namespace API.DataSchema
         public string? Observaciones { get; set; }
         public int? AntigAnios { get; set; }
         public int? AntigMeses { get; set; }
-        public int Horas { get; set; }
+        public int? Horas { get; set; }
         public DateTime? FechaInicioBaja { get; set; }
         public DateTime? FechaFinBaja { get; set; }
         public virtual MEC_MovimientosCabecera? MovimientoCabecera { get; set; }

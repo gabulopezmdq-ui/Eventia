@@ -11,7 +11,7 @@ namespace API.DataSchema
         public int IdInasistenciaCabecera { get; set; }
         public int IdEstablecimiento { get; set; }
         public int IdPOF { get; set; }
-        public int IdPOFBarra { get; set; }
+        public int? IdPOFBarra { get; set; }
         public int? IdTMPInasistenciasDetalle { get; set; }
         public int? CodLicencia { get; set; }
         public DateTime? Fecha { get; set; }

@@ -1,4 +1,5 @@
 ﻿using  API.DataSchema;
+using API.DataSchema.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -20,5 +21,6 @@ namespace API.Services
         Task<MEC_POF_Antiguedades?> GetByIdPOFAsync(int idPOF);
         Task<MEC_POF_Antiguedades> CreateOrUpdateAsync(MEC_POF_Antiguedades data);
         Task<List<MEC_POF_Barras>> GetBarrasPOF(int idPOF);
+        Task<POFBarraResultado> AddBarraAsync(POFBarraDTO dto);
     }
 }

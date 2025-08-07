@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using API.Migrations;
 using Microsoft.AspNetCore.Mvc;
+using API.DataSchema.DTO;
 
 namespace API.Services
 {
@@ -143,21 +144,39 @@ namespace API.Services
             return await _context.MEC_POF_Barras.Where(a => a.IdPOF == idPOF).ToListAsync();
         }
 
-        public async Task<bool> AddBarraAsync(MEC_POF_Barras nuevaBarra)
+        public async Task<POFBarraResultado> AddBarraAsync(POFBarraDTO dto)
         {
-            bool existe = await _context.MEC_POF_Barras
-                .AnyAsync(b => b.IdPOF == nuevaBarra.IdPOF && b.Barra == nuevaBarra.Barra);
+            var resultado = new POFBarraResultado();
 
-            if (existe)
+            if (dto == null || dto.Barra == null || dto.Barra.Count == 0)
+                return resultado;
+
+            foreach (var barra in dto.Barra)
             {
-                // Ya existe, no se guarda
-                return false;
+                bool existe = await _context.MEC_POF_Barras
+                    .AnyAsync(b => b.IdPOF == dto.IdPOF && b.Barra == barra);
+
+                if (existe)
+                {
+                    resultado.BarrasDuplicadas.Add(barra);
+                    continue;
+                }
+
+                var nuevaBarra = new MEC_POF_Barras
+                {
+                    IdPOF = dto.IdPOF,
+                    Barra = barra
+                };
+
+                _context.MEC_POF_Barras.Add(nuevaBarra);
+                resultado.BarrasAgregadas.Add(barra);
             }
 
-            _context.MEC_POF_Barras.Add(nuevaBarra);
             await _context.SaveChangesAsync();
-            return true;
+
+            return resultado;
         }
+
 
     }
 }
