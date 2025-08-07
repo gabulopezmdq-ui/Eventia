@@ -21,14 +21,16 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICabeceraInasistenciasService _cabeceraService;
         private readonly ICRUDService<MEC_InasistenciasCabecera> _serviceGenerico;
+        private readonly ICRUDService<MEC_InasistenciasDetalle> _serviceGenericoInas;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public InasistenciasCabeceraController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraInasistenciasService cabeceraService, ICRUDService<MEC_InasistenciasCabecera> serviceGenerico, IHttpContextAccessor httpContextAccessor)
+        public InasistenciasCabeceraController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraInasistenciasService cabeceraService, ICRUDService<MEC_InasistenciasCabecera> serviceGenerico, IHttpContextAccessor httpContextAccessor, ICRUDService<MEC_InasistenciasDetalle> serviceGenericoInas)
         {
             _context = context;
             _cabeceraService = cabeceraService;
             _serviceGenerico = serviceGenerico;
             _httpContextAccessor = httpContextAccessor;
+            _serviceGenericoInas = serviceGenericoInas;
         }
 
         [HttpGet("CheckIfExists")]
@@ -67,15 +69,18 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<string>> AddCabecera([FromBody] int idCabecera)
+        [HttpPost("AddCabecera")]
+        public async Task<ActionResult<string>> AddCabecera([FromBody] AddCabeceraRequestDTO request)
         {
-            if (idCabecera == null)
-                return BadRequest("La cabecera no puede ser nula.");
-
             try
             {
-                var result = await _cabeceraService.AddCabeceraAsync(idCabecera);
+                var result = await _cabeceraService.AddCabeceraAsync(
+                    request.IdCabecera,
+                    request.IdEstablecimiento,
+                    request.Anio,
+                    request.Mes
+                );
+
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
@@ -198,5 +203,49 @@ namespace API.Controllers
 
             return Ok("Guardado exitosamente.");
         }
+
+        //ENVIO DE INASISTENCIAS
+        [HttpGet("GetCabecerasInas")]
+        public async Task<ActionResult> ObtenerCabeceras(int idCabecera)
+        {
+            var resultado = await _cabeceraService.ObtenerCabecerasInas(idCabecera);
+            return Ok(resultado);
+        }
+
+        [HttpGet("GetDetalleInas")]
+        public async Task<ActionResult> ObtenerDetalles(int idEstablecimiento, int idInasistenciaCabecera)
+        {
+            var resultado = await _cabeceraService.DetalleInasistencia(idEstablecimiento, idInasistenciaCabecera);
+            return Ok(resultado);
+        }
+
+        [HttpPost("EnviarInas")]
+        public async Task<IActionResult> ConfirmarInas([FromBody] ConfirmarInasistenciaDTO request)
+        {
+            try
+            {
+                var resultado = await _cabeceraService.EnviarInas(
+                    request.IdInasistenciaCabecera,
+                    request.Observaciones
+                );
+
+                if (resultado)
+                    return Ok("Inasistencia confirmada y enviada correctamente.");
+                else
+                    return BadRequest("No se pudo confirmar la inasistencia.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPost("AgregarInasDetalle")]
+        public async Task<IActionResult> AgregarInas([FromBody] MEC_InasistenciasDetalle detalle)
+        {
+            await _serviceGenericoInas.Add(detalle);
+            return Ok(detalle);
+        }
     }
+
 }

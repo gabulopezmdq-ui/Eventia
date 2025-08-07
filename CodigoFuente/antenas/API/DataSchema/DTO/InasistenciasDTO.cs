@@ -20,6 +20,26 @@ public class InasistenciasDTO
     public int Horas { get; set; }
 }
 
+public class InasistenciasDetalleDTO
+{
+    public string DNI { get; set; }
+    public string NroLegajo { get; set; }
+    public string Secuencia { get; set; }
+    public string Cargo { get; set; }
+    public string Apellido { get; set; }
+    public string Nombre { get; set; }
+    public DateTime? Fecha { get; set; }
+    public int? CantHs { get; set; }
+    public int? CantMin { get; set; }
+}
+public class AddCabeceraRequestDTO
+{
+    public int IdCabecera { get; set; }
+    public int IdEstablecimiento { get; set; }
+    public int Anio { get; set; }
+    public int Mes { get; set; }
+}
+
 public class DevolverEst
 {
     public int IdCabecera { get; set; }
@@ -48,6 +68,15 @@ public class MesAnioDTO
     public int? Anio { get; set; }
     public int? Mes { get; set; }
 }
+public class CabeceraInasistenciaDTO
+{
+    public int? IdInasistenciaCabecera { get; set; }
+    public int? IdEstablecimiento { get; set; }
+    public int? Anio { get; set; }
+    public int? Mes { get; set; }
+    public string? Estado { get; set; }
+
+}
 public class InasistenciaDetalleDto
 {
     public int IdInasistenciaDetalle { get; set; }
@@ -66,6 +95,13 @@ public class InasistenciaRechazoDto
     public int UsuarioRechazo { get; set; }
     // Otros campos que necesites
 }
+
+public class ConfirmarInasistenciaDTO
+{
+    public int IdInasistenciaCabecera { get; set; }
+    public string Observaciones { get; set; }
+}
+
 public class DetalleRechazos
 {
     public List<MEC_InasistenciasDetalle> Detalles { get; set; }

@@ -74,7 +74,7 @@ builder.Services.AddHealthChecks();
 // Registro de servicios principales
 builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
 builder.Services.AddScoped<IMovimientosService, MovimientosService>();
-builder.Services.AddScoped<ICabeceraInasistenciasService, CabeceraInasistenciasService>();
+builder.Services.AddScoped<IAprobarInasistenciasService, AprobarInasistenciasService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IProcesarMecanizadaService<>), typeof(ProcesarMecanizadaService<>));
 builder.Services.AddScoped<IPOFService, POFService>();
@@ -85,6 +85,7 @@ builder.Services.AddScoped<IConsolidarMecanizadaService, ConsolidarMecanizadaSer
 builder.Services.AddHttpClient<IPartesDiariosService, PartesDiariosService>();
 builder.Services.AddScoped<IPartesDiariosService, PartesDiariosService>();
 builder.Services.AddScoped<ICabeceraLiquidacionService, CabeceraLiquidacionService>();
+builder.Services.AddScoped<ICabeceraInasistenciasService, CabeceraInasistenciasService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
