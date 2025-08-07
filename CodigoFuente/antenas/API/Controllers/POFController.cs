@@ -161,22 +161,31 @@ namespace API.Controllers
 
 
         //CREA LA BARRA
-        [HttpPost("Barras")]
-        public async Task<IActionResult> CreateBarra([FromBody] MEC_POF_Barras barra)
+        [HttpPut("Barras")]
+        public async Task<IActionResult> CreateBarras([FromBody] POFBarraDTO dto)
         {
-            if (barra == null)
-                return BadRequest();
+            if (dto == null || dto.Barra == null || dto.Barra.Count == 0)
+            {
+                return BadRequest("Datos inválidos");
+            }
 
-            bool existe = await _context.MEC_POF_Barras
-                .AnyAsync(b => b.IdPOF == barra.IdPOF && b.Barra == barra.Barra);
+            var resultado = await _pofService.AddBarraAsync(dto);
 
-            if (existe)
-                return Conflict("Ya existe una barra con ese IdPOF y Barra.");
+            if (resultado.BarrasAgregadas.Count == 0 && resultado.BarrasDuplicadas.Count > 0)
+            {
+                return Conflict(new
+                {
+                    mensaje = "No se agregaron barras. Todas ya existen.",
+                    duplicadas = resultado.BarrasDuplicadas
+                });
+            }
 
-            _context.MEC_POF_Barras.Add(barra);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetBarras), new { idPOF = barra.IdPOF }, barra);
+            return Ok(new
+            {
+                mensaje = "Proceso finalizado.",
+                agregadas = resultado.BarrasAgregadas,
+                duplicadas = resultado.BarrasDuplicadas
+            });
         }
 
         [HttpPut("EditarBarra")]
