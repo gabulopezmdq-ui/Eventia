@@ -113,7 +113,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.Horas)
               .HasColumnType("int")
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.FechaFinBaja)
               .IsRequired(true);

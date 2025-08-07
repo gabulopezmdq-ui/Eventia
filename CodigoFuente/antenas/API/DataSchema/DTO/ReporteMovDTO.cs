@@ -38,7 +38,7 @@ namespace API.DataSchema.DTO
             public string? Observaciones { get; set; }
             public int? AntigAnios { get; set; }
             public int? AntigMeses { get; set; }
-            public int Horas { get; set; }
+            public int? Horas { get; set; }
             public string Secuencia { get; set; }
             public string Funcion { get; set; }
             public string Categoria { get; set; }

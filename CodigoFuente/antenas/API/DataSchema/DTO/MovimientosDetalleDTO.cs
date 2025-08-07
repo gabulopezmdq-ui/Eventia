@@ -25,7 +25,7 @@ public class MovimientosDetalleDTO
     public string? ObservacionDetalle { get; set; }
     public int? AntigAnios { get; set; }
     public int? AntigMeses { get; set; }
-    public int Horas { get; set; }
+    public int? Horas { get; set; }
     public DateTime? FechaInicioBaja { get; set; }
     public DateTime? FechaFinBaja { get; set; }
 }
