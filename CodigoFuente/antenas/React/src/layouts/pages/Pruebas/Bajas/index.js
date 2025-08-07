@@ -34,6 +34,8 @@ function Bajas() {
   const [anioSeleccionado, setAnioSeleccionado] = useState("");
   const [niveles, setNiveles] = useState([]);
   const [añosDisponibles, setAñosDisponibles] = useState([]);
+  const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState("");
+  const [establecimientos, setEstablecimientos] = useState([]);
 
   const token = sessionStorage.getItem("token");
 
@@ -41,6 +43,7 @@ function Bajas() {
     fetchMotivosBajas();
     fetchNiveles();
     generarAniosDisponibles();
+    fetchEstablecimientos(); // 👈 nuevo
   }, []);
 
   // Función para obtener los datos desde la API
@@ -143,8 +146,28 @@ function Bajas() {
         return anioInicio === anioSeleccionado;
       });
     }
+    if (establecimientoSeleccionado) {
+      filtrado = filtrado.filter((item) => item.nroEstablecimiento === establecimientoSeleccionado);
+    }
 
     setDataTableBajaData(filtrado);
+  };
+  // Función filtrar establecimiento
+  const fetchEstablecimientos = () => {
+    axios
+      .get(process.env.REACT_APP_API_URL + "Establecimientos/Getall", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        const lista = response.data.map((item) => ({
+          id: item.idEstablecimiento,
+          nroEstablecimiento: item.nroEstablecimiento,
+        }));
+        setEstablecimientos(lista);
+      })
+      .catch((error) => {
+        console.error("Error al obtener establecimientos:", error);
+      });
   };
 
   // Función para navegar a nuevo registro
@@ -189,7 +212,7 @@ function Bajas() {
             <MDBox display="flex" justifyContent="center">
               <Grid container spacing={2} mb={2} justifyContent="center">
                 {/* Combo de Nivel */}
-                <Grid item xs={12} sm={6} md={5}>
+                <Grid item xs={12} sm={6} md={4}>
                   <FormControl fullWidth>
                     <InputLabel>NIVEL</InputLabel>
                     <Select
@@ -212,7 +235,7 @@ function Bajas() {
                 </Grid>
 
                 {/* Combo de Año */}
-                <Grid item xs={12} sm={6} md={5}>
+                <Grid item xs={12} sm={6} md={4}>
                   <FormControl fullWidth>
                     <InputLabel>AÑO</InputLabel>
                     <Select
@@ -228,6 +251,28 @@ function Bajas() {
                       {añosDisponibles.map((anio) => (
                         <MenuItem key={anio} value={anio}>
                           {anio}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                {/* Combo de Establecimiento */}
+                <Grid item xs={12} sm={6} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>ESTABLECIMIENTO</InputLabel>
+                    <Select
+                      value={establecimientoSeleccionado}
+                      onChange={(e) => setEstablecimientoSeleccionado(e.target.value)}
+                      sx={{
+                        height: "2.5rem",
+                        backgroundColor: "white",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      <MenuItem value="">Todos</MenuItem>
+                      {establecimientos.map((est) => (
+                        <MenuItem key={est.id} value={est.nroEstablecimiento}>
+                          {est.nroEstablecimiento}
                         </MenuItem>
                       ))}
                     </Select>
