@@ -14,8 +14,8 @@ namespace API.DataSchema
         public int? Anio { get; set; }
         public DateTime? FechaApertura { get; set; }
         public DateTime? FechaEntrega { get; set; }
-        public string SinNovedades { get; set; }
-        public string Observaciones { get; set; }
+        public string? SinNovedades { get; set; }
+        public string? Observaciones { get; set; }
         public string Estado { get; set; }
         public virtual MEC_Establecimientos? Establecimientos { get; set; }
         public virtual MEC_Usuarios? Usuarios { get; set; }

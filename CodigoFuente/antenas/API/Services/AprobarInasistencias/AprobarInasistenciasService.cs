@@ -11,25 +11,20 @@ using System.Threading.Tasks;
 
 namespace API.Services
 {
-    public class CabeceraInasistenciasService : ICabeceraInasistenciasService
+    public class AprobarInasistenciasService : IAprobarInasistenciasService
     {
         private readonly DataContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public CabeceraInasistenciasService(DataContext context, IHttpContextAccessor httpContextAccessor)
+        public AprobarInasistenciasService(DataContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
         }
 
 
-        public async Task<List<MesAnioDTO?>> ObtenerFechas(int idEstablecimiento)
+        public async Task<List<MEC_InasistenciasDetalle>> ObtenerDetallesPendientes()
         {
-            var resultados = await _context.MEC_InasistenciasCabecera.Where(m => m.IdEstablecimiento == idEstablecimiento)
-                .Select(m => new MesAnioDTO
-                {
-                    Anio = m.Anio,
-                    Mes = m.Mes
-                }).Distinct().OrderBy(x => x.Anio).ThenBy(x => x.Mes).ToListAsync();
+            var resultados = await _context.MEC_InasistenciasDetalle.Where(m => m.EstadoRegistro == "P").ToListAsync();
 
             return resultados;
         }
