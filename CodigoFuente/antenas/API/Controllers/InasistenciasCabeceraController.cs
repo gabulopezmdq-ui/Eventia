@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,7 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICabeceraInasistenciasService _cabeceraService;
+        private readonly IAprobarInasistenciasService _aprobarService;
         private readonly ICRUDService<MEC_InasistenciasCabecera> _serviceGenerico;
         private readonly ICRUDService<MEC_InasistenciasDetalle> _serviceGenericoInas;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -245,6 +247,81 @@ namespace API.Controllers
         {
             await _serviceGenericoInas.Add(detalle);
             return Ok(detalle);
+        }
+
+        [HttpPost("AprobarInas")]
+        public async Task<IActionResult> AprobarInas([FromBody] int idInasDetalle)
+        {
+            try
+            {
+                var resultado = await _aprobarService.AceptarInas(idInasDetalle);
+
+                if (resultado)
+                    return Ok("Inasistencia confirmada y enviada correctamente.");
+                else
+                    return BadRequest("No se pudo confirmar la inasistencia.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPost("RechazarInas")]
+        public async Task<IActionResult> RechazarInas([FromBody] int idInasDetalle, string observaciones)
+        {
+            try
+            {
+                var resultado = await _aprobarService.RechazarInas(idInasDetalle, observaciones);
+
+                if (resultado)
+                    return Ok("Inasistencia confirmada y enviada correctamente.");
+                else
+                    return BadRequest("No se pudo confirmar la inasistencia.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPost("AgregarInas")]
+        public async Task<IActionResult> AgregarInasDetalle([FromBody] MEC_InasistenciasDetalle detalle)
+        {
+            var exito = await _aprobarService.AgregarDetalle(detalle);
+
+            if (exito)
+                return Ok(new { mensaje = "Inasisetncia creada correctamente" });
+            else
+                return BadRequest(new { mensaje = "Error al crear la inasistencia" });
+        }
+
+        [HttpGet("ObtenerInas")]
+        public async Task<IActionResult> ObtenerInasEduc(int idInasistenciaCabecera)
+        {
+            var exito = await _aprobarService.ObtenerInasEduc(idInasistenciaCabecera);
+
+            return Ok(exito);
+        }
+
+        [HttpPost("EnviarInas")]
+        public async Task<IActionResult> EnviarInas([FromBody] List<int> idInasistencias)
+        {
+            var resultado = await _aprobarService.EnviarInas(idInasistencias);
+            if (!resultado)
+                return NotFound("No se encontraron registros para actualizar.");
+
+            return Ok("Inasistencias actualizadas correctamente.");
+        }
+
+        [HttpPost("EnviarCabecera")]
+        public async Task<IActionResult> EnviarEduc([FromBody] int idCabecera, string? observaciones)
+        {
+            var cabecera = await _aprobarService.EnviarEduc(idCabecera, observaciones);
+            if (!cabecera)
+                return NotFound("No se encontró la cabecera.");
+
+            return Ok("Cabecera enviada correctamente.");   
         }
     }
 
