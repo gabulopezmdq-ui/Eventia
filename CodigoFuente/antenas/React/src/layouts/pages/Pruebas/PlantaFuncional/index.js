@@ -123,7 +123,13 @@ function PlantaFuncional() {
   };
 
   const handleCargar = async () => {
+    if (!selectedEstablecimiento) {
+      console.error("No se ha seleccionado un establecimiento");
+      return;
+    }
+
     try {
+      setLoading(true);
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}POF/GetByIdEstablecimiento?IdEstablecimiento=${selectedEstablecimiento}`,
         {
@@ -140,14 +146,19 @@ function PlantaFuncional() {
         secuencia: item.secuencia,
         tipoCargo: item.tipoCargo,
         vigente: item.vigente,
+        barras: item.barras || [],
       }));
       setPersonas(personasData);
       setDataTableData(personasData); // <-- AÑADE ESTA LÍNEA
     } catch (error) {
-      console.error("Error al realizar la petición POST:", error);
-      alert("Hubo un error al enviar los datos.");
+      console.error("Error al cargar los datos:", error);
+      setAlertMessage("Hubo un error al cargar los datos");
+      setAlertType("error");
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
     } finally {
       setIsDataLoaded(true);
+      setLoading(false);
     }
   };
 
@@ -428,14 +439,22 @@ function PlantaFuncional() {
     handleCargar();
   };
   const handleSuccessBarras = () => {
+    setIsModalBarrasOpen(false);
     setShowAlert(true);
-    setAlertMessage("Se han actualizados las barras con éxito!");
+    setAlertMessage("Se han actualizado las barras con éxito!");
     setAlertType("success");
     setTimeout(() => {
       setShowAlert(false);
       setAlertMessage("");
+      handleCargar();
+      // Si el modal de edición estaba abierto, forzar su recarga
+      if (isModalOpen) {
+        setIsModalOpen(false);
+        setTimeout(() => {
+          setIsModalOpen(true);
+        }, 100);
+      }
     }, 3000);
-    handleCargar();
   };
   const handleEditar = (idPof) => {
     setSelectedIdPof(idPof);
@@ -444,7 +463,6 @@ function PlantaFuncional() {
   const handleBarras = (idPof) => {
     setSelectedIdPof(idPof);
     setIsModalBarrasOpen(true);
-    console.log("Boton handleBarras");
   };
   const handleCancel = () => {
     setAlertPOF(false);

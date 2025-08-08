@@ -56,6 +56,7 @@ import Bajas from "layouts/pages/Pruebas/Bajas";
 import AltaRegistroBaja from "layouts/pages/Pruebas/Bajas/AltaRegistroBaja";
 import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
 import AltaCabeceraMovimiento from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
+import PlantaFuncionalSec from "layouts/pages/Pruebas/PlantaFuncional/SecretarioPlantaFuncional";
 import AltaCabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
 import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
 
@@ -138,34 +139,39 @@ export default function App() {
 
   //Filtrado de las rutas + roles
 
-  const filterRoutesByRole = (routes, role) => {
+  const filterRoutesByRole = (routes, userRoles) => {
     return routes
-      .filter((route) => !route.roles || route.roles.includes(role))
+      .filter((route) => {
+        if (!route.roles) return true;
+        const routeRoles = route.roles.map((r) => r.toLowerCase());
+        return userRoles.some((role) => routeRoles.includes(role));
+      })
       .map((route) => {
         if (route.collapse) {
           return {
             ...route,
-            collapse: filterRoutesByRole(route.collapse, role),
+            collapse: filterRoutesByRole(route.collapse, userRoles),
           };
         }
         return route;
       });
   };
 
-  const getRoleFromToken = () => {
+  const getRolesFromToken = () => {
     const token = sessionStorage.getItem("token");
-    if (!token) return null;
+    if (!token) return [];
     try {
       const decodedToken = jwt_decode(token);
-      return decodedToken.role;
+      const roles = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+      return Array.isArray(roles) ? roles.map((r) => r.toLowerCase()) : [roles.toLowerCase()];
     } catch (error) {
       console.error("Failed to decode token", error);
-      return null;
+      return [];
     }
   };
 
-  const role = getRoleFromToken();
-  const filteredRoutes = filterRoutesByRole(routes, role);
+  const userRoles = getRolesFromToken(); // reemplaza al antiguo "role"
+  const filteredRoutes = filterRoutesByRole(routes, userRoles);
 
   //Agregar Roles para proteccion por URL !!!!
   //Coincidir roles + path(route) con routes.js para no generar conflictos
@@ -175,274 +181,346 @@ export default function App() {
     {
       path: "/InicioFE",
       component: Inicio,
+      roles: ["admin", "superadmin", "secretario"],
     },
     {
       path: "/CabeceraLiquidacionFE",
       component: CabeceraLiquidacion,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CargarInasistencia",
       component: CargarInasistencia,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/ImportarArchivoPlanoFE",
       component: ImportarArchivo,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/RevertirImportacionFE",
       component: RevertirImportacion,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/ProcesarArchivoImportadoFE",
       component: ProcesarArchivoImportado,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/ConsolidarMecPofFE",
       component: ConsolidarMecPof,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/PersonaFE",
       component: PersonaListado,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/GestionUsuariosFE",
       component: GestionUsuario,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/PlantaFuncionalFE",
       component: PlantaFuncional,
+      roles: ["admin", "superadmin", "secretario"],
     },
     {
       path: "/UsuariosEstablecimientosFE",
       component: UsuariosEstablecimientos,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CarRevistaFE",
       component: ListadoCarRevista,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CarRevistaFE/Nuevo",
       component: AltaCarRevista,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoEstablecimientoFE",
       component: ListadoTipoEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoEstablecimientoFE/Nuevo",
       component: AltaTipoEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/UsuariosPorRolFE",
       component: UsuarioPorRol,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/ConceptosFE",
       component: ListadoConceptos,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CarRevistaFE",
       component: ListadoCarRevista,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoEstablecimientoFE",
       component: ListadoTipoEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/EstablecimientoFE",
       component: Establecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TiposFuncionesFE",
       component: TiposFunciones,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoLiquidacionesFE",
       component: TipoLiquidaciones,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoCategoriasFE",
       component: TipoCategorias,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/MotivoBajaFE",
       component: MotivoBaja,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoMovimientoFE",
       component: TipoMovimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/ImportarFE",
       component: Importar,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/BajasFE",
       component: Bajas,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CabeceraMovimientos",
       component: CabeceraMovimientos,
+      roles: ["admin", "superadmin", "secretario"],
+    },
+    {
+      path: "/PlantaFuncionalSec",
+      component: PlantaFuncionalSec,
+      roles: ["admin", "superadmin", "secretario"],
     },
 
     //----------------------------------Rutas de Ver mas
     {
       path: "/VerCabeceraLiquidacionFE/:id",
       component: VerCabeceraLiquidacion,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/VerGestionUsuariosFE/:id",
       component: VerGestionUsuarios,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/VerConceptoFE/:id",
       component: VerConcepto,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CarRevistaFE/:id",
       component: CarRevistaVer,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TiposEstablecimientoFE/:id",
       component: CarRevistaVer,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/VerEstablecimientoFE/:id",
       component: VerEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     //----------------------------------Rutas de Editar
     {
       path: "/CabeceraLiquidacionFe/Edit/:id",
       component: AltaCabeceraLiquidacion,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CabeceraMovimientos/Edit/:id",
       component: AltaCabeceraMovimientos,
+      roles: ["admin", "superadmin", "secretario"],
     },
     {
       path: "/PersonaFE/Edit/:id",
       component: AltaPersona,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/GestionUsuariosFE/Edit/:id",
       component: AltaGestionUsuario,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/UsuariosPorRolFE/Edit/:id",
       component: EdicionUsuariosPorRol,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/ConceptosFE/Edit/:id",
       component: AltaConceptos,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CarRevistaFE/Edit/:id",
       component: AltaCarRevista,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TiposEstablecimientoFE/Edit/:id",
       component: AltaTipoEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TiposFuncionesFE/Edit/:id",
       component: AltaTiposFunciones,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoLiquidacionesFE/Edit/:id",
       component: AltaTipoLiquidaciones,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoCategoriasFE/Edit/:id",
       component: AltaTipoCategorias,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/MotivoBajaFE/Edit/:id",
       component: AltaMotivoBaja,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoMovimientoFE/Edit/:id",
       component: AltaTipoMovimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/EstablecimientoFE/Edit/:id",
       component: AltaEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/UsuariosEstablecimientosFE/Edit/:id",
       component: AltaUsuariosEstablecimientos,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/BajasFE/Edit/:id",
       component: AltaRegistroBaja,
+      roles: ["admin", "superadmin"],
     },
     //----------------------------------Rutas de Alta
     {
       path: "/CabeceraLiquidacionFE/Nuevo",
       component: AltaCabeceraLiquidacion,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/PersonaFE/Nuevo",
       component: AltaPersona,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/PlantaFuncionalFE/Nuevo",
       component: AltaPlantaFuncional,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/GestionUsuarioFE/Nuevo",
       component: AltaGestionUsuario,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/UsuarioPorRolFE/Nuevo",
       component: AltaUsuariosPorRol,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/UsuariosEstablecimientosFE/Nuevo",
       component: AltaUsuariosEstablecimientos,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/ConceptosFE/Nuevo",
       component: AltaConceptos,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CarRevistaFE/Nuevo",
       component: AltaCarRevista,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoEstablecimientoFE/Nuevo",
       component: AltaTipoEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/EstablecimientoFE/Nuevo",
       component: AltaEstablecimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TiposFuncionesFE/Nuevo",
       component: AltaTiposFunciones,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoLiquidacionesFE/Nuevo",
       component: AltaTipoLiquidaciones,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoCategoriasFE/Nuevo",
       component: AltaTipoCategorias,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/MotivoBajaFE/Nuevo",
       component: AltaMotivoBaja,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/TipoMovimientoFE/Nuevo",
       component: AltaTipoMovimiento,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/BajasFE/Nuevo",
       component: AltaRegistroBaja,
+      roles: ["admin", "superadmin"],
     },
     {
       path: "/CabeceraMovimientos/Nuevo",
       component: AltaCabeceraMovimiento,
+      roles: ["admin", "superadmin", "secretario"],
     },
   ];
 
@@ -453,9 +531,11 @@ export default function App() {
     },
   ];
 
-  const filteredProtectedRoutes = RoutesProtegidas.filter(
-    (route) => !route.roles || route.roles.includes(role)
-  );
+  const filteredProtectedRoutes = RoutesProtegidas.filter((route) => {
+    if (!route.roles) return true;
+    const routeRoles = route.roles.map((r) => r.toLowerCase());
+    return userRoles.some((role) => routeRoles.includes(role));
+  });
 
   return (
     <ThemeProvider theme={darkMode ? themeDark : theme}>
