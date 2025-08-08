@@ -18,6 +18,7 @@ import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import AgregarDetalle from "./AgregarDetalle";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import jwt_decode from "jwt-decode";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 function AltaCabeceraMovimientos() {
@@ -40,6 +41,10 @@ function AltaCabeceraMovimientos() {
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [formDeshabilitado, setFormDeshabilitado] = useState(false);
   const token = sessionStorage.getItem("token");
+  const decodedToken = token ? jwt_decode(token) : {};
+  const userRol = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+  const userIdEstablecimiento = decodedToken["idEstablecimiento"];
+  const roles = Array.isArray(userRol) ? userRol : [userRol];
   const navigate = useNavigate();
 
   const areaOptions = [
@@ -296,11 +301,19 @@ function AltaCabeceraMovimientos() {
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
                 >
-                  {establecimientos.map((e) => (
-                    <MenuItem key={e.idEstablecimiento} value={e.idEstablecimiento}>
-                      {e.nombrePcia.trim().replace(/"/g, "\\ ")}
-                    </MenuItem>
-                  ))}
+                  {roles.includes("Secretario")
+                    ? establecimientos
+                        .filter((e) => e.idEstablecimiento.toString() === userIdEstablecimiento)
+                        .map((e) => (
+                          <MenuItem key={e.idEstablecimiento} value={e.idEstablecimiento}>
+                            {e.nombrePcia.trim().replace(/"/g, "\\ ")}
+                          </MenuItem>
+                        ))
+                    : establecimientos.map((e) => (
+                        <MenuItem key={e.idEstablecimiento} value={e.idEstablecimiento}>
+                          {e.nombrePcia.trim().replace(/"/g, "\\ ")}
+                        </MenuItem>
+                      ))}
                 </Select>
               </FormControl>
             </Grid>
