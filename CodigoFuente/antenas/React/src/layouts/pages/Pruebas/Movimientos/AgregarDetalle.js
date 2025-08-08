@@ -17,6 +17,7 @@ export default function AgregarDetalle({
   const [observacionesOpciones, setObservacionesOpciones] = useState([]);
   const [funcionesOpciones, setFuncionesOpciones] = useState([]);
   const [docentesOpciones, setDocentesOpciones] = useState([]);
+  const [errors, setErrors] = useState({});
   const [categoriasOpciones, setCategoriasOpciones] = useState([]);
   const [motivosOpciones, setMotivosOpciones] = useState([]);
   const [form, setForm] = useState({
@@ -48,6 +49,21 @@ export default function AgregarDetalle({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
   const handleSubmit = () => {
+    const noRequeridos = ["horas", "antigAnos", "antigMeses"];
+    let newErrors = {};
+    Object.keys(form).forEach((campo) => {
+      if (!noRequeridos.includes(campo)) {
+        if (form[campo] === "" || form[campo] === null || form[campo] === undefined) {
+          newErrors[campo] = "Este campo es requerido";
+        }
+      }
+    });
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return; // No enviamos si hay errores
+    }
     const formData = { ...form };
     if (isBajaOModifOAdic) {
       formData.idPOF = form.idPOF;
@@ -222,8 +238,9 @@ export default function AgregarDetalle({
     <MDBox pb={3} px={3}>
       <Card>
         <Grid container spacing={3} p={2}>
+          {/* Tipo Movimiento */}
           <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.tipoMovimiento}>
               <InputLabel>Tipo Movimiento</InputLabel>
               <Select
                 name="tipoMovimiento"
@@ -244,17 +261,22 @@ export default function AgregarDetalle({
                   </MenuItem>
                 )}
               </Select>
+              {errors.tipoMovimiento && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.tipoMovimiento}</p>
+              )}
             </FormControl>
           </Grid>
+
+          {/* Alta */}
           {isAlta && (
             <>
               <Grid item xs={12} sm={4}>
-                <FormControl fullWidth>
+                <FormControl fullWidth error={!!errors.tipoDoc}>
                   <InputLabel>Tipo Doc.</InputLabel>
                   <Select
                     name="tipDoc"
                     label="TipoDoc"
-                    value={form.documentoOpciones}
+                    value={form.tipoDoc}
                     onChange={handleChange}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
                   >
@@ -264,11 +286,27 @@ export default function AgregarDetalle({
                       </MenuItem>
                     ))}
                   </Select>
+                  {errors.tipoDoc && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.tipoDoc}</p>
+                  )}
                 </FormControl>
               </Grid>
+
               <Grid item xs={12} sm={4}>
-                <TextField name="numDoc" label="Nro" fullWidth onChange={handleChange} />
+                <TextField
+                  name="numDoc"
+                  label="Nro"
+                  fullWidth
+                  onChange={handleChange}
+                  error={!!errors.numDoc}
+                  helperText={
+                    errors.numDoc && (
+                      <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.numDoc}</p>
+                    )
+                  }
+                />
               </Grid>
+
               <Grid item xs={12} sm={4}>
                 <TextField
                   name="apellido"
@@ -276,8 +314,15 @@ export default function AgregarDetalle({
                   fullWidth
                   value={form.apellido}
                   onChange={handleChange}
+                  error={!!errors.apellido}
+                  helperText={
+                    errors.apellido && (
+                      <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.apellido}</p>
+                    )
+                  }
                 />
               </Grid>
+
               <Grid item xs={12} sm={4}>
                 <TextField
                   name="nombre"
@@ -285,13 +330,21 @@ export default function AgregarDetalle({
                   fullWidth
                   value={form.nombre}
                   onChange={handleChange}
+                  error={!!errors.nombre}
+                  helperText={
+                    errors.nombre && (
+                      <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.nombre}</p>
+                    )
+                  }
                 />
               </Grid>
             </>
           )}
+
+          {/* Baja, Modif, Adic */}
           {isBajaOModifOAdic && (
             <Grid item xs={12}>
-              <FormControl fullWidth>
+              <FormControl fullWidth error={!!errors.docente}>
                 <InputLabel>Docente</InputLabel>
                 <Select
                   name="docente"
@@ -338,11 +391,16 @@ export default function AgregarDetalle({
                     </MenuItem>
                   )}
                 </Select>
+                {errors.docente && (
+                  <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.docente}</p>
+                )}
               </FormControl>
             </Grid>
           )}
+
+          {/* Sit. Revista */}
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.sitRevista}>
               <InputLabel>Sit.Revista</InputLabel>
               <Select
                 name="sitRevista"
@@ -357,10 +415,15 @@ export default function AgregarDetalle({
                   </MenuItem>
                 ))}
               </Select>
+              {errors.sitRevista && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.sitRevista}</p>
+              )}
             </FormControl>
           </Grid>
+
+          {/* Función */}
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.funcion}>
               <InputLabel>Función</InputLabel>
               <Select
                 name="idTipoFuncion"
@@ -389,8 +452,13 @@ export default function AgregarDetalle({
                   </MenuItem>
                 )}
               </Select>
+              {errors.funcion && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.funcion}</p>
+              )}
             </FormControl>
           </Grid>
+
+          {/* Rural */}
           <Grid item xs={12} sm={6}>
             <TextField
               name="rural"
@@ -401,8 +469,10 @@ export default function AgregarDetalle({
               disabled
             />
           </Grid>
+
+          {/* Turno */}
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.turno}>
               <InputLabel>Turno</InputLabel>
               <Select
                 name="turno"
@@ -417,10 +487,13 @@ export default function AgregarDetalle({
                   </MenuItem>
                 ))}
               </Select>
+              {errors.turno && <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.turno}</p>}
             </FormControl>
           </Grid>
+
+          {/* Categoría */}
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.categoria}>
               <InputLabel>Categoría</InputLabel>
               <Select
                 name="idTipoCategoria"
@@ -451,12 +524,18 @@ export default function AgregarDetalle({
                   </MenuItem>
                 )}
               </Select>
+              {errors.categoria && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.categoria}</p>
+              )}
             </FormControl>
           </Grid>
+
+          {/* Horas */}
           <Grid item xs={12} sm={6}>
             <TextField name="horas" label="Horas" type="number" fullWidth onChange={handleChange} />
           </Grid>
 
+          {/* Antigüedad */}
           <Grid item xs={6} sm={3}>
             <TextField
               name="antigAnos"
@@ -478,8 +557,9 @@ export default function AgregarDetalle({
             />
           </Grid>
 
+          {/* Observaciones predefinidas */}
           <Grid item xs={12}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={!!errors.observaciones}>
               <InputLabel>Observaciones predefinidas</InputLabel>
               <Select
                 value={observacionSeleccionada}
@@ -503,8 +583,13 @@ export default function AgregarDetalle({
                   </MenuItem>
                 )}
               </Select>
+              {errors.observaciones && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.observaciones}</p>
+              )}
             </FormControl>
           </Grid>
+
+          {/* Observaciones */}
           <Grid item xs={12}>
             <TextField
               name="observaciones"
@@ -514,8 +599,16 @@ export default function AgregarDetalle({
               rows={3}
               value={form.observaciones}
               onChange={handleChange}
+              error={!!errors.observaciones}
+              helperText={
+                errors.observaciones && (
+                  <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.observaciones}</p>
+                )
+              }
             />
           </Grid>
+
+          {/* Baja */}
           {isBaja && (
             <>
               <Grid item xs={12} sm={6}>
@@ -527,6 +620,12 @@ export default function AgregarDetalle({
                   InputLabelProps={{ shrink: true }}
                   value={form.fechaInicioBaja}
                   onChange={handleChange}
+                  error={!!errors.fechaInicioBaja}
+                  helperText={
+                    errors.fechaInicioBaja && (
+                      <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.fechaInicioBaja}</p>
+                    )
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -538,10 +637,16 @@ export default function AgregarDetalle({
                   InputLabelProps={{ shrink: true }}
                   value={form.fechaFinBaja}
                   onChange={handleChange}
+                  error={!!errors.fechaFinBaja}
+                  helperText={
+                    errors.fechaFinBaja && (
+                      <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.fechaFinBaja}</p>
+                    )
+                  }
                 />
               </Grid>
               <Grid item xs={12}>
-                <FormControl fullWidth>
+                <FormControl fullWidth error={!!errors.motivoBaja}>
                   <InputLabel>Motivo de Baja</InputLabel>
                   <Select
                     name="idMotivoBaja"
@@ -562,10 +667,15 @@ export default function AgregarDetalle({
                       </MenuItem>
                     )}
                   </Select>
+                  {errors.motivoBaja && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.motivoBaja}</p>
+                  )}
                 </FormControl>
               </Grid>
             </>
           )}
+
+          {/* Botón */}
           <Grid item xs={12} display="flex" justifyContent="flex-end">
             <MDButton onClick={handleSubmit} size="small" color="info" variant="contained">
               Agregar Detalle
