@@ -36,25 +36,36 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (idPof) {
+    if (isOpen && idPof) {
       const fetchData = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`${process.env.REACT_APP_API_URL}pof/GetById?id=${idPof}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
+          // 1. Cargar datos principales del POF
+          const pofResponse = await fetch(
+            `${process.env.REACT_APP_API_URL}pof/GetById?id=${idPof}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const pofData = await pofResponse.json();
+          // 2. Cargar barras actualizadas
+          const barrasResponse = await fetch(
+            `${process.env.REACT_APP_API_URL}POF/GetPOFBarras?idPOF=${idPof}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const barrasData = await barrasResponse.json();
           setFormData({
-            secuencia: data.secuencia || "",
-            tipoCargo: data.tipoCargo || "",
-            idFuncion: data.idFuncion || "",
-            idCategoria: data.idCategoria || "",
-            idCarRevista: data.idCarRevista || "",
-            idEstablecimiento: data.establecimiento?.idEstablecimiento || "",
-            idPersona: data.idPersona || null,
-            vigente: data.vigente || "",
+            secuencia: pofData.secuencia || "",
+            tipoCargo: pofData.tipoCargo || "",
+            idFuncion: pofData.idFuncion || "",
+            idCategoria: pofData.idCategoria || "",
+            idCarRevista: pofData.idCarRevista || "",
+            idEstablecimiento: pofData.establecimiento?.idEstablecimiento || "",
+            idPersona: pofData.idPersona || null,
+            vigente: pofData.vigente || "",
           });
-          setEstablecimientoNombre(data.establecimiento?.nroEstablecimiento || "");
+          setEstablecimientoNombre(pofData.establecimiento?.nroEstablecimiento || "");
+          setBarras(barrasData);
           setLoading(false);
         } catch (error) {
           console.error("Error al obtener los datos:", error);
@@ -62,71 +73,62 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
         }
       };
 
-      const fetchCategorias = async () => {
-        try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          const categoriasVigentes = data
-            .filter((categoria) => categoria.vigente === "S")
-            .sort((a, b) => a.descripcion.localeCompare(b.descripcion));
-          setCategorias(categoriasVigentes);
-        } catch (error) {
-          console.error("Error al cargar categorías:", error);
-        }
-      };
-
-      const fetchCarRevistas = async () => {
-        try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}CarRevista/getall`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          const carRevistaVigentes = data
-            .filter((carRevista) => carRevista.vigente === "S")
-            .sort((a, b) => a.descripcion.localeCompare(b.descripcion)); // Ordenar alfabéticamente
-          setCarRevista(carRevistaVigentes);
-        } catch (error) {
-          console.error("Error al cargar cargos de revista:", error);
-        }
-      };
-      const fetchBarras = async () => {
-        try {
-          const response = await fetch(
-            `${process.env.REACT_APP_API_URL}POF/GetPOFBarras?idPOF=${idPof}`,
-            {
+      // 3. Cargar datos complementarios (solo se necesitan una vez)
+      const fetchComplementaryData = async () => {
+        const fetchCategorias = async () => {
+          try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
               headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          const dataBarras = await response.json();
-          setBarras(dataBarras);
-        } catch (error) {
-          console.error("Error al cargar barras:", error);
-        }
-      };
-      const fetchFuncion = async () => {
-        try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}TiposFunciones/getall`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          const funcionesVigentes = data
-            .filter((funcion) => funcion.vigente === "S")
-            .sort((a, b) => a.descripcion.localeCompare(b.descripcion)); // Ordenar alfabéticamente
-          setFuncion(funcionesVigentes);
-        } catch (error) {
-          console.error("Error al cargar funciones:", error);
-        }
+            });
+            const data = await response.json();
+            const categoriasVigentes = data
+              .filter((categoria) => categoria.vigente === "S")
+              .sort((a, b) => a.descripcion.localeCompare(b.descripcion));
+            setCategorias(categoriasVigentes);
+          } catch (error) {
+            console.error("Error al cargar categorías:", error);
+          }
+        };
+
+        const fetchCarRevistas = async () => {
+          try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}CarRevista/getall`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            const carRevistaVigentes = data
+              .filter((carRevista) => carRevista.vigente === "S")
+              .sort((a, b) => a.descripcion.localeCompare(b.descripcion));
+            setCarRevista(carRevistaVigentes);
+          } catch (error) {
+            console.error("Error al cargar cargos de revista:", error);
+          }
+        };
+
+        const fetchFuncion = async () => {
+          try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}TiposFunciones/getall`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            const funcionesVigentes = data
+              .filter((funcion) => funcion.vigente === "S")
+              .sort((a, b) => a.descripcion.localeCompare(b.descripcion));
+            setFuncion(funcionesVigentes);
+          } catch (error) {
+            console.error("Error al cargar funciones:", error);
+          }
+        };
+
+        fetchFuncion();
+        fetchCarRevistas();
+        fetchCategorias();
       };
 
       fetchData();
-      fetchFuncion();
-      fetchBarras();
-      fetchCarRevistas();
-      fetchCategorias();
+      fetchComplementaryData();
     }
-  }, [idPof, token]);
+  }, [isOpen, idPof, token]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
