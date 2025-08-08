@@ -321,7 +321,7 @@ export default function App() {
     {
       path: "/PlantaFuncionalSec",
       component: PlantaFuncionalSec,
-      roles: ["admin", "superadmin", "secretario"],
+      roles: ["secretario"],
     },
 
     //----------------------------------Rutas de Ver mas
