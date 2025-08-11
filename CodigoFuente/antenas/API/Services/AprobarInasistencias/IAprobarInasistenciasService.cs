@@ -7,26 +7,12 @@ namespace API.Services
     public interface IAprobarInasistenciasService
     {
         Task<List<MEC_InasistenciasDetalle>> ObtenerDetallesPendientes();
-        Task<bool> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes);
-        Task<bool> CheckIfExists(string anio, string mes, int idTipo, string ordenPago); // Método para verificar duplicados
-        Task ProcesarTMPInasistencias(int idCabeceraLiquidacion, int idCabeceraInasistencia, int idEstablecimiento, string UE);
-        Task<List<MEC_InasistenciasCabecera>> ObtenerCabecerasHabilitadasAsync();
-        Task<(bool Exito, string? Mensaje)> DevolverAEstablecimientoAsync(
-                                                                            int idCabecera,
-                                                                            int usuario,
-                                                                            string motivoRechazo);
+        Task<bool> AceptarInas(int idInasDetalle);
+        Task<bool> RechazarInas(int idInasDetalle, string observaciones);
+        Task<bool> AgregarDetalle(MEC_InasistenciasDetalle detalle);
+        Task<List<MEC_InasistenciasDetalle>> ObtenerInasEduc(int idInasistenciaCabecera);
+        Task<bool> EnviarInas(List<int> idInasistencias);
+        Task<bool> EnviarEduc(int idCabecera, string observaciones);
 
-        Task<(bool Exito, string? Mensaje)> CorregidoEducacion(int? idCabecera);
-        Task<List<InasistenciaCabeceraDTO>> ObtenerCabeceraInasistenciasAsync(int idUsuario);
-        Task<DetalleRechazos> ObtenerDetalleYRechazosPorCabeceraAsync(int idCabecera);
-        Task<List<MecanizadasDTO>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento);
-        Task<(bool Exito, string? Mensaje)> GuardarInasistenciaAsync(MEC_InasistenciasDetalle inasistencia);
-        Task<InasistenciaCabeceraDTO?> ObtenerInasistenciaPorPeriodoAsync(int idEstablecimiento, int anio, int mes);
-        Task<List<CabeceraInasistenciaDTO>> ObtenerCabecerasInas(int idCabecera);
-        Task<List<InasistenciasDetalleDTO>> DetalleInasistencia(int idEstablecimiento, int idInasistenciaCabecera);
-        Task<bool> EnviarInas(int idInasistenciaCabecera, string observaciones);
-        
-
-
-        }
+    }
 }

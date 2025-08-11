@@ -38,6 +38,8 @@ namespace API.Services
             // Buscar la cabecera de inasistencias que coincida con establecimiento, año y mes
             var cabecera = await _context.MEC_InasistenciasCabecera
                 .Include(c => c.Detalle) // Cargar detalles relacionados
+                .Include(c => c.Cabecera)
+                .ThenInclude(cl => cl.TipoLiquidacion)
                 .FirstOrDefaultAsync(c => c.IdEstablecimiento == idEstablecimiento
                                        && c.Anio == anio
                                        && c.Mes == mes);
@@ -55,6 +57,7 @@ namespace API.Services
                 IdEstablecimiento = cabecera.IdEstablecimiento,
                 IdCabecera = cabecera.IdCabecera,
                 Confecciono = cabecera.Confecciono,
+                Descripcion = cabecera.Cabecera?.TipoLiquidacion?.Descripcion,
                 Mes = cabecera.Mes,
                 Anio = cabecera.Anio,
                 FechaApertura = cabecera.FechaApertura,
