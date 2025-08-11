@@ -95,6 +95,30 @@ namespace API.Services
             if (registros == null || !registros.Any())
                 throw new Exception("El JSON no contenía registros válidos.");
 
+            // 1. Borrar primero tabla de errores (dependiente)
+            await _context.Database.ExecuteSqlRawAsync("DELETE FROM \"MEC_TMPErroresInasistenciasDetalle\"");
+
+            // 2. Borrar tabla principal
+            await _context.Database.ExecuteSqlRawAsync("DELETE FROM \"MEC_TMPInasistenciasDetalle\"");
+
+            // 3. Reiniciar secuencias
+            await _context.Database.ExecuteSqlRawAsync(
+                @"DO $$
+            DECLARE seq_name text;
+            BEGIN
+                SELECT pg_get_serial_sequence('""MEC_TMPInasistenciasDetalle""', 'IdTMPInasistenciasDetalle')
+                INTO seq_name;
+                IF seq_name IS NOT NULL THEN
+                    EXECUTE format('ALTER SEQUENCE %s RESTART WITH 1', seq_name);
+                END IF;
+
+                SELECT pg_get_serial_sequence('""MEC_TMPErroresInasistenciasDetalle""', 'IdTMPErrorInasistencia')
+                INTO seq_name;
+                IF seq_name IS NOT NULL THEN
+                    EXECUTE format('ALTER SEQUENCE %s RESTART WITH 1', seq_name);
+                END IF;
+            END$$;");
+
             var entidades = registros.Select(dto => new MEC_TMPInasistenciasDetalle
             {
                 IdCabecera = idCabecera,

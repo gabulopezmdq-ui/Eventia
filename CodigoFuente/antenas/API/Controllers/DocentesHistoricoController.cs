@@ -54,7 +54,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpPost("importar-desde-historico")]
+        [HttpPost("ImportarInas")]
         public async Task<IActionResult> ImportarDesdeHistorico(
             [FromQuery] string desde,
             [FromQuery] string hasta,
