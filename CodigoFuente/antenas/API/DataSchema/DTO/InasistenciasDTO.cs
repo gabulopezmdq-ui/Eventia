@@ -51,6 +51,7 @@ public class InasistenciaCabeceraDTO
     public int IdInasistenciaCabecera { get; set; }
     public int IdEstablecimiento { get; set; }
     public int IdCabecera { get; set; }
+    public string? Descripcion { get; set; }
     public int Confecciono { get; set; }
     public int? Mes { get; set; }
     public int? Anio { get; set; }
