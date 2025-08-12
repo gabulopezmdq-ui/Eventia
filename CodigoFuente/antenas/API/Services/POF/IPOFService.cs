@@ -22,5 +22,6 @@ namespace API.Services
         Task<MEC_POF_Antiguedades> CreateOrUpdateAsync(MEC_POF_Antiguedades data);
         Task<List<MEC_POF_Barras>> GetBarrasPOF(int idPOF);
         Task<POFBarraResultado> AddBarraAsync(POFBarraDTO dto);
+        Task<bool> EliminarBarraAsync(EliminarBarraDTO dto);
     }
 }

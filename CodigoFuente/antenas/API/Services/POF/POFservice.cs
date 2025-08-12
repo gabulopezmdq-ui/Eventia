@@ -176,7 +176,18 @@ namespace API.Services
 
             return resultado;
         }
+        public async Task<bool> EliminarBarraAsync(EliminarBarraDTO dto)
+        {
+            var barra = await _context.MEC_POF_Barras.FindAsync(dto.IdPOFBarra);
 
+            if (barra == null || barra.IdPOF != dto.IdPOF)
+                return false;
+
+            _context.MEC_POF_Barras.Remove(barra);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
 
     }
 }
