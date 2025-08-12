@@ -599,7 +599,7 @@ function PlantaFuncional() {
               </Grid>
               <Card>
                 {dataTableData.length > 0 && (
-                  <MDBox display="flex" justifyContent="flex-end" mt={2} mr={4}>
+                  <MDBox display="flex" justifyContent="flex-end" mb={1}>
                     <MDButton
                       variant="gradient"
                       color="success"

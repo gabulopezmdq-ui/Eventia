@@ -52,6 +52,7 @@
     "react-chartjs-2": "5.2.0",
     "react-dom": "18.2.0",
     "react-draft-wysiwyg": "^1.15.0",
+    "react-export-table-to-excel": "^1.0.6",
     "react-flatpickr": "3.10.13",
     "react-github-btn": "1.4.0",
     "react-images-viewer": "1.7.1",
