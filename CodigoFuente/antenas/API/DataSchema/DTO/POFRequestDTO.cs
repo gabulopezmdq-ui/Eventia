@@ -23,6 +23,12 @@ namespace API.DataSchema.DTO
         public List<int> Barra { get; set; }
     }
 
+    public class EliminarBarraDTO
+    {
+        public int IdPOF { get; set; }
+        public int IdPOFBarra { get; set; }
+    }
+
     public class POFBarraResultado
     {
         public List<int> BarrasAgregadas { get; set; } = new();
