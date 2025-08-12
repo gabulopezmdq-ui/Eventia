@@ -6,6 +6,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import MDAlert from "components/MDAlert";
+import TablaInasistenciasDetalle from "../DetalleTabla/index";
 import DataTable from "examples/Tables/DataTable";
 import Card from "@mui/material/Card";
 import MDTypography from "components/MDTypography";
@@ -217,8 +218,8 @@ function CargarInasistencia() {
           <DataTable
             table={{
               columns: [
-                { Header: "Año", accessor: "anio" },
                 { Header: "Mes", accessor: "mes" },
+                { Header: "Año", accessor: "anio" },
                 {
                   Header: "Acciones",
                   accessor: "acciones",
@@ -240,7 +241,7 @@ function CargarInasistencia() {
                         row.original.mes === mesSeleccionado && (
                           <MDButton
                             variant="gradient"
-                            color="warning"
+                            color="success"
                             size="small"
                             onClick={handleGenerarCabecera}
                           >
@@ -258,6 +259,7 @@ function CargarInasistencia() {
           />
         </Card>
       )}
+      {inasistencias && <TablaInasistenciasDetalle inasistencias={inasistencias} />}
     </DashboardLayout>
   );
 }
