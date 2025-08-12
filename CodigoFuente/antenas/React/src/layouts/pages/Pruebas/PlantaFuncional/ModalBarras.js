@@ -78,18 +78,15 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
     if (!barraAEliminar) return;
 
     try {
-      await axios.delete(
-        `${process.env.REACT_APP_API_URL}POF/DeleteBarra?idPOFBarra=${idPofBarra}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          data: {
-            idPof,
-            barra: barraAEliminar.value,
-          },
-        }
-      );
+      await axios.delete(`${process.env.REACT_APP_API_URL}POF/DeleteBarra`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          idPof,
+          barra: barraAEliminar.value,
+        },
+      });
 
       setBarrasList((prev) => prev.filter((b) => b !== barraAEliminar.value));
       setBarrasIniciales((prev) => prev.filter((b) => b !== barraAEliminar.value));

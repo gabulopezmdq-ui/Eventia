@@ -202,9 +202,12 @@ namespace API.Controllers
         }
 
         [HttpDelete("DeleteBarra")]
-        public async Task<IActionResult> DeleteBarra([FromQuery] int idPOFBarra)
+        public async Task<IActionResult> DeleteBarra([FromBody] EliminarBarraDTO dto)
         {
-            await _pofBarrasGenerico.Delete(idPOFBarra);
+            var resultado = await _pofService.EliminarBarraAsync(dto);
+            if (!resultado)
+                return NotFound("La barra no existe o no coincide con IdPOF.");
+
             return Ok();
         }
     }
