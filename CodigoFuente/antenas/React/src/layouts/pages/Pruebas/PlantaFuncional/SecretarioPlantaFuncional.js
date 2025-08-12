@@ -18,8 +18,6 @@ import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
 import jwt_decode from "jwt-decode";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 function SecretarioPlantaFuncional() {
   const [establecimientos, setEstablecimientos] = useState([]);
@@ -71,37 +69,6 @@ function SecretarioPlantaFuncional() {
 
   const handleChange = (event) => {
     setSelectedEstablecimiento(event.target.value);
-  };
-  const exportToExcel = () => {
-    if (pofData.length === 0) return;
-
-    // Transformamos los datos para que sean más legibles en Excel (opcional)
-    const dataForExcel = pofData.map((row) => ({
-      Apellido: row.persona.apellido,
-      Nombre: row.persona.nombre,
-      DNI: row.persona.dni,
-      Legajo: row.persona.legajo,
-      Secuencia: row.secuencia,
-      "Tipo Cargo": row.tipoCargo,
-      Vigente: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
-    }));
-
-    // Creamos una hoja de cálculo
-    const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
-
-    // Creamos un libro y añadimos la hoja
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
-
-    // Convertimos el libro a un archivo binario
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    // Creamos un blob y lanzamos la descarga
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, "POF_Data.xlsx");
   };
 
   const handleCargar = async () => {
@@ -162,18 +129,6 @@ function SecretarioPlantaFuncional() {
       </MDBox>
       {pofData.length > 0 && (
         <Card sx={{ mt: 4 }}>
-          <MDBox display="flex" justifyContent="flex-end" mt={2} mr={4}>
-            <MDButton
-              variant="gradient"
-              color="success"
-              size="small"
-              onClick={exportToExcel}
-              disabled={pofData.length === 0}
-              style={{ marginLeft: "1rem" }}
-            >
-              Descargar Excel
-            </MDButton>
-          </MDBox>
           <DataTable
             table={{
               columns: [
