@@ -141,7 +141,7 @@ namespace API.Services
         //getpof barras
         public async Task<List<MEC_POF_Barras>> GetBarrasPOF(int idPOF)
         {
-            return await _context.MEC_POF_Barras.Where(a => a.IdPOF == idPOF).ToListAsync();
+            return await _context.MEC_POF_Barras.Where(a => a.IdPOF == idPOF && a.Vigente == "S").ToListAsync();
         }
 
         public async Task<POFBarraResultado> AddBarraAsync(POFBarraDTO dto)
@@ -151,25 +151,33 @@ namespace API.Services
             if (dto == null || dto.Barra == null || dto.Barra.Count == 0)
                 return resultado;
 
-            foreach (var barra in dto.Barra)
+            foreach (var barraDto in dto.Barra)
             {
+                // Convertís barra a entero, por si viene como string
+                if (!int.TryParse(barraDto.Barra, out int barraInt))
+                {
+                    // Opcional: podés registrar error o saltar
+                    continue;
+                }
+
                 bool existe = await _context.MEC_POF_Barras
-                    .AnyAsync(b => b.IdPOF == dto.IdPOF && b.Barra == barra);
+                    .AnyAsync(b => b.IdPOF == dto.IdPOF && b.Barra == barraInt);
 
                 if (existe)
                 {
-                    resultado.BarrasDuplicadas.Add(barra);
+                    resultado.BarrasDuplicadas.Add(barraInt);
                     continue;
                 }
 
                 var nuevaBarra = new MEC_POF_Barras
                 {
                     IdPOF = dto.IdPOF,
-                    Barra = barra
+                    Barra = barraInt,
+                    Vigente = "S"
                 };
 
                 _context.MEC_POF_Barras.Add(nuevaBarra);
-                resultado.BarrasAgregadas.Add(barra);
+                resultado.BarrasAgregadas.Add(barraInt);
             }
 
             await _context.SaveChangesAsync();
@@ -183,7 +191,8 @@ namespace API.Services
             if (barra == null || barra.IdPOF != dto.IdPOF)
                 return false;
 
-            _context.MEC_POF_Barras.Remove(barra);
+            barra.Vigente = "N";
+
             await _context.SaveChangesAsync();
 
             return true;

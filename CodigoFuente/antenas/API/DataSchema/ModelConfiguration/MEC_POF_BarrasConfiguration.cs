@@ -19,6 +19,10 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.Barra)
                 .IsRequired();
 
+            // Definir propiedades de la entidad
+            builder.Property(e => e.Vigente)
+                .IsRequired();
+
             // Configurar la relación con la entidad MEC_POF
             builder
                 .HasOne(p => p.POF)

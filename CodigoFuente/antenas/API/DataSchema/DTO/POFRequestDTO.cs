@@ -17,10 +17,17 @@ namespace API.DataSchema.DTO
         public string Legajo { get; set; }
     }
 
+    public class BarraDTO
+    {
+        public int? IdPOFBarra { get; set; }
+        public int IdPOF { get; set; }
+        public string Barra { get; set; }
+    }
+
     public class POFBarraDTO
     {
         public int IdPOF { get; set; }
-        public List<int> Barra { get; set; }
+        public List<BarraDTO> Barra { get; set; }
     }
 
     public class EliminarBarraDTO

@@ -7,6 +7,7 @@ namespace API.DataSchema
         public int IdPOFBarra { get; set; }
         public int IdPOF { get; set; }
         public int Barra { get; set; }
+        public string Vigente { get; set; }
 
         // Propiedades de navegación
         public virtual MEC_POF? POF { get; set; }
