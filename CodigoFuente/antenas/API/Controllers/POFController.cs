@@ -200,5 +200,12 @@ namespace API.Controllers
         { 
             return Ok(await _pofService.GetBarrasPOF(idPOF));
         }
+
+        [HttpDelete("DeleteBarra")]
+        public async Task<IActionResult> DeleteBarra([FromQuery] int idPOFBarra)
+        {
+            await _pofBarrasGenerico.Delete(idPOFBarra);
+            return Ok();
+        }
     }
 }

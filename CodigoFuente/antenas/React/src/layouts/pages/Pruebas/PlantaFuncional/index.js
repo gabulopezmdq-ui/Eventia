@@ -20,8 +20,6 @@ import DataTable from "examples/Tables/DataTable";
 import EditarModal from "./EditarModal";
 import ModalBarras from "./ModalBarras";
 import FormField from "layouts/pages/account/components/FormField";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 function PlantaFuncional() {
   const [establecimientos, setEstablecimientos] = useState([]);
@@ -48,7 +46,6 @@ function PlantaFuncional() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalBarrasOpen, setIsModalBarrasOpen] = useState(false);
   const [selectedIdPof, setSelectedIdPof] = useState(null);
-  const [dataTableData, setDataTableData] = useState([]);
   const [formData, setFormData] = useState({
     apellido: "",
     nombre: "",
@@ -86,18 +83,6 @@ function PlantaFuncional() {
     };
     fetchEstablecimientos();
   }, [token]);
-
-  const handleDownloadExcel = () => {
-    if (personas.length === 0) return; // evita exportar si no hay datos
-    const worksheet = XLSX.utils.json_to_sheet(personas);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Datos");
-    const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([wbout], {
-      type: "application/vnd.openxmlformats‑officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, "Personas.xlsx");
-  };
 
   const handleChange = (event) => {
     const selectedId = event.target.value;
@@ -139,17 +124,17 @@ function PlantaFuncional() {
         }
       );
       const personasData = response.data.map((item) => ({
-        apellido: item.persona.apellido,
         nombre: item.persona.nombre,
+        apellido: item.persona.apellido,
         dni: item.persona.dni,
         legajo: item.persona.legajo,
         secuencia: item.secuencia,
         tipoCargo: item.tipoCargo,
+        idPof: item.idPOF,
         vigente: item.vigente,
         barras: item.barras || [],
       }));
       setPersonas(personasData);
-      setDataTableData(personasData); // <-- AÑADE ESTA LÍNEA
     } catch (error) {
       console.error("Error al cargar los datos:", error);
       setAlertMessage("Hubo un error al cargar los datos");
@@ -598,18 +583,6 @@ function PlantaFuncional() {
                 </FormControl>
               </Grid>
               <Card>
-                {dataTableData.length > 0 && (
-                  <MDBox display="flex" justifyContent="flex-end" mb={1}>
-                    <MDButton
-                      variant="gradient"
-                      color="success"
-                      size="small"
-                      onClick={handleDownloadExcel}
-                    >
-                      Descargar Excel
-                    </MDButton>
-                  </MDBox>
-                )}
                 <DataTable
                   table={{
                     columns: [
