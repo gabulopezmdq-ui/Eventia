@@ -38,7 +38,12 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
           }
         );
 
-        const barrasExistentes = response.data.map((item) => item.barra?.toString());
+        const barrasExistentes = response.data.map((item) => ({
+          idPOFBarra: item.idPOFBarra,
+          idPOF: item.idPOF,
+          barra: item.barra?.toString(),
+        }));
+        console.log("barrasExistentes: ", barrasExistentes);
         setBarrasList(barrasExistentes || []);
         setBarrasIniciales(barrasExistentes || []);
       } catch (error) {
@@ -53,22 +58,20 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
 
   const handleAgregarBarra = () => {
     const nuevaBarra = currentBarra.trim();
-    if (nuevaBarra !== "" && !barrasList.includes(nuevaBarra)) {
-      setBarrasList([...barrasList, nuevaBarra]);
+    if (nuevaBarra !== "" && !barrasList.some((b) => b.barra === nuevaBarra)) {
+      setBarrasList([...barrasList, { idPOFBarra: null, idPOF: idPof, barra: nuevaBarra }]);
       setCurrentBarra("");
     }
   };
 
   const handleEliminarBarra = (index) => {
     const barra = barrasList[index];
-    const esDelBackend = barrasIniciales.includes(barra);
+    const esDelBackend = barra.idPOFBarra !== null; // Si tiene idPOFBarra es del backend
 
     if (esDelBackend) {
-      // Guardamos la barra que queremos eliminar y abrimos el modal de confirmación
-      setBarraAEliminar({ index, value: barra });
+      setBarraAEliminar(barra);
       setConfirmOpen(true);
     } else {
-      // Si no es del backend, la eliminamos directamente
       const newList = [...barrasList];
       newList.splice(index, 1);
       setBarrasList(newList);
@@ -84,12 +87,12 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
         },
         data: {
           idPof,
-          barra: barraAEliminar.value,
+          idPOFBarra: barraAEliminar.idPOFBarra,
         },
       });
 
-      setBarrasList((prev) => prev.filter((b) => b !== barraAEliminar.value));
-      setBarrasIniciales((prev) => prev.filter((b) => b !== barraAEliminar.value));
+      setBarrasList((prev) => prev.filter((b) => b.idPOFBarra !== barraAEliminar.idPOFBarra));
+      setBarrasIniciales((prev) => prev.filter((b) => b.idPOFBarra !== barraAEliminar.idPOFBarra));
     } catch (error) {
       console.error("Error al eliminar la barra del backend:", error);
     } finally {
@@ -170,8 +173,8 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
               <Stack direction="row" spacing={1} mt={1} flexWrap="wrap" useFlexGap>
                 {barrasList.map((barra, index) => (
                   <Chip
-                    key={index}
-                    label={barra}
+                    key={barra.idPOFBarra || `new-${index}`}
+                    label={barra.barra}
                     onDelete={() => handleEliminarBarra(index)}
                     sx={{ mb: 1 }}
                   />
@@ -206,7 +209,7 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={confirmarEliminacion}
-        message={`¿Estás seguro que querés eliminar la barra "${barraAEliminar?.value}" de forma permanente?`}
+        message={`¿Estás seguro que querés eliminar la barra "${barraAEliminar?.barra}" de forma permanente?`}
       />
     </>
   );
