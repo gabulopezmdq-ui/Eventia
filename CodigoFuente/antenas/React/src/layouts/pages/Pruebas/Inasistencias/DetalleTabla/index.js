@@ -4,6 +4,8 @@ import MDBox from "components/MDBox";
 import Card from "@mui/material/Card";
 import DataTable from "examples/Tables/DataTable";
 import MDButton from "components/MDButton";
+import MDAlert from "components/MDAlert";
+import MDTypography from "components/MDTypography";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 import InasistenciaModal from "../DetalleTabla/PopUp/InasistenciaModal";
@@ -14,6 +16,7 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
 
   const handleOpenModal = (row) => {
     setSelectedRow({ ...row, idCabecera: inasistencias.idCabecera });
@@ -33,22 +36,32 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
 
       const url = `${process.env.REACT_APP_API_URL}docentesHistorico/ImportarInas`;
 
-      // Pasamos los parámetros en un objeto 'params' para que axios arme el query string
       const response = await axios.post(url, null, {
         params: {
           desde: desdeStr,
           hasta: hastaStr,
-          idCabecera: idCabecera,
+          idCabecera,
           idInasistenciasCabecera: idInasistenciaCabecera,
         },
       });
 
       if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
 
-      const data = response.data;
-      console.log("Respuesta:", data);
+      console.log("Respuesta:", response.data);
 
+      // Solo cerrar el modal si la respuesta fue correcta
       handleCloseModal();
+      setErrorAlert({
+        show: true,
+        message: response.data,
+        type: "success",
+      });
+      setTimeout(() => {
+        setErrorAlert((prev) => ({
+          ...prev,
+          show: false,
+        }));
+      }, 4000);
     } catch (error) {
       console.error(error);
       alert("Error al cargar inasistencias: " + error.message);
@@ -114,7 +127,20 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
           </CardContent>
         </Card>
       </MDBox>
-      <MDBox mt={3}>
+      {errorAlert.show && (
+        <Grid container justifyContent="center">
+          <Grid item xs={12} lg={12}>
+            <MDBox pt={2}>
+              <MDAlert color={errorAlert.type} dismissible>
+                <MDTypography variant="body2" color="white">
+                  {errorAlert.message}
+                </MDTypography>
+              </MDAlert>
+            </MDBox>
+          </Grid>
+        </Grid>
+      )}
+      <MDBox mt={1}>
         <Card>
           <DataTable
             table={{

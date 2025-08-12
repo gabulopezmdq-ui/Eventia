@@ -5,7 +5,8 @@ import DialogContent from "@mui/material/DialogContent";
 import MDButton from "components/MDButton";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
-
+import CircularProgress from "@mui/material/CircularProgress";
+import Box from "@mui/material/Box";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -36,7 +37,6 @@ const InasistenciaModal = ({ open, onClose, onConfirm, mes, anio, initialData, i
   return (
     <Dialog open={open} onClose={isLoading ? null : onClose}>
       <DialogContent pt={3} sx={{ display: "flex", gap: 2 }}>
-        {isLoading && <Typography align="center">Cargando inasistencias...</Typography>}
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
           <DatePicker
             label="Desde"
@@ -56,6 +56,14 @@ const InasistenciaModal = ({ open, onClose, onConfirm, mes, anio, initialData, i
           />
         </LocalizationProvider>
       </DialogContent>
+      {isLoading && (
+        <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+          <CircularProgress color="info" size={16} />
+          <Typography variant="body2" color="text.secondary">
+            Cargando inasistencias...
+          </Typography>
+        </Box>
+      )}
       <DialogActions>
         <MDButton size="small" variant="text" color="error" onClick={onClose}>
           Cancelar
@@ -66,7 +74,6 @@ const InasistenciaModal = ({ open, onClose, onConfirm, mes, anio, initialData, i
           color="success"
           onClick={() => {
             onConfirm({ ...initialData, fechaDesde, fechaHasta });
-            onClose();
           }}
           disabled={!fechaDesde || !fechaHasta || fechaHasta.isBefore(fechaDesde) || isLoading}
         >
