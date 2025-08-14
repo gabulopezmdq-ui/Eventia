@@ -159,7 +159,7 @@ namespace API.Services
                 }
 
                 bool existe = await _context.MEC_POF_Barras
-                    .AnyAsync(b => b.IdPOF == dto.IdPOF && b.Barra == barraInt);
+                    .AnyAsync(b => b.IdPOF == dto.IdPOF && b.Barra == barraInt && b.Vigente == "S");
 
                 if (existe)
                 {
