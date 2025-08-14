@@ -20,8 +20,6 @@ import DataTable from "examples/Tables/DataTable";
 import EditarModal from "./EditarModal";
 import ModalBarras from "./ModalBarras";
 import FormField from "layouts/pages/account/components/FormField";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 function PlantaFuncional() {
   const [establecimientos, setEstablecimientos] = useState([]);
@@ -139,17 +137,17 @@ function PlantaFuncional() {
         }
       );
       const personasData = response.data.map((item) => ({
-        apellido: item.persona.apellido,
         nombre: item.persona.nombre,
+        apellido: item.persona.apellido,
         dni: item.persona.dni,
         legajo: item.persona.legajo,
         secuencia: item.secuencia,
         tipoCargo: item.tipoCargo,
+        idPof: item.idPOF,
         vigente: item.vigente,
         barras: item.barras || [],
       }));
       setPersonas(personasData);
-      setDataTableData(personasData); // <-- AÑADE ESTA LÍNEA
     } catch (error) {
       console.error("Error al cargar los datos:", error);
       setAlertMessage("Hubo un error al cargar los datos");
