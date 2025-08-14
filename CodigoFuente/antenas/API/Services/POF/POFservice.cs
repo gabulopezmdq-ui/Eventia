@@ -153,10 +153,8 @@ namespace API.Services
 
             foreach (var barraDto in dto.Barra)
             {
-                // Convertís barra a entero, por si viene como string
                 if (!int.TryParse(barraDto.Barra, out int barraInt))
                 {
-                    // Opcional: podés registrar error o saltar
                     continue;
                 }
 
