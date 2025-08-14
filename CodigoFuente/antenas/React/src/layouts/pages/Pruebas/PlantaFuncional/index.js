@@ -20,6 +20,8 @@ import DataTable from "examples/Tables/DataTable";
 import EditarModal from "./EditarModal";
 import ModalBarras from "./ModalBarras";
 import FormField from "layouts/pages/account/components/FormField";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 function PlantaFuncional() {
   const [establecimientos, setEstablecimientos] = useState([]);
@@ -148,6 +150,7 @@ function PlantaFuncional() {
         barras: item.barras || [],
       }));
       setPersonas(personasData);
+      setDataTableData(personasData); // 👈 esto habilita el botón
     } catch (error) {
       console.error("Error al cargar los datos:", error);
       setAlertMessage("Hubo un error al cargar los datos");
@@ -403,6 +406,37 @@ function PlantaFuncional() {
         console.error("Error al cargar Funciones:", error);
       }
     };
+    const exportToExcel = () => {
+      if (pofData.length === 0) return;
+
+      // Transformamos los datos para que sean más legibles en Excel (opcional)
+      const dataForExcel = pofData.map((row) => ({
+        Apellido: row.persona.apellido,
+        Nombre: row.persona.nombre,
+        DNI: row.persona.dni,
+        Legajo: row.persona.legajo,
+        Secuencia: row.secuencia,
+        "Tipo Cargo": row.tipoCargo,
+        Vigente: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
+      }));
+
+      // Creamos una hoja de cálculo
+      const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+
+      // Creamos un libro y añadimos la hoja
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
+
+      // Convertimos el libro a un archivo binario
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      // Creamos un blob y lanzamos la descarga
+      const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+      saveAs(data, "POF_Data.xlsx");
+    };
     const fetchCategorias = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
@@ -597,7 +631,7 @@ function PlantaFuncional() {
               </Grid>
               <Card>
                 {dataTableData.length > 0 && (
-                  <MDBox display="flex" justifyContent="flex-end" mb={1}>
+                  <MDBox display="flex" justifyContent="flex-end" mt={2} mr={4}>
                     <MDButton
                       variant="gradient"
                       color="success"
