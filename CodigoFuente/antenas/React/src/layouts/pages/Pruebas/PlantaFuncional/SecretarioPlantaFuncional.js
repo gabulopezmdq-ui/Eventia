@@ -75,15 +75,15 @@ function SecretarioPlantaFuncional() {
   const exportToExcel = () => {
     if (pofData.length === 0) return;
 
-    // Transformamos los datos para que sean más legibles en Excel (opcional)
+    // Transformamos los datos y convertimos todo a mayúscula
     const dataForExcel = pofData.map((row) => ({
-      Apellido: row.persona.apellido,
-      Nombre: row.persona.nombre,
-      DNI: row.persona.dni,
-      Legajo: row.persona.legajo,
-      Secuencia: row.secuencia,
-      "Tipo Cargo": row.tipoCargo,
-      Vigente: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
+      APELLIDO: row.persona.apellido.toUpperCase(),
+      NOMBRE: row.persona.nombre.toUpperCase(),
+      DNI: row.persona.dni.toString().toUpperCase(),
+      LEGAJO: row.persona.legajo.toString().toUpperCase(),
+      SECUENCIA: row.secuencia.toString().toUpperCase(),
+      "TIPO CARGO": row.tipoCargo.toUpperCase(),
+      VIGENTE: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
     }));
 
     // Creamos una hoja de cálculo
