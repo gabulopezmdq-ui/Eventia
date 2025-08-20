@@ -150,15 +150,13 @@ function PlantaFuncional() {
         }
       );
       const personasData = response.data.map((item) => ({
-        nombre: item.persona.nombre,
         apellido: item.persona.apellido,
+        nombre: item.persona.nombre,
         dni: item.persona.dni,
         legajo: item.persona.legajo,
         secuencia: item.secuencia,
         tipoCargo: item.tipoCargo,
-        idPof: item.idPOF,
         vigente: item.vigente,
-        barras: item.barras || [],
       }));
       setPersonas(personasData);
       setDataTableData(personasData); // 👈 esto habilita el botón
