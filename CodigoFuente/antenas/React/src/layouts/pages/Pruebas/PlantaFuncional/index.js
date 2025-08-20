@@ -89,7 +89,18 @@ function PlantaFuncional() {
 
   const handleDownloadExcel = () => {
     if (personas.length === 0) return; // evita exportar si no hay datos
-    const worksheet = XLSX.utils.json_to_sheet(personas);
+
+    // Convertir valores a mayúscula
+    const personasMayuscula = personas.map((persona) =>
+      Object.fromEntries(
+        Object.entries(persona).map(([key, value]) => [
+          key.toUpperCase(), // convertimos también el nombre de la columna
+          typeof value === "string" ? value.toUpperCase() : value,
+        ])
+      )
+    );
+
+    const worksheet = XLSX.utils.json_to_sheet(personasMayuscula);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Datos");
     const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
