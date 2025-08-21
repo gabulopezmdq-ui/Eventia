@@ -102,31 +102,20 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
   };
 
   const handleGuardar = async () => {
-    if (barrasList.length === 0) {
-      console.warn("No hay barras para guardar");
-      return;
-    }
-
     try {
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_URL}POF/Barras`,
-        {
-          idPof,
-          barra: barrasList,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.put(`${process.env.REACT_APP_API_URL}POF/Barras`, {
+        idPOF: idPof,
+        barras: barras,
+      });
 
-      console.log("Respuesta del backend:", response.data);
-      if (onEditSuccess) onEditSuccess();
-      onCloseBarras();
-      setBarrasList([]);
+      if (onEditSuccess) {
+        onEditSuccess();
+      }
+
+      onCloseBarras(); // 🔹 CIERRA EL MODAL SIEMPRE DESPUÉS DE GUARDAR
     } catch (error) {
       console.error("Error al guardar:", error);
+      onCloseBarras(); // 🔹 AÚN SI HAY ERROR, LO FORZÁS A CERRAR
     }
   };
 
@@ -193,13 +182,7 @@ const ModalBarras = ({ isOpenBarras, onCloseBarras, idPof, onEditSuccess }) => {
             >
               Cancelar
             </MDButton>
-            <MDButton
-              variant="contained"
-              size="small"
-              color="info"
-              onClick={handleGuardar}
-              disabled={barrasList.length === 0}
-            >
+            <MDButton variant="contained" size="small" color="info" onClick={handleGuardar}>
               Guardar
             </MDButton>
           </Box>
