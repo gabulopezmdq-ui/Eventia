@@ -21,7 +21,6 @@ import EditarModal from "./EditarModal";
 import ModalBarras from "./ModalBarras";
 import FormField from "layouts/pages/account/components/FormField";
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 function PlantaFuncional() {
   const [establecimientos, setEstablecimientos] = useState([]);
@@ -88,49 +87,22 @@ function PlantaFuncional() {
   }, [token]);
 
   const handleDownloadExcel = () => {
-    if (personas.length === 0) return; // evita exportar si no hay datos
+    if (filteredData.length === 0) return;
 
-    // Convertir valores a mayúscula
-    const personasMayuscula = personas.map((persona) =>
-      Object.fromEntries(
-        Object.entries(persona).map(([key, value]) => [
-          key.toUpperCase(), // convertimos también el nombre de la columna
-          typeof value === "string" ? value.toUpperCase() : value,
-        ])
-      )
-    );
+    const formattedData = filteredData.map((row) => ({
+      APELLIDO: row.apellido.toUpperCase(),
+      NOMBRE: row.nombre.toUpperCase(),
+      DNI: row.dni.toString(),
+      LEGAJO: row.legajo.toString(),
+      SECUENCIA: row.secuencia.toString(),
+      "TIPO CARGO": row.tipoCargo.toUpperCase(),
+      VIGENTE: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
+    }));
 
-    const worksheet = XLSX.utils.json_to_sheet(personasMayuscula);
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Datos");
-    const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([wbout], {
-      type: "application/vnd.openxmlformats‑officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, "Personas.xlsx");
-  };
-
-  const handleChange = (event) => {
-    const selectedId = event.target.value;
-    const selectedEstablecimiento = establecimientos.find(
-      (establecimiento) => establecimiento.idEstablecimiento === selectedId
-    );
-    setSelectedEstablecimiento(selectedId);
-    setEstablecimientoNombre(selectedEstablecimiento?.nombrePcia || "");
-    setPersonas([]);
-    setDni("");
-    setIsDataLoaded(false);
-    setPofVisible(false);
-    setPofFormData({
-      secuencia: "",
-      idCarRevista: "",
-      idFuncion: "",
-      tipoCargo: "",
-      barra: "",
-      idCategoria: "",
-      vigente: "S",
-    });
-    setVerificarRespuesta(null);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Personas");
+    XLSX.writeFile(workbook, "Personas.xlsx");
   };
 
   const handleCargar = async () => {
@@ -150,16 +122,17 @@ function PlantaFuncional() {
         }
       );
       const personasData = response.data.map((item) => ({
-        apellido: item.persona.apellido,
         nombre: item.persona.nombre,
+        apellido: item.persona.apellido,
         dni: item.persona.dni,
         legajo: item.persona.legajo,
         secuencia: item.secuencia,
         tipoCargo: item.tipoCargo,
+        idPof: item.idPOF,
         vigente: item.vigente,
+        barras: item.barras || [],
       }));
       setPersonas(personasData);
-      setDataTableData(personasData); // 👈 esto habilita el botón
     } catch (error) {
       console.error("Error al cargar los datos:", error);
       setAlertMessage("Hubo un error al cargar los datos");
@@ -415,37 +388,6 @@ function PlantaFuncional() {
         console.error("Error al cargar Funciones:", error);
       }
     };
-    const exportToExcel = () => {
-      if (pofData.length === 0) return;
-
-      // Transformamos los datos para que sean más legibles en Excel (opcional)
-      const dataForExcel = pofData.map((row) => ({
-        Apellido: row.persona.apellido,
-        Nombre: row.persona.nombre,
-        DNI: row.persona.dni,
-        Legajo: row.persona.legajo,
-        Secuencia: row.secuencia,
-        "Tipo Cargo": row.tipoCargo,
-        Vigente: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
-      }));
-
-      // Creamos una hoja de cálculo
-      const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
-
-      // Creamos un libro y añadimos la hoja
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
-
-      // Convertimos el libro a un archivo binario
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-
-      // Creamos un blob y lanzamos la descarga
-      const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-      saveAs(data, "POF_Data.xlsx");
-    };
     const fetchCategorias = async () => {
       try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
@@ -545,7 +487,7 @@ function PlantaFuncional() {
                 <Select
                   labelId="establecimiento-select-label"
                   value={selectedEstablecimiento}
-                  onChange={handleChange}
+                  onChange={(e) => setSelectedEstablecimiento(e.target.value)} // ✅ corregido
                   label="Establecimiento"
                   style={{ height: "2.5rem", backgroundColor: "white" }}
                 >
@@ -639,18 +581,18 @@ function PlantaFuncional() {
                 </FormControl>
               </Grid>
               <Card>
-                {dataTableData.length > 0 && (
-                  <MDBox display="flex" justifyContent="flex-end" mt={2} mr={4}>
-                    <MDButton
-                      variant="gradient"
-                      color="success"
-                      size="small"
-                      onClick={handleDownloadExcel}
-                    >
-                      Descargar Excel
-                    </MDButton>
-                  </MDBox>
-                )}
+                {/* Botón Descargar Excel */}
+                <MDBox display="flex" justifyContent="flex-end" mt={2} mr={4}>
+                  <MDButton
+                    variant="gradient"
+                    color="success"
+                    size="small"
+                    onClick={handleDownloadExcel}
+                    disabled={filteredData.length === 0} // deshabilitado si no hay datos
+                  >
+                    DESCARGAR EXCEL
+                  </MDButton>
+                </MDBox>
                 <DataTable
                   table={{
                     columns: [
