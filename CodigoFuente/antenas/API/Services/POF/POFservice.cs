@@ -210,7 +210,7 @@ namespace API.Services
                     Legajo = p.Persona.Legajo,
                     Secuencia = p.Secuencia,
                     TipoCargo = p.TipoCargo,
-                    Vigente = p.Vigente,
+                    Vigente = p.Vigente == "S" ? "SI" : "NO",
                     Barras = p. POFBarras
                     .Where(b => b.Vigente == "S")
                     .Select(b => b.Barra).ToList()
