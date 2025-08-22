@@ -86,23 +86,50 @@ function PlantaFuncional() {
     fetchEstablecimientos();
   }, [token]);
 
-  const handleDownloadExcel = () => {
-    if (filteredData.length === 0) return;
+  const handleDownloadExcel = async () => {
+    if (!selectedEstablecimiento) return;
 
-    const formattedData = filteredData.map((row) => ({
-      APELLIDO: row.apellido.toUpperCase(),
-      NOMBRE: row.nombre.toUpperCase(),
-      DNI: row.dni.toString(),
-      LEGAJO: row.legajo.toString(),
-      SECUENCIA: row.secuencia.toString(),
-      "TIPO CARGO": row.tipoCargo.toUpperCase(),
-      VIGENTE: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
-    }));
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}POF/ExcelPOF?idEstablecimiento=${selectedEstablecimiento}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Personas");
-    XLSX.writeFile(workbook, "Personas.xlsx");
+      const data = response.data;
+
+      if (!data || data.length === 0) {
+        console.warn("No hay datos para exportar");
+        return;
+      }
+
+      // 🔠 Transformamos los datos en mayúsculas
+      const dataForExcel = data.map((row) => ({
+        APELLIDO: row.apellido?.toUpperCase() || "",
+        NOMBRE: row.nombre?.toUpperCase() || "",
+        DNI: row.dni?.toString().toUpperCase() || "",
+        LEGAJO: row.legajo?.toString().toUpperCase() || "",
+        SECUENCIA: row.secuencia?.toString().toUpperCase() || "",
+        "TIPO CARGO": row.tipoCargo?.toUpperCase() || "",
+        VIGENTE: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
+        BARRAS: row.barras ? row.barras.join(", ").toUpperCase() : "",
+      }));
+
+      // 📑 Creamos hoja de cálculo
+      const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+
+      // 📘 Creamos libro y añadimos la hoja
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
+
+      // 💾 Generamos y descargamos archivo Excel
+      XLSX.writeFile(workbook, `POF_${selectedEstablecimiento}.xlsx`);
+    } catch (error) {
+      console.error("Error al descargar el Excel:", error);
+    }
   };
 
   const handleCargar = async () => {
@@ -588,9 +615,10 @@ function PlantaFuncional() {
                     color="success"
                     size="small"
                     onClick={handleDownloadExcel}
-                    disabled={filteredData.length === 0} // deshabilitado si no hay datos
+                    disabled={!selectedEstablecimiento}
+                    style={{ marginLeft: "1rem" }}
                   >
-                    DESCARGAR EXCEL
+                    Descargar Excel
                   </MDButton>
                 </MDBox>
                 <DataTable
