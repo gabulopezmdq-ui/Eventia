@@ -72,36 +72,50 @@ function SecretarioPlantaFuncional() {
   const handleChange = (event) => {
     setSelectedEstablecimiento(event.target.value);
   };
-  const exportToExcel = () => {
-    if (pofData.length === 0) return;
+  const exportToExcel = async () => {
+    if (!selectedEstablecimiento) return;
 
-    // Transformamos los datos y convertimos todo a mayúscula
-    const dataForExcel = pofData.map((row) => ({
-      APELLIDO: row.persona.apellido.toUpperCase(),
-      NOMBRE: row.persona.nombre.toUpperCase(),
-      DNI: row.persona.dni.toString().toUpperCase(),
-      LEGAJO: row.persona.legajo.toString().toUpperCase(),
-      SECUENCIA: row.secuencia.toString().toUpperCase(),
-      "TIPO CARGO": row.tipoCargo.toUpperCase(),
-      VIGENTE: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
-    }));
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}POF/ExcelPOF?idEstablecimiento=${selectedEstablecimiento}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    // Creamos una hoja de cálculo
-    const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+      const data = response.data;
 
-    // Creamos un libro y añadimos la hoja
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
+      if (!data || data.length === 0) {
+        console.warn("No hay datos para exportar");
+        return;
+      }
 
-    // Convertimos el libro a un archivo binario
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
+      // 🔠 Transformamos los datos en mayúsculas
+      const dataForExcel = data.map((row) => ({
+        APELLIDO: row.apellido?.toUpperCase() || "",
+        NOMBRE: row.nombre?.toUpperCase() || "",
+        DNI: row.dni?.toString().toUpperCase() || "",
+        LEGAJO: row.legajo?.toString().toUpperCase() || "",
+        SECUENCIA: row.secuencia?.toString().toUpperCase() || "",
+        "TIPO CARGO": row.tipoCargo?.toUpperCase() || "",
+        VIGENTE: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
+        BARRAS: row.barras ? row.barras.join(", ").toUpperCase() : "",
+      }));
 
-    // Creamos un blob y lanzamos la descarga
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, "POF_Data.xlsx");
+      // 📑 Creamos hoja de cálculo
+      const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+
+      // 📘 Creamos libro y añadimos la hoja
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
+
+      // 💾 Generamos y descargamos archivo Excel
+      XLSX.writeFile(workbook, `POF_${selectedEstablecimiento}.xlsx`);
+    } catch (error) {
+      console.error("Error al descargar el Excel:", error);
+    }
   };
 
   const handleCargar = async () => {
@@ -168,7 +182,7 @@ function SecretarioPlantaFuncional() {
               color="success"
               size="small"
               onClick={exportToExcel}
-              disabled={pofData.length === 0}
+              disabled={!selectedEstablecimiento}
               style={{ marginLeft: "1rem" }}
             >
               Descargar Excel
