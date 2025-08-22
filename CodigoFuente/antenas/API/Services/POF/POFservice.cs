@@ -196,5 +196,29 @@ namespace API.Services
             return true;
         }
 
+        public async Task<List<PofConBarrasDTO>> ExcelPOF(int idEstablecimiento)
+        {
+            var pofList = await _context.MEC_POF
+                .Where(p => p.IdEstablecimiento == idEstablecimiento)
+                .Include(p => p.Persona) 
+                .Include(p => p.POFBarras)
+                .Select(p => new PofConBarrasDTO
+                {
+                    Apellido = p.Persona.Apellido,
+                    Nombre = p.Persona.Nombre,
+                    DNI = p.Persona.DNI,
+                    Legajo = p.Persona.Legajo,
+                    Secuencia = p.Secuencia,
+                    TipoCargo = p.TipoCargo,
+                    Vigente = p.Vigente,
+                    Barras = p. POFBarras
+                    .Where(b => b.Vigente == "S")
+                    .Select(b => b.Barra).ToList()
+                })
+                .ToListAsync();
+
+            return pofList;
+        }
+
     }
 }

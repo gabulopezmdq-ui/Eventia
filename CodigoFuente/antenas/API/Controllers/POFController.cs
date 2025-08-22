@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
-    //[AllowAnonymous]
+    //[Authorize(Roles = "SuperAdmin, Admin, Secretario")]
+    [AllowAnonymous]
     [Route("[controller]")]
     public class POFController : ControllerBase
     {
@@ -210,5 +210,17 @@ namespace API.Controllers
 
             return Ok();
         }
+
+        [HttpGet("ExcelPOF")]
+        public async Task<IActionResult> ExcelPOF(int idEstablecimiento)
+        {
+            var resultado = await _pofService.ExcelPOF(idEstablecimiento);
+
+            if (resultado == null || !resultado.Any())
+                return NotFound("No se encontraron registros de POF para el establecimiento indicado.");
+
+            return Ok(resultado);
+        }
+
     }
 }
