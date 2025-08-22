@@ -202,6 +202,7 @@ namespace API.Services
                 .Where(p => p.IdEstablecimiento == idEstablecimiento)
                 .Include(p => p.Persona) 
                 .Include(p => p.POFBarras)
+                .OrderBy(b => b.Persona.Apellido)
                 .Select(p => new PofConBarrasDTO
                 {
                     Apellido = p.Persona.Apellido,
