@@ -23,5 +23,6 @@ namespace API.Services
         Task<List<MEC_POF_Barras>> GetBarrasPOF(int idPOF);
         Task<POFBarraResultado> AddBarraAsync(POFBarraDTO dto);
         Task<bool> EliminarBarraAsync(EliminarBarraDTO dto);
+        Task<List<PofConBarrasDTO>> ExcelPOF(int idEstablecimiento);
     }
 }

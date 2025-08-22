@@ -41,4 +41,16 @@ namespace API.DataSchema.DTO
         public List<int> BarrasAgregadas { get; set; } = new();
         public List<int> BarrasDuplicadas { get; set; } = new();
     }
+
+    public class PofConBarrasDTO
+    {
+        public string Apellido { get; set; }
+        public string Nombre { get; set; }
+        public string DNI { get; set; }
+        public string Legajo { get; set; }
+        public string Secuencia { get; set; }
+        public string TipoCargo { get; set; }
+        public string Vigente { get; set; }
+        public List<int> Barras { get; set; } = new();
+    }
 }
