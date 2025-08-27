@@ -8,7 +8,11 @@ namespace API.Services
     {
         Task<bool> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes);
         Task<bool> CheckIfExists(string anio, string mes, int idTipo, string ordenPago); // Método para verificar duplicados
-        Task ProcesarTMPInasistencias(int idCabeceraLiquidacion, int idCabeceraInasistencia, int idEstablecimiento, string UE);
+        Task<string> ProcesarTMPInasistencias(
+                                 int idCabeceraLiquidacion,
+                                 int idCabeceraInasistencia,
+                                 int idEstablecimiento,
+                                 string UE);
         Task<List<MEC_InasistenciasCabecera>> ObtenerCabecerasHabilitadasAsync();
         Task<(bool Exito, string? Mensaje)> DevolverAEstablecimientoAsync(
                                                                             int idCabecera,

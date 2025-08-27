@@ -108,3 +108,11 @@ public class DetalleRechazos
     public List<MEC_InasistenciasDetalle> Detalles { get; set; }
     public List<MEC_InasistenciasRechazo> Rechazos { get; set; }
 }
+
+public class ProcesarInasistencias
+{
+    public int IdCabeceraLiquidacion { get; set; }
+    public int IdCabeceraInasistencia { get; set; }
+    public int IdEstablecimiento { get; set; }
+    public string UE { get; set; }
+}
