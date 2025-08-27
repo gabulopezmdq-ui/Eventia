@@ -16,6 +16,7 @@ function CargarInasistencia() {
   const [cabeceras, setCabeceras] = useState([]);
   const [inasistencias, setInasistencias] = useState(null);
   const [anioSeleccionado, setAnioSeleccionado] = useState(null);
+  const [ueSeleccionada, setUESeleccionada] = useState("");
   const [mesSeleccionado, setMesSeleccionado] = useState(null);
   const [cabecerasCargar, setCabeceraCargar] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
@@ -62,7 +63,6 @@ function CargarInasistencia() {
     }
 
     const seleccionado = cabeceras.find((item) => item.idInasistenciaCabecera === selectedCabecera);
-
     if (!seleccionado) {
       setAlertMessage("No se encontró la cabecera seleccionada.");
       setAlertType("error");
@@ -72,6 +72,7 @@ function CargarInasistencia() {
 
     const idEstablecimiento = seleccionado.idEstablecimiento;
     setEstablecimientoSeleccionado(idEstablecimiento);
+    setUESeleccionada(seleccionado.establecimientos?.ue || "");
 
     try {
       const response = await axios.get(
@@ -164,6 +165,13 @@ function CargarInasistencia() {
       setAlertMessage("Cabecera de inasistencia generada correctamente.");
       setAlertType("success");
       setShowAlert(true);
+      setTimeout(() => {
+        setAlertMessage("");
+        setShowAlert(false);
+        setAlertType("");
+        handleCargar();
+        setInasistencias(null);
+      }, 4000);
     } catch (error) {
       console.error("Error al generar la cabecera:", error);
       setAlertMessage("Error al generar la cabecera de inasistencia.");
@@ -259,7 +267,9 @@ function CargarInasistencia() {
           />
         </Card>
       )}
-      {inasistencias && <TablaInasistenciasDetalle inasistencias={inasistencias} />}
+      {inasistencias && (
+        <TablaInasistenciasDetalle inasistencias={inasistencias} ue={ueSeleccionada} />
+      )}
     </DashboardLayout>
   );
 }

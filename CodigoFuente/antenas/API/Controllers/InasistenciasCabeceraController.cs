@@ -121,13 +121,18 @@ namespace API.Controllers
         }
 
         [HttpPost("procesar")]
-        public async Task<IActionResult> ProcesarTMPInasistencias(
-            [FromQuery] int idCabeceraLiquidacion,
-            [FromQuery] int idCabeceraInasistencia,
-            [FromQuery] int idEstablecimiento,
-            [FromQuery] string UE)
+        public async Task<IActionResult> ProcesarTMPInasistencias([FromBody] ProcesarInasistencias request)
         {
-            await _cabeceraService.ProcesarTMPInasistencias(idCabeceraLiquidacion, idCabeceraInasistencia, idEstablecimiento, UE);
+            if (request == null)
+                return BadRequest("El body de la petición está vacío.");
+
+            await _cabeceraService.ProcesarTMPInasistencias(
+                request.IdCabeceraLiquidacion,
+                request.IdCabeceraInasistencia,
+                request.IdEstablecimiento,
+                request.UE
+            );
+
             return Ok("Procesamiento completado");
         }
 
