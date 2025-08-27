@@ -11,10 +11,12 @@ import Grid from "@mui/material/Grid";
 import InasistenciaModal from "../DetalleTabla/PopUp/InasistenciaModal";
 import axios from "axios";
 import CardContent from "@mui/material/CardContent";
+import CabeceraLiquidacion from "../../CabeceraLiquidacion";
 
-const TablaInasistenciasDetalle = ({ inasistencias }) => {
+const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [procesados, setProcesados] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
 
@@ -28,7 +30,13 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
     setSelectedRow(null);
   };
 
-  const handleCargar = async ({ fechaDesde, fechaHasta, idCabecera, idInasistenciaCabecera }) => {
+  const handleCargar = async ({
+    fechaDesde,
+    fechaHasta,
+    idCabecera,
+    idInasistenciaCabecera,
+    idInasistenciaDetalle,
+  }) => {
     try {
       setIsLoading(true);
       const desdeStr = fechaDesde.format("YYYY-MM-DD");
@@ -46,9 +54,7 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
       });
 
       if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
-
-      console.log("Respuesta:", response.data);
-
+      setProcesados((prev) => [...prev, idInasistenciaDetalle]);
       // Solo cerrar el modal si la respuesta fue correcta
       handleCloseModal();
       setErrorAlert({
@@ -78,11 +84,50 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
     return null;
   }
 
+  const handleProcesar = async (row) => {
+    try {
+      setIsLoading(true);
+
+      const url = `${process.env.REACT_APP_API_URL}inasistenciascabecera/procesar`;
+
+      const payload = {
+        IdCabeceraLiquidacion: row.idCabecera,
+        IdCabeceraInasistencia: row.idInasistenciaCabecera,
+        IdEstablecimiento: row.idEstablecimiento,
+        UE: ue,
+      };
+
+      const response = await axios.post(url, payload);
+
+      if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
+
+      setErrorAlert({
+        show: true,
+        message: "Procesamiento generado correctamente",
+        type: "success",
+      });
+
+      setTimeout(() => {
+        setErrorAlert((prev) => ({ ...prev, show: false }));
+      }, 4000);
+    } catch (error) {
+      console.error(error);
+      setErrorAlert({
+        show: true,
+        message: "Error al generar procesamiento: " + error.message,
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const AccionesCell = ({ row }) => {
     const { original } = row;
+    const yaProcesado = procesados.includes(original.idInasistenciaDetalle);
     return (
       <MDBox display="flex" gap={1}>
-        {original.estado === "H" && (
+        {original.estado === "H" && !yaProcesado && (
           <MDButton
             variant="gradient"
             color="warning"
@@ -90,6 +135,17 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
             onClick={() => handleOpenModal(original)}
           >
             Cargar Inasistencia
+          </MDButton>
+        )}
+
+        {yaProcesado && (
+          <MDButton
+            variant="gradient"
+            color="success"
+            size="small"
+            onClick={() => handleProcesar(original)}
+          >
+            Generar Procesamientos
           </MDButton>
         )}
       </MDBox>
@@ -100,6 +156,7 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
     row: PropTypes.shape({
       original: PropTypes.shape({
         estado: PropTypes.string.isRequired,
+        idInasistenciaDetalle: PropTypes.number.isRequired,
       }).isRequired,
     }).isRequired,
   };
@@ -146,6 +203,8 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
             table={{
               columns: [
                 { Header: "ID Detalle", accessor: "idInasistenciaDetalle" },
+                { Header: "ID Cabecera", accessor: "idCabecera" }, // Mostrar idCabecera del root
+                { Header: "ID Establecimiento", accessor: "idEstablecimiento" },
                 { Header: "ID POF", accessor: "idPOF" },
                 {
                   Header: "Fecha Inasistencia",
@@ -161,6 +220,8 @@ const TablaInasistenciasDetalle = ({ inasistencias }) => {
               ],
               rows: inasistencias.detalle.map((item) => ({
                 idInasistenciaDetalle: item.idInasistenciaDetalle,
+                idCabecera: inasistencias.idCabecera,
+                idEstablecimiento: inasistencias.idEstablecimiento,
                 idInasistenciaCabecera: item.idInasistenciaCabecera,
                 idPOF: item.idPOF,
                 fechaInasistencia: item.fechaInasistencia,
@@ -193,6 +254,7 @@ TablaInasistenciasDetalle.propTypes = {
     anio: PropTypes.number,
     mes: PropTypes.number,
     idCabecera: PropTypes.number,
+    idEstablecimiento: PropTypes.number,
     fechaApertura: PropTypes.string,
     detalle: PropTypes.arrayOf(
       PropTypes.shape({
@@ -204,6 +266,7 @@ TablaInasistenciasDetalle.propTypes = {
       })
     ),
   }),
+  ue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 };
 
 export default TablaInasistenciasDetalle;
