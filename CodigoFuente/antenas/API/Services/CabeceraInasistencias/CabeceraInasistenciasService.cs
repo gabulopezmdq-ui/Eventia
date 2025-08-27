@@ -136,9 +136,14 @@ namespace API.Services
 
         //PROCESAR INASISTENCIAS
 
-        public async Task ProcesarTMPInasistencias(int idCabeceraLiquidacion, int idCabeceraInasistencia, int idEstablecimiento, string UE)
+        public async Task<string> ProcesarTMPInasistencias(
+                                 int idCabeceraLiquidacion,
+                                 int idCabeceraInasistencia,
+                                 int idEstablecimiento,
+                                 string UE)
         {
             string varUE = UE.Replace("-", "");
+            bool huboErrores = false; // <-- Bandera para controlar si hubo errores
 
             var registrosTMP = await _context.MEC_TMPInasistenciasDetalle
                 .Where(x => x.IdCabecera == idCabeceraLiquidacion
@@ -155,7 +160,7 @@ namespace API.Services
 
                 if (persona == null)
                 {
-                    var error = new MEC_TMPErroresInasistenciasDetalle
+                    _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
                     {
                         IdCabeceraInasistencia = idCabeceraLiquidacion,
                         IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
@@ -163,16 +168,15 @@ namespace API.Services
                         Legajo = "NE",
                         POF = "NE",
                         POFBarra = "NE"
-                    };
-                    _context.MEC_TMPErroresInasistenciasDetalle.Add(error);
+                    });
 
                     tmp.RegistroValido = "N";
                     tmp.RegistroProcesado = "S";
-
+                    huboErrores = true; // <-- Marcamos que hubo un error
                     continue;
                 }
 
-                // 2. Validar que el Legajo coincida con el NroLegajo
+                // 2. Validar Legajo
                 if (persona.Legajo != tmp.NroLegajo?.ToString())
                 {
                     _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
@@ -187,12 +191,13 @@ namespace API.Services
 
                     tmp.RegistroValido = "N";
                     tmp.RegistroProcesado = "S";
+                    huboErrores = true;
                     continue;
                 }
 
                 var idPersona = persona.IdPersona;
 
-                // 3. Validar existencia de registros en POF para ese Establecimiento + Persona
+                // 3. Validar POF
                 var pofs = await _context.MEC_POF
                     .Where(p => p.IdEstablecimiento == idEstablecimiento && p.IdPersona == idPersona)
                     .ToListAsync();
@@ -211,11 +216,11 @@ namespace API.Services
 
                     tmp.RegistroValido = "N";
                     tmp.RegistroProcesado = "S";
-
+                    huboErrores = true;
                     continue;
                 }
 
-                // 4. Validar que alguna de las barras coincida con NroCargo
+                // 4. Validar Barra
                 bool barraCoincide = false;
 
                 foreach (var pof in pofs)
@@ -229,9 +234,6 @@ namespace API.Services
 
                 if (!barraCoincide)
                 {
-                    tmp.RegistroValido = "N";
-                    tmp.RegistroProcesado = "S";
-
                     _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
                     {
                         IdCabeceraInasistencia = idCabeceraLiquidacion,
@@ -242,14 +244,23 @@ namespace API.Services
                         POFBarra = "NE"
                     });
 
+                    tmp.RegistroValido = "N";
+                    tmp.RegistroProcesado = "S";
+                    huboErrores = true;
                     continue;
                 }
 
+                // Si todo pasó correctamente
                 tmp.RegistroValido = "S";
                 tmp.RegistroProcesado = "S";
             }
 
             await _context.SaveChangesAsync();
+
+            // Devuelve un mensaje indicando el resultado
+            return huboErrores
+                ? "Se encontraron errores durante el procesamiento."
+                : "Todos los registros fueron procesados correctamente.";
         }
 
 
