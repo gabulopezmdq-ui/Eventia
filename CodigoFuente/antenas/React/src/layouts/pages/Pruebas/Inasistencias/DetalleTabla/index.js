@@ -11,12 +11,14 @@ import Grid from "@mui/material/Grid";
 import InasistenciaModal from "../DetalleTabla/PopUp/InasistenciaModal";
 import axios from "axios";
 import CardContent from "@mui/material/CardContent";
+import { generatePDF } from "./GeneradorPDF";
 import CabeceraLiquidacion from "../../CabeceraLiquidacion";
 
 const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [procesados, setProcesados] = useState([]);
+  const [pdfData, setPdfData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
 
@@ -100,7 +102,7 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
       const response = await axios.post(url, payload);
 
       if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
-
+      setPdfData(response.data);
       setErrorAlert({
         show: true,
         message: "Procesamiento generado correctamente",
@@ -146,6 +148,16 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
             onClick={() => handleProcesar(original)}
           >
             Generar Procesamientos
+          </MDButton>
+        )}
+        {pdfData && (
+          <MDButton
+            variant="gradient"
+            color="info"
+            size="small"
+            onClick={() => generatePDF(pdfData)}
+          >
+            Descargar Errores
           </MDButton>
         )}
       </MDBox>
@@ -242,7 +254,7 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
         mes={inasistencias.mes}
         anio={inasistencias.anio}
         initialData={selectedRow}
-        isLoading={isLoading} // pasamos loading
+        isLoading={isLoading}
       />
     </>
   );
