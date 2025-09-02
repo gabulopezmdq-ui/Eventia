@@ -8,7 +8,7 @@ import MDAlert from "components/MDAlert";
 import MDTypography from "components/MDTypography";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import InasistenciaModal from "../DetalleTabla/PopUp/InasistenciaModal";
+import InasistenciaModal from "./PopUp/InasistenciaModal";
 import axios from "axios";
 import CardContent from "@mui/material/CardContent";
 import { generatePDF } from "./GeneradorPDF";
@@ -18,7 +18,6 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [procesados, setProcesados] = useState([]);
-  const [pdfData, setPdfData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
 
@@ -57,7 +56,7 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
 
       if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
       setProcesados((prev) => [...prev, idInasistenciaDetalle]);
-      // Solo cerrar el modal si la respuesta fue correcta
+
       handleCloseModal();
       setErrorAlert({
         show: true,
@@ -65,10 +64,7 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
         type: "success",
       });
       setTimeout(() => {
-        setErrorAlert((prev) => ({
-          ...prev,
-          show: false,
-        }));
+        setErrorAlert((prev) => ({ ...prev, show: false }));
       }, 4000);
     } catch (error) {
       console.error(error);
@@ -77,14 +73,6 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
       setIsLoading(false);
     }
   };
-
-  if (
-    !inasistencias ||
-    !Array.isArray(inasistencias.detalle) ||
-    inasistencias.detalle.length === 0
-  ) {
-    return null;
-  }
 
   const handleProcesar = async (row) => {
     try {
@@ -102,7 +90,7 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
       const response = await axios.post(url, payload);
 
       if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
-      setPdfData(response.data);
+
       setErrorAlert({
         show: true,
         message: "Procesamiento generado correctamente",
@@ -123,10 +111,31 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
       setIsLoading(false);
     }
   };
+  const handleDescargarErrores = async () => {
+    try {
+      setIsLoading(true);
+      const url = `${process.env.REACT_APP_API_URL}inasistenciascabecera/ErroresInas`;
+
+      const response = await axios.get(url);
+
+      if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
+      await generatePDF(response.data);
+    } catch (error) {
+      console.error(error);
+      setErrorAlert({
+        show: true,
+        message: "Error al descargar errores: " + error.message,
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const AccionesCell = ({ row }) => {
     const { original } = row;
     const yaProcesado = procesados.includes(original.idInasistenciaDetalle);
+
     return (
       <MDBox display="flex" gap={1}>
         {original.estado === "H" && !yaProcesado && (
@@ -150,16 +159,9 @@ const TablaInasistenciasDetalle = ({ inasistencias, ue }) => {
             Generar Procesamientos
           </MDButton>
         )}
-        {pdfData && (
-          <MDButton
-            variant="gradient"
-            color="info"
-            size="small"
-            onClick={() => generatePDF(pdfData)}
-          >
-            Descargar Errores
-          </MDButton>
-        )}
+        <MDButton variant="gradient" color="info" size="small" onClick={handleDescargarErrores}>
+          Descargar Errores
+        </MDButton>
       </MDBox>
     );
   };
