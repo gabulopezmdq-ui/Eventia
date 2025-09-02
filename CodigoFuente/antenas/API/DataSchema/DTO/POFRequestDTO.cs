@@ -51,6 +51,7 @@ namespace API.DataSchema.DTO
         public string Secuencia { get; set; }
         public string TipoCargo { get; set; }
         public string Vigente { get; set; }
+        public string Barra { get; set; }
         public List<int> Barras { get; set; } = new();
     }
 }

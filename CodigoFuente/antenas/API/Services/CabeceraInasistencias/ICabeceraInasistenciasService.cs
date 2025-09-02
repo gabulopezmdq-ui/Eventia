@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using API.DataSchema;
 
@@ -6,9 +7,13 @@ namespace API.Services
 {
     public interface ICabeceraInasistenciasService
     {
-        Task<bool> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes);
+        Task<MEC_InasistenciasCabecera> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes);
         Task<bool> CheckIfExists(string anio, string mes, int idTipo, string ordenPago); // Método para verificar duplicados
-        Task ProcesarTMPInasistencias(int idCabeceraLiquidacion, int idCabeceraInasistencia, int idEstablecimiento, string UE);
+        Task<string> ProcesarTMPInasistencias(
+                                 int idCabeceraLiquidacion,
+                                 int idCabeceraInasistencia,
+                                 int idEstablecimiento,
+                                 string UE);
         Task<List<MEC_InasistenciasCabecera>> ObtenerCabecerasHabilitadasAsync();
         Task<(bool Exito, string? Mensaje)> DevolverAEstablecimientoAsync(
                                                                             int idCabecera,
@@ -21,11 +26,14 @@ namespace API.Services
         Task<List<MecanizadasDTO>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento);
         Task<(bool Exito, string? Mensaje)> GuardarInasistenciaAsync(MEC_InasistenciasDetalle inasistencia);
         Task<InasistenciaCabeceraDTO?> ObtenerInasistenciaPorPeriodoAsync(int idEstablecimiento, int anio, int mes);
-        Task<List<MesAnioDTO?>> ObtenerFechas(int idEstablecimiento);
+        Task<List<MesAnioDTO?>> ObtenerFechas(int idEstablecimiento, int idCabecera);
         Task<List<CabeceraInasistenciaDTO>> ObtenerCabecerasInas(int idCabecera);
         Task<List<InasistenciasDetalleDTO>> DetalleInasistencia(int idEstablecimiento, int idInasistenciaCabecera);
         Task<bool> EnviarInas(int idInasistenciaCabecera, string observaciones);
-        
+        Task<List<MEC_TMPInasistenciasDetalle>> ObtenerInas();
+        Task AgregarInasistenciaAsync(int idCabeceraInasistencia, int idPOF, int idPOFBarra, int idTMPInasistenciasDetalle, int? codLicencia, DateTime fecha, int cantHs);
+        Task<string> EliminarTMP();
+
 
 
         }

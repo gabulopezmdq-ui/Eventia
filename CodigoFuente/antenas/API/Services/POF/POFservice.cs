@@ -212,6 +212,7 @@ namespace API.Services
                     Secuencia = p.Secuencia,
                     TipoCargo = p.TipoCargo,
                     Vigente = p.Vigente,
+                    Barra = p.Barra,
                     Barras = p. POFBarras
                     .Where(b => b.Vigente == "S")
                     .Select(b => b.Barra).ToList()
