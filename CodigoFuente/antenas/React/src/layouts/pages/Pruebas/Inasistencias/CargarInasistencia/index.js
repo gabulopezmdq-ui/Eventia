@@ -5,22 +5,24 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
+import jwtDecode from "jwt-decode";
 import MDAlert from "components/MDAlert";
-import TablaInasistenciasDetalle from "../DetalleTabla/index";
 import DataTable from "examples/Tables/DataTable";
 import Card from "@mui/material/Card";
 import MDTypography from "components/MDTypography";
+import ImportarInasistenciaModal from "./PopUp";
 import axios from "axios";
-
 function CargarInasistencia() {
   const [cabeceras, setCabeceras] = useState([]);
+  const [establecimientos, setEstablecimientos] = useState([]);
   const [inasistencias, setInasistencias] = useState(null);
-  const [anioSeleccionado, setAnioSeleccionado] = useState(null);
+  const [procesados, setProcesados] = useState([]);
   const [ueSeleccionada, setUESeleccionada] = useState("");
-  const [mesSeleccionado, setMesSeleccionado] = useState(null);
+  const [detalleSeleccionado, setDetalleSeleccionado] = useState(null);
+  const [procesamientosListos, setProcesamientosListos] = useState({});
   const [cabecerasCargar, setCabeceraCargar] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
-  const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState();
+  const [selectedEstablecimiento, setSelectedEstablecimiento] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [alertType, setAlertType] = useState("info");
@@ -30,7 +32,7 @@ function CargarInasistencia() {
     const fetchEstablecimientos = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}InasistenciasCabecera/GetAll`,
+          `${process.env.REACT_APP_API_URL}CabeceraLiquidacion/getall`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -39,7 +41,7 @@ function CargarInasistencia() {
         );
 
         const filtrados = response.data.filter(
-          (item) => item.estado === "R" && item.cabecera?.calculaInasistencias === "S"
+          (item) => item.estado === "R" && item.calculaInasistencias === "S"
         );
 
         setCabeceras(filtrados);
@@ -54,6 +56,34 @@ function CargarInasistencia() {
     if (token) fetchEstablecimientos();
   }, [token]);
 
+  useEffect(() => {
+    const fetchEstablecimientos = async () => {
+      try {
+        const decoded = jwtDecode(token);
+        const roles = decoded?.role || [];
+        const idsAsociados = decoded?.idEstablecimiento || [];
+
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}Establecimientos/GetAll`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const dataFiltrada = roles.includes("superAdmin")
+          ? response.data
+          : response.data.filter((est) => idsAsociados.includes(est.idEstablecimiento.toString()));
+
+        setEstablecimientos(dataFiltrada);
+      } catch (error) {
+        console.error("Error al obtener establecimientos:", error);
+      }
+    };
+
+    if (token) fetchEstablecimientos();
+  }, [token]);
+
   const handleCargar = async () => {
     if (!selectedCabecera) {
       setAlertMessage("Por favor, seleccione una cabecera.");
@@ -62,31 +92,35 @@ function CargarInasistencia() {
       return;
     }
 
-    const seleccionado = cabeceras.find((item) => item.idInasistenciaCabecera === selectedCabecera);
+    const seleccionado = cabeceras.find((item) => item.idCabecera === selectedCabecera);
+    console.log("seleccionado: ", seleccionado);
     if (!seleccionado) {
       setAlertMessage("No se encontró la cabecera seleccionada.");
       setAlertType("error");
       setShowAlert(true);
       return;
     }
-
-    const idEstablecimiento = seleccionado.idEstablecimiento;
-    setEstablecimientoSeleccionado(idEstablecimiento);
+    const anio = seleccionado.anioLiquidacion;
+    const mes = seleccionado.mesLiquidacion;
+    const idCabecera = seleccionado.idCabecera;
     setUESeleccionada(seleccionado.establecimientos?.ue || "");
 
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}InasistenciasCabecera/GetFechas`,
+        `${process.env.REACT_APP_API_URL}InasistenciasCabecera/InasistenciasListado`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
           params: {
-            idEstablecimiento,
+            anio,
+            mes,
+            idCabecera,
+            idEstablecimiento: selectedEstablecimiento,
           },
         }
       );
-      setCabeceraCargar(response.data || []);
+      setCabeceraCargar([response.data] || []);
     } catch (error) {
       console.error("Error al cargar listado de inasistencias:", error);
       setAlertMessage("Error al cargar el listado de inasistencias.");
@@ -98,88 +132,66 @@ function CargarInasistencia() {
   const handleChangeCabecera = (event) => {
     setSelectedCabecera(event.target.value);
   };
-
-  const handleInasistencias = async (anio, mes) => {
-    if (!establecimientoSeleccionado) {
-      setAlertMessage("No se ha seleccionado un establecimiento.");
-      setAlertType("warning");
-      setShowAlert(true);
-      return;
-    }
-
-    setAnioSeleccionado(anio);
-    setMesSeleccionado(mes);
-
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}InasistenciasCabecera/InasistenciasListado`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            idEstablecimiento: establecimientoSeleccionado,
-            anio,
-            mes,
-          },
-        }
-      );
-
-      setInasistencias(response.data);
-    } catch (error) {
-      console.error("Error al obtener inasistencias:", error);
-      setAlertMessage("Error al obtener las inasistencias.");
-      setAlertType("error");
-      setShowAlert(true);
-    }
+  const handleChangeEstablecimiento = (event) => {
+    setSelectedEstablecimiento(event.target.value);
   };
-
-  const handleGenerarCabecera = async () => {
-    const seleccionado = cabeceras.find((item) => item.idInasistenciaCabecera === selectedCabecera);
-
-    if (!seleccionado) {
-      setAlertMessage("No se encontró la cabecera seleccionada.");
-      setAlertType("error");
-      setShowAlert(true);
-      return;
-    }
-
+  const handleProcesar = async (row) => {
     try {
+      const url = `${process.env.REACT_APP_API_URL}inasistenciascabecera/procesar`;
+
       const payload = {
-        anio: anioSeleccionado,
-        mes: mesSeleccionado,
-        idCabecera: seleccionado.idCabecera,
-        idEstablecimiento: seleccionado.idEstablecimiento,
+        IdCabeceraLiquidacion: row.idCabecera,
+        IdCabeceraInasistencia: row.idInasistenciaCabecera,
+        IdEstablecimiento: row.idEstablecimiento,
+        UE: row.establecimientos.ue,
       };
 
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}InasistenciasCabecera/AddCabecera`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(url, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      setAlertMessage("Cabecera de inasistencia generada correctamente.");
+      if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
+
+      setAlertMessage("Procesamiento generado correctamente.");
       setAlertType("success");
       setShowAlert(true);
-      setTimeout(() => {
-        setAlertMessage("");
-        setShowAlert(false);
-        setAlertType("");
-        handleCargar();
-        setInasistencias(null);
-      }, 4000);
     } catch (error) {
-      console.error("Error al generar la cabecera:", error);
-      setAlertMessage("Error al generar la cabecera de inasistencia.");
+      console.error(error);
+      setAlertMessage("Error al generar procesamiento: " + error.message);
       setAlertType("error");
       setShowAlert(true);
     }
   };
+  const AccionesCell = ({ row }) => {
+    const { original } = row;
+    const yaProcesado = procesados.includes(original.idInasistenciaCabecera);
 
+    return (
+      <MDBox display="flex" gap={1}>
+        {original.estado === "H" && !yaProcesado && (
+          <MDButton
+            variant="gradient"
+            color="warning"
+            size="small"
+            onClick={() => setDetalleSeleccionado(original)}
+          >
+            Cargar Inasistencia
+          </MDButton>
+        )}
+
+        {yaProcesado && (
+          <MDButton
+            variant="gradient"
+            color="info"
+            size="small"
+            onClick={() => handleProcesar(original)}
+          >
+            Generar Procesamientos
+          </MDButton>
+        )}
+      </MDBox>
+    );
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -196,8 +208,26 @@ function CargarInasistencia() {
                 style={{ height: "2.5rem", backgroundColor: "white" }}
               >
                 {cabeceras.map((item) => (
-                  <MenuItem key={item.idInasistenciaCabecera} value={item.idInasistenciaCabecera}>
-                    {item.establecimientos?.nombrePcia || "Sin nombre"}
+                  <MenuItem key={item.idCabecera} value={item.idCabecera}>
+                    {item.tipoLiquidacion.descripcion} {item.anioLiquidacion}/{item.mesLiquidacion}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={4}>
+            <FormControl fullWidth>
+              <InputLabel id="establecimiento-select-label">Establecimiento</InputLabel>
+              <Select
+                labelId="establecimiento-select-label"
+                value={selectedEstablecimiento}
+                onChange={handleChangeEstablecimiento}
+                label="Establecimiento"
+                style={{ height: "2.5rem", backgroundColor: "white" }}
+              >
+                {establecimientos.map((est) => (
+                  <MenuItem key={est.idEstablecimiento} value={est.idEstablecimiento}>
+                    {est.nombrePcia}
                   </MenuItem>
                 ))}
               </Select>
@@ -228,47 +258,30 @@ function CargarInasistencia() {
               columns: [
                 { Header: "Mes", accessor: "mes" },
                 { Header: "Año", accessor: "anio" },
+                { Header: "Tipo Liquidacion", accessor: "cabecera.tipoLiquidacion.descripcion" },
+                { Header: "Estado", accessor: "estado" },
                 {
                   Header: "Acciones",
                   accessor: "acciones",
-                  Cell: ({ row }) => (
-                    <MDBox display="flex" gap={1}>
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        size="small"
-                        onClick={() => handleInasistencias(row.original.anio, row.original.mes)}
-                      >
-                        Cargar
-                      </MDButton>
-
-                      {inasistencias &&
-                        Array.isArray(inasistencias.detalle) &&
-                        inasistencias.detalle.length === 0 &&
-                        row.original.anio === anioSeleccionado &&
-                        row.original.mes === mesSeleccionado && (
-                          <MDButton
-                            variant="gradient"
-                            color="success"
-                            size="small"
-                            onClick={handleGenerarCabecera}
-                          >
-                            Generar Cabecera Inasistencia
-                          </MDButton>
-                        )}
-                    </MDBox>
-                  ),
+                  Cell: AccionesCell,
                 },
               ],
               rows: cabecerasCargar,
             }}
             entriesPerPage={false}
-            canSearch
           />
         </Card>
       )}
-      {inasistencias && (
-        <TablaInasistenciasDetalle inasistencias={inasistencias} ue={ueSeleccionada} />
+      {detalleSeleccionado && (
+        <ImportarInasistenciaModal
+          open={!!detalleSeleccionado}
+          onClose={() => setDetalleSeleccionado(null)}
+          cabecera={detalleSeleccionado}
+          onSuccess={(detalle) => {
+            handleCargar(); // refrescar listado
+            setProcesados((prev) => [...prev, detalle.idInasistenciaCabecera]);
+          }}
+        />
       )}
     </DashboardLayout>
   );
