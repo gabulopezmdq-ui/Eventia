@@ -23,7 +23,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.Documento)
                 .HasColumnName("Documento")
-                .HasColumnType("char(2)");
+                .HasColumnType("char(8)");
 
             builder.Property(e => e.Legajo)
                 .HasColumnName("Legajo")

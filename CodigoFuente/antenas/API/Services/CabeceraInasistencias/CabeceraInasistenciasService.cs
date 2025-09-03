@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace API.Services
 {
@@ -22,9 +23,9 @@ namespace API.Services
         }
 
 
-        public async Task<List<MesAnioDTO?>> ObtenerFechas(int idEstablecimiento)
+        public async Task<List<MesAnioDTO?>> ObtenerFechas(int idEstablecimiento, int idCabecera)
         {
-            var resultados = await _context.MEC_InasistenciasCabecera.Where(m => m.IdEstablecimiento == idEstablecimiento)
+            var resultados = await _context.MEC_InasistenciasCabecera.Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
                 .Select(m => new MesAnioDTO
                 {
                     Anio = m.Anio,
@@ -81,10 +82,24 @@ namespace API.Services
 
 
         // Método principal para procesar la cabecera de liquidación
-        public async Task<bool> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes)
+        public async Task<MEC_InasistenciasCabecera> AddCabeceraAsync(int idCabecera, int idEstablecimiento, int año, int mes)
         {
             // Obtener el userId desde el token
             int userId = GetUserIdFromToken();
+
+            // Verificar si ya existe una cabecera de inasistencia con esos datos
+            var cabeceraExistente = await _context.MEC_InasistenciasCabecera
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c =>
+                    c.IdCabecera == idCabecera &&
+                    c.Anio == año &&
+                    c.Mes == mes);
+
+            if (cabeceraExistente != null)
+            {
+                // Ya existe, devolverla
+                return cabeceraExistente;
+            }
 
             var cabeceraLiquidacion = await _context.MEC_CabeceraLiquidacion.AsNoTracking().FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
@@ -107,7 +122,7 @@ namespace API.Services
             _context.MEC_InasistenciasCabecera.Add(nuevaCabecera);
             await _context.SaveChangesAsync();
 
-            return true;
+            return nuevaCabecera;
         }
 
         private int GetUserIdFromToken()
@@ -126,6 +141,11 @@ namespace API.Services
             return userId;
         }
 
+        public async Task<List<MEC_TMPInasistenciasDetalle>> ObtenerInas()
+        {
+            var resultado = await _context.MEC_TMPInasistenciasDetalle.Where(m => m.RegistroProcesado == "S").ToListAsync();
+            return resultado;
+        }
 
         // Método para verificar si ya existe un registro con el mismo Año, Mes y Tipo de Liquidación
         public async Task<bool> CheckIfExists(string anio, string mes, int idTipo, string ordenPago)
@@ -137,13 +157,13 @@ namespace API.Services
         //PROCESAR INASISTENCIAS
 
         public async Task<string> ProcesarTMPInasistencias(
-                                 int idCabeceraLiquidacion,
-                                 int idCabeceraInasistencia,
-                                 int idEstablecimiento,
-                                 string UE)
+    int idCabeceraLiquidacion,
+    int idCabeceraInasistencia,
+    int idEstablecimiento,
+    string UE)
         {
             string varUE = UE.Replace("-", "");
-            bool huboErrores = false; // <-- Bandera para controlar si hubo errores
+            var errores = new List<string>(); // Lista para acumular errores
 
             var registrosTMP = await _context.MEC_TMPInasistenciasDetalle
                 .Where(x => x.IdCabecera == idCabeceraLiquidacion
@@ -154,118 +174,125 @@ namespace API.Services
 
             foreach (var tmp in registrosTMP)
             {
-                // 1. Validar existencia del documento (DNI)
-                var persona = await _context.MEC_Personas
-                    .FirstOrDefaultAsync(p => p.DNI == tmp.DNI);
-
-                if (persona == null)
+                try
                 {
-                    _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                    // 1. Validar existencia del documento (DNI)
+                    var persona = await _context.MEC_Personas
+                        .FirstOrDefaultAsync(p => p.DNI == tmp.DNI);
+
+                    if (persona == null)
                     {
-                        IdCabeceraInasistencia = idCabeceraLiquidacion,
-                        IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                        Documento = "NE",
-                        Legajo = "NE",
-                        POF = "NE",
-                        POFBarra = "NE"
-                    });
+                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        {
+                            IdCabeceraInasistencia = idCabeceraLiquidacion,
+                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                            Documento = tmp.DNI,
+                            Legajo = "NE",
+                            POF = "NE",
+                            POFBarra = "NE"
+                        });
 
-                    tmp.RegistroValido = "N";
-                    tmp.RegistroProcesado = "S";
-                    huboErrores = true; // <-- Marcamos que hubo un error
-                    continue;
-                }
+                        tmp.RegistroValido = "N";
+                        tmp.RegistroProcesado = "S";
+                        errores.Add($"Error con TMP ID {tmp.IdTMPInasistenciasDetalle}: Persona con DNI {tmp.DNI} no encontrada.");
+                        continue;
+                    }
 
-                // 2. Validar Legajo
-                if (persona.Legajo != tmp.NroLegajo?.ToString())
-                {
-                    _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                    // 2. Validar Legajo
+                    if (persona.Legajo != tmp.NroLegajo?.ToString())
                     {
-                        IdCabeceraInasistencia = idCabeceraLiquidacion,
-                        IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                        Documento = "OK",
-                        Legajo = "NE",
-                        POF = "NE",
-                        POFBarra = "NE"
-                    });
+                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        {
+                            IdCabeceraInasistencia = idCabeceraLiquidacion,
+                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                            Documento = "OK",
+                            Legajo = "NE",
+                            POF = "NE",
+                            POFBarra = "NE"
+                        });
 
-                    tmp.RegistroValido = "N";
-                    tmp.RegistroProcesado = "S";
-                    huboErrores = true;
-                    continue;
-                }
+                        tmp.RegistroValido = "N";
+                        tmp.RegistroProcesado = "S";
+                        errores.Add($"Error con TMP ID {tmp.IdTMPInasistenciasDetalle}: Legajo no coincide.");
+                        continue;
+                    }
 
-                var idPersona = persona.IdPersona;
+                    var idPersona = persona.IdPersona;
 
-                // 3. Validar POF
-                var pofs = await _context.MEC_POF
-                    .Where(p => p.IdEstablecimiento == idEstablecimiento && p.IdPersona == idPersona)
-                    .ToListAsync();
+                    // 3. Validar POF
+                    var pofs = await _context.MEC_POF
+                        .Where(p => p.IdEstablecimiento == idEstablecimiento && p.IdPersona == idPersona)
+                        .ToListAsync();
 
-                if (!pofs.Any())
-                {
-                    _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                    if (!pofs.Any())
                     {
-                        IdCabeceraInasistencia = idCabeceraLiquidacion,
-                        IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                        Documento = "OK",
-                        Legajo = "OK",
-                        POF = "NE",
-                        POFBarra = "NE"
-                    });
+                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        {
+                            IdCabeceraInasistencia = idCabeceraLiquidacion,
+                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                            Documento = "OK",
+                            Legajo = "OK",
+                            POF = "NE",
+                            POFBarra = "NE"
+                        });
 
-                    tmp.RegistroValido = "N";
-                    tmp.RegistroProcesado = "S";
-                    huboErrores = true;
-                    continue;
-                }
+                        tmp.RegistroValido = "N";
+                        tmp.RegistroProcesado = "S";
+                        errores.Add($"Error con TMP ID {tmp.IdTMPInasistenciasDetalle}: No se encontró POF válido.");
+                        continue;
+                    }
 
-                // 4. Validar Barra
-                bool barraCoincide = false;
+                    // 4. Validar Barra
+                    bool barraCoincide = false;
 
-                foreach (var pof in pofs)
-                {
-                    barraCoincide = await _context.MEC_POF_Barras
-                        .AnyAsync(b => b.IdPOF == pof.IdPOF && b.Barra == tmp.NroCargo);
-
-                    if (barraCoincide)
-                        break;
-                }
-
-                if (!barraCoincide)
-                {
-                    _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                    foreach (var pof in pofs)
                     {
-                        IdCabeceraInasistencia = idCabeceraLiquidacion,
-                        IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                        Documento = "OK",
-                        Legajo = "OK",
-                        POF = "OK",
-                        POFBarra = "NE"
-                    });
+                        barraCoincide = await _context.MEC_POF_Barras
+                            .AnyAsync(b => b.IdPOF == pof.IdPOF && b.Barra == tmp.NroCargo);
 
-                    tmp.RegistroValido = "N";
+                        if (barraCoincide)
+                            break;
+                    }
+
+                    if (!barraCoincide)
+                    {
+                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        {
+                            IdCabeceraInasistencia = idCabeceraLiquidacion,
+                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                            Documento = "OK",
+                            Legajo = "OK",
+                            POF = "OK",
+                            POFBarra = "NE"
+                        });
+
+                        tmp.RegistroValido = "N";
+                        tmp.RegistroProcesado = "S";
+                        errores.Add($"Error con TMP ID {tmp.IdTMPInasistenciasDetalle}: Barra no coincide.");
+                        continue;
+                    }
+
+                    // Si todo pasó correctamente
+                    tmp.RegistroValido = "S";
                     tmp.RegistroProcesado = "S";
-                    huboErrores = true;
-                    continue;
                 }
-
-                // Si todo pasó correctamente
-                tmp.RegistroValido = "S";
-                tmp.RegistroProcesado = "S";
+                catch (Exception ex)
+                {
+                    errores.Add($"Error inesperado con TMP ID {tmp.IdTMPInasistenciasDetalle}: {ex.Message}");
+                }
             }
 
             await _context.SaveChangesAsync();
 
-            // Devuelve un mensaje indicando el resultado
-            return huboErrores
-                ? "Se encontraron errores durante el procesamiento."
+            // Devolver mensaje con todos los errores encontrados
+            return errores.Any()
+                ? $"Se encontraron errores en {errores.Count} registros:\n- {string.Join("\n- ", errores)}"
                 : "Todos los registros fueron procesados correctamente.";
         }
 
 
 
-        public async Task ProcesarInasistenciaAsync(int idCabeceraInasistencia, int idPOF, int idPOFBarra, int idTMPInasistenciasDetalle, int? codLicencia, DateTime fecha, int cantHs)
+        public async Task AgregarInasistenciaAsync(int idCabeceraInasistencia, int idPOF, int idPOFBarra, int idTMPInasistenciasDetalle, int? codLicencia, DateTime fecha, int cantHs)
         {
             // 1. Validar que no exista el registro en MEC_InasistenciasDetalle
             var yaExiste = await _context.MEC_InasistenciasDetalle
@@ -562,7 +589,7 @@ namespace API.Services
                      IdEstablecimiento = m.IdEstablecimiento,
                      Anio = m.Anio,
                      Mes = m.Mes,
-                     Estado = m.Estado  
+                     Estado = m.Estado
                  }).Distinct().OrderBy(x => x.Anio).ThenBy(x => x.Mes).ToListAsync();
 
             return cabeceras;
@@ -612,6 +639,22 @@ namespace API.Services
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<string> EliminarTMP()
+        {
+            try
+            {
+                // Usamos TRUNCATE con RESTART IDENTITY para reiniciar los IDs
+                await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"MEC_TMPInasistenciasDetalle\" RESTART IDENTITY;");
+
+                return "Tabla MEC_TMPInasistenciasDetalle truncada correctamente.";
+            }
+            catch (Exception ex)
+            {
+                // En caso de error, devolvemos el mensaje
+                return $"Error al truncar la tabla: {ex.Message}";
+            }
         }
     }
 }
