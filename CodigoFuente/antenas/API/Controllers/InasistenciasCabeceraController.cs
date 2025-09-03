@@ -23,16 +23,20 @@ namespace API.Controllers
         private readonly ICabeceraInasistenciasService _cabeceraService;
         private readonly IAprobarInasistenciasService _aprobarService;
         private readonly ICRUDService<MEC_InasistenciasCabecera> _serviceGenerico;
+        private readonly ICRUDService<MEC_CabeceraLiquidacion> _serviceCabLiq;
         private readonly ICRUDService<MEC_InasistenciasDetalle> _serviceGenericoInas;
+        private readonly ICRUDService<MEC_TMPErroresInasistenciasDetalle> _serviceGenericoErrores;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public InasistenciasCabeceraController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraInasistenciasService cabeceraService, ICRUDService<MEC_InasistenciasCabecera> serviceGenerico, IHttpContextAccessor httpContextAccessor, ICRUDService<MEC_InasistenciasDetalle> serviceGenericoInas)
+        public InasistenciasCabeceraController(DataContext context, ILogger<CabeceraLiquidacionController> logger, ICabeceraInasistenciasService cabeceraService, ICRUDService<MEC_InasistenciasCabecera> serviceGenerico, IHttpContextAccessor httpContextAccessor, ICRUDService<MEC_InasistenciasDetalle> serviceGenericoInas, ICRUDService<MEC_TMPErroresInasistenciasDetalle> serviceGenericoErrores, ICRUDService<MEC_CabeceraLiquidacion> serviceCabLiq)
         {
             _context = context;
             _cabeceraService = cabeceraService;
             _serviceGenerico = serviceGenerico;
             _httpContextAccessor = httpContextAccessor;
             _serviceGenericoInas = serviceGenericoInas;
+            _serviceGenericoErrores = serviceGenericoErrores;
+            _serviceCabLiq = serviceCabLiq;
         }
 
         [HttpGet("CheckIfExists")]
@@ -46,9 +50,9 @@ namespace API.Controllers
         }
 
         [HttpGet("GetFechas")]
-        public async Task<IActionResult> GetFechas(int idEstablecimiento)
+        public async Task<IActionResult> GetFechas(int idEstablecimiento, int idCabecera)
         {
-            var resultado = await _cabeceraService.ObtenerFechas(idEstablecimiento);
+            var resultado = await _cabeceraService.ObtenerFechas(idEstablecimiento, idCabecera);
 
             if (resultado == null)
             {
@@ -59,16 +63,17 @@ namespace API.Controllers
         }
 
         [HttpGet("InasistenciasListado")]
-        public async Task<IActionResult> GetInasistenciaPorPeriodo(int idEstablecimiento, int anio, int mes)
+        public async Task<IActionResult> GetInasistenciaPorPeriodo(int idEstablecimiento, int anio, int mes, int idCabecera)
         {
-            var resultado = await _cabeceraService.ObtenerInasistenciaPorPeriodoAsync(idEstablecimiento, anio, mes);
+            // Llama al servicio que crea o devuelve la cabecera
+            var cabecera = await _cabeceraService.AddCabeceraAsync(idCabecera, idEstablecimiento, anio, mes);
 
-            if (resultado == null)
+            if (cabecera == null)
             {
-                return NotFound($"No se encontró inasistencia para Establecimiento {idEstablecimiento}, {anio}-{mes}.");
+                return BadRequest("No se pudo crear o recuperar la cabecera de inasistencia.");
             }
 
-            return Ok(resultado);
+            return Ok(cabecera);
         }
 
         [HttpPost("AddCabecera")]
@@ -98,7 +103,7 @@ namespace API.Controllers
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_CabeceraLiquidacion>>> Get() //Trae los registros Vigentes = S
         {
-            return Ok(_serviceGenerico.GetAll());
+            return Ok(_serviceCabLiq.GetAll());
         }
 
         [HttpGet("GetByVigente")]
@@ -120,7 +125,42 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
-        [HttpPost("procesar")]
+        //Una vez que se selecciona el combo POF, se deberá completar el combo MEC_POF_Barra con el IdPOF seleccionado y armar una lista con todas las barras de la tabla  MEC_POF_Barras.
+       
+        [HttpPost("AgregarDetalle")]
+        public async Task<IActionResult> AgregarInasistencia([FromBody] InasistenciaRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                await _cabeceraService.AgregarInasistenciaAsync(
+                    request.IdCabeceraInasistencia,
+                    request.IdPOF,
+                    request.IdPOFBarra,
+                    request.IdTMPInasistenciasDetalle,
+                    request.CodLicencia,
+                    request.Fecha,
+                    request.CantHs
+                );
+
+                return Ok(new { message = "Inasistencia agregada correctamente." });
+            }
+            catch (Exception ex)
+            {
+                // Puedes registrar el error con logger aquí
+                return StatusCode(500, new { message = "Ocurrió un error al agregar la inasistencia.", error = ex.Message });
+            }
+        }
+        [HttpGet("Inasistencias")]
+        public async Task<ActionResult<IEnumerable<MEC_TMPInasistenciasDetalle>>> GetInasistenciasDetalle()
+        {
+            var resultado = await _cabeceraService.ObtenerInas();
+            return Ok(resultado);
+        }
+
+        [HttpPost("Procesar")]
         public async Task<IActionResult> ProcesarTMPInasistencias([FromBody] ProcesarInasistencias request)
         {
             if (request == null)
@@ -327,6 +367,14 @@ namespace API.Controllers
                 return NotFound("No se encontró la cabecera.");
 
             return Ok("Cabecera enviada correctamente.");   
+        }
+
+        //GET INASISTENCIAS ERORES
+
+        [HttpGet("ErroresInas")]
+        public async Task<IActionResult> ObtenerErrores ()
+        {
+            return Ok(_serviceGenericoErrores.GetAll());
         }
     }
 

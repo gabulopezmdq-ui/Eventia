@@ -160,6 +160,7 @@ namespace API.Services
                     DELETE FROM ""MEC_TMPErroresCarRevista"";
                     DELETE FROM ""MEC_TMPErroresTiposEstablecimientos"";
                     DELETE FROM ""MEC_TMPErroresMecanizadas"";
+                    DELETE FROM ""MEC_TMPMecanizadas"";
 
                 ALTER SEQUENCE ""MEC_TMPErroresEstablecimientos_IdTMPErrorEstablecimiento_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresFuncion_IdTMPErrorFuncion_seq"" RESTART WITH 1;
@@ -167,6 +168,7 @@ namespace API.Services
                 ALTER SEQUENCE ""MEC_TMPErroresCarRevista_IdTMPErrorCarRevista_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresTiposEstablecim_IdTMPErrorTipoEstablecimiento_seq"" RESTART WITH 1;
                 ALTER SEQUENCE ""MEC_TMPErroresMecanizadas_IdTMPErrorMecanizada_seq"" RESTART WITH 1;
+                ALTER SEQUENCE ""MEC_TMPMecanizadas_idTMPMecanizada_seq"" RESTART WITH 1;
                 ", idCabecera);
 
             //await _context.Database.ExecuteSqlRawAsync(@"

@@ -69,10 +69,10 @@ namespace API.Controllers
             var roles = usuario.UsuariosXRoles.Select(ur => ur.Rol?.NombreRol).Where(r => !string.IsNullOrEmpty(r)).ToList();
 
             // Obtener idEstablecimiento vigente (el primero que encuentre)
-            int? idEstablecimiento = _context.MEC_UsuariosEstablecimientos
-                .Where(uxe => uxe.IdUsuario == userId && uxe.Vigente == "S")
-                .Select(uxe => (int?)uxe.IdEstablecimiento)
-                .FirstOrDefault();
+            var idEstablecimientos = _context.MEC_UsuariosEstablecimientos
+                                    .Where(uxe => uxe.IdUsuario == userId && uxe.Vigente == "S")
+                                    .Select(uxe => uxe.IdEstablecimiento)
+                                    .ToList();
 
             var claims = new List<Claim>
             {
@@ -80,10 +80,11 @@ namespace API.Controllers
                 new Claim("id", usuario.IdUsuario.ToString())
             };
 
-            if (idEstablecimiento.HasValue)
+            foreach (var id in idEstablecimientos)
             {
-                claims.Add(new Claim("idEstablecimiento", idEstablecimiento.Value.ToString()));
+                claims.Add(new Claim("idEstablecimiento", id.ToString()));
             }
+
 
             claims.AddRange(roles.Select(rol => new Claim(ClaimTypes.Role, rol)));
 
