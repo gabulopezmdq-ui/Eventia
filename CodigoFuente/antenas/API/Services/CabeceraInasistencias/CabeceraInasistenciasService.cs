@@ -165,6 +165,27 @@ namespace API.Services
             string varUE = UE.Replace("-", "");
             var errores = new List<string>(); // Lista para acumular errores
 
+            // --- 1. Verificar si ya existen errores registrados para este contexto ---
+            var erroresExistentes = await _context.MEC_TMPErroresInasistenciasDetalle
+                .Where(e => e.IdCabeceraInasistencia == idCabeceraLiquidacion)
+                .Select(e => new
+                {
+                    e.IdTMPInasistenciasDetalle,
+                    e.Documento,
+                    e.Legajo,
+                    e.POF,
+                    e.POFBarra
+                })
+                .ToListAsync();
+
+            if (erroresExistentes.Any())
+            {
+                errores.AddRange(erroresExistentes.Select(e =>
+                    $"Error previo con TMP ID {e.IdTMPInasistenciasDetalle}: " +
+                    $"Documento={e.Documento}, Legajo={e.Legajo}, POF={e.POF}, POFBarra={e.POFBarra}"));
+            }
+
+            // --- 2. Procesar los registros TMP no procesados ---
             var registrosTMP = await _context.MEC_TMPInasistenciasDetalle
                 .Where(x => x.IdCabecera == idCabeceraLiquidacion
                             && x.IdInasistenciaCabecera == idCabeceraInasistencia
@@ -182,15 +203,27 @@ namespace API.Services
 
                     if (persona == null)
                     {
-                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        // Evita duplicados: busca si ya existe exactamente el mismo error
+                        var errorYaRegistrado = await _context.MEC_TMPErroresInasistenciasDetalle
+                            .AnyAsync(e =>
+                                e.IdTMPInasistenciasDetalle == tmp.IdTMPInasistenciasDetalle &&
+                                e.Documento == tmp.DNI &&
+                                e.Legajo == "NE" &&
+                                e.POF == "NE" &&
+                                e.POFBarra == "NE");
+
+                        if (!errorYaRegistrado)
                         {
-                            IdCabeceraInasistencia = idCabeceraLiquidacion,
-                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                            Documento = tmp.DNI,
-                            Legajo = "NE",
-                            POF = "NE",
-                            POFBarra = "NE"
-                        });
+                            _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                            {
+                                IdCabeceraInasistencia = idCabeceraLiquidacion,
+                                IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                                Documento = tmp.DNI,
+                                Legajo = "NE",
+                                POF = "NE",
+                                POFBarra = "NE"
+                            });
+                        }
 
                         tmp.RegistroValido = "N";
                         tmp.RegistroProcesado = "S";
@@ -201,15 +234,25 @@ namespace API.Services
                     // 2. Validar Legajo
                     if (persona.Legajo != tmp.NroLegajo?.ToString())
                     {
-                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        var errorYaRegistrado = await _context.MEC_TMPErroresInasistenciasDetalle
+                            .AnyAsync(e =>
+                                e.IdTMPInasistenciasDetalle == tmp.IdTMPInasistenciasDetalle &&
+                                e.Legajo == "NE" &&
+                                e.POF == "NE" &&
+                                e.POFBarra == "NE");
+
+                        if (!errorYaRegistrado)
                         {
-                            IdCabeceraInasistencia = idCabeceraLiquidacion,
-                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                            Documento = "OK",
-                            Legajo = "NE",
-                            POF = "NE",
-                            POFBarra = "NE"
-                        });
+                            _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                            {
+                                IdCabeceraInasistencia = idCabeceraLiquidacion,
+                                IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                                Documento = "OK",
+                                Legajo = "NE",
+                                POF = "NE",
+                                POFBarra = "NE"
+                            });
+                        }
 
                         tmp.RegistroValido = "N";
                         tmp.RegistroProcesado = "S";
@@ -226,15 +269,23 @@ namespace API.Services
 
                     if (!pofs.Any())
                     {
-                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        var errorYaRegistrado = await _context.MEC_TMPErroresInasistenciasDetalle
+                            .AnyAsync(e =>
+                                e.IdTMPInasistenciasDetalle == tmp.IdTMPInasistenciasDetalle &&
+                                e.POF == "NE");
+
+                        if (!errorYaRegistrado)
                         {
-                            IdCabeceraInasistencia = idCabeceraLiquidacion,
-                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                            Documento = "OK",
-                            Legajo = "OK",
-                            POF = "NE",
-                            POFBarra = "NE"
-                        });
+                            _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                            {
+                                IdCabeceraInasistencia = idCabeceraLiquidacion,
+                                IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                                Documento = "OK",
+                                Legajo = "OK",
+                                POF = "NE",
+                                POFBarra = "NE"
+                            });
+                        }
 
                         tmp.RegistroValido = "N";
                         tmp.RegistroProcesado = "S";
@@ -256,15 +307,23 @@ namespace API.Services
 
                     if (!barraCoincide)
                     {
-                        _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                        var errorYaRegistrado = await _context.MEC_TMPErroresInasistenciasDetalle
+                            .AnyAsync(e =>
+                                e.IdTMPInasistenciasDetalle == tmp.IdTMPInasistenciasDetalle &&
+                                e.POFBarra == "NE");
+
+                        if (!errorYaRegistrado)
                         {
-                            IdCabeceraInasistencia = idCabeceraLiquidacion,
-                            IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
-                            Documento = "OK",
-                            Legajo = "OK",
-                            POF = "OK",
-                            POFBarra = "NE"
-                        });
+                            _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                            {
+                                IdCabeceraInasistencia = idCabeceraLiquidacion,
+                                IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                                Documento = "OK",
+                                Legajo = "OK",
+                                POF = "OK",
+                                POFBarra = "NE"
+                            });
+                        }
 
                         tmp.RegistroValido = "N";
                         tmp.RegistroProcesado = "S";
@@ -284,11 +343,44 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
 
-            // Devolver mensaje con todos los errores encontrados
             return errores.Any()
-                ? $"Se encontraron errores en {errores.Count} registros:\n- {string.Join("\n- ", errores)}"
+                ? $"Se encontraron errores"
                 : "Todos los registros fueron procesados correctamente.";
         }
+
+
+        private async Task RegistrarErrorSiNoExiste(
+    MEC_TMPInasistenciasDetalle tmp,
+    int idCabeceraLiquidacion,
+    string documento,
+    string legajo,
+    string pof,
+    string pofBarra)
+        {
+            var existeError = await _context.MEC_TMPErroresInasistenciasDetalle
+                .AnyAsync(e =>
+                    e.IdCabeceraInasistencia == idCabeceraLiquidacion &&
+                    e.IdTMPInasistenciasDetalle == tmp.IdTMPInasistenciasDetalle &&
+                    e.Documento == documento &&
+                    e.Legajo == legajo &&
+                    e.POF == pof &&
+                    e.POFBarra == pofBarra
+                );
+
+            if (!existeError)
+            {
+                _context.MEC_TMPErroresInasistenciasDetalle.Add(new MEC_TMPErroresInasistenciasDetalle
+                {
+                    IdCabeceraInasistencia = idCabeceraLiquidacion,
+                    IdTMPInasistenciasDetalle = tmp.IdTMPInasistenciasDetalle,
+                    Documento = documento,
+                    Legajo = legajo,
+                    POF = pof,
+                    POFBarra = pofBarra
+                });
+            }
+        }
+
 
 
 
@@ -655,6 +747,63 @@ namespace API.Services
                 // En caso de error, devolvemos el mensaje
                 return $"Error al truncar la tabla: {ex.Message}";
             }
+        }
+
+
+        //DEVOLVER ERRORES
+        public async Task<List<MEC_TMPErroresInasistenciasDetalle>> ObtenerErroresTMPAsync(
+                        int idCabeceraLiquidacion,
+                        int idCabeceraInasistencia,
+                        string UE)
+        {
+            string varUE = UE.Replace("-", "");
+
+            var errores = await _context.MEC_TMPErroresInasistenciasDetalle
+                .Where(e => e.IdCabeceraInasistencia == idCabeceraLiquidacion
+                            && _context.MEC_TMPInasistenciasDetalle
+                                .Any(tmp => tmp.IdTMPInasistenciasDetalle == e.IdTMPInasistenciasDetalle
+                                            && tmp.IdInasistenciaCabecera == idCabeceraInasistencia
+                                            && tmp.UE == varUE))
+                .AsNoTracking()
+                .ToListAsync();
+
+            return errores;
+        }
+
+
+        public async Task<List<MEC_TMPInasistenciasDetalle>> RegistrosProcesados()
+        {
+            var listado = await _context.MEC_TMPInasistenciasDetalle.Where(x => x.RegistroProcesado == "S").OrderBy(x => x.UE).ToListAsync();
+            return listado;
+        }
+
+        //COMBO POF
+        public async Task<PofConBarrasDTO> BuscarPOF(string DNI, string Legajo)
+        {
+            var pofEntity = await _context.MEC_POF
+         .Where(x => x.Persona.DNI == DNI && x.Persona.Legajo == Legajo)
+         .FirstOrDefaultAsync(); // Primero traemos la entidad de la DB
+
+            if (pofEntity == null)
+                return null;
+
+            // Luego proyectamos a DTO en memoria
+            var pofDTO = new PofConBarrasDTO
+            {
+                Apellido = pofEntity.Persona.Apellido,
+                Nombre = pofEntity.Persona.Nombre,
+                DNI = pofEntity.Persona.DNI,
+                Legajo = pofEntity.Persona.Legajo,
+                Secuencia = pofEntity.Secuencia,
+                TipoCargo = pofEntity.TipoCargo,
+                Vigente = pofEntity.Vigente,
+                Barra = pofEntity.Barra,
+                Barras = !string.IsNullOrEmpty(pofEntity.Barra)
+                    ? pofEntity.Barra.Split(',').Select(b => int.Parse(b)).ToList()
+                    : new List<int>()
+            };
+
+            return pofDTO;
         }
     }
 }

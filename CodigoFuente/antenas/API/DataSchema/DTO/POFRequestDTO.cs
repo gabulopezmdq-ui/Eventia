@@ -54,4 +54,12 @@ namespace API.DataSchema.DTO
         public string Barra { get; set; }
         public List<int> Barras { get; set; } = new();
     }
+
+    public class POFInas
+    {
+        public string DNI { get; set; }
+        public string Apellido { get; set; }
+        public string Nombre { get; set; }
+        public string Legajo { get; set; }
+    }
 }
