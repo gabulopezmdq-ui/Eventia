@@ -102,5 +102,5 @@ ImportarInasistenciaModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   cabecera: PropTypes.object.isRequired,
-  onSuccess: PropTypes.func, // Callback opcional tras importar
+  onSuccess: PropTypes.func,
 };

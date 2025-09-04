@@ -95,6 +95,8 @@ namespace API.Services
             if (registros == null || !registros.Any())
                 throw new Exception("El JSON no contenía registros válidos.");
 
+
+            //eliminar esta parte para agregar un boton que elimine los registros
             // 1. Borrar primero tabla de errores (dependiente)
             await _context.Database.ExecuteSqlRawAsync("DELETE FROM \"MEC_TMPErroresInasistenciasDetalle\"");
 

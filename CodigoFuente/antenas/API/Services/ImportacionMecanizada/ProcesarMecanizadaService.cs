@@ -34,39 +34,42 @@ namespace API.Services
 
         public async Task PreprocesarAsync(int idCabecera)
         {
-            // 1. Usar AsNoTracking para la cabecera (operación de solo lectura)
+            // 1. Cabecera (solo lectura)
             var cabecera = await _context.MEC_CabeceraLiquidacion
                                         .AsNoTracking()
                                         .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera)
                                         .ConfigureAwait(false);
 
             if (cabecera == null || cabecera.Estado != "I")
-            {
                 throw new Exception("La cabecera no existe o no está en estado 'I'.");
-            }
 
-            // 2. Filtrar registros MEC_TMPMecanizadas que coinciden en OrdenPago
+            // 2. Cargar registros temporales
             var mecanizadasFiltradas = await _context.MEC_TMPMecanizadas
                 .Where(m => m.idCabecera == idCabecera && m.OrdenPago == cabecera.OrdenPago)
                 .ToListAsync()
                 .ConfigureAwait(false);
 
             if (!mecanizadasFiltradas.Any())
-            {
                 throw new Exception("No se encontraron registros en MEC_TMPMecanizadas que coincidan con la Orden de Pago de la cabecera.");
-            }
 
-            // 2. Ejecutar validaciones secuencialmente con ConfigureAwait(false)
-            await ValidarNroEstabAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            await ValidarCodFuncionAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            await ValidarCodLiquidacionAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            await ValidarCarRevistaAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            await ValidarTipoOrgAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            // 3. Cargar catálogos a memoria
+            var hsEstablecimientos = new HashSet<string>(await _context.MEC_Establecimientos.Select(e => e.NroDiegep).ToListAsync());
+            var hsFunciones = new HashSet<string>(await _context.MEC_TiposFunciones.Select(f => f.CodFuncion).ToListAsync());
+            var hsConceptos = new HashSet<string>(await _context.MEC_Conceptos.Select(c => c.CodConcepto).ToListAsync());
+            var hsCarRevista = new HashSet<string>(await _context.MEC_CarRevista.Select(c => c.CodPcia).ToListAsync());
+            var hsTiposEstablecimientos = new HashSet<string>(await _context.MEC_TiposEstablecimientos.Select(t => t.CodTipoEstablecimiento).ToListAsync());
 
-            // 3. Guardar cambios acumulados
+            // 4. Validaciones en memoria
+            await ValidarNroEstabOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsEstablecimientos);
+            await ValidarCodFuncionOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsFunciones);
+            await ValidarCodLiquidacionOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsConceptos);
+            await ValidarCarRevistaOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsCarRevista);
+            await ValidarTipoOrgOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsTiposEstablecimientos);
+
+            // 5. Guardar cambios acumulados
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
-            // 4. Verificar errores de manera atómica
+            // 6. Verificar errores de manera atómica
             bool tieneErrores = await VerificarErroresAsync(idCabecera).ConfigureAwait(false);
 
             if (tieneErrores)
@@ -77,23 +80,80 @@ namespace API.Services
                 throw new Exception("El archivo contiene errores. Debe corregir el archivo y volver a importarlo.");
             }
 
-            // 5. Validación MEC con operaciones secuenciales
+            // 7. Validación MEC
             await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
-            // 6. Verificar registros inválidos
-            var registrosInvalidos = await _context.MEC_TMPMecanizadas
-                .Where(m => m.idCabecera == idCabecera && m.RegistroValido == "N")
-                .ToListAsync()
-                .ConfigureAwait(false);
+            // 8. Verificar registros inválidos
+            var registrosInvalidos = mecanizadasFiltradas.Where(m => m.RegistroValido == "N").ToList();
 
             if (registrosInvalidos.Any())
+                throw new Exception("Existen Personas que no están registradas en el sistema...");
+        }
+
+        private Task ValidarNroEstabOptimizadoAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadas, HashSet<string> hsEstablecimientos)
+        {
+            var invalidos = mecanizadas
+                .Select(m => m.NroEstab)
+                .Distinct()
+                .Where(n => !hsEstablecimientos.Contains(n));
+
+            if (invalidos.Any())
             {
-                string leyenda = "Existen Personas que no están registradas en el sistema...";
-                throw new Exception(leyenda); // Eliminado el DisposeAsync
+                var errores = invalidos.Select(n => new MEC_TMPErroresEstablecimientos
+                {
+                    IdCabecera = idCabecera,
+                    NroEstab = n
+                });
+                _context.MEC_TMPErroresEstablecimientos.AddRange(errores);
             }
+
+            return Task.CompletedTask;
         }
 
 
+        private Task ValidarCodFuncionOptimizadoAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadas, HashSet<string> hsFunciones)
+        {
+            var invalidos = mecanizadas.Select(m => m.Funcion).Distinct().Where(c => !hsFunciones.Contains(c));
+            if (invalidos.Any())
+            {
+                var errores = invalidos.Select(c => new MEC_TMPErroresFuncion { IdCabecera = idCabecera, CodFuncion = c });
+                _context.MEC_TMPErroresFuncion.AddRange(errores);
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task ValidarCodLiquidacionOptimizadoAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadas, HashSet<string> hsConceptos)
+        {
+            var invalidos = mecanizadas.Select(m => m.CodigoLiquidacion).Distinct().Where(c => !hsConceptos.Contains(c));
+            if (invalidos.Any())
+            {
+                var errores = invalidos.Select(c => new MEC_TMPErroresConceptos { IdCabecera = idCabecera, CodigoLiquidacion = c });
+                _context.MEC_TMPErroresConceptos.AddRange(errores);
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task ValidarCarRevistaOptimizadoAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadas, HashSet<string> hsCarRevista)
+        {
+            var invalidos = mecanizadas.Select(m => m.CaracterRevista).Distinct().Where(c => !hsCarRevista.Contains(c));
+            if (invalidos.Any())
+            {
+                var errores = invalidos.Select(c => new MEC_TMPErroresCarRevista { IdCabecera = idCabecera, CaracterRevista = c });
+                _context.MEC_TMPErroresCarRevista.AddRange(errores);
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task ValidarTipoOrgOptimizadoAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadas, HashSet<string> hsTiposEstablecimientos)
+        {
+            var invalidos = mecanizadas.Select(m => m.TipoOrganizacion).Distinct().Where(c => !hsTiposEstablecimientos.Contains(c));
+            if (invalidos.Any())
+            {
+                var errores = invalidos.Select(c => new MEC_TMPErroresTiposEstablecimientos { IdCabecera = idCabecera, TipoOrganizacion = c });
+                _context.MEC_TMPErroresTiposEstablecimientos.AddRange(errores);
+            }
+            return Task.CompletedTask;
+        }
 
         private async Task<bool> VerificarErroresAsync(int idCabecera)
         {
@@ -251,7 +311,7 @@ namespace API.Services
             }
         }
 
-        public List<ErroresPOFDTO> ErroresPOFAgrupados ()
+        public List<ErroresPOFDTO> ErroresPOFAgrupados()
         {
             var resultado = (from a in _context.MEC_TMPErroresMecanizadas
                              join e in _context.MEC_Establecimientos
@@ -270,81 +330,103 @@ namespace API.Services
             return resultado;
         }
         private async Task ValidarMecAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
-                {
-            var registros = mecanizadasFiltradas;
+        {
+            // 1. Cargar datos que podemos en memoria
+    var personas = await _context.MEC_Personas.AsNoTracking()
+                       .ToDictionaryAsync(p => p.DNI);
 
-            var detallesPOF = new List<MEC_POFDetalle>();
-            var erroresMec = new List<MEC_TMPErroresMecanizadas>();
+    var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
+                             .ToDictionaryAsync(e => e.NroDiegep);
 
-            foreach (var registro in registros)
+    var pofs = await _context.MEC_POF.AsNoTracking().ToListAsync();
+    var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
+                      .ToDictionary(g => g.Key, g => g.First());
+
+    var cabecera = await _context.MEC_CabeceraLiquidacion
+                         .AsNoTracking()
+                         .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
+    // 2. Listas para batch insert
+    var detallesPOF = new List<MEC_POFDetalle>();
+    var erroresMec = new List<MEC_TMPErroresMecanizadas>();
+
+    // 3. Procesar registros en memoria
+    foreach (var registro in mecanizadasFiltradas)
+    {
+        personas.TryGetValue(registro.Documento, out var persona);
+        establecimientos.TryGetValue(registro.NroEstab, out var establecimiento);
+
+        if (establecimiento == null)
+        {
+            // Si no hay establecimiento, continuar con el siguiente registro
+            continue;
+        }
+
+        if (persona == null)
+        {
+            erroresMec.Add(new MEC_TMPErroresMecanizadas
             {
-                var persona = await _context.MEC_Personas.AsNoTracking()
-                                                         .FirstOrDefaultAsync(x => x.DNI == registro.Documento);
+                IdCabecera = idCabecera,
+                Documento = "NE",
+                IdTMPMecanizada = registro.idTMPMecanizada,
+                POF = "NE",
+                IdEstablecimiento = establecimiento.IdEstablecimiento
+            });
+            registro.RegistroValido = "N";
+            continue;
+        }
 
-                var establecimiento = await _context.MEC_Establecimientos
-                                                    .Where(e => e.NroDiegep == registro.NroEstab)
-                                                    .Select(e => e.IdEstablecimiento)
-                                                    .FirstOrDefaultAsync();
+        // Buscar POF en diccionario
+        if (!pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out var pof))
+        {
+            erroresMec.Add(new MEC_TMPErroresMecanizadas
+            {
+                IdCabecera = idCabecera,
+                Documento = "NE",
+                IdTMPMecanizada = registro.idTMPMecanizada,
+                POF = "NE",
+                IdEstablecimiento = establecimiento.IdEstablecimiento
+            });
+            registro.RegistroValido = "N";
+            continue;
+        }
 
-                // 🔍 Depuración: Verificar establecimiento obtenido
-                Console.WriteLine($"Registro: {registro.NroEstab} -> Establecimiento ID: {establecimiento}");
+        // Procesar detalle
+        var detalle = new MEC_POFDetalle
+        {
+            IdCabecera = idCabecera,
+            IdPOF = pof.IdPOF,
+            CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
+        };
 
-                if (establecimiento == 0) // Si no encontró el establecimiento, continuar con el siguiente
-                {
-                    Console.WriteLine($"No se encontró el establecimiento para NroDiegep {registro.NroEstab}");
-                    continue;
-                }
+        // ⚡ Consultar la antigüedad por persona (igual que en el código original)
+        var antiguedad = await _context.MEC_POF_Antiguedades
+                                       .AsNoTracking()
+                                       .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
 
-                if (persona == null)
-                {
+        if (antiguedad != null)
+        {
+            var result = CalcularAntiguedad(
+                ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
+                ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
+                antiguedad.MesReferencia,
+                antiguedad.AnioReferencia,
+                antiguedad.AnioAntiguedad,
+                antiguedad.MesAntiguedad
+            );
 
-                    await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
-                    continue;
-                } else
-                {
-                    // 🔍 Depuración: Verificar persona obtenida
-                    Console.WriteLine($"Persona encontrada");
+            detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
+            detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
+        }
 
-                    // Buscar la POF directamente en la base de datos
-                    var POF = await _context.MEC_POF
-                        .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
-                                                  p.IdPersona == persona.IdPersona &&
-                                                  p.Secuencia == registro.Secuencia);
+        detallesPOF.Add(detalle);
+        registro.RegistroValido = "S";
+    }
 
-                    if (POF == null)
-                    {
-                        Console.WriteLine($" No se encontró POF para Persona ");
-
-
-                        await RegistroErrorMecAsync(idCabecera, registro, "NE", "NE", "N", establecimiento);
-                        
-                        continue;
-                    }
-                }
-
-                var POF1 = await _context.MEC_POF
-                       .FirstOrDefaultAsync(p => p.IdEstablecimiento == establecimiento &&
-                                                 p.IdPersona == persona.IdPersona &&
-                                                 p.Secuencia == registro.Secuencia);
-
-
-                // 🔍 Depuración: Verificar POF obtenida
-                Console.WriteLine($"POF encontrada: IdEstablecimiento");
-
-                // Si la POF es encontrada, se procesa el detalle
-                var detalle = await ProcesarDetallePOFAsync(idCabecera, POF1, registro);
-                detallesPOF.Add(detalle);
-
-                // Marcar el registro como válido
-                registro.RegistroValido = "S";
-            }
-
-            // Agregar todos los detalles y errores de una sola vez
-            _context.MEC_POFDetalle.AddRange(detallesPOF);
-            _context.MEC_TMPErroresMecanizadas.AddRange(erroresMec);
-
-            // Guardar cambios una sola vez al final
-            await _context.SaveChangesAsync();
+    // 4. Guardar todos los detalles y errores de una sola vez
+    _context.MEC_POFDetalle.AddRange(detallesPOF);
+    _context.MEC_TMPErroresMecanizadas.AddRange(erroresMec);
+    await _context.SaveChangesAsync();
         }
 
 
@@ -397,7 +479,7 @@ namespace API.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.IdEstablecimiento == establecimiento);
 
-            
+
 
             // Crear nuevo registro de error mecanizado sin guardar inmediatamente
             _context.MEC_TMPErroresMecanizadas.Add(new MEC_TMPErroresMecanizadas
@@ -464,7 +546,7 @@ namespace API.Services
         }
 
         public async Task<string> ProcesarSiEsValidoAsync(int idCabecera, int usuario)
-        { 
+        {
             // 1. Usar AsNoTracking para la cabecera (operación de solo lectura)
             var cabeceras = await _context.MEC_CabeceraLiquidacion
                                         .AsNoTracking()
@@ -608,4 +690,3 @@ namespace API.Services
         }
     }
 }
-

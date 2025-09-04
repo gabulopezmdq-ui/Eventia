@@ -10,16 +10,18 @@ import MDAlert from "components/MDAlert";
 import DataTable from "examples/Tables/DataTable";
 import Card from "@mui/material/Card";
 import MDTypography from "components/MDTypography";
+import TablaProcesados from "./TablaProcesados";
+import { generatePDF } from "../GeneradorPDF";
 import ImportarInasistenciaModal from "./PopUp";
 import axios from "axios";
 function CargarInasistencia() {
   const [cabeceras, setCabeceras] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
-  const [inasistencias, setInasistencias] = useState(null);
   const [procesados, setProcesados] = useState([]);
   const [ueSeleccionada, setUESeleccionada] = useState("");
+  const [registrosProcesados, setRegistrosProcesados] = useState([]);
+  const [erroresProcesados, setErroresProcesados] = useState([]);
   const [detalleSeleccionado, setDetalleSeleccionado] = useState(null);
-  const [procesamientosListos, setProcesamientosListos] = useState({});
   const [cabecerasCargar, setCabeceraCargar] = useState([]);
   const [selectedCabecera, setSelectedCabecera] = useState("");
   const [selectedEstablecimiento, setSelectedEstablecimiento] = useState("");
@@ -27,7 +29,17 @@ function CargarInasistencia() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertType, setAlertType] = useState("info");
   const token = sessionStorage.getItem("token");
+  useEffect(() => {
+    if (showAlert) {
+      const timer = setTimeout(() => {
+        setShowAlert(false);
+        setAlertMessage("");
+        setAlertType("info");
+      }, 5000); // 5000 ms = 5 segundos
 
+      return () => clearTimeout(timer); // Limpia el timeout si se desmonta o cambia showAlert
+    }
+  }, [showAlert]);
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
@@ -146,18 +158,78 @@ function CargarInasistencia() {
         UE: row.establecimientos.ue,
       };
 
+      // Primera petición: procesar
       const response = await axios.post(url, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.status !== 200) throw new Error(`Error: ${response.statusText}`);
 
-      setAlertMessage("Procesamiento generado correctamente.");
-      setAlertType("success");
-      setShowAlert(true);
+      if (response.data.mensaje === "Se encontraron errores") {
+        const params = {
+          IdCabeceraLiquidacion: row.idCabecera,
+          IdCabeceraInasistencia: row.idInasistenciaCabecera,
+          IdEstablecimiento: row.idEstablecimiento,
+          UE: row.establecimientos.ue,
+        };
+
+        const erroresResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}inasistenciascabecera/ErroresInas`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params, // enviamos los datos como query params
+          }
+        );
+
+        console.log("Errores encontrados: ", erroresResponse.data);
+        setAlertMessage("Se encontraron errores en el procesamiento. Descargue el PDF");
+        setAlertType("error");
+        setShowAlert(true);
+
+        setErroresProcesados(erroresResponse.data || []);
+      } else {
+        // Si no hay errores, traer registros procesados
+        const procesadosResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}inasistenciascabecera/RegistrosProcesados`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        console.log("Registro procesados: ", procesadosResponse.data);
+        setRegistrosProcesados(procesadosResponse.data || []);
+        setErroresProcesamiento([]);
+        setAlertMessage("Procesamiento generado correctamente.");
+        setAlertType("success");
+        setShowAlert(true);
+      }
     } catch (error) {
       console.error(error);
       setAlertMessage("Error al generar procesamiento: " + error.message);
+      setAlertType("error");
+      setShowAlert(true);
+    }
+  };
+  const handleAgregarInasistencia = async (payload) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}inasistenciascabecera/agregarinasistencia`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setAlertMessage("Inasistencia agregada correctamente.");
+      setAlertType("success");
+      setShowAlert(true);
+
+      // Opcional: refrescar la tabla
+      const procesadosResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL}inasistenciascabecera/RegistrosProcesados`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setRegistrosProcesados(procesadosResponse.data || []);
+    } catch (error) {
+      console.error(error);
+      setAlertMessage("Error al agregar inasistencia: " + error.message);
       setAlertType("error");
       setShowAlert(true);
     }
@@ -187,6 +259,16 @@ function CargarInasistencia() {
             onClick={() => handleProcesar(original)}
           >
             Generar Procesamientos
+          </MDButton>
+        )}
+        {erroresProcesados.length > 0 && (
+          <MDButton
+            variant="gradient"
+            color="warning"
+            size="small"
+            onClick={() => generatePDF(erroresProcesados)}
+          >
+            Descargar errores
           </MDButton>
         )}
       </MDBox>
@@ -278,9 +360,15 @@ function CargarInasistencia() {
           onClose={() => setDetalleSeleccionado(null)}
           cabecera={detalleSeleccionado}
           onSuccess={(detalle) => {
-            handleCargar(); // refrescar listado
+            handleCargar();
             setProcesados((prev) => [...prev, detalle.idInasistenciaCabecera]);
           }}
+        />
+      )}
+      {registrosProcesados.length > 0 && (
+        <TablaProcesados
+          data={registrosProcesados}
+          onAgregarInasistencia={handleAgregarInasistencia}
         />
       )}
     </DashboardLayout>
