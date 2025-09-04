@@ -93,6 +93,9 @@ namespace API.Controllers
         [HttpPost("PreprocesarArchivo")]
         public async Task<IActionResult> PreprocesarArchivo(int idCabecera)
         {
+            var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
+                int usuario = int.Parse(idUsuario.Value);
+
             try
             {
                 await _procesarMecanizadaService.PreprocesarAsync(idCabecera);
