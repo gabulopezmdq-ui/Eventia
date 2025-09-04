@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using API.DataSchema;
+using API.DataSchema.DTO;
 
 namespace API.Services
 {
@@ -33,6 +34,12 @@ namespace API.Services
         Task<List<MEC_TMPInasistenciasDetalle>> ObtenerInas();
         Task AgregarInasistenciaAsync(int idCabeceraInasistencia, int idPOF, int idPOFBarra, int idTMPInasistenciasDetalle, int? codLicencia, DateTime fecha, int cantHs);
         Task<string> EliminarTMP();
+        Task<List<MEC_TMPErroresInasistenciasDetalle>> ObtenerErroresTMPAsync(
+      int idCabeceraLiquidacion,
+      int idCabeceraInasistencia,
+      string UE);
+        Task<List<MEC_TMPInasistenciasDetalle>> RegistrosProcesados();
+        Task<PofConBarrasDTO> BuscarPOF(string DNI, string Legajo);
 
 
 

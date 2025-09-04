@@ -10,7 +10,7 @@ export async function generatePDF(data) {
 
   let y = height - 50;
   page.drawText("Reporte de Errores de Inasistencias", {
-    x: 150,
+    x: 165,
     y,
     size: 16,
     font,
@@ -29,10 +29,24 @@ export async function generatePDF(data) {
     "POF",
     "POF Barra",
   ];
-  const colX = [50, 110, 200, 300, 380, 450, 520]; // posiciones en X para cada columna
+  const colX = [50, 110, 200, 300, 380, 450, 520];
+
+  // Fondo celeste para headers
+  const headerBackground = rgb(0.7, 0.9, 1); // celeste claro
+  const headerTextColor = rgb(0, 0, 0); // negro
 
   headers.forEach((header, i) => {
-    page.drawText(header, { x: colX[i], y, size: 10, font, color: rgb(0, 0, 0) });
+    // Dibujar rectángulo de fondo
+    page.drawRectangle({
+      x: colX[i] - 2, // margen pequeño a la izquierda
+      y: y - 2,
+      width: i < colX.length - 1 ? colX[i + 1] - colX[i] : 70,
+      height: 14,
+      color: headerBackground,
+    });
+
+    // Dibujar texto encima
+    page.drawText(header, { x: colX[i], y, size: 10, font, color: headerTextColor });
   });
 
   y -= 20;
@@ -64,10 +78,8 @@ export async function generatePDF(data) {
 
   const pdfBytes = await pdfDoc.save();
 
-  // 🔹 Descargar
+  // 🔹 Abrir en nueva pestaña (_blank)
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "errores_inasistencias.pdf";
-  link.click();
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank");
 }

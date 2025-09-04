@@ -126,7 +126,7 @@ namespace API.Controllers
         }
 
         //Una vez que se selecciona el combo POF, se deberá completar el combo MEC_POF_Barra con el IdPOF seleccionado y armar una lista con todas las barras de la tabla  MEC_POF_Barras.
-       
+
         [HttpPost("AgregarDetalle")]
         public async Task<IActionResult> AgregarInasistencia([FromBody] InasistenciaRequest request)
         {
@@ -159,22 +159,36 @@ namespace API.Controllers
             var resultado = await _cabeceraService.ObtenerInas();
             return Ok(resultado);
         }
-
         [HttpPost("Procesar")]
         public async Task<IActionResult> ProcesarTMPInasistencias([FromBody] ProcesarInasistencias request)
         {
             if (request == null)
                 return BadRequest("El body de la petición está vacío.");
 
-            await _cabeceraService.ProcesarTMPInasistencias(
-                request.IdCabeceraLiquidacion,
-                request.IdCabeceraInasistencia,
-                request.IdEstablecimiento,
-                request.UE
-            );
+            try
+            {
+                // Llama al servicio y captura el mensaje
+                var mensaje = await _cabeceraService.ProcesarTMPInasistencias(
+                    request.IdCabeceraLiquidacion,
+                    request.IdCabeceraInasistencia,
+                    request.IdEstablecimiento,
+                    request.UE
+                );
 
-            return Ok("Procesamiento completado");
+                // Devuelve el mensaje con un status 200
+                return Ok(new { mensaje });
+            }
+            catch (Exception ex)
+            {
+                // Maneja cualquier excepción y devuelve 500 con detalles
+                return StatusCode(500, new
+                {
+                    error = "Ocurrió un error durante el procesamiento.",
+                    detalle = ex.Message
+                });
+            }
         }
+
 
         //BOTON DEVOLVER A EST
         [HttpPost("Devolver")]
@@ -366,16 +380,52 @@ namespace API.Controllers
             if (!cabecera)
                 return NotFound("No se encontró la cabecera.");
 
-            return Ok("Cabecera enviada correctamente.");   
+            return Ok("Cabecera enviada correctamente.");
         }
 
         //GET INASISTENCIAS ERORES
 
         [HttpGet("ErroresInas")]
-        public async Task<IActionResult> ObtenerErrores ()
+        public async Task<IActionResult> ObtenerErroresTMP(
+                    [FromQuery] int idCabeceraLiquidacion,
+                    [FromQuery] int idCabeceraInasistencia,
+                    [FromQuery] string ue
+                )
         {
-            return Ok(_serviceGenericoErrores.GetAll());
+            var errores = await _cabeceraService.ObtenerErroresTMPAsync(
+                idCabeceraLiquidacion,
+                idCabeceraInasistencia,
+                ue
+            );
+
+            if (errores == null || !errores.Any())
+                return NotFound("No se encontraron errores para los parámetros indicados.");
+
+            return Ok(errores);
+        }
+
+        //GET LISTADO PROCESADO "S"
+        [HttpGet("RegistrosProcesados")]
+        public async Task<IActionResult> ObtenerRegistros()
+        {
+            var listado = await _cabeceraService.RegistrosProcesados();
+
+            return Ok(listado);
+        }
+
+        //BUSCAR POF
+        [HttpGet("POF")]
+        public async Task<IActionResult> GetPOF([FromQuery] string dni, [FromQuery] string legajo)
+        {
+            if (string.IsNullOrEmpty(dni) || string.IsNullOrEmpty(legajo))
+                return BadRequest("DNI y Legajo son requeridos.");
+
+            var resultado = await _cabeceraService.BuscarPOF(dni, legajo);
+
+            if (resultado == null)
+                return NotFound();
+
+            return Ok(resultado); 
         }
     }
-
 }
