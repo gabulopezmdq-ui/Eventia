@@ -44,6 +44,7 @@ namespace API.DataSchema.DTO
 
     public class PofConBarrasDTO
     {
+        public int? IdPOF { get; set; }
         public string Apellido { get; set; }
         public string Nombre { get; set; }
         public string DNI { get; set; }
@@ -53,6 +54,25 @@ namespace API.DataSchema.DTO
         public string Vigente { get; set; }
         public string Barra { get; set; }
         public List<int> Barras { get; set; } = new();
+    }
+
+    public class PofConBarrasDTOList
+    {
+        public int? IdPOF { get; set; }
+        public string Apellido { get; set; }
+        public string Nombre { get; set; }
+        public string DNI { get; set; }
+        public string Legajo { get; set; }
+        public string Secuencia { get; set; }
+        public string TipoCargo { get; set; }
+        public string Vigente { get; set; }
+        public string Barra { get; set; }
+        public List<ListBarraDTO> BarrasDetalle { get; set; } = new();
+    }
+    public class ListBarraDTO
+    {
+        public int IdPOFBarra { get; set; }
+        public int Barra{ get; set; }  // el campo "Barra" de la tabla
     }
 
     public class POFInas

@@ -384,7 +384,14 @@ namespace API.Services
 
 
 
-        public async Task AgregarInasistenciaAsync(int idCabeceraInasistencia, int idPOF, int idPOFBarra, int idTMPInasistenciasDetalle, int? codLicencia, DateTime fecha, int cantHs)
+        public async Task AgregarInasistenciaAsync(int idCabeceraInasistencia,
+                                                    int idPOF,
+                                                    int idEstablecimiento,
+                                                    int idPOFBarra,
+                                                    int idTMPInasistenciasDetalle,
+                                                    DateTime fecha,
+                                                    int? codLicencia,
+                                                    int cantHs)
         {
             // 1. Validar que no exista el registro en MEC_InasistenciasDetalle
             var yaExiste = await _context.MEC_InasistenciasDetalle
@@ -400,6 +407,7 @@ namespace API.Services
             var nuevoDetalle = new MEC_InasistenciasDetalle
             {
                 IdInasistenciaCabecera = idCabeceraInasistencia,
+                IdEstablecimiento = idEstablecimiento,
                 IdPOF = idPOF,
                 IdPOFBarra = idPOFBarra,
                 IdTMPInasistenciasDetalle = idTMPInasistenciasDetalle,
@@ -771,14 +779,25 @@ namespace API.Services
         }
 
 
-        public async Task<List<MEC_TMPInasistenciasDetalle>> RegistrosProcesados()
+        public async Task<List<InasEst>> RegistrosProcesados()
         {
-            var listado = await _context.MEC_TMPInasistenciasDetalle.Where(x => x.RegistroProcesado == "S").OrderBy(x => x.UE).ToListAsync();
+            var listado = await (
+                  from tmp in _context.MEC_TMPInasistenciasDetalle
+                  join est in _context.MEC_Establecimientos
+                      on tmp.UE.Replace("-", "") equals est.UE.Replace("-", "")
+                  where tmp.RegistroProcesado == "S"
+                  orderby tmp.UE
+                  select new InasEst
+                {
+                    TMPDetalle = tmp,
+                    IdEstablecimiento = est.IdEstablecimiento
+                }
+            ).ToListAsync();
+
             return listado;
         }
-
         //COMBO POF
-        public async Task<PofConBarrasDTO> BuscarPOF(string DNI, string Legajo)
+        public async Task<PofConBarrasDTOList> BuscarPOF(string DNI, string Legajo)
         {
             var pofEntity = await _context.MEC_POF
          .Where(x => x.Persona.DNI == DNI && x.Persona.Legajo == Legajo)
@@ -788,8 +807,18 @@ namespace API.Services
                 return null;
 
             // Luego proyectamos a DTO en memoria
-            var pofDTO = new PofConBarrasDTO
+            var barras = await _context.MEC_POF_Barras
+        .Where(b => b.IdPOF == pofEntity.IdPOF)
+        .Select(b => new ListBarraDTO
+        {
+            IdPOFBarra = b.IdPOFBarra,
+            Barra = b.Barra
+        })
+        .ToListAsync();
+
+            var pofDTO = new PofConBarrasDTOList
             {
+                IdPOF = pofEntity.IdPOF,
                 Apellido = pofEntity.Persona.Apellido,
                 Nombre = pofEntity.Persona.Nombre,
                 DNI = pofEntity.Persona.DNI,
@@ -798,12 +827,11 @@ namespace API.Services
                 TipoCargo = pofEntity.TipoCargo,
                 Vigente = pofEntity.Vigente,
                 Barra = pofEntity.Barra,
-                Barras = !string.IsNullOrEmpty(pofEntity.Barra)
-                    ? pofEntity.Barra.Split(',').Select(b => int.Parse(b)).ToList()
-                    : new List<int>()
+                BarrasDetalle = barras
             };
 
             return pofDTO;
         }
+
     }
 }
