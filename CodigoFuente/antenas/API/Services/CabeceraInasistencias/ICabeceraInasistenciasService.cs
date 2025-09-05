@@ -32,14 +32,21 @@ namespace API.Services
         Task<List<InasistenciasDetalleDTO>> DetalleInasistencia(int idEstablecimiento, int idInasistenciaCabecera);
         Task<bool> EnviarInas(int idInasistenciaCabecera, string observaciones);
         Task<List<MEC_TMPInasistenciasDetalle>> ObtenerInas();
-        Task AgregarInasistenciaAsync(int idCabeceraInasistencia, int idPOF, int idPOFBarra, int idTMPInasistenciasDetalle, int? codLicencia, DateTime fecha, int cantHs);
+        Task AgregarInasistenciaAsync(int idCabeceraInasistencia,
+                                                    int idPOF,
+                                                    int idEstablecimiento,
+                                                    int idPOFBarra,
+                                                    int idTMPInasistenciasDetalle,
+                                                    DateTime fecha,
+                                                    int? codLicencia,
+                                                    int cantHs);
         Task<string> EliminarTMP();
         Task<List<MEC_TMPErroresInasistenciasDetalle>> ObtenerErroresTMPAsync(
       int idCabeceraLiquidacion,
       int idCabeceraInasistencia,
       string UE);
-        Task<List<MEC_TMPInasistenciasDetalle>> RegistrosProcesados();
-        Task<PofConBarrasDTO> BuscarPOF(string DNI, string Legajo);
+        Task<List<InasEst>> RegistrosProcesados();
+        Task<PofConBarrasDTOList> BuscarPOF(string DNI, string Legajo);
 
 
 
