@@ -214,7 +214,7 @@ namespace API.Controllers
         }
 
         [HttpPost("Corregido")]
-        public async Task<IActionResult> MarcarCorregidoEducacion([FromBody] int? idCabecera)
+        public async Task<IActionResult> MarcarCorregidoEducacion([FromQuery] int? idCabecera)
         {
             var resultado = await _cabeceraService.CorregidoEducacion(idCabecera);
 

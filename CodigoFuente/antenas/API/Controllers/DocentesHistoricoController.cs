@@ -78,6 +78,21 @@ namespace API.Controllers
                 }
             }
 
+        [HttpPost("Limpiar")]
+        public async Task<IActionResult> LimpiarTmp()
+        {
+            try
+            {
+                await _partesDiariosService.LimpiarTmpAsync();
+                return Ok(new { mensaje = "Tablas TMP y errores limpiadas correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Ocurrió un error al limpiar las tablas TMP.", error = ex.Message });
+            }
+        }
+
+
         [HttpGet("Token")]
         public IActionResult GenerarToken([FromQuery] DateTime? timestamp = null)
         {
