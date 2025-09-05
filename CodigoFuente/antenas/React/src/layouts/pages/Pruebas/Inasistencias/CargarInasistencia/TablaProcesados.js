@@ -52,17 +52,17 @@ const TablaProcesados = ({ data, onAgregarInasistencia }) => {
         <DataTable
           table={{
             columns: [
-              { Header: "DNI", accessor: "dni" },
-              { Header: "Nº Legajo", accessor: "nroLegajo" },
-              { Header: "Nº Cargo", accessor: "nroCargo" },
-              { Header: "U.E", accessor: "ue" },
-              { Header: "Grupo", accessor: "grupo" },
-              { Header: "Nivel", accessor: "nivel" },
-              { Header: "Modulo", accessor: "modulo" },
-              { Header: "Cargo", accessor: "cargo" },
+              { Header: "DNI", accessor: "tmpDetalle.dni" },
+              { Header: "Nº Legajo", accessor: "tmpDetalle.nroLegajo" },
+              { Header: "Nº Cargo", accessor: "tmpDetalle.nroCargo" },
+              { Header: "U.E", accessor: "tmpDetalle.ue" },
+              { Header: "Grupo", accessor: "tmpDetalle.grupo" },
+              { Header: "Nivel", accessor: "tmpDetalle.nivel" },
+              { Header: "Modulo", accessor: "tmpDetalle.modulo" },
+              { Header: "Cargo", accessor: "tmpDetalle.cargo" },
               {
                 Header: "FecNov",
-                accessor: "fecNov",
+                accessor: "tmpDetalle.fecNov",
                 Cell: ({ value }) => {
                   if (!value) return "";
                   const d = new Date(value);
@@ -73,9 +73,9 @@ const TablaProcesados = ({ data, onAgregarInasistencia }) => {
                   });
                 },
               },
-              { Header: "CodLicen", accessor: "codLicen" },
-              { Header: "Cantidad", accessor: "cantidad" },
-              { Header: "Hora", accessor: "hora" },
+              { Header: "CodLicen", accessor: "tmpDetalle.codLicen" },
+              { Header: "Cantidad", accessor: "tmpDetalle.cantidad" },
+              { Header: "Hora", accessor: "tmpDetalle.hora" },
               {
                 Header: "Acciones",
                 accessor: "acciones",

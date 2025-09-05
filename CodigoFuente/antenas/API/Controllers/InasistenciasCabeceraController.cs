@@ -136,13 +136,14 @@ namespace API.Controllers
             try
             {
                 await _cabeceraService.AgregarInasistenciaAsync(
-                    request.IdCabeceraInasistencia,
-                    request.IdPOF,
-                    request.IdPOFBarra,
-                    request.IdTMPInasistenciasDetalle,
-                    request.CodLicencia,
-                    request.Fecha,
-                    request.CantHs
+                     request.IdCabeceraInasistencia,
+                     request.IdPOF,
+                     request.IdEstablecimiento,
+                     request.IdPOFBarra,
+                     request.IdTMPInasistenciasDetalle,
+                     request.Fecha,
+                     request.CodLicencia.GetValueOrDefault(), // <-- si es null, pasa 0
+                     request.CantHs
                 );
 
                 return Ok(new { message = "Inasistencia agregada correctamente." });
@@ -153,6 +154,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Ocurrió un error al agregar la inasistencia.", error = ex.Message });
             }
         }
+
         [HttpGet("Inasistencias")]
         public async Task<ActionResult<IEnumerable<MEC_TMPInasistenciasDetalle>>> GetInasistenciasDetalle()
         {

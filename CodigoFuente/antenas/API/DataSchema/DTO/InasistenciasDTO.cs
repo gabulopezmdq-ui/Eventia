@@ -120,9 +120,16 @@ public class InasistenciaRequest
 {
     public int IdCabeceraInasistencia { get; set; }
     public int IdPOF { get; set; }
+    public int IdEstablecimiento { get; set; }
     public int IdPOFBarra { get; set; }
     public int IdTMPInasistenciasDetalle { get; set; }
     public int? CodLicencia { get; set; }
     public DateTime Fecha { get; set; }
     public int CantHs { get; set; }
+}
+
+public class InasEst
+{
+    public MEC_TMPInasistenciasDetalle TMPDetalle { get; set; }
+    public int IdEstablecimiento { get; set; }
 }
