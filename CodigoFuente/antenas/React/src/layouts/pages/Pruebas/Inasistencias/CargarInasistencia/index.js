@@ -35,9 +35,9 @@ function CargarInasistencia() {
         setShowAlert(false);
         setAlertMessage("");
         setAlertType("info");
-      }, 5000); // 5000 ms = 5 segundos
+      }, 5000);
 
-      return () => clearTimeout(timer); // Limpia el timeout si se desmonta o cambia showAlert
+      return () => clearTimeout(timer);
     }
   }, [showAlert]);
   useEffect(() => {
@@ -158,7 +158,6 @@ function CargarInasistencia() {
         UE: row.establecimientos.ue,
       };
 
-      // Primera petición: procesar
       const response = await axios.post(url, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -181,7 +180,6 @@ function CargarInasistencia() {
           }
         );
 
-        console.log("Errores encontrados: ", erroresResponse.data);
         setAlertMessage("Se encontraron errores en el procesamiento. Descargue el PDF");
         setAlertType("error");
         setShowAlert(true);
@@ -195,9 +193,7 @@ function CargarInasistencia() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        console.log("Registro procesados: ", procesadosResponse.data);
         setRegistrosProcesados(procesadosResponse.data || []);
-        setErroresProcesamiento([]);
         setAlertMessage("Procesamiento generado correctamente.");
         setAlertType("success");
         setShowAlert(true);
@@ -212,7 +208,7 @@ function CargarInasistencia() {
   const handleAgregarInasistencia = async (payload) => {
     try {
       await axios.post(
-        `${process.env.REACT_APP_API_URL}inasistenciascabecera/agregarinasistencia`,
+        `${process.env.REACT_APP_API_URL}inasistenciascabecera/AgregarDetalle`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
