@@ -282,6 +282,15 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
+        //Cabeceras habilitadas "I"
+        [HttpGet("CabecerasHabilitadas")]
+        public async Task<IActionResult> ObtenerCabecerasPendientes()
+        {
+            var exito = await _cabeceraService.ObtenerCabecerasHabilitadasAsync();
+
+            return Ok(exito);
+        }
+
         //Recorrer MEC_inasistenciasDetalle
         [HttpGet("InasPendientes")]
         public async Task<IActionResult> ObtenerInasPendientes()
