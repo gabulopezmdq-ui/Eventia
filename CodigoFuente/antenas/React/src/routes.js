@@ -23,6 +23,7 @@ import ListadoTiposMovimientos from "layouts/pages/Pruebas/TiposMovimientos/inde
 import Bajas from "layouts/pages/Pruebas/Bajas";
 import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
 import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
+import VerificarInasistencia from "layouts/pages/Pruebas/Inasistencias/VerificarInasistencia/index";
 
 const routes = [
   {
@@ -130,6 +131,13 @@ const routes = [
         key: "cargarInasistencia",
         route: "/CargarInasistencia",
         component: <CargarInasistencia />,
+        roles: ["admin", "superadmin"],
+      },
+      {
+        name: "Verifica Inasistencia",
+        key: "verificaInasistencia",
+        route: "/VerificarInasistencia",
+        component: <VerificarInasistencia />,
         roles: ["admin", "superadmin"],
       },
     ],

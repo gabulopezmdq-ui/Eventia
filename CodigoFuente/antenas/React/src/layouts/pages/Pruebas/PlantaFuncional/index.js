@@ -514,7 +514,7 @@ function PlantaFuncional() {
                 <Select
                   labelId="establecimiento-select-label"
                   value={selectedEstablecimiento}
-                  onChange={(e) => setSelectedEstablecimiento(e.target.value)} // ✅ corregido
+                  onChange={(e) => setSelectedEstablecimiento(e.target.value)}
                   label="Establecimiento"
                   style={{ height: "2.5rem", backgroundColor: "white" }}
                 >
