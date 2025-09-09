@@ -214,7 +214,7 @@ namespace API.Controllers
         }
 
         [HttpPost("Corregido")]
-        public async Task<IActionResult> MarcarCorregidoEducacion([FromBody] int? idCabecera)
+        public async Task<IActionResult> MarcarCorregidoEducacion([FromQuery] int? idCabecera)
         {
             var resultado = await _cabeceraService.CorregidoEducacion(idCabecera);
 
@@ -280,6 +280,24 @@ namespace API.Controllers
         {
             var resultado = await _cabeceraService.DetalleInasistencia(idEstablecimiento, idInasistenciaCabecera);
             return Ok(resultado);
+        }
+
+        //Cabeceras habilitadas "I"
+        [HttpGet("CabecerasHabilitadas")]
+        public async Task<IActionResult> ObtenerCabecerasPendientes()
+        {
+            var exito = await _cabeceraService.ObtenerCabecerasHabilitadasAsync();
+
+            return Ok(exito);
+        }
+
+        //Recorrer MEC_inasistenciasDetalle
+        [HttpGet("InasPendientes")]
+        public async Task<IActionResult> ObtenerInasPendientes()
+        {
+            var exito = await _aprobarService.ObtenerDetallesPendientes();
+
+            return Ok(exito);
         }
 
         [HttpPost("EnviarInas")]
@@ -429,5 +447,6 @@ namespace API.Controllers
 
             return Ok(resultado); 
         }
+
+        }
     }
-}

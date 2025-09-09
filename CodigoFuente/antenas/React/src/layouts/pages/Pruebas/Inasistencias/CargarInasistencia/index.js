@@ -105,25 +105,29 @@ function CargarInasistencia() {
     }
 
     const seleccionado = cabeceras.find((item) => item.idCabecera === selectedCabecera);
-    console.log("seleccionado: ", seleccionado);
     if (!seleccionado) {
       setAlertMessage("No se encontró la cabecera seleccionada.");
       setAlertType("error");
       setShowAlert(true);
       return;
     }
+
     const anio = seleccionado.anioLiquidacion;
     const mes = seleccionado.mesLiquidacion;
     const idCabecera = seleccionado.idCabecera;
     setUESeleccionada(seleccionado.establecimientos?.ue || "");
 
     try {
+      // 🔑 limpiar resultados y estados previos
+      setCabeceraCargar([]);
+      setProcesados([]);
+      setErroresProcesados([]);
+      setRegistrosProcesados([]);
+
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}InasistenciasCabecera/InasistenciasListado`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           params: {
             anio,
             mes,
@@ -132,7 +136,9 @@ function CargarInasistencia() {
           },
         }
       );
-      setCabeceraCargar([response.data] || []);
+
+      const data = Array.isArray(response.data) ? response.data : [response.data];
+      setCabeceraCargar(data);
     } catch (error) {
       console.error("Error al cargar listado de inasistencias:", error);
       setAlertMessage("Error al cargar el listado de inasistencias.");
