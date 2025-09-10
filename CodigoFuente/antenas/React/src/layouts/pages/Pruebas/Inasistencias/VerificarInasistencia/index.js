@@ -30,7 +30,7 @@ function VerificarInasistencia() {
       setSelectedRow(row);
     }
   };
-  useEffect(() => {
+  /*  useEffect(() => {
     const fetchCabecerasHabilitadas = async () => {
       try {
         const response = await axios.get(
@@ -49,7 +49,32 @@ function VerificarInasistencia() {
       }
     };
     fetchCabecerasHabilitadas();
-  }, [token]);
+  }, [token]);*/
+  useEffect(() => {
+    setTimeout(() => {
+      setDataTableData([
+        {
+          idCabecera: 1,
+          establecimiento: "Escuela N°1",
+          año: 2025,
+          mes: "Septiembre",
+          estado: "Habilitado",
+          fechaEntrega: "2025-09-10",
+          confecciono: "Juan Pérez",
+        },
+        {
+          idCabecera: 2,
+          establecimiento: "Escuela N°5",
+          año: 2025,
+          mes: "Agosto",
+          estado: "Habilitado",
+          fechaEntrega: "2025-08-28",
+          confecciono: "María Gómez",
+        },
+      ]);
+      setLoading(false);
+    }, 1000);
+  }, []);
   return (
     <>
       <DashboardLayout>
@@ -61,7 +86,7 @@ function VerificarInasistencia() {
             </MDTypography>
           </MDAlert>
         )}
-        <MDBox>
+        <MDBox mt={5}>
           {loading ? (
             <MDBox>
               <MDTypography variant="body2">Cargando...</MDTypography>

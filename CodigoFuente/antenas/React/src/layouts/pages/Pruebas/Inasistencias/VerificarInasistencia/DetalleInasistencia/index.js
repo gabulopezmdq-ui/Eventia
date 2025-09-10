@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import { Card } from "@mui/material";
 import MDBox from "components/MDBox";
+import MDInput from "components/MDInput";
 import MDTypography from "components/MDTypography";
 import DataTable from "examples/Tables/DataTable";
 import MDAlert from "components/MDAlert";
@@ -14,7 +15,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
   const [error, setError] = useState(null);
   const token = sessionStorage.getItem("token");
 
-  useEffect(() => {
+  /*useEffect(() => {
     const fetchDetalles = async () => {
       try {
         const response = await axios.post(
@@ -34,7 +35,56 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
       }
     };
     fetchDetalles();
-  }, [idCabecera, mes, año, token]);
+  }, [idCabecera, mes, año, token]);*/
+
+  useEffect(() => {
+    // Simular delay como si fuera API
+    setTimeout(() => {
+      setDetalles([
+        {
+          idDetalle: 1,
+          idCabecera: idCabecera,
+          establecimiento: "Escuela N°1",
+          mes: mes,
+          anio: año,
+          dni: "30111222",
+          sec: "SEC-01",
+          apellido: "García",
+          nombre: "Juan",
+          cargo: "Docente",
+          diasInas: 2,
+          horasInas: 4,
+          minInas: 30,
+          estado: "Pendiente",
+          obsEstablecimiento: "Inasistencia justificada",
+          fechaEntrega: "2025-09-10",
+          entrego: "Directora",
+          obsSecretaria: "En revisión",
+        },
+        {
+          idDetalle: 2,
+          idCabecera: idCabecera,
+          establecimiento: "Escuela N°1",
+          mes: mes,
+          anio: año,
+          dni: "30222333",
+          sec: "SEC-02",
+          apellido: "Pérez",
+          nombre: "Ana",
+          cargo: "Preceptora",
+          diasInas: 1,
+          horasInas: 2,
+          minInas: 0,
+          estado: "Pendiente",
+          obsEstablecimiento: "Enfermedad común",
+          fechaEntrega: "2025-09-10",
+          entrego: "Directora",
+          obsSecretaria: "Pendiente de validar",
+        },
+      ]);
+      setLoading(false);
+    }, 1000);
+  }, [idCabecera, mes, año]);
 
   const handleAceptar = (row) => {
     console.log("Aceptar:", row);
@@ -140,30 +190,46 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
       {/* Observaciones */}
       <Card sx={{ mt: 2, p: 2 }}>
         <MDTypography variant="body2">
-          <strong>Observaciones Establecimiento:</strong>
+          <strong>Observaciones Establecimiento: </strong>
           {""}
           {detalles[0]?.obsEstablecimiento || "—"}
         </MDTypography>
         <MDTypography variant="body2">
-          <strong>Fecha Entrega:</strong>
+          <strong>Fecha Entrega: </strong>
           {""}
           {detalles[0]?.fechaEntrega || "—"}
         </MDTypography>
         <MDTypography variant="body2">
-          <strong>Entregó:</strong>
+          <strong>Entrego: </strong>
           {""}
           {detalles[0]?.entrego || "—"}
         </MDTypography>
-        <MDTypography variant="body2">
-          <strong>Observaciones Secretaría:</strong>
-          {""}
-          {detalles[0]?.obsSecretaria || "—"}
-        </MDTypography>
+        <MDBox mt={2}>
+          <MDTypography variant="body2" mb={1}>
+            <strong>Observaciones Secretaría:</strong>
+          </MDTypography>
+          <MDInput
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="Escriba observaciones..."
+            value={detalles[0]?.obsSecretaria || ""}
+            onChange={(e) => {
+              const nuevasObs = e.target.value;
+              setDetalles((prev) => {
+                const copia = [...prev];
+                copia[0].obsSecretaria = nuevasObs;
+                return copia;
+              });
+            }}
+          />
+        </MDBox>
 
-        <MDBox mt={2} display="flex" gap={2}>
+        <MDBox mt={2} display="flex" justifyContent="flex-end" gap={2}>
           <MDButton
             variant="gradient"
             color="warning"
+            size="small"
             onClick={() => console.log("Devolver a Establecimiento")}
           >
             Devolver a Establecimiento
@@ -171,6 +237,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
           <MDButton
             variant="gradient"
             color="info"
+            size="small"
             onClick={() => console.log("Corregido Educación")}
           >
             Corregido Educación
