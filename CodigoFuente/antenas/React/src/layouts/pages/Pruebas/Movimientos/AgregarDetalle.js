@@ -272,10 +272,12 @@ export default function AgregarDetalle({
             <>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth error={!!errors.tipoDoc}>
-                  <InputLabel>Tipo Doc.</InputLabel>
+                  <InputLabel id="tipo-doc-label">Tipo Doc.</InputLabel>
                   <Select
-                    name="tipDoc"
-                    label="TipoDoc"
+                    labelId="tipo-doc-label"
+                    id="tipo-doc"
+                    name="tipoDoc"
+                    label="Tipo Doc."
                     value={form.tipoDoc}
                     onChange={handleChange}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
