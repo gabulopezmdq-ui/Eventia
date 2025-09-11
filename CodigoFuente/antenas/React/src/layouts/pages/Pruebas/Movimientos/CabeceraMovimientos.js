@@ -337,7 +337,13 @@ function CabeceraMovimientos() {
                         const estado = row.original.estado;
                         return (
                           <MDBox display="flex" gap={1}>
-                            {(estado === "E" || estado === "P") && (
+                            {((estado === "P" &&
+                              (userRoles.includes("Secretario") ||
+                                userRoles.includes("Admin") ||
+                                userRoles.includes("SuperAdmin"))) ||
+                              (estado === "E" &&
+                                (userRoles.includes("Admin") ||
+                                  userRoles.includes("SuperAdmin")))) && (
                               <MDButton
                                 variant="gradient"
                                 color="warning"

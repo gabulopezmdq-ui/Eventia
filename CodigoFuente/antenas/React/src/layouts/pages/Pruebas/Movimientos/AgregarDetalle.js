@@ -56,7 +56,7 @@ export default function AgregarDetalle({
     if (isAlta) {
       noRequeridos.push("idPOF", "docente", "idMotivoBaja", "fechaFinBaja", "fechaInicioBaja");
     } else if (isBajaOModifOAdic) {
-      noRequeridos.push("docente");
+      noRequeridos.push("docente", "tipoDoc");
     } else if (isModiAdic) {
       noRequeridos.push("idMotivoBaja", "fechaFinBaja", "fechaInicioBaja");
     }
