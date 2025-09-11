@@ -15,6 +15,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
   const [error, setError] = useState(null);
   const token = sessionStorage.getItem("token");
 
+  /*Fijarse si es post o get*/
   /*useEffect(() => {
     const fetchDetalles = async () => {
       try {
@@ -43,6 +44,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
       setDetalles([
         {
           idDetalle: 1,
+          idInasistencia: 120,
           idCabecera: idCabecera,
           establecimiento: "Escuela N°1",
           mes: mes,
@@ -63,6 +65,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
         },
         {
           idDetalle: 2,
+          idInasistencia: 158,
           idCabecera: idCabecera,
           establecimiento: "Escuela N°1",
           mes: mes,
@@ -86,12 +89,77 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
     }, 1000);
   }, [idCabecera, mes, año]);
 
-  const handleAceptar = (row) => {
-    console.log("Aceptar:", row);
+  const handleAceptar = async (row) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}inasistenciascabecera/AprobarInas`,
+        {
+          idInasistencia: row.idInasistencia,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert(`Inasistencia ${row.idInasistencia} aceptada correctamente`);
+    } catch (err) {
+      console.error(err);
+      alert("Error al aceptar inasistencia");
+    }
   };
 
-  const handleRechazar = (row) => {
-    console.log("Rechazar:", row);
+  const handleRechazar = async (row) => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}inasistenciascabecera/RechazarInas`,
+        {
+          idInasDetalle: row.idInasistencia,
+          observaciones: row.obsSecretaria || "Sin observaciones",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert(`Inasistencia ${row.idInasistencia} rechazada correctamente`);
+    } catch (err) {
+      console.error(err);
+      alert("Error al rechazar inasistencia");
+    }
+  };
+
+  const handleDevolver = async () => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}inasistenciascabecera/Devolver`,
+        {
+          idCabecera: idCabecera,
+          motivo: detalles[0]?.obsSecretaria || "Sin motivo",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert("Se devolvió correctamente al establecimiento");
+    } catch (err) {
+      console.error(err);
+      alert("Error al devolver al establecimiento");
+    }
+  };
+
+  const handleCorregido = async () => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}inasistenciascabecera/Corregido`,
+        {
+          params: { idCabecera },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Respuesta corregido:", res.data);
+      alert("Marcado como corregido por Educación");
+    } catch (err) {
+      console.error(err);
+      alert("Error al marcar como corregido");
+    }
   };
 
   if (loading) {
@@ -125,7 +193,30 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
       </MDBox>
     );
   }
+  const AccionesCell = ({ row }) => (
+    <MDBox display="flex" gap={1}>
+      <MDButton
+        variant="gradient"
+        color="success"
+        size="small"
+        onClick={() => handleAceptar(row.original)}
+      >
+        ✓
+      </MDButton>
+      <MDButton
+        variant="gradient"
+        color="error"
+        size="small"
+        onClick={() => handleRechazar(row.original)}
+      >
+        x
+      </MDButton>
+    </MDBox>
+  );
 
+  AccionesCell.propTypes = {
+    row: PropTypes.object.isRequired,
+  };
   return (
     <>
       {/* Cabecera de información */}
@@ -158,26 +249,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
               {
                 Header: "Acciones",
                 accessor: "acciones",
-                Cell: ({}) => (
-                  <MDBox display="flex" gap={1}>
-                    <MDButton
-                      variant="gradient"
-                      color="success"
-                      size="small"
-                      onClick={() => handleAceptar(row.original)}
-                    >
-                      Aceptar
-                    </MDButton>
-                    <MDButton
-                      variant="gradient"
-                      color="error"
-                      size="small"
-                      onClick={() => handleRechazar(row.original)}
-                    >
-                      Rechazar
-                    </MDButton>
-                  </MDBox>
-                ),
+                Cell: AccionesCell,
               },
             ],
             rows: detalles,
@@ -226,20 +298,10 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
         </MDBox>
 
         <MDBox mt={2} display="flex" justifyContent="flex-end" gap={2}>
-          <MDButton
-            variant="gradient"
-            color="warning"
-            size="small"
-            onClick={() => console.log("Devolver a Establecimiento")}
-          >
+          <MDButton variant="gradient" color="warning" size="small" onClick={handleDevolver}>
             Devolver a Establecimiento
           </MDButton>
-          <MDButton
-            variant="gradient"
-            color="info"
-            size="small"
-            onClick={() => console.log("Corregido Educación")}
-          >
+          <MDButton variant="gradient" color="info" size="small" onClick={handleCorregido}>
             Corregido Educación
           </MDButton>
         </MDBox>
