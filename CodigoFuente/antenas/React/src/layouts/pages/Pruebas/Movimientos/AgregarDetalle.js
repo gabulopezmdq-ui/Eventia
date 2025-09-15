@@ -49,7 +49,18 @@ export default function AgregarDetalle({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
   const handleSubmit = () => {
+    console.log("Entre a la peticion");
     const noRequeridos = ["horas", "antigAnos", "antigMeses"];
+
+    // Campos que no aplican en cada flujo
+    if (isAlta) {
+      noRequeridos.push("idPOF", "docente", "idMotivoBaja", "fechaFinBaja", "fechaInicioBaja");
+    } else if (isBajaOModifOAdic) {
+      noRequeridos.push("docente", "tipoDoc");
+    } else if (isModiAdic) {
+      noRequeridos.push("idMotivoBaja", "fechaFinBaja", "fechaInicioBaja");
+    }
+
     let newErrors = {};
     Object.keys(form).forEach((campo) => {
       if (!noRequeridos.includes(campo)) {
@@ -62,9 +73,12 @@ export default function AgregarDetalle({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
+      console.log("Errores encontrados:", newErrors);
       return; // No enviamos si hay errores
     }
+
     const formData = { ...form };
+
     if (isBajaOModifOAdic) {
       formData.idPOF = form.idPOF;
       formData.tipoDoc = "4";
@@ -81,7 +95,9 @@ export default function AgregarDetalle({
       delete formData.fechaFinBaja;
       delete formData.fechaInicioBaja;
     }
+
     formData.idMovimientoCabecera = idCabecera;
+    console.log("Enviando formData", formData);
     onSubmit(formData);
   };
 
@@ -228,7 +244,7 @@ export default function AgregarDetalle({
   ];
 
   const documentoOpciones = [
-    { value: 1, label: "Enrolamiento" },
+    { value: 1, label: "Lib. Enrolamiento" },
     { value: 2, label: "Lib. Cívica" },
     { value: 3, label: "Ced. Identidad" },
     { value: 4, label: "DNI" },
@@ -272,10 +288,12 @@ export default function AgregarDetalle({
             <>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth error={!!errors.tipoDoc}>
-                  <InputLabel>Tipo Doc.</InputLabel>
+                  <InputLabel id="tipo-doc-label">Tipo Doc.</InputLabel>
                   <Select
-                    name="tipDoc"
-                    label="TipoDoc"
+                    labelId="tipo-doc-label"
+                    id="tipo-doc"
+                    name="tipoDoc"
+                    label="Tipo Doc."
                     value={form.tipoDoc}
                     onChange={handleChange}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -411,7 +429,7 @@ export default function AgregarDetalle({
               >
                 {situacionRevistaOpciones.map((opcion) => (
                   <MenuItem key={opcion.value} value={opcion.value}>
-                    {opcion.label}
+                    {opcion.label} ({opcion.value})
                   </MenuItem>
                 ))}
               </Select>

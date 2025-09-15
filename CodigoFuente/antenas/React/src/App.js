@@ -59,18 +59,11 @@ import AltaCabeceraMovimiento from "layouts/pages/Pruebas/Movimientos/AltaCabece
 import PlantaFuncionalSec from "layouts/pages/Pruebas/PlantaFuncional/SecretarioPlantaFuncional";
 import AltaCabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
 import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
+import VerificarInasistencia from "layouts/pages/Pruebas/Inasistencias/VerificarInasistencia/index";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
-  const {
-    miniSidenav,
-    layout,
-    openConfigurator,
-    sidenavColor,
-    transparentSidenav,
-    whiteSidenav,
-    darkMode,
-  } = controller;
+  const { miniSidenav, layout, sidenavColor, darkMode } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { pathname } = useLocation();
 
@@ -322,6 +315,11 @@ export default function App() {
       path: "/PlantaFuncionalSec",
       component: PlantaFuncionalSec,
       roles: ["secretario"],
+    },
+    {
+      path: "/VerificarInasistencia",
+      component: VerificarInasistencia,
+      roles: ["admin", "superadmin"],
     },
 
     //----------------------------------Rutas de Ver mas
