@@ -96,7 +96,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.SitRevista)
              .HasColumnType("char(2)")
              .IsFixedLength(true)
-             .IsRequired(true);
+             .IsRequired(false);
 
             builder.Property(e => e.Turno)
                .HasColumnType("char(1)")
