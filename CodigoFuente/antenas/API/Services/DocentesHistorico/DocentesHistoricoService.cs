@@ -98,28 +98,7 @@ namespace API.Services
 
             //eliminar esta parte para agregar un boton que elimine los registros
             // 1. Borrar primero tabla de errores (dependiente)
-            await _context.Database.ExecuteSqlRawAsync("DELETE FROM \"MEC_TMPErroresInasistenciasDetalle\"");
-
-            // 2. Borrar tabla principal
-            await _context.Database.ExecuteSqlRawAsync("DELETE FROM \"MEC_TMPInasistenciasDetalle\"");
-
-            // 3. Reiniciar secuencias
-            await _context.Database.ExecuteSqlRawAsync(
-                @"DO $$
-            DECLARE seq_name text;
-            BEGIN
-                SELECT pg_get_serial_sequence('""MEC_TMPInasistenciasDetalle""', 'IdTMPInasistenciasDetalle')
-                INTO seq_name;
-                IF seq_name IS NOT NULL THEN
-                    EXECUTE format('ALTER SEQUENCE %s RESTART WITH 1', seq_name);
-                END IF;
-
-                SELECT pg_get_serial_sequence('""MEC_TMPErroresInasistenciasDetalle""', 'IdTMPErrorInasistencia')
-                INTO seq_name;
-                IF seq_name IS NOT NULL THEN
-                    EXECUTE format('ALTER SEQUENCE %s RESTART WITH 1', seq_name);
-                END IF;
-            END$$;");
+           
 
             var entidades = registros.Select(dto => new MEC_TMPInasistenciasDetalle
             {
@@ -143,6 +122,51 @@ namespace API.Services
 
             _context.MEC_TMPInasistenciasDetalle.AddRange(entidades);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task LimpiarTmpAsync()
+        {
+            // 1. Borrar registros dependientes en MEC_InasistenciasDetalle
+            await _context.Database.ExecuteSqlRawAsync(
+                @"DELETE FROM ""MEC_InasistenciasDetalle""
+              WHERE ""IdTMPInasistenciasDetalle"" IS NOT NULL");
+
+            // 2. Borrar tabla de errores
+            await _context.Database.ExecuteSqlRawAsync(
+                @"DELETE FROM ""MEC_TMPErroresInasistenciasDetalle""");
+
+            // 3. Borrar tabla TMP
+            await _context.Database.ExecuteSqlRawAsync(
+                @"DELETE FROM ""MEC_TMPInasistenciasDetalle""");
+
+            // 4. Reiniciar secuencias
+            await _context.Database.ExecuteSqlRawAsync(
+                @"DO $$
+            DECLARE seq_name text;
+            BEGIN
+                SELECT pg_get_serial_sequence('""MEC_TMPInasistenciasDetalle""', 'IdTMPInasistenciasDetalle')
+                INTO seq_name;
+                IF seq_name IS NOT NULL THEN
+                    EXECUTE format('ALTER SEQUENCE %s RESTART WITH 1', seq_name);
+                END IF;
+
+                SELECT pg_get_serial_sequence('""MEC_TMPErroresInasistenciasDetalle""', 'IdTMPErrorInasistencia')
+                INTO seq_name;
+                IF seq_name IS NOT NULL THEN
+                    EXECUTE format('ALTER SEQUENCE %s RESTART WITH 1', seq_name);
+                END IF;
+            END$$;");
+
+            // 5. Agregar ON DELETE CASCADE a la FK (si no existe)
+            await _context.Database.ExecuteSqlRawAsync(
+                @"ALTER TABLE ""MEC_InasistenciasDetalle"" 
+              DROP CONSTRAINT IF EXISTS ""FK_TMPInasistenciasDetalle"";
+
+              ALTER TABLE ""MEC_InasistenciasDetalle""
+              ADD CONSTRAINT ""FK_TMPInasistenciasDetalle""
+              FOREIGN KEY(""IdTMPInasistenciasDetalle"")
+              REFERENCES ""MEC_TMPInasistenciasDetalle""(""IdTMPInasistenciasDetalle"")
+              ON DELETE CASCADE;");
         }
     }
 }

@@ -101,6 +101,7 @@ function SecretarioPlantaFuncional() {
         SECUENCIA: row.secuencia?.toString().toUpperCase() || "",
         "TIPO CARGO": row.tipoCargo?.toUpperCase() || "",
         VIGENTE: row.vigente === "S" ? "SI" : row.vigente === "N" ? "NO" : "N/A",
+        "BARRAS ANTERIORES": row.barra?.toString().toUpperCase() || "",
         BARRAS: row.barras ? row.barras.join(", ").toUpperCase() : "",
       }));
 
