@@ -114,7 +114,7 @@ namespace API.Controllers
         [HttpPost("AddDetalle")]
         public async Task<ActionResult> Post([FromBody] MEC_MovimientosDetalle movimientos)
         {
-            await _serviceDetalle.Add(movimientos);
+            await _movimientosDetalle.AgregarDetalle(movimientos);
             return Ok(movimientos);
         }
 
