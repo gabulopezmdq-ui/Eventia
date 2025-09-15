@@ -1,9 +1,8 @@
-// src/utils/PDFGenerator.js
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 export async function generatePDF(data) {
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([600, 800]);
+  let page = pdfDoc.addPage([600, 800]); // 👈 usamos let
   const { height } = page.getSize();
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -35,24 +34,42 @@ export async function generatePDF(data) {
   const headerBackground = rgb(0.7, 0.9, 1); // celeste claro
   const headerTextColor = rgb(0, 0, 0); // negro
 
-  headers.forEach((header, i) => {
-    // Dibujar rectángulo de fondo
-    page.drawRectangle({
-      x: colX[i] - 2, // margen pequeño a la izquierda
-      y: y - 2,
-      width: i < colX.length - 1 ? colX[i + 1] - colX[i] : 70,
-      height: 14,
-      color: headerBackground,
+  const drawHeaders = (pg, yPos) => {
+    headers.forEach((header, i) => {
+      // Dibujar rectángulo de fondo
+      pg.drawRectangle({
+        x: colX[i] - 2,
+        y: yPos - 2,
+        width: i < colX.length - 1 ? colX[i + 1] - colX[i] : 70,
+        height: 14,
+        color: headerBackground,
+      });
+
+      // Dibujar texto encima
+      pg.drawText(header, {
+        x: colX[i],
+        y: yPos,
+        size: 10,
+        font,
+        color: headerTextColor,
+      });
     });
+  };
 
-    // Dibujar texto encima
-    page.drawText(header, { x: colX[i], y, size: 10, font, color: headerTextColor });
-  });
-
+  // Dibujamos los headers de la primera página
+  drawHeaders(page, y);
   y -= 20;
 
   // 🔹 Recorremos cada error del array
   data.forEach((item) => {
+    // Si no hay espacio, agregamos nueva página y volvemos a dibujar headers
+    if (y < 50) {
+      page = pdfDoc.addPage([600, 800]); // 👈 nueva página
+      y = height - 50;
+      drawHeaders(page, y);
+      y -= 20;
+    }
+
     const values = [
       item.idTMPErrorInasistencia,
       item.idCabeceraInasistencia,
@@ -68,12 +85,6 @@ export async function generatePDF(data) {
     });
 
     y -= 15;
-
-    // Si llegamos al final de la página, agregamos otra
-    if (y < 50) {
-      y = height - 50;
-      page.addPage();
-    }
   });
 
   const pdfBytes = await pdfDoc.save();
