@@ -23,6 +23,8 @@ namespace API.DataSchema
         public int? AntigAnios { get; set; }
         public int? AntigMeses { get; set; }
         public int? Horas { get; set; }
+        public int? HorasDecrece { get; set; }
+        public string? Decrece { get; set; }
         public DateTime? FechaInicioBaja { get; set; }
         public DateTime? FechaFinBaja { get; set; }
         public virtual MEC_MovimientosCabecera? MovimientoCabecera { get; set; }

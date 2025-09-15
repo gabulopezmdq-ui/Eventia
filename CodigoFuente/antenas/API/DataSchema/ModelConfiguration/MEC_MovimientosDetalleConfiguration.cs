@@ -105,11 +105,11 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.AntigAnios)
               .HasColumnType("int")
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.AntigMeses)
               .HasColumnType("int")
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.Horas)
               .HasColumnType("int")
@@ -125,6 +125,15 @@ namespace API.DataSchema.ModelConfiguration
                .HasColumnType("char(1000)")
                .IsFixedLength(true)
                .IsRequired(false);
+
+            builder.Property(e => e.HorasDecrece)
+             .HasColumnType("int")
+             .IsRequired(false);
+
+            builder.Property(e => e.Decrece)
+             .HasColumnType("char(1)")
+             .IsFixedLength(true)
+             .IsRequired(false);
 
         }
     }

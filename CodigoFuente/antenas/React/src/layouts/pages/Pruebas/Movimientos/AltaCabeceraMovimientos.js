@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import axios from "axios";
 import {
   Grid,
@@ -16,6 +17,7 @@ import DataTable from "examples/Tables/DataTable";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
+import DetallePopup from "./DetallePopUp";
 import AgregarDetalle from "./AgregarDetalle";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import jwt_decode from "jwt-decode";
@@ -30,6 +32,9 @@ function AltaCabeceraMovimientos() {
   const [ruralidadCabecera, setRuralidadCabecera] = useState("");
   const [idEstablecimiento, setIdEstablecimiento] = useState("");
   const [detallesCargados, setDetallesCargados] = useState(false);
+  const [detalleSeleccionado, setDetalleSeleccionado] = useState(null);
+  const [openPopup, setOpenPopup] = useState(false);
+
   const [formData, setFormData] = useState({
     area: "L",
     mes: "",
@@ -236,6 +241,28 @@ function AltaCabeceraMovimientos() {
     }
   };
 
+  const handleVer = (detalle) => {
+    setDetalleSeleccionado(detalle);
+    setOpenPopup(true);
+  };
+
+  const handleCerrarPopup = () => {
+    setOpenPopup(false);
+    setDetalleSeleccionado(null);
+  };
+
+  const handleEliminar = async (id) => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}MovimientosCabecera/EliminarDetalle`, {
+        params: { IdMovimientoDetalle: id },
+      });
+      await fetchDetalles(idCabecera);
+      console.log(`Detalle con id ${id} eliminado correctamente`);
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      alert("❌ No se pudo eliminar el detalle. Intente nuevamente.");
+    }
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -415,6 +442,30 @@ function AltaCabeceraMovimientos() {
                       { Header: "Hs", accessor: "horas" },
                       { Header: "Años", accessor: "antigAnios" },
                       { Header: "Meses", accessor: "antigMeses" },
+                      {
+                        Header: "Acciones",
+                        accessor: "acciones",
+                        Cell: ({ row }) => (
+                          <MDBox display="flex" gap={1}>
+                            <MDButton
+                              variant="gradient"
+                              color="info"
+                              size="small"
+                              onClick={() => handleVer(row.original)}
+                            >
+                              Ver
+                            </MDButton>
+                            <MDButton
+                              variant="gradient"
+                              color="error"
+                              size="small"
+                              onClick={() => handleEliminar(row.original.idMovimientoDetalle)}
+                            >
+                              Eliminar
+                            </MDButton>
+                          </MDBox>
+                        ),
+                      },
                     ],
                     rows: detalles,
                   }}
@@ -427,7 +478,14 @@ function AltaCabeceraMovimientos() {
           </>
         )}
       </MDBox>
+      <DetallePopup open={openPopup} onClose={handleCerrarPopup} detalle={detalleSeleccionado} />
     </DashboardLayout>
   );
 }
+AltaCabeceraMovimientos.propTypes = {
+  row: PropTypes.object,
+  "row.original": PropTypes.shape({
+    id: PropTypes.number,
+  }),
+};
 export default AltaCabeceraMovimientos;

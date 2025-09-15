@@ -43,7 +43,7 @@ export default function AgregarDetalle({
     fechaFinBaja: "",
     idMotivoBaja: "",
   });
-  const isBaja = form.tipoMovimiento === "B";
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -55,10 +55,10 @@ export default function AgregarDetalle({
     // Campos que no aplican en cada flujo
     if (isAlta) {
       noRequeridos.push("idPOF", "docente", "idMotivoBaja", "fechaFinBaja", "fechaInicioBaja");
-    } else if (isBajaOModifOAdic) {
-      noRequeridos.push("docente", "tipoDoc");
     } else if (isModiAdic) {
-      noRequeridos.push("idMotivoBaja", "fechaFinBaja", "fechaInicioBaja");
+      noRequeridos.push("idMotivoBaja", "fechaFinBaja", "fechaInicioBaja", "tipoDoc");
+    } else if (isBaja) {
+      noRequeridos.push("turno", "sitRevista", "tipoDoc");
     }
 
     let newErrors = {};
@@ -103,6 +103,7 @@ export default function AgregarDetalle({
 
   const isAlta = form.tipoMovimiento === "A";
   const isBajaOModifOAdic = ["B", "M", "D"].includes(form.tipoMovimiento);
+  const isBaja = form.tipoMovimiento === "B";
   const isModiAdic = ["M", "D"].includes(form.tipoMovimiento);
   useEffect(() => {
     const fetchObservaciones = async () => {
@@ -361,220 +362,221 @@ export default function AgregarDetalle({
 
           {/* Baja, Modif, Adic */}
           {isBajaOModifOAdic && (
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.docente}>
-                <InputLabel>Docente</InputLabel>
-                <Select
-                  name="docente"
-                  label="Docente"
-                  value={form.docente}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const docenteSeleccionado = docentesOpciones.find(
-                      (doc) => doc.idPersona === selectedId
-                    );
+            <>
+              <Grid item xs={12}>
+                <FormControl fullWidth error={!!errors.docente}>
+                  <InputLabel>Docente</InputLabel>
+                  <Select
+                    name="docente"
+                    label="Docente"
+                    value={form.docente}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const docenteSeleccionado = docentesOpciones.find(
+                        (doc) => doc.idPersona === selectedId
+                      );
 
-                    setForm((prev) => ({
-                      ...prev,
-                      docente: selectedId,
-                      idPOF: docenteSeleccionado.idPOF,
-                      nombre: docenteSeleccionado.personaNombre,
-                      apellido: docenteSeleccionado.personaApellido,
-                      idTipoFuncion: docenteSeleccionado.idTipoFuncion || "",
-                      numDoc: docenteSeleccionado.personaDNI || "",
-                      antigAnos: docenteSeleccionado.anioAntiguedad || "",
-                      antigMeses: docenteSeleccionado.mesAntiguedad || "",
-                      funcion:
-                        funcionesOpciones.find(
-                          (f) => f.idTipoFuncion === docenteSeleccionado.idTipoFuncion
-                        )?.codFuncion || "",
-                      idTipoCategoria: docenteSeleccionado.idCategoria || "",
-                      categoria:
-                        categoriasOpciones.find(
-                          (cat) => cat.idTipoCategoria === docenteSeleccionado.idCategoria
-                        )?.codCategoria || "",
-                    }));
-                  }}
-                  style={{ height: "2.8rem", backgroundColor: "white" }}
-                >
-                  {docentesOpciones.length > 0 ? (
-                    docentesOpciones.map((doc) => (
-                      <MenuItem key={doc.idPersona} value={doc.idPersona}>
-                        {`${doc.personaDNI} - ${doc.secuencia} - ${doc.personaApellido} ${doc.personaNombre}`}
+                      setForm((prev) => ({
+                        ...prev,
+                        docente: selectedId,
+                        idPOF: docenteSeleccionado.idPOF,
+                        nombre: docenteSeleccionado.personaNombre,
+                        apellido: docenteSeleccionado.personaApellido,
+                        idTipoFuncion: docenteSeleccionado.idTipoFuncion || "",
+                        numDoc: docenteSeleccionado.personaDNI || "",
+                        antigAnos: docenteSeleccionado.anioAntiguedad || "",
+                        antigMeses: docenteSeleccionado.mesAntiguedad || "",
+                        funcion:
+                          funcionesOpciones.find(
+                            (f) => f.idTipoFuncion === docenteSeleccionado.idTipoFuncion
+                          )?.codFuncion || "",
+                        idTipoCategoria: docenteSeleccionado.idCategoria || "",
+                        categoria:
+                          categoriasOpciones.find(
+                            (cat) => cat.idTipoCategoria === docenteSeleccionado.idCategoria
+                          )?.codCategoria || "",
+                      }));
+                    }}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {docentesOpciones.length > 0 ? (
+                      docentesOpciones.map((doc) => (
+                        <MenuItem key={doc.idPersona} value={doc.idPersona}>
+                          {`${doc.personaDNI} - ${doc.secuencia} - ${doc.personaApellido} ${doc.personaNombre}`}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled value="">
+                        No hay docentes disponibles
                       </MenuItem>
-                    ))
-                  ) : (
-                    <MenuItem disabled value="">
-                      No hay docentes disponibles
-                    </MenuItem>
+                    )}
+                  </Select>
+                  {errors.docente && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.docente}</p>
                   )}
-                </Select>
-                {errors.docente && (
-                  <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.docente}</p>
-                )}
-              </FormControl>
-            </Grid>
+                </FormControl>
+              </Grid>
+              {isModiAdic && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={!!errors.sitRevista}>
+                      <InputLabel>Sit.Revista</InputLabel>
+                      <Select
+                        name="sitRevista"
+                        label="Sit.Revista"
+                        value={form.sitRevista}
+                        onChange={handleChange}
+                        style={{ height: "2.8rem", backgroundColor: "white" }}
+                      >
+                        {situacionRevistaOpciones.map((opcion) => (
+                          <MenuItem key={opcion.value} value={opcion.value}>
+                            {opcion.label} ({opcion.value})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {errors.sitRevista && (
+                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.sitRevista}</p>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={!!errors.funcion}>
+                      <InputLabel>Función</InputLabel>
+                      <Select
+                        name="idTipoFuncion"
+                        label="Función"
+                        value={form.idTipoFuncion}
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          const funcionObj = funcionesOpciones.find(
+                            (f) => f.idTipoFuncion === selectedId
+                          );
+                          setForm((prev) => ({
+                            ...prev,
+                            idTipoFuncion: selectedId,
+                            funcion: funcionObj?.codFuncion || "",
+                          }));
+                        }}
+                        style={{ height: "2.8rem", backgroundColor: "white" }}
+                      >
+                        {funcionesOpciones.length > 0 ? (
+                          funcionesOpciones.map((funcion) => (
+                            <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
+                              {funcion.codFuncion}
+                            </MenuItem>
+                          ))
+                        ) : (
+                          <MenuItem disabled value="">
+                            No hay funciones disponibles
+                          </MenuItem>
+                        )}
+                      </Select>
+                      {errors.funcion && (
+                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.funcion}</p>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      name="rural"
+                      label="Rural"
+                      fullWidth
+                      value={form.rural}
+                      onChange={handleChange}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={!!errors.turno}>
+                      <InputLabel>Turno</InputLabel>
+                      <Select
+                        name="turno"
+                        label="Turno"
+                        value={form.turno}
+                        onChange={handleChange}
+                        style={{ height: "2.8rem", backgroundColor: "white" }}
+                      >
+                        {turno.map((opcion) => (
+                          <MenuItem key={opcion.value} value={opcion.value}>
+                            {opcion.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {errors.turno && (
+                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.turno}</p>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={!!errors.categoria}>
+                      <InputLabel>Categoría</InputLabel>
+                      <Select
+                        name="idTipoCategoria"
+                        label="Categoría"
+                        value={form.idTipoCategoria}
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          const categoriaObj = categoriasOpciones.find(
+                            (cat) => cat.idTipoCategoria === selectedId
+                          );
+                          setForm((prev) => ({
+                            ...prev,
+                            idTipoCategoria: selectedId,
+                            categoria: categoriaObj?.codCategoria || "",
+                          }));
+                        }}
+                        style={{ height: "2.8rem", backgroundColor: "white" }}
+                      >
+                        {categoriasOpciones.length > 0 ? (
+                          categoriasOpciones.map((cat) => (
+                            <MenuItem key={cat.idTipoCategoria} value={cat.idTipoCategoria}>
+                              {cat.codCategoria}
+                            </MenuItem>
+                          ))
+                        ) : (
+                          <MenuItem disabled value="">
+                            No hay categorías disponibles
+                          </MenuItem>
+                        )}
+                      </Select>
+                      {errors.categoria && (
+                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.categoria}</p>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      name="horas"
+                      label="Horas"
+                      type="number"
+                      fullWidth
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <TextField
+                      name="antigAnos"
+                      label="Antig. Años"
+                      fullWidth
+                      disabled={isBajaOModifOAdic}
+                      value={form.antigAnos}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <TextField
+                      name="antigMeses"
+                      label="Antig. Meses"
+                      fullWidth
+                      value={form.antigMeses}
+                      disabled={isBajaOModifOAdic}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                </>
+              )}
+            </>
           )}
-
-          {/* Sit. Revista */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth error={!!errors.sitRevista}>
-              <InputLabel>Sit.Revista</InputLabel>
-              <Select
-                name="sitRevista"
-                label="Sit.Revista"
-                value={form.sitRevista}
-                onChange={handleChange}
-                style={{ height: "2.8rem", backgroundColor: "white" }}
-              >
-                {situacionRevistaOpciones.map((opcion) => (
-                  <MenuItem key={opcion.value} value={opcion.value}>
-                    {opcion.label} ({opcion.value})
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.sitRevista && (
-                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.sitRevista}</p>
-              )}
-            </FormControl>
-          </Grid>
-
-          {/* Función */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth error={!!errors.funcion}>
-              <InputLabel>Función</InputLabel>
-              <Select
-                name="idTipoFuncion"
-                label="Función"
-                value={form.idTipoFuncion}
-                onChange={(e) => {
-                  const selectedId = e.target.value;
-                  const funcionObj = funcionesOpciones.find((f) => f.idTipoFuncion === selectedId);
-                  setForm((prev) => ({
-                    ...prev,
-                    idTipoFuncion: selectedId,
-                    funcion: funcionObj?.codFuncion || "",
-                  }));
-                }}
-                style={{ height: "2.8rem", backgroundColor: "white" }}
-              >
-                {funcionesOpciones.length > 0 ? (
-                  funcionesOpciones.map((funcion) => (
-                    <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
-                      {funcion.codFuncion}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled value="">
-                    No hay funciones disponibles
-                  </MenuItem>
-                )}
-              </Select>
-              {errors.funcion && (
-                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.funcion}</p>
-              )}
-            </FormControl>
-          </Grid>
-
-          {/* Rural */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="rural"
-              label="Rural"
-              fullWidth
-              value={form.rural}
-              onChange={handleChange}
-              disabled
-            />
-          </Grid>
-
-          {/* Turno */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth error={!!errors.turno}>
-              <InputLabel>Turno</InputLabel>
-              <Select
-                name="turno"
-                label="Turno"
-                value={form.turno}
-                onChange={handleChange}
-                style={{ height: "2.8rem", backgroundColor: "white" }}
-              >
-                {turno.map((opcion) => (
-                  <MenuItem key={opcion.value} value={opcion.value}>
-                    {opcion.label}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.turno && <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.turno}</p>}
-            </FormControl>
-          </Grid>
-
-          {/* Categoría */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth error={!!errors.categoria}>
-              <InputLabel>Categoría</InputLabel>
-              <Select
-                name="idTipoCategoria"
-                label="Categoría"
-                value={form.idTipoCategoria}
-                onChange={(e) => {
-                  const selectedId = e.target.value;
-                  const categoriaObj = categoriasOpciones.find(
-                    (cat) => cat.idTipoCategoria === selectedId
-                  );
-                  setForm((prev) => ({
-                    ...prev,
-                    idTipoCategoria: selectedId,
-                    categoria: categoriaObj?.codCategoria || "",
-                  }));
-                }}
-                style={{ height: "2.8rem", backgroundColor: "white" }}
-              >
-                {categoriasOpciones.length > 0 ? (
-                  categoriasOpciones.map((cat) => (
-                    <MenuItem key={cat.idTipoCategoria} value={cat.idTipoCategoria}>
-                      {cat.codCategoria}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled value="">
-                    No hay categorías disponibles
-                  </MenuItem>
-                )}
-              </Select>
-              {errors.categoria && (
-                <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.categoria}</p>
-              )}
-            </FormControl>
-          </Grid>
-
-          {/* Horas */}
-          <Grid item xs={12} sm={6}>
-            <TextField name="horas" label="Horas" type="number" fullWidth onChange={handleChange} />
-          </Grid>
-
-          {/* Antigüedad */}
-          <Grid item xs={6} sm={3}>
-            <TextField
-              name="antigAnos"
-              label="Antig. Años"
-              fullWidth
-              disabled={isBajaOModifOAdic}
-              value={form.antigAnos}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <TextField
-              name="antigMeses"
-              label="Antig. Meses"
-              fullWidth
-              value={form.antigMeses}
-              disabled={isBajaOModifOAdic}
-              onChange={handleChange}
-            />
-          </Grid>
-
           {/* Observaciones predefinidas */}
           <Grid item xs={12}>
             <FormControl fullWidth error={!!errors.observaciones}>
