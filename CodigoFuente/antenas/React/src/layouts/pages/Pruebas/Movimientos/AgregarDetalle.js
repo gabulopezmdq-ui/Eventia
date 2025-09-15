@@ -95,6 +95,10 @@ export default function AgregarDetalle({
       delete formData.fechaFinBaja;
       delete formData.fechaInicioBaja;
     }
+    if (isModificacion) {
+      formData.horasModulos = form.horasModulos;
+      formData.cantidadHrasDecrece = form.cantidadHrasDecrece;
+    }
 
     formData.idMovimientoCabecera = idCabecera;
     console.log("Enviando formData", formData);
@@ -105,6 +109,7 @@ export default function AgregarDetalle({
   const isBajaOModifOAdic = ["B", "M", "D"].includes(form.tipoMovimiento);
   const isBaja = form.tipoMovimiento === "B";
   const isModiAdic = ["M", "D"].includes(form.tipoMovimiento);
+  const isModificacion = ["M"].includes(form.tipoMovimiento);
   useEffect(() => {
     const fetchObservaciones = async () => {
       try {
@@ -627,7 +632,44 @@ export default function AgregarDetalle({
               }
             />
           </Grid>
-
+          {isModificacion && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!errors.decrece}>
+                  <InputLabel>Decrece</InputLabel>
+                  <Select
+                    name="decrece"
+                    label="Decrece"
+                    value={form.decrece || ""}
+                    onChange={handleChange}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    <MenuItem value="S">Sí</MenuItem>
+                    <MenuItem value="N">No</MenuItem>
+                  </Select>
+                  {errors.decrece && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.decrece}</p>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="horasDecrece "
+                  label="Horas/Módulos"
+                  type="number"
+                  fullWidth
+                  value={form.horasDecrece || ""}
+                  onChange={handleChange}
+                  error={!!errors.horasDecrece}
+                  helperText={
+                    errors.horasDecrece && (
+                      <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.horasDecrece}</p>
+                    )
+                  }
+                />
+              </Grid>
+            </>
+          )}
           {/* Baja */}
           {isBaja && (
             <>
