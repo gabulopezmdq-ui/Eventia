@@ -491,7 +491,7 @@ namespace API.Services
         //MODIFICACION CON HORAS DECRECECIENTES
         public async Task AgregarDetalle(MEC_MovimientosDetalle detalle)
         {
-            var decrece = detalle.Decrece;
+            var decrece = detalle.Decrece?.ToUpper() ?? "N";
             if (decrece == "S")
             {
                 try
@@ -532,7 +532,7 @@ namespace API.Services
                     throw;   
                 }
             }
-            else if(decrece == "N")
+            else if(decrece == "N" )
             {
                 _context.MEC_MovimientosDetalle.Add(detalle);
                 await _context.SaveChangesAsync();
