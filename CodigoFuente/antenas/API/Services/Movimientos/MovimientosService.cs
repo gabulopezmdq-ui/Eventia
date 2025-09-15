@@ -261,6 +261,7 @@ namespace API.Services
                 .Select(d => new MovimientosDetalleDTO
                 {
                     IdMovimientoCabecera = d.IdMovimientoCabecera,
+                    IdMovimientoDetalle = d.IdMovimientoDetalle,
                     IdTipoFuncion = d.IdTipoFuncion,
                     IdPOF = d.IdPOF ?? null,
                     IdTipoCategoria = d.IdTipoCategoria,
@@ -467,6 +468,25 @@ namespace API.Services
                 .Select(uxe => uxe.IdEstablecimiento)
                 .Distinct()
                 .ToListAsync();
+        }
+
+        //borrar detalle
+
+        public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
+        {
+            var entidad = await _context.MEC_MovimientosDetalle.FindAsync(IdMovimientoDetalle);
+            if (entidad == null)
+            {
+                return false; // No existe
+            }
+
+            // Lo removemos del contexto
+            _context.MEC_MovimientosDetalle.Remove(entidad);
+
+            // Guardamos cambios
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
     
