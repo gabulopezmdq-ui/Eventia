@@ -187,7 +187,7 @@ function CabeceraMovimientos() {
   };
   const handleEnviarEducacion = (movimiento) => {
     const confirmacion = window.confirm(
-      `¿Está seguro de enviar el movimiento ${movimiento.idMovimientoCabecera} a Educación?`
+      `¿Está seguro de enviar el movimiento ${movimiento.mes}/${movimiento.anio} ${movimiento.establecimientos.nroEstablecimiento} a Educación?`
     );
     if (!confirmacion) {
       return;
@@ -233,8 +233,9 @@ function CabeceraMovimientos() {
       });
   };
   const handleEnviarProvincia = (movimiento) => {
+    console.log("muestro movimeinto: ", movimiento);
     const confirmacion = window.confirm(
-      `¿Está seguro de enviar el movimiento ${movimiento.idMovimientoCabecera} a Provinvia?`
+      `¿Está seguro de enviar el movimiento ${movimiento.mes}/${movimiento.anio} ${movimiento.establecimientos.nroEstablecimiento} a Provincia?`
     );
     if (!confirmacion) {
       return;
@@ -304,7 +305,7 @@ function CabeceraMovimientos() {
         {dataTableData.length === 0 ? (
           <MDBox my={3}>
             <MDBox p={3} textAlign="center">
-              No tiene establecimientos asociados.
+              No tiene cabeceras de movimientos asociadas.
             </MDBox>
           </MDBox>
         ) : (
