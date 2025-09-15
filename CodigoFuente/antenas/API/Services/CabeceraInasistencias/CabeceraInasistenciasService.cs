@@ -93,7 +93,8 @@ namespace API.Services
                 .FirstOrDefaultAsync(c =>
                     c.IdCabecera == idCabecera &&
                     c.Anio == año &&
-                    c.Mes == mes);
+                    c.Mes == mes &&
+                    c.IdEstablecimiento == idEstablecimiento);
 
             if (cabeceraExistente != null)
             {
