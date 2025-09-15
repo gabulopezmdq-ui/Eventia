@@ -126,6 +126,15 @@ namespace API.DataSchema.ModelConfiguration
                .IsFixedLength(true)
                .IsRequired(false);
 
+            builder.Property(e => e.HorasDecrece)
+             .HasColumnType("int")
+             .IsRequired(false);
+
+            builder.Property(e => e.Decrece)
+             .HasColumnType("char(1)")
+             .IsFixedLength(true)
+             .IsRequired(false);
+
         }
     }
 }
