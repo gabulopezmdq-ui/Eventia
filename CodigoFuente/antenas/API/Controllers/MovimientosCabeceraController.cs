@@ -224,5 +224,18 @@ namespace API.Controllers
                 return StatusCode(500, $"Error obteniendo establecimientos: {ex.Message}");
             }
         }
+
+        //Eliminar Detalle
+        [HttpDelete("EliminarDetalle")]
+        public async Task<IActionResult> EliminarDetalle([FromQuery] int IdMovimientoDetalle)
+        {
+            var resultado = await _movimientosDetalle.EliminarDetalle(IdMovimientoDetalle);
+            if (!resultado)
+            {
+                return NotFound(new { mensaje = "Registro no encontrado" });
+            }
+
+            return Ok(new { mensaje = "Registro eliminado correctamente" });
+        }
     }
 }

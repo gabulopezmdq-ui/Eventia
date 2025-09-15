@@ -30,5 +30,6 @@ namespace API.Services
 
         //ROLES USUARIOS
         Task<List<int>> ObtenerIdsPorUsuarioAsync(int idUsuario);
+        Task<bool> EliminarDetalle(int IdMovimientoDetalle);
     }
 }
