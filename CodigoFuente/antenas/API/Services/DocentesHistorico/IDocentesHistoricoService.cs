@@ -9,5 +9,6 @@ namespace API.Services
         Task<string> ObtenerHistoricoDocentesAsync(string desde, string hasta, string secretKey);
         string GenerarApiKey(string secretKey, DateTime? timestamp = null);
         Task ImportarJSON(string json, int idCabecera, int idInasistenciasCabecera);
+        Task LimpiarTmpAsync();
     }
 }
