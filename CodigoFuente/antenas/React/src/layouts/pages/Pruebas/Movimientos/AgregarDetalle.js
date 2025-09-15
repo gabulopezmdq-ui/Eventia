@@ -654,7 +654,7 @@ export default function AgregarDetalle({
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  name="horasDecrece "
+                  name="horasDecrece"
                   label="Horas/Módulos"
                   type="number"
                   fullWidth
