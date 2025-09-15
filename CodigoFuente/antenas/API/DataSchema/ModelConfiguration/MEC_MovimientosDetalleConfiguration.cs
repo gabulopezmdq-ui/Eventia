@@ -105,11 +105,11 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.AntigAnios)
               .HasColumnType("int")
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.AntigMeses)
               .HasColumnType("int")
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.Horas)
               .HasColumnType("int")
