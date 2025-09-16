@@ -8,7 +8,7 @@ export async function BajasModificacionesPDF({ data, title, usuario, infoTitulos
   const rowHeight = 30;
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  console.log("infoTitulos: ", infoTitulos);
+  console.log("usuarios: ", usuario);
   // --------------------
   // Dibuja el título
   // --------------------
@@ -162,7 +162,7 @@ export async function BajasModificacionesPDF({ data, title, usuario, infoTitulos
   });
 
   // Confeccionó
-  page.drawText(`CONFECCIONÓ: `, {
+  page.drawText(`CONFECCIONÓ: ${usuario.apellidoPersona} ${usuario.nombrePersona}`, {
     x: rectX + 10,
     y: yPosition + 10,
     size: 10,

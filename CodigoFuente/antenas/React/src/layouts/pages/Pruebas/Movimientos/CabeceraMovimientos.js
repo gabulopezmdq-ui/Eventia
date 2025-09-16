@@ -285,7 +285,7 @@ function CabeceraMovimientos() {
     console.log("row: ", row);
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}MovimientosCabecera/DetallesCabecera?IdCabecera=${row.idMovimientoCabecera}`,
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/DetallesPDF?idCabecera=${row.idMovimientoCabecera}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -293,17 +293,22 @@ function CabeceraMovimientos() {
         }
       );
 
-      const data = response.data;
+      const data = response.data.detalles;
+      const user = response.data;
 
       // Filtrar solo los tipos de movimiento "M" y "B"
       const filteredData = data.filter(
         (item) => item.tipoMovimiento === "M" || item.tipoMovimiento === "B"
       );
-
+      const usuario = {
+        nombrePersona: user.nombrePersona,
+        apellidoPersona: user.apellidoPersona,
+      };
       await BajasModificacionesPDF({
         title: "Informacion para Bajas",
         data: filteredData,
         infoTitulos: row,
+        usuario: usuario,
         fileName: `InformacionBajas${row.idMovimientoCabecera}`,
       });
     } catch (error) {
