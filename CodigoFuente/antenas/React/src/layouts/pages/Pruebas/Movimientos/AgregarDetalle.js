@@ -58,7 +58,7 @@ export default function AgregarDetalle({
     } else if (isModiAdic) {
       noRequeridos.push("idMotivoBaja", "fechaFinBaja", "fechaInicioBaja", "tipoDoc");
     } else if (isBaja) {
-      noRequeridos.push("turno", "sitRevista", "tipoDoc");
+      noRequeridos.push("turno", "sitRevista", "tipoDoc", "fechaFinBaja");
     }
 
     let newErrors = {};
