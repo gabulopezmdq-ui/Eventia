@@ -15,6 +15,10 @@ namespace API.DataSchema.ModelConfiguration
                 .ValueGeneratedOnAdd();
 
             builder
+                   .Property(e => e.IdMovimientoDetalle)
+                  .HasColumnName("IdMovimientoDetalle");
+
+            builder
                 .HasOne(p => p.MovimientoCabecera)
                 .WithMany(t => t.MovimientosDetalle)
                 .HasForeignKey(p => p.IdMovimientoCabecera)
@@ -116,7 +120,7 @@ namespace API.DataSchema.ModelConfiguration
               .IsRequired(false);
 
             builder.Property(e => e.FechaFinBaja)
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.FechaInicioBaja)
               .IsRequired(true);

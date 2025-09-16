@@ -256,6 +256,8 @@ namespace API.Services
 
         public async Task<List<MovimientosDetalleDTO>> ObtenerDetallesPorCabeceraAsync(int idCabecera)
         {
+            var usuarioId = GetUserIdFromToken();
+            var usuario = _context.MEC_Usuarios.FirstOrDefault(u => u.IdUsuario == usuarioId);
             var detalles = await _context.MEC_MovimientosDetalle
                 .Where(d => d.IdMovimientoCabecera == idCabecera)
                 .Select(d => new MovimientosDetalleDTO
@@ -278,13 +280,30 @@ namespace API.Services
                     AntigMeses = d.AntigMeses ?? null,
                     Horas = d.Horas,
                     FechaInicioBaja = d.FechaInicioBaja ?? null,
-                    FechaFinBaja = d.FechaFinBaja ?? null
+                    FechaFinBaja = d.FechaFinBaja ?? null,
+                    Decrece = d.Decrece,
+                    HorasDecrece = d.HorasDecrece,
+                    Usuario = usuario.Nombre,
                 })
                 .ToListAsync();
 
             return detalles;
         }
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = _httpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                throw new InvalidOperationException("Claim 'id' no encontrada en el token.");
+            }
 
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                throw new InvalidOperationException("El valor de la claim 'id' no es un número válido.");
+            }
+
+            return userId;
+        }
 
         //SERVICIOS BAJAS
 
@@ -472,71 +491,80 @@ namespace API.Services
 
         public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
         {
-            var entidad = await _context.MEC_MovimientosDetalle.FindAsync(IdMovimientoDetalle);
-            if (entidad == null)
-            {
-                return false; // No existe
-            }
+            var id = new MEC_MovimientosDetalle { IdMovimientoDetalle = IdMovimientoDetalle };
+            _context.MEC_MovimientosDetalle.Attach(id);
+            _context.MEC_MovimientosDetalle.Remove(id);
 
-            // Lo removemos del contexto
-            _context.MEC_MovimientosDetalle.Remove(entidad);
-
-            // Guardamos cambios
             await _context.SaveChangesAsync();
-
             return true;
         }
+        //en caso de que siga habiendo un error en el find con IdMOvimientoDetalle, utilizar la version con RAW SQL
+        //public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
+        //{
+        //    {
+        //        var filasAfectadas = await _context.Database.ExecuteSqlRawAsync(
+        //           @"DELETE FROM ""MEC_MovimientosDetalle"" 
+        //          WHERE ""IdMovimientoDetalle"" = {0}",
+        //           IdMovimientoDetalle);
+
+        //        return filasAfectadas > 0;
+        //    }
+
+        //}
 
 
         //MODIFICACION CON HORAS DECRECECIENTES
         public async Task AgregarDetalle(MEC_MovimientosDetalle detalle)
         {
-            var decrece = detalle.Decrece?.ToUpper() ?? "N";
-            if (decrece == "S")
-            {
-                try
-                {
-                    _context.MEC_MovimientosDetalle.Add(detalle);
-                    await _context.SaveChangesAsync();
+            _context.MEC_MovimientosDetalle.Add(detalle);
+            await _context.SaveChangesAsync();
+            //var decrece = detalle.Decrece?.ToUpper() ?? "N";
+            //if (decrece == "S")
+            //{
+            //    _context.MEC_MovimientosDetalle.Add(detalle);
+            //    await _context.SaveChangesAsync();
+            //    //try
+            //    //{
+                    
 
-                    var cabecera = await _context.MEC_MovimientosCabecera
-                    .Include(c => c.Establecimientos)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == detalle.IdMovimientoCabecera);
+            //    //    var cabecera = await _context.MEC_MovimientosCabecera
+            //    //    .Include(c => c.Establecimientos)
+            //    //    .AsNoTracking()
+            //    //    .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == detalle.IdMovimientoCabecera);
 
-                    var bajas = new MEC_MovimientosBajas
-                    {
-                        IdTipoEstablecimiento = cabecera.Establecimientos.IdTipoEstablecimiento,
-                        Anio = cabecera.Anio,
-                        IdEstablecimiento = cabecera.Establecimientos.IdEstablecimiento,
-                        SuplenteDNI = null,
-                        SuplenteApellido = null,
-                        SuplenteNombre = null,
-                        CantHoras = detalle.Horas,
-                        Estado = "H",
-                        Ingreso = null,
-                        IngresoDescripcion = null,
-                        Observaciones = null,
-                        IdPOF = detalle.IdPOF,
-                        IdMotivoBaja = detalle.IdMotivoBaja,
-                        FechaInicio = detalle.FechaInicioBaja,
-                        FechaFin = detalle.FechaFinBaja,
-                    };
+            //    //    var bajas = new MEC_MovimientosBajas
+            //    //    {
+            //    //        IdTipoEstablecimiento = cabecera.Establecimientos.IdTipoEstablecimiento,
+            //    //        Anio = cabecera.Anio,
+            //    //        IdEstablecimiento = cabecera.Establecimientos.IdEstablecimiento,
+            //    //        SuplenteDNI = null,
+            //    //        SuplenteApellido = null,
+            //    //        SuplenteNombre = null,
+            //    //        CantHoras = detalle.Horas,
+            //    //        Estado = "H",
+            //    //        Ingreso = null,
+            //    //        IngresoDescripcion = null,
+            //    //        Observaciones = null,
+            //    //        IdPOF = detalle.IdPOF,
+            //    //        IdMotivoBaja = detalle.IdMotivoBaja,
+            //    //        FechaInicio = detalle.FechaInicioBaja,
+            //    //        FechaFin = detalle.FechaFinBaja,
+            //    //    };
 
-                    _context.MEC_MovimientosBajas.Add(bajas);
-                    await _context.SaveChangesAsync();
-                }
+            //    //    _context.MEC_MovimientosBajas.Add(bajas);
+            //    //    await _context.SaveChangesAsync();
+            //    //}
 
-                catch
-                {
-                    throw;   
-                }
-            }
-            else if(decrece == "N" )
-            {
-                _context.MEC_MovimientosDetalle.Add(detalle);
-                await _context.SaveChangesAsync();
-            }
+            //    //catch
+            //    //{
+            //    //    throw;   
+            //    //}
+            //}
+            //else if(decrece == "N" )
+            //{
+            //    _context.MEC_MovimientosDetalle.Add(detalle);
+            //    await _context.SaveChangesAsync();
+            //}
         }
     }
     

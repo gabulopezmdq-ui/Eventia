@@ -13,6 +13,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import GeneradorPDF from "./GeneradorPDF";
+import { BajasModificacionesPDF } from "./BajasModificacionesPDF";
 import "../../Pruebas/pruebas.css";
 
 function CabeceraMovimientos() {
@@ -280,6 +281,28 @@ function CabeceraMovimientos() {
         }
       });
   };
+  const handleDescargarCambios = async (row) => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/DetallesCabecera?IdCabecera=${row.idMovimientoCabecera}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response.data;
+
+      await BajasModificacionesPDF({
+        title: "Detalles Bajas Modificaciones",
+        data,
+        fileName: `DetallesCabecera_${row.idMovimientoCabecera}`,
+      });
+    } catch (error) {
+      console.error("Error al generar PDF", error);
+    }
+  };
   return (
     <>
       <DashboardLayout>
@@ -336,6 +359,8 @@ function CabeceraMovimientos() {
                       accessor: "acciones",
                       Cell: ({ row }) => {
                         const estado = row.original.estado;
+                        const tieneBajas = row.original.tipoMovimiento === "B";
+                        const tieneModificaciones = row.original.tipoMovimiento === "M";
                         return (
                           <MDBox display="flex" gap={1}>
                             {((estado === "P" &&
@@ -389,6 +414,16 @@ function CabeceraMovimientos() {
                                   Enviar a Prov
                                 </MDButton>
                               )}
+                            {estado === "E" && (
+                              <MDButton
+                                variant="gradient"
+                                size="small"
+                                color="secondary"
+                                onClick={() => handleDescargarCambios(row.original)}
+                              >
+                                Bajas | Modificaciones
+                              </MDButton>
+                            )}
                           </MDBox>
                         );
                       },

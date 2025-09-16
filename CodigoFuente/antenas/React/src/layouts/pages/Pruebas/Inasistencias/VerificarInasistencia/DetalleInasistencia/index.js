@@ -61,7 +61,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
           obsEstablecimiento: "Inasistencia justificada",
           fechaEntrega: "2025-09-10",
           entrego: "Directora",
-          obsSecretaria: "En revisión",
+          obsSecretaria: "",
         },
         {
           idDetalle: 2,
@@ -82,7 +82,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
           obsEstablecimiento: "Enfermedad común",
           fechaEntrega: "2025-09-10",
           entrego: "Directora",
-          obsSecretaria: "Pendiente de validar",
+          obsSecretaria: "",
         },
       ]);
       setLoading(false);
@@ -132,7 +132,7 @@ function DetalleInasistencia({ idCabecera, mes, año }) {
         `${process.env.REACT_APP_API_URL}inasistenciascabecera/Devolver`,
         {
           idCabecera: idCabecera,
-          motivo: detalles[0]?.obsSecretaria || "Sin motivo",
+          motivoRechazo: detalles[0]?.obsSecretaria || "Sin motivo",
         },
         {
           headers: { Authorization: `Bearer ${token}` },
