@@ -282,6 +282,7 @@ function CabeceraMovimientos() {
       });
   };
   const handleDescargarCambios = async (row) => {
+    console.log("row: ", row);
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}MovimientosCabecera/DetallesCabecera?IdCabecera=${row.idMovimientoCabecera}`,
@@ -300,9 +301,10 @@ function CabeceraMovimientos() {
       );
 
       await BajasModificacionesPDF({
-        title: "Detalles Bajas Modificaciones",
+        title: "Informacion para Bajas",
         data: filteredData,
-        fileName: `DetallesCabecera_${row.idMovimientoCabecera}`,
+        infoTitulos: row,
+        fileName: `InformacionBajas${row.idMovimientoCabecera}`,
       });
     } catch (error) {
       console.error("Error al generar PDF", error);
@@ -426,7 +428,7 @@ function CabeceraMovimientos() {
                                 color="secondary"
                                 onClick={() => handleDescargarCambios(row.original)}
                               >
-                                Bajas | Modificaciones
+                                Info Bajas
                               </MDButton>
                             )}
                           </MDBox>
