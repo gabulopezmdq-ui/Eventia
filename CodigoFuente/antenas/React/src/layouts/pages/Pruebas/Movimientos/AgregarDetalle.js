@@ -421,165 +421,165 @@ export default function AgregarDetalle({
                   )}
                 </FormControl>
               </Grid>
-              {isModiAdic && (
-                <>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth error={!!errors.sitRevista}>
-                      <InputLabel>Sit.Revista</InputLabel>
-                      <Select
-                        name="sitRevista"
-                        label="Sit.Revista"
-                        value={form.sitRevista}
-                        onChange={handleChange}
-                        style={{ height: "2.8rem", backgroundColor: "white" }}
-                      >
-                        {situacionRevistaOpciones.map((opcion) => (
-                          <MenuItem key={opcion.value} value={opcion.value}>
-                            {opcion.label} ({opcion.value})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.sitRevista && (
-                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.sitRevista}</p>
-                      )}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth error={!!errors.funcion}>
-                      <InputLabel>Función</InputLabel>
-                      <Select
-                        name="idTipoFuncion"
-                        label="Función"
-                        value={form.idTipoFuncion}
-                        onChange={(e) => {
-                          const selectedId = e.target.value;
-                          const funcionObj = funcionesOpciones.find(
-                            (f) => f.idTipoFuncion === selectedId
-                          );
-                          setForm((prev) => ({
-                            ...prev,
-                            idTipoFuncion: selectedId,
-                            funcion: funcionObj?.codFuncion || "",
-                          }));
-                        }}
-                        style={{ height: "2.8rem", backgroundColor: "white" }}
-                      >
-                        {funcionesOpciones.length > 0 ? (
-                          funcionesOpciones.map((funcion) => (
-                            <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
-                              {funcion.codFuncion}
-                            </MenuItem>
-                          ))
-                        ) : (
-                          <MenuItem disabled value="">
-                            No hay funciones disponibles
-                          </MenuItem>
-                        )}
-                      </Select>
-                      {errors.funcion && (
-                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.funcion}</p>
-                      )}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      name="rural"
-                      label="Rural"
-                      fullWidth
-                      value={form.rural}
-                      onChange={handleChange}
-                      disabled
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth error={!!errors.turno}>
-                      <InputLabel>Turno</InputLabel>
-                      <Select
-                        name="turno"
-                        label="Turno"
-                        value={form.turno}
-                        onChange={handleChange}
-                        style={{ height: "2.8rem", backgroundColor: "white" }}
-                      >
-                        {turno.map((opcion) => (
-                          <MenuItem key={opcion.value} value={opcion.value}>
-                            {opcion.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.turno && (
-                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.turno}</p>
-                      )}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth error={!!errors.categoria}>
-                      <InputLabel>Categoría</InputLabel>
-                      <Select
-                        name="idTipoCategoria"
-                        label="Categoría"
-                        value={form.idTipoCategoria}
-                        onChange={(e) => {
-                          const selectedId = e.target.value;
-                          const categoriaObj = categoriasOpciones.find(
-                            (cat) => cat.idTipoCategoria === selectedId
-                          );
-                          setForm((prev) => ({
-                            ...prev,
-                            idTipoCategoria: selectedId,
-                            categoria: categoriaObj?.codCategoria || "",
-                          }));
-                        }}
-                        style={{ height: "2.8rem", backgroundColor: "white" }}
-                      >
-                        {categoriasOpciones.length > 0 ? (
-                          categoriasOpciones.map((cat) => (
-                            <MenuItem key={cat.idTipoCategoria} value={cat.idTipoCategoria}>
-                              {cat.codCategoria}
-                            </MenuItem>
-                          ))
-                        ) : (
-                          <MenuItem disabled value="">
-                            No hay categorías disponibles
-                          </MenuItem>
-                        )}
-                      </Select>
-                      {errors.categoria && (
-                        <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.categoria}</p>
-                      )}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      name="horas"
-                      label="Horas"
-                      type="number"
-                      fullWidth
-                      onChange={handleChange}
-                    />
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <TextField
-                      name="antigAnos"
-                      label="Antig. Años"
-                      fullWidth
-                      disabled={isBajaOModifOAdic}
-                      value={form.antigAnos}
-                      onChange={handleChange}
-                    />
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <TextField
-                      name="antigMeses"
-                      label="Antig. Meses"
-                      fullWidth
-                      value={form.antigMeses}
-                      disabled={isBajaOModifOAdic}
-                      onChange={handleChange}
-                    />
-                  </Grid>
-                </>
-              )}
+            </>
+          )}
+          {(isModiAdic || isAlta) && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!errors.sitRevista}>
+                  <InputLabel>Sit.Revista</InputLabel>
+                  <Select
+                    name="sitRevista"
+                    label="Sit.Revista"
+                    value={form.sitRevista}
+                    onChange={handleChange}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {situacionRevistaOpciones.map((opcion) => (
+                      <MenuItem key={opcion.value} value={opcion.value}>
+                        {opcion.label} ({opcion.value})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.sitRevista && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.sitRevista}</p>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!errors.funcion}>
+                  <InputLabel>Función</InputLabel>
+                  <Select
+                    name="idTipoFuncion"
+                    label="Función"
+                    value={form.idTipoFuncion}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const funcionObj = funcionesOpciones.find(
+                        (f) => f.idTipoFuncion === selectedId
+                      );
+                      setForm((prev) => ({
+                        ...prev,
+                        idTipoFuncion: selectedId,
+                        funcion: funcionObj?.codFuncion || "",
+                      }));
+                    }}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {funcionesOpciones.length > 0 ? (
+                      funcionesOpciones.map((funcion) => (
+                        <MenuItem key={funcion.idTipoFuncion} value={funcion.idTipoFuncion}>
+                          {funcion.codFuncion}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled value="">
+                        No hay funciones disponibles
+                      </MenuItem>
+                    )}
+                  </Select>
+                  {errors.funcion && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.funcion}</p>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="rural"
+                  label="Rural"
+                  fullWidth
+                  value={form.rural}
+                  onChange={handleChange}
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!errors.turno}>
+                  <InputLabel>Turno</InputLabel>
+                  <Select
+                    name="turno"
+                    label="Turno"
+                    value={form.turno}
+                    onChange={handleChange}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {turno.map((opcion) => (
+                      <MenuItem key={opcion.value} value={opcion.value}>
+                        {opcion.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.turno && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.turno}</p>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!errors.categoria}>
+                  <InputLabel>Categoría</InputLabel>
+                  <Select
+                    name="idTipoCategoria"
+                    label="Categoría"
+                    value={form.idTipoCategoria}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const categoriaObj = categoriasOpciones.find(
+                        (cat) => cat.idTipoCategoria === selectedId
+                      );
+                      setForm((prev) => ({
+                        ...prev,
+                        idTipoCategoria: selectedId,
+                        categoria: categoriaObj?.codCategoria || "",
+                      }));
+                    }}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {categoriasOpciones.length > 0 ? (
+                      categoriasOpciones.map((cat) => (
+                        <MenuItem key={cat.idTipoCategoria} value={cat.idTipoCategoria}>
+                          {cat.codCategoria}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled value="">
+                        No hay categorías disponibles
+                      </MenuItem>
+                    )}
+                  </Select>
+                  {errors.categoria && (
+                    <p style={{ color: "red", fontSize: "0.8rem" }}>{errors.categoria}</p>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="horas"
+                  label="Horas"
+                  type="number"
+                  fullWidth
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <TextField
+                  name="antigAnos"
+                  label="Antig. Años"
+                  fullWidth
+                  disabled={isBajaOModifOAdic}
+                  value={form.antigAnos}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <TextField
+                  name="antigMeses"
+                  label="Antig. Meses"
+                  fullWidth
+                  value={form.antigMeses}
+                  disabled={isBajaOModifOAdic}
+                  onChange={handleChange}
+                />
+              </Grid>
             </>
           )}
           {/* Observaciones predefinidas */}

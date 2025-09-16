@@ -294,9 +294,14 @@ function CabeceraMovimientos() {
 
       const data = response.data;
 
+      // Filtrar solo los tipos de movimiento "M" y "B"
+      const filteredData = data.filter(
+        (item) => item.tipoMovimiento === "M" || item.tipoMovimiento === "B"
+      );
+
       await BajasModificacionesPDF({
         title: "Detalles Bajas Modificaciones",
-        data,
+        data: filteredData,
         fileName: `DetallesCabecera_${row.idMovimientoCabecera}`,
       });
     } catch (error) {
