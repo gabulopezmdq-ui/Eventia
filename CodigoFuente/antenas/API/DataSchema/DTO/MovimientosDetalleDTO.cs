@@ -29,4 +29,7 @@ public class MovimientosDetalleDTO
     public int? Horas { get; set; }
     public DateTime? FechaInicioBaja { get; set; }
     public DateTime? FechaFinBaja { get; set; }
+
+    //dato Usuario
+    public string? Usuario { get; set; }
 }
