@@ -282,7 +282,7 @@ namespace API.Services
                     FechaInicioBaja = d.FechaInicioBaja ?? null,
                     FechaFinBaja = d.FechaFinBaja ?? null,
                     Decrece = d.Decrece,
-                    HorasDecrece = d.HorasDecrece,
+                    HorasDecrece = d.HorasDecrece,  
                     Usuario = usuario.Nombre,
                 })
                 .ToListAsync();
@@ -566,6 +566,59 @@ namespace API.Services
             //    await _context.SaveChangesAsync();
             //}
         }
+
+        //Datos para el reporte
+        public async Task<DetalleReporteDTO> ObtenerDetallesReporteAsycn(int idCabecera)
+        {
+            // Obtener el usuario logueado
+            var usuarioId = GetUserIdFromToken();
+            var usuario = await _context.MEC_Usuarios
+                .FirstOrDefaultAsync(u => u.IdUsuario == usuarioId);
+
+            if (usuario == null)
+                throw new InvalidOperationException("Usuario no encontrado.");
+
+            // Obtener los detalles
+            var detalles = await _context.MEC_MovimientosDetalle
+                .Where(d => d.IdMovimientoCabecera == idCabecera)
+                .Select(d => new MovimientosDetalleDTO
+                {
+                    IdMovimientoCabecera = d.IdMovimientoCabecera,
+                    IdMovimientoDetalle = d.IdMovimientoDetalle,
+                    IdTipoFuncion = d.IdTipoFuncion,
+                    IdPOF = d.IdPOF ?? null,
+                    IdTipoCategoria = d.IdTipoCategoria,
+                    IdMotivoBaja = d.IdMotivoBaja ?? null,
+                    TipoDoc = d.TipoDoc,
+                    TipoMovimiento = d.TipoMovimiento,
+                    NumDoc = d.NumDoc,
+                    Apellido = d.Apellido,
+                    Nombre = d.Nombre,
+                    SitRevista = d.SitRevista,
+                    Turno = d.Turno,
+                    Observaciones = d.Observaciones,
+                    AntigAnios = d.AntigAnios ?? null,
+                    AntigMeses = d.AntigMeses ?? null,
+                    Horas = d.Horas,
+                    FechaInicioBaja = d.FechaInicioBaja ?? null,
+                    FechaFinBaja = d.FechaFinBaja ?? null,
+                    Decrece = d.Decrece,
+                    HorasDecrece = d.HorasDecrece,
+                })
+                .ToListAsync();
+
+            // Armar el objeto que contiene usuario y detalles
+            var resultado = new DetalleReporteDTO
+            {
+                Usuario = usuario.Nombre,
+                NombrePersona = usuario.NombrePersona, 
+                ApellidoPersona = usuario.ApellidoPersona,
+                Detalles = detalles
+            };
+
+            return resultado;
+        }
+
     }
-    
+
 }

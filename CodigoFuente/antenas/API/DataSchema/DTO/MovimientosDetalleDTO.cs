@@ -35,3 +35,13 @@ public class MovimientosDetalleDTO
     //dato Usuario
     public string? Usuario { get; set; }
 }
+public class DetalleReporteDTO
+{
+    // Datos comunes
+    public string Usuario { get; set; }
+    public string NombrePersona { get; set; }
+    public string ApellidoPersona { get; set; }
+
+    // Lista de detalles
+    public List<MovimientosDetalleDTO> Detalles { get; set; } = new();
+}

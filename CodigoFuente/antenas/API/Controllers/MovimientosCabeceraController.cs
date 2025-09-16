@@ -171,6 +171,16 @@ namespace API.Controllers
             return Ok(detalles);
         }
 
+        //REPORTE
+        [HttpGet("DetallesPDF")]
+        public async Task<IActionResult> ObtenerDetallesPDF(int idCabecera)
+        {
+            var detalles = await _movimientosDetalle.ObtenerDetallesReporteAsycn(idCabecera);
+
+
+            return Ok(detalles);
+        }
+
         //BAJA
         [HttpPost("MovimientosBajas")]
         public async Task<IActionResult> Baja([FromBody] MEC_MovimientosDetalle movimientos)
