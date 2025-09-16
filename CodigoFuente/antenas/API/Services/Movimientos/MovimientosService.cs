@@ -472,20 +472,26 @@ namespace API.Services
 
         public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
         {
-            var entidad = await _context.MEC_MovimientosDetalle.FindAsync(IdMovimientoDetalle);
-            if (entidad == null)
-            {
-                return false; // No existe
-            }
+            var id = new MEC_MovimientosDetalle { IdMovimientoDetalle = IdMovimientoDetalle };
+            _context.MEC_MovimientosDetalle.Attach(id);
+            _context.MEC_MovimientosDetalle.Remove(id);
 
-            // Lo removemos del contexto
-            _context.MEC_MovimientosDetalle.Remove(entidad);
-
-            // Guardamos cambios
             await _context.SaveChangesAsync();
-
             return true;
         }
+        //en caso de que siga habiendo un error en el find con IdMOvimientoDetalle, utilizar la version con RAW SQL
+        //public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
+        //{
+        //    {
+        //        var filasAfectadas = await _context.Database.ExecuteSqlRawAsync(
+        //           @"DELETE FROM ""MEC_MovimientosDetalle"" 
+        //          WHERE ""IdMovimientoDetalle"" = {0}",
+        //           IdMovimientoDetalle);
+
+        //        return filasAfectadas > 0;
+        //    }
+
+        //}
 
 
         //MODIFICACION CON HORAS DECRECECIENTES
@@ -496,8 +502,8 @@ namespace API.Services
             {
                 try
                 {
-                    _context.MEC_MovimientosDetalle.Add(detalle);
-                    await _context.SaveChangesAsync();
+                    //_context.MEC_MovimientosDetalle.Add(detalle);
+                    //await _context.SaveChangesAsync();
 
                     var cabecera = await _context.MEC_MovimientosCabecera
                     .Include(c => c.Establecimientos)

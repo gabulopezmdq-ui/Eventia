@@ -15,6 +15,10 @@ namespace API.DataSchema.ModelConfiguration
                 .ValueGeneratedOnAdd();
 
             builder
+                   .Property(e => e.IdMovimientoDetalle)
+                  .HasColumnName("IdMovimientoDetalle");
+
+            builder
                 .HasOne(p => p.MovimientoCabecera)
                 .WithMany(t => t.MovimientosDetalle)
                 .HasForeignKey(p => p.IdMovimientoCabecera)
