@@ -497,53 +497,55 @@ namespace API.Services
         //MODIFICACION CON HORAS DECRECECIENTES
         public async Task AgregarDetalle(MEC_MovimientosDetalle detalle)
         {
-            var decrece = detalle.Decrece?.ToUpper() ?? "N";
-            if (decrece == "S")
-            {
-                _context.MEC_MovimientosDetalle.Add(detalle);
-                await _context.SaveChangesAsync();
-                //try
-                //{
+            _context.MEC_MovimientosDetalle.Add(detalle);
+            await _context.SaveChangesAsync();
+            //var decrece = detalle.Decrece?.ToUpper() ?? "N";
+            //if (decrece == "S")
+            //{
+            //    _context.MEC_MovimientosDetalle.Add(detalle);
+            //    await _context.SaveChangesAsync();
+            //    //try
+            //    //{
                     
 
-                //    var cabecera = await _context.MEC_MovimientosCabecera
-                //    .Include(c => c.Establecimientos)
-                //    .AsNoTracking()
-                //    .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == detalle.IdMovimientoCabecera);
+            //    //    var cabecera = await _context.MEC_MovimientosCabecera
+            //    //    .Include(c => c.Establecimientos)
+            //    //    .AsNoTracking()
+            //    //    .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == detalle.IdMovimientoCabecera);
 
-                //    var bajas = new MEC_MovimientosBajas
-                //    {
-                //        IdTipoEstablecimiento = cabecera.Establecimientos.IdTipoEstablecimiento,
-                //        Anio = cabecera.Anio,
-                //        IdEstablecimiento = cabecera.Establecimientos.IdEstablecimiento,
-                //        SuplenteDNI = null,
-                //        SuplenteApellido = null,
-                //        SuplenteNombre = null,
-                //        CantHoras = detalle.Horas,
-                //        Estado = "H",
-                //        Ingreso = null,
-                //        IngresoDescripcion = null,
-                //        Observaciones = null,
-                //        IdPOF = detalle.IdPOF,
-                //        IdMotivoBaja = detalle.IdMotivoBaja,
-                //        FechaInicio = detalle.FechaInicioBaja,
-                //        FechaFin = detalle.FechaFinBaja,
-                //    };
+            //    //    var bajas = new MEC_MovimientosBajas
+            //    //    {
+            //    //        IdTipoEstablecimiento = cabecera.Establecimientos.IdTipoEstablecimiento,
+            //    //        Anio = cabecera.Anio,
+            //    //        IdEstablecimiento = cabecera.Establecimientos.IdEstablecimiento,
+            //    //        SuplenteDNI = null,
+            //    //        SuplenteApellido = null,
+            //    //        SuplenteNombre = null,
+            //    //        CantHoras = detalle.Horas,
+            //    //        Estado = "H",
+            //    //        Ingreso = null,
+            //    //        IngresoDescripcion = null,
+            //    //        Observaciones = null,
+            //    //        IdPOF = detalle.IdPOF,
+            //    //        IdMotivoBaja = detalle.IdMotivoBaja,
+            //    //        FechaInicio = detalle.FechaInicioBaja,
+            //    //        FechaFin = detalle.FechaFinBaja,
+            //    //    };
 
-                //    _context.MEC_MovimientosBajas.Add(bajas);
-                //    await _context.SaveChangesAsync();
-                //}
+            //    //    _context.MEC_MovimientosBajas.Add(bajas);
+            //    //    await _context.SaveChangesAsync();
+            //    //}
 
-                //catch
-                //{
-                //    throw;   
-                //}
-            }
-            else if(decrece == "N" )
-            {
-                _context.MEC_MovimientosDetalle.Add(detalle);
-                await _context.SaveChangesAsync();
-            }
+            //    //catch
+            //    //{
+            //    //    throw;   
+            //    //}
+            //}
+            //else if(decrece == "N" )
+            //{
+            //    _context.MEC_MovimientosDetalle.Add(detalle);
+            //    await _context.SaveChangesAsync();
+            //}
         }
     }
     
