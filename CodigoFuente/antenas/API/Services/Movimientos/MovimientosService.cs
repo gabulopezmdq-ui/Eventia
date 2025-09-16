@@ -281,6 +281,8 @@ namespace API.Services
                     Horas = d.Horas,
                     FechaInicioBaja = d.FechaInicioBaja ?? null,
                     FechaFinBaja = d.FechaFinBaja ?? null,
+                    Decrece = d.Decrece,
+                    HorasDecrece = d.HorasDecrece,
                     Usuario = usuario.Nombre,
                 })
                 .ToListAsync();
