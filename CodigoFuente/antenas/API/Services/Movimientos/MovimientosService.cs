@@ -256,6 +256,8 @@ namespace API.Services
 
         public async Task<List<MovimientosDetalleDTO>> ObtenerDetallesPorCabeceraAsync(int idCabecera)
         {
+            var usuarioId = GetUserIdFromToken();
+            var usuario = _context.MEC_Usuarios.FirstOrDefault(u => u.IdUsuario == usuarioId);
             var detalles = await _context.MEC_MovimientosDetalle
                 .Where(d => d.IdMovimientoCabecera == idCabecera)
                 .Select(d => new MovimientosDetalleDTO
@@ -278,13 +280,28 @@ namespace API.Services
                     AntigMeses = d.AntigMeses ?? null,
                     Horas = d.Horas,
                     FechaInicioBaja = d.FechaInicioBaja ?? null,
-                    FechaFinBaja = d.FechaFinBaja ?? null
+                    FechaFinBaja = d.FechaFinBaja ?? null,
+                    Usuario = usuario.Nombre,
                 })
                 .ToListAsync();
 
             return detalles;
         }
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = _httpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                throw new InvalidOperationException("Claim 'id' no encontrada en el token.");
+            }
 
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                throw new InvalidOperationException("El valor de la claim 'id' no es un número válido.");
+            }
+
+            return userId;
+        }
 
         //SERVICIOS BAJAS
 
