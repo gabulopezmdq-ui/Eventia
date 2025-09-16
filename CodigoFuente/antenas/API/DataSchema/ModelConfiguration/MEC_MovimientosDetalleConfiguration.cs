@@ -120,7 +120,7 @@ namespace API.DataSchema.ModelConfiguration
               .IsRequired(false);
 
             builder.Property(e => e.FechaFinBaja)
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.FechaInicioBaja)
               .IsRequired(true);
