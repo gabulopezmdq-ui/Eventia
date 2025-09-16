@@ -13,6 +13,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import axios from "axios";
 import MDButton from "components/MDButton"; // Ajusta la ruta a tu MDButton
+import "dayjs/locale/es";
 import dayjs from "dayjs";
 
 export default function ImportarInasistenciaModal({ open, onClose, cabecera, onSuccess }) {
@@ -57,12 +58,14 @@ export default function ImportarInasistenciaModal({ open, onClose, cabecera, onS
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
           <DatePicker
             label="Desde"
+            format="DD-MM-YYYY"
             value={fechaDesde}
             onChange={(newValue) => setFechaDesde(newValue)}
             renderInput={(params) => <TextField {...params} />}
           />
           <DatePicker
             label="Hasta"
+            format="DD-MM-YYYY"
             value={fechaHasta}
             onChange={(newValue) => setFechaHasta(newValue)}
             renderInput={(params) => <TextField {...params} />}
