@@ -23,6 +23,15 @@ namespace API.DataSchema
                .HasColumnType("char(1)")
                .IsFixedLength(true);
 
+            builder
+            .Property(p => p.ApellidoPersona)
+            .IsRequired(false);
+
+            builder
+            .Property(p => p.NombrePersona)
+            .IsRequired(false);
+
+
 
         }
     }
