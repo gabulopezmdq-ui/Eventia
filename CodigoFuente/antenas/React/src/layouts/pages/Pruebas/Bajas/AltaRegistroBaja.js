@@ -30,9 +30,12 @@ function AltaRegistroBaja() {
 
   const fetchNiveles = async () => {
     try {
-      const response = await axios.get("https://localhost:44382/TiposEstablecimientos/GetAll", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        process.env.REACT_APP_API_URL + "TiposEstablecimientos/GetAll",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setNiveles(response.data);
     } catch (error) {
       console.error("Error al obtener los niveles:", error);
@@ -60,7 +63,7 @@ function AltaRegistroBaja() {
 
   const fetchEstablecimientos = async () => {
     try {
-      const response = await axios.get("https://localhost:44382/Establecimientos/GetAll", {
+      const response = await axios.get(process.env.REACT_APP_API_URL + "Establecimientos/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEstablecimientos(response.data);
@@ -81,7 +84,8 @@ function AltaRegistroBaja() {
   const fetchDocentesPOF = async (idEstablecimiento) => {
     try {
       const response = await axios.get(
-        `https://localhost:44382/MovimientosBaja/GetPOF?idEstablecimiento=${idEstablecimiento}`,
+        process.env.REACT_APP_API_URL +
+          `MovimientosBaja/GetPOF?idEstablecimiento=${idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDocentes(response.data);
@@ -98,7 +102,7 @@ function AltaRegistroBaja() {
 
   const buscarSuplentePorDNI = async (dni) => {
     try {
-      const response = await axios.get("https://localhost:44382/MovimientosBaja/Getall", {
+      const response = await axios.get(process.env.REACT_APP_API_URL + "MovimientosBaja/Getall", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -138,7 +142,7 @@ function AltaRegistroBaja() {
 
   useEffect(() => {
     axios
-      .get("https://localhost:44382/MotivosBajasDoc/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "MotivosBajasDoc/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => setMotivos(response.data))
@@ -152,7 +156,7 @@ function AltaRegistroBaja() {
     const fetchMovimiento = async () => {
       try {
         const response = await axios.get(
-          `https://localhost:44382/MovimientosBaja/GetById?Id=${id}`,
+          process.env.REACT_APP_API_URL + `MovimientosBaja/GetById?Id=${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -199,12 +203,13 @@ function AltaRegistroBaja() {
     }
 
     const movimiento = {
-      suplenteDNI: suplenteDni,
+      ...(id && { idMovimientoBaja: Number(id) }),
+      suplenteDni,
       suplenteApellido,
       suplenteNombre,
       fechaInicio,
       fechaFin,
-      cantHoras,
+      cantHoras: cantHoras ? Number(cantHoras) : null,
       estado,
       ingreso,
       ingresoDescripcion,
@@ -216,9 +221,8 @@ function AltaRegistroBaja() {
     };
 
     try {
-      const url = "https://localhost:44382/MovimientosBaja";
+      const url = process.env.REACT_APP_API_URL + "MovimientosBaja";
       const method = id ? "PUT" : "POST";
-      const body = id ? { idMovimientoBaja: Number(id), ...movimiento } : { baja: movimiento };
 
       const response = await fetch(url, {
         method,
@@ -226,7 +230,7 @@ function AltaRegistroBaja() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(movimiento), // Enviamos el objeto directamente
       });
 
       if (response.ok) {
