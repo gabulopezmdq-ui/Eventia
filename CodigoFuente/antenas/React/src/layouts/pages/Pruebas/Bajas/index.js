@@ -184,9 +184,10 @@ function Bajas() {
       console.error("El objeto rowData o su propiedad 'idMovimientoBaja' no están definidos.");
     }
   };
-
+  console.log(dataTableBajaData);
   // Función para navegar a editar registro
-  const handleEditarMotivosBajass = (idMovimientoBaja) => {
+  const handleEditarMotivosBajas = (idMovimientoBaja) => {
+    console.log("id: ", idMovimientoBaja);
     navigate(`/BajasFE/Edit/${idMovimientoBaja}`);
   };
 
@@ -330,7 +331,7 @@ function Bajas() {
                       <MDButton
                         variant="gradient"
                         color="info"
-                        onClick={() => handleEditarMotivosBajass(row.original.idMovimientoBaja)}
+                        onClick={() => handleEditarMotivosBajas(row.original.idMovimientoBaja)}
                       >
                         Editar
                       </MDButton>
