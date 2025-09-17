@@ -7,12 +7,8 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import { Snackbar, Alert } from "@mui/material";
-
-// Material Dashboard components
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
-
-// Material Dashboard layout components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import React, { useState, useEffect } from "react";
@@ -20,13 +16,32 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 function AltaRegistroBaja() {
-  const token = sessionStorage.getItem("token");
   const navigate = useNavigate();
-  const { id } = useParams(); // 👈 para edición
-
-  // ---------- Niveles ----------
+  const { id } = useParams();
   const [niveles, setNiveles] = useState([]);
   const [nivelSeleccionado, setNivelSeleccionado] = useState("");
+  const [successAlert, setSuccessAlert] = useState(false);
+  const [aniosDisponibles, setAniosDisponibles] = useState([]);
+  const [anioSeleccionado, setAnioSeleccionado] = useState("");
+  const [establecimientos, setEstablecimientos] = useState([]);
+  const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState(null);
+  const [docentes, setDocentes] = useState([]);
+  const [docenteSeleccionado, setDocenteSeleccionado] = useState("");
+  const [datosDocenteSeleccionado, setDatosDocenteSeleccionado] = useState(null);
+  const [suplenteDni, setSuplenteDni] = useState("");
+  const [suplenteApellido, setSuplenteApellido] = useState("");
+  const [suplenteNombre, setSuplenteNombre] = useState("");
+  const [camposSuplenteReadonly, setCamposSuplenteReadonly] = useState(false);
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [cantHoras, setCantHoras] = useState("");
+  const [motivos, setMotivos] = useState([]);
+  const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
+  const [estado, setEstado] = useState("PENDIENTE");
+  const [ingreso, setIngreso] = useState(null);
+  const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
+
+  const token = sessionStorage.getItem("token");
 
   const fetchNiveles = async () => {
     try {
@@ -46,20 +61,12 @@ function AltaRegistroBaja() {
     if (token) fetchNiveles();
   }, [token]);
 
-  // ---------- Años ----------
-  const [aniosDisponibles, setAniosDisponibles] = useState([]);
-  const [anioSeleccionado, setAnioSeleccionado] = useState("");
-
   useEffect(() => {
     const anioActual = new Date().getFullYear();
     const anios = [];
     for (let i = anioActual - 5; i <= anioActual + 1; i++) anios.push(i);
     setAniosDisponibles(anios.reverse());
   }, []);
-
-  // ---------- Establecimientos ----------
-  const [establecimientos, setEstablecimientos] = useState([]);
-  const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState(null);
 
   const fetchEstablecimientos = async () => {
     try {
@@ -76,11 +83,6 @@ function AltaRegistroBaja() {
     if (token) fetchEstablecimientos();
   }, [token]);
 
-  // ---------- Docentes ----------
-  const [docentes, setDocentes] = useState([]);
-  const [docenteSeleccionado, setDocenteSeleccionado] = useState("");
-  const [datosDocenteSeleccionado, setDatosDocenteSeleccionado] = useState(null);
-
   const fetchDocentesPOF = async (idEstablecimiento) => {
     try {
       const response = await axios.get(
@@ -93,12 +95,6 @@ function AltaRegistroBaja() {
       console.error("Error al obtener docentes de la POF:", error);
     }
   };
-
-  // ---------- Suplente ----------
-  const [suplenteDni, setSuplenteDni] = useState("");
-  const [suplenteApellido, setSuplenteApellido] = useState("");
-  const [suplenteNombre, setSuplenteNombre] = useState("");
-  const [camposSuplenteReadonly, setCamposSuplenteReadonly] = useState(false);
 
   const buscarSuplentePorDNI = async (dni) => {
     try {
@@ -130,16 +126,6 @@ function AltaRegistroBaja() {
     if (nuevoDni.length >= 7) buscarSuplentePorDNI(nuevoDni);
   };
 
-  // ---------- Otros campos ----------
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  const [cantHoras, setCantHoras] = useState("");
-  const [motivos, setMotivos] = useState([]);
-  const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
-  const [estado, setEstado] = useState("PENDIENTE");
-  const [ingreso, setIngreso] = useState(null);
-  const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
-
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "MotivosBajasDoc/GetAll", {
@@ -149,7 +135,6 @@ function AltaRegistroBaja() {
       .catch((error) => console.error("Error al obtener motivos:", error));
   }, [token]);
 
-  // ---------- Cargar datos para edición ----------
   useEffect(() => {
     if (!id) return;
 
@@ -193,9 +178,6 @@ function AltaRegistroBaja() {
     fetchMovimiento();
   }, [id, token]);
 
-  // ---------- Guardar ----------
-  const [successAlert, setSuccessAlert] = useState(false);
-
   const handleSubmit = async () => {
     if (!docenteSeleccionado) {
       alert("Completa los campos obligatorios.");
@@ -222,26 +204,22 @@ function AltaRegistroBaja() {
 
     try {
       const url = process.env.REACT_APP_API_URL + "MovimientosBaja";
-      const method = id ? "PUT" : "POST";
+      const method = id ? "put" : "post";
 
-      const response = await fetch(url, {
+      const response = await axios({
         method,
+        url,
+        data: movimiento,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(movimiento), // Enviamos el objeto directamente
       });
-
-      if (response.ok) {
-        setSuccessAlert(true);
-        setTimeout(() => navigate(-1), 1200);
-      } else {
-        const error = await response.text();
-        alert("Error al registrar: " + error);
-      }
+      setSuccessAlert(true);
+      setTimeout(() => navigate(-1), 1200);
     } catch (error) {
-      alert("Error de conexión: " + error.message);
+      const errorMsg = error.response?.data || error.message;
+      alert("Error al registrar: " + errorMsg);
     }
   };
   return (
