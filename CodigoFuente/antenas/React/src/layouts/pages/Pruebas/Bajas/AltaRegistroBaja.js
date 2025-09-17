@@ -15,26 +15,23 @@ import MDButton from "components/MDButton";
 // Material Dashboard layout components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import { useNavigate } from "react-router-dom";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
-// dentro de tu componente:
 function AltaRegistroBaja() {
   const token = sessionStorage.getItem("token");
-  const [docenteSeleccionado, setDocenteSeleccionado] = useState(null);
-  // Selecccionar Nivel
+  const navigate = useNavigate();
+  const { id } = useParams(); // 👈 para edición
+
+  // ---------- Niveles ----------
   const [niveles, setNiveles] = useState([]);
   const [nivelSeleccionado, setNivelSeleccionado] = useState("");
-  const navigate = useNavigate();
 
   const fetchNiveles = async () => {
     try {
       const response = await axios.get("https://localhost:44382/TiposEstablecimientos/GetAll", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setNiveles(response.data);
     } catch (error) {
@@ -43,57 +40,49 @@ function AltaRegistroBaja() {
   };
 
   useEffect(() => {
-    if (token) {
-      fetchNiveles();
-    } else {
-      console.warn("No token found, user might not be logged in.");
-    }
+    if (token) fetchNiveles();
   }, [token]);
-  // Selecccionar Año
+
+  // ---------- Años ----------
   const [aniosDisponibles, setAniosDisponibles] = useState([]);
   const [anioSeleccionado, setAnioSeleccionado] = useState("");
 
   useEffect(() => {
     const anioActual = new Date().getFullYear();
     const anios = [];
-    for (let i = anioActual - 5; i <= anioActual + 1; i++) {
-      anios.push(i);
-    }
-    setAniosDisponibles(anios.reverse()); // opcional: muestra el año más reciente primero
+    for (let i = anioActual - 5; i <= anioActual + 1; i++) anios.push(i);
+    setAniosDisponibles(anios.reverse());
   }, []);
-  // Establecimientos / Nro DIEGEP
-  const [diegep, setDiegep] = useState("");
+
+  // ---------- Establecimientos ----------
   const [establecimientos, setEstablecimientos] = useState([]);
   const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState(null);
+
   const fetchEstablecimientos = async () => {
     try {
       const response = await axios.get("https://localhost:44382/Establecimientos/GetAll", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setEstablecimientos(response.data);
     } catch (error) {
       console.error("Error al obtener establecimientos:", error);
     }
   };
+
   useEffect(() => {
-    if (token) {
-      fetchEstablecimientos();
-    }
+    if (token) fetchEstablecimientos();
   }, [token]);
-  // Obtener docentes
+
+  // ---------- Docentes ----------
   const [docentes, setDocentes] = useState([]);
+  const [docenteSeleccionado, setDocenteSeleccionado] = useState("");
   const [datosDocenteSeleccionado, setDatosDocenteSeleccionado] = useState(null);
+
   const fetchDocentesPOF = async (idEstablecimiento) => {
     try {
       const response = await axios.get(
         `https://localhost:44382/MovimientosBaja/GetPOF?idEstablecimiento=${idEstablecimiento}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setDocentes(response.data);
     } catch (error) {
@@ -101,7 +90,7 @@ function AltaRegistroBaja() {
     }
   };
 
-  //Suplente DNI
+  // ---------- Suplente ----------
   const [suplenteDni, setSuplenteDni] = useState("");
   const [suplenteApellido, setSuplenteApellido] = useState("");
   const [suplenteNombre, setSuplenteNombre] = useState("");
@@ -110,13 +99,12 @@ function AltaRegistroBaja() {
   const buscarSuplentePorDNI = async (dni) => {
     try {
       const response = await axios.get("https://localhost:44382/MovimientosBaja/Getall", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      const registros = response.data;
-      const coincidencia = registros.find((mov) => mov.suplenteDNI.trim() === dni.trim());
+      const coincidencia = response.data.find(
+        (mov) => String(mov.suplenteDNI).trim() === String(dni).trim()
+      );
 
       if (coincidencia) {
         setSuplenteApellido(coincidencia.suplenteApellido);
@@ -135,89 +123,115 @@ function AltaRegistroBaja() {
   const handleDniChange = (e) => {
     const nuevoDni = e.target.value;
     setSuplenteDni(nuevoDni);
-
-    if (nuevoDni.length >= 7) {
-      buscarSuplentePorDNI(nuevoDni);
-    }
+    if (nuevoDni.length >= 7) buscarSuplentePorDNI(nuevoDni);
   };
 
-  // Fecha Inicio
+  // ---------- Otros campos ----------
   const [fechaInicio, setFechaInicio] = useState("");
-  // Fecha Fin
   const [fechaFin, setFechaFin] = useState("");
-  // Cantidad de horas
   const [cantHoras, setCantHoras] = useState("");
-  // Buscar Motivos Baja
   const [motivos, setMotivos] = useState([]);
   const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
+  const [estado, setEstado] = useState("PENDIENTE");
+  const [ingreso, setIngreso] = useState(null);
+  const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
 
   useEffect(() => {
     axios
-      .get("https://localhost:44382/MotivosBajasDoc/GetAll")
-      .then((response) => {
-        setMotivos(response.data);
+      .get("https://localhost:44382/MotivosBajasDoc/GetAll", {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .catch((error) => {
-        console.error("Error al obtener motivos:", error);
-      });
-  }, []);
+      .then((response) => setMotivos(response.data))
+      .catch((error) => console.error("Error al obtener motivos:", error));
+  }, [token]);
 
-  //Estado
-  const [estado, setEstado] = useState("PENDIENTE"); // Valor por defecto
+  // ---------- Cargar datos para edición ----------
+  useEffect(() => {
+    if (!id) return;
 
-  //Ingreso meses
-  const [ingreso, setIngreso] = useState(null); // Por defecto null
-  const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
+    const fetchMovimiento = async () => {
+      try {
+        const response = await axios.get(
+          `https://localhost:44382/MovimientosBaja/GetById?Id=${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const data = response.data;
+
+        setSuplenteDni(data.suplenteDNI ?? "");
+        setSuplenteApellido(data.suplenteApellido ?? "");
+        setSuplenteNombre(data.suplenteNombre ?? "");
+        setCamposSuplenteReadonly(!!data.suplenteDNI);
+
+        setFechaInicio(data.fechaInicio?.split("T")[0] ?? "");
+        setFechaFin(data.fechaFin?.split("T")[0] ?? "");
+        setCantHoras(data.cantHoras ?? "");
+        setEstado(data.estado ?? "PENDIENTE");
+        setIngreso(data.ingreso ?? null);
+        setIngresoDescripcion(data.ingresoDescripcion ?? "NE");
+
+        setMotivoSeleccionado(data.idMotivoBaja ?? "");
+        setAnioSeleccionado(data.anio ?? "");
+        setNivelSeleccionado(data.idTipoEstablecimiento ?? "");
+
+        if (data.establecimiento) {
+          setEstablecimientoSeleccionado(data.establecimiento);
+          fetchDocentesPOF(data.idEstablecimiento);
+        }
+
+        setDocenteSeleccionado(data.idPOF ?? "");
+        setDatosDocenteSeleccionado(data.pof ?? null);
+      } catch (error) {
+        console.error("Error al cargar datos de edición:", error);
+      }
+    };
+
+    fetchMovimiento();
+  }, [id, token]);
+
+  // ---------- Guardar ----------
+  const [successAlert, setSuccessAlert] = useState(false);
 
   const handleSubmit = async () => {
-    if (!suplenteDni || !suplenteApellido || !suplenteNombre || !docenteSeleccionado) {
+    if (!docenteSeleccionado) {
       alert("Completa los campos obligatorios.");
       return;
     }
 
-    const nuevoMovimiento = {
-      baja: {
-        suplenteDNI: suplenteDni,
-        suplenteApellido: suplenteApellido,
-        suplenteNombre: suplenteNombre,
-        fechaInicio,
-        fechaFin,
-        cantHoras,
-        estado,
-        ingreso,
-        ingresoDescripcion,
-        idMotivoBaja: motivoSeleccionado,
-        idEstablecimiento: establecimientoSeleccionado?.idEstablecimiento,
-        idTipoEstablecimiento: nivelSeleccionado,
-        idPOF: docenteSeleccionado,
-        anio: anioSeleccionado,
-      },
+    const movimiento = {
+      suplenteDNI: suplenteDni,
+      suplenteApellido,
+      suplenteNombre,
+      fechaInicio,
+      fechaFin,
+      cantHoras,
+      estado,
+      ingreso,
+      ingresoDescripcion,
+      idMotivoBaja: motivoSeleccionado ? Number(motivoSeleccionado) : null,
+      idEstablecimiento: establecimientoSeleccionado?.idEstablecimiento ?? null,
+      idTipoEstablecimiento: nivelSeleccionado ? Number(nivelSeleccionado) : null,
+      idPOF: docenteSeleccionado,
+      anio: anioSeleccionado ? Number(anioSeleccionado) : null,
     };
+
     try {
-      const response = await fetch("https://localhost:44382/MovimientosBaja", {
-        method: "POST",
+      const url = "https://localhost:44382/MovimientosBaja";
+      const method = id ? "PUT" : "POST";
+      const body = id ? { idMovimientoBaja: Number(id), ...movimiento } : { baja: movimiento };
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(nuevoMovimiento),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         setSuccessAlert(true);
-        // Limpiar campos
-        setSuplenteDni("");
-        setSuplenteApellido("");
-        setSuplenteNombre("");
-        setFechaInicio("");
-        setFechaFin("");
-        setCantHoras("");
-        setEstado("PENDIENTE");
-        setIngreso(null);
-        setIngresoDescripcion("NE");
-        setMotivoSeleccionado("");
-        setDocenteSeleccionado(null);
-        setDatosDocenteSeleccionado(null);
+        setTimeout(() => navigate(-1), 1200);
       } else {
         const error = await response.text();
         alert("Error al registrar: " + error);
@@ -226,10 +240,6 @@ function AltaRegistroBaja() {
       alert("Error de conexión: " + error.message);
     }
   };
-
-  // Aler y limpiar
-  const [successAlert, setSuccessAlert] = useState(false);
-
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -244,8 +254,8 @@ function AltaRegistroBaja() {
                     <InputLabel>Nivel</InputLabel>
                     <Select
                       value={nivelSeleccionado}
-                      onOpen={fetchNiveles} // ⚡️ llama al GET al abrir el select
-                      onChange={(e) => setNivelSeleccionado(e.target.value)}
+                      onOpen={fetchNiveles}
+                      onChange={(e) => setNivelSeleccionado(Number(e.target.value))}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
                       {niveles.map((nivel) => (
@@ -266,7 +276,7 @@ function AltaRegistroBaja() {
                     <InputLabel>Año</InputLabel>
                     <Select
                       value={anioSeleccionado}
-                      onChange={(e) => setAnioSeleccionado(e.target.value)}
+                      onChange={(e) => setAnioSeleccionado(Number(e.target.value))}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
                       {aniosDisponibles.map((anio) => (
@@ -289,8 +299,7 @@ function AltaRegistroBaja() {
                           (est) => est.idEstablecimiento === e.target.value
                         );
                         setEstablecimientoSeleccionado(est);
-                        setDiegep(est?.nroDiegep || ""); // si usás un estado para el campo diegep
-                        fetchDocentesPOF(est.idEstablecimiento); // ⚡️ Traer docentes POF
+                        fetchDocentesPOF(est.idEstablecimiento);
                       }}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
@@ -317,24 +326,31 @@ function AltaRegistroBaja() {
                   <FormControl fullWidth>
                     <InputLabel>Docente</InputLabel>
                     <Select
-                      value={docenteSeleccionado ?? ""} // docenteSeleccionado será string o null
+                      label="Docente"
+                      value={docenteSeleccionado}
                       onChange={(e) => {
-                        const id = e.target.value; // es string
+                        const id = Number(e.target.value); // idPOF
                         setDocenteSeleccionado(id);
-                        const seleccionado = docentes.find((d) => String(d.id) === id);
+                        const seleccionado = docentes.find((d) => d.idPOF === id);
                         setDatosDocenteSeleccionado(seleccionado);
+                      }}
+                      renderValue={(selected) => {
+                        if (!selected) return "Seleccione un docente"; // 👈 placeholder
+                        const docente = docentes.find((d) => d.idPOF === selected);
+                        return docente
+                          ? `${docente.personaDNI} - ${docente.secuencia} - ${docente.personaApellido}, ${docente.personaNombre}`
+                          : "";
                       }}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
                       {docentes.map((doc) => (
-                        <MenuItem key={doc.id} value={String(doc.id)}>
+                        <MenuItem key={doc.idPOF} value={doc.idPOF}>
                           {`${doc.personaDNI} - ${doc.secuencia} - ${doc.personaApellido}, ${doc.personaNombre}`}
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                 </Grid>
-
                 {/* Suplente */}
                 <Grid item xs={6}>
                   <TextField
@@ -396,7 +412,7 @@ function AltaRegistroBaja() {
                     label="Cant. Hs."
                     value={cantHoras}
                     onChange={(e) => setCantHoras(e.target.value)}
-                    inputProps={{ min: 0 }} // Opcional: evita valores negativos
+                    inputProps={{ min: 0 }}
                   />
                 </Grid>
 
@@ -406,7 +422,7 @@ function AltaRegistroBaja() {
                     <InputLabel>Motivo</InputLabel>
                     <Select
                       value={motivoSeleccionado}
-                      onChange={(e) => setMotivoSeleccionado(e.target.value)}
+                      onChange={(e) => setMotivoSeleccionado(Number(e.target.value))}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
                       {motivos.map((motivo) => (
@@ -418,21 +434,6 @@ function AltaRegistroBaja() {
                   </FormControl>
                 </Grid>
 
-                {/* Estado 
-                <Grid item xs={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Estado</InputLabel>
-                    <Select
-                      value={estado}
-                      onChange={(e) => setEstado(e.target.value)}
-                      style={{ height: "2.5rem", backgroundColor: "white" }}
-                    >
-                      <MenuItem value="PENDIENTE">PENDIENTE</MenuItem>
-                      <MenuItem value="HECHO">HECHO</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>*/}
-
                 {/* Ingreso */}
                 <Grid item xs={6}>
                   <FormControl fullWidth>
@@ -442,7 +443,7 @@ function AltaRegistroBaja() {
                       onChange={(e) => {
                         const value = e.target.value;
                         setIngreso(value);
-                        setIngresoDescripcion(value !== null ? null : "NE");
+                        setIngresoDescripcion(value === null ? "NE" : value);
                       }}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
@@ -471,9 +472,7 @@ function AltaRegistroBaja() {
                     fullWidth
                     label="Ingreso Descripción"
                     value={ingresoDescripcion ?? ""}
-                    InputProps={{
-                      readOnly: true,
-                    }}
+                    InputProps={{ readOnly: true }}
                   />
                 </Grid>
               </Grid>
