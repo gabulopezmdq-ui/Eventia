@@ -37,7 +37,7 @@ function AltaRegistroBaja() {
   const [cantHoras, setCantHoras] = useState("");
   const [motivos, setMotivos] = useState([]);
   const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
-  const [estado, setEstado] = useState("PENDIENTE");
+  const [estado, setEstado] = useState("P");
   const [ingreso, setIngreso] = useState(null);
   const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
 
@@ -155,7 +155,7 @@ function AltaRegistroBaja() {
         setFechaInicio(data.fechaInicio?.split("T")[0] ?? "");
         setFechaFin(data.fechaFin?.split("T")[0] ?? "");
         setCantHoras(data.cantHoras ?? "");
-        setEstado(data.estado ?? "PENDIENTE");
+        setEstado(data.estado ?? "P");
         setIngreso(data.ingreso ?? null);
         setIngresoDescripcion(data.ingresoDescripcion ?? "NE");
 
@@ -183,7 +183,10 @@ function AltaRegistroBaja() {
       alert("Completa los campos obligatorios.");
       return;
     }
-
+    if (!fechaInicio) {
+      alert("La fecha de inicio es obligatoria.");
+      return;
+    }
     const movimiento = {
       ...(id && { idMovimientoBaja: Number(id) }),
       suplenteDni,
@@ -194,14 +197,13 @@ function AltaRegistroBaja() {
       cantHoras: cantHoras ? Number(cantHoras) : null,
       estado,
       ingreso,
-      ingresoDescripcion,
+      ingresoDescripcion: ingreso ? "" : "NE",
       idMotivoBaja: motivoSeleccionado ? Number(motivoSeleccionado) : null,
       idEstablecimiento: establecimientoSeleccionado?.idEstablecimiento ?? null,
       idTipoEstablecimiento: nivelSeleccionado ? Number(nivelSeleccionado) : null,
       idPOF: docenteSeleccionado,
       anio: anioSeleccionado ? Number(anioSeleccionado) : null,
     };
-
     try {
       const url = process.env.REACT_APP_API_URL + "MovimientosBaja";
       const method = id ? "put" : "post";
@@ -373,6 +375,7 @@ function AltaRegistroBaja() {
                     value={fechaInicio}
                     onChange={(e) => setFechaInicio(e.target.value)}
                     InputLabelProps={{ shrink: true }}
+                    required
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -453,8 +456,11 @@ function AltaRegistroBaja() {
                   <TextField
                     fullWidth
                     label="Ingreso Descripción"
-                    value={ingresoDescripcion ?? ""}
-                    InputProps={{ readOnly: true }}
+                    value={ingreso ? "" : "NE"}
+                    InputProps={{
+                      readOnly: true, // siempre solo lectura
+                    }}
+                    disabled={!!ingreso} // si selecciona un ingreso, deshabilitado
                   />
                 </Grid>
               </Grid>
