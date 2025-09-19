@@ -7,12 +7,8 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import { Snackbar, Alert } from "@mui/material";
-
-// Material Dashboard components
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
-
-// Material Dashboard layout components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import React, { useState, useEffect } from "react";
@@ -20,19 +16,41 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 function AltaRegistroBaja() {
-  const token = sessionStorage.getItem("token");
   const navigate = useNavigate();
-  const { id } = useParams(); // 👈 para edición
-
-  // ---------- Niveles ----------
+  const { id } = useParams();
   const [niveles, setNiveles] = useState([]);
   const [nivelSeleccionado, setNivelSeleccionado] = useState("");
+  const [successAlert, setSuccessAlert] = useState(false);
+  const [aniosDisponibles, setAniosDisponibles] = useState([]);
+  const [anioSeleccionado, setAnioSeleccionado] = useState("");
+  const [establecimientos, setEstablecimientos] = useState([]);
+  const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState(null);
+  const [docentes, setDocentes] = useState([]);
+  const [docenteSeleccionado, setDocenteSeleccionado] = useState("");
+  const [datosDocenteSeleccionado, setDatosDocenteSeleccionado] = useState(null);
+  const [suplenteDni, setSuplenteDni] = useState("");
+  const [suplenteApellido, setSuplenteApellido] = useState("");
+  const [suplenteNombre, setSuplenteNombre] = useState("");
+  const [camposSuplenteReadonly, setCamposSuplenteReadonly] = useState(false);
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [cantHoras, setCantHoras] = useState("");
+  const [motivos, setMotivos] = useState([]);
+  const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
+  const [estado, setEstado] = useState("P");
+  const [ingreso, setIngreso] = useState(null);
+  const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
+
+  const token = sessionStorage.getItem("token");
 
   const fetchNiveles = async () => {
     try {
-      const response = await axios.get("https://localhost:44382/TiposEstablecimientos/GetAll", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        process.env.REACT_APP_API_URL + "TiposEstablecimientos/GetAll",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setNiveles(response.data);
     } catch (error) {
       console.error("Error al obtener los niveles:", error);
@@ -43,10 +61,6 @@ function AltaRegistroBaja() {
     if (token) fetchNiveles();
   }, [token]);
 
-  // ---------- Años ----------
-  const [aniosDisponibles, setAniosDisponibles] = useState([]);
-  const [anioSeleccionado, setAnioSeleccionado] = useState("");
-
   useEffect(() => {
     const anioActual = new Date().getFullYear();
     const anios = [];
@@ -54,13 +68,9 @@ function AltaRegistroBaja() {
     setAniosDisponibles(anios.reverse());
   }, []);
 
-  // ---------- Establecimientos ----------
-  const [establecimientos, setEstablecimientos] = useState([]);
-  const [establecimientoSeleccionado, setEstablecimientoSeleccionado] = useState(null);
-
   const fetchEstablecimientos = async () => {
     try {
-      const response = await axios.get("https://localhost:44382/Establecimientos/GetAll", {
+      const response = await axios.get(process.env.REACT_APP_API_URL + "Establecimientos/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEstablecimientos(response.data);
@@ -73,15 +83,11 @@ function AltaRegistroBaja() {
     if (token) fetchEstablecimientos();
   }, [token]);
 
-  // ---------- Docentes ----------
-  const [docentes, setDocentes] = useState([]);
-  const [docenteSeleccionado, setDocenteSeleccionado] = useState("");
-  const [datosDocenteSeleccionado, setDatosDocenteSeleccionado] = useState(null);
-
   const fetchDocentesPOF = async (idEstablecimiento) => {
     try {
       const response = await axios.get(
-        `https://localhost:44382/MovimientosBaja/GetPOF?idEstablecimiento=${idEstablecimiento}`,
+        process.env.REACT_APP_API_URL +
+          `MovimientosBaja/GetPOF?idEstablecimiento=${idEstablecimiento}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDocentes(response.data);
@@ -90,15 +96,9 @@ function AltaRegistroBaja() {
     }
   };
 
-  // ---------- Suplente ----------
-  const [suplenteDni, setSuplenteDni] = useState("");
-  const [suplenteApellido, setSuplenteApellido] = useState("");
-  const [suplenteNombre, setSuplenteNombre] = useState("");
-  const [camposSuplenteReadonly, setCamposSuplenteReadonly] = useState(false);
-
   const buscarSuplentePorDNI = async (dni) => {
     try {
-      const response = await axios.get("https://localhost:44382/MovimientosBaja/Getall", {
+      const response = await axios.get(process.env.REACT_APP_API_URL + "MovimientosBaja/Getall", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -126,33 +126,22 @@ function AltaRegistroBaja() {
     if (nuevoDni.length >= 7) buscarSuplentePorDNI(nuevoDni);
   };
 
-  // ---------- Otros campos ----------
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  const [cantHoras, setCantHoras] = useState("");
-  const [motivos, setMotivos] = useState([]);
-  const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
-  const [estado, setEstado] = useState("PENDIENTE");
-  const [ingreso, setIngreso] = useState(null);
-  const [ingresoDescripcion, setIngresoDescripcion] = useState("NE");
-
   useEffect(() => {
     axios
-      .get("https://localhost:44382/MotivosBajasDoc/GetAll", {
+      .get(process.env.REACT_APP_API_URL + "MotivosBajasDoc/GetAll", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => setMotivos(response.data))
       .catch((error) => console.error("Error al obtener motivos:", error));
   }, [token]);
 
-  // ---------- Cargar datos para edición ----------
   useEffect(() => {
     if (!id) return;
 
     const fetchMovimiento = async () => {
       try {
         const response = await axios.get(
-          `https://localhost:44382/MovimientosBaja/GetById?Id=${id}`,
+          process.env.REACT_APP_API_URL + `MovimientosBaja/GetById?Id=${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -166,7 +155,7 @@ function AltaRegistroBaja() {
         setFechaInicio(data.fechaInicio?.split("T")[0] ?? "");
         setFechaFin(data.fechaFin?.split("T")[0] ?? "");
         setCantHoras(data.cantHoras ?? "");
-        setEstado(data.estado ?? "PENDIENTE");
+        setEstado(data.estado ?? "P");
         setIngreso(data.ingreso ?? null);
         setIngresoDescripcion(data.ingresoDescripcion ?? "NE");
 
@@ -189,55 +178,50 @@ function AltaRegistroBaja() {
     fetchMovimiento();
   }, [id, token]);
 
-  // ---------- Guardar ----------
-  const [successAlert, setSuccessAlert] = useState(false);
-
   const handleSubmit = async () => {
     if (!docenteSeleccionado) {
       alert("Completa los campos obligatorios.");
       return;
     }
-
+    if (!fechaInicio) {
+      alert("La fecha de inicio es obligatoria.");
+      return;
+    }
     const movimiento = {
-      suplenteDNI: suplenteDni,
+      ...(id && { idMovimientoBaja: Number(id) }),
+      suplenteDni,
       suplenteApellido,
       suplenteNombre,
       fechaInicio,
       fechaFin,
-      cantHoras,
+      cantHoras: cantHoras ? Number(cantHoras) : null,
       estado,
       ingreso,
-      ingresoDescripcion,
+      ingresoDescripcion: ingreso ? "" : "NE",
       idMotivoBaja: motivoSeleccionado ? Number(motivoSeleccionado) : null,
       idEstablecimiento: establecimientoSeleccionado?.idEstablecimiento ?? null,
       idTipoEstablecimiento: nivelSeleccionado ? Number(nivelSeleccionado) : null,
       idPOF: docenteSeleccionado,
       anio: anioSeleccionado ? Number(anioSeleccionado) : null,
     };
-
     try {
-      const url = "https://localhost:44382/MovimientosBaja";
-      const method = id ? "PUT" : "POST";
-      const body = id ? { idMovimientoBaja: Number(id), ...movimiento } : { baja: movimiento };
+      const url = process.env.REACT_APP_API_URL + "MovimientosBaja";
+      const method = id ? "put" : "post";
 
-      const response = await fetch(url, {
+      const response = await axios({
         method,
+        url,
+        data: movimiento,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body),
       });
-
-      if (response.ok) {
-        setSuccessAlert(true);
-        setTimeout(() => navigate(-1), 1200);
-      } else {
-        const error = await response.text();
-        alert("Error al registrar: " + error);
-      }
+      setSuccessAlert(true);
+      setTimeout(() => navigate(-1), 1200);
     } catch (error) {
-      alert("Error de conexión: " + error.message);
+      const errorMsg = error.response?.data || error.message;
+      alert("Error al registrar: " + errorMsg);
     }
   };
   return (
@@ -391,6 +375,7 @@ function AltaRegistroBaja() {
                     value={fechaInicio}
                     onChange={(e) => setFechaInicio(e.target.value)}
                     InputLabelProps={{ shrink: true }}
+                    required
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -471,8 +456,11 @@ function AltaRegistroBaja() {
                   <TextField
                     fullWidth
                     label="Ingreso Descripción"
-                    value={ingresoDescripcion ?? ""}
-                    InputProps={{ readOnly: true }}
+                    value={ingreso ? "" : "NE"}
+                    InputProps={{
+                      readOnly: true, // siempre solo lectura
+                    }}
+                    disabled={!!ingreso} // si selecciona un ingreso, deshabilitado
                   />
                 </Grid>
               </Grid>
