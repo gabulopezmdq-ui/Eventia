@@ -32,6 +32,7 @@ namespace API.DataSchema
         public virtual ICollection<MEC_MovimientosBajas>? MovimientosBaja { get; set; } = new List<MEC_MovimientosBajas>();
         public List<MEC_TMPErroresMecanizadas>? TMPErroresMecanizadas { get; set; } = new();
         public virtual ICollection<MEC_InasistenciasDetalle>? Detalle { get; set; } = new List<MEC_InasistenciasDetalle>();
+        public virtual ICollection<MEC_MovimientosSuperCabecera>? SuperCabecera { get; set; } = new List<MEC_MovimientosSuperCabecera>();
 
 
     }

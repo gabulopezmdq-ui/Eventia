@@ -6,7 +6,7 @@ using System.IO;
 public class MovimientosDetalleDTO
 {
     // Datos de la cabecera
-    public int IdMovimientoCabecera { get; set; }
+    public int? IdMovimientoCabecera { get; set; }
     public string? Observaciones { get; set; }
     public string? Estado { get; set; }
 

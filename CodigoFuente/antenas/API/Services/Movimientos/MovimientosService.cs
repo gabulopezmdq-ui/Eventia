@@ -65,7 +65,7 @@ namespace API.Services
                     // relaciones simples ----------------------
                     CarRevista = p.CarRevista.Descripcion,
                     Cargo = p.TipoFuncion.Descripcion,
-                    AnioAntiguedad = p.Persona.POFAntiguedad.Select( a => a.AnioAntiguedad).FirstOrDefault(),
+                    AnioAntiguedad = p.Persona.POFAntiguedad.Select(a => a.AnioAntiguedad).FirstOrDefault(),
                     MesAntiguedad = p.Persona.POFAntiguedad.Select(a => a.MesAntiguedad).FirstOrDefault(),
 
 
@@ -81,7 +81,7 @@ namespace API.Services
 
         //Nueva Cabecera Movimientos
         public async Task<(bool Success, string Message, int? IdMovimientoCabecera)>
-    CrearMovimientoCabeceraAsync(MEC_MovimientosCabecera movimiento)
+        CrearMovimientoCabeceraAsync(MEC_MovimientosCabecera movimiento)
         {
             if (movimiento.IdEstablecimiento <= 0 ||
                 movimiento.Mes is < 1 or > 12 ||
@@ -213,6 +213,7 @@ namespace API.Services
                 cabecera.Observaciones = dto.Observaciones;
                 cabecera.Estado = dto.Estado;
                 cabecera.Fecha = DateTime.Now;
+                await ActualizarApellidosCabeceraAsync(cabecera.IdMovimientoCabecera);
 
                 _context.MEC_MovimientosCabecera.Update(cabecera);
                 await _context.SaveChangesAsync();
@@ -237,7 +238,7 @@ namespace API.Services
                     AntigMeses = dto.AntigMeses,
                     Horas = dto.Horas,
                     FechaInicioBaja = dto.FechaInicioBaja,
-                    FechaFinBaja = dto.FechaFinBaja
+                    FechaFinBaja = dto.FechaFinBaja,
                 };
 
                 await _context.MEC_MovimientosDetalle.AddAsync(detalle);
@@ -282,7 +283,7 @@ namespace API.Services
                     FechaInicioBaja = d.FechaInicioBaja ?? null,
                     FechaFinBaja = d.FechaFinBaja ?? null,
                     Decrece = d.Decrece,
-                    HorasDecrece = d.HorasDecrece,  
+                    HorasDecrece = d.HorasDecrece,
                     Usuario = usuario.Nombre,
                 })
                 .ToListAsync();
@@ -451,7 +452,7 @@ namespace API.Services
             catch
             {
                 await tx.RollbackAsync();
-                throw;  
+                throw;
             }
         }
 
@@ -491,10 +492,17 @@ namespace API.Services
 
         public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
         {
+            var detalle = await _context.MEC_MovimientosDetalle
+                           .AsNoTracking()
+                           .FirstOrDefaultAsync(d => d.IdMovimientoDetalle == IdMovimientoDetalle);
+
+            int idCabecera = detalle.IdMovimientoCabecera;
+
             var id = new MEC_MovimientosDetalle { IdMovimientoDetalle = IdMovimientoDetalle };
             _context.MEC_MovimientosDetalle.Attach(id);
             _context.MEC_MovimientosDetalle.Remove(id);
 
+            await ActualizarApellidosCabeceraAsync(idCabecera);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -525,7 +533,7 @@ namespace API.Services
             //    await _context.SaveChangesAsync();
             //    //try
             //    //{
-                    
+
 
             //    //    var cabecera = await _context.MEC_MovimientosCabecera
             //    //    .Include(c => c.Establecimientos)
@@ -611,7 +619,7 @@ namespace API.Services
             var resultado = new DetalleReporteDTO
             {
                 Usuario = usuario.Nombre,
-                NombrePersona = usuario.NombrePersona, 
+                NombrePersona = usuario.NombrePersona,
                 ApellidoPersona = usuario.ApellidoPersona,
                 Detalles = detalles
             };
@@ -619,6 +627,72 @@ namespace API.Services
             return resultado;
         }
 
-    }
+        public async Task<MEC_MovimientosSuperCabecera> CrearSuperCabeceraAsync(MEC_MovimientosSuperCabecera entidad)
+        {
+            entidad.Fecha = DateTime.Today;
 
+            bool existe = await _context.MEC_MovimientosSuperCabecera.AnyAsync(x =>
+                  x.Area.Trim() == entidad.Area.Trim() &&
+                  x.Mes == entidad.Mes &&
+                  x.Anio == entidad.Anio &&
+                  x.IdEstablecimiento == entidad.IdEstablecimiento
+              );
+
+            if (existe)
+            {
+                throw new InvalidOperationException(
+                    $"Ya existe un registro para el Área {entidad.Area}, Mes {entidad.Mes}, Año {entidad.Anio}, Establecimiento {entidad.Establecimiento}."
+                );
+            }
+
+            _context.MEC_MovimientosSuperCabecera.Add(entidad);
+            await _context.SaveChangesAsync();
+
+            return entidad;
+
+        }
+
+
+        //Actualizacion de apellidos en MovimientosDetalle
+        public async Task ActualizarApellidosCabeceraAsync(int idMovimientoCabecera)
+        {
+            var detalles = await _context.MEC_MovimientosDetalle
+                .Where(d => d.IdMovimientoCabecera == idMovimientoCabecera)
+                .ToListAsync();
+
+            var apellidos = new List<string>();
+
+            foreach (var d in detalles)
+            {
+                if (d.TipoMovimiento == "A")
+                {
+                    if (!string.IsNullOrWhiteSpace(d.Apellido))
+                        apellidos.Add(d.Apellido.Trim());
+                }
+                else if(d.TipoMovimiento == "B")
+                {
+                    if (d.IdPOF.HasValue)
+                    {
+                        var pof = await _context.MEC_POF
+                            .Where(p => p.IdPOF == d.IdPOF.Value)
+                            .Select(p => p.Persona.Apellido)
+                            .FirstOrDefaultAsync();
+
+                        if (!string.IsNullOrWhiteSpace(pof))
+                            apellidos.Add(pof.Trim());
+                    }
+                }
+            }
+
+            var cabecera = await _context.MEC_MovimientosCabecera
+                .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == idMovimientoCabecera);
+
+            if (cabecera != null)
+            {
+                cabecera.Apellidos = string.Join(", ", apellidos);
+                _context.MEC_MovimientosCabecera.Update(cabecera);
+                await _context.SaveChangesAsync();
+            }
+        }
+    }
 }

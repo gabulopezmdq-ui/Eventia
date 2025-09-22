@@ -60,6 +60,14 @@ namespace API.DataSchema.ModelConfiguration
            .HasColumnType("char(1)")
            .IsFixedLength(true);
 
+            builder.Property(x => x.Apellidos)
+           .HasColumnType("varchar(100)")
+           .IsRequired(false);
+
+            builder.HasOne(x => x.SuperCabecera)
+                .WithMany()
+                .HasForeignKey(x => x.IdSuperCabecera)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

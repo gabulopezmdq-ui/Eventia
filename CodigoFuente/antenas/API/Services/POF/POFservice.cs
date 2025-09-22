@@ -222,5 +222,22 @@ namespace API.Services
             return pofList;
         }
 
+        //BORRADO DEFINITIVO POV
+        public async Task<bool> EliminarPOF(int IdPOF)
+        {
+            var POF= await _context.MEC_POF
+                           .AsNoTracking()
+                           .FirstOrDefaultAsync(d => d.IdPOF == IdPOF);
+
+            int idPOF = POF.IdPOF;
+
+            var id = new MEC_POF { IdPOF = IdPOF};
+            _context.MEC_POF.Attach(id);
+            _context.MEC_POF.Remove(id);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
     }
 }

@@ -33,5 +33,6 @@ namespace API.Services
         Task<bool> EliminarDetalle(int IdMovimientoDetalle);
         Task AgregarDetalle(MEC_MovimientosDetalle detalle);
         Task<DetalleReporteDTO> ObtenerDetallesReporteAsycn(int idCabecera);
+        Task<MEC_MovimientosSuperCabecera> CrearSuperCabeceraAsync(MEC_MovimientosSuperCabecera entidad);
     }
 }

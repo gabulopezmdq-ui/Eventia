@@ -20,12 +20,12 @@ namespace API.Controllers
     public class MovimientosCabeceraController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly ICRUDService<MEC_MovimientosCabecera> _serviceGenerico;
+        private readonly ICRUDService<MEC_MovimientosSuperCabecera> _serviceGenerico;
         private readonly ICRUDService<MEC_MovimientosDetalle> _serviceDetalle;
         private readonly IMovimientosService _movimientosDetalle;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosCabecera> logger, ICRUDService<MEC_MovimientosCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle, ICRUDService<MEC_MovimientosDetalle> serviceDetalle, IHttpContextAccessor httpContextAccessor)
+        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosSuperCabecera> logger, ICRUDService<MEC_MovimientosSuperCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle, ICRUDService<MEC_MovimientosDetalle> serviceDetalle, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
@@ -97,19 +97,33 @@ namespace API.Controllers
         }
 
         [HttpPost("CabeceraMovimiento")]
-        public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosCabecera movimientos)
+        public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosSuperCabecera entidad)
         {
-            var (success, message, idCabecera) = await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
+            if (entidad == null)
+                return BadRequest(new { mensaje = "Debe enviar los datos de la cabecera." });
 
-            if (!success)
-                return BadRequest(new { message });
+            var creado = await _movimientosDetalle.CrearSuperCabeceraAsync(entidad);
 
             return Ok(new
             {
-                idMovimientoCabecera = idCabecera,
-                message = message
+                mensaje = "SuperCabecera creada con éxito",
             });
         }
+
+        //[HttpPost("CabeceraMovimiento")]
+        //public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosCabecera movimientos)
+        //{
+        //    var (success, message, idCabecera) = await _movimientosDetalle.CrearMovimientoCabeceraAsync(movimientos);
+
+        //    if (!success)
+        //        return BadRequest(new { message });
+
+        //    return Ok(new
+        //    {
+        //        idMovimientoCabecera = idCabecera,
+        //        message = message
+        //    });
+        //}
 
         [HttpPost("AddDetalle")]
         public async Task<ActionResult> Post([FromBody] MEC_MovimientosDetalle movimientos)

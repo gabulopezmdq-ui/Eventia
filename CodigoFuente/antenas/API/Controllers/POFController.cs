@@ -87,6 +87,13 @@ namespace API.Controllers
             return Ok();
         }
 
+        //BORRADO DEFINITIVO
+        [HttpDelete("Admin")]
+        public async Task<IActionResult> DeletePOF(int Id)
+        {
+            await _pofService.EliminarPOF(Id);
+            return Ok();
+        }
         [HttpPut]
         public async Task<ActionResult<MEC_POF>> Update([FromBody] MEC_POF pof)
         {

@@ -18,7 +18,13 @@ namespace API.DataSchema
         public string? Adicionales { get; set; }
         public string? Observaciones { get; set; }
         public string? Estado { get; set; }
+        public int? IdSuperCabecera { get; set; }  // FK opcional
+        public string? Apellidos { get; set; }
+
+        public MEC_MovimientosSuperCabecera? SuperCabecera { get; set; }
+
         public virtual MEC_Establecimientos? Establecimientos { get; set; }
         public virtual ICollection<MEC_MovimientosDetalle>? MovimientosDetalle { get; set; }
+        public virtual ICollection<MEC_MovimientosCabecera>? MovimientosCabecera { get; set; }
     }
 }
