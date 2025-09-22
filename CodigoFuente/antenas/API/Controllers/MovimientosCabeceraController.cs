@@ -21,17 +21,19 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_MovimientosSuperCabecera> _serviceGenerico;
+        private readonly ICRUDService<MEC_MovimientosCabecera> _serviceCabecera;
         private readonly ICRUDService<MEC_MovimientosDetalle> _serviceDetalle;
         private readonly IMovimientosService _movimientosDetalle;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosSuperCabecera> logger, ICRUDService<MEC_MovimientosSuperCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle, ICRUDService<MEC_MovimientosDetalle> serviceDetalle, IHttpContextAccessor httpContextAccessor)
+        public MovimientosCabeceraController(DataContext context, ILogger<MEC_MovimientosSuperCabecera> logger, ICRUDService<MEC_MovimientosSuperCabecera> serviceGenerico, Services.IMovimientosService movimientosDetalle, ICRUDService<MEC_MovimientosDetalle> serviceDetalle, IHttpContextAccessor httpContextAccessor, ICRUDService<MEC_MovimientosCabecera> serviceCabecera)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
             _movimientosDetalle = movimientosDetalle;
             _serviceDetalle = serviceDetalle;
             _httpContextAccessor = httpContextAccessor;
+            _serviceCabecera = serviceCabecera;
         }
 
         [HttpGet("BuscarSuplente")]
@@ -78,20 +80,32 @@ namespace API.Controllers
 
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<MEC_MovimientosCabecera>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
+        [HttpGet("GetAllCabeceras")]
+        public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> GetCabecera() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        {
+            return Ok(_serviceCabecera.GetAll());
+        }
+
+        [HttpGet("GetByIdCabcera")]
+        public async Task<ActionResult<MEC_MovimientosCabecera>> GetCabecera(int Id)
+        {
+            return Ok(await _serviceCabecera.GetByID(Id));
+        }
+
         [HttpGet("GetByVigente")]
-        public async Task<ActionResult<IEnumerable<MEC_MovimientosCabecera>>> GetByVigente([FromQuery] string vigente = null)
+        public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> GetByVigente([FromQuery] string vigente = null)
         {
             var result = await _serviceGenerico.GetByVigente(vigente);
             return Ok(result);
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<MEC_MovimientosCabecera>> Get(int Id)
+        public async Task<ActionResult<MEC_MovimientosSuperCabecera>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
