@@ -163,6 +163,13 @@ namespace API.Controllers
             return Ok();
         }
 
+        [HttpDelete("BorrarCabecera")]
+        public async Task<IActionResult> DeleteCabecera(int Id)
+        {
+            await _serviceCabecera.Delete(Id);
+            return Ok();
+        }
+
         [HttpPost("EnviarEduc")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> Update([FromBody] MEC_MovimientosCabecera movimiento)
         {
@@ -274,6 +281,20 @@ namespace API.Controllers
             }
 
             return Ok(new { mensaje = "Registro eliminado correctamente" });
+        }
+
+        [HttpPut("PutCabecera")]
+        public async Task<ActionResult<MEC_MovimientosCabecera>> UpdateCabecera([FromBody] MEC_MovimientosCabecera cabecera)
+        {
+            await _serviceCabecera.Update(cabecera);
+            return Ok(cabecera);
+        }
+
+        [HttpPut]
+        public async Task<ActionResult<MEC_MovimientosSuperCabecera>> UpdateSuperCabecera([FromBody] MEC_MovimientosSuperCabecera cabecera)
+        {
+            await _serviceGenerico.Update(cabecera);
+            return Ok(cabecera);
         }
     }
 }
