@@ -13,7 +13,7 @@ namespace API.DataSchema
         public int? IdTipoCategoria { get; set; }
         public int? IdMotivoBaja { get; set; }
         public string TipoDoc { get; set; }
-        public string TipoMovimiento { get; set; }
+        public string? TipoMovimiento { get; set; }
         public string NumDoc { get; set; }
         public string Apellido { get; set; }
         public string Nombre { get; set; }

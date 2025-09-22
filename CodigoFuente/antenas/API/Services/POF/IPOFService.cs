@@ -24,5 +24,6 @@ namespace API.Services
         Task<POFBarraResultado> AddBarraAsync(POFBarraDTO dto);
         Task<bool> EliminarBarraAsync(EliminarBarraDTO dto);
         Task<List<PofConBarrasDTO>> ExcelPOF(int idEstablecimiento);
+        Task<bool> EliminarPOF(int IdPOF);
     }
 }
