@@ -86,12 +86,12 @@ namespace API.Controllers
         }
 
         [HttpGet("GetAllCabeceras")]
-        public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> GetCabecera() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<MEC_MovimientosCabecera>>> GetCabecera() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceCabecera.GetAll());
         }
 
-        [HttpGet("GetByIdCabcera")]
+        [HttpGet("GetByIdCabecera")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> GetCabecera(int Id)
         {
             return Ok(await _serviceCabecera.GetByID(Id));
@@ -138,6 +138,14 @@ namespace API.Controllers
         //        message = message
         //    });
         //}
+
+        //AGREGRA CABECERA A MEC_MOVIMIENTOSCABECERA
+        [HttpPost("AddMovCabecera")]
+        public async Task<ActionResult> Post([FromBody] MEC_MovimientosCabecera movimientos)
+        {
+            await _serviceCabecera.Add(movimientos);
+            return Ok(movimientos);
+        }
 
         [HttpPost("AddDetalle")]
         public async Task<ActionResult> Post([FromBody] MEC_MovimientosDetalle movimientos)
