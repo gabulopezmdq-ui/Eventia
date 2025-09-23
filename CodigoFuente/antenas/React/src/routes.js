@@ -24,6 +24,7 @@ import Bajas from "layouts/pages/Pruebas/Bajas";
 import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
 import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
 import VerificarInasistencia from "layouts/pages/Pruebas/Inasistencias/VerificarInasistencia/index";
+import SuperCabecera from "layouts/pages/Pruebas/SuperCabecera";
 
 const routes = [
   {
@@ -114,6 +115,13 @@ const routes = [
         key: "cabecerasMovimientos",
         route: "/CabeceraMovimientos",
         component: <CabeceraMovimientos />,
+        roles: ["admin", "superadmin", "secretario"],
+      },
+      {
+        name: "Super Cabecera",
+        key: "SuperCabecera",
+        route: "/SuperCabecera",
+        component: <SuperCabecera />,
         roles: ["admin", "superadmin", "secretario"],
       },
     ],

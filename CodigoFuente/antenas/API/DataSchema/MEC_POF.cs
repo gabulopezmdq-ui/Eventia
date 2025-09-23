@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿
+using System.Collections.Generic;
 namespace API.DataSchema
 {
     public class MEC_POF

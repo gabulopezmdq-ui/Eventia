@@ -60,6 +60,8 @@ import PlantaFuncionalSec from "layouts/pages/Pruebas/PlantaFuncional/Secretario
 import AltaCabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/AltaCabeceraMovimientos";
 import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
 import VerificarInasistencia from "layouts/pages/Pruebas/Inasistencias/VerificarInasistencia/index";
+import SuperCabecera from "layouts/pages/Pruebas/SuperCabecera";
+import AltaSuperCabecera from "layouts/pages/Pruebas/SuperCabecera/AltaSuperCabecera";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -321,6 +323,11 @@ export default function App() {
       component: VerificarInasistencia,
       roles: ["admin", "superadmin"],
     },
+    {
+      path: "/SuperCabecera",
+      component: SuperCabecera,
+      roles: ["admin", "superadmin", "secretario"],
+    },
 
     //----------------------------------Rutas de Ver mas
     {
@@ -518,6 +525,11 @@ export default function App() {
     {
       path: "/CabeceraMovimientos/Nuevo",
       component: AltaCabeceraMovimiento,
+      roles: ["admin", "superadmin", "secretario"],
+    },
+    {
+      path: "/SuperCabecera/Nuevo",
+      component: AltaSuperCabecera,
       roles: ["admin", "superadmin", "secretario"],
     },
   ];
