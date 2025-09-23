@@ -12,7 +12,7 @@ import {
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import axios from "axios";
-import MDButton from "components/MDButton"; // Ajusta la ruta a tu MDButton
+import MDButton from "components/MDButton";
 import "dayjs/locale/es";
 import dayjs from "dayjs";
 
@@ -20,7 +20,7 @@ export default function ImportarInasistenciaModal({ open, onClose, cabecera, onS
   const [fechaDesde, setFechaDesde] = useState(null);
   const [fechaHasta, setFechaHasta] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const minDate = dayjs(cabecera?.fechaMin || undefined); // Opcional: si quieres limitar fechas
+  const minDate = dayjs(cabecera?.fechaMin || undefined);
   const maxDate = dayjs(cabecera?.fechaMax || undefined);
 
   const handleConfirm = async () => {
@@ -46,7 +46,7 @@ export default function ImportarInasistenciaModal({ open, onClose, cabecera, onS
       onClose();
     } catch (error) {
       console.error("Error al importar inasistencias:", error);
-      alert("Error al importar inasistencias."); // Puedes reemplazarlo por un MDAlert
+      alert("Error al importar inasistencias.");
     } finally {
       setIsLoading(false);
     }
