@@ -18,6 +18,7 @@ namespace API.DataSchema.ModelConfiguration
                    .Property(e => e.IdMovimientoDetalle)
                   .HasColumnName("IdMovimientoDetalle");
 
+
             builder
                 .HasOne(p => p.MovimientoCabecera)
                 .WithMany(t => t.MovimientosDetalle)

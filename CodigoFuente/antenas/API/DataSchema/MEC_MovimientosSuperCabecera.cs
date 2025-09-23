@@ -15,5 +15,7 @@ namespace API.DataSchema
         public DateTime Fecha { get; set; }
 
         public virtual MEC_Establecimientos? Establecimiento { get; set; }
+        public virtual ICollection<MEC_MovimientosCabecera>? MovimientosCabecera { get; set; }
+
     }
 }
