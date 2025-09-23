@@ -32,7 +32,10 @@ function AltaCabeceraMovimientos() {
   const [ruralidadCabecera, setRuralidadCabecera] = useState("");
   const [idEstablecimiento, setIdEstablecimiento] = useState("");
   const [detallesCargados, setDetallesCargados] = useState(false);
+  const [cabeceraCamposBloqueados, setCabeceraCamposBloqueados] = useState(false);
   const [detalleSeleccionado, setDetalleSeleccionado] = useState(null);
+  const [cabeceras, setCabeceras] = useState([]);
+  const [cabeceraSeleccionada, setCabeceraSeleccionada] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -88,6 +91,37 @@ function AltaCabeceraMovimientos() {
   ];
 
   useEffect(() => {
+    const fetchCabeceras = async () => {
+      try {
+        const res = await axios.get(process.env.REACT_APP_API_URL + "MovimientosCabecera/GetAll", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        let data = res.data;
+
+        // Obtener valores actuales dentro del efecto
+        const currentRoles = Array.isArray(userRol) ? userRol : [userRol];
+        const currentUserIdEst = userIdEstablecimiento;
+
+        if (!currentRoles.includes("SuperAdmin")) {
+          const ids = Array.isArray(currentUserIdEst)
+            ? currentUserIdEst.map(String)
+            : [String(currentUserIdEst)];
+
+          data = data.filter((c) => ids.includes(String(c.idEstablecimiento)));
+        }
+
+        setCabeceras(data);
+        console.log("cabeceras cargadas: ", data);
+      } catch (err) {
+        console.error("Error al cargar cabeceras", err);
+      }
+    };
+
+    if (!id) fetchCabeceras();
+  }, [id, token]);
+
+  useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
         const res = await axios.get(process.env.REACT_APP_API_URL + "Establecimientos/GetAll", {
@@ -105,7 +139,7 @@ function AltaCabeceraMovimientos() {
       const fetchCabecera = async () => {
         try {
           const res = await axios.get(
-            process.env.REACT_APP_API_URL + `MovimientosCabecera/GetById?id=${id}`,
+            process.env.REACT_APP_API_URL + `MovimientosCabecera/GetByIdCabecera?Id=${id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           const cabecera = res.data;
@@ -125,6 +159,7 @@ function AltaCabeceraMovimientos() {
           });
           setIdCabecera(cabecera.idMovimientoCabecera);
           setFormDeshabilitado(true);
+          setCabeceraCamposBloqueados(true);
           setMostrarDetalle(true);
           if (cabecera.establecimientos?.ruralidad) {
             setRuralidadCabecera(cabecera.establecimientos.ruralidad);
@@ -269,8 +304,47 @@ function AltaCabeceraMovimientos() {
       <MDBox component="form" pb={3} px={3}>
         <Card>
           <Grid container spacing={3} p={2}>
+            {!id && (
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Seleccionar Cabecera</InputLabel>
+                  <Select
+                    label="Seleccionar Cabecera"
+                    value={cabeceraSeleccionada || ""}
+                    onChange={(e) => {
+                      const cabeceraId = e.target.value;
+                      setCabeceraSeleccionada(cabeceraId);
+                      const cabecera = cabeceras.find(
+                        (c) => String(c.idSuperCabecera) === String(cabeceraId)
+                      );
+
+                      if (cabecera) {
+                        setFormData({
+                          area: cabecera.area,
+                          mes: cabecera.mes,
+                          anio: cabecera.anio,
+                          idEstablecimiento: cabecera.idEstablecimiento,
+                          Accion: [],
+                          estado: "P",
+                        });
+                        setIdEstablecimiento(cabecera.idEstablecimiento);
+                        setCabeceraCamposBloqueados(true);
+                        setFormDeshabilitado(false);
+                      }
+                    }}
+                    style={{ height: "2.8rem", backgroundColor: "white" }}
+                  >
+                    {cabeceras.map((c) => (
+                      <MenuItem key={c.idSuperCabecera} value={c.idSuperCabecera}>
+                        {`${c.area} - ${c.mes}/${c.anio} - ${c.establecimiento?.nombrePcia}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={formDeshabilitado}>
+              <FormControl fullWidth disabled={formDeshabilitado || cabeceraCamposBloqueados}>
                 <InputLabel>Área</InputLabel>
                 <Select
                   name="area"
@@ -289,7 +363,7 @@ function AltaCabeceraMovimientos() {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={formDeshabilitado}>
+              <FormControl fullWidth disabled={formDeshabilitado || cabeceraCamposBloqueados}>
                 <InputLabel>Mes</InputLabel>
                 <Select
                   name="mes"
@@ -312,14 +386,14 @@ function AltaCabeceraMovimientos() {
                 fullWidth
                 name="anio"
                 type="number"
-                disabled={formDeshabilitado}
+                disabled={formDeshabilitado || cabeceraCamposBloqueados}
                 value={formData.anio}
                 onChange={handleInputChange}
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={formDeshabilitado}>
+              <FormControl fullWidth disabled={formDeshabilitado || cabeceraCamposBloqueados}>
                 <InputLabel>Establecimiento</InputLabel>
                 <Select
                   name="idEstablecimiento"
@@ -386,7 +460,19 @@ function AltaCabeceraMovimientos() {
 
           {!id && !formDeshabilitado && (
             <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
-              <MDButton variant="contained" color="info" size="small" onClick={handleSubmit}>
+              <MDButton
+                variant="contained"
+                color="info"
+                size="small"
+                onClick={handleSubmit}
+                disabled={
+                  (!cabeceraSeleccionada && id) || // si estoy editando pero no elegí cabecera
+                  !formData.idEstablecimiento ||
+                  !formData.mes ||
+                  !formData.anio ||
+                  formData.Accion.length === 0
+                }
+              >
                 Guardar
               </MDButton>
             </MDBox>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace API.DataSchema.ModelConfiguration
 {
@@ -62,12 +63,19 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.Apellidos)
            .HasColumnType("varchar(100)")
-           .IsRequired(false);
+            .IsRequired(false);
 
-            builder.HasOne(x => x.SuperCabecera)
-                .WithMany()
-                .HasForeignKey(x => x.IdSuperCabecera)
-                .OnDelete(DeleteBehavior.Cascade);
+            builder
+           .HasOne(p => p.SuperCabecera)
+           .WithMany(t => t.MovimientosCabecera)
+           .HasForeignKey(p => p.IdSuperCabecera)
+           .IsRequired(true);
+
+            builder
+                .Navigation(e => e.SuperCabecera)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
         }
     }
 }

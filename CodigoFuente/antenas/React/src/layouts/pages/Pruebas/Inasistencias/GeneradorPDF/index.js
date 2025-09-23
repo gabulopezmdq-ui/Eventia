@@ -18,7 +18,6 @@ export async function generatePDF(data) {
 
   y -= 40;
 
-  // 🔹 Encabezados de tabla
   const headers = [
     "ID Error",
     "ID Cabecera",
@@ -29,14 +28,11 @@ export async function generatePDF(data) {
     "POF Barra",
   ];
   const colX = [50, 110, 200, 300, 380, 450, 520];
-
-  // Fondo celeste para headers
-  const headerBackground = rgb(0.7, 0.9, 1); // celeste claro
-  const headerTextColor = rgb(0, 0, 0); // negro
+  const headerBackground = rgb(0.7, 0.9, 1);
+  const headerTextColor = rgb(0, 0, 0);
 
   const drawHeaders = (pg, yPos) => {
     headers.forEach((header, i) => {
-      // Dibujar rectángulo de fondo
       pg.drawRectangle({
         x: colX[i] - 2,
         y: yPos - 2,
@@ -45,7 +41,6 @@ export async function generatePDF(data) {
         color: headerBackground,
       });
 
-      // Dibujar texto encima
       pg.drawText(header, {
         x: colX[i],
         y: yPos,
@@ -56,15 +51,11 @@ export async function generatePDF(data) {
     });
   };
 
-  // Dibujamos los headers de la primera página
   drawHeaders(page, y);
   y -= 20;
-
-  // 🔹 Recorremos cada error del array
   data.forEach((item) => {
-    // Si no hay espacio, agregamos nueva página y volvemos a dibujar headers
     if (y < 50) {
-      page = pdfDoc.addPage([600, 800]); // 👈 nueva página
+      page = pdfDoc.addPage([600, 800]);
       y = height - 50;
       drawHeaders(page, y);
       y -= 20;
@@ -89,7 +80,6 @@ export async function generatePDF(data) {
 
   const pdfBytes = await pdfDoc.save();
 
-  // 🔹 Abrir en nueva pestaña (_blank)
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank");

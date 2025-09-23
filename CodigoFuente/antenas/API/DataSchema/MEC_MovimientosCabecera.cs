@@ -25,6 +25,5 @@ namespace API.DataSchema
 
         public virtual MEC_Establecimientos? Establecimientos { get; set; }
         public virtual ICollection<MEC_MovimientosDetalle>? MovimientosDetalle { get; set; }
-        public virtual ICollection<MEC_MovimientosCabecera>? MovimientosCabecera { get; set; }
     }
 }
