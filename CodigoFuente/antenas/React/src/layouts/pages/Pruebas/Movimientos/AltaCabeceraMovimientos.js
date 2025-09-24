@@ -60,6 +60,7 @@ function AltaCabeceraMovimientos() {
     { label: "LICENCIAS POR ENFERMEDAD", value: "E" },
     { label: "ASIGNACIONES FAMILIARES", value: "A" },
     { label: "COORDINACION ADMINISTRATIVA", value: "C" },
+    { label: "LICENCIAS EXTRAODINARIAS Y CRÓNICAS", value: "O" },
   ];
 
   const meses = [
@@ -214,6 +215,7 @@ function AltaCabeceraMovimientos() {
 
     const payload = {
       ...resto,
+      idSuperCabecera: cabeceraSeleccionada || null,
       altas: Accion.includes("A") ? "A" : null,
       bajas: Accion.includes("B") ? "B" : null,
       modificaciones: Accion.includes("M") ? "M" : null,
@@ -222,7 +224,7 @@ function AltaCabeceraMovimientos() {
 
     try {
       const response = await axios.post(
-        process.env.REACT_APP_API_URL + "MovimientosCabecera/CabeceraMovimiento",
+        process.env.REACT_APP_API_URL + "MovimientosCabecera/AddMovCabecera",
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -242,8 +244,16 @@ function AltaCabeceraMovimientos() {
       setFormDeshabilitado(true);
       setMostrarDetalle(true);
     } catch (err) {
-      if (err.response?.status === 404) {
-        alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
+      if (err.response) {
+        const backendError = err.response.data?.error;
+        if (backendError) {
+          alert(backendError);
+        } else if (err.response.status === 404) {
+          alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
+        } else {
+          console.error("Error al guardar", err.response);
+          alert("Error en el servidor");
+        }
       } else {
         console.error("Error al guardar", err);
         alert("Error al guardar");
@@ -314,6 +324,7 @@ function AltaCabeceraMovimientos() {
                     onChange={(e) => {
                       const cabeceraId = e.target.value;
                       setCabeceraSeleccionada(cabeceraId);
+                      console.log("cabeceraSeleccionada: ", cabeceraSeleccionada);
                       const cabecera = cabeceras.find(
                         (c) => String(c.idSuperCabecera) === String(cabeceraId)
                       );
