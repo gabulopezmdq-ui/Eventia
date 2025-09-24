@@ -20,6 +20,7 @@ import DataTable from "examples/Tables/DataTable";
 import EditarModal from "./EditarModal";
 import ModalBarras from "./ModalBarras";
 import FormField from "layouts/pages/account/components/FormField";
+import jwtDecode from "jwt-decode";
 import * as XLSX from "xlsx";
 
 function PlantaFuncional() {
@@ -47,6 +48,8 @@ function PlantaFuncional() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalBarrasOpen, setIsModalBarrasOpen] = useState(false);
   const [selectedIdPof, setSelectedIdPof] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [idToDelete, setIdToDelete] = useState(null);
   const [dataTableData, setDataTableData] = useState([]);
   const [formData, setFormData] = useState({
     apellido: "",
@@ -64,6 +67,9 @@ function PlantaFuncional() {
     idCategoria: "",
     vigente: "S",
   });
+
+  const decoded = token ? jwtDecode(token) : null;
+  const role = decoded?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
 
   useEffect(() => {
     const fetchEstablecimientos = async () => {
@@ -105,8 +111,6 @@ function PlantaFuncional() {
         console.warn("No hay datos para exportar");
         return;
       }
-
-      // 🔠 Transformamos los datos en mayúsculas
       const dataForExcel = data.map((row) => ({
         APELLIDO: row.apellido?.toUpperCase() || "",
         NOMBRE: row.nombre?.toUpperCase() || "",
@@ -118,14 +122,9 @@ function PlantaFuncional() {
         "BARRAS ANTERIORES": row.barra?.toString().toUpperCase() || "",
         BARRAS: row.barras ? row.barras.join(", ").toUpperCase() : "",
       }));
-      // 📑 Creamos hoja de cálculo
       const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
-
-      // 📘 Creamos libro y añadimos la hoja
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
-
-      // 💾 Generamos y descargamos archivo Excel
       XLSX.writeFile(workbook, `POF_${selectedEstablecimiento}.xlsx`);
     } catch (error) {
       console.error("Error al descargar el Excel:", error);
@@ -502,6 +501,41 @@ function PlantaFuncional() {
     return persona.vigente === selectedFilter;
   });
 
+  const confirmDelete = (idPof) => {
+    setIdToDelete(idPof);
+    setShowConfirm(true);
+  };
+
+  const handleSuperAdminAction = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(`${process.env.REACT_APP_API_URL}POF/Admin?id=${idToDelete}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setShowAlert(true);
+      setAlertMessage("Registro eliminado con éxito");
+      setAlertType("success");
+      fetchData();
+    } catch (error) {
+      console.error("Error eliminando el registro:", error);
+      setShowAlert(true);
+      setAlertMessage("Error al eliminar el registro");
+      setAlertType("error");
+    } finally {
+      setShowConfirm(false);
+      setIdToDelete(null);
+
+      setTimeout(() => {
+        setShowAlert(false);
+        setAlertMessage("");
+      }, 3000);
+    }
+  };
+
   return (
     <>
       <DashboardLayout>
@@ -607,8 +641,28 @@ function PlantaFuncional() {
                   </Select>
                 </FormControl>
               </Grid>
+              {showConfirm && (
+                <Grid container justifyContent="center">
+                  <Grid item xs={12} lg={12}>
+                    <MDBox>
+                      <MDAlert
+                        color="warning"
+                        dismissible={false}
+                        showActions
+                        onConfirm={handleSuperAdminAction}
+                        onCancel={() => setShowConfirm(false)}
+                        onDismiss={() => setShowConfirm(false)}
+                        style={{ display: "flex" }}
+                      >
+                        <MDTypography variant="body2" color="white">
+                          ¿Estás seguro de eliminar este registro?
+                        </MDTypography>
+                      </MDAlert>
+                    </MDBox>
+                  </Grid>
+                </Grid>
+              )}
               <Card>
-                {/* Botón Descargar Excel */}
                 <MDBox display="flex" justifyContent="flex-end" mt={2} mr={4}>
                   <MDButton
                     variant="gradient"
@@ -658,6 +712,16 @@ function PlantaFuncional() {
                               >
                                 Agregar Barras
                               </MDButton>
+                              {role === "SuperAdmin" && (
+                                <MDButton
+                                  variant="gradient"
+                                  color="error"
+                                  size="small"
+                                  onClick={() => confirmDelete(row.original.idPof)}
+                                >
+                                  Eliminar Permanente
+                                </MDButton>
+                              )}
                             </MDBox>
                           </>
                         ),
