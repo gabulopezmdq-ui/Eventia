@@ -22,6 +22,14 @@ namespace API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+        public async Task AddCabeceraFecha(MEC_MovimientosCabecera entity)
+        {
+                entity.Fecha = DateTime.Now;
+
+            _context.MEC_MovimientosCabecera.Add(entity);
+            await _context.SaveChangesAsync();
+        }
+
         //Busqueda de suplentes para Movimientos Bajas
         public async Task<MEC_MovimientosDetalle> BuscarSuplente(string numDoc)
         {
@@ -493,14 +501,17 @@ namespace API.Services
         public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
         {
             var detalle = await _context.MEC_MovimientosDetalle
-                           .AsNoTracking()
                            .FirstOrDefaultAsync(d => d.IdMovimientoDetalle == IdMovimientoDetalle);
+
+            if (detalle == null)
+            {
+                // No existe el detalle, podés devolver false o lanzar excepción controlada
+                return false;
+            }
 
             int idCabecera = detalle.IdMovimientoCabecera;
 
-            var id = new MEC_MovimientosDetalle { IdMovimientoDetalle = IdMovimientoDetalle };
-            _context.MEC_MovimientosDetalle.Attach(id);
-            _context.MEC_MovimientosDetalle.Remove(id);
+            _context.MEC_MovimientosDetalle.Remove(detalle);
 
             await ActualizarApellidosCabeceraAsync(idCabecera);
             await _context.SaveChangesAsync();
