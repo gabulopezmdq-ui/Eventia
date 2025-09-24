@@ -1,39 +1,25 @@
-/**
-=========================================================
-* Material Dashboard 2 PRO React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-pro-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 import { useState } from "react";
-
-// prop-types is a library for typechecking of props
 import PropTypes from "prop-types";
-
-// @mui material components
 import Fade from "@mui/material/Fade";
-
-// Material Dashboard 2 PRO React components
 import MDBox from "components/MDBox";
-
-// Custom styles for the MDAlert
+import MDButton from "components/MDButton";
 import MDAlertRoot from "components/MDAlert/MDAlertRoot";
 import MDAlertCloseIcon from "components/MDAlert/MDAlertCloseIcon";
 
-function MDAlert({ color, dismissible, children, onDismiss, ...rest }) {
+function MDAlert({
+  color,
+  dismissible,
+  children,
+  onDismiss,
+  onConfirm,
+  onCancel,
+  showActions,
+  ...rest
+}) {
   const [alertStatus, setAlertStatus] = useState("mount");
 
   const handleAlertStatus = () => setAlertStatus("fadeOut");
 
-  // The base template for the alert
   const alertTemplate = (mount = true) => (
     <Fade in={mount} timeout={300} onExited={() => onDismiss && onDismiss()}>
       <MDAlertRoot ownerState={{ color }} {...rest}>
@@ -43,6 +29,16 @@ function MDAlert({ color, dismissible, children, onDismiss, ...rest }) {
         {dismissible ? (
           <MDAlertCloseIcon onClick={mount ? handleAlertStatus : null}>&times;</MDAlertCloseIcon>
         ) : null}
+        {showActions && (
+          <MDBox display="flex" justifyContent="flex-end" gap={1}>
+            <MDButton variant="outlined" color="light" size="small" onClick={onCancel}>
+              Cancelar
+            </MDButton>
+            <MDButton variant="contained" color="white" size="small" onClick={onConfirm}>
+              Confirmar
+            </MDButton>
+          </MDBox>
+        )}
       </MDAlertRoot>
     </Fade>
   );
@@ -61,13 +57,12 @@ function MDAlert({ color, dismissible, children, onDismiss, ...rest }) {
   return null;
 }
 
-// Setting default values for the props of MDAlert
 MDAlert.defaultProps = {
   color: "info",
   dismissible: false,
+  showActions: false,
 };
 
-// Typechecking props of the MDAlert
 MDAlert.propTypes = {
   color: PropTypes.oneOf([
     "primary",
@@ -82,6 +77,9 @@ MDAlert.propTypes = {
   dismissible: PropTypes.bool,
   children: PropTypes.node.isRequired,
   onDismiss: PropTypes.func,
+  onConfirm: PropTypes.func,
+  onCancel: PropTypes.func,
+  showActions: PropTypes.bool,
 };
 
 export default MDAlert;
