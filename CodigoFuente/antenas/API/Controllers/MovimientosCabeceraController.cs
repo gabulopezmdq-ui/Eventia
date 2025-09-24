@@ -143,7 +143,7 @@ namespace API.Controllers
         [HttpPost("AddMovCabecera")]
         public async Task<ActionResult> Post([FromBody] MEC_MovimientosCabecera movimientos)
         {
-            await _serviceCabecera.Add(movimientos);
+            await _movimientosDetalle.AddCabeceraFecha(movimientos);
             return Ok(movimientos);
         }
 
