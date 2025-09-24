@@ -26,14 +26,18 @@ namespace API.DataSchema.ModelConfiguration
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
-            builder.Property(e => e.Area);
 
-            builder.Property(e => e.Mes);
+            builder.Property(e => e.Area)
+                .IsRequired(false);
 
-            builder.Property(e => e.Anio);
+            builder.Property(e => e.Mes)
+                .IsRequired(false);
+
+            builder.Property(e => e.Anio)
+                .IsRequired(false);
 
             builder.Property(e => e.Fecha)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.Modificaciones)
                .IsRequired(false);
@@ -55,7 +59,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.Observaciones)
             .HasColumnType("char(1000)")
-            .IsFixedLength(true);
+            .IsFixedLength(false);
 
             builder.Property(e => e.Estado)
            .HasColumnType("char(1)")

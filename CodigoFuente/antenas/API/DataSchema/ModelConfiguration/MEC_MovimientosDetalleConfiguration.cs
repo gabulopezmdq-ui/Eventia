@@ -34,7 +34,7 @@ namespace API.DataSchema.ModelConfiguration
               .HasOne(p => p.POF)
               .WithMany(t => t.MovimientosDetalle)
               .HasForeignKey(p => p.IdPOF)
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder
                 .Navigation(e => e.POF)
@@ -45,7 +45,7 @@ namespace API.DataSchema.ModelConfiguration
                .HasOne(p => p.TipoFuncion)
                .WithMany(t => t.MovimientosDetalle)
                .HasForeignKey(p => p.IdTipoFuncion)
-               .IsRequired(true);
+               .IsRequired(false);
 
             builder
                 .Navigation(e => e.TipoFuncion)
@@ -56,7 +56,7 @@ namespace API.DataSchema.ModelConfiguration
                  .HasOne(p => p.TipoCategoria)
                  .WithMany(t => t.MovimientosDetalle)
                  .HasForeignKey(p => p.IdTipoCategoria)
-                 .IsRequired(true);
+                 .IsRequired(false);
 
             builder
                 .Navigation(e => e.TipoCategoria)
@@ -67,7 +67,7 @@ namespace API.DataSchema.ModelConfiguration
               .HasOne(p => p.MotivosBajasDoc)
               .WithMany(t => t.MovimientosDetalle)
               .HasForeignKey(p => p.IdMotivoBaja)
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder
                 .Navigation(e => e.MotivosBajasDoc)
@@ -124,7 +124,7 @@ namespace API.DataSchema.ModelConfiguration
               .IsRequired(false);
 
             builder.Property(e => e.FechaInicioBaja)
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.Observaciones)
                .HasColumnType("char(1000)")
