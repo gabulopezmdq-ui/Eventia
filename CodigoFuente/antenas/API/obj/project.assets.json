@@ -11919,19 +11919,32 @@
     ]
   },
   "packageFolders": {
+<<<<<<< HEAD
     "C:\\Users\\efrontera\\.nuget\\packages\\": {}
+=======
+    "C:\\Users\\jcgarcia\\.nuget\\packages\\": {}
+>>>>>>> origin/juancruz
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+      "projectUniqueName": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
       "projectName": "API",
+<<<<<<< HEAD
       "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
       "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
       "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
+=======
+      "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+      "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
+>>>>>>> origin/juancruz
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -12091,7 +12104,11 @@
             "privateAssets": "all"
           }
         },
+<<<<<<< HEAD
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+>>>>>>> origin/juancruz
       }
     }
   }

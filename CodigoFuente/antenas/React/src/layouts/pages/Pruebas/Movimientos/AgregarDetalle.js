@@ -29,7 +29,7 @@ export default function AgregarDetalle({
     numDoc: "",
     categoria: "",
     horas: "",
-    antigAnos: "",
+    antigAnios: "",
     antigMeses: "",
     observaciones: "",
     idTipoFuncion: "",
@@ -50,7 +50,7 @@ export default function AgregarDetalle({
   };
   const handleSubmit = () => {
     console.log("Entre a la peticion");
-    const noRequeridos = ["horas", "antigAnos", "antigMeses"];
+    const noRequeridos = ["horas", "antigAnios", "antigMeses"];
 
     // Campos que no aplican en cada flujo
     if (isAlta) {
@@ -239,6 +239,8 @@ export default function AgregarDetalle({
   const situacionRevistaOpciones = [
     { value: "11", label: "Docente Titular" },
     { value: "P", label: "Provisorio" },
+    { value: "PJ", label: " Provisorio Jubilado" },
+    { value: "PE", label: "Provisorio en Trámite" },
     { value: "21", label: "Docente Suplente" },
     { value: "31", label: "Docente suplente de titular en licencia por maternidad" },
   ];
@@ -247,6 +249,7 @@ export default function AgregarDetalle({
     { value: "M", label: "Mañana" },
     { value: "T", label: "Tarde" },
     { value: "N", label: "Noche" },
+    { value: "A", label: "Alternado" },
   ];
 
   const documentoOpciones = [
@@ -389,7 +392,7 @@ export default function AgregarDetalle({
                         apellido: docenteSeleccionado.personaApellido,
                         idTipoFuncion: docenteSeleccionado.idTipoFuncion || "",
                         numDoc: docenteSeleccionado.personaDNI || "",
-                        antigAnos: docenteSeleccionado.anioAntiguedad || "",
+                        antigAnios: docenteSeleccionado.anioAntiguedad || "",
                         antigMeses: docenteSeleccionado.mesAntiguedad || "",
                         funcion:
                           funcionesOpciones.find(
@@ -562,11 +565,11 @@ export default function AgregarDetalle({
               </Grid>
               <Grid item xs={6} sm={3}>
                 <TextField
-                  name="antigAnos"
+                  name="antigAnios"
                   label="Antig. Años"
                   fullWidth
                   disabled={isBajaOModifOAdic}
-                  value={form.antigAnos}
+                  value={form.antigAnios}
                   onChange={handleChange}
                 />
               </Grid>
