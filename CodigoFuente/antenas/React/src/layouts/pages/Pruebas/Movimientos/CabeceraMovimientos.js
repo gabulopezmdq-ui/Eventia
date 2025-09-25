@@ -39,7 +39,7 @@ function CabeceraMovimientos() {
       setUserRoles(userRolesFromToken);
       if (userRolesFromToken.includes("SuperAdmin")) {
         const movimientosResponse = await axios.get(
-          `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAll`,
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAllCabeceras`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -65,7 +65,7 @@ function CabeceraMovimientos() {
 
         // Luego traigo todos los movimientos
         const movimientosResponse = await axios.get(
-          `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAll`,
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAllCabeceras`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -295,8 +295,6 @@ function CabeceraMovimientos() {
 
       const data = response.data.detalles;
       const user = response.data;
-
-      // Filtrar solo los tipos de movimiento "M" y "B"
       const filteredData = data.filter(
         (item) => item.tipoMovimiento === "M" || item.tipoMovimiento === "B"
       );
@@ -353,6 +351,11 @@ function CabeceraMovimientos() {
                     { Header: "Año", accessor: "anio", Cell: ({ value }) => value ?? "" },
                     { Header: "Mes", accessor: "mes", Cell: ({ value }) => value ?? "" },
                     { Header: "Establecimiento", accessor: "establecimientos.nroEstablecimiento" },
+                    {
+                      Header: "Apellidos",
+                      accessor: "apellidos",
+                      Cell: ({ value }) => value ?? "",
+                    },
                     {
                       Header: "Estado",
                       accessor: "estado",
@@ -412,7 +415,7 @@ function CabeceraMovimientos() {
                                 color="info"
                                 onClick={() => handleImprimir(row.original)}
                               >
-                                Imprimir
+                                Reporte
                               </MDButton>
                             )}
                             {(userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) &&

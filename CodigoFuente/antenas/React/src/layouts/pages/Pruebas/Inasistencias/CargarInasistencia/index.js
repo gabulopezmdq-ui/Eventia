@@ -118,7 +118,7 @@ function CargarInasistencia() {
     setUESeleccionada(seleccionado.establecimientos?.ue || "");
 
     try {
-      // 🔑 limpiar resultados y estados previos
+      // limpiar resultados y estados previos
       setCabeceraCargar([]);
       setProcesados([]);
       setErroresProcesados([]);
