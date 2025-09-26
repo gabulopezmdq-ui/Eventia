@@ -17,6 +17,8 @@ import DataTable from "examples/Tables/DataTable";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
+import MDAlert from "components/MDAlert";
+import MDTypography from "components/MDTypography";
 import DetallePopup from "./DetallePopUp";
 import AgregarDetalle from "./AgregarDetalle";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -37,6 +39,9 @@ function AltaCabeceraMovimientos() {
   const [cabeceras, setCabeceras] = useState([]);
   const [cabeceraSeleccionada, setCabeceraSeleccionada] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
+  const [alertDetalle, setAlertDetalle] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const [formData, setFormData] = useState({
     area: "L",
@@ -228,11 +233,22 @@ function AltaCabeceraMovimientos() {
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       if (response.data === false || response.data?.success === false) {
-        alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
-        navigate(-1);
+        setAlertMessage(
+          "Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área"
+        );
+        setAlertType("error");
+        setAlertDetalle(true);
+        setTimeout(() => {
+          setAlertDetalle(false);
+          setAlertMessage("");
+          setAlertType("");
+          navigate(-1);
+        }, 5000);
         return;
       }
+
       if (response.data && response.data.idMovimientoCabecera) {
         setIdCabecera(response.data.idMovimientoCabecera);
         fetchDetalles(response.data.idMovimientoCabecera);
@@ -240,24 +256,45 @@ function AltaCabeceraMovimientos() {
         setDetallesCargados(false);
       }
 
-      alert("Alta exitosa de la Cabecera");
+      setAlertMessage("Alta exitosa de la Cabecera ✅");
+      setAlertType("success");
+      setAlertDetalle(true);
+      setTimeout(() => {
+        setAlertDetalle(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
+
       setFormDeshabilitado(true);
       setMostrarDetalle(true);
     } catch (err) {
       if (err.response) {
         const backendError = err.response.data?.error;
         if (backendError) {
-          alert(backendError);
+          setAlertMessage(backendError);
+          setAlertType("error");
         } else if (err.response.status === 404) {
-          alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
+          setAlertMessage(
+            "Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área"
+          );
+          setAlertType("error");
         } else {
           console.error("Error al guardar", err.response);
-          alert("Error en el servidor");
+          setAlertMessage("Error en el servidor");
+          setAlertType("error");
         }
       } else {
         console.error("Error al guardar", err);
-        alert("Error al guardar");
+        setAlertMessage("Error al guardar");
+        setAlertType("error");
       }
+
+      setAlertDetalle(true);
+      setTimeout(() => {
+        setAlertDetalle(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
     }
   };
   const handleDetalleSubmit = async (detalleData) => {
@@ -276,13 +313,27 @@ function AltaCabeceraMovimientos() {
       });
 
       if (response.status === 200) {
-        alert("Detalle guardado correctamente");
+        setAlertMessage("Detalle guardado correctamente");
+        setAlertType("success");
+        setAlertDetalle(true);
+        setTimeout(() => {
+          setAlertDetalle(false);
+          setAlertMessage("");
+          setAlertType("");
+        }, 5000);
         fetchDetalles(idCabecera);
         setMostrarFormularioDetalle(false);
       }
     } catch (error) {
       console.error("Error al guardar el detalle:", error);
-      alert("Error al guardar el detalle");
+      setAlertMessage("Error al guardar el detalle");
+      setAlertType("error");
+      setAlertDetalle(true);
+      setTimeout(() => {
+        setAlertDetalle(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
     }
   };
 
@@ -301,11 +352,28 @@ function AltaCabeceraMovimientos() {
       await axios.delete(`${process.env.REACT_APP_API_URL}MovimientosCabecera/EliminarDetalle`, {
         params: { IdMovimientoDetalle: id },
       });
+
       await fetchDetalles(idCabecera);
-      console.log(`Detalle con id ${id} eliminado correctamente`);
+
+      setAlertMessage(`Detalle con id ${id} eliminado correctamente`);
+      setAlertType("success");
+      setAlertDetalle(true);
+      setTimeout(() => {
+        setAlertDetalle(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
     } catch (error) {
       console.error("Error al eliminar:", error);
-      alert("❌ No se pudo eliminar el detalle. Intente nuevamente.");
+
+      setAlertMessage("No se pudo eliminar el detalle. Intente nuevamente.");
+      setAlertType("error");
+      setAlertDetalle(true);
+      setTimeout(() => {
+        setAlertDetalle(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 5000);
     }
   };
   return (
@@ -519,7 +587,15 @@ function AltaCabeceraMovimientos() {
             )}
           </>
         )}
-
+        {alertDetalle && (
+          <MDBox mt={3}>
+            <MDAlert color={alertType} dismissibleonClose={() => setAlertDetalle(false)}>
+              <MDTypography variant="body2" color="white">
+                {alertMessage}
+              </MDTypography>
+            </MDAlert>
+          </MDBox>
+        )}
         {detalles.length > 0 && (
           <>
             <MDBox mt={3}>
