@@ -223,6 +223,7 @@ namespace API.Services
         }
 
         //BORRADO DEFINITIVO POV
+        //AGREGAR VALIDACIONES PARA QUE NO ELIMINE ALGUNA POF CON REGISTROS ASOCIADOS
         public async Task<bool> EliminarPOF(int IdPOF)
         {
             var POF= await _context.MEC_POF
