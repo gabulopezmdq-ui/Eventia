@@ -226,15 +226,35 @@ namespace API.Services
         //AGREGAR VALIDACIONES PARA QUE NO ELIMINE ALGUNA POF CON REGISTROS ASOCIADOS
         public async Task<bool> EliminarPOF(int IdPOF)
         {
-            var POF= await _context.MEC_POF
-                           .AsNoTracking()
-                           .FirstOrDefaultAsync(d => d.IdPOF == IdPOF);
+            // Verificamos si existe la POF
+            var pof = await _context.MEC_POF
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.IdPOF == IdPOF);
 
-            int idPOF = POF.IdPOF;
+            if (pof == null)
+                return false; 
 
-            var id = new MEC_POF { IdPOF = IdPOF};
-            _context.MEC_POF.Attach(id);
-            _context.MEC_POF.Remove(id);
+            if (await _context.MEC_Mecanizadas.AnyAsync(m => m.IdPOF == IdPOF))
+                throw new InvalidOperationException("No se puede eliminar: tiene mecanizadas asociadas.");
+
+            if (await _context.MEC_BajasDetalle.AnyAsync(b => b.IdPOF == IdPOF))
+                throw new InvalidOperationException("No se puede eliminar: tiene bajas asociadas.");
+
+            if (await _context.MEC_MovimientosDetalle.AnyAsync(md => md.IdPOF == IdPOF))
+                throw new InvalidOperationException("No se puede eliminar: tiene movimientos detalle asociados.");
+
+            if (await _context.MEC_MovimientosBajas.AnyAsync(mb => mb.IdPOF == IdPOF))
+                throw new InvalidOperationException("No se puede eliminar: tiene movimientos de baja asociados.");
+
+            if (await _context.MEC_POF_Barras.AnyAsync(pb => pb.IdPOF == IdPOF && pb.Vigente == "S"))
+                throw new InvalidOperationException("No se puede eliminar: tiene barras asociadas.");
+
+            if (await _context.MEC_InasistenciasDetalle.AnyAsync(i => i.IdPOF == IdPOF))
+                throw new InvalidOperationException("No se puede eliminar: tiene inasistencias asociadas.");
+
+            var entity = new MEC_POF { IdPOF = IdPOF };
+            _context.MEC_POF.Attach(entity);
+            _context.MEC_POF.Remove(entity);
 
             await _context.SaveChangesAsync();
             return true;
