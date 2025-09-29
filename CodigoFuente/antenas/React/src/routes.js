@@ -119,7 +119,7 @@ const routes = [
       },
       {
         name: "Super Cabecera",
-        key: "SuperCabecera",
+        key: "superCabecera",
         route: "/SuperCabecera",
         component: <SuperCabecera />,
         roles: ["admin", "superadmin", "secretario"],
