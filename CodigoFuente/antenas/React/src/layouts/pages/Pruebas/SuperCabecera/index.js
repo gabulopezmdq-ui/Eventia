@@ -31,23 +31,21 @@ function SuperCabecera() {
       const rolesKey = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
       const userRolesFromToken = decodedToken[rolesKey] || [];
       setUserRoles(userRolesFromToken);
-
-      // Obtener todas las cabeceras
-      const response = await axios.get(`https://localhost:44382/MovimientosCabecera/GetAll`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAll`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       let cabeceras = response.data;
 
       if (!userRolesFromToken.includes("SuperAdmin")) {
-        // Traer ids de establecimientos asociados
         const rolesResponse = await axios.get(
-          `https://localhost:44382/MovimientosCabecera/RolesEst?id=${userId}`,
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/RolesEst?id=${userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const { idsEstablecimientos } = rolesResponse.data;
-
-        // Filtrar según establecimientos asociados
         cabeceras = cabeceras.filter((c) => idsEstablecimientos.includes(c.idEstablecimiento));
       }
 
@@ -64,8 +62,6 @@ function SuperCabecera() {
   const handleNuevoSuperCabecera = () => {
     navigate("/SuperCabecera/Nuevo");
   };
-
-  // Función para traducir el número de mes a texto
   const convertirMes = (mesNumerico) => {
     const meses = [
       "ENERO",
@@ -124,7 +120,6 @@ function SuperCabecera() {
             <DataTable
               table={{
                 columns: [
-                  //{ Header: "ID", accessor: "idSuperCabecera" },
                   { Header: "Área", accessor: "area" },
                   { Header: "Año", accessor: "anio" },
                   {
