@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Grid, Select, MenuItem, InputLabel, FormControl, TextField } from "@mui/material";
+import MDAlert from "components/MDAlert";
+import MDTypography from "components/MDTypography";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
@@ -12,6 +14,9 @@ import jwt_decode from "jwt-decode";
 function AltaSuperCabecera() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("");
   const token = sessionStorage.getItem("token");
 
   const [formData, setFormData] = useState({
@@ -46,11 +51,10 @@ function AltaSuperCabecera() {
     { label: "Diciembre", value: 12 },
   ];
 
-  // Cargar establecimientos y cabecera si es edición
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
-        const res = await axios.get("https://localhost:44382/Establecimientos/GetAll", {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}Establecimientos/GetAll`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setEstablecimientos(res.data);
@@ -65,7 +69,7 @@ function AltaSuperCabecera() {
       const fetchCabecera = async () => {
         try {
           const res = await axios.get(
-            `https://localhost:44382/MovimientosCabecera/GetById?id=${id}`,
+            `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetById?id=${id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
 
@@ -86,35 +90,54 @@ function AltaSuperCabecera() {
     }
   }, [id, token]);
 
-  // Manejo de cambios en el formulario
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Guardar nueva SuperCabecera
   const handleSubmit = async () => {
     try {
       const response = await axios.post(
-        "https://localhost:44382/MovimientosCabecera/CabeceraMovimiento",
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/CabeceraMovimiento`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data === false || response.data?.success === false) {
-        alert("Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área");
-        navigate(-1);
+        setAlertMessage(
+          "Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área"
+        );
+        setAlertType("error");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+          setAlertMessage("");
+          setAlertType("");
+          navigate(-1);
+        }, 3000);
         return;
       }
 
-      alert("✅ Alta exitosa de la SuperCabecera");
-      navigate("/SuperCabecera"); // volver al listado
+      setAlertMessage("Alta exitosa de la SuperCabecera");
+      setAlertType("success");
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+        setAlertMessage("");
+        setAlertType("");
+        navigate(-1);
+      }, 3000);
     } catch (err) {
-      console.error("Error al guardar SuperCabecera", err);
-      alert("❌ Error al guardar la SuperCabecera");
+      const backendMessage = err.response?.data?.error || "Error guardar";
+      setAlertMessage(backendMessage);
+      setAlertType("error");
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+        setAlertMessage("");
+        setAlertType("");
+      }, 3000);
     }
   };
-
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -198,6 +221,13 @@ function AltaSuperCabecera() {
             </MDBox>
           )}
         </Card>
+        {showAlert && (
+          <MDAlert mt={2} color={alertType} dismissible>
+            <MDTypography variant="body2" color="white">
+              {alertMessage}
+            </MDTypography>
+          </MDAlert>
+        )}
       </MDBox>
     </DashboardLayout>
   );

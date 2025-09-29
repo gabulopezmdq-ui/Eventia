@@ -51,6 +51,8 @@ function PlantaFuncional() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [idToDelete, setIdToDelete] = useState(null);
   const [dataTableData, setDataTableData] = useState([]);
+  const [personaSeleccionada, setPersonaSeleccionada] = useState(null);
+
   const [formData, setFormData] = useState({
     apellido: "",
     nombre: "",
@@ -501,8 +503,9 @@ function PlantaFuncional() {
     return persona.vigente === selectedFilter;
   });
 
-  const confirmDelete = (idPof) => {
+  const confirmDelete = (idPof, personaData) => {
     setIdToDelete(idPof);
+    setPersonaSeleccionada(personaData);
     setShowConfirm(true);
   };
 
@@ -523,10 +526,12 @@ function PlantaFuncional() {
     } catch (error) {
       console.error("Error eliminando el registro:", error);
       setShowAlert(true);
-      setAlertMessage("Error al eliminar el registro");
+      const backendMessage = error.response?.data?.error || "Error al eliminar el registro";
+      setAlertMessage(backendMessage);
       setAlertType("error");
     } finally {
       setShowConfirm(false);
+      setPersonaSeleccionada(null);
       setIdToDelete(null);
 
       setTimeout(() => {
@@ -572,13 +577,6 @@ function PlantaFuncional() {
             </Grid>
           </Grid>
         </MDBox>
-        {showAlert && (
-          <MDAlert color={alertType} dismissible>
-            <MDTypography variant="body2" color="white">
-              {alertMessage}
-            </MDTypography>
-          </MDAlert>
-        )}
         {isDataLoaded ? (
           personas.length === 0 ? (
             <MDBox mt={3}>
@@ -655,12 +653,28 @@ function PlantaFuncional() {
                         style={{ display: "flex" }}
                       >
                         <MDTypography variant="body2" color="white">
-                          ¿Estás seguro de eliminar este registro?
+                          ¿Estás seguro de eliminar el registro{" "}
+                          {personaSeleccionada && (
+                            <>
+                              de{" "}
+                              <strong>
+                                {personaSeleccionada.apellido} {personaSeleccionada.nombre}
+                              </strong>
+                              ?
+                            </>
+                          )}
                         </MDTypography>
                       </MDAlert>
                     </MDBox>
                   </Grid>
                 </Grid>
+              )}
+              {showAlert && (
+                <MDAlert color={alertType} dismissible>
+                  <MDTypography variant="body2" color="white">
+                    {alertMessage}
+                  </MDTypography>
+                </MDAlert>
               )}
               <Card>
                 <MDBox display="flex" justifyContent="flex-end" mt={2} mr={4}>
@@ -717,7 +731,7 @@ function PlantaFuncional() {
                                   variant="gradient"
                                   color="error"
                                   size="small"
-                                  onClick={() => confirmDelete(row.original.idPof)}
+                                  onClick={() => confirmDelete(row.original.idPof, row.original)}
                                 >
                                   Eliminar Permanente
                                 </MDButton>
