@@ -340,7 +340,14 @@ export default function AgregarDetalle({
                   label="Apellido"
                   fullWidth
                   value={form.apellido}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    handleChange({
+                      target: {
+                        name: e.target.name,
+                        value: e.target.value.toUpperCase(),
+                      },
+                    })
+                  }
                   error={!!errors.apellido}
                   helperText={
                     errors.apellido && (
@@ -356,7 +363,14 @@ export default function AgregarDetalle({
                   label="Nombre"
                   fullWidth
                   value={form.nombre}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    handleChange({
+                      target: {
+                        name: e.target.name,
+                        value: e.target.value.toUpperCase(),
+                      },
+                    })
+                  }
                   error={!!errors.nombre}
                   helperText={
                     errors.nombre && (
