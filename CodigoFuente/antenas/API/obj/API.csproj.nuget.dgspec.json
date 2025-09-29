@@ -9,6 +9,7 @@
       "restore": {
         "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
         "projectName": "API",
+<<<<<<< HEAD
         "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
         "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
         "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
@@ -19,6 +20,14 @@
         "configFilePaths": [
           "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+=======
+        "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj",
+        "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
+>>>>>>> origin/juancruz
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -178,7 +187,11 @@
               "privateAssets": "all"
             }
           },
+<<<<<<< HEAD
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+=======
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+>>>>>>> origin/juancruz
         }
       }
     }

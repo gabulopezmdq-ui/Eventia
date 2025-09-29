@@ -125,6 +125,7 @@ function AltaSuperCabecera() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Área</InputLabel>
                 <Select
+                  label="Area"
                   name="area"
                   value={formData.area}
                   onChange={handleInputChange}
@@ -144,6 +145,7 @@ function AltaSuperCabecera() {
                 <InputLabel>Mes</InputLabel>
                 <Select
                   name="mes"
+                  label="Mes"
                   value={formData.mes}
                   onChange={handleInputChange}
                   style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -172,6 +174,7 @@ function AltaSuperCabecera() {
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Establecimiento</InputLabel>
                 <Select
+                  label="Establecimiento"
                   name="idEstablecimiento"
                   value={formData.idEstablecimiento}
                   onChange={handleInputChange}
