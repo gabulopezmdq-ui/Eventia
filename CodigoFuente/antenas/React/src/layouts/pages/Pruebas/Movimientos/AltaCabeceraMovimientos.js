@@ -41,6 +41,7 @@ function AltaCabeceraMovimientos() {
   const [openPopup, setOpenPopup] = useState(false);
   const [alertDetalle, setAlertDetalle] = useState(false);
   const [alertType, setAlertType] = useState("");
+  const [categorias, setCategorias] = useState([]);
   const [alertMessage, setAlertMessage] = useState("");
 
   const [formData, setFormData] = useState({
@@ -95,7 +96,6 @@ function AltaCabeceraMovimientos() {
     { label: "Enviado a Educación", value: "E" },
     { label: "Enviado a Provincia", value: "V" },
   ];
-
   useEffect(() => {
     const fetchCabeceras = async () => {
       try {
@@ -180,6 +180,16 @@ function AltaCabeceraMovimientos() {
       fetchCabecera();
     }
   }, [id, token]);
+  const fetchCategorias = async () => {
+    try {
+      const res = await axios.get(process.env.REACT_APP_API_URL + "tiposcategorias/getall", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCategorias(res.data);
+    } catch (err) {
+      console.error("Error al obtener categorías:", err);
+    }
+  };
 
   const fetchDetalles = async (cabeceraId) => {
     try {
@@ -188,7 +198,17 @@ function AltaCabeceraMovimientos() {
           `MovimientosCabecera/DetallesCabecera?IdCabecera=${cabeceraId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setDetalles(res.data);
+
+      const detallesConCategoria = res.data.map((detalle) => {
+        console.log("detalle: ", detalle);
+        const categoria = categorias.find((c) => c.idTipoCategoria === detalle.idTipoCategoria);
+        return {
+          ...detalle,
+          idTipoCategoria: categoria ? categoria.descripcion : "Sin categoría",
+        };
+      });
+
+      setDetalles(detallesConCategoria);
       setDetallesCargados(true);
     } catch (err) {
       if (err.response?.status === 404) {
@@ -201,6 +221,15 @@ function AltaCabeceraMovimientos() {
       }
     }
   };
+  useEffect(() => {
+    fetchCategorias();
+  }, []);
+
+  useEffect(() => {
+    if (categorias.length > 0 && idCabecera) {
+      fetchDetalles(idCabecera);
+    }
+  }, [categorias, idCabecera]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
