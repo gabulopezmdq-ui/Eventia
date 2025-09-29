@@ -221,9 +221,7 @@ namespace API.Services
                 cabecera.Observaciones = dto.Observaciones;
                 cabecera.Estado = dto.Estado;
                 cabecera.Fecha = DateTime.Now;
-                await ActualizarApellidosCabeceraAsync(cabecera.IdMovimientoCabecera);
 
-                _context.MEC_MovimientosCabecera.Update(cabecera);
                 await _context.SaveChangesAsync();
 
                 // Agregar detalle
@@ -251,6 +249,8 @@ namespace API.Services
 
                 await _context.MEC_MovimientosDetalle.AddAsync(detalle);
                 await _context.SaveChangesAsync();
+
+                await ActualizarApellidosCabeceraAsync(cabecera.IdMovimientoCabecera);
 
                 await transaction.CommitAsync();
             }
@@ -451,8 +451,11 @@ namespace API.Services
                     FechaFin = nuevoDetalle.FechaFinBaja,
                 };
 
+
                 _context.MEC_MovimientosBajas.Add(bajas);
                 await _context.SaveChangesAsync();
+
+                await ActualizarApellidosCabeceraAsync(cabecera.IdMovimientoCabecera);
 
                 await tx.CommitAsync();
                 return true;
@@ -501,20 +504,21 @@ namespace API.Services
         public async Task<bool> EliminarDetalle(int IdMovimientoDetalle)
         {
             var detalle = await _context.MEC_MovimientosDetalle
-                           .FirstOrDefaultAsync(d => d.IdMovimientoDetalle == IdMovimientoDetalle);
+                                   .FirstOrDefaultAsync(d => d.IdMovimientoDetalle == IdMovimientoDetalle);
 
             if (detalle == null)
-            {
-                // No existe el detalle, podés devolver false o lanzar excepción controlada
                 return false;
-            }
 
             int idCabecera = detalle.IdMovimientoCabecera;
 
             _context.MEC_MovimientosDetalle.Remove(detalle);
 
-            await ActualizarApellidosCabeceraAsync(idCabecera);
+            // ✅ Primero guardo la eliminación
             await _context.SaveChangesAsync();
+
+            // ✅ Después recalculo apellidos sin ese detalle
+            await ActualizarApellidosCabeceraAsync(idCabecera);
+
             return true;
         }
         //en caso de que siga habiendo un error en el find con IdMOvimientoDetalle, utilizar la version con RAW SQL
@@ -536,54 +540,15 @@ namespace API.Services
         public async Task AgregarDetalle(MEC_MovimientosDetalle detalle)
         {
             _context.MEC_MovimientosDetalle.Add(detalle);
+            var cabecera = await _context.MEC_MovimientosCabecera
+                    .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == detalle.IdMovimientoCabecera);
+
+            if (cabecera == null)
+                throw new Exception("Movimiento cabecera no encontrado.");
+
             await _context.SaveChangesAsync();
-            //var decrece = detalle.Decrece?.ToUpper() ?? "N";
-            //if (decrece == "S")
-            //{
-            //    _context.MEC_MovimientosDetalle.Add(detalle);
-            //    await _context.SaveChangesAsync();
-            //    //try
-            //    //{
+            await ActualizarApellidosCabeceraAsync(cabecera.IdMovimientoCabecera);
 
-
-            //    //    var cabecera = await _context.MEC_MovimientosCabecera
-            //    //    .Include(c => c.Establecimientos)
-            //    //    .AsNoTracking()
-            //    //    .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == detalle.IdMovimientoCabecera);
-
-            //    //    var bajas = new MEC_MovimientosBajas
-            //    //    {
-            //    //        IdTipoEstablecimiento = cabecera.Establecimientos.IdTipoEstablecimiento,
-            //    //        Anio = cabecera.Anio,
-            //    //        IdEstablecimiento = cabecera.Establecimientos.IdEstablecimiento,
-            //    //        SuplenteDNI = null,
-            //    //        SuplenteApellido = null,
-            //    //        SuplenteNombre = null,
-            //    //        CantHoras = detalle.Horas,
-            //    //        Estado = "H",
-            //    //        Ingreso = null,
-            //    //        IngresoDescripcion = null,
-            //    //        Observaciones = null,
-            //    //        IdPOF = detalle.IdPOF,
-            //    //        IdMotivoBaja = detalle.IdMotivoBaja,
-            //    //        FechaInicio = detalle.FechaInicioBaja,
-            //    //        FechaFin = detalle.FechaFinBaja,
-            //    //    };
-
-            //    //    _context.MEC_MovimientosBajas.Add(bajas);
-            //    //    await _context.SaveChangesAsync();
-            //    //}
-
-            //    //catch
-            //    //{
-            //    //    throw;   
-            //    //}
-            //}
-            //else if(decrece == "N" )
-            //{
-            //    _context.MEC_MovimientosDetalle.Add(detalle);
-            //    await _context.SaveChangesAsync();
-            //}
         }
 
         //Datos para el reporte
@@ -668,40 +633,51 @@ namespace API.Services
         public async Task ActualizarApellidosCabeceraAsync(int idMovimientoCabecera)
         {
             var detalles = await _context.MEC_MovimientosDetalle
-                .Where(d => d.IdMovimientoCabecera == idMovimientoCabecera)
-                .ToListAsync();
+        .Where(d => d.IdMovimientoCabecera == idMovimientoCabecera)
+        .ToListAsync();
 
             var apellidos = new List<string>();
 
-            foreach (var d in detalles)
-            {
-                if (d.TipoMovimiento == "A")
-                {
-                    if (!string.IsNullOrWhiteSpace(d.Apellido))
-                        apellidos.Add(d.Apellido.Trim());
-                }
-                else if(d.TipoMovimiento == "B")
-                {
-                    if (d.IdPOF.HasValue)
-                    {
-                        var pof = await _context.MEC_POF
-                            .Where(p => p.IdPOF == d.IdPOF.Value)
-                            .Select(p => p.Persona.Apellido)
-                            .FirstOrDefaultAsync();
+            // ✅ Tipo A: tomo directo de detalle
+            apellidos.AddRange(
+                detalles
+                    .Where(d => (d.TipoMovimiento == "A" || d.TipoMovimiento == "M" || d.TipoMovimiento == "D") && !string.IsNullOrWhiteSpace(d.Apellido))
+                    .Select(d => d.Apellido.Trim())
+            );
 
-                        if (!string.IsNullOrWhiteSpace(pof))
-                            apellidos.Add(pof.Trim());
-                    }
-                }
+            // ✅ Tipo B: traigo los apellidos desde MEC_POF en UNA sola query
+            var idsPOF = detalles
+                .Where(d => d.TipoMovimiento == "B" && d.IdPOF.HasValue)
+                .Select(d => d.IdPOF.Value)
+                .Distinct()
+                .ToList();
+
+            if (idsPOF.Any())
+            {
+                var apellidosPOF = await _context.MEC_POF
+                    .Where(p => idsPOF.Contains(p.IdPOF))
+                    .Select(p => p.Persona.Apellido)
+                    .ToListAsync();
+
+                apellidos.AddRange(
+                    apellidosPOF.Where(a => !string.IsNullOrWhiteSpace(a))
+                                .Select(a => a.Trim())
+                );
             }
 
+            // ✅ Actualizo cabecera con todos los apellidos concatenados
             var cabecera = await _context.MEC_MovimientosCabecera
                 .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == idMovimientoCabecera);
 
             if (cabecera != null)
             {
-                cabecera.Apellidos = string.Join(", ", apellidos);
+                cabecera.Apellidos = apellidos.Any()
+                    ? string.Join(", ", apellidos)
+                    : null;
+
                 _context.MEC_MovimientosCabecera.Update(cabecera);
+                _context.Entry(cabecera).Property(c => c.Estado).IsModified = false;
+
                 await _context.SaveChangesAsync();
             }
         }
