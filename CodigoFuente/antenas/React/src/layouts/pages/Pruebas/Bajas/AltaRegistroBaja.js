@@ -238,6 +238,7 @@ function AltaRegistroBaja() {
                     <InputLabel>Nivel</InputLabel>
                     <Select
                       value={nivelSeleccionado}
+                      label="Nivel"
                       onOpen={fetchNiveles}
                       onChange={(e) => setNivelSeleccionado(Number(e.target.value))}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -259,6 +260,7 @@ function AltaRegistroBaja() {
                   <FormControl fullWidth>
                     <InputLabel>Año</InputLabel>
                     <Select
+                      label="Año"
                       value={anioSeleccionado}
                       onChange={(e) => setAnioSeleccionado(Number(e.target.value))}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -277,6 +279,7 @@ function AltaRegistroBaja() {
                   <FormControl fullWidth>
                     <InputLabel>Establecimiento</InputLabel>
                     <Select
+                      label="Establecimiento"
                       value={establecimientoSeleccionado?.idEstablecimiento || ""}
                       onChange={(e) => {
                         const est = establecimientos.find(
@@ -406,6 +409,7 @@ function AltaRegistroBaja() {
                   <FormControl fullWidth>
                     <InputLabel>Motivo</InputLabel>
                     <Select
+                      label="Motivo"
                       value={motivoSeleccionado}
                       onChange={(e) => setMotivoSeleccionado(Number(e.target.value))}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -425,6 +429,7 @@ function AltaRegistroBaja() {
                     <InputLabel>Ingreso</InputLabel>
                     <Select
                       value={ingreso}
+                      label="Ingreso"
                       onChange={(e) => {
                         const value = e.target.value;
                         setIngreso(value);
