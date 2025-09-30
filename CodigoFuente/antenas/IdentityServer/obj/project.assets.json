@@ -12676,19 +12676,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\efrontera\\.nuget\\packages\\": {}
+    "C:\\Users\\jcgarcia\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectUniqueName": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
-      "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-      "packagesPath": "C:\\Users\\efrontera\\.nuget\\packages\\",
-      "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+      "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\efrontera\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -12702,8 +12702,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
-              "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
+            "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\API.csproj"
             }
           }
         }
@@ -12776,7 +12776,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
       }
     }
   }
