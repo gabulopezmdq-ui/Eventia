@@ -550,8 +550,15 @@ namespace API.Services
             if (usuario == null)
                 throw new InvalidOperationException("Usuario no encontrado.");
 
+            var cabecera = await _context.MEC_MovimientosCabecera
+                .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == idCabecera && c.Estado == "E");
+
+            if (cabecera == null)
+                throw new InvalidOperationException("Cabecera no encontrada o no está en estado E.");
+
+            //detalles
             var detalles = await _context.MEC_MovimientosDetalle
-                .Where(d => d.IdMovimientoCabecera == idCabecera)
+                .Where(d => d.IdMovimientoCabecera == idCabecera && d.MovimientoCabecera.Estado == "E" && d.TipoMovimiento== "B" )
                 .Select(d => new MovimientosDetalleDTO
                 {
                     IdMovimientoCabecera = d.IdMovimientoCabecera,
@@ -578,12 +585,37 @@ namespace API.Services
                 })
                 .ToListAsync();
 
+            //baja
+            var bajas = await _context.MEC_MovimientosBajas
+              .Where(b => b.IdEstablecimiento == cabecera.IdEstablecimiento
+                       && b.Anio == cabecera.Anio && b.Ingreso == null)
+              .Select(b => new MovimientosBajasDTO
+              {
+                  IdMovimientoBaja = b.IdMovimientoBaja,
+                  IdEstablecimiento = b.IdEstablecimiento,
+                  IdPOF = b.IdPOF,
+                  IdMotivoBaja = b.IdMotivoBaja,
+                  Anio = b.Anio,
+                  SuplenteDNI = b.SuplenteDNI,
+                  SuplenteApellido = b.SuplenteApellido,
+                  SuplenteNombre = b.SuplenteNombre,
+                  FechaInicio = b.FechaInicio,
+                  FechaFin = b.FechaFin,
+                  CantHoras = b.CantHoras,
+                  Estado = b.Estado,
+                  Ingreso = b.Ingreso,
+                  IngresoDescripcion = b.IngresoDescripcion,
+                  Observaciones = b.Observaciones
+              })
+              .ToListAsync();
+
             var resultado = new DetalleReporteDTO
             {
                 Usuario = usuario.Nombre,
                 NombrePersona = usuario.NombrePersona,
                 ApellidoPersona = usuario.ApellidoPersona,
-                Detalles = detalles
+                Detalles = detalles,
+                Bajas = bajas
             };
 
             return resultado;

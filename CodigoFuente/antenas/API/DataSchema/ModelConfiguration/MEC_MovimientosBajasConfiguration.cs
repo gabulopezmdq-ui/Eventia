@@ -51,7 +51,7 @@ namespace API.DataSchema.ModelConfiguration
                  .HasOne(p => p.MotivoBajaDoc)
                  .WithMany(t => t.MovimientosBaja)
                  .HasForeignKey(p => p.IdMotivoBaja)
-                 .IsRequired(true);
+                 .IsRequired(false);
 
             builder
                 .Navigation(e => e.MotivoBajaDoc)
