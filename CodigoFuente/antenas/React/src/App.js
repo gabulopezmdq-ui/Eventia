@@ -441,6 +441,11 @@ export default function App() {
       component: AltaRegistroBaja,
       roles: ["admin", "superadmin"],
     },
+    {
+      path: "/SuperCabecera/Edit/:id",
+      component: AltaSuperCabecera,
+      roles: ["admin", "superadmin", "secretario"],
+    },
     //----------------------------------Rutas de Alta
     {
       path: "/CabeceraLiquidacionFE/Nuevo",
