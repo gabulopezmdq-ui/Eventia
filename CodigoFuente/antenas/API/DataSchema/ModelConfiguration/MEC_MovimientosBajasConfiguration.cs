@@ -18,7 +18,7 @@ namespace API.DataSchema.ModelConfiguration
                 .HasOne(p => p.TipoEstablecimiento)
                 .WithMany(t => t.MovimientosBaja)
                 .HasForeignKey(p => p.IdTipoEstablecimiento)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder
                 .Navigation(e => e.TipoEstablecimiento)
@@ -29,7 +29,7 @@ namespace API.DataSchema.ModelConfiguration
               .HasOne(p => p.POF)
               .WithMany(t => t.MovimientosBaja)
               .HasForeignKey(p => p.IdPOF)
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder
                 .Navigation(e => e.POF)
@@ -40,7 +40,7 @@ namespace API.DataSchema.ModelConfiguration
                .HasOne(p => p.Establecimiento)
                .WithMany(t => t.MovimientosBaja)
                .HasForeignKey(p => p.IdEstablecimiento)
-               .IsRequired(true);
+               .IsRequired(false);
 
             builder
                 .Navigation(e => e.Establecimiento)
@@ -61,7 +61,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(e => e.Anio)
                 .HasColumnType("char(4)")
                 .IsFixedLength(true)
-                .IsRequired(true);
+                .IsRequired(false);
 
             builder.Property(e => e.SuplenteDNI)
               .HasColumnType("char(8)")
@@ -91,7 +91,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.Estado)
               .HasColumnType("char(1)")
-              .IsRequired(true);
+              .IsRequired(false);
 
             builder.Property(e => e.Ingreso)
               .HasColumnType("varchar(20)")
