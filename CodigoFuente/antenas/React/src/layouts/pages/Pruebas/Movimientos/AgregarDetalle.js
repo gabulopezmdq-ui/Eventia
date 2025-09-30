@@ -545,8 +545,8 @@ export default function AgregarDetalle({
                       );
                       setForm((prev) => ({
                         ...prev,
-                        idTipoCategoria: selectedId,
-                        categoria: categoriaObj?.codCategoria || "",
+                        idTipoCategoria: selectedId, // lo que mandas al backend
+                        categoria: categoriaObj?.codCategoria || "", // sigues guardando el código si lo necesitas
                       }));
                     }}
                     style={{ height: "2.8rem", backgroundColor: "white" }}
@@ -554,7 +554,7 @@ export default function AgregarDetalle({
                     {categoriasOpciones.length > 0 ? (
                       categoriasOpciones.map((cat) => (
                         <MenuItem key={cat.idTipoCategoria} value={cat.idTipoCategoria}>
-                          {cat.codCategoria}
+                          {cat.descripcion} {/* 👈 Aquí se muestra la descripción al usuario */}
                         </MenuItem>
                       ))
                     ) : (
