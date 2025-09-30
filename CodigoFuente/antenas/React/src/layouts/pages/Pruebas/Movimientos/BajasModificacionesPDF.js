@@ -102,8 +102,11 @@ export async function BajasModificacionesPDF({ data, title, usuario, infoTitulos
 
     // Condición para horasDecrece
     const horas = row.tipoMovimiento === "M" && row.decrece === "S" ? row.horasDecrece : "";
-
-    const rowData = [row.numDoc, row.sec, nombreApellido, row.fechaInicioBaja, horas];
+    const formatFecha = (fecha) => {
+      if (!fecha) return "";
+      return String(fecha).split("T")[0]; // devuelve solo 'YYYY-MM-DD'
+    };
+    const rowData = [row.numDoc, row.sec, nombreApellido, formatFecha(row.fechaInicioBaja), horas];
 
     rowData.forEach((cell, i) => {
       const colWidth = columnWidths[i];
