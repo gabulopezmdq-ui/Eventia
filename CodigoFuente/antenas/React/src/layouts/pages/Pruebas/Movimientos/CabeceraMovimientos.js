@@ -126,9 +126,7 @@ function CabeceraMovimientos() {
 
       const data = response.data;
       const areaLabel = areaOptions.find((opt) => opt.value === data.area)?.label || data.area;
-      // 2. Armar el objeto unificado para el PDF
       const movimientoConTodo = {
-        // estos datos vienen directo en el JSON
         establecimiento: data.nombrePcia,
         diegep: data.nroDiegep,
         tipoEstablecimiento: data.idTipoEstablecimiento,
@@ -137,14 +135,11 @@ function CabeceraMovimientos() {
         mes: convertirMes(data.mes),
         anio: data.anio,
         area: areaLabel,
-        // podés agregar más campos de cabecera si quisieras
-
-        // docentes
         docentes: data.docentes.map((docente) => ({
           nDNI: docente.numDoc,
           nombre: docente.nombre,
           apellido: docente.apellido,
-          turno: docente.turno, // si querés traducir "M" a "Mañana" lo podés hacer acá
+          turno: docente.turno,
           nHoras: docente.horas?.toString() || "0",
           anos: docente.antigAnios?.toString() || "0",
           meses: docente.antigMeses?.toString() || "0",
@@ -162,11 +157,27 @@ function CabeceraMovimientos() {
       await GeneradorPDF.generar(movimientoConTodo);
     } catch (error) {
       console.error(error);
+
+      let errorBack;
+
+      if (typeof error?.response?.data === "string") {
+        errorBack = error.response.data;
+      } else if (error?.response?.data?.message) {
+        errorBack = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorBack = error.response.data.error;
+      } else {
+        errorBack = "Ocurrió un error al obtener los datos para imprimir.";
+      }
+
       setErrorAlert({
         show: true,
-        message: "Error al obtener los datos para imprimir.",
+        message: errorBack,
         type: "error",
       });
+      setTimeout(() => {
+        setErrorAlert({ show: false, message: "", type: "error" });
+      }, 3000);
     }
   };
   const convertirMes = (mesNumerico) => {
@@ -398,6 +409,14 @@ function CabeceraMovimientos() {
                                 Editar
                               </MDButton>
                             )}
+                            <MDButton
+                              variant="gradient"
+                              size="small"
+                              color="info"
+                              onClick={() => handleImprimir(row.original)}
+                            >
+                              Reporte
+                            </MDButton>
                             {estado === "P" && (
                               <MDButton
                                 variant="gradient"
@@ -406,16 +425,6 @@ function CabeceraMovimientos() {
                                 onClick={() => handleEnviarEducacion(row.original)}
                               >
                                 Enviar a Educacion
-                              </MDButton>
-                            )}
-                            {estado === "V" && (
-                              <MDButton
-                                variant="gradient"
-                                size="small"
-                                color="info"
-                                onClick={() => handleImprimir(row.original)}
-                              >
-                                Reporte
                               </MDButton>
                             )}
                             {(userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) &&

@@ -80,7 +80,7 @@ function AltaSuperCabecera() {
             anio: cabecera.anio,
             idEstablecimiento: cabecera.idEstablecimiento,
           });
-          setFormDeshabilitado(true);
+          setFormDeshabilitado(false);
         } catch (err) {
           console.error("Error al cargar SuperCabecera", err);
           alert("Error al cargar los datos de la SuperCabecera");
@@ -92,58 +92,69 @@ function AltaSuperCabecera() {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}MovimientosCabecera/CabeceraMovimiento`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      if (id) {
+        // Agregar el id al JSON
+        const dataToSend = { ...formData, idSupercabecera: id };
 
-      if (response.data === false || response.data?.success === false) {
-        setAlertMessage(
-          "Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área"
+        const response = await axios.put(
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/SuperCabecera`,
+          dataToSend,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setAlertType("error");
-        setShowAlert(true);
-        setTimeout(() => {
-          setShowAlert(false);
-          setAlertMessage("");
-          setAlertType("");
-          navigate(-1);
-        }, 3000);
-        return;
+
+        if (response.status === 200) {
+          setAlertMessage("SuperCabecera actualizada correctamente");
+          setAlertType("success");
+        } else {
+          throw new Error("Error al actualizar");
+        }
+      } else {
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}MovimientosCabecera/CabeceraMovimiento`,
+          formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data === false || response.data?.success === false) {
+          setAlertMessage(
+            "Ya existe un registro con esa combinación IdEstablecimiento - Mes - Año - Área"
+          );
+          setAlertType("error");
+          setShowAlert(true);
+          setTimeout(() => navigate(-1), 3000);
+          return;
+        }
+
+        setAlertMessage("Alta exitosa de la SuperCabecera");
+        setAlertType("success");
       }
 
-      setAlertMessage("Alta exitosa de la SuperCabecera");
-      setAlertType("success");
       setShowAlert(true);
       setTimeout(() => {
         setShowAlert(false);
-        setAlertMessage("");
-        setAlertType("");
         navigate(-1);
       }, 3000);
     } catch (err) {
-      const backendMessage = err.response?.data?.error || "Error guardar";
+      const backendMessage = err.response?.data?.error || "Error al guardar cambios";
       setAlertMessage(backendMessage);
       setAlertType("error");
       setShowAlert(true);
-      setTimeout(() => {
-        setShowAlert(false);
-        setAlertMessage("");
-        setAlertType("");
-      }, 3000);
+      setTimeout(() => setShowAlert(false), 3000);
     }
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox component="form" pb={3} px={3}>
         <Card>
           <Grid container spacing={3} p={2}>
+            {/* Campos del formulario */}
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth disabled={formDeshabilitado}>
                 <InputLabel>Área</InputLabel>
@@ -164,7 +175,7 @@ function AltaSuperCabecera() {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={formDeshabilitado}>
+              <FormControl fullWidth>
                 <InputLabel>Mes</InputLabel>
                 <Select
                   name="mes"
@@ -187,14 +198,13 @@ function AltaSuperCabecera() {
                 fullWidth
                 name="anio"
                 type="number"
-                disabled={formDeshabilitado}
                 value={formData.anio}
                 onChange={handleInputChange}
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={formDeshabilitado}>
+              <FormControl fullWidth>
                 <InputLabel>Establecimiento</InputLabel>
                 <Select
                   label="Establecimiento"
@@ -212,15 +222,18 @@ function AltaSuperCabecera() {
               </FormControl>
             </Grid>
           </Grid>
-
-          {!id && !formDeshabilitado && (
-            <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
-              <MDButton variant="contained" color="info" size="small" onClick={handleSubmit}>
-                Guardar
-              </MDButton>
-            </MDBox>
-          )}
+          <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
+            <MDButton
+              variant="contained"
+              color={id ? "warning" : "info"}
+              size="small"
+              onClick={handleSubmit}
+            >
+              {id ? "Actualizar" : "Guardar"}
+            </MDButton>
+          </MDBox>
         </Card>
+
         {showAlert && (
           <MDAlert mt={2} color={alertType} dismissible>
             <MDTypography variant="body2" color="white">

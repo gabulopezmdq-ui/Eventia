@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Card from "@mui/material/Card";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import jwt_decode from "jwt-decode";
@@ -80,6 +81,14 @@ function SuperCabecera() {
     return meses[mesNumerico - 1] || mesNumerico.toString();
   };
 
+  const handleEditar = (idSuperCabecera) => {
+    if (!idSuperCabecera) {
+      console.error("❌ ID de cabecera no definido");
+      return;
+    }
+    navigate(`/SuperCabecera/Edit/${idSuperCabecera}`);
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -144,6 +153,24 @@ function SuperCabecera() {
                     accessor: "fecha",
                     Cell: ({ value }) => new Date(value).toLocaleDateString("es-AR"),
                   },
+                  {
+                    Header: "Acciones",
+                    accessor: "edit",
+                    Cell: ({ row }) => (
+                      <>
+                        <MDBox display="flex" gap={1}>
+                          <MDButton
+                            variant="gradient"
+                            color="info"
+                            size="small"
+                            onClick={() => handleEditar(row.original.idSuperCabecera)}
+                          >
+                            Editar
+                          </MDButton>
+                        </MDBox>
+                      </>
+                    ),
+                  },
                 ],
                 rows: dataTableData,
               }}
@@ -157,5 +184,13 @@ function SuperCabecera() {
     </DashboardLayout>
   );
 }
+
+SuperCabecera.propTypes = {
+  row: PropTypes.shape({
+    original: PropTypes.shape({
+      idSuperCabecera: PropTypes.number,
+    }),
+  }),
+};
 
 export default SuperCabecera;
