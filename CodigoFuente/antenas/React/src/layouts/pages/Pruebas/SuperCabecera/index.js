@@ -129,7 +129,20 @@ function SuperCabecera() {
             <DataTable
               table={{
                 columns: [
-                  { Header: "Área", accessor: "area" },
+                  //{ Header: "ID", accessor: "idSuperCabecera" },
+                  {
+                    Header: "Área",
+                    accessor: "area",
+                    Cell: ({ value }) => {
+                      const areaMap = {
+                        L: "LIQUIDACIONES",
+                        E: "LICENCIA POR ENFERMEDAD",
+                        A: "ASIGNACIONES FAMILIARES",
+                        C: "COORDINACION ADMINISTRATIVA",
+                      };
+                      return areaMap[value] || value; // Si no está en el mapa, muestra el valor original
+                    },
+                  },
                   { Header: "Año", accessor: "anio" },
                   {
                     Header: "Mes",
