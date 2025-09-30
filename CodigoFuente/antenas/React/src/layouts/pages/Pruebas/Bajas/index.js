@@ -27,8 +27,7 @@ function Bajas() {
   const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [dataTableBajaData, setDataTableBajaData] = useState([]); // Arreglo vacío para evitar errores iniciales
-  const [allData, setAllData] = useState([]); // Almacena todos los datos sin filtrar
-
+  const [allData, setAllData] = useState([]);
   // Estados para los filtros de Nivel y Año
   const [nivelSeleccionado, setNivelSeleccionado] = useState("");
   const [anioSeleccionado, setAnioSeleccionado] = useState("");
@@ -218,6 +217,7 @@ function Bajas() {
                     <InputLabel>NIVEL</InputLabel>
                     <Select
                       value={nivelSeleccionado}
+                      label="NIVEL"
                       onChange={(e) => setNivelSeleccionado(e.target.value)}
                       sx={{
                         height: "2.5rem",
@@ -241,6 +241,7 @@ function Bajas() {
                     <InputLabel>AÑO</InputLabel>
                     <Select
                       value={anioSeleccionado}
+                      label="AÑO"
                       onChange={(e) => setAnioSeleccionado(e.target.value)}
                       sx={{
                         height: "2.5rem",
@@ -262,6 +263,7 @@ function Bajas() {
                   <FormControl fullWidth>
                     <InputLabel>ESTABLECIMIENTO</InputLabel>
                     <Select
+                      label="ESTABLECIMIENTO"
                       value={establecimientoSeleccionado}
                       onChange={(e) => setEstablecimientoSeleccionado(e.target.value)}
                       sx={{
@@ -331,6 +333,7 @@ function Bajas() {
                       <MDButton
                         variant="gradient"
                         color="info"
+                        size="small"
                         onClick={() => handleEditarMotivosBajas(row.original.idMovimientoBaja)}
                       >
                         Editar
