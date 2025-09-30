@@ -12677,10 +12677,18 @@
   },
   "packageFolders": {
 <<<<<<< HEAD
+<<<<<<< HEAD
     "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
 =======
     "C:\\Users\\jcgarcia\\.nuget\\packages\\": {}
+>>>>>>> origin/juancruz
+=======
+    "C:\\Users\\jcgarcia\\.nuget\\packages\\": {}
+=======
+    "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+>>>>>>> 5b50bc880d69c13e7739d56dfae93a21f930a2e9
 >>>>>>> origin/juancruz
   },
   "project": {
@@ -12688,6 +12696,7 @@
     "restore": {
       "projectUniqueName": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
+<<<<<<< HEAD
 <<<<<<< HEAD
       "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
@@ -12697,16 +12706,34 @@
       "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
 >>>>>>> origin/juancruz
+=======
+      "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+=======
+      "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+>>>>>>> 5b50bc880d69c13e7739d56dfae93a21f930a2e9
+>>>>>>> origin/juancruz
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
 <<<<<<< HEAD
+<<<<<<< HEAD
         "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
 =======
         "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
+>>>>>>> origin/juancruz
+=======
+        "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
+=======
+        "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+>>>>>>> 5b50bc880d69c13e7739d56dfae93a21f930a2e9
 >>>>>>> origin/juancruz
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -12796,9 +12823,16 @@
           }
         },
 <<<<<<< HEAD
+<<<<<<< HEAD
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
 =======
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+>>>>>>> origin/juancruz
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+=======
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+>>>>>>> 5b50bc880d69c13e7739d56dfae93a21f930a2e9
 >>>>>>> origin/juancruz
       }
     }
