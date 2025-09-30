@@ -646,6 +646,44 @@ namespace API.Services
 
         }
 
+        //UPDATE SUPERCABECERA
+        public async Task<MEC_MovimientosSuperCabecera> ActualizarSuperCabeceraAsync(MEC_MovimientosSuperCabecera entidad)
+        {
+            bool existe = await _context.MEC_MovimientosSuperCabecera.AnyAsync(x =>
+                x.IdSuperCabecera != entidad.IdSuperCabecera &&  
+                x.Area.Trim() == entidad.Area.Trim() &&
+                x.Mes == entidad.Mes &&
+                x.Anio == entidad.Anio &&
+                x.IdEstablecimiento == entidad.IdEstablecimiento
+            );
+
+            if (existe)
+            {
+                throw new InvalidOperationException(
+                    $"Ya existe un registro para el Área {entidad.Area}, Mes {entidad.Mes}, Año {entidad.Anio}, Establecimiento {entidad.Establecimiento}."
+                );
+            }
+
+            var existente = await _context.MEC_MovimientosSuperCabecera
+                .FirstOrDefaultAsync(x => x.IdSuperCabecera == entidad.IdSuperCabecera);
+
+            if (existente == null)
+                throw new KeyNotFoundException("No se encontró la SuperCabecera a actualizar.");
+
+            // Actualizar valores
+            existente.Area = entidad.Area.Trim();
+            existente.Mes = entidad.Mes;
+            existente.Anio = entidad.Anio;
+            existente.IdEstablecimiento = entidad.IdEstablecimiento;
+            //existente.Fecha = DateTime.Today;
+            //existente.Fecha = existente.Fecha;
+
+            _context.MEC_MovimientosSuperCabecera.Update(existente);
+            await _context.SaveChangesAsync();
+
+            return existente;
+        }
+
 
         //Actualizacion de apellidos en MovimientosDetalle
         public async Task ActualizarApellidosCabeceraAsync(int idMovimientoCabecera)
