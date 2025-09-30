@@ -301,7 +301,7 @@ namespace API.Controllers
         [HttpPut("SuperCabecera")]
         public async Task<ActionResult<MEC_MovimientosSuperCabecera>> UpdateSuperCabecera([FromBody] MEC_MovimientosSuperCabecera cabecera)
         {
-            await _serviceGenerico.Update(cabecera);
+            await _movimientosDetalle.ActualizarSuperCabeceraAsync(cabecera);
             return Ok(cabecera);
         }
     }

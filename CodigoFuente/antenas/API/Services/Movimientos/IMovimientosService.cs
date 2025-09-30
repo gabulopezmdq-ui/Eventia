@@ -35,5 +35,6 @@ namespace API.Services
         Task<DetalleReporteDTO> ObtenerDetallesReporteAsycn(int idCabecera);
         Task<MEC_MovimientosSuperCabecera> CrearSuperCabeceraAsync(MEC_MovimientosSuperCabecera entidad);
         Task AddCabeceraFecha(MEC_MovimientosCabecera entity);
+        Task<MEC_MovimientosSuperCabecera> ActualizarSuperCabeceraAsync(MEC_MovimientosSuperCabecera entidad);
     }
 }
