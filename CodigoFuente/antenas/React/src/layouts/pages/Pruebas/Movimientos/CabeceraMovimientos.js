@@ -13,6 +13,11 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import GeneradorPDF from "./GeneradorPDF";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
 import { BajasModificacionesPDF } from "./BajasModificacionesPDF";
 import "../../Pruebas/pruebas.css";
 
@@ -22,6 +27,9 @@ function CabeceraMovimientos() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [dataTableData, setDataTableData] = useState([]);
   const [userRoles, setUserRoles] = useState([]);
+  const [openDevolver, setOpenDevolver] = useState(false);
+  const [devolucionObs, setDevolucionObs] = useState("");
+  const [devolverCabeceraId, setDevolverCabeceraId] = useState(null);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -292,6 +300,61 @@ function CabeceraMovimientos() {
         }
       });
   };
+  const handleAbrirModalDevolver = (movimiento) => {
+    setDevolverCabeceraId(movimiento.idMovimientoCabecera);
+    // Si quisieras precargar algo, lo ponés acá. Por ahora lo dejamos vacío:
+    setDevolucionObs(movimiento.observaciones || "");
+    setOpenDevolver(true);
+  };
+
+  const handleCerrarModalDevolver = () => {
+    setOpenDevolver(false);
+    setDevolucionObs("");
+    setDevolverCabeceraId(null);
+  };
+
+  const handleGuardarDevolucion = async () => {
+    if (!devolverCabeceraId) return;
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/DevolverMov`,
+        {
+          idCabecera: devolverCabeceraId,
+          observaciones: devolucionObs, // nombre de campo: observaciones
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Refrescamos y avisamos
+      await fetchConceptos();
+      setErrorAlert({
+        show: true,
+        message: "Movimiento devuelto (rechazado) correctamente.",
+        type: "success",
+      });
+
+      // Cerramos modal y limpiamos
+      handleCerrarModalDevolver();
+    } catch (error) {
+      if (error.response) {
+        const statusCode = error.response.status;
+        const errorMessage =
+          statusCode >= 500
+            ? `Error ${statusCode}: Problema en el servidor.`
+            : `Error ${statusCode}: Problema en la solicitud.`;
+        setErrorAlert({ show: true, message: errorMessage, type: "error" });
+      } else {
+        setErrorAlert({
+          show: true,
+          message: "Ocurrió un error inesperado al devolver el movimiento.",
+          type: "error",
+        });
+      }
+    }
+  };
+
   const handleDescargarCambios = async (row) => {
     console.log("row: ", row);
     try {
@@ -375,25 +438,29 @@ function CabeceraMovimientos() {
                           { label: "Pendiente", value: "P" },
                           { label: "Enviado a Educación", value: "E" },
                           { label: "Enviado a Provincia", value: "V" },
+                          { label: "Rechazado", value: "R" },
                         ];
-                        const estadoEncontrado = estados.find((e) => e.value === value);
-                        return estadoEncontrado ? estadoEncontrado.label : value;
+                        const encontrado = estados.find((e) => e.value === value);
+                        return encontrado ? encontrado.label : value ?? "";
                       },
                     },
                     {
                       Header: "Acciones",
                       accessor: "acciones",
                       Cell: ({ row }) => {
-                        const estado = row.original.estado;
-                        const tieneBajas = row.original.tipoMovimiento === "B";
-                        const tieneModificaciones = row.original.tipoMovimiento === "M";
+                        const estadoNorm = String(row?.original?.estado ?? "")
+                          .trim()
+                          .toUpperCase();
+                        const isRechazado = estadoNorm === "R" || estadoNorm === "RECHAZADO";
+
                         return (
                           <MDBox display="flex" gap={1}>
-                            {((estado === "P" &&
+                            {/* Editar */}
+                            {((estadoNorm === "P" &&
                               (userRoles.includes("Secretario") ||
                                 userRoles.includes("Admin") ||
                                 userRoles.includes("SuperAdmin"))) ||
-                              (estado === "E" &&
+                              (estadoNorm === "E" &&
                                 (userRoles.includes("Admin") ||
                                   userRoles.includes("SuperAdmin")))) && (
                               <MDButton
@@ -409,6 +476,8 @@ function CabeceraMovimientos() {
                                 Editar
                               </MDButton>
                             )}
+
+                            {/* Reporte */}
                             <MDButton
                               variant="gradient"
                               size="small"
@@ -417,7 +486,9 @@ function CabeceraMovimientos() {
                             >
                               Reporte
                             </MDButton>
-                            {estado === "P" && (
+
+                            {/* Enviar a Educación (habilitado en P o R) */}
+                            {(estadoNorm === "P" || estadoNorm === "R") && (
                               <MDButton
                                 variant="gradient"
                                 size="small"
@@ -427,8 +498,10 @@ function CabeceraMovimientos() {
                                 Enviar a Educacion
                               </MDButton>
                             )}
+
+                            {/* Enviar a Prov (solo Admin/SuperAdmin y estado E) */}
                             {(userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) &&
-                              estado == "E" && (
+                              (estadoNorm === "E" || estadoNorm === "R") && (
                                 <MDButton
                                   variant="gradient"
                                   size="small"
@@ -438,7 +511,9 @@ function CabeceraMovimientos() {
                                   Enviar a Prov
                                 </MDButton>
                               )}
-                            {estado === "E" && (
+
+                            {/* Info Bajas (cuando está en E) */}
+                            {estadoNorm === "E" && (
                               <MDButton
                                 variant="gradient"
                                 size="small"
@@ -446,6 +521,18 @@ function CabeceraMovimientos() {
                                 onClick={() => handleDescargarCambios(row.original)}
                               >
                                 Info Bajas
+                              </MDButton>
+                            )}
+
+                            {/* Devolver: visible en cualquier estado excepto Rechazado */}
+                            {!isRechazado && (
+                              <MDButton
+                                variant="gradient"
+                                size="small"
+                                color="error"
+                                onClick={() => handleAbrirModalDevolver(row.original)}
+                              >
+                                Devolver
                               </MDButton>
                             )}
                           </MDBox>
@@ -462,6 +549,35 @@ function CabeceraMovimientos() {
             </Card>
           </MDBox>
         )}
+        <Dialog open={openDevolver} onClose={handleCerrarModalDevolver} fullWidth maxWidth="sm">
+          <DialogTitle>Motivo de Devolución</DialogTitle>
+          <DialogContent>
+            <MDBox mt={1}>
+              <TextField
+                label="Observaciones"
+                placeholder="Ingresá el motivo de la devolución..."
+                fullWidth
+                multiline
+                minRows={3}
+                value={devolucionObs}
+                onChange={(e) => setDevolucionObs(e.target.value)}
+              />
+            </MDBox>
+          </DialogContent>
+          <DialogActions>
+            <MDButton variant="outlined" color="secondary" onClick={handleCerrarModalDevolver}>
+              Cancelar
+            </MDButton>
+            <MDButton
+              variant="gradient"
+              color="error"
+              onClick={handleGuardarDevolucion}
+              disabled={!devolucionObs?.trim()}
+            >
+              Guardar
+            </MDButton>
+          </DialogActions>
+        </Dialog>
       </DashboardLayout>
     </>
   );
