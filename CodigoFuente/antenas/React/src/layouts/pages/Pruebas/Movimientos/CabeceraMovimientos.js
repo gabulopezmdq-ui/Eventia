@@ -501,7 +501,7 @@ function CabeceraMovimientos() {
 
                             {/* Enviar a Prov (solo Admin/SuperAdmin y estado E) */}
                             {(userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) &&
-                              (estadoNorm === "E" || estadoNorm === "R") && (
+                              estadoNorm === "E" && (
                                 <MDButton
                                   variant="gradient"
                                   size="small"
