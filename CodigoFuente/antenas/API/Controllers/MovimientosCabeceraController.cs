@@ -307,9 +307,9 @@ namespace API.Controllers
 
         //devolucion de la cabecera
         [HttpPut("DevolverMov")]
-        public async Task<ActionResult<MEC_MovimientosCabecera>> DevolverMovimiento([FromBody] int idCabecera, string observaciones)
+        public async Task<ActionResult<MEC_MovimientosCabecera>> DevolverMovimiento([FromBody] DevolverMov request)
         {
-            await _movimientosDetalle.DevolverCabeceraParaCorreccionAsync(idCabecera, observaciones);
+            await _movimientosDetalle.DevolverCabeceraParaCorreccionAsync(request.IdCabecera, request.Observaciones);
             return Ok("Cabecera Actualizada");
         }
     }
