@@ -51,6 +51,7 @@ function AltaCabeceraMovimientos() {
     idEstablecimiento: "",
     Accion: [],
     estado: "P",
+    observaciones: "", // 👈 Nuevo campo
   });
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [formDeshabilitado, setFormDeshabilitado] = useState(false);
@@ -564,8 +565,17 @@ function AltaCabeceraMovimientos() {
                 </Select>
               </FormControl>
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Observaciones"
+                value={formData.observaciones || ""}
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
+            </Grid>
           </Grid>
-
           {!id && !formDeshabilitado && (
             <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
               <MDButton
