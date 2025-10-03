@@ -158,10 +158,10 @@ namespace API.Services
         //PROCESAR INASISTENCIAS
 
         public async Task<string> ProcesarTMPInasistencias(
-    int idCabeceraLiquidacion,
-    int idCabeceraInasistencia,
-    int idEstablecimiento,
-    string UE)
+                                int idCabeceraLiquidacion,
+                                int idCabeceraInasistencia,
+                                int idEstablecimiento,
+                                string UE)
         {
             string varUE = UE.Replace("-", "");
             var errores = new List<string>(); // Lista para acumular errores
