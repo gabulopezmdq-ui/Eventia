@@ -456,7 +456,7 @@ function CabeceraMovimientos() {
                         return (
                           <MDBox display="flex" gap={1}>
                             {/* Editar */}
-                            {((estadoNorm === "P" &&
+                            {(((estadoNorm === "P" || estadoNorm === "R") && // ⬅️ agregado R
                               (userRoles.includes("Secretario") ||
                                 userRoles.includes("Admin") ||
                                 userRoles.includes("SuperAdmin"))) ||
@@ -469,7 +469,8 @@ function CabeceraMovimientos() {
                                 size="small"
                                 onClick={() =>
                                   navigate(
-                                    `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`
+                                    `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`,
+                                    { state: { allowRejected: true } } // ⬅️ bandera para permitir edición en R
                                   )
                                 }
                               >
