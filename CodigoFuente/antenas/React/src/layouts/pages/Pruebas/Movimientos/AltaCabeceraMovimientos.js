@@ -570,7 +570,7 @@ function AltaCabeceraMovimientos() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Observaciones"
+                label="MOTIVO DE DEVOLUCIÓN"
                 value={formData.observaciones || ""}
                 InputProps={{
                   readOnly: true,
