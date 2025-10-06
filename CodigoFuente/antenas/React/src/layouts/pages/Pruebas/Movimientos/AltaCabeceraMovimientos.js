@@ -96,6 +96,7 @@ function AltaCabeceraMovimientos() {
     { label: "Pendiente", value: "P" },
     { label: "Enviado a Educación", value: "E" },
     { label: "Enviado a Provincia", value: "V" },
+    { label: "Rechazado", value: "R" }, // 👈 agrega R
   ];
   useEffect(() => {
     const fetchCabeceras = async () => {
@@ -163,6 +164,7 @@ function AltaCabeceraMovimientos() {
             idEstablecimiento: cabecera.idEstablecimiento,
             Accion: accionesSeleccionadas,
             estado: cabecera.estado,
+            observaciones: cabecera.observaciones || "", // 👈 agrega esto
           });
           setIdCabecera(cabecera.idMovimientoCabecera);
           setFormDeshabilitado(true);
