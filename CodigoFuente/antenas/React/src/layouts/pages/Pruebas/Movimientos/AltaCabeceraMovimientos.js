@@ -417,9 +417,9 @@ function AltaCabeceraMovimientos() {
             {!id && (
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Seleccionar Cabecera</InputLabel>
+                  <InputLabel>Seleccionar SuperCabecera</InputLabel>
                   <Select
-                    label="Seleccionar Cabecera"
+                    label="Seleccionar SuperCabecera"
                     value={cabeceraSeleccionada || ""}
                     onChange={(e) => {
                       const cabeceraId = e.target.value;
