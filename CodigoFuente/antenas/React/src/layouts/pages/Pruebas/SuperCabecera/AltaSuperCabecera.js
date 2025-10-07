@@ -20,9 +20,9 @@ function AltaSuperCabecera() {
   const token = sessionStorage.getItem("token");
 
   const [formData, setFormData] = useState({
-    area: "L",
+    area: "",
     mes: "",
-    anio: new Date().getFullYear().toString(),
+    anio: "",
     idEstablecimiento: "",
   });
 
@@ -34,6 +34,7 @@ function AltaSuperCabecera() {
     { label: "LICENCIAS POR ENFERMEDAD", value: "E" },
     { label: "ASIGNACIONES FAMILIARES", value: "A" },
     { label: "COORDINACION ADMINISTRATIVA", value: "C" },
+    { label: "LICENCIAS EXTRAODINARIAS Y CRÓNICAS", value: "O" },
   ];
 
   const meses = [
@@ -197,6 +198,7 @@ function AltaSuperCabecera() {
               <TextField
                 fullWidth
                 name="anio"
+                label="Año"
                 type="number"
                 value={formData.anio}
                 onChange={handleInputChange}
