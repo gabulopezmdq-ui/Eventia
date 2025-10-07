@@ -456,11 +456,14 @@ function CabeceraMovimientos() {
                         return (
                           <MDBox display="flex" gap={1}>
                             {/* Editar */}
-                            {(((estadoNorm === "P" || estadoNorm === "R") && // ⬅️ agregado R
+                            {((estadoNorm === "P" &&
                               (userRoles.includes("Secretario") ||
                                 userRoles.includes("Admin") ||
                                 userRoles.includes("SuperAdmin"))) ||
                               (estadoNorm === "E" &&
+                                (userRoles.includes("Admin") ||
+                                  userRoles.includes("SuperAdmin"))) ||
+                              (estadoNorm === "R" &&
                                 (userRoles.includes("Admin") ||
                                   userRoles.includes("SuperAdmin")))) && (
                               <MDButton
@@ -469,8 +472,7 @@ function CabeceraMovimientos() {
                                 size="small"
                                 onClick={() =>
                                   navigate(
-                                    `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`,
-                                    { state: { allowRejected: true } } // ⬅️ bandera para permitir edición en R
+                                    `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`
                                   )
                                 }
                               >
@@ -575,7 +577,7 @@ function CabeceraMovimientos() {
               onClick={handleGuardarDevolucion}
               disabled={!devolucionObs?.trim()}
             >
-              Guardar
+              Devolver
             </MDButton>
           </DialogActions>
         </Dialog>
