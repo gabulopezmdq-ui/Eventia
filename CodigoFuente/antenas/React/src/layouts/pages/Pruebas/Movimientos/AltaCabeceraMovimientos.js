@@ -45,9 +45,10 @@ function AltaCabeceraMovimientos() {
   const [alertMessage, setAlertMessage] = useState("");
 
   const [formData, setFormData] = useState({
-    area: "L",
+    area: "",
     mes: "",
-    anio: new Date().getFullYear().toString(),
+    anio: "",
+    //anio: new Date().getFullYear().toString(),
     idEstablecimiento: "",
     Accion: [],
     estado: "P",
