@@ -11531,35 +11531,24 @@
     ]
   },
   "packageFolders": {
-<<<<<<< HEAD
     "C:\\Users\\gcassulo\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
-=======
-    "C:\\Users\\jcgarcia\\.nuget\\packages\\": {}
->>>>>>> origin/juancruz
   },
   "project": {
     "version": "1.0.0",
     "restore": {
       "projectUniqueName": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "projectName": "CoreServices.Test",
-<<<<<<< HEAD
       "projectPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
       "packagesPath": "C:\\Users\\gcassulo\\.nuget\\packages\\",
       "outputPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
-=======
-      "projectPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\CoreServices.Test.csproj",
-      "packagesPath": "C:\\Users\\jcgarcia\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\obj\\",
->>>>>>> origin/juancruz
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-<<<<<<< HEAD
         "C:\\Users\\gcassulo\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-=======
-        "C:\\Users\\jcgarcia\\AppData\\Roaming\\NuGet\\NuGet.Config",
->>>>>>> origin/juancruz
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -11630,11 +11619,7 @@
             "privateAssets": "all"
           }
         },
-<<<<<<< HEAD
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
-=======
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
->>>>>>> origin/juancruz
       }
     }
   },
@@ -11643,7 +11628,7 @@
       "code": "Undefined",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Problema al leer el archivo de caché C:\\Users\\jcgarcia\\Desktop\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+      "message": "Problema al leer el archivo de caché C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\CoreServices\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
     }
   ]
 }
