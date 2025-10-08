@@ -513,16 +513,33 @@ function PlantaFuncional() {
     try {
       const token = localStorage.getItem("token");
 
-      await axios.delete(`${process.env.REACT_APP_API_URL}POF/Admin?id=${idToDelete}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.delete(
+        `${process.env.REACT_APP_API_URL}POF/Admin?id=${idToDelete}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      setShowAlert(true);
-      setAlertMessage("Registro eliminado con éxito");
-      setAlertType("success");
-      fetchData();
+      console.log("Respuesta del backend:", response);
+
+      if (response.status === 200) {
+        setShowAlert(true);
+        setAlertMessage("Registro eliminado con éxito");
+        setAlertType("success");
+
+        // Evitamos que un error en fetchData() dispare el alert de error
+        try {
+          await fetchData();
+        } catch (fetchError) {
+          console.error("Error al actualizar los datos después de eliminar:", fetchError);
+        }
+      } else {
+        setShowAlert(true);
+        setAlertMessage("Error inesperado al eliminar el registro");
+        setAlertType("error");
+      }
     } catch (error) {
       console.error("Error eliminando el registro:", error);
       setShowAlert(true);
