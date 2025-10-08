@@ -743,7 +743,7 @@ function PlantaFuncional() {
                               >
                                 Agregar Barras
                               </MDButton>
-                              {role === "SuperAdmin" && (
+                              {role.includes("SuperAdmin") && (
                                 <MDButton
                                   variant="gradient"
                                   color="error"
