@@ -14,7 +14,7 @@ using System.Security.Claims;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin")]
+    [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
     //[AllowAnonymous]
     [Route("[controller]")]
     public class MovimientosCabeceraController : ControllerBase
@@ -78,7 +78,7 @@ namespace API.Controllers
             });
         }
 
-
+        //[Authorize(Roles = "SuperAdmin, Admin")]
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
@@ -91,12 +91,14 @@ namespace API.Controllers
             return Ok(_serviceCabecera.GetAll());
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpGet("GetByIdCabecera")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> GetCabecera(int Id)
         {
             return Ok(await _serviceCabecera.GetByID(Id));
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin")]
         [HttpGet("GetByVigente")]
         public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> GetByVigente([FromQuery] string vigente = null)
         {
@@ -104,12 +106,14 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpGet("GetById")]
         public async Task<ActionResult<MEC_MovimientosSuperCabecera>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin")]
         [HttpPost("CabeceraMovimiento")]
         public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosSuperCabecera entidad)
         {
@@ -298,6 +302,7 @@ namespace API.Controllers
             return Ok(cabecera);
         }
 
+        [Authorize(Roles = "SuperAdmin, Admin")]
         [HttpPut("SuperCabecera")]
         public async Task<ActionResult<MEC_MovimientosSuperCabecera>> UpdateSuperCabecera([FromBody] MEC_MovimientosSuperCabecera cabecera)
         {

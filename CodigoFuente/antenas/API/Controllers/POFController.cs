@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SuperAdmin, Admin, Secretario")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class POFController : ControllerBase
     {
@@ -88,6 +88,7 @@ namespace API.Controllers
         }
 
         //BORRADO DEFINITIVO
+        [Authorize(Roles = "SuperAdmin, Admin")]
         [HttpDelete("Admin")]
         public async Task<IActionResult> DeletePOF(int Id)
         {
