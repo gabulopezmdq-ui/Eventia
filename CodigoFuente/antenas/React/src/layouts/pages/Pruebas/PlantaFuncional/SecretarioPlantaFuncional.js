@@ -29,7 +29,6 @@ function SecretarioPlantaFuncional() {
   const [pofData, setPofData] = useState([]);
   const [loadingPof, setLoadingPof] = useState(false);
 
-  // 🔓 Decodificamos el token
   let decodedToken = {};
   if (token) {
     decodedToken = jwt_decode(token);
@@ -51,11 +50,9 @@ function SecretarioPlantaFuncional() {
         );
 
         let data = response.data;
-
-        // Si el usuario es Secretario, filtramos
         if (rol === "Secretario") {
           data = data.filter((e) => e.idEstablecimiento === parseInt(idEstablecimiento));
-          setSelectedEstablecimiento(idEstablecimiento); // selecciona por defecto
+          setSelectedEstablecimiento(idEstablecimiento);
         }
 
         setEstablecimientos(data);
@@ -91,8 +88,6 @@ function SecretarioPlantaFuncional() {
         console.warn("No hay datos para exportar");
         return;
       }
-
-      // 🔠 Transformamos los datos en mayúsculas
       const dataForExcel = data.map((row) => ({
         APELLIDO: row.apellido?.toUpperCase() || "",
         NOMBRE: row.nombre?.toUpperCase() || "",
@@ -104,15 +99,9 @@ function SecretarioPlantaFuncional() {
         "BARRAS ANTERIORES": row.barra?.toString().toUpperCase() || "",
         BARRAS: row.barras ? row.barras.join(", ").toUpperCase() : "",
       }));
-
-      // 📑 Creamos hoja de cálculo
       const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
-
-      // 📘 Creamos libro y añadimos la hoja
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "POF");
-
-      // 💾 Generamos y descargamos archivo Excel
       XLSX.writeFile(workbook, `POF_${selectedEstablecimiento}.xlsx`);
     } catch (error) {
       console.error("Error al descargar el Excel:", error);
