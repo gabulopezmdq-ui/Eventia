@@ -94,7 +94,7 @@ const routes = [
         roles: ["admin", "superadmin"],
       },
       {
-        name: "Planta Funcional",
+        name: "Planta Funcional (Sec)",
         key: "plantaFuncionalsecretario",
         route: "/PlantaFuncionalSec",
         component: <PlantaFuncionalSec />,
