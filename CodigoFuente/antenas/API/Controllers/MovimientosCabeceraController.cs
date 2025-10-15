@@ -53,6 +53,7 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
+        [AllowAnonymous]
         [HttpGet("POF")]
         public async Task<IActionResult> ObtenerPOF(int idEstablecimiento)
         {
