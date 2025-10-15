@@ -529,12 +529,8 @@ function PlantaFuncional() {
         setAlertMessage("Registro eliminado con éxito");
         setAlertType("success");
 
-        // Evitamos que un error en fetchData() dispare el alert de error
-        try {
-          await fetchData();
-        } catch (fetchError) {
-          console.error("Error al actualizar los datos después de eliminar:", fetchError);
-        }
+        // Recargar los datos de la tabla
+        await handleCargar(); // <- Esta es la línea importante
       } else {
         setShowAlert(true);
         setAlertMessage("Error inesperado al eliminar el registro");
