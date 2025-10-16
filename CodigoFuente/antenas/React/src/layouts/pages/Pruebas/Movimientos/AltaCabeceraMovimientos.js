@@ -23,6 +23,7 @@ import DetallePopup from "./DetallePopUp";
 import AgregarDetalle from "./AgregarDetalle";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import jwt_decode from "jwt-decode";
+import EditarDetallePopup from "./EditarPopUp";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 function AltaCabeceraMovimientos() {
@@ -43,6 +44,8 @@ function AltaCabeceraMovimientos() {
   const [alertType, setAlertType] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [alertMessage, setAlertMessage] = useState("");
+  const [openEditPopup, setOpenEditPopup] = useState(false);
+  const [detalleEditando, setDetalleEditando] = useState(null);
 
   const [formData, setFormData] = useState({
     area: "L",
@@ -405,6 +408,42 @@ function AltaCabeceraMovimientos() {
       }, 5000);
     }
   };
+  const handleEditar = (detalle) => {
+    setDetalleEditando(detalle);
+    setOpenEditPopup(true);
+  };
+  const handleCerrarEditPopup = () => {
+    setOpenEditPopup(false);
+    setDetalleEditando(null);
+  };
+  const actualizarDetalle = async (detalleActualizado) => {
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/ActualizarDetalle`,
+        detalleActualizado,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setOpenEditPopup(false);
+      await fetchDetalles(idCabecera);
+
+      setAlertMessage("Detalle actualizado correctamente");
+      setAlertType("success");
+      setAlertDetalle(true);
+      setTimeout(() => {
+        setAlertDetalle(false);
+      }, 5000);
+    } catch (error) {
+      console.error("Error al actualizar:", error);
+      setAlertMessage("No se pudo actualizar el detalle. Intente nuevamente.");
+      setAlertType("error");
+      setAlertDetalle(true);
+      setTimeout(() => setAlertDetalle(false), 5000);
+    }
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -659,6 +698,14 @@ function AltaCabeceraMovimientos() {
                             </MDButton>
                             <MDButton
                               variant="gradient"
+                              color="warning"
+                              size="small"
+                              onClick={() => handleEditar(row.original)}
+                            >
+                              Editar
+                            </MDButton>
+                            <MDButton
+                              variant="gradient"
                               color="error"
                               size="small"
                               onClick={() => handleEliminar(row.original.idMovimientoDetalle)}
@@ -681,6 +728,12 @@ function AltaCabeceraMovimientos() {
         )}
       </MDBox>
       <DetallePopup open={openPopup} onClose={handleCerrarPopup} detalle={detalleSeleccionado} />
+      <EditarDetallePopup
+        open={openEditPopup}
+        onClose={handleCerrarEditPopup}
+        detalle={detalleEditando}
+        onSave={actualizarDetalle}
+      />
     </DashboardLayout>
   );
 }
