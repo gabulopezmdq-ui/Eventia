@@ -25,3 +25,9 @@ public class MovimientosCabeceraDTO
     public DateTime FechaInicioBaja { get; set; }
     public DateTime FechaFinBaja { get; set; }
 }
+
+public class DevolverMov
+{
+    public int IdCabecera { get; set; }
+    public string? Observaciones { get; set; }
+}

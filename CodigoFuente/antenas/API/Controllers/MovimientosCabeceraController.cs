@@ -14,8 +14,8 @@ using System.Security.Claims;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SuperAdmin, Admin")]
-    [AllowAnonymous]
+    [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
+    //[AllowAnonymous]
     [Route("[controller]")]
     public class MovimientosCabeceraController : ControllerBase
     {
@@ -53,6 +53,7 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
+        [AllowAnonymous]
         [HttpGet("POF")]
         public async Task<IActionResult> ObtenerPOF(int idEstablecimiento)
         {
@@ -78,7 +79,7 @@ namespace API.Controllers
             });
         }
 
-
+        //[Authorize(Roles = "SuperAdmin, Admin")]
         [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
@@ -91,12 +92,14 @@ namespace API.Controllers
             return Ok(_serviceCabecera.GetAll());
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpGet("GetByIdCabecera")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> GetCabecera(int Id)
         {
             return Ok(await _serviceCabecera.GetByID(Id));
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin")]
         [HttpGet("GetByVigente")]
         public async Task<ActionResult<IEnumerable<MEC_MovimientosSuperCabecera>>> GetByVigente([FromQuery] string vigente = null)
         {
@@ -104,12 +107,14 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpGet("GetById")]
         public async Task<ActionResult<MEC_MovimientosSuperCabecera>> Get(int Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
         }
 
+        //[Authorize(Roles = "SuperAdmin, Admin")]
         [HttpPost("CabeceraMovimiento")]
         public async Task<ActionResult<bool>> Post([FromBody] MEC_MovimientosSuperCabecera entidad)
         {
@@ -298,11 +303,27 @@ namespace API.Controllers
             return Ok(cabecera);
         }
 
+        [Authorize(Roles = "SuperAdmin, Admin")]
         [HttpPut("SuperCabecera")]
         public async Task<ActionResult<MEC_MovimientosSuperCabecera>> UpdateSuperCabecera([FromBody] MEC_MovimientosSuperCabecera cabecera)
         {
             await _movimientosDetalle.ActualizarSuperCabeceraAsync(cabecera);
             return Ok(cabecera);
+        }
+
+        //devolucion de la cabecera
+        [HttpPut("DevolverMov")]
+        public async Task<ActionResult<MEC_MovimientosCabecera>> DevolverMovimiento([FromBody] DevolverMov request)
+        {
+            await _movimientosDetalle.DevolverCabeceraParaCorreccionAsync(request.IdCabecera, request.Observaciones);
+            return Ok("Cabecera Actualizada");
+        }
+
+        [HttpPut("EditarDetalle")]
+        public async Task<ActionResult<MEC_MovimientosDetalle>> EditarDetalle([FromBody] MEC_MovimientosDetalle request)
+        {
+            await _serviceDetalle.Update(request);
+            return Ok("Detalle Actualizada");
         }
     }
 }
