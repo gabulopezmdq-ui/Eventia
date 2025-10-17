@@ -318,5 +318,12 @@ namespace API.Controllers
             await _movimientosDetalle.DevolverCabeceraParaCorreccionAsync(request.IdCabecera, request.Observaciones);
             return Ok("Cabecera Actualizada");
         }
+
+        [HttpPut("EditarDetalle")]
+        public async Task<ActionResult<MEC_MovimientosDetalle>> EditarDetalle([FromBody] MEC_MovimientosDetalle request)
+        {
+            await _serviceDetalle.Update(request);
+            return Ok("Detalle Actualizada");
+        }
     }
 }
