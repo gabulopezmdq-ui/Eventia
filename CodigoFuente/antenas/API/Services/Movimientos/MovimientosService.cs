@@ -734,5 +734,23 @@ namespace API.Services
                 await _context.SaveChangesAsync();
             }
         }
+
+        //ESTADO DEVOLVER A EST
+
+        public async Task DevolverCabeceraParaCorreccionAsync(int idCabecera, string observaciones)
+        {
+            var cabecera = await _context.MEC_MovimientosCabecera
+                .FirstOrDefaultAsync(c => c.IdMovimientoCabecera == idCabecera);
+
+            if (cabecera == null)
+                throw new KeyNotFoundException("No se encontró la cabecera.");
+
+            cabecera.Estado = "R";
+            cabecera.Observaciones = observaciones;
+            //cabecera.Fecha = DateTime.Now;
+
+            _context.MEC_MovimientosCabecera.Update(cabecera);
+            await _context.SaveChangesAsync();
+        }
     }
 }

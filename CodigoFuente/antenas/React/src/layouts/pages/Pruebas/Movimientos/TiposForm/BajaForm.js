@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { Grid, TextField } from "@mui/material";
 
 const BajaForm = ({ formValues, handleChange }) => {

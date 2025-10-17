@@ -419,7 +419,7 @@ function AltaCabeceraMovimientos() {
   const actualizarDetalle = async (detalleActualizado) => {
     try {
       await axios.put(
-        `${process.env.REACT_APP_API_URL}MovimientosCabecera/ActualizarDetalle`,
+        `${process.env.REACT_APP_API_URL}MovimientosCabecera/EditarDetalle`,
         detalleActualizado,
         {
           headers: { Authorization: `Bearer ${token}` },

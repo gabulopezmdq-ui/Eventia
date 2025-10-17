@@ -36,5 +36,6 @@ namespace API.Services
         Task<MEC_MovimientosSuperCabecera> CrearSuperCabeceraAsync(MEC_MovimientosSuperCabecera entidad);
         Task AddCabeceraFecha(MEC_MovimientosCabecera entity);
         Task<MEC_MovimientosSuperCabecera> ActualizarSuperCabeceraAsync(MEC_MovimientosSuperCabecera entidad);
+        Task DevolverCabeceraParaCorreccionAsync(int idCabecera, string observaciones);
     }
 }
