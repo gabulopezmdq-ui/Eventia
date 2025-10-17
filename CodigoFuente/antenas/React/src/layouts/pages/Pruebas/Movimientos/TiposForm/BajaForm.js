@@ -29,12 +29,10 @@ const BajaForm = ({ formValues, handleChange }) => {
         <TextField
           label="Observaciones"
           name="observaciones"
-          value={formValues.observacionDetalle || ""}
+          value={formValues.observaciones || ""}
           fullWidth
-          InputProps={{ readOnly: true }}
           multiline
           rows={2}
-          disabled
         />
       </Grid>
       <Grid item xs={12}>
@@ -45,17 +43,6 @@ const BajaForm = ({ formValues, handleChange }) => {
           fullWidth
           InputProps={{ readOnly: true }}
           disabled
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Observaciones Detalle"
-          name="observacionDetalle"
-          value={formValues.observaciones || ""}
-          onChange={handleChange}
-          fullWidth
-          multiline
-          rows={2}
         />
       </Grid>
       <Grid item xs={6}>
