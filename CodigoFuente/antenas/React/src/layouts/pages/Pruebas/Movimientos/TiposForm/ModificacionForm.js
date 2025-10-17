@@ -118,9 +118,9 @@ const ModificacionForm = ({ formValues, handleChange }) => {
       </Grid>
       <Grid item xs={8}>
         <TextField
-          label="Observaciones Detalle"
-          name="observacionDetalle"
-          value={formValues.observacionDetalle || ""}
+          label="Observaciones"
+          name="observaciones"
+          value={formValues.observaciones || ""}
           onChange={handleChange}
           fullWidth
           multiline

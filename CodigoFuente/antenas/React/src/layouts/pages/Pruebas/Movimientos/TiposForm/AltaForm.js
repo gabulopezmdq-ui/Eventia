@@ -72,19 +72,6 @@ function FormTipoA({ formValues, handleChange }) {
         />
       </Grid>
 
-      <Grid item xs={12}>
-        <TextField
-          label="Observaciones Detalle"
-          name="observacionDetalle"
-          value={formValues.observacionDetalle || ""}
-          fullWidth
-          InputProps={{ readOnly: true }}
-          disabled
-          multiline
-          rows={2}
-        />
-      </Grid>
-
       {/* === EDITABLES === */}
       <Grid item xs={4}>
         <TextField

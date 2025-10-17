@@ -76,18 +76,6 @@ const AdicionalForm = ({ formValues, handleChange }) => {
           disabled
         />
       </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Observaciones Detalle"
-          name="observacionDetalle"
-          value={formValues.observacionDetalle || ""}
-          fullWidth
-          InputProps={{ readOnly: true }}
-          multiline
-          rows={2}
-          disabled
-        />
-      </Grid>
       <Grid item xs={6}>
         <TextField
           label="Antigüedad (Años)"
