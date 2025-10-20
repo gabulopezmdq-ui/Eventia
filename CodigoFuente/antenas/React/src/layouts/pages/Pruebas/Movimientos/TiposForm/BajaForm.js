@@ -37,6 +37,7 @@ const BajaForm = ({ formValues, handleChange }) => {
           name="observaciones"
           value={formValues.observaciones || ""}
           fullWidth
+          onChange={handleChange}
           multiline
           rows={2}
         />
