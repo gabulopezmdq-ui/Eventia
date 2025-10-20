@@ -528,9 +528,7 @@ function PlantaFuncional() {
         setShowAlert(true);
         setAlertMessage("Registro eliminado con éxito");
         setAlertType("success");
-
-        // Recargar los datos de la tabla
-        await handleCargar(); // <- Esta es la línea importante
+        await handleCargar();
       } else {
         setShowAlert(true);
         setAlertMessage("Error inesperado al eliminar el registro");
