@@ -203,11 +203,10 @@ function AltaCabeceraMovimientos() {
       );
 
       const detallesConCategoria = res.data.map((detalle) => {
-        console.log("detalle: ", detalle);
         const categoria = categorias.find((c) => c.idTipoCategoria === detalle.idTipoCategoria);
         return {
           ...detalle,
-          idTipoCategoria: categoria ? categoria.descripcion : "Sin categoría",
+          nombreCategoria: categoria ? categoria.descripcion : "Sin categoría", // solo agregás el nombre
         };
       });
 
@@ -679,7 +678,7 @@ function AltaCabeceraMovimientos() {
                       { Header: "Función", accessor: "idTipoFuncion" },
                       { Header: "Rural", accessor: "rural" },
                       { Header: "Turno", accessor: "turno" },
-                      { Header: "Cat", accessor: "idTipoCategoria" },
+                      { Header: "Cat", accessor: "nombreCategoria" },
                       { Header: "Hs", accessor: "horas" },
                       { Header: "Años", accessor: "antigAnios" },
                       { Header: "Meses", accessor: "antigMeses" },

@@ -2,7 +2,13 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Grid, TextField } from "@mui/material";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  return dateString.split("T")[0];
+};
+
 const BajaForm = ({ formValues, handleChange }) => {
+  console.log(formValues);
   return (
     <Grid container spacing={2}>
       <Grid item xs={6}>
@@ -50,7 +56,7 @@ const BajaForm = ({ formValues, handleChange }) => {
           label="Fecha Inicio de Baja"
           name="fechaInicioBaja"
           type="date"
-          value={formValues.fechaInicioBaja || ""}
+          value={formatDate(formValues.fechaInicioBaja) || ""}
           onChange={handleChange}
           fullWidth
           InputLabelProps={{ shrink: true }}
@@ -61,7 +67,7 @@ const BajaForm = ({ formValues, handleChange }) => {
           label="Fecha Fin de Baja"
           name="fechaFinBaja"
           type="date"
-          value={formValues.fechaFinBaja || ""}
+          value={formatDate(formValues.fechaFinBaja) || ""}
           onChange={handleChange}
           fullWidth
           InputLabelProps={{ shrink: true }}
