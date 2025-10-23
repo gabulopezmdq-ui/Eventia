@@ -511,7 +511,7 @@ function PlantaFuncional() {
 
   const handleSuperAdminAction = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
 
       const response = await axios.delete(
         `${process.env.REACT_APP_API_URL}POF/Admin?id=${idToDelete}`,
@@ -916,14 +916,6 @@ function PlantaFuncional() {
                       name="secuencia"
                       value={pofFormData.secuencia}
                       type="number"
-                      onChange={handlePofChange}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <FormField
-                      label="Barra"
-                      name="barra"
-                      value={pofFormData.barra}
                       onChange={handlePofChange}
                     />
                   </Grid>

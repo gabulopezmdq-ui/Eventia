@@ -246,8 +246,8 @@ namespace API.Services
             if (await _context.MEC_MovimientosBajas.AnyAsync(mb => mb.IdPOF == IdPOF))
                 throw new InvalidOperationException("No se puede eliminar: tiene movimientos de baja asociados.");
 
-            //if (await _context.MEC_POF_Barras.AnyAsync(pb => pb.IdPOF == IdPOF && pb.Vigente == "S"))
-            //    throw new InvalidOperationException("No se puede eliminar: tiene barras asociadas.");
+            if (await _context.MEC_POF_Barras.AnyAsync(pb => pb.IdPOF == IdPOF && pb.Vigente == "S"))
+                throw new InvalidOperationException("No se puede eliminar: tiene barras asociadas.");
 
             if (await _context.MEC_InasistenciasDetalle.AnyAsync(i => i.IdPOF == IdPOF))
                 throw new InvalidOperationException("No se puede eliminar: tiene inasistencias asociadas.");
