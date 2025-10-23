@@ -25,6 +25,8 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DataTableProcesar from "examples/Tables/DataTableProcesar";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
 import Establecimiento from "../Establecimiento";
 
 function ProcesarArchivoImportado() {
@@ -561,6 +563,7 @@ function ProcesarArchivoImportado() {
               </InputLabel>
               <Select
                 labelId="filter-label"
+                label="Seleccionar Cabecera"
                 value={selectedIdCabecera}
                 onChange={(e) => setSelectedIdCabecera(e.target.value)}
                 sx={{
@@ -656,6 +659,22 @@ function ProcesarArchivoImportado() {
           </Grid>
         )}
       </Grid>
+      {/* 🔥 BACKDROP CON SPINNER CENTRAL */}
+      {/* 🔥 BACKDROP CON SPINNER CENTRAL Y TEXTO */}
+      {isProcessing && (
+        <Grid
+          container
+          direction="column"
+          alignItems="center"
+          justifyContent="center"
+          sx={{ mt: 3 }}
+        >
+          <CircularProgress color="info" mb={1} />
+          <span style={{ fontSize: "1.2rem", fontWeight: 500, color: "#333" }}>
+            Procesando archivo importado...
+          </span>
+        </Grid>
+      )}
     </DashboardLayout>
   );
 }
