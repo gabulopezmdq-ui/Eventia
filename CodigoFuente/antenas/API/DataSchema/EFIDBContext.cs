@@ -20,6 +20,7 @@ namespace API.DataSchema
 
         public DbSet<Cargos> Cargos { get; set; }
         public DbSet<Legajo> Legajos { get; set; }
+        public DbSet<Nomen> Nomen { get; set; }
         public DbSet<Caradesi> Caradesi { get; set; }
         public DbSet<TipoDesi> TipoDesi { get; set; }
 

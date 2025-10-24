@@ -42,5 +42,13 @@ namespace API.Controllers
             var result = await _eFIService.GetDocentesByUEAsync(codDepend);
             return Ok(result);
         }
+
+
+        [HttpGet("DocentesEFIPOF")]
+        public async Task<IActionResult> GetByUEPOF(string codDepend)
+        {
+            var result = await _eFIService.GetEFIPOFAsync(codDepend);
+            return Ok(result);
+        }
     }
 }
