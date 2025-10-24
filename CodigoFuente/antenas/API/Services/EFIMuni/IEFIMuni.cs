@@ -14,5 +14,6 @@ namespace API.Services
     {
         Task<IEnumerable<EFIMuniDTO>> ObtenerLegajoConCargoAsync(int nroLegajo);
         Task<IEnumerable<DocenteDTO>> GetDocentesByUEAsync(string codDepend);
+        Task<IEnumerable<EFIDocPOFDTO>> GetEFIPOFAsync(string codDepend);
     }
 }
