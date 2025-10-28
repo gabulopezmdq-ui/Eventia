@@ -511,7 +511,7 @@ function PlantaFuncional() {
 
   const handleSuperAdminAction = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
 
       const response = await axios.delete(
         `${process.env.REACT_APP_API_URL}POF/Admin?id=${idToDelete}`,
