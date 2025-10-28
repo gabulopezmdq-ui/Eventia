@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using API.Migrations;
 using Microsoft.AspNetCore.Mvc;
 using API.DataSchema.DTO;
 

@@ -84,8 +84,8 @@ namespace API.Services
             }
 
             // 7. Validación MEC
-           // await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas, "080221215").ConfigureAwait(false);
+             await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            //await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
             // 8. Verificar registros inválidos
             var registrosInvalidos = mecanizadasFiltradas.Where(m => m.RegistroValido == "N").ToList();
@@ -334,8 +334,8 @@ namespace API.Services
             return resultado;
         }
         private async Task ValidarMecAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
-                {
-                    // 1. Cargar datos que podemos en memoria
+        {
+            // 1. Cargar datos que podemos en memoria
             var personas = await _context.MEC_Personas.AsNoTracking()
                                .ToDictionaryAsync(p => p.DNI);
 
@@ -403,7 +403,7 @@ namespace API.Services
                     CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
                 };
 
-                // ⚡ Consultar la antigüedad por persona (igual que en el código original)
+
                 var antiguedad = await _context.MEC_POF_Antiguedades
                                                .AsNoTracking()
                                                .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
@@ -695,107 +695,94 @@ namespace API.Services
 
 
         //Prueba con EFI
-        private async Task ValidarMecEfiAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas, string codDepend)
+        private async Task ValidarMecEfiAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
         {
-            // 1. Cargar datos que podemos en memoria
+            // Limpiar tabla TMPEFI
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"MEC_TMPEFI\" RESTART IDENTITY CASCADE");
+
+            // Cargar datos en memoria
             var personas = await _context.MEC_Personas.AsNoTracking()
                                 .ToDictionaryAsync(p => p.DNI);
+
             var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
-                                     .ToDictionaryAsync(e => e.NroDiegep);
+                                         .ToDictionaryAsync(e => e.NroDiegep);
+
             var pofs = await _context.MEC_POF.AsNoTracking().ToListAsync();
             var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
                               .ToDictionary(g => g.Key, g => g.First());
-            var cabecera = await _context.MEC_CabeceraLiquidacion
-                                 .AsNoTracking()
-                                 .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
-            // 2. Listas para batch insert
-            var detallesPOF = new List<MEC_POFDetalle>();
-            var erroresMec = new List<MEC_TMPErroresMecanizadas>();
+            var tmpEfiList = new List<MEC_TMPEFI>();
 
-            // 3. Procesar registros en memoria
             foreach (var registro in mecanizadasFiltradas)
             {
+                if (!establecimientos.TryGetValue(registro.NroEstab, out var establecimiento))
+                    continue;
+
                 personas.TryGetValue(registro.Documento, out var persona);
-                establecimientos.TryGetValue(registro.NroEstab, out var establecimiento);
 
-                if (establecimiento == null)
+                bool existePOF = persona != null &&
+                                 pofDict.ContainsKey((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia));
+
+                // Si ya existe en todo, skip
+                if (existePOF)
                     continue;
 
+                // Traer docentes EFI solo si no hay persona o no hay POF
+                EFIDocPOFDTO? docenteEFI = null;
+                var ueLimpia = LimpiarUE(establecimiento.UE);
+                var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia);
 
-                MEC_POF pof = null;
-                bool existePOF = false;
-
-                if (persona != null)
+                if (docentesUE != null && docentesUE.Any())
                 {
-                    // Verificar si existe POF en ese establecimiento y secuencia
-                    existePOF = pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out pof);
+                    // Buscar solo el documento correspondiente al registro
+                    docenteEFI = docentesUE.FirstOrDefault(d => d.NroDoc.Trim() == registro.Documento.Trim());
                 }
 
-                if (persona == null || !existePOF)
-                {
-                    // 🔹 Consultar EFI si no existe POF o persona
-                    var docenteEFI = (await _efiService.GetEFIPOFAsync(codDepend))
-                                     .FirstOrDefault(d => d.NroDoc == registro.Documento);
-
-                    if (docenteEFI != null)
-                    {
-                        // Docente encontrado en EFI: mostrar datos
-                        registro.RegistroValido = "P"; // P = Pendiente
-                        Console.WriteLine($"Docente en EFI: {docenteEFI.Apellido}, {docenteEFI.Nombre}, Legajo: {docenteEFI.Legajo}, Secuencia: {docenteEFI.Secuencia}, TipoCargo: {docenteEFI.TipoCargo}");
-                        continue; // No se agrega a errores todavía
-                    }
-
-                    // No existe ni en la base ni en EFI → error
-                    erroresMec.Add(new MEC_TMPErroresMecanizadas
-                    {
-                        IdCabecera = idCabecera,
-                        Documento = "NE",
-                        IdTMPMecanizada = registro.idTMPMecanizada,
-                        POF = "NE",
-                        IdEstablecimiento = establecimiento.IdEstablecimiento
-                    });
-                    registro.RegistroValido = "N";
+                // **Filtrar registros que no tienen persona ni cargo activo en EFI**
+                if (persona == null && docenteEFI == null)
                     continue;
-                }
 
-                // Procesar detalle si hay POF existente
-                var detalle = new MEC_POFDetalle
+                string apellido = persona?.Apellido ?? docenteEFI?.Apellido;
+                string nombre = persona?.Nombre ?? docenteEFI?.Nombre;
+                string legajo = persona?.Legajo ?? docenteEFI?.Legajo.ToString();
+                int? barra = docenteEFI?.Barra; // solo barra si hay cargo activo EFI
+
+                var tmp = new MEC_TMPEFI
                 {
                     IdCabecera = idCabecera,
-                    IdPOF = pof.IdPOF,
-                    CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
+                    Documento = registro.Documento,
+                    Secuencia = registro.Secuencia,
+                    TipoCargo = registro.TipoCargo,
+                    UE = establecimiento.UE,
+                    Apellido = apellido,
+                    Nombre = nombre,
+                    Legajo = legajo,
+                    Barra = barra,
+                    Estado = persona != null ? "NP" : "NE" // NP: persona existente, NE: persona no existe pero EFI activo
                 };
 
-                // ⚡ Consultar la antigüedad por persona
-                var antiguedad = await _context.MEC_POF_Antiguedades
-                                               .AsNoTracking()
-                                               .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
-
-                if (antiguedad != null)
-                {
-                    var result = CalcularAntiguedad(
-                        ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
-                        ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
-                        antiguedad.MesReferencia,
-                        antiguedad.AnioReferencia,
-                        antiguedad.AnioAntiguedad,
-                        antiguedad.MesAntiguedad
-                    );
-
-                    detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
-                    detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
-                }
-
-                detallesPOF.Add(detalle);
-                registro.RegistroValido = "S";
+                tmpEfiList.Add(tmp);
             }
 
-            // 4. Guardar todos los detalles y errores de una sola vez
-            _context.MEC_POFDetalle.AddRange(detallesPOF);
-            _context.MEC_TMPErroresMecanizadas.AddRange(erroresMec);
-            await _context.SaveChangesAsync();
+            // Guardar todos los registros
+            if (tmpEfiList.Any())
+            {
+                _context.MEC_TMPEFI.AddRange(tmpEfiList);
+                await _context.SaveChangesAsync();
+            }
+
+            Console.WriteLine($"--- VALIDACIÓN FINAL ---");
+            Console.WriteLine($"Total registros TMPEFI: {tmpEfiList.Count}");
         }
+
+        // Limpieza de UE: eliminar guiones y espacios
+        private static string LimpiarUE(string? ue)
+        {
+            if (string.IsNullOrWhiteSpace(ue)) return string.Empty;
+            return ue.Replace("-", "").Replace(" ", "").Trim();
+        }
+
+
 
     }
 }

@@ -1,6 +1,5 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
-using API.Migrations;
 using API.Services.ImportacionMecanizada;
 using Microsoft.EntityFrameworkCore;
 using System;
