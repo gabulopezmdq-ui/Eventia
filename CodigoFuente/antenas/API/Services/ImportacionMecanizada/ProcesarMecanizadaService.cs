@@ -7,16 +7,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using static API.Services.EFIMuniService;
 
 namespace API.Services
 {
     public class ProcesarMecanizadaService<T> : IProcesarMecanizadaService<T> where T : class
     {
         private readonly DataContext _context;
+        private readonly IEFIMuniService _efiService;
 
-        public ProcesarMecanizadaService(DataContext context)
+        public ProcesarMecanizadaService(DataContext context, IEFIMuniService efiService)
         {
             _context = context;
+            _efiService = efiService;
         }
 
         public async Task<string> HandlePreprocesarArchivoAsync(int idCabecera)
@@ -81,7 +84,8 @@ namespace API.Services
             }
 
             // 7. Validación MEC
-            await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+           // await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas, "080221215").ConfigureAwait(false);
 
             // 8. Verificar registros inválidos
             var registrosInvalidos = mecanizadasFiltradas.Where(m => m.RegistroValido == "N").ToList();
@@ -330,103 +334,103 @@ namespace API.Services
             return resultado;
         }
         private async Task ValidarMecAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas)
-        {
-            // 1. Cargar datos que podemos en memoria
-    var personas = await _context.MEC_Personas.AsNoTracking()
-                       .ToDictionaryAsync(p => p.DNI);
+                {
+                    // 1. Cargar datos que podemos en memoria
+            var personas = await _context.MEC_Personas.AsNoTracking()
+                               .ToDictionaryAsync(p => p.DNI);
 
-    var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
-                             .ToDictionaryAsync(e => e.NroDiegep);
+            var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
+                                     .ToDictionaryAsync(e => e.NroDiegep);
 
-    var pofs = await _context.MEC_POF.AsNoTracking().ToListAsync();
-    var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
-                      .ToDictionary(g => g.Key, g => g.First());
+            var pofs = await _context.MEC_POF.AsNoTracking().ToListAsync();
+            var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
+                              .ToDictionary(g => g.Key, g => g.First());
 
-    var cabecera = await _context.MEC_CabeceraLiquidacion
-                         .AsNoTracking()
-                         .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+            var cabecera = await _context.MEC_CabeceraLiquidacion
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
 
-    // 2. Listas para batch insert
-    var detallesPOF = new List<MEC_POFDetalle>();
-    var erroresMec = new List<MEC_TMPErroresMecanizadas>();
+            // 2. Listas para batch insert
+            var detallesPOF = new List<MEC_POFDetalle>();
+            var erroresMec = new List<MEC_TMPErroresMecanizadas>();
 
-    // 3. Procesar registros en memoria
-    foreach (var registro in mecanizadasFiltradas)
-    {
-        personas.TryGetValue(registro.Documento, out var persona);
-        establecimientos.TryGetValue(registro.NroEstab, out var establecimiento);
-
-        if (establecimiento == null)
-        {
-            // Si no hay establecimiento, continuar con el siguiente registro
-            continue;
-        }
-
-        if (persona == null)
-        {
-            erroresMec.Add(new MEC_TMPErroresMecanizadas
+            // 3. Procesar registros en memoria
+            foreach (var registro in mecanizadasFiltradas)
             {
-                IdCabecera = idCabecera,
-                Documento = "NE",
-                IdTMPMecanizada = registro.idTMPMecanizada,
-                POF = "NE",
-                IdEstablecimiento = establecimiento.IdEstablecimiento
-            });
-            registro.RegistroValido = "N";
-            continue;
-        }
+                personas.TryGetValue(registro.Documento, out var persona);
+                establecimientos.TryGetValue(registro.NroEstab, out var establecimiento);
 
-        // Buscar POF en diccionario
-        if (!pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out var pof))
-        {
-            erroresMec.Add(new MEC_TMPErroresMecanizadas
-            {
-                IdCabecera = idCabecera,
-                Documento = "NE",
-                IdTMPMecanizada = registro.idTMPMecanizada,
-                POF = "NE",
-                IdEstablecimiento = establecimiento.IdEstablecimiento
-            });
-            registro.RegistroValido = "N";
-            continue;
-        }
+                if (establecimiento == null)
+                {
+                    // Si no hay establecimiento, continuar con el siguiente registro
+                    continue;
+                }
 
-        // Procesar detalle
-        var detalle = new MEC_POFDetalle
-        {
-            IdCabecera = idCabecera,
-            IdPOF = pof.IdPOF,
-            CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
-        };
+                if (persona == null)
+                {
+                    erroresMec.Add(new MEC_TMPErroresMecanizadas
+                    {
+                        IdCabecera = idCabecera,
+                        Documento = "NE",
+                        IdTMPMecanizada = registro.idTMPMecanizada,
+                        POF = "NE",
+                        IdEstablecimiento = establecimiento.IdEstablecimiento
+                    });
+                    registro.RegistroValido = "N";
+                    continue;
+                }
 
-        // ⚡ Consultar la antigüedad por persona (igual que en el código original)
-        var antiguedad = await _context.MEC_POF_Antiguedades
-                                       .AsNoTracking()
-                                       .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
+                // Buscar POF en diccionario
+                if (!pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out var pof))
+                {
+                    erroresMec.Add(new MEC_TMPErroresMecanizadas
+                    {
+                        IdCabecera = idCabecera,
+                        Documento = "NE",
+                        IdTMPMecanizada = registro.idTMPMecanizada,
+                        POF = "NE",
+                        IdEstablecimiento = establecimiento.IdEstablecimiento
+                    });
+                    registro.RegistroValido = "N";
+                    continue;
+                }
 
-        if (antiguedad != null)
-        {
-            var result = CalcularAntiguedad(
-                ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
-                ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
-                antiguedad.MesReferencia,
-                antiguedad.AnioReferencia,
-                antiguedad.AnioAntiguedad,
-                antiguedad.MesAntiguedad
-            );
+                // Procesar detalle
+                var detalle = new MEC_POFDetalle
+                {
+                    IdCabecera = idCabecera,
+                    IdPOF = pof.IdPOF,
+                    CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
+                };
 
-            detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
-            detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
-        }
+                // ⚡ Consultar la antigüedad por persona (igual que en el código original)
+                var antiguedad = await _context.MEC_POF_Antiguedades
+                                               .AsNoTracking()
+                                               .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
 
-        detallesPOF.Add(detalle);
-        registro.RegistroValido = "S";
-    }
+                if (antiguedad != null)
+                {
+                    var result = CalcularAntiguedad(
+                        ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
+                        ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
+                        antiguedad.MesReferencia,
+                        antiguedad.AnioReferencia,
+                        antiguedad.AnioAntiguedad,
+                        antiguedad.MesAntiguedad
+                    );
 
-    // 4. Guardar todos los detalles y errores de una sola vez
-    _context.MEC_POFDetalle.AddRange(detallesPOF);
-    _context.MEC_TMPErroresMecanizadas.AddRange(erroresMec);
-    await _context.SaveChangesAsync();
+                    detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
+                    detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
+                }
+
+                detallesPOF.Add(detalle);
+                registro.RegistroValido = "S";
+            }
+
+            // 4. Guardar todos los detalles y errores de una sola vez
+            _context.MEC_POFDetalle.AddRange(detallesPOF);
+            _context.MEC_TMPErroresMecanizadas.AddRange(erroresMec);
+            await _context.SaveChangesAsync();
         }
 
 
@@ -688,5 +692,110 @@ namespace API.Services
 
             return "Registros procesados correctamente.";
         }
+
+
+        //Prueba con EFI
+        private async Task ValidarMecEfiAsync(int idCabecera, List<MEC_TMPMecanizadas> mecanizadasFiltradas, string codDepend)
+        {
+            // 1. Cargar datos que podemos en memoria
+            var personas = await _context.MEC_Personas.AsNoTracking()
+                                .ToDictionaryAsync(p => p.DNI);
+            var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
+                                     .ToDictionaryAsync(e => e.NroDiegep);
+            var pofs = await _context.MEC_POF.AsNoTracking().ToListAsync();
+            var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
+                              .ToDictionary(g => g.Key, g => g.First());
+            var cabecera = await _context.MEC_CabeceraLiquidacion
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
+            // 2. Listas para batch insert
+            var detallesPOF = new List<MEC_POFDetalle>();
+            var erroresMec = new List<MEC_TMPErroresMecanizadas>();
+
+            // 3. Procesar registros en memoria
+            foreach (var registro in mecanizadasFiltradas)
+            {
+                personas.TryGetValue(registro.Documento, out var persona);
+                establecimientos.TryGetValue(registro.NroEstab, out var establecimiento);
+
+                if (establecimiento == null)
+                    continue;
+
+
+                MEC_POF pof = null;
+                bool existePOF = false;
+
+                if (persona != null)
+                {
+                    // Verificar si existe POF en ese establecimiento y secuencia
+                    existePOF = pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out pof);
+                }
+
+                if (persona == null || !existePOF)
+                {
+                    // 🔹 Consultar EFI si no existe POF o persona
+                    var docenteEFI = (await _efiService.GetEFIPOFAsync(codDepend))
+                                     .FirstOrDefault(d => d.NroDoc == registro.Documento);
+
+                    if (docenteEFI != null)
+                    {
+                        // Docente encontrado en EFI: mostrar datos
+                        registro.RegistroValido = "P"; // P = Pendiente
+                        Console.WriteLine($"Docente en EFI: {docenteEFI.Apellido}, {docenteEFI.Nombre}, Legajo: {docenteEFI.Legajo}, Secuencia: {docenteEFI.Secuencia}, TipoCargo: {docenteEFI.TipoCargo}");
+                        continue; // No se agrega a errores todavía
+                    }
+
+                    // No existe ni en la base ni en EFI → error
+                    erroresMec.Add(new MEC_TMPErroresMecanizadas
+                    {
+                        IdCabecera = idCabecera,
+                        Documento = "NE",
+                        IdTMPMecanizada = registro.idTMPMecanizada,
+                        POF = "NE",
+                        IdEstablecimiento = establecimiento.IdEstablecimiento
+                    });
+                    registro.RegistroValido = "N";
+                    continue;
+                }
+
+                // Procesar detalle si hay POF existente
+                var detalle = new MEC_POFDetalle
+                {
+                    IdCabecera = idCabecera,
+                    IdPOF = pof.IdPOF,
+                    CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
+                };
+
+                // ⚡ Consultar la antigüedad por persona
+                var antiguedad = await _context.MEC_POF_Antiguedades
+                                               .AsNoTracking()
+                                               .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
+
+                if (antiguedad != null)
+                {
+                    var result = CalcularAntiguedad(
+                        ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
+                        ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
+                        antiguedad.MesReferencia,
+                        antiguedad.AnioReferencia,
+                        antiguedad.AnioAntiguedad,
+                        antiguedad.MesAntiguedad
+                    );
+
+                    detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
+                    detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
+                }
+
+                detallesPOF.Add(detalle);
+                registro.RegistroValido = "S";
+            }
+
+            // 4. Guardar todos los detalles y errores de una sola vez
+            _context.MEC_POFDetalle.AddRange(detallesPOF);
+            _context.MEC_TMPErroresMecanizadas.AddRange(erroresMec);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

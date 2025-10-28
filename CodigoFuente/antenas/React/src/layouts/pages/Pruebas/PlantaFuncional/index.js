@@ -920,14 +920,6 @@ function PlantaFuncional() {
                     />
                   </Grid>
                   <Grid item xs={6}>
-                    <FormField
-                      label="Barra"
-                      name="barra"
-                      value={pofFormData.barra}
-                      onChange={handlePofChange}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
                     <FormControl fullWidth>
                       <InputLabel id="car-revista-select-label">Car. Revista</InputLabel>
                       <Select

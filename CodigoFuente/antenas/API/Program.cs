@@ -62,6 +62,10 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+//configuracion para EFIMuni
+builder.Services.AddDbContext<EFIDBContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("EFIMuni")));
+
 // Configuraci�n de la base de datos
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"))
@@ -86,6 +90,7 @@ builder.Services.AddHttpClient<IPartesDiariosService, PartesDiariosService>();
 builder.Services.AddScoped<IPartesDiariosService, PartesDiariosService>();
 builder.Services.AddScoped<ICabeceraLiquidacionService, CabeceraLiquidacionService>();
 builder.Services.AddScoped<ICabeceraInasistenciasService, CabeceraInasistenciasService>();
+builder.Services.AddScoped<IEFIMuniService, EFIMuniService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

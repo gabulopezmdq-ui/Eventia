@@ -48,12 +48,14 @@ function AltaCabeceraMovimientos() {
   const [detalleEditando, setDetalleEditando] = useState(null);
 
   const [formData, setFormData] = useState({
-    area: "L",
+    area: "",
     mes: "",
-    anio: new Date().getFullYear().toString(),
+    anio: "",
+    //anio: new Date().getFullYear().toString(),
     idEstablecimiento: "",
     Accion: [],
     estado: "P",
+    observaciones: "", // 👈 Nuevo campo
   });
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [formDeshabilitado, setFormDeshabilitado] = useState(false);
@@ -98,6 +100,7 @@ function AltaCabeceraMovimientos() {
     { label: "Pendiente", value: "P" },
     { label: "Enviado a Educación", value: "E" },
     { label: "Enviado a Provincia", value: "V" },
+    { label: "Rechazado", value: "R" }, // 👈 agrega R
   ];
   useEffect(() => {
     const fetchCabeceras = async () => {
@@ -165,6 +168,7 @@ function AltaCabeceraMovimientos() {
             idEstablecimiento: cabecera.idEstablecimiento,
             Accion: accionesSeleccionadas,
             estado: cabecera.estado,
+            observaciones: cabecera.observaciones || "", // 👈 agrega esto
           });
           setIdCabecera(cabecera.idMovimientoCabecera);
           setFormDeshabilitado(true);
@@ -452,9 +456,9 @@ function AltaCabeceraMovimientos() {
             {!id && (
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Seleccionar Cabecera</InputLabel>
+                  <InputLabel>Seleccionar SuperCabecera</InputLabel>
                   <Select
-                    label="Seleccionar Cabecera"
+                    label="Seleccionar SuperCabecera"
                     value={cabeceraSeleccionada || ""}
                     onChange={(e) => {
                       const cabeceraId = e.target.value;
@@ -602,8 +606,17 @@ function AltaCabeceraMovimientos() {
                 </Select>
               </FormControl>
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="MOTIVO DE DEVOLUCIÓN"
+                value={formData.observaciones || ""}
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
+            </Grid>
           </Grid>
-
           {!id && !formDeshabilitado && (
             <MDBox mt={3} p={2} display="flex" justifyContent="flex-end">
               <MDButton
