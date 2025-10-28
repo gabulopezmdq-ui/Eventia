@@ -314,7 +314,6 @@ namespace API.Services
                 await _context.MEC_TMPErroresTiposEstablecimientos.AddRangeAsync(erroresTiposEstablecimientos);
             }
         }
-
         public List<ErroresTMPEFIDTO> TMPEFIAgrupados()
         {
             var resultado = (from t in _context.MEC_TMPEFI
@@ -333,13 +332,14 @@ namespace API.Services
                                  UE = g.Key.UE,
                                  Barra = g.FirstOrDefault().Barra,
                                  Estado = g.Key.Estado,
-                                 Cargo = g.FirstOrDefault().Cargo // <-- nuevo campo
-                                                                  //Cantidad = g.Count() // opcional
+                                 Cargo = g.FirstOrDefault().Cargo,
+                                 Caracter = g.FirstOrDefault().Caracter,
+                                 Funcion = g.FirstOrDefault().Funcion // <-- nuevo campo
+                                                                      //Cantidad = g.Count() // opcional
                              }).ToList();
 
             return resultado;
         }
-
         public List<ErroresPOFDTO> ErroresPOFAgrupados()
         {
             var resultado = (from a in _context.MEC_TMPErroresMecanizadas
@@ -759,6 +759,7 @@ namespace API.Services
 
                 if (docentesUE != null && docentesUE.Any())
                 {
+                    // Buscar solo el documento correspondiente al registro
                     docenteEFI = docentesUE.FirstOrDefault(d => d.NroDoc.Trim() == registro.Documento.Trim());
                 }
 
@@ -769,8 +770,10 @@ namespace API.Services
                 string apellido = persona?.Apellido ?? docenteEFI?.Apellido;
                 string nombre = persona?.Nombre ?? docenteEFI?.Nombre;
                 string legajo = persona?.Legajo ?? docenteEFI?.Legajo.ToString();
-                int? barra = docenteEFI?.Barra;
-                string cargo = docenteEFI?.Cargo; // <-- nuevo campo
+                int? barra = docenteEFI?.Barra; // solo barra si hay cargo activo EFI
+                string cargo = docenteEFI?.Cargo;
+                string caracter = docenteEFI?.Caracter;
+                string funcion = registro.Funcion; // <-- nuevo campo
 
                 var tmp = new MEC_TMPEFI
                 {
@@ -784,7 +787,9 @@ namespace API.Services
                     Legajo = legajo,
                     Barra = barra,
                     Estado = persona != null ? "NP" : "NE",
-                    Cargo = cargo // asignamos el valor del cargo
+                    Cargo = cargo,
+                    Caracter = caracter,
+                    Funcion = funcion // asignamos la funcion
                 };
 
                 tmpEfiList.Add(tmp);
@@ -800,13 +805,13 @@ namespace API.Services
             Console.WriteLine($"Total registros TMPEFI: {tmpEfiList.Count}");
         }
 
-
         // Limpieza de UE: eliminar guiones y espacios
         private static string LimpiarUE(string? ue)
         {
             if (string.IsNullOrWhiteSpace(ue)) return string.Empty;
             return ue.Replace("-", "").Replace(" ", "").Trim();
         }
+
 
 
 
