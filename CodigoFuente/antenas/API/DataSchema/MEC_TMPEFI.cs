@@ -16,6 +16,8 @@ namespace API.DataSchema
         public string? Secuencia { get; set; }
         public string? TipoCargo { get; set; }
         public string? Cargo { get; set; }
+        public string? Caracter { get; set; }
+        public string? Funcion { get; set; }
         public string? UE { get; set; }
         public int? Barra { get; set; }
         public string? Estado { get; set; }

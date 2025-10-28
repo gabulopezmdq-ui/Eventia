@@ -60,6 +60,8 @@ namespace API.DataSchema.DTO
         public int? Barra { get; set; }
         public string Estado { get; set; }
         public string? Cargo { get; set; }
+        public string? Caracter { get; set; }
+        public string? Funcion { get; set; }
         //public int Cantidad { get; set; } // opcional
     }
 }
