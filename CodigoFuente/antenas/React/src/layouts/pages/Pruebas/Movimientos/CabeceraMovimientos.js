@@ -134,6 +134,7 @@ function CabeceraMovimientos() {
 
       const data = response.data;
       const areaLabel = areaOptions.find((opt) => opt.value === data.area)?.label || data.area;
+
       const movimientoConTodo = {
         establecimiento: data.nombrePcia,
         diegep: data.nroDiegep,
@@ -143,23 +144,27 @@ function CabeceraMovimientos() {
         mes: convertirMes(data.mes),
         anio: data.anio,
         area: areaLabel,
-        docentes: data.docentes.map((docente) => ({
-          nDNI: docente.numDoc,
-          nombre: docente.nombre,
-          apellido: docente.apellido,
-          turno: docente.turno,
-          nHoras: docente.horas?.toString() || "0",
-          anos: docente.antigAnios?.toString() || "0",
-          meses: docente.antigMeses?.toString() || "0",
-          sitRevista: docente.sitRevista,
-          secuencia: docente.secuencia != null ? docente.secuencia : "",
-          observaciones: docente.observaciones || "",
-          tipoMovimiento: docente.tipoMovimiento,
-          tipoDoc: docente.tipoDoc,
-          categoria: docente.categoria,
-          funcion: docente.funcion,
-          ruralidad: data.ruralidad,
-        })),
+        docentes: data.docentes.map((docente) => {
+          const esBaja = docente.tipoMovimiento === "B";
+
+          return {
+            nDNI: docente.numDoc,
+            nombre: docente.nombre,
+            apellido: docente.apellido,
+            turno: esBaja ? "" : docente.turno,
+            nHoras: esBaja ? "" : docente.horas?.toString() || "",
+            anos: esBaja ? "" : docente.antigAnios?.toString() || "",
+            meses: esBaja ? "" : docente.antigMeses?.toString() || "",
+            sitRevista: docente.sitRevista,
+            secuencia: docente.secuencia != null ? docente.secuencia : "",
+            observaciones: docente.observaciones || "",
+            tipoMovimiento: docente.tipoMovimiento,
+            tipoDoc: docente.tipoDoc,
+            categoria: esBaja ? "" : docente.categoria?.toString() || "",
+            funcion: esBaja ? "" : docente.funcion?.toString() || "",
+            ruralidad: esBaja ? "" : data.ruralidad?.toString() || "",
+          };
+        }),
       };
 
       await GeneradorPDF.generar(movimientoConTodo);
@@ -183,6 +188,7 @@ function CabeceraMovimientos() {
         message: errorBack,
         type: "error",
       });
+
       setTimeout(() => {
         setErrorAlert({ show: false, message: "", type: "error" });
       }, 3000);
@@ -455,7 +461,6 @@ function CabeceraMovimientos() {
 
                         return (
                           <MDBox display="flex" gap={1}>
-                            {/* Editar */}
                             {((estadoNorm === "P" &&
                               (userRoles.includes("Secretario") ||
                                 userRoles.includes("Admin") ||
@@ -465,7 +470,8 @@ function CabeceraMovimientos() {
                                   userRoles.includes("SuperAdmin"))) ||
                               (estadoNorm === "R" &&
                                 (userRoles.includes("Admin") ||
-                                  userRoles.includes("SuperAdmin")))) && (
+                                  userRoles.includes("SuperAdmin") ||
+                                  userRoles.includes("Secretario")))) && (
                               <MDButton
                                 variant="gradient"
                                 color="warning"
