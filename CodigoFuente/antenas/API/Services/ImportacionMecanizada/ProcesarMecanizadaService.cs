@@ -84,8 +84,8 @@ namespace API.Services
             }
 
             // 7. Validación MEC
-             await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            //await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+             //await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
             // 8. Verificar registros inválidos
             var registrosInvalidos = mecanizadasFiltradas.Where(m => m.RegistroValido == "N").ToList();
@@ -315,6 +315,29 @@ namespace API.Services
             }
         }
 
+        public List<ErroresTMPEFIDTO> TMPEFIAgrupados()
+        {
+            var resultado = (from t in _context.MEC_TMPEFI
+                             group t by new { t.Documento, t.Secuencia, t.UE, t.Estado } into g
+                             orderby g.Key.UE, g.Key.Documento, g.Key.Secuencia
+                             select new ErroresTMPEFIDTO
+                             {
+                                 IdTMPEFI = g.FirstOrDefault().IdTMPEFI,
+                                 IdCabecera = g.FirstOrDefault().IdCabecera,
+                                 Documento = g.Key.Documento,
+                                 Apellido = g.FirstOrDefault().Apellido,
+                                 Nombre = g.FirstOrDefault().Nombre,
+                                 Legajo = g.FirstOrDefault().Legajo,
+                                 Secuencia = g.Key.Secuencia,
+                                 TipoCargo = g.FirstOrDefault().TipoCargo,
+                                 UE = g.Key.UE,
+                                 Barra = g.FirstOrDefault().Barra,
+                                 Estado = g.Key.Estado,
+                                 //Cantidad = g.Count() // opcional, muestra cuántos registros había en el grupo
+                             }).ToList();
+
+            return resultado;
+        }
         public List<ErroresPOFDTO> ErroresPOFAgrupados()
         {
             var resultado = (from a in _context.MEC_TMPErroresMecanizadas
