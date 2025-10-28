@@ -24,13 +24,14 @@ namespace API.Controllers
         private readonly ICRUDService<MEC_TMPErroresFuncion> _funcion;
         private readonly ICRUDService<MEC_TMPErroresMecanizadas> _mecanizada;
         private readonly ICRUDService<MEC_TMPErroresTiposEstablecimientos> _tiposEstablecimiento;
+        private readonly ICRUDService<MEC_TMPEFI> _tmpEfi;
         private readonly IProcesarMecanizadaService<MEC_TMPMecanizadas> _procesarMecanizadaService;
 
-        public TMPErroresController(DataContext context, ILogger<MEC_Establecimientos> logger, ICRUDService<MEC_TMPErroresCarRevista> carRevista, 
+        public TMPErroresController(DataContext context, ILogger<MEC_Establecimientos> logger, ICRUDService<MEC_TMPErroresCarRevista> carRevista,
                                     ICRUDService<MEC_TMPErroresConceptos> concepto, ICRUDService<MEC_TMPErroresEstablecimientos> establecimiento,
-                                    ICRUDService<MEC_TMPErroresFuncion> funcion, ICRUDService<MEC_TMPErroresMecanizadas> mecanizada, 
+                                    ICRUDService<MEC_TMPErroresFuncion> funcion, ICRUDService<MEC_TMPErroresMecanizadas> mecanizada,
                                     ICRUDService<MEC_TMPErroresTiposEstablecimientos> tiposEstablecimientos,
-                                    IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService)
+                                    IProcesarMecanizadaService<MEC_TMPMecanizadas> procesarMecanizadaService, ICRUDService<MEC_TMPEFI> tmpEfi)
         {
             _context = context;
             _carRevista = carRevista;
@@ -40,8 +41,9 @@ namespace API.Controllers
             _mecanizada = mecanizada;
             _tiposEstablecimiento = tiposEstablecimientos;
             _procesarMecanizadaService = procesarMecanizadaService;
+            _tmpEfi = tmpEfi;
         }
-        
+
         [HttpGet("GetAllCarRevista")]
         public async Task<ActionResult<IEnumerable<MEC_TMPErroresCarRevista>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
@@ -70,7 +72,7 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<MEC_TMPErroresMecanizadas>>> GetErroresMec()
         {
             return Ok(_mecanizada.GetAll().ToList()); //trae todos los registros. De la forma anterior generaba un problema por el volumen de la solicitud
-        
+
         }
 
         [HttpGet("GetAllTipoEst")]
@@ -84,6 +86,14 @@ namespace API.Controllers
         public IActionResult GetErroresAgrupados()
         {
             var resultado = _procesarMecanizadaService.ErroresPOFAgrupados();
+            return Ok(resultado);
+        }
+
+
+        [HttpGet("GetErroresMec")]
+        public async Task<ActionResult<IEnumerable<MEC_TMPEFI>>> GetEfi() 
+        {
+            var resultado = _procesarMecanizadaService.TMPEFIAgrupados();
             return Ok(resultado);
         }
 

@@ -15,6 +15,7 @@ namespace API.Services
         Task PreprocesarAsync(int idCabecera);
         Task<string> ProcesarSiEsValidoAsync(int idCabecera, int usuario);
         public List<ErroresPOFDTO> ErroresPOFAgrupados();
+        List<ErroresTMPEFIDTO> TMPEFIAgrupados();
     }
 
 }
