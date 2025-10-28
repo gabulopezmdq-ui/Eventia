@@ -333,11 +333,13 @@ namespace API.Services
                                  UE = g.Key.UE,
                                  Barra = g.FirstOrDefault().Barra,
                                  Estado = g.Key.Estado,
-                                 //Cantidad = g.Count() // opcional, muestra cuántos registros había en el grupo
+                                 Cargo = g.FirstOrDefault().Cargo // <-- nuevo campo
+                                                                  //Cantidad = g.Count() // opcional
                              }).ToList();
 
             return resultado;
         }
+
         public List<ErroresPOFDTO> ErroresPOFAgrupados()
         {
             var resultado = (from a in _context.MEC_TMPErroresMecanizadas
@@ -728,7 +730,7 @@ namespace API.Services
                                 .ToDictionaryAsync(p => p.DNI);
 
             var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
-                                         .ToDictionaryAsync(e => e.NroDiegep);
+                                             .ToDictionaryAsync(e => e.NroDiegep);
 
             var pofs = await _context.MEC_POF.AsNoTracking().ToListAsync();
             var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
@@ -750,25 +752,25 @@ namespace API.Services
                 if (existePOF)
                     continue;
 
-                // Traer docentes EFI solo si no hay persona o no hay POF
+                // Traer docentes EFI
                 EFIDocPOFDTO? docenteEFI = null;
                 var ueLimpia = LimpiarUE(establecimiento.UE);
                 var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia);
 
                 if (docentesUE != null && docentesUE.Any())
                 {
-                    // Buscar solo el documento correspondiente al registro
                     docenteEFI = docentesUE.FirstOrDefault(d => d.NroDoc.Trim() == registro.Documento.Trim());
                 }
 
-                // **Filtrar registros que no tienen persona ni cargo activo en EFI**
+                // Filtrar registros sin persona ni cargo activo en EFI
                 if (persona == null && docenteEFI == null)
                     continue;
 
                 string apellido = persona?.Apellido ?? docenteEFI?.Apellido;
                 string nombre = persona?.Nombre ?? docenteEFI?.Nombre;
                 string legajo = persona?.Legajo ?? docenteEFI?.Legajo.ToString();
-                int? barra = docenteEFI?.Barra; // solo barra si hay cargo activo EFI
+                int? barra = docenteEFI?.Barra;
+                string cargo = docenteEFI?.Cargo; // <-- nuevo campo
 
                 var tmp = new MEC_TMPEFI
                 {
@@ -781,13 +783,13 @@ namespace API.Services
                     Nombre = nombre,
                     Legajo = legajo,
                     Barra = barra,
-                    Estado = persona != null ? "NP" : "NE" // NP: persona existente, NE: persona no existe pero EFI activo
+                    Estado = persona != null ? "NP" : "NE",
+                    Cargo = cargo // asignamos el valor del cargo
                 };
 
                 tmpEfiList.Add(tmp);
             }
 
-            // Guardar todos los registros
             if (tmpEfiList.Any())
             {
                 _context.MEC_TMPEFI.AddRange(tmpEfiList);
@@ -797,6 +799,7 @@ namespace API.Services
             Console.WriteLine($"--- VALIDACIÓN FINAL ---");
             Console.WriteLine($"Total registros TMPEFI: {tmpEfiList.Count}");
         }
+
 
         // Limpieza de UE: eliminar guiones y espacios
         private static string LimpiarUE(string? ue)
