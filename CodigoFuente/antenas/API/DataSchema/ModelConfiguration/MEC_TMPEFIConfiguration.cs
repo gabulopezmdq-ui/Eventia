@@ -61,6 +61,11 @@ namespace API.DataSchema.ModelConfiguration
              .IsFixedLength(true)
              .IsRequired(false);
 
+            builder.Property(e => e.Cargo)
+         .HasColumnType("varchar(50)")
+         .IsFixedLength(true)
+         .IsRequired(false);
+
             builder.Property(e => e.Barra)
              .IsFixedLength(true)
             .IsRequired(false);
