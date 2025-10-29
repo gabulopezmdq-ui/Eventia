@@ -130,6 +130,20 @@ function ProcesarArchivoImportado() {
   };
 
   //* Acciones del POPUP*/
+  const handleGuardarPOF = (formData) => {
+    console.log("Datos a guardar:", formData);
+    // 👉 Aquí llamamos al backend
+    // axios.post("/TU_API", formData)
+
+    setShowAgregarPOFModal(false);
+    setPersonaSeleccionada(null);
+
+    setErrorAlert({
+      show: true,
+      message: "POF guardado correctamente",
+      type: "success",
+    });
+  };
   const handleAgregarPOF = (persona) => {
     setPersonaSeleccionada(persona);
     setShowAgregarPOFModal(true);
@@ -266,6 +280,7 @@ function ProcesarArchivoImportado() {
         open={showAgregarPOFModal}
         onClose={handleClosePOFModal}
         persona={personaSeleccionada}
+        onSave={handleGuardarPOF}
       />
     </DashboardLayout>
   );

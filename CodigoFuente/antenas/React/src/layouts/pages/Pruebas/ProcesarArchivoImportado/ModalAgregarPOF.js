@@ -1,24 +1,58 @@
 import PropTypes from "prop-types";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Grid,
-  TextField,
-} from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Grid, TextField } from "@mui/material";
 import { useState, useEffect } from "react";
+import axios from "axios";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
 import MDButton from "components/MDButton";
 
 export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   const [formData, setFormData] = useState({});
+  const [categorias, setCategorias] = useState([]);
+  const token = sessionStorage.getItem("token");
 
   useEffect(() => {
-    if (persona) setFormData(persona);
+    if (persona) {
+      // Inicializar formData con los datos de persona
+      setFormData({
+        ...persona,
+        idTipoCategoria: persona.idTipoCategoria || "", // Asegurar que existe el campo para el select
+      });
+    }
+
+    const fetchCategorias = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+
+        const result = await axios.get(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setCategorias(result.data);
+      } catch (error) {
+        console.error("Error al obtener categorías", error);
+      }
+    };
+
+    fetchCategorias();
   }, [persona]);
 
   if (!persona) return null;
+
+  const handleCategoriaChange = (e) => {
+    const selectedId = e.target.value;
+    const categoriaSeleccionada = categorias.find((c) => c.idTipoCategoria === selectedId);
+
+    setFormData((prev) => ({
+      ...prev,
+      idTipoCategoria: selectedId, // Guardar el ID de la categoría
+      cargo: categoriaSeleccionada?.descripcion || "", // Actualizar el campo cargo con la descripción
+    }));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,43 +126,47 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               onChange={handleInputChange}
             />
           </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              label="Estado"
-              name="estado"
-              fullWidth
-              value={formData.estado || ""}
-              onChange={handleInputChange}
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              label="Cargo"
-              name="cargo"
-              fullWidth
-              value={formData.cargo || ""}
-              onChange={handleInputChange}
-            />
-          </Grid>
-
-          <Grid item xs={6}>
-            <TextField
-              label="Caracter"
-              name="caracter"
-              fullWidth
-              value={formData.caracter || ""}
-              onChange={handleInputChange}
-            />
-          </Grid>
-
           <Grid item xs={6}>
             <TextField
               label="Función"
               name="funcion"
               fullWidth
               value={formData.funcion || ""}
+              onChange={handleInputChange}
+            />
+          </Grid>
+          {/* Campo de solo lectura para mostrar el cargo actual */}
+          {formData.cargo && (
+            <Grid item xs={12}>
+              <TextField label="Cargo Actual" fullWidth value={formData.cargo} disabled />
+            </Grid>
+          )}
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel id="cargo-label">Cargo</InputLabel>
+              <Select
+                labelId="cargo-label"
+                name="idTipoCategoria"
+                label="Cargo"
+                style={{ height: "2.7rem" }}
+                value={formData.idTipoCategoria || ""}
+                onChange={handleCategoriaChange}
+              >
+                {/* Opciones de las categorías */}
+                {categorias.map((categoria) => (
+                  <MenuItem key={categoria.idTipoCategoria} value={categoria.idTipoCategoria}>
+                    {categoria.descripcion}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Caracter"
+              name="caracter"
+              fullWidth
+              value={formData.caracter || ""}
               onChange={handleInputChange}
             />
           </Grid>
