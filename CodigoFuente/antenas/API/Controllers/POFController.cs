@@ -229,7 +229,7 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
-        [HttpGet("EFIPOF")]
+        [HttpPost("EFIPOF")]
         public async Task<IActionResult> EFIPOF([FromBody] CrearPOFRequest request)
         {
             if (request == null || request.Dto == null)
