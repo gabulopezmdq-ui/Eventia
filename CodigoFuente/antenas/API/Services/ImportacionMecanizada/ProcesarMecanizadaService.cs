@@ -84,8 +84,8 @@ namespace API.Services
             }
 
             // 7. Validación MEC
-            await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            //await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+           // await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
             // 8. Verificar registros inválidos
             var registrosInvalidos = mecanizadasFiltradas.Where(m => m.RegistroValido == "N").ToList();
