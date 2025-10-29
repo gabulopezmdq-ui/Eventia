@@ -295,14 +295,14 @@ namespace API.Services
             return idFuncion?.IdTipoFuncion;
         }
 
-        public async Task<MEC_POF?> CrearPOFAsync(ErroresTMPEFIDTO dto, int carRevista, int cargo)
+        public async Task<MEC_POF?> CrearPOFAsync(ErroresTMPEFIDTO dto, int carRevista, int cargo, List<int> barras)
         {
             var idPersona = await ObtenerPersonaEFI(dto.Documento);
             var idEst = await ObtenerEstEFI(dto.UE);
             var idFuncion = await ObtenerFuncionEFI(dto.Funcion);
 
             if (idPersona == null)
-                return null; 
+                return null;
 
             var nuevoPOF = new MEC_POF
             {
@@ -311,14 +311,25 @@ namespace API.Services
                 IdFuncion = idFuncion.Value,
                 IdCarRevista = carRevista,
                 Secuencia = dto.Secuencia ?? string.Empty,
-                Barra = dto.Barra?.ToString() ?? string.Empty,
+                //Barra = dto.Barra?.ToString() ?? string.Empty,
                 IdCategoria = cargo,
                 TipoCargo = dto.TipoCargo ?? string.Empty,
-                Vigente = "S" 
+                Vigente = "S"
             };
 
             _context.MEC_POF.Add(nuevoPOF);
             await _context.SaveChangesAsync();
+            if (barras != null && barras.Any())
+            {
+                var barrasPOF = barras.Select(b => new MEC_POF_Barras
+                {
+                    IdPOF = nuevoPOF.IdPOF,  // clave foránea al MEC_POF recién creado
+                    Barra = b
+                }).ToList();
+
+                _context.MEC_POF_Barras.AddRange(barrasPOF);
+                await _context.SaveChangesAsync();
+            }
 
             return nuevoPOF;
         }
