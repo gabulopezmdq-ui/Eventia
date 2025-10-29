@@ -20,7 +20,7 @@ namespace API.Services
             _context = context;
             _serviceGenerico = serviceGenerico;
         }
-        
+
         public async Task<int> AddPersona(MEC_Personas persona)
         {
             await _serviceGenerico.Add(persona);
@@ -86,7 +86,7 @@ namespace API.Services
         // Verifica la existencia de la existencia de un registro con la misma persona, establecimiento y secuencia
         public async Task<bool> ExisteRegistroEnPOFAsync(int idPersona, int idEstablecimiento, string secuencia)
         {
-            var pof =  await _context.MEC_POF.AnyAsync(p => p.IdPersona == idPersona && p.IdEstablecimiento == idEstablecimiento && p.Secuencia == secuencia);
+            var pof = await _context.MEC_POF.AnyAsync(p => p.IdPersona == idPersona && p.IdEstablecimiento == idEstablecimiento && p.Secuencia == secuencia);
 
             return pof;
         }
@@ -99,7 +99,7 @@ namespace API.Services
             // Verificar si ya existe un registro en MEC_POF para esta combinación
             if (await _context.MEC_POF.AnyAsync(p => p.IdEstablecimiento == idEstablecimiento &&
                                                         p.IdPersona == idPersona &&
-                                                        p.Secuencia == secuencia))  
+                                                        p.Secuencia == secuencia))
             {
                 return "Ya existe un registro en MEC_POF para esta combinación de Establecimiento, Persona y Secuencia.";
             }
@@ -121,7 +121,7 @@ namespace API.Services
 
             if (existe != null)
             {
-                
+
                 existe.MesReferencia = data.MesReferencia;
                 existe.AnioReferencia = data.AnioReferencia;
                 existe.AnioAntiguedad = data.AnioAntiguedad;
@@ -199,7 +199,7 @@ namespace API.Services
         {
             var pofList = await _context.MEC_POF
                 .Where(p => p.IdEstablecimiento == idEstablecimiento)
-                .Include(p => p.Persona) 
+                .Include(p => p.Persona)
                 .Include(p => p.POFBarras)
                 .OrderBy(b => b.Persona.Apellido)
                 .Select(p => new PofConBarrasDTO
@@ -212,7 +212,7 @@ namespace API.Services
                     TipoCargo = p.TipoCargo,
                     Vigente = p.Vigente,
                     Barra = p.Barra,
-                    Barras = p. POFBarras
+                    Barras = p.POFBarras
                     .Where(b => b.Vigente == "S")
                     .Select(b => b.Barra).ToList()
                 })
@@ -231,7 +231,7 @@ namespace API.Services
                 .FirstOrDefaultAsync(d => d.IdPOF == IdPOF);
 
             if (pof == null)
-                return false; 
+                return false;
 
             if (await _context.MEC_Mecanizadas.AnyAsync(m => m.IdPOF == IdPOF))
                 throw new InvalidOperationException("No se puede eliminar: tiene mecanizadas asociadas.");
@@ -259,5 +259,68 @@ namespace API.Services
             return true;
         }
 
+        //GRABAR POF POR EFI
+        private async Task<int?> ObtenerPersonaEFI(string documento)
+        {
+            if (string.IsNullOrEmpty(documento))
+                return null;
+
+            var persona = await _context.MEC_Personas
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.DNI == documento);
+
+            return persona?.IdPersona;
+        }
+
+        private async Task<int?> ObtenerEstEFI(string UE)
+        {
+            if (string.IsNullOrEmpty(UE))
+                return null;
+
+            var est = await _context.MEC_Establecimientos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.UE == UE);
+
+            return est?.IdEstablecimiento;
+        }
+        private async Task<int?> ObtenerFuncionEFI(string funcion)
+        {
+            if (string.IsNullOrEmpty(funcion))
+                return null;
+
+            var idFuncion = await _context.MEC_TiposFunciones
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.CodFuncion == funcion);
+
+            return idFuncion?.IdTipoFuncion;
+        }
+
+        public async Task<MEC_POF?> CrearPOFAsync(ErroresTMPEFIDTO dto, int carRevista, int cargo)
+        {
+            var idPersona = await ObtenerPersonaEFI(dto.Documento);
+            var idEst = await ObtenerEstEFI(dto.UE);
+            var idFuncion = await ObtenerFuncionEFI(dto.Funcion);
+
+            if (idPersona == null)
+                return null; 
+
+            var nuevoPOF = new MEC_POF
+            {
+                IdEstablecimiento = idEst.Value,
+                IdPersona = idPersona.Value,
+                IdFuncion = idFuncion.Value,
+                IdCarRevista = carRevista,
+                Secuencia = dto.Secuencia ?? string.Empty,
+                Barra = dto.Barra?.ToString() ?? string.Empty,
+                IdCategoria = cargo,
+                TipoCargo = dto.TipoCargo ?? string.Empty,
+                Vigente = "S" 
+            };
+
+            _context.MEC_POF.Add(nuevoPOF);
+            await _context.SaveChangesAsync();
+
+            return nuevoPOF;
+        }
     }
 }

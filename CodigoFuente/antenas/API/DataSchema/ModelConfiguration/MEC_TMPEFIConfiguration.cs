@@ -72,7 +72,7 @@ namespace API.DataSchema.ModelConfiguration
          .IsRequired(false);
 
             builder.Property(e => e.Funcion)
-         .HasColumnType("varchar(2)")
+         .HasColumnType("varchar(1)")
          .IsFixedLength(true)
          .IsRequired(false);
 
