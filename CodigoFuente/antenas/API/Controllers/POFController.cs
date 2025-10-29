@@ -229,5 +229,29 @@ namespace API.Controllers
             return Ok(resultado);
         }
 
+        [HttpGet("EFIPOF")]
+        public async Task<IActionResult> EFIPOF([FromBody] CrearPOFRequest request)
+        {
+            if (request == null || request.Dto == null)
+                return BadRequest("Los datos enviados son inválidos.");
+
+            var resultado = await _pofService.CrearPOFAsync(
+                request.Dto,
+                request.IdCarRevista,
+                request.IdCategoria
+            );
+
+            if (resultado == null)
+                return NotFound("No se encontró la persona o el establecimiento asociado.");
+
+            return Ok(new
+            {
+                mensaje = "POF creado correctamente",
+                idPOF = resultado.IdPOF,
+                resultado
+            });
+        }
+
+
     }
 }
