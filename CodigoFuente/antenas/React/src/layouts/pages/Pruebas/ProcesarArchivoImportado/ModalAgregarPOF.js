@@ -1,82 +1,125 @@
-import PropTypes from "prop-types";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Grid, TextField } from "@mui/material";
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import axios from "axios";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Grid,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import MDButton from "components/MDButton";
 
 export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   const [formData, setFormData] = useState({});
   const [categorias, setCategorias] = useState([]);
-  const [caracteres, setCaracteres] = useState([]); // Estado para CarRevista
+  const [caracteres, setCaracteres] = useState([]);
+  const [funciones, setFunciones] = useState([]);
   const token = sessionStorage.getItem("token");
 
+  const tipoCargoOptions = [
+    { value: "C", label: "CARGO" },
+    { value: "H", label: "HORAS" },
+    { value: "M", label: "MÓDULOS" },
+  ];
+
   useEffect(() => {
-    if (persona) {
-      // Inicializar formData con los datos de persona
+    if (!token) return;
+
+    const fetchData = async () => {
+      try {
+        const [funcRes, catRes, carRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URL}TiposFunciones/getall`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API_URL}CarRevista/getall`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const funcionesVigentes = funcRes.data.filter((f) => f.vigente === "S");
+        setFunciones(funcionesVigentes);
+        setCategorias(catRes.data);
+        setCaracteres(carRes.data);
+      } catch (error) {
+        console.error("Error al obtener datos del backend:", error);
+      }
+    };
+
+    if (open) fetchData();
+  }, [token, open]);
+
+  useEffect(() => {
+    if (persona && funciones.length > 0) {
+      const funcionEncontrada = funciones.find(
+        (f) =>
+          f.codFuncion?.toUpperCase() === persona.funcion?.toUpperCase() ||
+          f.descripcion?.toUpperCase() === persona.funcion?.toUpperCase()
+      );
+
       setFormData({
         ...persona,
-        idTipoCategoria: persona.idTipoCategoria || "", // Para el select de Cargo
-        idCarRevista: persona.idCarRevista || "", // Para el select de Carácter
+        idTipoCategoria: persona.idTipoCategoria || "",
+        idCarRevista: persona.idCarRevista || "",
+        tipoCargo: persona.tipoCargo || "",
+        funcion: funcionEncontrada?.descripcion || persona.funcion || "",
+        barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : persona.barra || "",
+      });
+    } else if (persona) {
+      setFormData({
+        ...persona,
+        idTipoCategoria: persona.idTipoCategoria || "",
+        idCarRevista: persona.idCarRevista || "",
+        tipoCargo: persona.tipoCargo || "",
+        barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : persona.barra || "",
       });
     }
-
-    const fetchCategorias = async () => {
-      try {
-        const result = await axios.get(`${process.env.REACT_APP_API_URL}TiposCategorias/getall`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setCategorias(result.data);
-      } catch (error) {
-        console.error("Error al obtener categorías", error);
-      }
-    };
-
-    const fetchCaracteres = async () => {
-      try {
-        const result = await axios.get(`${process.env.REACT_APP_API_URL}CarRevista/getall`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setCaracteres(result.data);
-      } catch (error) {
-        console.error("Error al obtener caracteres", error);
-      }
-    };
-
-    fetchCategorias();
-    fetchCaracteres();
-  }, [persona, token]);
+  }, [persona, funciones]);
 
   if (!persona) return null;
 
-  // Manejar cambio de categoría (Cargo)
+  // 🔹 Handlers
   const handleCategoriaChange = (e) => {
     const selectedId = e.target.value;
     const categoriaSeleccionada = categorias.find((c) => c.idTipoCategoria === selectedId);
-
     setFormData((prev) => ({
       ...prev,
-      idTipoCategoria: selectedId, // Guardar el ID de la categoría
-      cargo: categoriaSeleccionada?.descripcion || "", // Actualizar el campo cargo con la descripción
+      idTipoCategoria: selectedId,
+      cargo: categoriaSeleccionada?.descripcion || "",
     }));
   };
 
-  // Manejar cambio de carácter (CarRevista)
   const handleCaracterChange = (e) => {
     const selectedId = e.target.value;
     const caracterSeleccionado = caracteres.find((c) => c.idCarRevista === selectedId);
-
     setFormData((prev) => ({
       ...prev,
-      idCarRevista: selectedId, // Guardar el ID del carácter
-      caracter: caracterSeleccionado?.descripcion || "", // Actualizar el campo caracter con la descripción
+      idCarRevista: selectedId,
+      caracter: caracterSeleccionado?.descripcion || "",
+    }));
+  };
+
+  const handleFuncionChange = (e) => {
+    const selectedDescripcion = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      funcion: selectedDescripcion,
+    }));
+  };
+
+  const handleTipoCargoChange = (e) => {
+    const selectedValue = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      tipoCargo: selectedValue,
     }));
   };
 
@@ -89,7 +132,12 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   };
 
   const handleSubmit = () => {
-    onSave(formData); // lo mandamos al padre
+    const dataToSend = {
+      ...formData,
+      barra: formData.barra ? formData.barra.split(/[ ,]+/).filter((b) => b.trim() !== "") : [],
+    };
+
+    onSave(dataToSend);
   };
 
   return (
@@ -98,21 +146,18 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
 
       <DialogContent>
         <Grid container spacing={2} mt={1}>
-          {/* Campos no editables */}
           <Grid item xs={6}>
-            <TextField label="Legajo" fullWidth value={formData.legajo} disabled />
+            <TextField label="Legajo" fullWidth value={formData.legajo || ""} disabled />
           </Grid>
           <Grid item xs={6}>
-            <TextField label="Documento" fullWidth value={formData.documento} disabled />
+            <TextField label="Documento" fullWidth value={formData.documento || ""} disabled />
           </Grid>
           <Grid item xs={6}>
-            <TextField label="Apellido" fullWidth value={formData.apellido} disabled />
+            <TextField label="Apellido" fullWidth value={formData.apellido || ""} disabled />
           </Grid>
           <Grid item xs={6}>
-            <TextField label="Nombre" fullWidth value={formData.nombre} disabled />
+            <TextField label="Nombre" fullWidth value={formData.nombre || ""} disabled />
           </Grid>
-
-          {/* Campos editables */}
           <Grid item xs={6}>
             <TextField
               label="Secuencia"
@@ -122,17 +167,25 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               onChange={handleInputChange}
             />
           </Grid>
-
           <Grid item xs={6}>
-            <TextField
-              label="Tipo Cargo"
-              name="tipoCargo"
-              fullWidth
-              value={formData.tipoCargo || ""}
-              onChange={handleInputChange}
-            />
+            <FormControl fullWidth>
+              <InputLabel id="tipo-cargo-label">Tipo Cargo</InputLabel>
+              <Select
+                labelId="tipo-cargo-label"
+                name="tipoCargo"
+                label="Tipo Cargo"
+                style={{ height: "2.7rem" }}
+                value={formData.tipoCargo || ""}
+                onChange={handleTipoCargoChange}
+              >
+                {tipoCargoOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
-
           <Grid item xs={6}>
             <TextField
               label="UE"
@@ -142,35 +195,41 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               onChange={handleInputChange}
             />
           </Grid>
-
           <Grid item xs={6}>
             <TextField
               label="Barra"
               name="barra"
               fullWidth
+              placeholder="Ej: 54 60 30 21"
+              helperText="Podés separar con espacios o comas"
               value={formData.barra || ""}
               onChange={handleInputChange}
             />
           </Grid>
-
           <Grid item xs={6}>
-            <TextField
-              label="Función"
-              name="funcion"
-              fullWidth
-              value={formData.funcion || ""}
-              onChange={handleInputChange}
-            />
+            <FormControl fullWidth>
+              <InputLabel id="funcion-label">Función</InputLabel>
+              <Select
+                labelId="funcion-label"
+                name="funcion"
+                label="Función"
+                style={{ height: "2.7rem" }}
+                value={formData.funcion || ""}
+                onChange={handleFuncionChange}
+              >
+                {funciones.map((funcion) => (
+                  <MenuItem key={funcion.idTipoFuncion} value={funcion.descripcion}>
+                    {funcion.descripcion}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
-
-          {/* Campo de solo lectura para mostrar el cargo actual */}
           {formData.cargo && (
             <Grid item xs={12}>
               <TextField label="Cargo Actual" fullWidth value={formData.cargo} disabled />
             </Grid>
           )}
-
-          {/* Select para Cargo */}
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel id="cargo-label">Cargo</InputLabel>
@@ -182,7 +241,6 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
                 value={formData.idTipoCategoria || ""}
                 onChange={handleCategoriaChange}
               >
-                {/* Opciones de las categorías */}
                 {categorias.map((categoria) => (
                   <MenuItem key={categoria.idTipoCategoria} value={categoria.idTipoCategoria}>
                     {categoria.descripcion}
@@ -191,14 +249,11 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               </Select>
             </FormControl>
           </Grid>
-
           {formData.caracter && (
             <Grid item xs={12}>
               <TextField label="Carácter Actual" fullWidth value={formData.caracter} disabled />
             </Grid>
           )}
-
-          {/* Select para Carácter */}
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel id="caracter-label">Carácter</InputLabel>
