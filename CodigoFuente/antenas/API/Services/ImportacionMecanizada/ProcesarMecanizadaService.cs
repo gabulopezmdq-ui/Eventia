@@ -62,7 +62,7 @@ namespace API.Services
             var hsCarRevista = new HashSet<string>(await _context.MEC_CarRevista.Select(c => c.CodPcia).ToListAsync());
             var hsTiposEstablecimientos = new HashSet<string>(await _context.MEC_TiposEstablecimientos.Select(t => t.CodTipoEstablecimiento).ToListAsync());
 
-            // 4. Validaciones en memoria
+            // 4. Validaciones en memoria   
             await ValidarNroEstabOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsEstablecimientos);
             await ValidarCodFuncionOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsFunciones);
             await ValidarCodLiquidacionOptimizadoAsync(idCabecera, mecanizadasFiltradas, hsConceptos);
@@ -84,8 +84,8 @@ namespace API.Services
             }
 
             // 7. Validación MEC
-            await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
-            //await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            //await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
+            await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
             // 8. Verificar registros inválidos
             var registrosInvalidos = mecanizadasFiltradas.Where(m => m.RegistroValido == "N").ToList();
@@ -748,7 +748,7 @@ namespace API.Services
                 bool existePOF = persona != null &&
                                  pofDict.ContainsKey((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia));
 
-                // Si ya existe en todo, skip
+               
                 if (existePOF)
                     continue;
 
@@ -759,7 +759,7 @@ namespace API.Services
 
                 if (docentesUE != null && docentesUE.Any())
                 {
-                    // Buscar solo el documento correspondiente al registro
+                    
                     docenteEFI = docentesUE.FirstOrDefault(d => d.NroDoc.Trim() == registro.Documento.Trim());
                 }
 
@@ -770,10 +770,10 @@ namespace API.Services
                 string apellido = persona?.Apellido ?? docenteEFI?.Apellido;
                 string nombre = persona?.Nombre ?? docenteEFI?.Nombre;
                 string legajo = persona?.Legajo ?? docenteEFI?.Legajo.ToString();
-                int? barra = docenteEFI?.Barra; // solo barra si hay cargo activo EFI
+                int? barra = docenteEFI?.Barra; 
                 string cargo = docenteEFI?.Cargo;
                 string caracter = docenteEFI?.Caracter;
-                string funcion = registro.Funcion; // <-- nuevo campo
+                string funcion = registro.Funcion; 
 
                 var tmp = new MEC_TMPEFI
                 {
@@ -789,7 +789,7 @@ namespace API.Services
                     Estado = persona != null ? "NP" : "NE",
                     Cargo = cargo,
                     Caracter = caracter,
-                    Funcion = funcion // asignamos la funcion
+                    Funcion = funcion 
                 };
 
                 tmpEfiList.Add(tmp);
@@ -805,7 +805,7 @@ namespace API.Services
             Console.WriteLine($"Total registros TMPEFI: {tmpEfiList.Count}");
         }
 
-        // Limpieza de UE: eliminar guiones y espacios
+       
         private static string LimpiarUE(string? ue)
         {
             if (string.IsNullOrWhiteSpace(ue)) return string.Empty;
