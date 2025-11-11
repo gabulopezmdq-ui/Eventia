@@ -143,7 +143,12 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}pof/EFIPOF`, dataToSend, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log(response.data); // ✅ Te mostrará: { mensaje: "POF creado correctamente", idPOF: ..., resultado: {...} }
+
+      // ✅ Solo llamamos a onSave una vez, con la respuesta correcta
       onSave(response.data);
+      alert(response.data.mensaje); // 👈 rápido y simple, o usar un Snackbar si querés más estilo
     } catch (error) {
       console.error("Error al guardar POF:", error.response?.data || error);
     }
