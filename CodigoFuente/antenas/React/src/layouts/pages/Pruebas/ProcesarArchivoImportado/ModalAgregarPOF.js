@@ -131,13 +131,22 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const dataToSend = {
-      ...formData,
-      barra: formData.barra ? formData.barra.split(/[ ,]+/).filter((b) => b.trim() !== "") : [],
+      Dto: {
+        ...formData,
+      },
+      Barras: formData.barra ? formData.barra.split(/[ ,]+/).filter((b) => b.trim() !== "") : [],
     };
 
-    onSave(dataToSend);
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}pof/EFIPOF`, dataToSend, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      onSave(response.data);
+    } catch (error) {
+      console.error("Error al guardar POF:", error.response?.data || error);
+    }
   };
 
   return (
