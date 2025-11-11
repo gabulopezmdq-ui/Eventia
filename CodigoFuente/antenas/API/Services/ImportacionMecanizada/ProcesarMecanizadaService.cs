@@ -87,10 +87,16 @@ namespace API.Services
             //await ValidarMecAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
             await ValidarMecEfiAsync(idCabecera, mecanizadasFiltradas).ConfigureAwait(false);
 
+            //registrar errores en TMPEFI
+            bool mecanizadasEFI = await _context.MEC_TMPEFI.AnyAsync(x => x.Estado == "NP" || x.Estado == "NE");
+
             // 8. Verificar registros inválidos
             var registrosInvalidos = mecanizadasFiltradas.Where(m => m.RegistroValido == "N").ToList();
 
-            if (registrosInvalidos.Any())
+            //if (registrosInvalidos.Any())
+            //    throw new Exception("Existen Personas que no están registradas en el sistema...");
+
+            if (mecanizadasEFI == true)
                 throw new Exception("Existen Personas que no están registradas en el sistema...");
         }
 
@@ -790,7 +796,10 @@ namespace API.Services
                     Cargo = cargo,
                     Caracter = caracter,
                     Funcion = funcion 
+
+
                 };
+
 
                 tmpEfiList.Add(tmp);
             }
