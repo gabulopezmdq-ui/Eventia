@@ -237,8 +237,8 @@ namespace API.Controllers
 
             var resultado = await _pofService.CrearPOFAsync(
                 request.Dto,
-                request.IdCarRevista,
-                request.IdCategoria,
+                request.Dto.IdCarRevista,
+                request.Dto.IdTipoCategoria,
                 request.Barras
             );
 

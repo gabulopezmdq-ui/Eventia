@@ -324,7 +324,8 @@ namespace API.Services
                 var barrasPOF = barras.Select(b => new MEC_POF_Barras
                 {
                     IdPOF = nuevoPOF.IdPOF,  // clave foránea al MEC_POF recién creado
-                    Barra = b
+                    Barra = b,
+                    Vigente = "S"
                 }).ToList();
 
                 _context.MEC_POF_Barras.AddRange(barrasPOF);
