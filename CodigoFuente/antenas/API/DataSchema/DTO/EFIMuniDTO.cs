@@ -63,13 +63,16 @@ namespace API.DataSchema.DTO
         public string? Caracter { get; set; }
         public string? Funcion { get; set; }
         //public int Cantidad { get; set; } // opcional
+
+        public int IdCarRevista { get; set; }  
+        public int IdTipoCategoria { get; set; }
     }
 
     public class CrearPOFRequest
     {
         public ErroresTMPEFIDTO Dto { get; set; }
-        public List<int> Barras { get; set; }
         public int IdCarRevista { get; set; }
         public int IdCategoria { get; set; }
+        public List<int> Barras { get; set; }
     }
 }
