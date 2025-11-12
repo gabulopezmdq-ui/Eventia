@@ -9,6 +9,11 @@ import {
   MenuItem,
   CircularProgress,
   Card,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -28,10 +33,21 @@ export default function ProcesarArchivoImportado() {
   const [showErrorButton, setShowErrorButton] = useState(false);
   const [erroresMec, setErroresMec] = useState([]);
   const [isLoadingErrores, setIsLoadingErrores] = useState(false);
+
   const [showAgregarPOFModal, setShowAgregarPOFModal] = useState(false);
   const [personaSeleccionada, setPersonaSeleccionada] = useState(null);
 
+  // ⬇️ ADD: estado para modal "Agregar Persona"
+  const [showAgregarPersonaModal, setShowAgregarPersonaModal] = useState(false);
+  const [personaForm, setPersonaForm] = useState({
+    legajo: "",
+    dni: "",
+    apellido: "",
+    nombre: "",
+  });
+
   const token = sessionStorage.getItem("token");
+
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_API_URL + "CabeceraLiquidacion/GetAll", {
@@ -53,6 +69,7 @@ export default function ProcesarArchivoImportado() {
         });
       });
   }, [token]);
+
   const fetchErroresMec = async () => {
     setIsLoadingErrores(true);
     try {
@@ -73,6 +90,7 @@ export default function ProcesarArchivoImportado() {
       setIsLoadingErrores(false);
     }
   };
+
   const handleProcessFile = async () => {
     if (!selectedIdCabecera) {
       setErrorAlert({
@@ -117,9 +135,11 @@ export default function ProcesarArchivoImportado() {
       setIsProcessing(false);
     }
   };
+
   const handleViewErrors = () => {
     fetchErroresMec();
   };
+
   const handleGuardarPOF = async (formData) => {
     try {
       const response = await axios.post(process.env.REACT_APP_API_URL + "POF/EFIPOF", formData, {
@@ -144,6 +164,7 @@ export default function ProcesarArchivoImportado() {
       });
     }
   };
+
   const handleAgregarPOF = (persona) => {
     setPersonaSeleccionada(persona);
     setShowAgregarPOFModal(true);
@@ -153,6 +174,79 @@ export default function ProcesarArchivoImportado() {
     setShowAgregarPOFModal(false);
     setPersonaSeleccionada(null);
   };
+
+  // ⬇️ ADD: abrir modal "Agregar Persona" con datos prellenados
+  const handleAgregarPersona = (persona) => {
+    setPersonaForm({
+      legajo: persona?.legajo || "",
+      dni: persona?.documento || "",
+      apellido: persona?.apellido || "",
+      nombre: persona?.nombre || "",
+    });
+    setShowAgregarPersonaModal(true);
+  };
+
+  // ⬇️ ADD: guardar persona -> POST Personas/EFIPersona y recargar grilla
+  const handleGuardarPersona = async () => {
+    // 1) Construcción segura de URL
+    const base = process.env.REACT_APP_API_URL || "";
+    const url = new URL("Personas/EFIPersona", base).toString();
+
+    // 2) Armar el DTO usando DNI (no "documento")
+    const dto = {
+      legajo: isNaN(Number(personaForm.legajo)) ? personaForm.legajo : Number(personaForm.legajo),
+      dni: isNaN(Number(personaForm.dni)) ? personaForm.dni : Number(personaForm.dni),
+      apellido: personaForm.apellido,
+      nombre: personaForm.nombre,
+    };
+
+    const payload = { Dto: dto };
+
+    try {
+      console.log("POST =>", url, payload);
+      const resp = await axios.post(url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("RESPUESTA:", resp.status, resp.data);
+
+      if (resp.status >= 200 && resp.status < 300) {
+        setShowAgregarPersonaModal(false);
+        setErrorAlert({
+          show: true,
+          message: resp.data?.mensaje || "Persona guardada correctamente",
+          type: "success",
+        });
+        await fetchErroresMec(); // recarga la grilla
+      } else {
+        setErrorAlert({
+          show: true,
+          message: resp.data?.mensaje || `Error (${resp.status}) al guardar la persona.`,
+          type: "error",
+        });
+      }
+    } catch (e) {
+      console.error("ERROR guardar persona:", {
+        message: e.message,
+        status: e.response?.status,
+        data: e.response?.data,
+      });
+      setErrorAlert({
+        show: true,
+        message:
+          e?.response?.data?.mensaje ||
+          e?.response?.data?.Message ||
+          e?.response?.data?.error ||
+          "Error al guardar la persona.",
+        type: "error",
+      });
+    }
+  };
+
+  // ⬇️ Para validar propTypes del cell Acciones
   const AccionesCellPropTypes = {
     row: PropTypes.shape({
       original: PropTypes.shape({
@@ -207,6 +301,7 @@ export default function ProcesarArchivoImportado() {
           </MDButton>
         </Grid>
       </Grid>
+
       {errorAlert.show && (
         <Grid container justifyContent="center">
           <Grid item xs={12}>
@@ -220,6 +315,7 @@ export default function ProcesarArchivoImportado() {
           </Grid>
         </Grid>
       )}
+
       {showErrorButton && (
         <Grid container justifyContent="center" mt={3}>
           <MDButton size="small" variant="gradient" color="error" onClick={handleViewErrors}>
@@ -227,6 +323,7 @@ export default function ProcesarArchivoImportado() {
           </MDButton>
         </Grid>
       )}
+
       {isProcessing && (
         <Grid container direction="column" alignItems="center" justifyContent="center" mt={7}>
           <CircularProgress color="info" />
@@ -235,6 +332,7 @@ export default function ProcesarArchivoImportado() {
           </span>
         </Grid>
       )}
+
       {isLoadingErrores ? (
         <Grid container justifyContent="center" mt={4}>
           <CircularProgress color="info" />
@@ -254,9 +352,24 @@ export default function ProcesarArchivoImportado() {
                       Header: "Acciones",
                       accessor: "acciones",
                       Cell: function AccionesCell({ row }) {
-                        const estado = row.original.estado;
+                        const estado = String(row.original.estado || "")
+                          .trim()
+                          .toUpperCase();
                         return (
-                          <MDBox display="flex" justifyContent="center" alignItems="center">
+                          <MDBox display="flex" justifyContent="center" alignItems="center" gap={1}>
+                            {/* ⬇️ Mostrar Agregar persona SOLO cuando estado === "NE" */}
+                            {estado === "NE" && (
+                              <MDButton
+                                variant="gradient"
+                                color="warning"
+                                size="small"
+                                onClick={() => handleAgregarPersona(row.original)}
+                              >
+                                Agregar persona
+                              </MDButton>
+                            )}
+
+                            {/* Mantengo tu regla original para POF (estado === "NP") */}
                             {estado === "NP" && (
                               <MDButton
                                 variant="gradient"
@@ -265,16 +378,6 @@ export default function ProcesarArchivoImportado() {
                                 onClick={() => handleAgregarPOF(row.original)}
                               >
                                 Agregar POF
-                              </MDButton>
-                            )}
-                            {estado === "NN" && (
-                              <MDButton
-                                variant="gradient"
-                                color="warning"
-                                size="small"
-                                onClick={() => handleAgregarPersona(row.original)}
-                              >
-                                Agregar persona
                               </MDButton>
                             )}
                           </MDBox>
@@ -293,12 +396,78 @@ export default function ProcesarArchivoImportado() {
           </MDBox>
         )
       )}
+
+      {/* Modal POF (existente) */}
       <ModalAgregarPOF
         open={showAgregarPOFModal}
         onClose={handleClosePOFModal}
         persona={personaSeleccionada}
         onSave={handleGuardarPOF}
       />
+
+      {/* ⬇️ Modal NUEVO: Agregar Persona */}
+      <Dialog
+        open={showAgregarPersonaModal}
+        onClose={() => setShowAgregarPersonaModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Agregar Persona</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} mt={1}>
+            <Grid item xs={6}>
+              <TextField
+                label="Legajo"
+                name="legajo"
+                fullWidth
+                value={personaForm.legajo}
+                onChange={(e) => setPersonaForm((p) => ({ ...p, legajo: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="DNI"
+                name="dni"
+                fullWidth
+                value={personaForm.dni}
+                onChange={(e) => setPersonaForm((p) => ({ ...p, dni: e.target.value }))}
+                inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Apellido"
+                name="apellido"
+                fullWidth
+                value={personaForm.apellido}
+                onChange={(e) => setPersonaForm((p) => ({ ...p, apellido: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Nombre"
+                name="nombre"
+                fullWidth
+                value={personaForm.nombre}
+                onChange={(e) => setPersonaForm((p) => ({ ...p, nombre: e.target.value }))}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <MDButton
+            color="secondary"
+            size="small"
+            variant="contained"
+            onClick={() => setShowAgregarPersonaModal(false)}
+          >
+            Cancelar
+          </MDButton>
+          <MDButton color="success" size="small" variant="contained" onClick={handleGuardarPersona}>
+            Agregar persona
+          </MDButton>
+        </DialogActions>
+      </Dialog>
     </DashboardLayout>
   );
 }
