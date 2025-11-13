@@ -1,5 +1,6 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
+using API.Migrations;
 using API.Services;
 using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Authorization;
@@ -232,8 +233,7 @@ namespace API.Controllers
         [HttpPost("EFIPOF")]
         public async Task<IActionResult> EFIPOF([FromBody] CrearPOFRequest request)
         {
-            if (request == null || request.Dto == null)
-                return BadRequest("Los datos enviados son inválidos.");
+          
 
             var resultado = await _pofService.CrearPOFAsync(
                 request.Dto,
