@@ -71,7 +71,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
         idCarRevista: persona.idCarRevista || "",
         tipoCargo: persona.tipoCargo || "",
         funcion: funcionEncontrada?.descripcion || persona.funcion || "",
-        barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : persona.barra || "",
+        barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : String(persona.barra ?? ""),
       });
     } else if (persona) {
       setFormData({
@@ -79,7 +79,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
         idTipoCategoria: persona.idTipoCategoria || "",
         idCarRevista: persona.idCarRevista || "",
         tipoCargo: persona.tipoCargo || "",
-        barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : persona.barra || "",
+        barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : String(persona.barra ?? ""),
       });
     }
   }, [persona, funciones]);
@@ -132,11 +132,19 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   };
 
   const handleSubmit = async () => {
+    const barrasRaw = formData.barra;
+    const Barras = Array.isArray(barrasRaw)
+      ? barrasRaw.map((b) => String(b)).filter((b) => b.trim() !== "")
+      : barrasRaw == null
+      ? []
+      : String(barrasRaw)
+          .split(/[ ,]+/)
+          .map((b) => b.trim())
+          .filter((b) => b !== "");
+
     const dataToSend = {
-      Dto: {
-        ...formData,
-      },
-      Barras: formData.barra ? formData.barra.split(/[ ,]+/).filter((b) => b.trim() !== "") : [],
+      Dto: { ...formData, barra: String(formData.barra ?? "") }, // opcional: normalizar también aquí
+      Barras,
     };
 
     try {
@@ -216,7 +224,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               fullWidth
               placeholder="Ej: 54 60 30 21"
               helperText="Podés separar con espacios o comas"
-              value={formData.barra || ""}
+              value={String(formData.barra ?? "")}
               onChange={handleInputChange}
             />
           </Grid>
