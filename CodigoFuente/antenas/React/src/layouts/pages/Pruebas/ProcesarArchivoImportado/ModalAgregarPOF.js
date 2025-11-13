@@ -143,7 +143,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
           .filter((b) => b !== "");
 
     const dataToSend = {
-      Dto: { ...formData, barra: String(formData.barra ?? "") }, // opcional: normalizar también aquí
+      Dto: { ...formData, barra: String(formData.barra ?? "") },
       Barras,
     };
 
