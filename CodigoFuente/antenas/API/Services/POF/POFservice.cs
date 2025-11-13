@@ -301,17 +301,27 @@ namespace API.Services
             var idEst = await ObtenerEstEFI(dto.UE);
             var idFuncion = await ObtenerFuncionEFI(dto.Funcion);
 
-            if (idPersona == null)
+            if (idPersona == null || idEst == null)
                 return null;
 
+            // VALIDACIÓN: evitar duplicados
+            bool existePOF = await _context.MEC_POF
+                .AnyAsync(p => p.IdPersona == idPersona.Value &&
+                               p.IdEstablecimiento == idEst.Value &&
+                               p.Secuencia == dto.Secuencia);
+
+            if (existePOF)
+                throw new InvalidOperationException(
+                    "Ya existe un registro en MEC_POF con la misma persona, establecimiento y secuencia.");
+
+            // Crear nuevo registro si no existe duplicado
             var nuevoPOF = new MEC_POF
             {
                 IdEstablecimiento = idEst.Value,
                 IdPersona = idPersona.Value,
-                IdFuncion = idFuncion.Value,
+                IdFuncion = idFuncion ?? 0,
                 IdCarRevista = carRevista,
                 Secuencia = dto.Secuencia ?? string.Empty,
-                //Barra = dto.Barra?.ToString() ?? string.Empty,
                 IdCategoria = cargo,
                 TipoCargo = dto.TipoCargo ?? string.Empty,
                 Vigente = "S"
@@ -319,11 +329,12 @@ namespace API.Services
 
             _context.MEC_POF.Add(nuevoPOF);
             await _context.SaveChangesAsync();
+
             if (barras != null && barras.Any())
             {
                 var barrasPOF = barras.Select(b => new MEC_POF_Barras
                 {
-                    IdPOF = nuevoPOF.IdPOF,  // clave foránea al MEC_POF recién creado
+                    IdPOF = nuevoPOF.IdPOF,
                     Barra = b,
                     Vigente = "S"
                 }).ToList();
@@ -334,5 +345,6 @@ namespace API.Services
 
             return nuevoPOF;
         }
+
     }
 }
