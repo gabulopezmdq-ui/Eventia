@@ -18,11 +18,14 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_Personas> _serviceGenerico;
+        private readonly IEFIMuniService _eFIService;
 
-        public PersonasController(DataContext context, ILogger<MEC_CarRevista> logger, ICRUDService<MEC_Personas> serviceGenerico)
+        public PersonasController(DataContext context, ILogger<MEC_CarRevista> logger, ICRUDService<MEC_Personas> serviceGenerico, IEFIMuniService eFIService)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
+
+            _eFIService = eFIService;
         }
 
         [HttpGet("GetByVigente")]
@@ -74,6 +77,14 @@ namespace API.Controllers
         public async Task<ActionResult<MEC_Personas>> Update([FromBody] MEC_Personas per)
         {
             await _serviceGenerico.Update(per);
+            return Ok(per);
+        }
+
+        [HttpPost("EFIPersona")]
+        public async Task<ActionResult> PostEFI([FromBody] MEC_Personas per)
+        {
+            await _serviceGenerico.Add(per);
+            await _eFIService.ActualizarEstadoTMPEFI(per.DNI);
             return Ok(per);
         }
 

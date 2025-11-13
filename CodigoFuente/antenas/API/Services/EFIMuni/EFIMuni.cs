@@ -14,7 +14,7 @@ using API.DataSchema.DTO;
 
 namespace API.Services
 {
-    public class EFIMuniService: IEFIMuniService
+    public class EFIMuniService : IEFIMuniService
     {
         private readonly EFIDBContext _efiContext;
         private readonly DataContext _context;
@@ -41,7 +41,7 @@ namespace API.Services
                             CargoNombre = c.CargoNombre,
                             CodPlanta = cd.CodPlanta ?? c.CodPlanta,
                             CaracterDescripcion = cd.Descrip,
-                            TipoDesigDescripcion = td.Descrip 
+                            TipoDesigDescripcion = td.Descrip
                         };
 
             return await query.AsNoTracking().ToListAsync();
@@ -56,7 +56,7 @@ namespace API.Services
                 from cara in caraJoin.DefaultIfEmpty()
                 join tipo in _efiContext.TipoDesi on cargo.TipoDesig equals tipo.TipoDesig into tipoJoin
                 from tipo in tipoJoin.DefaultIfEmpty()
-                join nomen in _efiContext.Nomen 
+                join nomen in _efiContext.Nomen
                                             on new { CargoValue = (int)9, CodGrupo = (int?)cargo.CodGrupo }
                                             equals new { CargoValue = (int)nomen.Cargo, CodGrupo = (int?)nomen.CodGrupo }
                                             into nomenJoin
@@ -163,5 +163,21 @@ namespace API.Services
 
             return result;
         }
+
+        public async Task ActualizarEstadoTMPEFI(string documento)
+        {
+            var registros = await _context.MEC_TMPEFI
+                .Where(e => e.Documento == documento && e.Estado == "NE")
+                .ToListAsync();
+
+            if (registros.Count == 0)
+                return;
+
+            foreach (var r in registros)
+                r.Estado = "NP";
+
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
