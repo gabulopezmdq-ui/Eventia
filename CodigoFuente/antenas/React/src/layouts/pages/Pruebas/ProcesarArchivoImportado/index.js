@@ -79,6 +79,15 @@ export default function ProcesarArchivoImportado() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setErroresMec(response.data);
+      const permitidos = new Set(["NE", "NP"]);
+      const filtrados = (response.data || []).filter((r) =>
+        permitidos.has(
+          String(r?.estado ?? "")
+            .trim()
+            .toUpperCase()
+        )
+      );
+      setErroresMec(filtrados);
     } catch (error) {
       console.error("Error al obtener errores:", error.response);
       setErrorAlert({
