@@ -151,12 +151,13 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}pof/EFIPOF`, dataToSend, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log(response.data);
 
-      console.log(response.data); // ✅ Te mostrará: { mensaje: "POF creado correctamente", idPOF: ..., resultado: {...} }
-
-      // ✅ Solo llamamos a onSave una vez, con la respuesta correcta
       onSave(response.data);
-      alert(response.data.mensaje); // 👈 rápido y simple, o usar un Snackbar si querés más estilo
+      alert(response.data.mensaje);
+
+      // 👇 acá cerrás el modal después de guardar OK
+      onClose();
     } catch (error) {
       console.error("Error al guardar POF:", error.response?.data || error);
     }
@@ -247,9 +248,9 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               </Select>
             </FormControl>
           </Grid>
-          {formData.cargo && (
+          {persona.cargo && (
             <Grid item xs={12}>
-              <TextField label="Cargo Actual" fullWidth value={formData.cargo} disabled />
+              <TextField label="Cargo Actual" fullWidth value={persona.cargo} disabled />
             </Grid>
           )}
           <Grid item xs={12}>
@@ -271,9 +272,9 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               </Select>
             </FormControl>
           </Grid>
-          {formData.caracter && (
+          {persona.caracter && (
             <Grid item xs={12}>
-              <TextField label="Carácter Actual" fullWidth value={formData.caracter} disabled />
+              <TextField label="Carácter Actual" fullWidth value={persona.caracter} disabled />
             </Grid>
           )}
           <Grid item xs={12}>

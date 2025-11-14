@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin")]
+    dar [Authorize(Roles = "SuperAdmin, Admin")]
     //[AllowAnonymous]
     [Route("[controller]")]
     public class PersonasController : ControllerBase
