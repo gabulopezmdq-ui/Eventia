@@ -311,8 +311,21 @@ namespace API.Services
                                p.Secuencia == dto.Secuencia);
 
             if (existePOF)
-                throw new InvalidOperationException(
-                    "Ya existe un registro en MEC_POF con la misma persona, establecimiento y secuencia.");
+            {
+                // Cambiar estado de MEC_TMPEFI a "EX"
+                var registrosTMPEFI = await _context.MEC_TMPEFI
+                    .Where(e => e.Documento == dto.Documento && e.Estado == "NE")
+                    .ToListAsync();
+
+                foreach (var r in registrosTMPEFI)
+                    r.Estado = "EX";
+
+                if (registrosTMPEFI.Count > 0)
+                    await _context.SaveChangesAsync();
+
+                // No crear POF porque ya existe
+                return null;
+            }
 
             // Crear nuevo registro si no existe duplicado
             var nuevoPOF = new MEC_POF
@@ -343,8 +356,20 @@ namespace API.Services
                 await _context.SaveChangesAsync();
             }
 
+
+            var registrosTMPEFIExito = await _context.MEC_TMPEFI
+                .Where(e => e.Documento == dto.Documento && e.Estado == "NP")
+                .ToListAsync();
+
+            foreach (var r in registrosTMPEFIExito)
+                r.Estado = "EX";
+
+            if (registrosTMPEFIExito.Count > 0)
+                await _context.SaveChangesAsync();
+
             return nuevoPOF;
         }
+
 
     }
 }
