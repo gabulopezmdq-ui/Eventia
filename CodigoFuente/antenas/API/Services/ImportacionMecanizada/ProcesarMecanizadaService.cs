@@ -341,8 +341,8 @@ namespace API.Services
                                  Estado = g.Key.Estado,
                                  Cargo = g.FirstOrDefault().Cargo,
                                  Caracter = g.FirstOrDefault().Caracter,
-                                 Funcion = g.FirstOrDefault().Funcion // <-- nuevo campo
-                                                                      //Cantidad = g.Count() // opcional
+                                 Funcion = g.FirstOrDefault().Funcion 
+                                                                      
                              }).ToList();
 
             return resultado;
@@ -774,7 +774,6 @@ namespace API.Services
                 string apellido = persona?.Apellido ?? docenteEFI?.Apellido;
                 string nombre = persona?.Nombre ?? docenteEFI?.Nombre;
 
-                // ACA ESTÁ EL CAMBIO
                 string? legajoMEC = persona?.Legajo;
                 string? legajoEFI = docenteEFI?.LegajoEFI.ToString();
 
@@ -793,7 +792,6 @@ namespace API.Services
                     Apellido = apellido,
                     Nombre = nombre,
 
-                    // NUEVAS ASIGNACIONES CORRECTAS
                     LegajoMEC = legajoMEC,
                     LegajoEFI = legajoEFI,
 
