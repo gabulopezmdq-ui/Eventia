@@ -151,12 +151,15 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}pof/EFIPOF`, dataToSend, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       console.log(response.data);
 
+      // 👉 le paso al padre la respuesta (por si quiere mostrar el mensaje)
       onSave(response.data);
-      alert(response.data.mensaje);
 
-      // 👇 acá cerrás el modal después de guardar OK
+      // (opcional) si querés sacar el alert del modal:
+      // alert(response.data.mensaje);
+
       onClose();
     } catch (error) {
       console.error("Error al guardar POF:", error.response?.data || error);
