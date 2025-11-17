@@ -177,7 +177,7 @@ export default function ProcesarArchivoImportado() {
   // ⬇️ ADD: abrir modal "Agregar Persona" con datos prellenados
   const handleAgregarPersona = (persona) => {
     setPersonaForm({
-      legajo: persona?.legajo || "",
+      legajo: persona?.legajoEFI || persona?.legajoMEC || "", // 👈 antes persona?.legajo
       dni: persona?.documento || "",
       apellido: persona?.apellido || "",
       nombre: persona?.nombre || "",
@@ -395,7 +395,8 @@ export default function ProcesarArchivoImportado() {
               <DataTable
                 table={{
                   columns: [
-                    { Header: "Legajo", accessor: "legajo" },
+                    { Header: "Legajo EFI", accessor: "legajoEFI" },
+                    { Header: "Legajo MEC", accessor: "legajoMEC" },
                     { Header: "Documento", accessor: "documento" },
                     { Header: "Apellido", accessor: "apellido" },
                     { Header: "Nombre", accessor: "nombre" },
