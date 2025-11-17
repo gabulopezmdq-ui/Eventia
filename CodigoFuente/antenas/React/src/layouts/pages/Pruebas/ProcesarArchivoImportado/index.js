@@ -150,29 +150,18 @@ export default function ProcesarArchivoImportado() {
     fetchErroresMec();
   };
 
-  const handleGuardarPOF = async (formData) => {
-    try {
-      const response = await axios.post(process.env.REACT_APP_API_URL + "POF/EFIPOF", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.status === 200) {
-        setShowAgregarPOFModal(false);
-        setPersonaSeleccionada(null);
+  const handleGuardarPOF = async (dataGuardada) => {
+    setShowAgregarPOFModal(false);
+    setPersonaSeleccionada(null);
 
-        setErrorAlert({
-          show: true,
-          message: "POF guardado correctamente",
-          type: "success",
-        });
-        await fetchErroresMec();
-      }
-    } catch (error) {
-      setErrorAlert({
-        show: true,
-        message: "Error al guardar el POF.",
-        type: "error",
-      });
-    }
+    setErrorAlert({
+      show: true,
+      message: dataGuardada?.mensaje || "POF guardado correctamente",
+      type: "success",
+    });
+
+    // 🔁 Recargar la grilla de errores
+    await fetchErroresMec();
   };
 
   const handleAgregarPOF = (persona) => {
