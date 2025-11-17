@@ -16,12 +16,11 @@ namespace API.DataSchema.ModelConfiguration
 
 
             builder.HasOne(e => e.Cabecera)
-               .WithMany(c => c.TMPEFI)   // <--- aquí la colección
+               .WithMany(c => c.TMPEFI)   
                .HasForeignKey(e => e.IdCabecera)
                .HasConstraintName("fk_mec_tmpefi_cabecera")
                .OnDelete(DeleteBehavior.Restrict);
 
-            // Forzar que EF Core no genere shadow property
             builder.Navigation(e => e.Cabecera)
                    .AutoInclude()
                    .UsePropertyAccessMode(PropertyAccessMode.Property);
@@ -41,7 +40,13 @@ namespace API.DataSchema.ModelConfiguration
                .IsFixedLength(true)
                .IsRequired(false);
 
-            builder.Property(e => e.Legajo)
+            builder.Property(e => e.LegajoEFI)
+               .HasColumnType("varchar(10)")
+               .IsFixedLength(true)
+               .IsRequired(false);
+
+
+            builder.Property(e => e.LegajoMEC)
                .HasColumnType("varchar(10)")
                .IsFixedLength(true)
                .IsRequired(false);

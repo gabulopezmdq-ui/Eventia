@@ -332,7 +332,7 @@ namespace API.Services
                                  Documento = g.Key.Documento,
                                  Apellido = g.FirstOrDefault().Apellido,
                                  Nombre = g.FirstOrDefault().Nombre,
-                                 Legajo = g.FirstOrDefault().Legajo,
+                                 Legajo = g.FirstOrDefault().LegajoEFI,
                                  Secuencia = g.Key.Secuencia,
                                  TipoCargo = g.FirstOrDefault().TipoCargo,
                                  UE = g.Key.UE,
@@ -754,32 +754,33 @@ namespace API.Services
                 bool existePOF = persona != null &&
                                  pofDict.ContainsKey((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia));
 
-               
-                if (existePOF)
-                    continue;
-
-                // Traer docentes EFI
+                // SIEMPRE buscar en EFI, exista o no POF
                 EFIDocPOFDTO? docenteEFI = null;
                 var ueLimpia = LimpiarUE(establecimiento.UE);
                 var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia);
 
                 if (docentesUE != null && docentesUE.Any())
                 {
-                    
-                    docenteEFI = docentesUE.FirstOrDefault(d => d.NroDoc.Trim() == registro.Documento.Trim());
+                    docenteEFI = docentesUE
+                        .FirstOrDefault(d =>
+                            d.NroDoc.TrimStart('0').Trim() ==
+                            registro.Documento.TrimStart('0').Trim());
                 }
 
-                // Filtrar registros sin persona ni cargo activo en EFI
                 if (persona == null && docenteEFI == null)
                     continue;
 
                 string apellido = persona?.Apellido ?? docenteEFI?.Apellido;
                 string nombre = persona?.Nombre ?? docenteEFI?.Nombre;
-                string legajo = persona?.Legajo ?? docenteEFI?.Legajo.ToString();
-                int? barra = docenteEFI?.Barra; 
+
+                // ACA ESTÁ EL CAMBIO
+                string? legajoMEC = persona?.Legajo;
+                string? legajoEFI = docenteEFI?.LegajoEFI.ToString();
+
+                int? barra = docenteEFI?.Barra;
                 string cargo = docenteEFI?.Cargo;
                 string caracter = docenteEFI?.Caracter;
-                string funcion = registro.Funcion; 
+                string funcion = registro.Funcion;
 
                 var tmp = new MEC_TMPEFI
                 {
@@ -790,16 +791,17 @@ namespace API.Services
                     UE = establecimiento.UE,
                     Apellido = apellido,
                     Nombre = nombre,
-                    Legajo = legajo,
+
+                    // NUEVAS ASIGNACIONES CORRECTAS
+                    LegajoMEC = legajoMEC,
+                    LegajoEFI = legajoEFI,
+
                     Barra = barra,
                     Estado = persona != null ? "NP" : "NE",
                     Cargo = cargo,
                     Caracter = caracter,
-                    Funcion = funcion 
-
-
+                    Funcion = funcion
                 };
-
 
                 tmpEfiList.Add(tmp);
             }
@@ -809,6 +811,7 @@ namespace API.Services
                 _context.MEC_TMPEFI.AddRange(tmpEfiList);
                 await _context.SaveChangesAsync();
             }
+
 
             Console.WriteLine($"--- VALIDACIÓN FINAL ---");
             Console.WriteLine($"Total registros TMPEFI: {tmpEfiList.Count}");

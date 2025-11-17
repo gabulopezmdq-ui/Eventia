@@ -12,7 +12,8 @@ namespace API.DataSchema
         public string? Documento { get; set; }
         public string? Apellido { get; set; }
         public string? Nombre { get; set; }
-        public string? Legajo { get; set; }
+        public string? LegajoEFI { get; set; }
+        public string? LegajoMEC { get; set; }
         public string? Secuencia { get; set; }
         public string? TipoCargo { get; set; }
         public string? Cargo { get; set; }

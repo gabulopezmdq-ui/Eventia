@@ -62,7 +62,7 @@ namespace API.Services
                                             into nomenJoin
                 from nomen in nomenJoin.DefaultIfEmpty()
                 where cargo.CodDepend == codDepend
-                //where cargo.NroLegajo == 27149
+                //where cargo.NroLegajo == 35642
                 where cargo.FechaBaja == new DateTime(1894, 4, 15) //esta es la fecha que es considerada NULL en EFImuni
                 select new
                 {
@@ -112,11 +112,13 @@ namespace API.Services
                     into nomenJoin
                 from nomen in nomenJoin.DefaultIfEmpty()
                 where cargo.CodDepend == codDepend
+                //where cargo.NroLegajo == 35666
                 where cargo.FechaBaja == new DateTime(1894, 4, 15)
                 select new
                 {
                     NroOrden = cargo.NroOrden ?? 0,
-                    NroLegajo = cargo.NroLegajo.ToString(),
+                    // <-- Fuente correcta del legajo EFI: viene de la tabla Legajos (legajo.NroLegajo)
+                    LegajoEFIString = legajo.NroLegajo.ToString(),
                     Nombre = legajo.Nombre,
                     NroDoc = legajo.NroDoc.ToString(),
                     CargoNombre = cargo.CargoNombre != null ? cargo.CargoNombre.ToString() : null,
@@ -130,25 +132,31 @@ namespace API.Services
 
             var docentes = await docentesQuery.ToListAsync();
 
-            var legajoList = docentes.Select(d => d.NroLegajo).Distinct().ToList();
+            // Lista de DNI que trajo EFI (para buscar en MEC_Personas)
+            var dniList = docentes.Select(d => d.NroDoc).Distinct().ToList();
 
             var personas = await _context.MEC_Personas
-                .Where(p => legajoList.Contains(p.Legajo))
-                .ToListAsync();
+                        .Where(p => dniList.Contains(p.DNI))
+                        .ToListAsync();
+
+            var personaIds = personas.Select(p => p.IdPersona).Distinct().ToList();
 
             var pofs = await _context.MEC_POF
-                .Where(p => legajoList.Contains(p.Persona.Legajo))
-                .ToListAsync();
+                        .Where(p => personaIds.Contains(p.IdPersona))
+                        .Include(p => p.Persona)
+                        .ToListAsync();
 
             var result =
                 from d in docentes
-                join p in personas on d.NroLegajo equals p.Legajo into perJoin
+                join p in personas on d.NroDoc equals p.DNI into perJoin
                 from p in perJoin.DefaultIfEmpty()
-                join pf in pofs on d.NroLegajo equals pf.Persona.Legajo into pofJoin
+                join pf in pofs on p?.IdPersona equals pf.IdPersona into pofJoin
                 from pf in pofJoin.DefaultIfEmpty()
                 select new EFIDocPOFDTO
                 {
-                    Legajo = int.Parse(d.NroLegajo),
+                    // LegajoEFI viene del legajo real (tabla Legajos) y se convierte a int
+                    LegajoEFI = int.TryParse(d.LegajoEFIString, out var le) ? le : 0,
+                    LegajoMEC = p?.Legajo,
                     Barra = d.NroOrden,
                     Apellido = d.Nombre.Split(',')[0].Trim(),
                     Nombre = d.Nombre.Split(',').Length > 1 ? d.Nombre.Split(',')[1].Trim() : d.Nombre,
