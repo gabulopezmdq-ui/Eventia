@@ -30,7 +30,8 @@ namespace API.DataSchema.DTO
 
     public class EFIDocPOFDTO
     {
-        public int Legajo { get; set; }
+        public int LegajoEFI { get; set; } //legajo EFI
+        public string? LegajoMEC { get; set; }
         public int Barra { get; set; }
         public string Apellido { get; set; }
         public string Nombre { get; set; }
