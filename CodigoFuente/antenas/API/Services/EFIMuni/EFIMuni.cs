@@ -99,9 +99,7 @@ namespace API.Services
         //trae los datos de secuencia y tipoCargo de la POF en relacion al nroLegajo de EFIMuni
         public async Task<IEnumerable<EFIDocPOFDTO>> GetEFIPOFAsync(string codDepend, List<string>? dniMEC = null)
         {
-            // ================================================================
-            // 1. DOCENTES: cargos asociados a codDepend (NO MODIFICAR)
-            // ================================================================
+            //DOCENTES: cargos asociados a codDepend
             var docentesQuery =
                 from cargo in _efiContext.Cargos
                 join legajo in _efiContext.Legajos on cargo.NroLegajo equals legajo.NroLegajo
@@ -120,7 +118,7 @@ namespace API.Services
                 {
                     NroOrden = cargo.NroOrden ?? 0,
                     LegajoEFIString = legajo.NroLegajo.ToString(),
-                    NombreCompleto = legajo.Nombre,    // Ej: "Pérez, Juan"
+                    NombreCompleto = legajo.Nombre,    
                     NroDoc = legajo.NroDoc.ToString(),
                     CargoNombre = cargo.CargoNombre != null ? cargo.CargoNombre.ToString() : null,
                     CargoNombreFromNomen = nomen != null ? nomen.Descripcion : null,
@@ -134,9 +132,7 @@ namespace API.Services
             var docentes = await docentesQuery.ToListAsync();
 
 
-            // ================================================================
             // 2. DNI totales (docentes + MEC)
-            // ================================================================
             var dniTotales = new List<string>();
             dniTotales.AddRange(docentes.Select(d => d.NroDoc));
 
@@ -149,7 +145,6 @@ namespace API.Services
                 .Distinct()
                 .ToList();
 
-            // convertir a numérico para buscar en liqhab.legajo
             var dniNumericos = dniTotales
                 .Select(d => long.TryParse(d.TrimStart('0'), out var n) ? (long?)n : null)
                 .Where(n => n.HasValue)
@@ -158,10 +153,8 @@ namespace API.Services
                 .ToList();
 
 
-            // ================================================================
-            // 3. LEGÁJOS DIRECTOS desde liqhab.legajo 
+            // LEGÁJOS DIRECTOS desde liqhab.legajo 
             //    (clave: nro_doc, valor: entidad completa para poder obtener nombres)
-            // ================================================================
             var legajosDirectos = await _efiContext.Legajos
                                         .Where(l => dniNumericos.Contains((long)l.NroDoc))
                                         .GroupBy(l => l.NroDoc)
@@ -173,9 +166,6 @@ namespace API.Services
 
 
 
-            // ================================================================
-            // 4. PERSONAS MEC
-            // ================================================================
             var personas = await _context.MEC_Personas
                 .Where(p => dniTotales.Contains(p.DNI))
                 .ToListAsync();
@@ -188,9 +178,6 @@ namespace API.Services
                 .ToListAsync();
 
 
-            // ================================================================
-            // 5. Crear entradas mínimas para MEC sin cargo
-            // ================================================================
             var docentesNrosDoc = docentes.Select(d => d.NroDoc).ToHashSet();
             var extras = new List<dynamic>();
 
@@ -216,16 +203,8 @@ namespace API.Services
                 }
             }
 
-
-            // ================================================================
-            // 6. Unimos docentes + extras
-            // ================================================================
             var docentesExtendidos = docentes.Cast<dynamic>().Concat(extras).ToList();
 
-
-            // ================================================================
-            // 7. DTO FINAL – ahora también usa nombre/apellido de legajosDirectos
-            // ================================================================
             var result =
                 from d in docentesExtendidos
                 join p in personas on d.NroDoc equals p.DNI into perJoin
@@ -234,9 +213,7 @@ namespace API.Services
                 from pf in pofJoin.DefaultIfEmpty()
                 select new EFIDocPOFDTO
                 {
-                    // ================
                     // LEGAJO EFI
-                    // ================
                     LegajoEFI =
                         int.TryParse(d.LegajoEFIString, out int leAux) && leAux > 0
                             ? leAux
@@ -247,15 +224,10 @@ namespace API.Services
                                         : 0
                               ),
 
-                    // ================
                     // NOMBRE Y APELLIDO
-                    // ================
                     Apellido = GetApellido(d.NombreCompleto, d.NroDoc, legajosDirectos),
                     Nombre = GetNombre(d.NombreCompleto, d.NroDoc, legajosDirectos),
 
-                    // ================
-                    // MEC
-                    // ================
                     LegajoMEC = p?.Legajo,
                     Barra = d.NroOrden,
                     NroDoc = d.NroDoc,
@@ -270,10 +242,6 @@ namespace API.Services
             return result;
         }
 
-
-        // ================================================================
-        // MÉTODOS AUXILIARES PARA NOMBRE Y APELLIDO
-        // ================================================================
         private string? GetApellido(string? nombreCompleto, string nroDoc,
         Dictionary<long, (int Legajo, string NombreCompleto)> legajosDirectos)
             {
