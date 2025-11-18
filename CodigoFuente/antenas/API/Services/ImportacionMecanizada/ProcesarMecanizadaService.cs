@@ -758,7 +758,7 @@ namespace API.Services
                 // SIEMPRE buscar en EFI, exista o no POF
                 EFIDocPOFDTO? docenteEFI = null;
                 var ueLimpia = LimpiarUE(establecimiento.UE);
-                var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia);
+                var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia, new List<string> { registro.Documento });
 
                 if (docentesUE != null && docentesUE.Any())
                 {
