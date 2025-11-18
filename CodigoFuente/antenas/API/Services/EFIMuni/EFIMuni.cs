@@ -97,8 +97,9 @@ namespace API.Services
 
 
         //trae los datos de secuencia y tipoCargo de la POF en relacion al nroLegajo de EFIMuni
-        public async Task<IEnumerable<EFIDocPOFDTO>> GetEFIPOFAsync(string codDepend)
+        public async Task<IEnumerable<EFIDocPOFDTO>> GetEFIPOFAsync(string codDepend, List<string>? dniMEC = null)
         {
+            // 1. Traigo docentes con cargos asociados a codDepend (NO MODIFICAR)
             var docentesQuery =
                 from cargo in _efiContext.Cargos
                 join legajo in _efiContext.Legajos on cargo.NroLegajo equals legajo.NroLegajo
@@ -112,12 +113,10 @@ namespace API.Services
                     into nomenJoin
                 from nomen in nomenJoin.DefaultIfEmpty()
                 where cargo.CodDepend == codDepend
-                //where cargo.NroLegajo == 35666
                 where cargo.FechaBaja == new DateTime(1894, 4, 15)
                 select new
                 {
                     NroOrden = cargo.NroOrden ?? 0,
-                    // <-- Fuente correcta del legajo EFI: viene de la tabla Legajos (legajo.NroLegajo)
                     LegajoEFIString = legajo.NroLegajo.ToString(),
                     Nombre = legajo.Nombre,
                     NroDoc = legajo.NroDoc.ToString(),
@@ -132,34 +131,102 @@ namespace API.Services
 
             var docentes = await docentesQuery.ToListAsync();
 
-            // Lista de DNI que trajo EFI (para buscar en MEC_Personas)
-            var dniList = docentes.Select(d => d.NroDoc).Distinct().ToList();
+            // 2. DNI totales (docentes + MEC)
+            var dniTotales = new List<string>();
+            dniTotales.AddRange(docentes.Select(d => d.NroDoc));
 
+            if (dniMEC != null && dniMEC.Any())
+                dniTotales.AddRange(dniMEC);
+
+            dniTotales = dniTotales
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Select(d => d.Trim())
+                .Distinct()
+                .ToList();
+
+            // convertimos a numeros compatibles con la columna NroDoc (int) en la BD EFI
+            var dniNumericos = dniTotales
+                .Select(d => long.TryParse(d.TrimStart('0'), out var n) ? (long?)n : null)
+                .Where(n => n.HasValue)
+                .Select(n => n.Value)
+                .Distinct()
+                .ToList();
+
+            // 3. QUERY DIRECTA A LIQHAB.LEGAJO -> diccionario por nro_doc (clave long para evitar problemas de tipos)
+            var legajosEFI = await _efiContext.Legajos
+                .Where(l => dniNumericos.Contains((long)l.NroDoc)) // casteo explícito para evitar mismatch int/long
+                .GroupBy(l => l.NroDoc)
+                .Select(g => g.FirstOrDefault())
+                .ToDictionaryAsync(
+                    l => (long)l.NroDoc,   // clave long
+                    l => l.NroLegajo       // valor int (nro_legajo)
+                );
+
+            // 4. Traigo personas y POF de MEC (usamos dniTotales strings para MEC)
             var personas = await _context.MEC_Personas
-                        .Where(p => dniList.Contains(p.DNI))
-                        .ToListAsync();
+                .Where(p => dniTotales.Contains(p.DNI))
+                .ToListAsync();
 
             var personaIds = personas.Select(p => p.IdPersona).Distinct().ToList();
 
             var pofs = await _context.MEC_POF
-                        .Where(p => personaIds.Contains(p.IdPersona))
-                        .Include(p => p.Persona)
-                        .ToListAsync();
+                .Where(p => personaIds.Contains(p.IdPersona))
+                .Include(p => p.Persona)
+                .ToListAsync();
 
+            // 5. CREAR ENTRADAS "MINIMAS" PARA LOS DNI_MEC QUE NO ESTÉN EN 'docentes'
+            var docentesNrosDoc = docentes.Select(d => d.NroDoc).ToHashSet();
+            var extras = new List<dynamic>();
+            if (dniMEC != null)
+            {
+                foreach (var dni in dniMEC.Select(s => s?.Trim()).Where(s => !string.IsNullOrEmpty(s)))
+                {
+                    if (!docentesNrosDoc.Contains(dni))
+                    {
+                        // entrada mínima: sin cargo ni legajo por cargo, sólo NroDoc (permitirá asignar LegajoEFI desde legajosEFI)
+                        extras.Add(new
+                        {
+                            NroOrden = 0,
+                            LegajoEFIString = (string?)null,
+                            Nombre = (string?)null,
+                            NroDoc = dni,
+                            CargoNombre = (string?)null,
+                            CargoNombreFromNomen = (string?)null,
+                            CodPlanta = (string?)null,
+                            Caracter = (string?)null,
+                            TipoDesig = (string?)null
+                        });
+                    }
+                }
+            }
+
+            // 6. Unimos docentes + extras para proyectar
+            var docentesExtendidos = docentes.Cast<dynamic>().Concat(extras).ToList();
+
+            // 7. Armo el DTO final (si legajo por cargo viene lo uso, si no uso legajosEFI por nro_doc)
             var result =
-                from d in docentes
+                from d in docentesExtendidos
                 join p in personas on d.NroDoc equals p.DNI into perJoin
                 from p in perJoin.DefaultIfEmpty()
                 join pf in pofs on p?.IdPersona equals pf.IdPersona into pofJoin
                 from pf in pofJoin.DefaultIfEmpty()
                 select new EFIDocPOFDTO
                 {
-                    // LegajoEFI viene del legajo real (tabla Legajos) y se convierte a int
-                    LegajoEFI = int.TryParse(d.LegajoEFIString, out var le) ? le : 0,
+                    // Intento primero legajo del cargo; si no existe, busco en legajosEFI por nro_doc (convertir d.NroDoc -> long)
+                    LegajoEFI =
+                                int.TryParse(d.LegajoEFIString, out int leAux) && leAux > 0
+                                    ? leAux
+                                    : (
+                                        long.TryParse((d.NroDoc ?? "").TrimStart('0'), out long dniLongAux)
+                                            && legajosEFI.ContainsKey(dniLongAux)
+                                                ? legajosEFI[dniLongAux]
+                                                : 0
+                                      ),
+
                     LegajoMEC = p?.Legajo,
                     Barra = d.NroOrden,
-                    Apellido = d.Nombre.Split(',')[0].Trim(),
-                    Nombre = d.Nombre.Split(',').Length > 1 ? d.Nombre.Split(',')[1].Trim() : d.Nombre,
+                    Apellido = (d.Nombre != null) ? d.Nombre.Split(',')[0].Trim() : null,
+                    Nombre = (d.Nombre != null && d.Nombre.Split(',').Length > 1) ? d.Nombre.Split(',')[1].Trim() : d.Nombre,
                     NroDoc = d.NroDoc,
                     Cargo = d.CargoNombreFromNomen ?? d.CargoNombre,
                     CodPlanta = d.CodPlanta,
@@ -171,6 +238,10 @@ namespace API.Services
 
             return result;
         }
+
+
+
+
 
         public async Task ActualizarEstadoTMPEFI(string documento)
         {
