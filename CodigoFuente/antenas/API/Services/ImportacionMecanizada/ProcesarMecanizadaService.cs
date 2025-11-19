@@ -341,7 +341,9 @@ namespace API.Services
                                  Estado = g.Key.Estado,
                                  Cargo = g.FirstOrDefault().Cargo,
                                  Caracter = g.FirstOrDefault().Caracter,
-                                 Funcion = g.FirstOrDefault().Funcion 
+                                 Funcion = g.FirstOrDefault().Funcion,
+                                 CargoMEC = g.FirstOrDefault().CargoMEC,
+                                 CaracterMEC = g.FirstOrDefault().CaracterMEC
                                                                       
                              }).ToList();
 
@@ -759,6 +761,9 @@ namespace API.Services
                 var ueLimpia = LimpiarUE(establecimiento.UE);
                 var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia, new List<string> { registro.Documento });
 
+                var cargoMEC = await _context.MEC_TiposCategorias.Where(x => x.CodCategoria == registro.Categoria).Select(x => x.IdTipoCategoria).FirstOrDefaultAsync();
+                var caracterMEC = await _context.MEC_CarRevista.Where(x => x.CodPcia == registro.CaracterRevista).Select(x => x.IdCarRevista).FirstOrDefaultAsync();
+
                 if (docentesUE != null && docentesUE.Any())
                 {
                     docenteEFI = docentesUE
@@ -799,8 +804,8 @@ namespace API.Services
                     Cargo = cargo,
                     Caracter = caracter,
                     Funcion = funcion,
-                    CargoMEC = registro.Categoria,
-                    CaracterMEC = registro.CaracterRevista,
+                    CargoMEC = cargoMEC,
+                    CaracterMEC = caracterMEC,
                 };
 
                 tmpEfiList.Add(tmp);

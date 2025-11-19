@@ -16,7 +16,11 @@ import {
 import MDButton from "components/MDButton";
 
 export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    idTipoCategoria: "",
+    idCarRevista: "",
+  });
+
   const [categorias, setCategorias] = useState([]);
   const [caracteres, setCaracteres] = useState([]);
   const [funciones, setFunciones] = useState([]);
@@ -29,7 +33,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   ];
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !open) return;
 
     const fetchData = async () => {
       try {
@@ -49,13 +53,22 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
         setFunciones(funcionesVigentes);
         setCategorias(catRes.data);
         setCaracteres(carRes.data);
+
+        const cargoMEC = catRes.data.find((x) => x.codCategoria === persona?.categoria);
+        const caracterMEC = carRes.data.find((x) => x.codPcia === persona?.tipoCargo);
+
+        setFormData((prev) => ({
+          ...prev,
+          idTipoCategoria: cargoMEC?.idTipoCategoria || "",
+          idCarRevista: caracterMEC?.idCarRevista || "",
+        }));
       } catch (error) {
         console.error("Error al obtener datos del backend:", error);
       }
     };
 
-    if (open) fetchData();
-  }, [token, open]);
+    fetchData();
+  }, [token, open, persona]);
 
   useEffect(() => {
     if (persona && funciones.length > 0) {
@@ -65,31 +78,21 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
           f.descripcion?.toUpperCase() === persona.funcion?.toUpperCase()
       );
 
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         ...persona,
-        idTipoCategoria: persona.idTipoCategoria || "",
-        idCarRevista: persona.idCarRevista || "",
-        tipoCargo: persona.tipoCargo || "",
         funcion: funcionEncontrada?.descripcion || persona.funcion || "",
         barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : String(persona.barra ?? ""),
-      });
-    } else if (persona) {
-      setFormData({
-        ...persona,
-        idTipoCategoria: persona.idTipoCategoria || "",
-        idCarRevista: persona.idCarRevista || "",
-        tipoCargo: persona.tipoCargo || "",
-        barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : String(persona.barra ?? ""),
-      });
+      }));
     }
   }, [persona, funciones]);
 
   if (!persona) return null;
 
-  // 🔹 Handlers
   const handleCategoriaChange = (e) => {
     const selectedId = e.target.value;
     const categoriaSeleccionada = categorias.find((c) => c.idTipoCategoria === selectedId);
+
     setFormData((prev) => ({
       ...prev,
       idTipoCategoria: selectedId,
@@ -100,6 +103,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   const handleCaracterChange = (e) => {
     const selectedId = e.target.value;
     const caracterSeleccionado = caracteres.find((c) => c.idCarRevista === selectedId);
+
     setFormData((prev) => ({
       ...prev,
       idCarRevista: selectedId,
@@ -108,18 +112,16 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   };
 
   const handleFuncionChange = (e) => {
-    const selectedDescripcion = e.target.value;
     setFormData((prev) => ({
       ...prev,
-      funcion: selectedDescripcion,
+      funcion: e.target.value,
     }));
   };
 
   const handleTipoCargoChange = (e) => {
-    const selectedValue = e.target.value;
     setFormData((prev) => ({
       ...prev,
-      tipoCargo: selectedValue,
+      tipoCargo: e.target.value,
     }));
   };
 
@@ -133,6 +135,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
 
   const handleSubmit = async () => {
     const barrasRaw = formData.barra;
+
     const Barras = Array.isArray(barrasRaw)
       ? barrasRaw.map((b) => String(b)).filter((b) => b.trim() !== "")
       : barrasRaw == null
@@ -152,14 +155,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log(response.data);
-
-      // 👉 le paso al padre la respuesta (por si quiere mostrar el mensaje)
       onSave(response.data);
-
-      // (opcional) si querés sacar el alert del modal:
-      // alert(response.data.mensaje);
-
       onClose();
     } catch (error) {
       console.error("Error al guardar POF:", error.response?.data || error);
@@ -175,15 +171,19 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
           <Grid item xs={6}>
             <TextField label="Legajo" fullWidth value={formData.legajoEFI || ""} disabled />
           </Grid>
+
           <Grid item xs={6}>
             <TextField label="Documento" fullWidth value={formData.documento || ""} disabled />
           </Grid>
+
           <Grid item xs={6}>
             <TextField label="Apellido" fullWidth value={formData.apellido || ""} disabled />
           </Grid>
+
           <Grid item xs={6}>
             <TextField label="Nombre" fullWidth value={formData.nombre || ""} disabled />
           </Grid>
+
           <Grid item xs={6}>
             <TextField
               label="Secuencia"
@@ -193,6 +193,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               onChange={handleInputChange}
             />
           </Grid>
+
           <Grid item xs={6}>
             <FormControl fullWidth>
               <InputLabel id="tipo-cargo-label">Tipo Cargo</InputLabel>
@@ -212,6 +213,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               </Select>
             </FormControl>
           </Grid>
+
           <Grid item xs={6}>
             <TextField
               label="UE"
@@ -221,6 +223,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               onChange={handleInputChange}
             />
           </Grid>
+
           <Grid item xs={6}>
             <TextField
               label="Barra"
@@ -232,6 +235,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               onChange={handleInputChange}
             />
           </Grid>
+
           <Grid item xs={6}>
             <FormControl fullWidth>
               <InputLabel id="funcion-label">Función</InputLabel>
@@ -251,11 +255,13 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               </Select>
             </FormControl>
           </Grid>
+
           {persona.cargo && (
             <Grid item xs={12}>
               <TextField label="Cargo Actual" fullWidth value={persona.cargo} disabled />
             </Grid>
           )}
+
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel id="cargo-label">Cargo</InputLabel>
@@ -275,11 +281,13 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               </Select>
             </FormControl>
           </Grid>
+
           {persona.caracter && (
             <Grid item xs={12}>
               <TextField label="Carácter Actual" fullWidth value={persona.caracter} disabled />
             </Grid>
           )}
+
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel id="caracter-label">Carácter</InputLabel>
