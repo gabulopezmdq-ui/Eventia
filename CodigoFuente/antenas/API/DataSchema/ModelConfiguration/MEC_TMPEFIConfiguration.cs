@@ -95,6 +95,12 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(e => e.CargoMEC)
          .IsRequired(false);
+
+
+            builder.Property(e => e.HorasDesignadas)
+                    .HasColumnType("decimal")
+                    .IsFixedLength(true)
+                    .IsRequired(true);
         }
     }
 }

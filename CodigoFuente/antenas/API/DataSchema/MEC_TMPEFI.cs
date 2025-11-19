@@ -24,6 +24,7 @@ namespace API.DataSchema
         public string? Estado { get; set; }
         public int? CargoMEC { get; set; }
         public int? CaracterMEC { get; set; }
+        public decimal? HorasDesignadas { get; set; }
 
         // Propiedad de navegación
         [ForeignKey(nameof(IdCabecera))]
