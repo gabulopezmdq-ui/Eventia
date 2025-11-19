@@ -89,6 +89,16 @@ namespace API.DataSchema.ModelConfiguration
             .HasColumnType("varchar(2)")
             .IsFixedLength(true)
             .IsRequired(false);
+
+            builder.Property(e => e.CaracterMEC)
+         .HasColumnType("varchar(50)")
+         .IsFixedLength(true)
+         .IsRequired(false);
+
+            builder.Property(e => e.CargoMEC)
+         .HasColumnType("varchar(50)")
+         .IsFixedLength(true)
+         .IsRequired(false);
         }
     }
 }
