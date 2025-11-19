@@ -154,7 +154,6 @@ namespace API.Services
 
 
             // LEGÁJOS DIRECTOS desde liqhab.legajo 
-            //    (clave: nro_doc, valor: entidad completa para poder obtener nombres)
             var legajosDirectos = await _efiContext.Legajos
                                         .Where(l => dniNumericos.Contains((long)l.NroDoc))
                                         .GroupBy(l => l.NroDoc)
