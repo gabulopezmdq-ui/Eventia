@@ -22,6 +22,8 @@ namespace API.DataSchema
         public string? UE { get; set; }
         public int? Barra { get; set; }
         public string? Estado { get; set; }
+        public string? CargoMEC { get; set; }
+        public string? CaracterMEC { get; set; }
 
         // Propiedad de navegación
         [ForeignKey(nameof(IdCabecera))]

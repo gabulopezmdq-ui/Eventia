@@ -798,7 +798,9 @@ namespace API.Services
                     Estado = persona != null ? "NP" : "NE",
                     Cargo = cargo,
                     Caracter = caracter,
-                    Funcion = funcion
+                    Funcion = funcion,
+                    CargoMEC = registro.Categoria,
+                    CaracterMEC = registro.CaracterRevista,
                 };
 
                 tmpEfiList.Add(tmp);

@@ -173,7 +173,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
       <DialogContent>
         <Grid container spacing={2} mt={1}>
           <Grid item xs={6}>
-            <TextField label="Legajo" fullWidth value={formData.legajoMEC || ""} disabled />
+            <TextField label="Legajo" fullWidth value={formData.legajoEFI || ""} disabled />
           </Grid>
           <Grid item xs={6}>
             <TextField label="Documento" fullWidth value={formData.documento || ""} disabled />
