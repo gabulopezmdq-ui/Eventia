@@ -344,7 +344,7 @@ namespace API.Services
                                  Funcion = g.FirstOrDefault().Funcion,
                                  CargoMEC = g.FirstOrDefault().CargoMEC,
                                  CaracterMEC = g.FirstOrDefault().CaracterMEC
-                                                                      
+
                              }).ToList();
 
             return resultado;
@@ -806,6 +806,7 @@ namespace API.Services
                     Funcion = funcion,
                     CargoMEC = cargoMEC,
                     CaracterMEC = caracterMEC,
+                    HorasDesignadas = registro.HorasDesignadas
                 };
 
                 tmpEfiList.Add(tmp);
