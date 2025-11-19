@@ -64,7 +64,8 @@ namespace API.DataSchema.DTO
         public string? Cargo { get; set; }
         public string? Caracter { get; set; }
         public string? Funcion { get; set; }
-        //public int Cantidad { get; set; } // opcional
+        public int? CargoMEC { get; set; }
+        public int? CaracterMEC { get; set; }
 
         public int IdCarRevista { get; set; }  
         public int IdTipoCategoria { get; set; }
