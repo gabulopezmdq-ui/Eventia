@@ -38,7 +38,7 @@ namespace API.Services
                         {
                             Nombre = l.Nombre,
                             NroDoc = l.NroDoc,
-                            CargoNombre = c.CargoNombre,
+                            CargoNombre = c.Cargo,
                             CodPlanta = cd.CodPlanta ?? c.CodPlanta,
                             CaracterDescripcion = cd.Descrip,
                             TipoDesigDescripcion = td.Descrip
@@ -70,7 +70,7 @@ namespace API.Services
                     cargo.NroLegajo,
                     legajo.Nombre,
                     legajo.NroDoc,
-                    cargo.CargoNombre,
+                    cargo.Cargo,
                     CargoNombreFromNomen = nomen != null ? nomen.Descripcion : null,
                     CodPlanta = cara.CodPlanta ?? cargo.CodPlanta,
                     Caracter = cara.Descrip,
@@ -85,8 +85,8 @@ namespace API.Services
                               NroDoc = x.NroDoc,
                               Legajo = x.NroLegajo,
                               Barra = x.NroOrden,
-                              Cargo = x.CargoNombre,
-                              CargoNombre = x.CargoNombreFromNomen ?? x.CargoNombre?.ToString(),
+                              Cargo = x.Cargo,
+                              CargoNombre = x.CargoNombreFromNomen ?? x.Cargo?.ToString(),
                               CodPlanta = x.CodPlanta,
                               Caracter = x.Caracter,
                               TipoDesig = x.TipoDesig
@@ -101,33 +101,52 @@ namespace API.Services
         {
             //DOCENTES: cargos asociados a codDepend
             var docentesQuery =
-                from cargo in _efiContext.Cargos
-                join legajo in _efiContext.Legajos on cargo.NroLegajo equals legajo.NroLegajo
-                join cara in _efiContext.Caradesi on cargo.Caracter equals cara.Caracter into caraJoin
-                from cara in caraJoin.DefaultIfEmpty()
-                join tipo in _efiContext.TipoDesi on cargo.TipoDesig equals tipo.TipoDesig into tipoJoin
-                from tipo in tipoJoin.DefaultIfEmpty()
-                join nomen in _efiContext.Nomen
-                    on new { CargoValue = (int)9, CodGrupo = (int?)cargo.CodGrupo }
-                    equals new { CargoValue = (int)nomen.Cargo, CodGrupo = (int?)nomen.CodGrupo }
-                    into nomenJoin
-                from nomen in nomenJoin.DefaultIfEmpty()
-                where cargo.CodDepend == codDepend
-                where cargo.FechaBaja == new DateTime(1894, 4, 15)
-                select new
-                {
-                    NroOrden = cargo.NroOrden ?? 0,
-                    LegajoEFIString = legajo.NroLegajo.ToString(),
-                    NombreCompleto = legajo.Nombre,    
-                    NroDoc = legajo.NroDoc.ToString(),
-                    CargoNombre = cargo.CargoNombre != null ? cargo.CargoNombre.ToString() : null,
-                    CargoNombreFromNomen = nomen != null ? nomen.Descripcion : null,
-                    CodPlanta = cara.CodPlanta != null
-                        ? cara.CodPlanta.ToString()
-                        : (cargo.CodPlanta != null ? cargo.CodPlanta.ToString() : null),
-                    Caracter = cara.Descrip,
-                    TipoDesig = tipo.Descrip
-                };
+                        from cargo in _efiContext.Cargos
+                        join legajo in _efiContext.Legajos
+                            on cargo.NroLegajo equals legajo.NroLegajo
+
+                        join cara in _efiContext.Caradesi
+                            on cargo.Caracter equals cara.Caracter into caraJoin
+                        from cara in caraJoin.DefaultIfEmpty()
+
+                        join tipo in _efiContext.TipoDesi
+                            on cargo.TipoDesig equals tipo.TipoDesig into tipoJoin
+                        from tipo in tipoJoin.DefaultIfEmpty()
+
+                        join nomen in _efiContext.Nomen
+                                        on new
+                                        {
+                                            CodGrupo = cargo.CodGrupo,
+                                            Cargo = cargo.Cargo,
+                                            CodNivel = cargo.CodNivel
+                                        }
+                                        equals new
+                                        {
+                                            CodGrupo = (int?)nomen.CodGrupo,
+                                            Cargo = (int?)nomen.Cargo,
+                                            CodNivel = (int?)nomen.CodNivel
+                                        }
+                                        into nomenJoin
+                        from nomen in nomenJoin.DefaultIfEmpty()
+
+                        where cargo.CodDepend == codDepend
+                        where cargo.FechaBaja == new DateTime(1894, 4, 15)
+
+                        select new
+                        {
+                            NroOrden = cargo.NroOrden ?? 0,
+                            LegajoEFIString = legajo.NroLegajo.ToString(),
+                            NombreCompleto = legajo.Nombre,
+                            NroDoc = legajo.NroDoc.ToString(),
+                            CargoNombre = cargo.Cargo != null ? cargo.Cargo.ToString() : null,
+                            CargoNombreFromNomen = nomen != null ? nomen.Descripcion : null,
+                            CodPlanta = cara.CodPlanta != null
+                                ? cara.CodPlanta.ToString()
+                                : (cargo.CodPlanta != null ? cargo.CodPlanta.ToString() : null),
+                            Caracter = cara.Descrip,
+                            TipoDesig = tipo.Descrip
+                        };
+
 
             var docentes = await docentesQuery.ToListAsync();
 

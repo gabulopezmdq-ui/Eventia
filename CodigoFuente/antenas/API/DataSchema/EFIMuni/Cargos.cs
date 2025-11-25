@@ -31,7 +31,7 @@ namespace API.DataSchema
         public int? Modulo { get; set; }
 
         [Column("cargo")]
-        public int? CargoNombre { get; set; }
+        public int? Cargo { get; set; }
 
         [Column("final")]
         public int? Final { get; set; }
