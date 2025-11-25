@@ -343,7 +343,8 @@ namespace API.Services
                                  Caracter = g.FirstOrDefault().Caracter,
                                  Funcion = g.FirstOrDefault().Funcion,
                                  CargoMEC = g.FirstOrDefault().CargoMEC,
-                                 CaracterMEC = g.FirstOrDefault().CaracterMEC
+                                 CaracterMEC = g.FirstOrDefault().CaracterMEC,
+                                 HorasDesignadas = (int)(g.FirstOrDefault().HorasDesignadas),
 
                              }).ToList();
 
