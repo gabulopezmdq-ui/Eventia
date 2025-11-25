@@ -19,6 +19,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   const [formData, setFormData] = useState({
     idTipoCategoria: "",
     idCarRevista: "",
+    horasDesignadas: "",
   });
 
   const [categorias, setCategorias] = useState([]);
@@ -89,6 +90,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
         barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : String(persona.barra ?? ""),
         tipoCargo: persona.tipoCargo ?? prev.tipoCargo,
         ue: persona.ue ?? prev.ue,
+        horasDesignadas: persona.horasDesignadas ?? prev.horasDesignadas,
       }));
     }
   }, [persona, funciones]);
@@ -219,7 +221,18 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
               </Select>
             </FormControl>
           </Grid>
-
+          {(formData.tipoCargo === "H" || formData.tipoCargo === "M") && (
+            <Grid item xs={6}>
+              <TextField
+                label="Horas Designadas"
+                name="horasDesignadas"
+                fullWidth
+                type="number"
+                value={formData.horasDesignadas || ""}
+                onChange={handleInputChange}
+              />
+            </Grid>
+          )}
           <Grid item xs={6}>
             <TextField
               label="UE"
