@@ -54,8 +54,8 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
         setCategorias(catRes.data);
         setCaracteres(carRes.data);
 
-        const cargoMEC = catRes.data.find((x) => x.codCategoria === persona?.categoria);
-        const caracterMEC = carRes.data.find((x) => x.codPcia === persona?.tipoCargo);
+        const cargoMEC = catRes.data.find((x) => x.idTipoCategoria === persona?.cargoMEC);
+        const caracterMEC = carRes.data.find((x) => x.idCarRevista === persona?.caracterMEC);
 
         setFormData((prev) => ({
           ...prev,
@@ -80,9 +80,11 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
 
       setFormData((prev) => ({
         ...prev,
-        ...persona,
-        funcion: funcionEncontrada?.descripcion || persona.funcion || "",
+        secuencia: persona.secuencia ?? prev.secuencia,
+        funcion: funcionEncontrada?.descripcion || persona.funcion || prev.funcion,
         barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : String(persona.barra ?? ""),
+        tipoCargo: persona.tipoCargo ?? prev.tipoCargo,
+        ue: persona.ue ?? prev.ue,
       }));
     }
   }, [persona, funciones]);
@@ -265,6 +267,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel id="cargo-label">Cargo</InputLabel>
+
               <Select
                 labelId="cargo-label"
                 name="idTipoCategoria"
@@ -291,6 +294,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel id="caracter-label">Carácter</InputLabel>
+
               <Select
                 labelId="caracter-label"
                 name="idCarRevista"
