@@ -9,11 +9,6 @@ import {
   MenuItem,
   CircularProgress,
   Card,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
 } from "@mui/material";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -24,6 +19,7 @@ import MDButton from "components/MDButton";
 import DataTable from "examples/Tables/DataTable";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ModalAgregarPOF from "./ModalAgregarPOF";
+import ModalAgregarPersona from "./ModalAgregarPersona";
 
 export default function ProcesarArchivoImportado() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
@@ -33,19 +29,10 @@ export default function ProcesarArchivoImportado() {
   const [showErrorButton, setShowErrorButton] = useState(false);
   const [erroresMec, setErroresMec] = useState([]);
   const [isLoadingErrores, setIsLoadingErrores] = useState(false);
-
   const [showAgregarPOFModal, setShowAgregarPOFModal] = useState(false);
   const [personaSeleccionada, setPersonaSeleccionada] = useState(null);
-
-  // ⬇️ ADD: estado para modal "Agregar Persona"
   const [showAgregarPersonaModal, setShowAgregarPersonaModal] = useState(false);
-  const [personaForm, setPersonaForm] = useState({
-    legajo: "",
-    dni: "",
-    apellido: "",
-    nombre: "",
-    vigente: "S", // valor por defecto oculto
-  });
+  const [personaDataForModal, setPersonaDataForModal] = useState(null);
 
   const token = sessionStorage.getItem("token");
 
@@ -159,8 +146,6 @@ export default function ProcesarArchivoImportado() {
       message: dataGuardada?.mensaje || "POF guardado correctamente",
       type: "success",
     });
-
-    // 🔁 Recargar la grilla de errores
     await fetchErroresMec();
   };
 
@@ -174,130 +159,26 @@ export default function ProcesarArchivoImportado() {
     setPersonaSeleccionada(null);
   };
 
-  // ⬇️ ADD: abrir modal "Agregar Persona" con datos prellenados
-  const handleAgregarPersona = (persona) => {
-    setPersonaForm({
-      legajo: persona?.legajoEFI || persona?.legajoMEC || "", // 👈 antes persona?.legajo
+  const handleOpenAgregarPersonaModal = (persona) => {
+    setPersonaDataForModal({
+      legajo: persona?.legajoEFI || persona?.legajoMEC || "",
       dni: persona?.documento || "",
       apellido: persona?.apellido || "",
       nombre: persona?.nombre || "",
-      vigente: "S", // si viene en la fila podés usar persona?.vigente ?? "S"
     });
     setShowAgregarPersonaModal(true);
   };
 
-  // ⬇️ ADD: guardar persona -> POST Personas/EFIPersona y recargar grilla
-  const handleGuardarPersona = async () => {
-    const base = process.env.REACT_APP_API_URL || "";
-    const url = new URL("Personas/EFIPersona", base).toString();
-
-    // Normalizamos valores
-    const Legajo = isNaN(Number(personaForm.legajo))
-      ? personaForm.legajo
-      : Number(personaForm.legajo);
-    const DNI = String(personaForm.dni ?? "").trim();
-    const Nombre = String(personaForm.nombre ?? "").trim();
-    const Apellido = String(personaForm.apellido ?? "").trim();
-    const Vigente = personaForm.vigente ?? "S";
-
-    // Payload plano (lo que probablemente espera el backend, según el error)
-    const flat = { Legajo, DNI, Apellido, Nombre, Vigente };
-
-    try {
-      console.log("POST (flat) =>", url, flat);
-      const resp = await axios.post(url, flat, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("RESPUESTA (flat):", resp.status, resp.data);
-
-      if (resp.status >= 200 && resp.status < 300) {
-        setShowAgregarPersonaModal(false);
-        setErrorAlert({
-          show: true,
-          message: resp.data?.mensaje || "Persona guardada correctamente",
-          type: "success",
-        });
-        await fetchErroresMec();
-        return;
-      }
-
-      // Si no fue 2xx, muestro error genérico
-      setErrorAlert({
-        show: true,
-        message: resp.data?.mensaje || `Error (${resp.status}) al guardar la persona.`,
-        type: "error",
-      });
-    } catch (e) {
-      const status = e.response?.status;
-      const data = e.response?.data;
-      console.error("ERROR guardar persona (flat):", { status, data });
-
-      // Si el server se queja de campos requeridos (DNI/Nombre), probamos con wrapper { Dto: ... }
-      const hasValidationMissing =
-        status === 400 &&
-        data &&
-        data.errors &&
-        (data.errors.DNI || data.errors.Nombre || data.errors.Apellido || data.errors.Legajo);
-
-      if (hasValidationMissing) {
-        const wrapped = { Dto: flat };
-        try {
-          console.log("RETRY (wrapped Dto) =>", url, wrapped);
-          const resp2 = await axios.post(url, wrapped, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
-          console.log("RESPUESTA (wrapped):", resp2.status, resp2.data);
-          if (resp2.status >= 200 && resp2.status < 300) {
-            setShowAgregarPersonaModal(false);
-            setErrorAlert({
-              show: true,
-              message: resp2.data?.mensaje || "Persona guardada correctamente",
-              type: "success",
-            });
-            await fetchErroresMec();
-            return;
-          }
-          setErrorAlert({
-            show: true,
-            message: resp2.data?.mensaje || `Error (${resp2.status}) al guardar la persona.`,
-            type: "error",
-          });
-          return;
-        } catch (e2) {
-          console.error("ERROR guardar persona (wrapped):", {
-            status: e2.response?.status,
-            data: e2.response?.data,
-          });
-          setErrorAlert({
-            show: true,
-            message:
-              e2.response?.data?.mensaje ||
-              e2.response?.data?.Message ||
-              e2.response?.data?.error ||
-              "Error al guardar la persona.",
-            type: "error",
-          });
-          return;
-        }
-      }
-
-      // Otros errores (no de validación de campos) → muestro detalle
-      setErrorAlert({
-        show: true,
-        message: data?.mensaje || data?.Message || data?.error || "Error al guardar la persona.",
-        type: "error",
-      });
-    }
+  const handleSavePersona = async (dataGuardada) => {
+    setShowAgregarPersonaModal(false);
+    setPersonaDataForModal(null);
+    setErrorAlert({
+      show: true,
+      message: dataGuardada?.mensaje || "Persona guardada correctamente",
+      type: "success",
+    });
+    await fetchErroresMec();
   };
-
-  // ⬇️ Para validar propTypes del cell Acciones
   const AccionesCellPropTypes = {
     row: PropTypes.shape({
       original: PropTypes.shape({
@@ -409,19 +290,16 @@ export default function ProcesarArchivoImportado() {
                           .toUpperCase();
                         return (
                           <MDBox display="flex" justifyContent="center" alignItems="center" gap={1}>
-                            {/* ⬇️ Mostrar Agregar persona SOLO cuando estado === "NE" */}
                             {estado === "NE" && (
                               <MDButton
                                 variant="gradient"
                                 color="warning"
                                 size="small"
-                                onClick={() => handleAgregarPersona(row.original)}
+                                onClick={() => handleOpenAgregarPersonaModal(row.original)}
                               >
                                 Agregar persona
                               </MDButton>
                             )}
-
-                            {/* Mantengo tu regla original para POF (estado === "NP") */}
                             {estado === "NP" && (
                               <MDButton
                                 variant="gradient"
@@ -448,78 +326,21 @@ export default function ProcesarArchivoImportado() {
           </MDBox>
         )
       )}
-
-      {/* Modal POF (existente) */}
       <ModalAgregarPOF
         open={showAgregarPOFModal}
         onClose={handleClosePOFModal}
         persona={personaSeleccionada}
         onSave={handleGuardarPOF}
       />
-
-      {/* ⬇️ Modal NUEVO: Agregar Persona */}
-      <Dialog
+      <ModalAgregarPersona
         open={showAgregarPersonaModal}
         onClose={() => setShowAgregarPersonaModal(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Agregar Persona</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} mt={1}>
-            <Grid item xs={6}>
-              <TextField
-                label="Legajo"
-                name="legajo"
-                fullWidth
-                value={personaForm.legajo}
-                onChange={(e) => setPersonaForm((p) => ({ ...p, legajo: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="DNI"
-                name="dni"
-                fullWidth
-                value={personaForm.dni}
-                onChange={(e) => setPersonaForm((p) => ({ ...p, dni: e.target.value }))}
-                inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Apellido"
-                name="apellido"
-                fullWidth
-                value={personaForm.apellido}
-                onChange={(e) => setPersonaForm((p) => ({ ...p, apellido: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                label="Nombre"
-                name="nombre"
-                fullWidth
-                value={personaForm.nombre}
-                onChange={(e) => setPersonaForm((p) => ({ ...p, nombre: e.target.value }))}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <MDButton
-            color="secondary"
-            size="small"
-            variant="contained"
-            onClick={() => setShowAgregarPersonaModal(false)}
-          >
-            Cancelar
-          </MDButton>
-          <MDButton color="success" size="small" variant="contained" onClick={handleGuardarPersona}>
-            Agregar persona
-          </MDButton>
-        </DialogActions>
-      </Dialog>
+        personaData={personaDataForModal}
+        onSave={handleSavePersona}
+        token={token}
+        setErrorAlert={setErrorAlert}
+        fetchErroresMec={fetchErroresMec}
+      />
     </DashboardLayout>
   );
 }
