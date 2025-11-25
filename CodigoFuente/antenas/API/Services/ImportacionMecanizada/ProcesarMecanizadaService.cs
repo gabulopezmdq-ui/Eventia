@@ -747,6 +747,7 @@ namespace API.Services
 
             var tmpEfiList = new List<MEC_TMPEFI>();
 
+
             foreach (var registro in mecanizadasFiltradas)
             {
                 if (!establecimientos.TryGetValue(registro.NroEstab, out var establecimiento))
@@ -757,9 +758,35 @@ namespace API.Services
                 bool existePOF = persona != null &&
                                  pofDict.ContainsKey((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia));
 
+                if (existePOF)
+                {
+                    continue;
+                }
+
                 EFIDocPOFDTO? docenteEFI = null;
                 var ueLimpia = LimpiarUE(establecimiento.UE);
                 var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia, new List<string> { registro.Documento });
+              
+                var lista = await _context.MEC_CarRevista
+                    .Where(x => x.CodPcia.Trim().ToUpper() == registro.CaracterRevista.Trim().ToUpper())
+                    .Select(x => x.IdCarRevista)
+                    .ToListAsync();
+             
+
+                if (lista.Count == 0)
+                {
+                    // no encontrado
+                }
+                else if (lista.Count > 1)
+                {
+                    // ambigüedad: decidir estrategia (usar Single, loguear, escoger por otra columna)
+                }
+                else
+                {
+                    var caracterId = lista[0];
+                }
+
+
 
                 var cargoMEC = await _context.MEC_TiposCategorias.Where(x => x.CodCategoria == registro.Categoria).Select(x => x.IdTipoCategoria).FirstOrDefaultAsync();
                 var caracterMEC = await _context.MEC_CarRevista.Where(x => x.CodPcia == registro.CaracterRevista).Select(x => x.IdCarRevista).FirstOrDefaultAsync();

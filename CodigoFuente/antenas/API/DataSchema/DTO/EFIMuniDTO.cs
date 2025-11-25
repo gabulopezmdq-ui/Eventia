@@ -55,12 +55,12 @@ namespace API.DataSchema.DTO
         public string Apellido { get; set; }
         public string Nombre { get; set; }
         public string LegajoEFI { get; set; }
-        public string LegajoMEC { get; set; }
+        public string? LegajoMEC { get; set; }
         public string Secuencia { get; set; }
         public string TipoCargo { get; set; }
         public string UE { get; set; }
         public int? Barra { get; set; }
-        public string Estado { get; set; }
+        public string? Estado { get; set; }
         public string? Cargo { get; set; }
         public string? Caracter { get; set; }
         public string? Funcion { get; set; }
