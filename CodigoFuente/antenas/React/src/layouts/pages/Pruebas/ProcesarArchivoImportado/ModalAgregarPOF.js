@@ -16,12 +16,13 @@ import {
 import MDButton from "components/MDButton";
 
 export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
+  console.log("Persona:", persona);
   const [formData, setFormData] = useState({
     idTipoCategoria: "",
     idCarRevista: "",
     horasDesignadas: "",
   });
-
+  console.log("Persona en ModalAgregarPOF:", persona);
   const [categorias, setCategorias] = useState([]);
   const [caracteres, setCaracteres] = useState([]);
   const [funciones, setFunciones] = useState([]);
