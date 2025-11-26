@@ -354,7 +354,7 @@ namespace API.Services
 
                 _context.MEC_POF_Barras.AddRange(barrasPOF);
                 await _context.SaveChangesAsync();
-            }
+            };
 
 
             var registrosTMPEFIExito = await _context.MEC_TMPEFI

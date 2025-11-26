@@ -746,7 +746,12 @@ namespace API.Services
             var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
                               .ToDictionary(g => g.Key, g => g.First());
 
+            var cabecera = await _context.MEC_CabeceraLiquidacion
+                                   .AsNoTracking()
+                                   .FirstOrDefaultAsync(c => c.IdCabecera == idCabecera);
+
             var tmpEfiList = new List<MEC_TMPEFI>();
+            var detallesPOF = new List<MEC_POFDetalle>();
 
 
             foreach (var registro in mecanizadasFiltradas)
@@ -755,29 +760,62 @@ namespace API.Services
                     continue;
 
                 personas.TryGetValue(registro.Documento, out var persona);
-
+                MEC_POF? pof = null;
+                // Verificar si el docente existe en POF
                 bool existePOF = persona != null &&
-                                 pofDict.ContainsKey((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia));
+                                 pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out  pof);
 
+
+                // == PARTE NUEVA: si existe POF debe generar detalle + antigüedad ==
                 if (existePOF)
                 {
-                    continue;
+                    var detalle = new MEC_POFDetalle
+                    {
+                        IdCabecera = idCabecera,
+                        IdPOF = pof.IdPOF,
+                        CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
+                    };
+
+                    // Calcular antigüedad
+                    var antiguedad = await _context.MEC_POF_Antiguedades
+                                                   .AsNoTracking()
+                                                   .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
+
+                    if (antiguedad != null)
+                    {
+                        var result = CalcularAntiguedad(
+                            ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
+                            ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
+                            antiguedad.MesReferencia,
+                            antiguedad.AnioReferencia,
+                            antiguedad.AnioAntiguedad,
+                            antiguedad.MesAntiguedad
+                        );
+
+                        detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
+                        detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
+                    }
+
+                    detallesPOF.Add(detalle);
+                    continue; // no debe insertarse en TMPEFI si existe POF
                 }
 
+
+                // == LÓGICA ORIGINAL EFI ==
                 EFIDocPOFDTO? docenteEFI = null;
                 var ueLimpia = LimpiarUE(establecimiento.UE);
                 var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia, new List<string> { registro.Documento });
 
+                var cargoMEC = await _context.MEC_TiposCategorias.Where(x => x.CodCategoria == registro.Categoria)
+                                .Select(x => x.IdTipoCategoria).FirstOrDefaultAsync();
 
-                var cargoMEC = await _context.MEC_TiposCategorias.Where(x => x.CodCategoria == registro.Categoria).Select(x => x.IdTipoCategoria).FirstOrDefaultAsync();
-                var caracterMEC = await _context.MEC_CarRevista.Where(x => x.CodPcia == registro.CaracterRevista).Select(x => x.IdCarRevista).FirstOrDefaultAsync();
+                var caracterMEC = await _context.MEC_CarRevista.Where(x => x.CodPcia == registro.CaracterRevista)
+                                .Select(x => x.IdCarRevista).FirstOrDefaultAsync();
 
                 if (docentesUE != null && docentesUE.Any())
                 {
                     docenteEFI = docentesUE
-                        .FirstOrDefault(d =>
-                            d.NroDoc.TrimStart('0').Trim() ==
-                            registro.Documento.TrimStart('0').Trim());
+                        .FirstOrDefault(d => d.NroDoc.TrimStart('0').Trim() == registro.Documento.TrimStart('0').Trim());
                 }
 
                 if (persona == null && docenteEFI == null)
@@ -820,18 +858,19 @@ namespace API.Services
                 tmpEfiList.Add(tmp);
             }
 
+
+            // GUARDADO FINAL
             if (tmpEfiList.Any())
-            {
                 _context.MEC_TMPEFI.AddRange(tmpEfiList);
-                await _context.SaveChangesAsync();
-            }
 
+            if (detallesPOF.Any())
+                _context.MEC_POFDetalle.AddRange(detallesPOF);
 
-            Console.WriteLine($"--- VALIDACIÓN FINAL ---");
-            Console.WriteLine($"Total registros TMPEFI: {tmpEfiList.Count}");
+            await _context.SaveChangesAsync();
         }
 
-       
+
+
         private static string LimpiarUE(string? ue)
         {
             if (string.IsNullOrWhiteSpace(ue)) return string.Empty;
