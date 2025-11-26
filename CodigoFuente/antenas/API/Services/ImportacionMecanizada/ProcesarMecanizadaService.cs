@@ -761,12 +761,11 @@ namespace API.Services
 
                 personas.TryGetValue(registro.Documento, out var persona);
                 MEC_POF? pof = null;
-                // Verificar si el docente existe en POF
+
                 bool existePOF = persona != null &&
                                  pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out  pof);
 
 
-                // == PARTE NUEVA: si existe POF debe generar detalle + antigüedad ==
                 if (existePOF)
                 {
                     var detalle = new MEC_POFDetalle
@@ -797,11 +796,10 @@ namespace API.Services
                     }
 
                     detallesPOF.Add(detalle);
-                    continue; // no debe insertarse en TMPEFI si existe POF
+                    continue; 
                 }
 
 
-                // == LÓGICA ORIGINAL EFI ==
                 EFIDocPOFDTO? docenteEFI = null;
                 var ueLimpia = LimpiarUE(establecimiento.UE);
                 var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia, new List<string> { registro.Documento });
@@ -859,7 +857,6 @@ namespace API.Services
             }
 
 
-            // GUARDADO FINAL
             if (tmpEfiList.Any())
                 _context.MEC_TMPEFI.AddRange(tmpEfiList);
 
