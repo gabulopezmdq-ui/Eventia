@@ -26,7 +26,7 @@ COPY ./DEPLOY/openssl.cnf /etc/ssl/
 RUN npm config set strict-ssl false
 
 WORKDIR /App
-COPY ./CodigoFuente/antenas/React/*.json ./
+COPY ./CodigoFuente/antenas/React/package*.json ./
 COPY ./CodigoFuente/antenas/React/.npmrc ./
 RUN npm install
 COPY ./CodigoFuente/antenas/React ./
