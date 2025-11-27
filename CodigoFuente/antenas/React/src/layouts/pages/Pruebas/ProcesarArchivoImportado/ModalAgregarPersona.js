@@ -46,8 +46,7 @@ export default function ModalAgregarPersona({
   };
 
   const handleGuardarPersona = async () => {
-    const base = process.env.REACT_APP_API_URL || "";
-    const url = new URL("Personas/EFIPersona", base).toString();
+    const url = `${process.env.REACT_APP_API_URL}Personas/EFIPersona`;
     const Legajo = isNaN(Number(personaForm.legajo))
       ? personaForm.legajo
       : Number(personaForm.legajo);
