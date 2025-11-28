@@ -33,6 +33,7 @@ export default function ProcesarArchivoImportado() {
   const [personaSeleccionada, setPersonaSeleccionada] = useState(null);
   const [showAgregarPersonaModal, setShowAgregarPersonaModal] = useState(false);
   const [personaDataForModal, setPersonaDataForModal] = useState(null);
+  const [showProcesarDefinitivo, setShowProcesarDefinitivo] = useState(false);
 
   const token = sessionStorage.getItem("token");
 
@@ -65,7 +66,7 @@ export default function ProcesarArchivoImportado() {
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setErroresMec(response.data);
+
       const permitidos = new Set(["NE", "NP"]);
       const filtrados = (response.data || []).filter((r) =>
         permitidos.has(
@@ -74,20 +75,18 @@ export default function ProcesarArchivoImportado() {
             .toUpperCase()
         )
       );
+
       setErroresMec(filtrados);
     } catch (error) {
-      console.error("Error al obtener errores:", error.response);
       setErrorAlert({
         show: true,
         message: "No se pudieron obtener los errores.",
         type: "error",
       });
-      setTimeout(() => setErrorAlert({ show: false, message: "", type: "error" }), 5000);
     } finally {
       setIsLoadingErrores(false);
     }
   };
-
   const handleProcessFile = async () => {
     if (!selectedIdCabecera) {
       setErrorAlert({
@@ -100,6 +99,7 @@ export default function ProcesarArchivoImportado() {
 
     setIsProcessing(true);
     setShowErrorButton(false);
+    setShowProcesarDefinitivo(false);
 
     try {
       const url =
@@ -110,16 +110,15 @@ export default function ProcesarArchivoImportado() {
 
       setErrorAlert({
         show: true,
-        message: "Archivo procesado exitosamente.",
+        message: "Archivo preprocesado exitosamente.",
         type: "success",
       });
+      setTimeout(() => setErrorAlert((prev) => ({ ...prev, show: false })), 3000);
+      setShowProcesarDefinitivo(true);
     } catch (error) {
-      const errorData = error.response?.data;
       const errorMessage =
-        errorData?.mensaje ||
-        errorData?.Message ||
-        errorData?.error ||
-        (typeof errorData === "string" ? errorData : null) ||
+        error.response?.data?.mensaje ||
+        error.response?.data?.error ||
         "Error inesperado al procesar el archivo.";
 
       setErrorAlert({ show: true, message: errorMessage, type: "error" });
@@ -130,6 +129,29 @@ export default function ProcesarArchivoImportado() {
       }
     } finally {
       setIsProcessing(false);
+    }
+  };
+  const handleProcesarDefinitivo = async () => {
+    try {
+      const url =
+        process.env.REACT_APP_API_URL +
+        `ImportarMecanizadas/Procesar?idCabecera=${selectedIdCabecera}`;
+
+      await axios.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
+
+      setErrorAlert({
+        show: true,
+        message: "Archivo procesado definitivamente.",
+        type: "success",
+      });
+    } catch (error) {
+      const backendMessage = error.response?.data || "Error procesando definitivamente el archivo.";
+      setErrorAlert({
+        show: true,
+        message: backendMessage,
+        type: "error",
+      });
+      setTimeout(() => setErrorAlert((prev) => ({ ...prev, show: false })), 5000);
     }
   };
 
@@ -146,6 +168,7 @@ export default function ProcesarArchivoImportado() {
       message: dataGuardada?.mensaje || "POF guardado correctamente",
       type: "success",
     });
+
     await fetchErroresMec();
   };
 
@@ -179,6 +202,7 @@ export default function ProcesarArchivoImportado() {
     });
     await fetchErroresMec();
   };
+
   const AccionesCellPropTypes = {
     row: PropTypes.shape({
       original: PropTypes.shape({
@@ -207,6 +231,7 @@ export default function ProcesarArchivoImportado() {
                 setSelectedIdCabecera(e.target.value);
                 setShowErrorButton(false);
                 setErroresMec([]);
+                setShowProcesarDefinitivo(false);
               }}
             >
               <MenuItem value="">
@@ -245,6 +270,13 @@ export default function ProcesarArchivoImportado() {
               </MDAlert>
             </MDBox>
           </Grid>
+        </Grid>
+      )}
+      {showProcesarDefinitivo && (
+        <Grid container justifyContent="center" mt={2}>
+          <MDButton variant="gradient" color="success" onClick={handleProcesarDefinitivo}>
+            Finalizar Proceso
+          </MDButton>
         </Grid>
       )}
 
@@ -326,12 +358,14 @@ export default function ProcesarArchivoImportado() {
           </MDBox>
         )
       )}
+
       <ModalAgregarPOF
         open={showAgregarPOFModal}
         onClose={handleClosePOFModal}
         persona={personaSeleccionada}
         onSave={handleGuardarPOF}
       />
+
       <ModalAgregarPersona
         open={showAgregarPersonaModal}
         onClose={() => setShowAgregarPersonaModal(false)}
