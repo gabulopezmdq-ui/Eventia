@@ -757,8 +757,10 @@ namespace API.Services
             foreach (var registro in mecanizadasFiltradas)
             {
                 if (!establecimientos.TryGetValue(registro.NroEstab, out var establecimiento))
+                {
+                    registro.RegistroValido = "N"; // no encontrado
                     continue;
-
+                }
                 personas.TryGetValue(registro.Documento, out var persona);
                 MEC_POF? pof = null;
 
@@ -796,6 +798,7 @@ namespace API.Services
                     }
 
                     detallesPOF.Add(detalle);
+                    registro.RegistroValido = "S";
                     continue; 
                 }
 
@@ -817,7 +820,10 @@ namespace API.Services
                 }
 
                 if (persona == null && docenteEFI == null)
+                {
+                    registro.RegistroValido = "N";
                     continue;
+                }
 
                 string apellido = persona?.Apellido ?? docenteEFI?.Apellido;
                 string nombre = persona?.Nombre ?? docenteEFI?.Nombre;
@@ -854,6 +860,7 @@ namespace API.Services
                 };
 
                 tmpEfiList.Add(tmp);
+                registro.RegistroValido = "S";
             }
 
 
