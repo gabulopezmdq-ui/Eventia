@@ -671,6 +671,7 @@ namespace API.Services
                     CantHsCs = horasCs.CantHorasCS,
                     MesAntiguedad = antiguedad.MesAntiguedad,
                     AnioAntiguedad = antiguedad.AnioAntiguedad,
+                    AnioMesAfectacion = dto.AnioMesAfectacion,
                     CodigoLiquidacionNumero = dto.CodigoLiquidacion.Trim(),
                     CodigoLiquidacionDescripcion = concepto?.Descripcion ?? "",
                     Importe = dto.Importe,
@@ -692,7 +693,7 @@ namespace API.Services
                         CantHsCs = g.First().CantHsCs,
                         MesAntiguedad = g.First().MesAntiguedad,
                         AnioAntiguedad = g.First().AnioAntiguedad,
-
+                        AnioMesAfectacion = g.First().AnioMesAfectacion
                         TipoFuncion = g.First().TipoFuncion,
                         CarRevista = g.First().CarRevista,
 

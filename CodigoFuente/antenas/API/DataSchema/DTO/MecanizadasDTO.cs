@@ -51,6 +51,7 @@ public class MecReporte
     public int? CantHsCs { get; set; }
     public int? MesAntiguedad { get; set; }
     public int? AnioAntiguedad { get; set; }
+    public string AnioMesAfectacion { get; set; }
     public string CodigoLiquidacionNumero { get; set; }
     public string CodigoLiquidacionDescripcion { get; set; }
      public decimal? Importe { get; set; }
@@ -68,7 +69,7 @@ public class MecReportePersona
     public int? CantHsCs { get; set; }
     public int? MesAntiguedad { get; set; }
     public int? AnioAntiguedad { get; set; }
-
+    public string AnioMesAfectacion { get; set; }
     public string TipoFuncion { get; set; }
     public string CarRevista { get; set; }
 
