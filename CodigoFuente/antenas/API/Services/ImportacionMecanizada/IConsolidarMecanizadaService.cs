@@ -29,5 +29,6 @@ namespace API.Services.ImportacionMecanizada
         Task ActualizarMEC_POFDetalle(int idPOF, int supleAId, int idCabecera, DateTime supleDesde, DateTime supleHasta);
         Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario);
         Task CambiarEstadoCabeceraAsync(int idCabecera, int usuario);
+        Task<List<MecReportePersona>> ObtenerReporte(int idCabecera, int idEstablecimiento);
     }
 }

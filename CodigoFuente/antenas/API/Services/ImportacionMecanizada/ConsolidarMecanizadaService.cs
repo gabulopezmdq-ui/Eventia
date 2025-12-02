@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services.ImportacionMecanizada;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,8 @@ namespace API.Services
 
             var query = _context.MEC_Mecanizadas
                 .Where(m => m.Cabecera != null && m.Cabecera.IdCabecera == idCabecera).GroupBy(m => m.IdEstablecimiento)
-                .Select(g => new {
+                .Select(g => new
+                {
                     IdEstablecimiento = g.Key,
                     CountConsolidadoS = g.Count(m => m.Consolidado == "S"),
                     CountConsolidadoN = g.Count(m => m.Consolidado == "N")
@@ -121,7 +123,7 @@ namespace API.Services
             {
                 registro.TieneAntiguedad = await ValidarExistenciaAntiguedadAsync(registro.IdPOF);
 
-                if(registro.TieneAntiguedad)
+                if (registro.TieneAntiguedad)
                 {
                     var antiguedad = await _context.MEC_POF_Antiguedades.Where(a => a.IdPersona == registro.IdPersona)
                         .Select(a => new
@@ -221,7 +223,7 @@ namespace API.Services
         }
 
         //Crear registro antiguedad y detalle
-        
+
         public async Task CrearRegistroAntigDet(AltaMecanizadaDTO datos)
         {
             try
@@ -419,7 +421,7 @@ namespace API.Services
         // Actualizar MEC_POFDetalle 
         public async Task ActualizarMEC_POFDetalle(int idPOF, int supleAId, int idCabecera, DateTime supleDesde, DateTime supleHasta)
         {
-            
+
 
             // Buscar el registro correspondiente
             var detalle = await _context.MEC_POFDetalle.FirstOrDefaultAsync(d => d.IdPOF == idPOF && d.IdCabecera == idCabecera);
@@ -481,7 +483,7 @@ namespace API.Services
 
         public async Task<List<object>> ObtenerPOFsSimplificadoAsync(int idEstablecimiento)
         {
-            var result=  await _context.MEC_POF
+            var result = await _context.MEC_POF
                 .Where(p => p.IdEstablecimiento == idEstablecimiento && p.Vigente == "S")
                 .Select(p => new
                 {
@@ -531,7 +533,7 @@ namespace API.Services
                 throw new Exception("Cabecera no encontrada");
 
             // Cambiar estado
-            cabecera.Estado = "S";  
+            cabecera.Estado = "S";
 
             // Registrar cambio en MEC_CabeceraLiquidacionEstados
             var nuevoEstado = new MEC_CabeceraLiquidacionEstados
@@ -546,6 +548,181 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
         }
-    }
+        public async Task<List<MecReportePersona>> ObtenerReporte(int idCabecera, int idEstablecimiento)
+        {
+            var mecanizadas = await _context.MEC_Mecanizadas
+                .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
+                .Select(p => new MecanizadasDTO
+                {
+                    IdMecanizada = p.IdMecanizada,
+                    FechaConsolidacion = p.FechaConsolidacion,
+                    IdUsuario = p.IdUsuario,
+                    IdCabecera = p.IdCabecera,
+                    MesLiquidacion = p.MesLiquidacion,
+                    OrdenPago = p.OrdenPago,
+                    AnioMesAfectacion = p.AnioMesAfectacion,
+                    IdEstablecimiento = p.IdEstablecimiento,
+                    IdPOF = p.IdPOF,
+                    Importe = p.Importe,
+                    Signo = p.Signo,
+                    MarcaTransferido = p.MarcaTransferido,
+                    Moneda = p.Moneda,
+                    RegimenEstatutario = p.RegimenEstatutario,
+                    Dependencia = p.Dependencia,
+                    Distrito = p.Distrito,
+                    Subvencion = p.Subvencion,
+                    Origen = p.Origen,
+                    Consolidado = p.Consolidado,
+                    CodigoLiquidacion = p.CodigoLiquidacion,
+                    DNI = p.POF.Persona.DNI,
+                    Secuencia = p.POF.Secuencia,
+                    TipoCargo = p.POF.TipoCargo,
+                    Nombre = p.POF.Persona.Nombre,
+                    Apellido = p.POF.Persona.Apellido,
+                })
+                .ToListAsync();
 
+            var lista = new List<MecReporte>();
+
+
+            foreach (var dto in mecanizadas)
+            {
+
+                var est = await _context.MEC_Establecimientos.FirstOrDefaultAsync(e => e.IdEstablecimiento == dto.IdEstablecimiento);
+
+                var pof = await _context.MEC_POF.FirstOrDefaultAsync(p => p.IdPOF == dto.IdPOF);
+
+                if (est == null)
+                    throw new Exception($"Establecimiento no encontrado: {dto.IdEstablecimiento}");
+
+                var tipoEst = await _context.MEC_TiposEstablecimientos
+                    .FirstOrDefaultAsync(t => t.IdTipoEstablecimiento == est.IdTipoEstablecimiento);
+
+                if (tipoEst == null)
+                    throw new Exception($"TipoEstablecimiento no encontrado: {est.IdTipoEstablecimiento}");
+
+
+                if (pof == null)
+                    throw new Exception($"POF no encontrado: {dto.IdPOF}");
+
+                var carRevista = await _context.MEC_CarRevista
+                    .FirstOrDefaultAsync(c => c.IdCarRevista == pof.IdCarRevista);
+
+                if (carRevista == null)
+                    throw new Exception($"CarRevista no encontrado: {pof.IdCarRevista}");
+
+                var tipoFuncion = await _context.MEC_TiposFunciones
+                    .FirstOrDefaultAsync(f => f.IdTipoFuncion == pof.IdFuncion);
+
+                if (tipoFuncion == null)
+                    throw new Exception($"TipoFuncion no encontrada: {pof.IdFuncion}");
+
+                var antiguedad = await _context.MEC_POF_Antiguedades
+                    .FirstOrDefaultAsync(f => f.IdPersona == pof.IdPersona);
+
+                if (antiguedad == null)
+                {
+                    antiguedad = new MEC_POF_Antiguedades
+                    {
+                        MesAntiguedad = 0,
+                        AnioAntiguedad = 0
+                    };
+                }
+
+                var horasCs = await _context.MEC_POFDetalle
+                    .FirstOrDefaultAsync(f => f.IdPOF == pof.IdPOF);
+
+                if (horasCs == null)
+                {
+                    horasCs = new MEC_POFDetalle
+                    {
+                        CantHorasCS = 0,
+                    };
+                }
+
+                var categoria = await _context.MEC_TiposCategorias
+                    .FirstOrDefaultAsync(f => f.IdTipoCategoria == pof.IdCategoria);
+
+                if (categoria == null)
+                    throw new Exception($"antiguedad no encontrada: {pof.IdCategoria}");
+                
+                var codigoLimpio = dto.CodigoLiquidacion?.Trim();
+
+                var concepto = await _context.MEC_Conceptos
+                    .FirstOrDefaultAsync(x => x.CodConcepto.Trim() == codigoLimpio);
+
+
+
+                lista.Add (new MecReporte
+                {
+                    DTO = dto,
+                    OrdenPago = dto.OrdenPago,
+                    NroDiegep = est.NroDiegep,
+                    NombrePcia = est.NombrePcia,
+                    Subvencion = est.Subvencion,
+                    CantTurnos = est.CantTurnos,
+                    CantSecciones = est.CantSecciones,
+                    Ruralidad = est.Ruralidad,
+                    TipoEst = tipoEst.CodTipoEstablecimiento,
+                    TipoEstDesc = tipoEst.Descripcion,
+                    CarRevista = carRevista.CodPcia,
+                    TipoFuncion = tipoFuncion.CodFuncion,
+                    Categoria = categoria.CodCategoria,
+                    CantHsCs = horasCs.CantHorasCS,
+                    MesAntiguedad = antiguedad.MesAntiguedad,
+                    AnioAntiguedad = antiguedad.AnioAntiguedad,
+                    CodigoLiquidacionNumero = dto.CodigoLiquidacion.Trim(),
+                    CodigoLiquidacionDescripcion = concepto?.Descripcion ?? "",
+                    Importe = dto.Importe,
+                    Signo = dto.Signo
+
+                });
+
+            }
+
+            var agrupados = lista
+                    .GroupBy(x => x.DTO.DNI)
+                    .Select(g => new MecReportePersona
+                    {
+                        DNI = g.First().DTO.DNI,
+                        Nombre = g.First().DTO.Nombre,
+                        Apellido = g.First().DTO.Apellido,
+
+                        Categoria = g.First().Categoria,
+                        CantHsCs = g.First().CantHsCs,
+                        MesAntiguedad = g.First().MesAntiguedad,
+                        AnioAntiguedad = g.First().AnioAntiguedad,
+
+                        TipoFuncion = g.First().TipoFuncion,
+                        CarRevista = g.First().CarRevista,
+
+                        NroDiegep = g.First().NroDiegep,
+                        NombrePcia = g.First().NombrePcia,
+                        Subvencion = g.First().Subvencion,
+                        CantTurnos = g.First().CantTurnos,
+                        CantSecciones = g.First().CantSecciones,
+                        Ruralidad = g.First().Ruralidad,
+                        TipoEst = g.First().TipoEst,
+                        TipoEstDesc = g.First().TipoEstDesc,
+                        CodigosLiquidacionDetallados = g
+                                        .GroupBy(x => x.CodigoLiquidacionNumero)
+                                        .Select(grp => new CodigoLiquidacionDTO
+                                        {
+                                            Codigo = grp.Key,
+                                            Descripcion = grp.First().CodigoLiquidacionDescripcion,
+                                            Importe = grp.Sum(i => i.Importe ?? 0),
+                                            Signo = grp.First().Signo,
+                                        })
+                                        .ToList(),
+                        NetoTotal = g.Sum(i =>
+                        {
+                            var importe = i.Importe ?? 0;
+                            return i.Signo == "-" ? -importe : importe;
+                        })
+                    })
+                    .ToList();
+            return agrupados;
+        }
+
+    }
 }

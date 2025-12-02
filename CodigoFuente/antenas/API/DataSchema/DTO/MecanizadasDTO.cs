@@ -30,3 +30,64 @@ public class MecanizadasDTO
     public string Nombre { get; set; }
     public string Apellido { get; set; }
 }
+
+
+public class MecReporte
+{
+    public MecanizadasDTO DTO { get; set; }
+
+    public string OrdenPago { get; set; }
+    public string NroDiegep { get; set; }
+    public string NombrePcia { get; set; }
+    public string Subvencion { get; set; }
+    public string CantTurnos { get; set; }
+    public string CantSecciones { get; set; }
+    public string Ruralidad { get; set; }
+    public string TipoEst { get; set; }
+    public string TipoEstDesc { get; set; }
+    public string CarRevista { get; set; }
+    public string TipoFuncion { get; set; }
+    public string Categoria { get; set; }
+    public int? CantHsCs { get; set; }
+    public int? MesAntiguedad { get; set; }
+    public int? AnioAntiguedad { get; set; }
+    public string CodigoLiquidacionNumero { get; set; }
+    public string CodigoLiquidacionDescripcion { get; set; }
+     public decimal? Importe { get; set; }
+    public string Signo { get; set; }
+
+}
+
+public class MecReportePersona
+{
+    public string DNI { get; set; }
+    public string Nombre { get; set; }
+    public string Apellido { get; set; }
+
+    public string Categoria { get; set; }
+    public int? CantHsCs { get; set; }
+    public int? MesAntiguedad { get; set; }
+    public int? AnioAntiguedad { get; set; }
+
+    public string TipoFuncion { get; set; }
+    public string CarRevista { get; set; }
+
+    public string NroDiegep { get; set; }
+    public string NombrePcia { get; set; }
+    public string Subvencion { get; set; }
+    public string CantTurnos { get; set; }
+    public string CantSecciones { get; set; }
+    public string Ruralidad { get; set; }
+    public string TipoEst { get; set; }
+    public string TipoEstDesc { get; set; }
+    public decimal NetoTotal { get; set; }
+    public List<CodigoLiquidacionDTO> CodigosLiquidacionDetallados { get; set; } = new();
+}
+
+public class CodigoLiquidacionDTO
+{
+    public string Codigo { get; set; }
+    public string Descripcion { get; set; }
+    public decimal Importe { get; set; }
+    public string Signo { get; set; }
+}
