@@ -693,7 +693,7 @@ namespace API.Services
                         CantHsCs = g.First().CantHsCs,
                         MesAntiguedad = g.First().MesAntiguedad,
                         AnioAntiguedad = g.First().AnioAntiguedad,
-                        AnioMesAfectacion = g.First().AnioMesAfectacion
+                        AnioMesAfectacion = g.First().AnioMesAfectacion,
                         TipoFuncion = g.First().TipoFuncion,
                         CarRevista = g.First().CarRevista,
 
