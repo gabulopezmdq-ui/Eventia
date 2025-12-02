@@ -269,5 +269,13 @@ namespace API.Controllers
                 return StatusCode(500, $"Error al consolidar registros: {ex.Message}");
             }
         }
+
+        [HttpGet("Reporte")]
+
+        public async Task<IActionResult> ObtenerReporte(int idCabecera, int idEstablecimiento)
+        {
+            var mecanizadas = await _consolidarMecanizadaService.ObtenerReporte(idCabecera, idEstablecimiento);
+            return Ok(mecanizadas.ToList());
+        }
     }
 }
