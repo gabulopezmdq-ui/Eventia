@@ -714,7 +714,7 @@ namespace API.Services
                                             Signo = grp.First().Signo,
                                         })
                                         .ToList(),
-                        NetoTotal = g.Sum(i =>
+                        Neto = g.Sum(i =>
                         {
                             var importe = i.Importe ?? 0;
                             return i.Signo == "-" ? -importe : importe;
