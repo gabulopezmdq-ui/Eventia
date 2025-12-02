@@ -687,7 +687,7 @@ namespace API.Services
                         DNI = g.First().DTO.DNI,
                         Nombre = g.First().DTO.Nombre,
                         Apellido = g.First().DTO.Apellido,
-
+                        Secuencia = g.First().DTO.Secuencia,
                         Categoria = g.First().Categoria,
                         CantHsCs = g.First().CantHsCs,
                         MesAntiguedad = g.First().MesAntiguedad,

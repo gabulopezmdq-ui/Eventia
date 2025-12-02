@@ -63,7 +63,7 @@ public class MecReportePersona
     public string DNI { get; set; }
     public string Nombre { get; set; }
     public string Apellido { get; set; }
-
+    public string Secuencia { get; set; }
     public string Categoria { get; set; }
     public int? CantHsCs { get; set; }
     public int? MesAntiguedad { get; set; }
