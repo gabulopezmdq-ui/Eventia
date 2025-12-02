@@ -80,7 +80,7 @@ public class MecReportePersona
     public string Ruralidad { get; set; }
     public string TipoEst { get; set; }
     public string TipoEstDesc { get; set; }
-    public decimal NetoTotal { get; set; }
+    public decimal Neto { get; set; }
     public List<CodigoLiquidacionDTO> CodigosLiquidacionDetallados { get; set; } = new();
 }
 
