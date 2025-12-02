@@ -124,21 +124,27 @@ const MecPopup = ({
             anioAfeccion: formData.anioReferencia,
             mesAfeccion: formData.mesReferencia,
           };
+
       await onSubmit(submitData);
       setAlertType("success");
       setAlertMessage("Operación realizada con éxito!");
       setShowAlert(true);
+
+      // Espera 3500ms para ocultar el alert antes de cerrar el modal
       setTimeout(() => {
-        handleClose();
         setShowAlert(false);
-      }, 3500);
+        handleClose(); // Cierra el modal después de mostrar la alerta
+      }, 1000); // Ajusta este tiempo si deseas mostrar el mensaje más tiempo
     } catch (error) {
       setAlertType("error");
       setAlertMessage(error.response?.data?.message || "Error en la operación");
       setShowAlert(true);
+
+      // Espera 4500ms para ocultar el alert antes de cerrar el modal
       setTimeout(() => {
         setShowAlert(false);
-      }, 4500);
+        handleClose(); // Cierra el modal después de mostrar la alerta
+      }, 1000); // Ajusta este tiempo si deseas mostrar el mensaje más tiempo
     }
   };
 
