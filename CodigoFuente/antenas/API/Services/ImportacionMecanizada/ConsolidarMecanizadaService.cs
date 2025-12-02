@@ -672,10 +672,10 @@ namespace API.Services
                     MesAntiguedad = antiguedad.MesAntiguedad,
                     AnioAntiguedad = antiguedad.AnioAntiguedad,
                     AnioMesAfectacion = dto.AnioMesAfectacion,
-                    CodigoLiquidacionNumero = dto.CodigoLiquidacion.Trim(),
+                    CodigoLiquidacionNumero = dto.CodigoLiquidacion?.Trim() ?? "",
                     CodigoLiquidacionDescripcion = concepto?.Descripcion ?? "",
                     Importe = dto.Importe,
-                    Signo = dto.Signo
+                    Signo = dto.Signo ?? "+",
 
                 });
 
@@ -718,7 +718,8 @@ namespace API.Services
                         Neto = g.Sum(i =>
                         {
                             var importe = i.Importe ?? 0;
-                            return i.Signo == "-" ? -importe : importe;
+                            var signo = i.Signo ?? "+";
+                            return signo == "-" ? -importe : importe;
                         })
                     })
                     .ToList();
