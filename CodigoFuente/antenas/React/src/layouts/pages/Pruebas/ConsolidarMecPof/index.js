@@ -44,6 +44,7 @@ function ConsolidarMecPOF() {
   const [loadingMec, setLoadingMec] = useState(false);
   const [loadingDocentes, setLoadingDocentes] = useState(false);
   const [loadingSuplentes, setLoadingSuplentes] = useState(false);
+  const [loadingConsolidar, setLoadingConsolidar] = useState(false);
   const [selectedCabeceraData, setSelectedCabeceraData] = useState(null);
   const token = sessionStorage.getItem("token");
 
@@ -367,6 +368,10 @@ function ConsolidarMecPOF() {
   const shouldHideTables = allCountsZero;
 
   const handleConsolidarFinal = async () => {
+    if (!selectedCabecera || !selectedIdEstablecimiento) return;
+
+    setLoadingConsolidar(true);
+
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}Consolidar/Consolidar`,
@@ -381,9 +386,55 @@ function ConsolidarMecPOF() {
           },
         }
       );
+
       console.log("Consolidación exitosa:", response.data);
+
+      // Alert verde de éxito
+      setErrorAlert({
+        show: true,
+        message: "Consolidación realizada correctamente.",
+        type: "success",
+      });
+
+      // 🔁 Recargar la grilla (misma lógica que estaba en tu useEffect)
+      const conteosResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL}Consolidar/ObtenerConteosConsolidado?idCabecera=${selectedCabecera}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = Array.isArray(conteosResponse.data.datos)
+        ? conteosResponse.data.datos
+        : [conteosResponse.data.datos];
+
+      const enrichedData = data.map((item) => {
+        const establecimiento = establecimientos.find(
+          (e) => e.idEstablecimiento === item.idEstablecimiento
+        );
+        return {
+          ...item,
+          nroEstablecimiento: establecimiento ? establecimiento.nroEstablecimiento : "N/A",
+        };
+      });
+
+      setDataTableData(enrichedData);
+
+      // (Opcional) limpiar las tablas del establecimiento actual
+      setMecData([]);
+      setDocentesData([]);
+      setSuplentesData([]);
+      setNombreEstablecimiento("");
+      setSelectedIdEstablecimiento(null);
     } catch (error) {
       console.error("Error al consolidar:", error);
+      setErrorAlert({
+        show: true,
+        message: "Error al consolidar.",
+        type: "error",
+      });
+    } finally {
+      setLoadingConsolidar(false);
     }
   };
 
@@ -649,9 +700,17 @@ function ConsolidarMecPOF() {
             size="small"
             color="info"
             variant="gradient"
-            onClick={() => handleConsolidarFinal()}
+            onClick={handleConsolidarFinal}
+            disabled={loadingConsolidar}
           >
-            Finalizar Consolidacion
+            {loadingConsolidar ? (
+              <>
+                <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
+                Consolidando...
+              </>
+            ) : (
+              "Finalizar Consolidacion"
+            )}
           </MDButton>
         )}
         <SupleAPopup
