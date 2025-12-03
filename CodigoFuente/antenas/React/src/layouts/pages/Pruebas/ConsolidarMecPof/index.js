@@ -449,8 +449,15 @@ function ConsolidarMecPOF() {
   const handleVerReporteClick = async (row) => {
     const { idEstablecimiento } = row;
     const dataParaReporte = reporteData[idEstablecimiento];
+
     if (Array.isArray(dataParaReporte) && dataParaReporte.length > 0) {
       const primerRegistro = dataParaReporte[0];
+
+      // Buscar el primer docente que tenga ordenPago
+      const docenteConOrdenPago = dataParaReporte.find(
+        (d) => d.ordenPago !== undefined && d.ordenPago !== null
+      );
+
       const reporteParseado = {
         establecimiento: {
           nombrePcia: primerRegistro.nombrePcia,
@@ -461,6 +468,7 @@ function ConsolidarMecPOF() {
           ruralidad: primerRegistro.ruralidad,
           tipoEst: primerRegistro.tipoEst,
           tipoEstDesc: primerRegistro.tipoEstDesc,
+          ordenPago: docenteConOrdenPago ? docenteConOrdenPago.ordenPago : null,
         },
         docentes: dataParaReporte,
       };
@@ -469,6 +477,7 @@ function ConsolidarMecPOF() {
         `Datos parseados para el reporte del establecimiento ${idEstablecimiento}:`,
         reporteParseado
       );
+
       await HaberesPDF(reporteParseado);
     } else {
       console.error(
@@ -477,6 +486,7 @@ function ConsolidarMecPOF() {
       );
     }
   };
+
   return (
     <>
       <DashboardLayout>
