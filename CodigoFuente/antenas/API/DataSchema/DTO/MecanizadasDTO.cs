@@ -61,6 +61,7 @@ public class MecReporte
 
 public class MecReportePersona
 {
+    public string OrdenPago { get; set; }
     public string DNI { get; set; }
     public string Nombre { get; set; }
     public string Apellido { get; set; }
