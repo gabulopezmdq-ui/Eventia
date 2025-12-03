@@ -685,6 +685,7 @@ namespace API.Services
                     .GroupBy(x => x.DTO.DNI)
                     .Select(g => new MecReportePersona
                     {
+                        OrdenPago = g.First().DTO.OrdenPago,
                         DNI = g.First().DTO.DNI,
                         Nombre = g.First().DTO.Nombre,
                         Apellido = g.First().DTO.Apellido,
