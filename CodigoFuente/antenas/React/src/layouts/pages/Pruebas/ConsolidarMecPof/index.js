@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Card from "@mui/material/Card";
-import { Link, useNavigate, useParams } from "react-router-dom";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import Grid from "@mui/material/Grid";
@@ -19,9 +18,8 @@ import FormControl from "@mui/material/FormControl";
 import DataTable from "examples/Tables/DataTable";
 import SupleAPopup from "./SupleAPopUp";
 import MecPopup from "./MecPopUp";
+import HaberesPDF from "./HaberesPDF";
 function ConsolidarMecPOF() {
-  const navigate = useNavigate();
-  const { id } = useParams();
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [errorAlertDelete, setErrorAlertDelete] = useState({
     show: false,
@@ -46,6 +44,8 @@ function ConsolidarMecPOF() {
   const [loadingSuplentes, setLoadingSuplentes] = useState(false);
   const [loadingConsolidar, setLoadingConsolidar] = useState(false);
   const [selectedCabeceraData, setSelectedCabeceraData] = useState(null);
+  const [reporteData, setReporteData] = useState({});
+  const [haberesButtonState, setHaberesButtonState] = useState({});
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -119,9 +119,6 @@ function ConsolidarMecPOF() {
   }, [selectedCabecera, token, establecimientos]);
 
   const allCountsZero = dataTableData.every((row) => row.countConsolidadoN === 0);
-
-  const displayValue = (value) => (value ? value : "N/A");
-
   //Boton de consolidar tabla MEC
   const handleButtonClick = (row) => {
     setNombreEstablecimiento(row.nroEstablecimiento);
@@ -199,6 +196,7 @@ function ConsolidarMecPOF() {
       })
       .finally(() => setLoadingSuplentes(false));
   };
+
   // Boton delete de la tabla MEC
   const handleDelete = (id) => {
     axios
@@ -219,19 +217,11 @@ function ConsolidarMecPOF() {
 
   const handleChangeStatus = () => {
     if (!selectedCabecera) return;
-    /*const today = new Date();
-    const formattedDate =
-      today.getFullYear() +
-      "/" +
-      (today.getMonth() + 1).toString().padStart(2, "0") +
-      "/" +
-      today.getDate().toString().padStart(2, "0");*/
     axios
       .post(
         `${process.env.REACT_APP_API_URL}Consolidar/CambiarEstado?idCabecera=${selectedCabecera}`,
         {
           idCabecera: selectedCabecera,
-          /*fechaCambioEstado: formattedDate,*/
           estado: "S",
         },
         {
@@ -388,15 +378,11 @@ function ConsolidarMecPOF() {
       );
 
       console.log("Consolidación exitosa:", response.data);
-
-      // Alert verde de éxito
       setErrorAlert({
         show: true,
         message: "Consolidación realizada correctamente.",
         type: "success",
       });
-
-      // 🔁 Recargar la grilla (misma lógica que estaba en tu useEffect)
       const conteosResponse = await axios.get(
         `${process.env.REACT_APP_API_URL}Consolidar/ObtenerConteosConsolidado?idCabecera=${selectedCabecera}`,
         {
@@ -419,8 +405,6 @@ function ConsolidarMecPOF() {
       });
 
       setDataTableData(enrichedData);
-
-      // (Opcional) limpiar las tablas del establecimiento actual
       setMecData([]);
       setDocentesData([]);
       setSuplentesData([]);
@@ -438,6 +422,61 @@ function ConsolidarMecPOF() {
     }
   };
 
+  const handleHaberesClick = async (row) => {
+    const { idEstablecimiento } = row;
+    setHaberesButtonState((prev) => ({ ...prev, [idEstablecimiento]: "loading" }));
+
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}Consolidar/reporte?idCabecera=${selectedCabecera}&idEstablecimiento=${idEstablecimiento}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setReporteData((prev) => ({ ...prev, [idEstablecimiento]: response.data }));
+      setHaberesButtonState((prev) => ({ ...prev, [idEstablecimiento]: "finished" }));
+    } catch (error) {
+      console.error("Error al generar el reporte de haberes:", error);
+      setErrorAlert({
+        show: true,
+        message: "Error al generar el reporte de haberes.",
+        type: "error",
+      });
+      setHaberesButtonState((prev) => ({ ...prev, [idEstablecimiento]: "initial" }));
+    }
+  };
+
+  const handleVerReporteClick = async (row) => {
+    const { idEstablecimiento } = row;
+    const dataParaReporte = reporteData[idEstablecimiento];
+    if (Array.isArray(dataParaReporte) && dataParaReporte.length > 0) {
+      const primerRegistro = dataParaReporte[0];
+      const reporteParseado = {
+        establecimiento: {
+          nombrePcia: primerRegistro.nombrePcia,
+          nroDiegep: primerRegistro.nroDiegep,
+          subvencion: primerRegistro.subvencion,
+          cantTurnos: primerRegistro.cantTurnos,
+          cantSecciones: primerRegistro.cantSecciones,
+          ruralidad: primerRegistro.ruralidad,
+          tipoEst: primerRegistro.tipoEst,
+          tipoEstDesc: primerRegistro.tipoEstDesc,
+        },
+        docentes: dataParaReporte,
+      };
+
+      console.log(
+        `Datos parseados para el reporte del establecimiento ${idEstablecimiento}:`,
+        reporteParseado
+      );
+      await HaberesPDF(reporteParseado);
+    } else {
+      console.error(
+        "No se encontraron datos para el reporte del establecimiento:",
+        idEstablecimiento
+      );
+    }
+  };
   return (
     <>
       <DashboardLayout>
@@ -488,20 +527,48 @@ function ConsolidarMecPOF() {
                       Header: "Acción",
                       accessor: "accion",
                       Cell: ({ row }) => {
-                        const countConsolidadoN = row.original.countConsolidadoN;
-                        if (countConsolidadoN > 0) {
-                          return (
-                            <MDButton
-                              size="small"
-                              color="info"
-                              variant="gradient"
-                              onClick={() => handleButtonClick(row.original)}
-                            >
-                              Consolidar
-                            </MDButton>
-                          );
-                        }
-                        return null;
+                        const { countConsolidadoN, countConsolidadoS } = row.original;
+                        const buttonState =
+                          haberesButtonState[row.original.idEstablecimiento] || "initial";
+                        return (
+                          <>
+                            {countConsolidadoN > 0 && (
+                              <MDButton
+                                size="small"
+                                color="info"
+                                variant="gradient"
+                                onClick={() => handleButtonClick(row.original)}
+                                sx={{ mr: 1 }}
+                              >
+                                Consolidar
+                              </MDButton>
+                            )}
+                            {countConsolidadoS > 0 && (
+                              <MDButton
+                                size="small"
+                                color="secondary"
+                                variant="gradient"
+                                onClick={() =>
+                                  buttonState === "finished"
+                                    ? handleVerReporteClick(row.original)
+                                    : handleHaberesClick(row.original)
+                                }
+                                disabled={buttonState === "loading"}
+                              >
+                                {buttonState === "loading" ? (
+                                  <>
+                                    <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
+                                    Procesando...
+                                  </>
+                                ) : buttonState === "finished" ? (
+                                  "Ver Reporte"
+                                ) : (
+                                  "Haberes"
+                                )}
+                              </MDButton>
+                            )}
+                          </>
+                        );
                       },
                     },
                   ],
