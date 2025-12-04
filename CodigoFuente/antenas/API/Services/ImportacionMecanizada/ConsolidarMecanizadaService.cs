@@ -667,6 +667,7 @@ namespace API.Services
                     Signo = dto.Signo ?? "+",
                     ConSubvencion = dto.ConSubvencion ?? "",
                     ConHaberes = dto.ConHaberes ?? "",
+
                 });
             }
 
@@ -704,6 +705,8 @@ namespace API.Services
                             Descripcion = grp.First().CodigoLiquidacionDescripcion,
                             Importe = grp.Sum(i => i.Importe ?? 0),
                             Signo = grp.First().Signo,
+                            Patronal = conceptos.TryGetValue(grp.Key, out var c) ? c.Patronal : null,
+                            ConAporte = conceptos.TryGetValue(grp.Key, out var c2) ? c2.ConAporte : null
                         })
                         .ToList(),
                     Neto = g.Sum(i =>
