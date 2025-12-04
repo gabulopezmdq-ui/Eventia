@@ -17,7 +17,7 @@ namespace API.DataSchema.ModelConfiguration
 
             // Definir propiedades de la entidad
             builder.Property(e => e.MesReferencia)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(e => e.AnioReferencia)
                 .IsRequired();
