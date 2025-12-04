@@ -98,4 +98,6 @@ public class CodigoLiquidacionDTO
     public string Descripcion { get; set; }
     public decimal Importe { get; set; }
     public string Signo { get; set; }
+    public string Patronal { get; set; }
+    public string ConAporte { get; set; }
 }
