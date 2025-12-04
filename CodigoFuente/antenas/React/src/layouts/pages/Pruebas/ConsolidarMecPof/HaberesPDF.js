@@ -1,8 +1,13 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+// ---------------------------------------------
+// FUNCIONES AUXILIARES PARA TABLAS ASCII
+// ---------------------------------------------
+const repeat = (char, count) => Array(count + 1).join(char);
+
 const HaberesPDF = async (reporteData) => {
-  const { establecimiento } = reporteData;
+  const { establecimiento, docentes } = reporteData;
 
   const doc = new jsPDF({
     orientation: "landscape",
@@ -11,83 +16,141 @@ const HaberesPDF = async (reporteData) => {
   });
 
   doc.setFont("courier", "normal");
-
-  // ======================================================
-  // ENCABEZADO
-  // ======================================================
   doc.setFontSize(8);
-  // Textos del encabezado
-  doc.text("PROVINCIA DE BUENOS AIRES - SERVICIOS DPTI -", 14, 15);
-  doc.text("DIRECCION GENERAL DE CULTURA Y EDUCACION", 14, 19);
-  doc.text("DIRECCION DE EDUCACION DE GESTION PRIVADA", 14, 23);
-  doc.text("- P L A N I L L A  D E  H A B E R E S -", 17, 30);
-  doc.text("Di.E.Ge.P", 100, 30);
-  doc.text(`N/R PESOS ${establecimiento.ordenPago}  Sueldos Conv ME 421/09`, 180, 34);
-  doc.text("DISTRITO :043  G Pueyrredon", 14, 37);
-  doc.text(`TIPO ORG :${establecimiento.tipoEst} ${establecimiento.tipoEstDesc}`, 90, 37);
-  doc.text(`INSTITUTO: ${establecimiento.nroDiegep} ${establecimiento.nombrePcia}`, 180, 37);
 
-  doc.text(`RURAL: ${establecimiento.ruralidad}`, 65, 41);
-  doc.text(`SECCS: ${establecimiento.cantSecciones}`, 110, 41);
-  doc.text(`TURNOS: ${establecimiento.cantTurnos}`, 160, 41);
-  doc.text(`SUBVENCION: ${establecimiento.subvencion} %`, 220, 41);
+  // ================================
+  // FUNCION PARA DIBUJAR ENCABEZADO
+  // ================================
+  const drawHeader = () => {
+    doc.text("PROVINCIA DE BUENOS AIRES - SERVICIOS DPTI -", 14, 15);
+    doc.text("DIRECCION GENERAL DE CULTURA Y EDUCACION", 14, 19);
+    doc.text("DIRECCION DE EDUCACION DE GESTION PRIVADA", 14, 23);
+    doc.text("- P L A N I L L A  D E  H A B E R E S -", 17, 30);
 
-  // ======================================================
-  // VARIABLES DE DISEÑO COMUNES
-  // =====================================================
-  const margenX = 14;
-  const anchoPagina = doc.internal.pageSize.getWidth();
-  const anchoDisponible = anchoPagina - margenX * 2;
+    doc.text("Di.E.Ge.P", 100, 30);
+    doc.text(`N/R PESOS ${establecimiento.ordenPago}  Sueldos Conv ME 421/09`, 180, 34);
 
-  // ======================================================
-  // 1. LÍNEA DIVISORIA DINÁMICA (# - - - #)
-  // ======================================================
-  const posY_Linea = 46;
-  const inicio = "#";
-  const patron = " -";
-  const fin = " #";
+    doc.text("DISTRITO :043  G Pueyrredon", 14, 37);
+    doc.text(`TIPO ORG :${establecimiento.tipoEst} ${establecimiento.tipoEstDesc}`, 90, 37);
+    doc.text(`INSTITUTO: ${establecimiento.nroDiegep} ${establecimiento.nombrePcia}`, 180, 37);
 
-  let lineaSeparadora = inicio;
-  while (doc.getTextWidth(lineaSeparadora + patron + fin) < anchoDisponible) {
-    lineaSeparadora += patron;
-  }
-  lineaSeparadora += fin;
+    doc.text(`RURAL: ${establecimiento.ruralidad}`, 65, 41);
+    doc.text(`SECCS: ${establecimiento.cantSecciones}`, 110, 41);
+    doc.text(`TURNOS: ${establecimiento.cantTurnos}`, 160, 41);
+    doc.text(`SUBVENCION: ${establecimiento.subvencion} %`, 220, 41);
 
-  // Imprimimos la línea divisoria
-  doc.text(lineaSeparadora, margenX, posY_Linea);
+    // Línea divisoria
+    const margenX = 14;
+    const anchoPagina = doc.internal.pageSize.getWidth();
+    const anchoDisponible = anchoPagina - margenX * 2;
 
-  // ======================================================
-  // 2. ENCABEZADO DE COLUMNAS (TABLA ESTILO TEXTO)
-  // ======================================================
-  const posY_Encabezado = posY_Linea + 4; // Unos milímetros más abajo
-  // El string exacto que solicitaste
-  const textoEncabezado = "* * Datos *R  F* * * Descuentos     * * NRO. CHEQUE Y   * NRO. *";
-  // --- Lógica para justificar el texto (stretch) ---
-  // Calculamos cuánto mide el texto normalmente
-  const anchoTextoNormal = doc.getTextWidth(textoEncabezado);
-  // Calculamos cuánto espacio nos sobra
-  const espacioFaltante = anchoDisponible - anchoTextoNormal;
-  // Dividimos ese espacio entre la cantidad de caracteres para distribuirlo
-  // (Esto hace que el primer * toque el margen izq y el último * toque el margen der)
-  const espacioEntreCaracteres = espacioFaltante / (textoEncabezado.length - 1);
+    const inicio = "#";
+    const patron = " -";
+    const fin = " #";
+    const anchoExtra = doc.getTextWidth("-");
 
-  // Cambiamos a negrita para que parezca encabezado real
-  doc.setFont("courier", "normal");
-  // Imprimimos con el espaciado calculado (charSpace se pasa en las opciones)
-  doc.text(textoEncabezado, margenX, posY_Encabezado, {
-    charSpace: espacioEntreCaracteres,
+    let linea = inicio;
+    while (doc.getTextWidth(linea + patron + fin) < anchoDisponible + anchoExtra) {
+      linea += patron;
+    }
+    linea += fin;
+
+    doc.text(linea, margenX, 46);
+
+    // Encabezado columnas
+    const posY_Enc1 = 50;
+    const posY_Enc2 = posY_Enc1 + 3;
+    const posY_Enc3 = posY_Enc2 + 3;
+
+    const enc1 =
+      "*            *        DATOS       *R F*                      *              *     DESCUENTOS    *            *Nro. Cheque  Y  *  Nro. *";
+    const enc2 =
+      "* DOCUMENTO/ *                    *E U*      CONCEPTOS       *   IMPORTES   * - - - - + - - - - *    NETO    *                *RECIBO *";
+    const enc3 =
+      "*   CARGO    *     PERSONALES     *V N*    REMUNERACIONES    *              * INASIST + JUBILAC *            *RECIBI CONFORME *DE PAGO*";
+
+    const anchoDisponible2 = anchoDisponible;
+
+    const calcCharSpace = (texto) =>
+      (anchoDisponible2 - doc.getTextWidth(texto)) / (texto.length - 1);
+
+    doc.text(enc1, margenX, posY_Enc1, { charSpace: calcCharSpace(enc1) });
+    doc.text(enc2, margenX, posY_Enc2, { charSpace: calcCharSpace(enc2) });
+    doc.text(enc3, margenX, posY_Enc3, { charSpace: calcCharSpace(enc3) });
+
+    // Línea debajo encabezado
+    let linea2 = inicio;
+    while (doc.getTextWidth(linea2 + patron + fin) < anchoDisponible + anchoExtra) {
+      linea2 += patron;
+    }
+    linea2 += fin;
+
+    doc.text(linea2, margenX, posY_Enc3 + 4);
+  };
+
+  // ================================
+  // PIE DE PÁGINA
+  // ================================
+  const drawFooter = () => {
+    doc.setFontSize(8);
+    doc.text(
+      `Página ${doc.internal.getCurrentPageInfo().pageNumber}`,
+      14,
+      doc.internal.pageSize.height - 10
+    );
+  };
+
+  // ================================
+  // INICIO PRIMERA PÁGINA
+  // ================================
+  drawHeader();
+
+  let posY = 65;
+  const altoDocente = 40;
+  let countEnPagina = 0;
+
+  docentes.forEach((d, i) => {
+    if (countEnPagina === 4) {
+      drawFooter();
+      doc.addPage();
+      drawHeader();
+      posY = 65;
+      countEnPagina = 0;
+    }
+
+    // Datos del docente
+    doc.text(`${d.dni}/${d.secuencia}`, 16, posY);
+    doc.text(`AFEC:${d.anioMesAfectacion} CATEG. ${d.categoria}`, 16, posY + 3);
+    doc.text(`ANT:${d.anioAntiguedad}/${d.mesAntiguedad}`, 16, posY + 6);
+    doc.text(`${d.apellido} ${d.nombre}`, 45, posY);
+    doc.text(`${d.carRevista} ${d.tipoFuncion}`, 84, posY);
+    doc.text(`NETO : ${d.neto}`, 205, posY);
+
+    // AHORA DETALLE DE CÓDIGOS ABAJO
+    let detalleY = posY;
+    d.codigosLiquidacionDetallados.forEach((c) => {
+      const signoMostrar = c.signo === "-" ? "-" : "";
+      const linea = `${c.codigo} ${c.descripcion} ${signoMostrar}`;
+
+      doc.text(linea, 92, detalleY);
+
+      const importeTexto = Number(c.importe).toFixed(2);
+      const xRight = 160;
+      const textWidth = doc.getTextWidth(importeTexto);
+
+      doc.text(importeTexto, xRight - textWidth, detalleY);
+
+      detalleY += 4;
+    });
+
+    posY += altoDocente;
+    countEnPagina++;
   });
 
-  // Volvemos a fuente normal para lo que siga después
-  doc.setFont("courier", "normal");
+  // Pie de la última página
+  drawFooter();
 
-  // ======================================================
-  // PIE DE PÁGINA
-  // ======================================================
-  doc.setFontSize(8);
-  doc.text("Página 1", 14, doc.internal.pageSize.height - 10);
-
-  // Abrir en nueva pestaña
+  // Abrir nueva pestaña
   doc.output("dataurlnewwindow");
 };
 
