@@ -19,6 +19,22 @@ const HaberesPDF = async (reporteData) => {
   doc.setFontSize(8);
 
   // ================================
+  // FUNCION PARA LÍNEA DE SEPARACIÓN
+  // ================================
+  const drawSeparationLine = (y) => {
+    const margenX = 14;
+    const anchoPagina = doc.internal.pageSize.getWidth();
+    const anchoDisponible = anchoPagina - margenX * 2;
+
+    let linea = "";
+    while (doc.getTextWidth(linea + "*") < anchoDisponible) {
+      linea += "*";
+    }
+
+    doc.text(linea, margenX, y);
+  };
+
+  // ================================
   // FUNCION PARA DIBUJAR ENCABEZADO
   // ================================
   const drawHeader = () => {
@@ -41,8 +57,8 @@ const HaberesPDF = async (reporteData) => {
 
     // Línea divisoria
     const margenX = 14;
-    const anchoPagina = doc.internal.pageSize.getWidth();
-    const anchoDisponible = anchoPagina - margenX * 2;
+    const anchoPagina2 = doc.internal.pageSize.getWidth();
+    const anchoDisponible = anchoPagina2 - margenX * 2;
 
     const inicio = "#";
     const patron = " -";
@@ -70,7 +86,6 @@ const HaberesPDF = async (reporteData) => {
       "*   CARGO    *     PERSONALES     *V N*    REMUNERACIONES    *              * INASIST + JUBILAC *            *RECIBI CONFORME *DE PAGO*";
 
     const anchoDisponible2 = anchoDisponible;
-
     const calcCharSpace = (texto) =>
       (anchoDisponible2 - doc.getTextWidth(texto)) / (texto.length - 1);
 
@@ -105,52 +120,64 @@ const HaberesPDF = async (reporteData) => {
   // ================================
   drawHeader();
 
-  let posY = 65;
-  const altoDocente = 40;
-  let countEnPagina = 0;
+  const startContentY = 65;
+  const endContentY = doc.internal.pageSize.height - 15;
+  let posY = startContentY;
 
-  docentes.forEach((d, i) => {
-    if (countEnPagina === 4) {
+  docentes.forEach((d) => {
+    // ALTURA TOTAL DEL BLOQUE DOCENTE
+    const cantidadConceptos = d.codigosLiquidacionDetallados.length;
+    const alturaConceptos = cantidadConceptos * 4;
+    const alturaDocente = 10 + alturaConceptos + 6;
+
+    // Salto de página si no entra
+    if (posY + alturaDocente > endContentY) {
       drawFooter();
       doc.addPage();
       drawHeader();
-      posY = 65;
-      countEnPagina = 0;
+      posY = startContentY;
     }
 
-    // Datos del docente
+    // DATOS PRINCIPALES
     doc.text(`${d.dni}/${d.secuencia}`, 16, posY);
     doc.text(`AFEC:${d.anioMesAfectacion} CATEG. ${d.categoria}`, 16, posY + 3);
     doc.text(`ANT:${d.anioAntiguedad}/${d.mesAntiguedad}`, 16, posY + 6);
+
     doc.text(`${d.apellido} ${d.nombre}`, 45, posY);
     doc.text(`${d.carRevista} ${d.tipoFuncion}`, 84, posY);
     doc.text(`NETO : ${d.neto}`, 205, posY);
 
-    // AHORA DETALLE DE CÓDIGOS ABAJO
+    // DETALLE DE CONCEPTOS
     let detalleY = posY;
+
     d.codigosLiquidacionDetallados.forEach((c) => {
-      const signoMostrar = c.signo === "-" ? "-" : "";
-      const linea = `${c.codigo} ${c.descripcion} ${signoMostrar}`;
-
+      const codigoFormateado = c.codigo.slice(0, -1) + "." + c.codigo.slice(-1);
+      const linea = `${codigoFormateado} ${c.descripcion}`;
       doc.text(linea, 92, detalleY);
-
-      const importeTexto = Number(c.importe).toFixed(2);
-      const xRight = 160;
+      const importeTexto = `${c.signo === "-" ? "-" : ""}${Number(c.importe).toFixed(2)}`;
+      const xRightBase = 160;
+      const esIPS = c.descripcion.trim().toUpperCase() === "IPS";
+      const extraOffset = esIPS ? 35 : 0;
+      const xRight = xRightBase + extraOffset;
       const textWidth = doc.getTextWidth(importeTexto);
-
       doc.text(importeTexto, xRight - textWidth, detalleY);
 
       detalleY += 4;
     });
 
-    posY += altoDocente;
-    countEnPagina++;
+    // ===========================
+    // LÍNEA DE SEPARACIÓN FINAL
+    // ===========================
+    const ultimaLineaDatos = posY + 6;
+    const lineaY = Math.max(ultimaLineaDatos + 4, detalleY + 2);
+
+    drawSeparationLine(lineaY);
+
+    // Avanzar posición general
+    posY = lineaY + 4;
   });
 
-  // Pie de la última página
   drawFooter();
-
-  // Abrir nueva pestaña
   doc.output("dataurlnewwindow");
 };
 
