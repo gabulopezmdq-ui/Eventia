@@ -578,82 +578,71 @@ namespace API.Services
                     Secuencia = p.POF.Secuencia,
                     TipoCargo = p.POF.TipoCargo,
                     Nombre = p.POF.Persona.Nombre,
-                    Apellido = p.POF.Persona.Apellido,
+                    Apellido = p.POF.Persona.Apellido
                 })
                 .ToListAsync();
 
-            var lista = new List<MecReporte>();
+            // ✅ Precarga masiva (una sola vez)
+            var establecimientos = await _context.MEC_Establecimientos.ToDictionaryAsync(x => x.IdEstablecimiento);
+            var tiposEst = await _context.MEC_TiposEstablecimientos.ToDictionaryAsync(x => x.IdTipoEstablecimiento);
+            var pofs = await _context.MEC_POF
+                .GroupBy(x => x.IdPOF)
+                .Select(g => g.First())
+                .ToDictionaryAsync(x => x.IdPOF);
+            var carRevistas = await _context.MEC_CarRevista
+                .GroupBy(x => x.IdCarRevista)
+                .Select(g => g.First())
+                .ToDictionaryAsync(x => x.IdCarRevista);
 
+            var tiposFunciones = await _context.MEC_TiposFunciones
+                .GroupBy(x => x.IdTipoFuncion)
+                .Select(g => g.First())
+                .ToDictionaryAsync(x => x.IdTipoFuncion);
+
+            var pofDetalle = await _context.MEC_POFDetalle
+                .GroupBy(x => x.IdPOF)
+                .Select(g => g.First())
+                .ToDictionaryAsync(x => x.IdPOF);
+
+            var antiguedades = await _context.MEC_POF_Antiguedades
+                .GroupBy(x => x.IdPersona)
+                .Select(g => g.First())
+                .ToDictionaryAsync(x => x.IdPersona);
+            var categorias = await _context.MEC_TiposCategorias.ToDictionaryAsync(x => x.IdTipoCategoria);
+            var conceptos = await _context.MEC_Conceptos.ToDictionaryAsync(x => x.CodConcepto.Trim());
+
+            var lista = new List<MecReporte>();
 
             foreach (var dto in mecanizadas)
             {
-
-                var est = await _context.MEC_Establecimientos.FirstOrDefaultAsync(e => e.IdEstablecimiento == dto.IdEstablecimiento);
-
-                var pof = await _context.MEC_POF.FirstOrDefaultAsync(p => p.IdPOF == dto.IdPOF);
-
-                if (est == null)
+                if (!establecimientos.TryGetValue(dto.IdEstablecimiento, out var est))
                     throw new Exception($"Establecimiento no encontrado: {dto.IdEstablecimiento}");
 
-                var tipoEst = await _context.MEC_TiposEstablecimientos
-                    .FirstOrDefaultAsync(t => t.IdTipoEstablecimiento == est.IdTipoEstablecimiento);
-
-                if (tipoEst == null)
-                    throw new Exception($"TipoEstablecimiento no encontrado: {est.IdTipoEstablecimiento}");
-
-
-                if (pof == null)
+                if (!pofs.TryGetValue(dto.IdPOF.Value, out var pof))
                     throw new Exception($"POF no encontrado: {dto.IdPOF}");
 
-                var carRevista = await _context.MEC_CarRevista
-                    .FirstOrDefaultAsync(c => c.IdCarRevista == pof.IdCarRevista);
+                if (!tiposEst.TryGetValue(est.IdTipoEstablecimiento, out var tipoEst))
+                    throw new Exception($"TipoEstablecimiento no encontrado: {est.IdTipoEstablecimiento}");
 
-                if (carRevista == null)
+                if (!carRevistas.TryGetValue(pof.IdCarRevista, out var carRevista))
                     throw new Exception($"CarRevista no encontrado: {pof.IdCarRevista}");
 
-                var tipoFuncion = await _context.MEC_TiposFunciones
-                    .FirstOrDefaultAsync(f => f.IdTipoFuncion == pof.IdFuncion);
-
-                if (tipoFuncion == null)
+                if (!tiposFunciones.TryGetValue(pof.IdFuncion, out var tipoFuncion))
                     throw new Exception($"TipoFuncion no encontrada: {pof.IdFuncion}");
 
-                var antiguedad = await _context.MEC_POF_Antiguedades
-                    .FirstOrDefaultAsync(f => f.IdPersona == pof.IdPersona);
+                antiguedades.TryGetValue(pof.IdPersona, out var antiguedad);
+                antiguedad ??= new MEC_POF_Antiguedades { MesAntiguedad = 0, AnioAntiguedad = 0 };
 
-                if (antiguedad == null)
-                {
-                    antiguedad = new MEC_POF_Antiguedades
-                    {
-                        MesAntiguedad = 0,
-                        AnioAntiguedad = 0
-                    };
-                }
+                pofDetalle.TryGetValue(pof.IdPOF, out var horasCs);
+                horasCs ??= new MEC_POFDetalle { CantHorasCS = 0 };
 
-                var horasCs = await _context.MEC_POFDetalle
-                    .FirstOrDefaultAsync(f => f.IdPOF == pof.IdPOF);
+                if (!categorias.TryGetValue(pof.IdCategoria, out var categoria))
+                    throw new Exception($"Categoria no encontrada: {pof.IdCategoria}");
 
-                if (horasCs == null)
-                {
-                    horasCs = new MEC_POFDetalle
-                    {
-                        CantHorasCS = 0,
-                    };
-                }
-
-                var categoria = await _context.MEC_TiposCategorias
-                    .FirstOrDefaultAsync(f => f.IdTipoCategoria == pof.IdCategoria);
-
-                if (categoria == null)
-                    throw new Exception($"antiguedad no encontrada: {pof.IdCategoria}");
-                
                 var codigoLimpio = dto.CodigoLiquidacion?.Trim();
+                conceptos.TryGetValue(codigoLimpio ?? "", out var concepto);
 
-                var concepto = await _context.MEC_Conceptos
-                    .FirstOrDefaultAsync(x => x.CodConcepto.Trim() == codigoLimpio);
-
-
-
-                lista.Add (new MecReporte
+                lista.Add(new MecReporte
                 {
                     DTO = dto,
                     OrdenPago = dto.OrdenPago,
@@ -672,64 +661,63 @@ namespace API.Services
                     MesAntiguedad = antiguedad.MesAntiguedad,
                     AnioAntiguedad = antiguedad.AnioAntiguedad,
                     AnioMesAfectacion = dto.AnioMesAfectacion,
-                    CodigoLiquidacionNumero = dto.CodigoLiquidacion?.Trim() ?? "",
+                    CodigoLiquidacionNumero = codigoLimpio ?? "",
                     CodigoLiquidacionDescripcion = concepto?.Descripcion ?? "",
                     Importe = dto.Importe,
                     Signo = dto.Signo ?? "+",
                     ConSubvencion = dto.ConSubvencion ?? "",
-                    ConHaberes = dto.ConHaberes?? "",
-
+                    ConHaberes = dto.ConHaberes ?? "",
                 });
-
             }
 
             var agrupados = lista
-                    .GroupBy(x => x.DTO.DNI)
-                    .Select(g => new MecReportePersona
-                    {
-                        OrdenPago = g.First().DTO.OrdenPago,
-                        DNI = g.First().DTO.DNI,
-                        Nombre = g.First().DTO.Nombre,
-                        Apellido = g.First().DTO.Apellido,
-                        Secuencia = g.First().DTO.Secuencia,
-                        Categoria = g.First().Categoria,
-                        CantHsCs = g.First().CantHsCs,
-                        MesAntiguedad = g.First().MesAntiguedad,
-                        AnioAntiguedad = g.First().AnioAntiguedad,
-                        AnioMesAfectacion = g.First().AnioMesAfectacion,
-                        TipoFuncion = g.First().TipoFuncion,
-                        CarRevista = g.First().CarRevista,
-
-                        NroDiegep = g.First().NroDiegep,
-                        NombrePcia = g.First().NombrePcia,
-                        Subvencion = g.First().Subvencion,
-                        CantTurnos = g.First().CantTurnos,
-                        CantSecciones = g.First().CantSecciones,
-                        Ruralidad = g.First().Ruralidad,
-                        TipoEst = g.First().TipoEst,
-                        TipoEstDesc = g.First().TipoEstDesc,
-                        ConHaberes = g.First().ConHaberes,
-                        ConSubvencion = g.First().ConSubvencion,
-                        CodigosLiquidacionDetallados = g
-                                        .GroupBy(x => x.CodigoLiquidacionNumero)
-                                        .Select(grp => new CodigoLiquidacionDTO
-                                        {
-                                            Codigo = grp.Key,
-                                            Descripcion = grp.First().CodigoLiquidacionDescripcion,
-                                            Importe = grp.Sum(i => i.Importe ?? 0),
-                                            Signo = grp.First().Signo,
-                                        })
-                                        .ToList(),
-                        Neto = g.Sum(i =>
+                .GroupBy(x => x.DTO.DNI)
+                .Select(g => new MecReportePersona
+                {
+                    OrdenPago = g.First().DTO.OrdenPago,
+                    DNI = g.First().DTO.DNI,
+                    Nombre = g.First().DTO.Nombre,
+                    Apellido = g.First().DTO.Apellido,
+                    Secuencia = g.First().DTO.Secuencia,
+                    Categoria = g.First().Categoria,
+                    CantHsCs = g.First().CantHsCs,
+                    MesAntiguedad = g.First().MesAntiguedad,
+                    AnioAntiguedad = g.First().AnioAntiguedad,
+                    AnioMesAfectacion = g.First().AnioMesAfectacion,
+                    TipoFuncion = g.First().TipoFuncion,
+                    CarRevista = g.First().CarRevista,
+                    NroDiegep = g.First().NroDiegep,
+                    NombrePcia = g.First().NombrePcia,
+                    Subvencion = g.First().Subvencion,
+                    CantTurnos = g.First().CantTurnos,
+                    CantSecciones = g.First().CantSecciones,
+                    Ruralidad = g.First().Ruralidad,
+                    TipoEst = g.First().TipoEst,
+                    TipoEstDesc = g.First().TipoEstDesc,
+                    ConHaberes = g.First().ConHaberes,
+                    ConSubvencion = g.First().ConSubvencion,
+                    CodigosLiquidacionDetallados = g
+                        .GroupBy(x => x.CodigoLiquidacionNumero)
+                        .Select(grp => new CodigoLiquidacionDTO
                         {
-                            var importe = i.Importe ?? 0;
-                            var signo = i.Signo ?? "+";
-                            return signo == "-" ? -importe : importe;
+                            Codigo = grp.Key,
+                            Descripcion = grp.First().CodigoLiquidacionDescripcion,
+                            Importe = grp.Sum(i => i.Importe ?? 0),
+                            Signo = grp.First().Signo,
                         })
+                        .ToList(),
+                    Neto = g.Sum(i =>
+                    {
+                        var importe = i.Importe ?? 0;
+                        var signo = i.Signo ?? "+";
+                        return signo == "-" ? -importe : importe;
                     })
-                    .ToList();
+                })
+                .ToList();
+
             return agrupados;
         }
+
 
     }
 }
