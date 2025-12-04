@@ -29,6 +29,8 @@ public class MecanizadasDTO
     public string TipoCargo { get; set; }
     public string Nombre { get; set; }
     public string Apellido { get; set; }
+    public string ConSubvencion { get; set; }
+    public string ConHaberes { get; set; }
 }
 
 
@@ -56,6 +58,8 @@ public class MecReporte
     public string CodigoLiquidacionDescripcion { get; set; }
      public decimal? Importe { get; set; }
     public string Signo { get; set; }
+    public string ConSubvencion { get; set; }
+    public string ConHaberes { get; set; }
 
 }
 
@@ -83,6 +87,8 @@ public class MecReportePersona
     public string TipoEst { get; set; }
     public string TipoEstDesc { get; set; }
     public decimal Neto { get; set; }
+    public string ConSubvencion { get; set; }
+    public string ConHaberes { get; set; }
     public List<CodigoLiquidacionDTO> CodigosLiquidacionDetallados { get; set; } = new();
 }
 
