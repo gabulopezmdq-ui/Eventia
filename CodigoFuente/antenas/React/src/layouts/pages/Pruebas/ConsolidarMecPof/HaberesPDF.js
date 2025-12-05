@@ -124,13 +124,18 @@ const HaberesPDF = async (reporteData) => {
   const endContentY = doc.internal.pageSize.height - 15;
   let posY = startContentY;
 
+  // ===== ACUMULADORES GLOBALES =====
+  let totalDocentes = docentes.length;
+  let totalCAportes = 0;
+  let totalSAportes = 0;
+  let totalSalarioFamiliar = 0;
+  let totalDescuentos = 0;
+
   docentes.forEach((d) => {
-    // ALTURA TOTAL DEL BLOQUE DOCENTE
     const cantidadConceptos = d.codigosLiquidacionDetallados.length;
     const alturaConceptos = cantidadConceptos * 4;
     const alturaDocente = 10 + alturaConceptos + 6;
 
-    // Salto de página si no entra
     if (posY + alturaDocente > endContentY) {
       drawFooter();
       doc.addPage();
@@ -149,37 +154,74 @@ const HaberesPDF = async (reporteData) => {
 
     // DETALLE DE CONCEPTOS
     let detalleY = posY;
+
     d.codigosLiquidacionDetallados.forEach((c) => {
       if (c.descripcion.toUpperCase().includes("PATRONAL")) {
         return;
       }
+
       const codigoFormateado = c.codigo.slice(0, -1) + "." + c.codigo.slice(-1);
       const linea = `${codigoFormateado} ${c.descripcion}`;
       doc.text(linea, 92, detalleY);
 
-      const importeTexto = `${c.signo === "-" ? "-" : ""}${Number(c.importe).toFixed(2)}`;
+      const importeNum = Number(c.importe);
+      const importeTexto = `${c.signo === "-" ? "-" : ""}${importeNum.toFixed(2)}`;
+      const descUpper = c.descripcion.trim().toUpperCase();
+
+      // SUMA DE TOTALES
+      if (descUpper.includes("C/APORT")) totalCAportes += importeNum;
+      if (descUpper.includes("S/APORT") || descUpper.includes("NO SALARIO"))
+        totalSAportes += importeNum;
+      if (descUpper.includes("SALARIO FAMILIAR")) totalSalarioFamiliar += importeNum;
+      if (c.signo === "-") totalDescuentos += importeNum;
+
       const xRightBase = 160;
-      const esIPS = c.descripcion.trim().toUpperCase() === "IPS";
+      const esIPS = descUpper === "IPS";
       const extraOffset = esIPS ? 35 : 0;
       const xRight = xRightBase + extraOffset;
-      const textWidth = doc.getTextWidth(importeTexto);
 
+      const textWidth = doc.getTextWidth(importeTexto);
       doc.text(importeTexto, xRight - textWidth, detalleY);
 
       detalleY += 4;
     });
 
-    // ===========================
     // LÍNEA DE SEPARACIÓN FINAL
-    // ===========================
     const ultimaLineaDatos = posY + 6;
     const lineaY = Math.max(ultimaLineaDatos + 4, detalleY + 2);
 
     drawSeparationLine(lineaY);
 
-    // Avanzar posición general
     posY = lineaY + 4;
   });
+
+  // ======================
+  // IMPRESIÓN DE TOTALES
+  // ======================
+  posY;
+
+  doc.setFontSize(8);
+  doc.text(`TOTAL DEL DISTRIRO 043 INSTITUTO (${establecimiento.nroDiegep})`, 14, posY);
+
+  doc.text(`DOCENTES: `, 92, posY);
+  doc.text(`${totalDocentes}`, 150, posY);
+  posY += 3;
+
+  doc.text(`C/APORTES:`, 92, posY);
+  doc.text(`${totalCAportes.toFixed(2)}`, 150, posY);
+  posY += 3;
+
+  doc.text(`S/APORTES - No Salario:`, 92, posY);
+  doc.text(`${totalSAportes.toFixed(2)}`, 150, posY);
+  posY += 3;
+
+  doc.text(`SALARIO FAMILIAR:`, 92, posY);
+  doc.text(`${totalSalarioFamiliar.toFixed(2)}`, 150, posY);
+  posY += 3;
+
+  doc.text(`DESCUENTOS:`, 92, posY);
+  doc.text(`-${totalDescuentos.toFixed(2)}`, 150, posY);
+  posY += 3;
 
   drawFooter();
   doc.output("dataurlnewwindow");
