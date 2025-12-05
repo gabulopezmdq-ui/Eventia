@@ -24,6 +24,9 @@ namespace API.DataSchema.DTO
         public string Categoria { get; set; }
 
         // Datos MEC_POF_Detalle
+
+        public string? MesLiquidacion { get; set; }
+        public string? AnioLiquidacion { get; set; }
         public string? SinHaberes { get; set; }
         public string? NoSubvencionado { get; set; }
         public decimal? CantHorasCS { get; set; }
@@ -47,4 +50,19 @@ namespace API.DataSchema.DTO
         public int? MesAntiguedad { get; set; }
         public int? AnioAntiguedad { get; set; }
     }
+
+    public class POFDetalleReporteDTO
+    {
+        public int IdPOF { get; set; }
+        public int? CantHorasCS { get; set; }
+        public int? CantHorasSS { get; set; }
+        public int? AntiguedadAnios { get; set; }
+        public int? AntiguedadMeses { get; set; }
+        public string? SinHaberes { get; set; }
+        public string? NoSubvencionado { get; set; }
+        public int? SupleA { get; set; }
+        public DateTime? SupleDesde { get; set; }
+        public DateTime? SupleHasta { get; set; }
+    }
+
 }

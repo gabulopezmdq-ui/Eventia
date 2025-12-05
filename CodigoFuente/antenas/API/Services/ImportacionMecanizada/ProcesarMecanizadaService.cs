@@ -322,34 +322,57 @@ namespace API.Services
         }
         public List<ErroresTMPEFIDTO> TMPEFIAgrupados()
         {
-            var resultado = (from t in _context.MEC_TMPEFI
-                             group t by new { t.Documento, t.Secuencia, t.UE, t.Estado } into g
-                             orderby g.Key.UE, g.Key.Documento, g.Key.Secuencia
-                             select new ErroresTMPEFIDTO
-                             {
-                                 IdTMPEFI = g.FirstOrDefault().IdTMPEFI,
-                                 IdCabecera = g.FirstOrDefault().IdCabecera,
-                                 Documento = g.Key.Documento,
-                                 Apellido = g.FirstOrDefault().Apellido,
-                                 Nombre = g.FirstOrDefault().Nombre,
-                                 LegajoEFI = g.FirstOrDefault().LegajoEFI,
-                                 LegajoMEC = g.FirstOrDefault().LegajoMEC,
-                                 Secuencia = g.Key.Secuencia,
-                                 TipoCargo = g.FirstOrDefault().TipoCargo,
-                                 UE = g.Key.UE,
-                                 Barra = g.FirstOrDefault().Barra,
-                                 Estado = g.Key.Estado,
-                                 Cargo = g.FirstOrDefault().Cargo,
-                                 Caracter = g.FirstOrDefault().Caracter,
-                                 Funcion = g.FirstOrDefault().Funcion,
-                                 CargoMEC = g.FirstOrDefault().CargoMEC,
-                                 CaracterMEC = g.FirstOrDefault().CaracterMEC,
-                                 HorasDesignadas = (int)(g.FirstOrDefault().HorasDesignadas),
+            var resultado = (
+                from t in _context.MEC_TMPEFI
+                join p in _context.MEC_Personas
+                    on t.Documento equals p.DNI into perJoin
+                from persona in perJoin.DefaultIfEmpty()
 
-                             }).ToList();
+                join a in _context.MEC_POF_Antiguedades
+                    on persona.IdPersona equals a.IdPersona into antJoin
+                from antiguedad in antJoin.DefaultIfEmpty()
+
+                group new { t, antiguedad } by new
+                {
+                    t.Documento,
+                    t.Secuencia,
+                    t.UE,
+                    t.Estado
+                }
+                into g
+                orderby g.Key.UE, g.Key.Documento, g.Key.Secuencia
+                select new ErroresTMPEFIDTO
+                {
+                    IdTMPEFI = g.FirstOrDefault().t.IdTMPEFI,
+                    IdCabecera = g.FirstOrDefault().t.IdCabecera,
+                    Documento = g.Key.Documento,
+                    Apellido = g.FirstOrDefault().t.Apellido,
+                    Nombre = g.FirstOrDefault().t.Nombre,
+                    LegajoEFI = g.FirstOrDefault().t.LegajoEFI,
+                    LegajoMEC = g.FirstOrDefault().t.LegajoMEC,
+                    Secuencia = g.Key.Secuencia,
+                    TipoCargo = g.FirstOrDefault().t.TipoCargo,
+                    UE = g.Key.UE,
+                    Barra = g.FirstOrDefault().t.Barra,
+                    Estado = g.Key.Estado,
+                    Cargo = g.FirstOrDefault().t.Cargo,
+                    Caracter = g.FirstOrDefault().t.Caracter,
+                    Funcion = g.FirstOrDefault().t.Funcion,
+                    CargoMEC = g.FirstOrDefault().t.CargoMEC,
+                    CaracterMEC = g.FirstOrDefault().t.CaracterMEC,
+                    HorasDesignadas = (int)g.FirstOrDefault().t.HorasDesignadas,
+
+                    // ✅ ANTIGÜEDAD (NULL SI NO EXISTE)
+                    MesReferencia = g.FirstOrDefault().antiguedad.MesReferencia,
+                    AnioReferencia = g.FirstOrDefault().antiguedad.AnioReferencia,
+                    MesAntiguedad = g.FirstOrDefault().antiguedad.MesAntiguedad,
+                    AnioAntiguedad = g.FirstOrDefault().antiguedad.AnioAntiguedad
+                }
+            ).ToList();
 
             return resultado;
         }
+
         public List<ErroresPOFDTO> ErroresPOFAgrupados()
         {
             var resultado = (from a in _context.MEC_TMPErroresMecanizadas
@@ -753,23 +776,52 @@ namespace API.Services
             var tmpEfiList = new List<MEC_TMPEFI>();
             var detallesPOF = new List<MEC_POFDetalle>();
 
-
             foreach (var registro in mecanizadasFiltradas)
             {
                 if (!establecimientos.TryGetValue(registro.NroEstab, out var establecimiento))
                 {
-                    registro.RegistroValido = "N"; // no encontrado
+                    registro.RegistroValido = "N";
                     continue;
                 }
+
                 personas.TryGetValue(registro.Documento, out var persona);
                 MEC_POF? pof = null;
 
                 bool existePOF = persona != null &&
-                                 pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out  pof);
+                                 pofDict.TryGetValue((persona.IdPersona, establecimiento.IdEstablecimiento, registro.Secuencia), out pof);
 
-
+                // ============================
+                // ✅ EXISTE POF
+                // ============================
                 if (existePOF)
                 {
+                    var antiguedad = await _context.MEC_POF_Antiguedades
+                                                   .AsNoTracking()
+                                                   .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
+
+                    // ❌ EXISTE POF pero NO hay antigüedad → TMPEFI (NP) y NO POFDetalle
+                    if (antiguedad == null)
+                    {
+                        var tmpNp = new MEC_TMPEFI
+                        {
+                            IdCabecera = idCabecera,
+                            Documento = registro.Documento,
+                            Secuencia = registro.Secuencia,
+                            TipoCargo = registro.TipoCargo,
+                            UE = establecimiento.UE,
+                            Apellido = persona.Apellido,
+                            Nombre = persona.Nombre,
+                            LegajoMEC = persona.Legajo,
+                            Estado = "NP",
+                            HorasDesignadas = registro.HorasDesignadas
+                        };
+
+                        tmpEfiList.Add(tmpNp);
+                        registro.RegistroValido = "S";
+                        continue;
+                    }
+
+                    // ✅ EXISTE POF + EXISTE ANTIGÜEDAD → SE GUARDA POFDETALLE
                     var detalle = new MEC_POFDetalle
                     {
                         IdCabecera = idCabecera,
@@ -777,46 +829,46 @@ namespace API.Services
                         CantHorasCS = Convert.ToInt32(registro.HorasDesignadas ?? 0)
                     };
 
-                    // Calcular antigüedad
-                    var antiguedad = await _context.MEC_POF_Antiguedades
-                                                   .AsNoTracking()
-                                                   .FirstOrDefaultAsync(a => a.IdPersona == persona.IdPersona);
+                    var result = CalcularAntiguedad(
+                        ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
+                        ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
+                        antiguedad.MesReferencia,
+                        antiguedad.AnioReferencia,
+                        antiguedad.AnioAntiguedad,
+                        antiguedad.MesAntiguedad
+                    );
 
-                    if (antiguedad != null)
-                    {
-                        var result = CalcularAntiguedad(
-                            ConvertirStringAIntNullable(cabecera?.MesLiquidacion),
-                            ConvertirStringAIntNullable(cabecera?.AnioLiquidacion),
-                            antiguedad.MesReferencia,
-                            antiguedad.AnioReferencia,
-                            antiguedad.AnioAntiguedad,
-                            antiguedad.MesAntiguedad
-                        );
-
-                        detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
-                        detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
-                    }
+                    detalle.AntiguedadAnios = result.antiguedadAnios.GetValueOrDefault();
+                    detalle.AntiguedadMeses = result.antiguedadMeses.GetValueOrDefault();
 
                     detallesPOF.Add(detalle);
                     registro.RegistroValido = "S";
-                    continue; 
+                    continue;
                 }
 
+                // ============================
+                // ❌ NO EXISTE POF → SE VA A EFI
+                // ============================
 
                 EFIDocPOFDTO? docenteEFI = null;
                 var ueLimpia = LimpiarUE(establecimiento.UE);
                 var docentesUE = await _efiService.GetEFIPOFAsync(ueLimpia, new List<string> { registro.Documento });
 
-                var cargoMEC = await _context.MEC_TiposCategorias.Where(x => x.CodCategoria == registro.Categoria)
-                                .Select(x => x.IdTipoCategoria).FirstOrDefaultAsync();
+                var cargoMEC = await _context.MEC_TiposCategorias
+                    .Where(x => x.CodCategoria == registro.Categoria)
+                    .Select(x => x.IdTipoCategoria)
+                    .FirstOrDefaultAsync();
 
-                var caracterMEC = await _context.MEC_CarRevista.Where(x => x.CodPcia == registro.CaracterRevista)
-                                .Select(x => x.IdCarRevista).FirstOrDefaultAsync();
+                var caracterMEC = await _context.MEC_CarRevista
+                    .Where(x => x.CodPcia == registro.CaracterRevista)
+                    .Select(x => x.IdCarRevista)
+                    .FirstOrDefaultAsync();
 
                 if (docentesUE != null && docentesUE.Any())
                 {
                     docenteEFI = docentesUE
-                        .FirstOrDefault(d => d.NroDoc.TrimStart('0').Trim() == registro.Documento.TrimStart('0').Trim());
+                        .FirstOrDefault(d => d.NroDoc.TrimStart('0').Trim() ==
+                                             registro.Documento.TrimStart('0').Trim());
                 }
 
                 if (persona == null && docenteEFI == null)
@@ -845,10 +897,8 @@ namespace API.Services
                     UE = establecimiento.UE,
                     Apellido = apellido,
                     Nombre = nombre,
-
                     LegajoMEC = legajoMEC,
                     LegajoEFI = legajoEFI,
-
                     Barra = barra,
                     Estado = persona != null ? "NP" : "NE",
                     Cargo = cargo,
@@ -863,7 +913,6 @@ namespace API.Services
                 registro.RegistroValido = "S";
             }
 
-
             if (tmpEfiList.Any())
                 _context.MEC_TMPEFI.AddRange(tmpEfiList);
 
@@ -872,7 +921,6 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
         }
-
 
 
         private static string LimpiarUE(string? ue)

@@ -297,6 +297,63 @@ namespace API.Services
 
 
 
+        public async Task AltaPersonaDesdeEFI(EFIPersonaAltaDTO dto)
+        {
+            using var trx = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var persona = await _context.MEC_Personas
+                    .FirstOrDefaultAsync(p => p.DNI == dto.DNI);
+
+                // ✅ 1. CREAR PERSONA SI NO EXISTE
+                if (persona == null)
+                {
+                    persona = new MEC_Personas
+                    {
+                        DNI = dto.DNI,
+                        Apellido = dto.Apellido,
+                        Nombre = dto.Nombre,
+                        Legajo = dto.Legajo,
+                        Vigente = "S"
+                    };
+
+                    _context.MEC_Personas.Add(persona);
+                    await _context.SaveChangesAsync();
+                }
+
+                // ✅ 2. CREAR ANTIGÜEDAD SI NO EXISTE
+                var antiguedadExiste = await _context.MEC_POF_Antiguedades
+                    .AnyAsync(a => a.IdPersona == persona.IdPersona);
+
+                if (!antiguedadExiste)
+                {
+                    var antiguedad = new MEC_POF_Antiguedades
+                    {
+                        IdPersona = persona.IdPersona,
+                        MesReferencia = dto.MesReferencia,
+                        AnioReferencia = dto.AnioReferencia,
+                        MesAntiguedad = dto.MesAntiguedad,
+                        AnioAntiguedad = dto.AnioAntiguedad
+                    };
+
+                    _context.MEC_POF_Antiguedades.Add(antiguedad);
+                    await _context.SaveChangesAsync();
+                }
+
+                // ✅ 3. ACTUALIZAR ESTADO TMPEFI (NE → NP)
+                await ActualizarEstadoTMPEFI(dto.DNI);
+
+                await trx.CommitAsync();
+            }
+            catch
+            {
+                await trx.RollbackAsync();
+                throw;
+            }
+        }
+
+
         public async Task ActualizarEstadoTMPEFI(string documento)
         {
             var registros = await _context.MEC_TMPEFI

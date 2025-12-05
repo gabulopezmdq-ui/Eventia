@@ -1,4 +1,5 @@
 ﻿using  API.DataSchema;
+using API.DataSchema.DTO;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -81,11 +82,10 @@ namespace API.Controllers
         }
 
         [HttpPost("EFIPersona")]
-        public async Task<ActionResult> PostEFI([FromBody] MEC_Personas per)
+        public async Task<ActionResult> PostEFI([FromBody] EFIPersonaAltaDTO dto)
         {
-            await _serviceGenerico.Add(per);
-            await _eFIService.ActualizarEstadoTMPEFI(per.DNI);
-            return Ok(per);
+            await _eFIService.AltaPersonaDesdeEFI(dto);
+            return Ok();
         }
 
     }
