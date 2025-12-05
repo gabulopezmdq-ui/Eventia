@@ -22,16 +22,16 @@ const HaberesPDF = async (reporteData) => {
   // FUNCION PARA LÍNEA DE SEPARACIÓN
   // ================================
   const drawSeparationLine = (y) => {
-    const margenX = 14;
+    const inicioX = 92;
     const anchoPagina = doc.internal.pageSize.getWidth();
-    const anchoDisponible = anchoPagina - margenX * 2;
-
+    const largo = anchoPagina - inicioX - 14;
     let linea = "";
-    while (doc.getTextWidth(linea + "*") < anchoDisponible) {
+
+    while (doc.getTextWidth(linea + "*") < largo) {
       linea += "*";
     }
 
-    doc.text(linea, margenX, y);
+    doc.text(linea, inicioX, y);
   };
 
   // ================================
@@ -149,17 +149,21 @@ const HaberesPDF = async (reporteData) => {
 
     // DETALLE DE CONCEPTOS
     let detalleY = posY;
-
     d.codigosLiquidacionDetallados.forEach((c) => {
+      if (c.descripcion.toUpperCase().includes("PATRONAL")) {
+        return;
+      }
       const codigoFormateado = c.codigo.slice(0, -1) + "." + c.codigo.slice(-1);
       const linea = `${codigoFormateado} ${c.descripcion}`;
       doc.text(linea, 92, detalleY);
+
       const importeTexto = `${c.signo === "-" ? "-" : ""}${Number(c.importe).toFixed(2)}`;
       const xRightBase = 160;
       const esIPS = c.descripcion.trim().toUpperCase() === "IPS";
       const extraOffset = esIPS ? 35 : 0;
       const xRight = xRightBase + extraOffset;
       const textWidth = doc.getTextWidth(importeTexto);
+
       doc.text(importeTexto, xRight - textWidth, detalleY);
 
       detalleY += 4;
