@@ -671,7 +671,21 @@ namespace API.Services
                 });
             }
 
-            var agrupados = lista
+
+            var codigosExcluidos = new HashSet<string> { "3060", "3285" };
+            var listaDepurada = lista
+                        .Where(x => !codigosExcluidos.Contains(x.CodigoLiquidacionNumero))
+                        .GroupBy(x => new
+                        {
+                            x.DTO.DNI,
+                            x.CodigoLiquidacionNumero,
+                            x.DTO.OrdenPago,
+                            x.AnioMesAfectacion
+                        })
+                        .Select(g => g.First())
+                        .ToList();
+;
+            var agrupados = listaDepurada
                 .GroupBy(x => x.DTO.DNI)
                 .Select(g => new MecReportePersona
                 {
