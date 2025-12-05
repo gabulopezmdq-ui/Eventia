@@ -304,7 +304,7 @@ namespace API.Services
             if (idPersona == null || idEst == null)
                 return null;
 
-            // VALIDACIÓN: evitar duplicados
+            // 🔹 VALIDACIÓN: evitar duplicados
             bool existePOF = await _context.MEC_POF
                 .AnyAsync(p => p.IdPersona == idPersona.Value &&
                                p.IdEstablecimiento == idEst.Value &&
@@ -312,7 +312,6 @@ namespace API.Services
 
             if (existePOF)
             {
-                // Cambiar estado de MEC_TMPEFI a "EX"
                 var registrosTMPEFI = await _context.MEC_TMPEFI
                     .Where(e => e.Documento == dto.Documento && e.Estado == "NE")
                     .ToListAsync();
@@ -323,11 +322,10 @@ namespace API.Services
                 if (registrosTMPEFI.Count > 0)
                     await _context.SaveChangesAsync();
 
-                // No crear POF porque ya existe
                 return null;
             }
 
-            // Crear nuevo registro si no existe duplicado
+            // 🔹 CREAR POF
             var nuevoPOF = new MEC_POF
             {
                 IdEstablecimiento = idEst.Value,
@@ -343,6 +341,7 @@ namespace API.Services
             _context.MEC_POF.Add(nuevoPOF);
             await _context.SaveChangesAsync();
 
+            // 🔹 BARRAS
             if (barras != null && barras.Any())
             {
                 var barrasPOF = barras.Select(b => new MEC_POF_Barras
@@ -354,9 +353,41 @@ namespace API.Services
 
                 _context.MEC_POF_Barras.AddRange(barrasPOF);
                 await _context.SaveChangesAsync();
-            };
+            }
 
+            // ✅ UPSERT DE ANTIGÜEDAD (NUEVO BLOQUE)
+            if (dto.AnioAntiguedad.HasValue || dto.MesAntiguedad.HasValue)
+            {
+                var antiguedadExistente = await _context.MEC_POF_Antiguedades
+                    .FirstOrDefaultAsync(a => a.IdPersona == idPersona.Value);
 
+                if (antiguedadExistente != null)
+                {
+                    // 🔁 MODIFICAR EXISTENTE
+                    antiguedadExistente.MesReferencia = dto.MesReferencia;
+                    antiguedadExistente.AnioReferencia = dto.AnioReferencia;
+                    antiguedadExistente.MesAntiguedad = dto.MesAntiguedad;
+                    antiguedadExistente.AnioAntiguedad = dto.AnioAntiguedad;
+                }
+                else
+                {
+                    // ➕ CREAR NUEVA
+                    var nuevaAntiguedad = new MEC_POF_Antiguedades
+                    {
+                        IdPersona = idPersona.Value,
+                        MesReferencia = dto.MesReferencia,
+                        AnioReferencia = dto.AnioReferencia,
+                        MesAntiguedad = dto.MesAntiguedad,
+                        AnioAntiguedad = dto.AnioAntiguedad
+                    };
+
+                    _context.MEC_POF_Antiguedades.Add(nuevaAntiguedad);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            // 🔹 FINALIZAR TMPEFI A EX
             var registrosTMPEFIExito = await _context.MEC_TMPEFI
                 .Where(e => e.Documento == dto.Documento && e.Estado == "NP")
                 .ToListAsync();
@@ -370,6 +401,27 @@ namespace API.Services
             return nuevoPOF;
         }
 
+
+        public async Task<List<POFDetalleReporteDTO>> POFDetalle(int idPOF)
+        {
+            return await _context.MEC_POFDetalle
+                .Where(x => x.IdPOF == idPOF)
+                .Select(x => new POFDetalleReporteDTO
+                {
+                    IdPOF = x.IdPOF,
+                    CantHorasCS = x.CantHorasCS,
+                    CantHorasSS = x.CantHorasSS,
+                    AntiguedadAnios = x.AntiguedadAnios,
+                    AntiguedadMeses = x.AntiguedadMeses,
+                    SinHaberes = x.SinHaberes,
+                    NoSubvencionado = x.NoSubvencionado,
+                    SupleA = x.SupleA,
+                    SupleDesde = x.SupleDesde,
+                    SupleHasta = x.SupleHasta
+                })
+                .AsNoTracking()
+                .ToListAsync();
+        }
 
     }
 }

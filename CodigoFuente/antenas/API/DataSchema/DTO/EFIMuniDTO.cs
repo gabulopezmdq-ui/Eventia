@@ -70,6 +70,11 @@ namespace API.DataSchema.DTO
         public int HorasDesignadas { get; set; }
         public int IdCarRevista { get; set; }  
         public int IdTipoCategoria { get; set; }
+
+        public int? MesReferencia { get; set; }
+        public int? AnioReferencia { get; set; }
+        public int? MesAntiguedad { get; set; }
+        public int? AnioAntiguedad { get; set; }
     }
 
     public class CrearPOFRequest
@@ -79,4 +84,18 @@ namespace API.DataSchema.DTO
         public int IdCategoria { get; set; }
         public List<int> Barras { get; set; }
     }
+
+    public class EFIPersonaAltaDTO
+    {
+        public string DNI { get; set; }
+        public string Apellido { get; set; }
+        public string Nombre { get; set; }
+        public string? Legajo { get; set; }
+
+        public int? MesReferencia { get; set; }
+        public int? AnioReferencia { get; set; }
+        public int? MesAntiguedad { get; set; }
+        public int? AnioAntiguedad { get; set; }
+    }
+
 }

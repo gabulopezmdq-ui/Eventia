@@ -26,5 +26,6 @@ namespace API.Services
         Task<List<PofConBarrasDTO>> ExcelPOF(int idEstablecimiento);
         Task<bool> EliminarPOF(int IdPOF);
         Task<MEC_POF?> CrearPOFAsync(ErroresTMPEFIDTO dto, int carRevista, int cargo, List<int> barras);
+        Task<List<POFDetalleReporteDTO>> POFDetalle(int idPOF);
     }
 }
