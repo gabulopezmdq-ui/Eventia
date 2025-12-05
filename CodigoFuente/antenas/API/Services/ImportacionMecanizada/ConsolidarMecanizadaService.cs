@@ -671,7 +671,10 @@ namespace API.Services
                 });
             }
 
+
+            var codigosExcluidos = new HashSet<string> { "3060", "3285" };
             var listaDepurada = lista
+                        .Where(x => !codigosExcluidos.Contains(x.CodigoLiquidacionNumero))
                         .GroupBy(x => new
                         {
                             x.DTO.DNI,
@@ -681,7 +684,7 @@ namespace API.Services
                         })
                         .Select(g => g.First())
                         .ToList();
-
+;
             var agrupados = listaDepurada
                 .GroupBy(x => x.DTO.DNI)
                 .Select(g => new MecReportePersona
