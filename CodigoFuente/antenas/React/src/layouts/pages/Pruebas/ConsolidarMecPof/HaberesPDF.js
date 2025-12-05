@@ -153,15 +153,39 @@ const HaberesPDF = async (reporteData) => {
     doc.text(`ANT:${d.anioAntiguedad}/${d.mesAntiguedad}`, 16, posY + 6);
     doc.text(`${d.apellido} ${d.nombre}`, 45, posY);
     doc.text(`${d.carRevista} ${d.tipoFuncion}`, 84, posY);
+
+    // SI ES "SIN HABERES" → SOLO IMPRIME MENSAJE Y LÍNEA
+    if (d.sinHaberes === "S") {
+      doc.setFontSize(8);
+      doc.text("<--- SIN HABERES --->", 120, posY + 3);
+
+      // Línea de separación
+      const lineaY = posY + 10;
+      drawSeparationLine(lineaY);
+
+      posY = lineaY + 4;
+      return; // NO imprime conceptos ni neto
+    }
+    if (d.sinSubvencion === "S") {
+      doc.setFontSize(8);
+      doc.text("<--- SIN SUBVENCION --->", 120, posY + 3);
+
+      const lineaY = posY + 10;
+      drawSeparationLine(lineaY);
+
+      posY = lineaY + 4;
+      return;
+    }
+
+    // ----------- SI *NO* ES SIN HABERES CONTINÚA NORMAL -----------
+
     doc.text(`NETO : ${d.neto}`, 205, posY);
 
     // DETALLE DE CONCEPTOS
     let detalleY = posY;
 
     d.codigosLiquidacionDetallados.forEach((c) => {
-      if (c.descripcion.toUpperCase().includes("PATRONAL")) {
-        return;
-      }
+      if (c.descripcion.toUpperCase().includes("PATRONAL")) return;
 
       const codigoFormateado = c.codigo.slice(0, -1) + "." + c.codigo.slice(-1);
       const linea = `${codigoFormateado} ${c.descripcion}`;
@@ -192,7 +216,6 @@ const HaberesPDF = async (reporteData) => {
     // LÍNEA DE SEPARACIÓN FINAL
     const ultimaLineaDatos = posY + 6;
     const lineaY = Math.max(ultimaLineaDatos + 4, detalleY + 2);
-
     drawSeparationLine(lineaY);
 
     posY = lineaY + 4;
