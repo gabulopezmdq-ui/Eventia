@@ -146,8 +146,11 @@ const HaberesPDF = async (reporteData) => {
     // DATOS PRINCIPALES
     doc.text(`${d.dni}/${d.secuencia}`, 16, posY);
     doc.text(`AFEC:${d.anioMesAfectacion} CATEG. ${d.categoria}`, 16, posY + 3);
+    if (Number(d.cantHsCs) !== 0) {
+      const hsFormateado = Number(d.cantHsCs).toFixed(2);
+      doc.text(`HS.CS      ${hsFormateado}`, 55, posY + 3);
+    }
     doc.text(`ANT:${d.anioAntiguedad}/${d.mesAntiguedad}`, 16, posY + 6);
-
     doc.text(`${d.apellido} ${d.nombre}`, 45, posY);
     doc.text(`${d.carRevista} ${d.tipoFuncion}`, 84, posY);
     doc.text(`NETO : ${d.neto}`, 205, posY);
@@ -201,7 +204,7 @@ const HaberesPDF = async (reporteData) => {
   posY;
 
   doc.setFontSize(8);
-  doc.text(`TOTAL DEL DISTRIRO 043 INSTITUTO (${establecimiento.nroDiegep})`, 14, posY);
+  doc.text(`TOTAL DEL DISTRIRO 043 INSTITUTO ${establecimiento.nroDiegep}`, 14, posY);
 
   doc.text(`DOCENTES: `, 92, posY);
   doc.text(`${totalDocentes}`, 150, posY);
