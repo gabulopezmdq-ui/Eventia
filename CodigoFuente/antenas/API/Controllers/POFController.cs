@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
-    //[AllowAnonymous]
+    //[Authorize(Roles = "SuperAdmin, Admin, Secretario")]
+    [AllowAnonymous]
     [Route("[controller]")]
     public class POFController : ControllerBase
     {
@@ -253,6 +253,16 @@ namespace API.Controllers
             });
         }
 
+        [HttpGet("POFDetalle")]
+        public async Task<IActionResult> POFDetalle(int idPOF)
+        {
+            var resultado = await _pofService.POFDetalle(idPOF);
+
+            if (resultado == null || !resultado.Any())
+                return NotFound("No se encontraron registros Detalles para la POF indicada.");
+
+            return Ok(resultado);
+        }
 
     }
 }

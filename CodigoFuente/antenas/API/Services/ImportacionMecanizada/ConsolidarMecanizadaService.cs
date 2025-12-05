@@ -665,8 +665,8 @@ namespace API.Services
                     CodigoLiquidacionDescripcion = concepto?.Descripcion ?? "",
                     Importe = dto.Importe,
                     Signo = dto.Signo ?? "+",
-                    ConSubvencion = dto.ConSubvencion ?? "",
-                    ConHaberes = dto.ConHaberes ?? "",
+                    SinSubvencion = horasCs?.NoSubvencionado ?? "",
+                    SinHaberes = horasCs?.SinHaberes ?? "",
 
                 });
             }
@@ -709,8 +709,8 @@ namespace API.Services
                     Ruralidad = g.First().Ruralidad,
                     TipoEst = g.First().TipoEst,
                     TipoEstDesc = g.First().TipoEstDesc,
-                    ConHaberes = g.First().ConHaberes,
-                    ConSubvencion = g.First().ConSubvencion,
+                    SinHaberes = g.First().SinHaberes,
+                    SinSubvencion = g.First().SinSubvencion,
                     CodigosLiquidacionDetallados = g
                         .GroupBy(x => x.CodigoLiquidacionNumero)
                         .Select(grp => new CodigoLiquidacionDTO
