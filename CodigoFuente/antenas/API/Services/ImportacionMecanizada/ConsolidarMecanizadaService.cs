@@ -671,7 +671,18 @@ namespace API.Services
                 });
             }
 
-            var agrupados = lista
+            var listaDepurada = lista
+                        .GroupBy(x => new
+                        {
+                            x.DTO.DNI,
+                            x.CodigoLiquidacionNumero,
+                            x.DTO.OrdenPago,
+                            x.AnioMesAfectacion
+                        })
+                        .Select(g => g.First())
+                        .ToList();
+
+            var agrupados = listaDepurada
                 .GroupBy(x => x.DTO.DNI)
                 .Select(g => new MecReportePersona
                 {
