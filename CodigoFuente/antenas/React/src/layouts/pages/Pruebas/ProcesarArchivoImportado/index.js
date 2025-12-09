@@ -188,6 +188,10 @@ export default function ProcesarArchivoImportado() {
       dni: persona?.documento || "",
       apellido: persona?.apellido || "",
       nombre: persona?.nombre || "",
+      mesAntiguedad: persona?.mesAntiguedad || "",
+      anioAntiguedad: persona?.anioAntiguedad || "",
+      mesReferencia: persona?.mesReferencia || "",
+      anioReferencia: persona?.anioReferencia || "",
     });
     setShowAgregarPersonaModal(true);
   };
