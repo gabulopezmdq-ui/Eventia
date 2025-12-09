@@ -11,6 +11,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Alert,
   MenuItem,
 } from "@mui/material";
 import MDButton from "components/MDButton";
@@ -38,6 +39,12 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   const [categorias, setCategorias] = useState([]);
   const [caracteres, setCaracteres] = useState([]);
   const [funciones, setFunciones] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "success", // "success" | "error" | "warning" | "info"
+    message: "",
+  });
 
   const token = sessionStorage.getItem("token");
 
@@ -53,11 +60,13 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   useEffect(() => {
     if (!open) {
       setFormData(initialForm);
+      setErrors({});
       return;
     }
 
     if (!persona) {
       setFormData(initialForm);
+      setErrors({});
       return;
     }
 
@@ -66,6 +75,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
       ...persona,
       barra: Array.isArray(persona.barra) ? persona.barra.join(" ") : persona.barra ?? "",
     });
+    setErrors({});
   }, [open, persona]);
 
   // -----------------------------------------------------
@@ -166,29 +176,65 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   // 4️⃣ GUARDAR POF
   // -----------------------------------------------------
   const handleSubmit = async () => {
-    const barrasRaw = formData.barra;
+    const newErrors = {};
 
-    const Barras = Array.isArray(barrasRaw)
-      ? barrasRaw.map((b) => String(b)).filter((b) => b.trim() !== "")
-      : String(barrasRaw ?? "")
-          .split(/[ ,]+/)
-          .map((b) => b.trim())
-          .filter((b) => b !== "");
+    if (!formData.secuencia) newErrors.secuencia = "La secuencia es obligatoria";
+    if (!formData.tipoCargo) newErrors.tipoCargo = "El tipo de cargo es obligatorio";
+    if (!formData.funcion) newErrors.funcion = "La función es obligatoria";
+    if (!formData.idCarRevista) newErrors.idCarRevista = "El carácter es obligatorio";
+    if (!formData.idTipoCategoria) newErrors.idTipoCategoria = "La categoría es obligatoria";
 
-    const dataToSend = {
-      Dto: { ...formData, barra: String(formData.barra ?? "") },
-      Barras,
-    };
+    setErrors(newErrors);
 
+    // 🚨 Si hay errores → mostramos alerta dentro del modal
+    if (Object.keys(newErrors).length > 0) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Hay campos obligatorios sin completar.",
+      });
+
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, show: false }));
+      }, 3000);
+
+      return;
+    }
+
+    // ---- LÓGICA ORIGINAL ----
     try {
+      const barrasRaw = formData.barra;
+
+      const Barras = Array.isArray(barrasRaw)
+        ? barrasRaw.map((b) => String(b)).filter((b) => b.trim() !== "")
+        : String(barrasRaw ?? "")
+            .split(/[ ,]+/)
+            .map((b) => b.trim())
+            .filter((b) => b !== "");
+
+      const dataToSend = {
+        Dto: { ...formData, barra: String(formData.barra ?? "") },
+        Barras,
+      };
+
       const response = await axios.post(`${process.env.REACT_APP_API_URL}pof/EFIPOF`, dataToSend, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+      setErrors({});
       onSave(response.data);
       onClose();
     } catch (error) {
       console.error("Error al guardar POF:", error.response?.data || error);
+
+      setAlert({
+        show: true,
+        type: "error",
+        message: error.response?.data?.mensaje || "Error al guardar.",
+      });
+
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, show: false }));
+      }, 3000);
     }
   };
 
@@ -197,7 +243,16 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Agregar POF</DialogTitle>
-
+      {alert.show && (
+        <Alert
+          severity={alert.type}
+          variant="filled"
+          sx={{ mb: 2 }}
+          onClose={() => setAlert({ ...alert, show: false })}
+        >
+          {alert.message}
+        </Alert>
+      )}
       <DialogContent>
         <Grid container spacing={2} mt={1}>
           {/* Datos base */}
@@ -222,15 +277,18 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
             <TextField
               label="Secuencia"
               name="secuencia"
+              required
               fullWidth
               value={formData.secuencia || ""}
               onChange={handleInputChange}
+              error={!!errors.secuencia}
+              helperText={errors.secuencia}
             />
           </Grid>
 
           {/* Tipo cargo */}
           <Grid item xs={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth required error={!!errors.tipoCargo}>
               <InputLabel id="tipo-cargo-label">Tipo Cargo</InputLabel>
               <Select
                 labelId="tipo-cargo-label"
@@ -246,6 +304,11 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
                   </MenuItem>
                 ))}
               </Select>
+              {errors.tipoCargo && (
+                <p style={{ color: "#d32f2f", fontSize: "0.75rem", marginTop: "3px" }}>
+                  {errors.tipoCargo}
+                </p>
+              )}
             </FormControl>
           </Grid>
 
@@ -288,7 +351,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
 
           {/* Función */}
           <Grid item xs={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth required error={!!errors.funcion}>
               <InputLabel id="funcion-label">Función</InputLabel>
               <Select
                 labelId="funcion-label"
@@ -304,6 +367,11 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
                   </MenuItem>
                 ))}
               </Select>
+              {errors.funcion && (
+                <p style={{ color: "#d32f2f", fontSize: "0.75rem", marginTop: "3px" }}>
+                  {errors.funcion}
+                </p>
+              )}
             </FormControl>
           </Grid>
 
@@ -316,7 +384,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
 
           {/* Cargo MEC */}
           <Grid item xs={12}>
-            <FormControl fullWidth>
+            <FormControl fullWidth required error={!!errors.idTipoCategoria}>
               <InputLabel id="cargo-label">Cargo</InputLabel>
               <Select
                 labelId="cargo-label"
@@ -332,6 +400,11 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
                   </MenuItem>
                 ))}
               </Select>
+              {errors.idTipoCategoria && (
+                <p style={{ color: "#d32f2f", fontSize: "0.75rem", marginTop: "3px" }}>
+                  {errors.idTipoCategoria}
+                </p>
+              )}
             </FormControl>
           </Grid>
 
@@ -344,7 +417,7 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
 
           {/* Carácter MEC */}
           <Grid item xs={12}>
-            <FormControl fullWidth>
+            <FormControl fullWidth required error={!!errors.idCarRevista}>
               <InputLabel id="caracter-label">Carácter</InputLabel>
               <Select
                 labelId="caracter-label"
@@ -360,6 +433,11 @@ export default function ModalAgregarPOF({ open, onClose, persona, onSave }) {
                   </MenuItem>
                 ))}
               </Select>
+              {errors.idCarRevista && (
+                <p style={{ color: "#d32f2f", fontSize: "0.75rem", marginTop: "3px" }}>
+                  {errors.idCarRevista}
+                </p>
+              )}
             </FormControl>
           </Grid>
 
