@@ -13,13 +13,20 @@ export default function ModalAgregarPersona({
   setErrorAlert,
   fetchErroresMec,
 }) {
-  const [personaForm, setPersonaForm] = useState({
+  const initialState = {
     legajo: "",
     dni: "",
     apellido: "",
     nombre: "",
     vigente: "S",
-  });
+    anioAntiguedad: "",
+    mesAntiguedad: "",
+    anioReferencia: "",
+    mesReferencia: "",
+  };
+  console.log("PersonaData:", personaData);
+  const [personaForm, setPersonaForm] = useState(initialState);
+
   useEffect(() => {
     if (open && personaData) {
       setPersonaForm({
@@ -28,15 +35,14 @@ export default function ModalAgregarPersona({
         apellido: personaData.apellido || "",
         nombre: personaData.nombre || "",
         vigente: "S",
+
+        anioAntiguedad: personaData.anioAntiguedad || "",
+        mesAntiguedad: personaData.mesAntiguedad || "",
+        anioReferencia: personaData.anioReferencia || "",
+        mesReferencia: personaData.mesReferencia || "",
       });
     } else if (!open) {
-      setPersonaForm({
-        legajo: "",
-        dni: "",
-        apellido: "",
-        nombre: "",
-        vigente: "S",
-      });
+      setPersonaForm(initialState);
     }
   }, [open, personaData]);
 
@@ -47,26 +53,30 @@ export default function ModalAgregarPersona({
 
   const handleGuardarPersona = async () => {
     const url = `${process.env.REACT_APP_API_URL}Personas/EFIPersona`;
+
     const Legajo = isNaN(Number(personaForm.legajo))
       ? personaForm.legajo
       : Number(personaForm.legajo);
-    const DNI = String(personaForm.dni ?? "").trim();
-    const Nombre = String(personaForm.nombre ?? "").trim();
-    const Apellido = String(personaForm.apellido ?? "").trim();
-    const Vigente = personaForm.vigente ?? "S";
+    const flatData = {
+      Legajo,
+      DNI: String(personaForm.dni ?? "").trim(),
+      Apellido: String(personaForm.apellido ?? "").trim(),
+      Nombre: String(personaForm.nombre ?? "").trim(),
+      Vigente: personaForm.vigente ?? "S",
 
-    const flatData = { Legajo, DNI, Apellido, Nombre, Vigente };
+      AnioAntiguedad: personaForm.anioAntiguedad || null,
+      MesAntiguedad: personaForm.mesAntiguedad || null,
+      AnioReferencia: personaForm.anioReferencia || null,
+      MesReferencia: personaForm.mesReferencia || null,
+    };
 
     try {
-      console.log("POST (flat) =>", url, flatData);
       const resp = await axios.post(url, flatData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-
-      console.log("RESPUESTA (flat):", resp.status, resp.data);
 
       if (resp.status >= 200 && resp.status < 300) {
         onSave(resp.data);
@@ -79,6 +89,7 @@ export default function ModalAgregarPersona({
         await fetchErroresMec();
         return;
       }
+
       setErrorAlert({
         show: true,
         message: resp.data?.mensaje || `Error (${resp.status}) al guardar la persona.`,
@@ -87,15 +98,22 @@ export default function ModalAgregarPersona({
     } catch (e) {
       const status = e.response?.status;
       const data = e.response?.data;
-      console.error("ERROR guardar persona (flat):", { status, data });
+
       const hasValidationMissing =
         status === 400 &&
-        data &&
-        data.errors &&
-        (data.errors.DNI || data.errors.Nombre || data.errors.Apellido || data.errors.Legajo);
+        data?.errors &&
+        (data.errors.DNI ||
+          data.errors.Nombre ||
+          data.errors.Apellido ||
+          data.errors.Legajo ||
+          data.errors.AnioAntiguedad ||
+          data.errors.MesAntiguedad ||
+          data.errors.AnioReferencia ||
+          data.errors.MesReferencia);
 
       if (hasValidationMissing) {
         const wrappedData = { Dto: flatData };
+
         try {
           console.log("RETRY (wrapped Dto) =>", url, wrappedData);
           const resp2 = await axios.post(url, wrappedData, {
@@ -104,7 +122,7 @@ export default function ModalAgregarPersona({
               "Content-Type": "application/json",
             },
           });
-          console.log("RESPUESTA (wrapped):", resp2.status, resp2.data);
+
           if (resp2.status >= 200 && resp2.status < 300) {
             onSave(resp2.data);
             onClose();
@@ -116,6 +134,7 @@ export default function ModalAgregarPersona({
             await fetchErroresMec();
             return;
           }
+
           setErrorAlert({
             show: true,
             message: resp2.data?.mensaje || `Error (${resp2.status}) al guardar la persona.`,
@@ -127,6 +146,7 @@ export default function ModalAgregarPersona({
             status: e2.response?.status,
             data: e2.response?.data,
           });
+
           setErrorAlert({
             show: true,
             message:
@@ -139,6 +159,7 @@ export default function ModalAgregarPersona({
           return;
         }
       }
+
       setErrorAlert({
         show: true,
         message: data?.mensaje || data?.Message || data?.error || "Error al guardar la persona.",
@@ -150,8 +171,10 @@ export default function ModalAgregarPersona({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Agregar Persona</DialogTitle>
+
       <DialogContent>
         <Grid container spacing={2} mt={1}>
+          {/* EXISTENTES */}
           <Grid item xs={6}>
             <TextField
               label="Legajo"
@@ -161,6 +184,7 @@ export default function ModalAgregarPersona({
               onChange={handleInputChange}
             />
           </Grid>
+
           <Grid item xs={6}>
             <TextField
               label="DNI"
@@ -171,6 +195,7 @@ export default function ModalAgregarPersona({
               inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
             />
           </Grid>
+
           <Grid item xs={6}>
             <TextField
               label="Apellido"
@@ -180,6 +205,7 @@ export default function ModalAgregarPersona({
               onChange={handleInputChange}
             />
           </Grid>
+
           <Grid item xs={6}>
             <TextField
               label="Nombre"
@@ -189,12 +215,55 @@ export default function ModalAgregarPersona({
               onChange={handleInputChange}
             />
           </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Año antigüedad"
+              name="anioAntiguedad"
+              fullWidth
+              value={personaForm.anioAntiguedad}
+              onChange={handleInputChange}
+              inputProps={{ inputMode: "numeric" }}
+            />
+          </Grid>
+
+          <Grid item xs={6}>
+            <TextField
+              label="Mes antigüedad"
+              name="mesAntiguedad"
+              fullWidth
+              value={personaForm.mesAntiguedad}
+              onChange={handleInputChange}
+              inputProps={{ inputMode: "numeric" }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Año referencia"
+              name="anioReferencia"
+              fullWidth
+              value={personaForm.anioReferencia}
+              onChange={handleInputChange}
+              inputProps={{ inputMode: "numeric" }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              label="Mes referencia"
+              name="mesReferencia"
+              fullWidth
+              value={personaForm.mesReferencia}
+              onChange={handleInputChange}
+              inputProps={{ inputMode: "numeric" }}
+            />
+          </Grid>
         </Grid>
       </DialogContent>
+
       <DialogActions>
         <MDButton color="secondary" size="small" variant="contained" onClick={onClose}>
           Cancelar
         </MDButton>
+
         <MDButton color="success" size="small" variant="contained" onClick={handleGuardarPersona}>
           Agregar persona
         </MDButton>
@@ -202,6 +271,7 @@ export default function ModalAgregarPersona({
     </Dialog>
   );
 }
+
 ModalAgregarPersona.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
