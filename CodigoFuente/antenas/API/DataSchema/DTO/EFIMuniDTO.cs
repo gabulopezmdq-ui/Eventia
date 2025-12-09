@@ -67,7 +67,7 @@ namespace API.DataSchema.DTO
         public int? CargoMEC { get; set; }
         public int? CaracterMEC { get; set; }
 
-        public int HorasDesignadas { get; set; }
+        public int? HorasDesignadas { get; set; }
         public int IdCarRevista { get; set; }  
         public int IdTipoCategoria { get; set; }
 
