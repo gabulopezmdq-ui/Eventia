@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import * as XLSX from "xlsx"; // 👈 NUEVO
 
 // Componentes de Material-UI
 import Card from "@mui/material/Card";
@@ -99,6 +100,7 @@ function Conceptos() {
       console.error("El objeto rowData o su propiedad 'idConcepto' no están definidos.");
     }
   };
+
   const handleEditarConceptos = (idConcepto) => {
     const url = `/ConceptosFE/Edit/${idConcepto}`;
     navigate(url);
@@ -106,18 +108,61 @@ function Conceptos() {
 
   const displayValue = (value) => (value ? value : "N/A");
 
+  // 👇 NUEVO: exportar grilla a Excel
+  const handleExportExcel = () => {
+    if (!dataTableData || dataTableData.length === 0) {
+      setErrorAlert({
+        show: true,
+        message: "No hay datos para exportar.",
+        type: "warning",
+      });
+      return;
+    }
+
+    // Armar los datos como filas legibles para Excel
+    const wsData = dataTableData.map((item) => ({
+      "Cod Concepto Provincia": item.codConcepto,
+      "Cod Concepto MGP": item.codConceptoMgp,
+      Descripción: item.descripcion,
+      "Con Aporte": item.conAporte,
+      Patronal: item.patronal,
+      "Dev. Salario": item.devolucionSalario,
+      Vigente:
+        item.vigente === "S" || item.vigente === true
+          ? "SI"
+          : item.vigente === "N" || item.vigente === false
+          ? "NO"
+          : "N/A",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Conceptos");
+
+    XLSX.writeFile(wb, "Conceptos.xlsx");
+  };
+
   return (
     <>
       <DashboardLayout>
         <DashboardNavbar />
         <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
-          <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
-            Agregar
-          </MDButton>
+          <MDBox display="flex" alignItems="center" gap={1}>
+            <MDButton variant="gradient" color="success" onClick={handleNuevoTipo}>
+              Agregar
+            </MDButton>
+
+            {/* 👇 NUEVO BOTÓN A LA IZQUIERDA DEL SELECT VIGENTE */}
+            <MDButton variant="gradient" color="info" onClick={handleExportExcel}>
+              Exportar Excel
+            </MDButton>
+          </MDBox>
+
+          {/* SELECT VIGENTE */}
           <MDBox
             component="select"
-            onChange={handleFilterChange} // Llamar a la función al cambiar el filtro
-            value={activoFilter} // Vincular el estado del filtro al valor del `select`
+            onChange={handleFilterChange}
+            value={activoFilter}
             sx={{
               padding: "10px 20px",
               borderRadius: "5px",
@@ -134,6 +179,7 @@ function Conceptos() {
             <option value="N">No Vigente</option>
           </MDBox>
         </MDBox>
+
         {errorAlert.show && (
           <Grid container justifyContent="center">
             <Grid item xs={12} lg={12}>
@@ -147,6 +193,7 @@ function Conceptos() {
             </Grid>
           </Grid>
         )}
+
         <MDBox my={3}>
           <Card>
             <DataTable
@@ -155,6 +202,8 @@ function Conceptos() {
                   { Header: "Cod Concepto Provincia", accessor: "codConcepto" },
                   { Header: "Cod Concepto MGP", accessor: "codConceptoMgp" },
                   { Header: "Descripción", accessor: "descripcion" },
+                  { Header: "Con Aporte", accessor: "conAporte" },
+                  { Header: "Patronal", accessor: "patronal" },
                   { Header: "Dev. Salario", accessor: "devolucionSalario" },
                   {
                     Header: "VIGENTE",

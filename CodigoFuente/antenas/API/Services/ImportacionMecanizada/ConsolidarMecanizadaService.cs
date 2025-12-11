@@ -701,6 +701,13 @@ namespace API.Services
                 .Select(g => g.First())
                 .ToList();
 
+            var importeNetoTotal = lista.Sum(x =>
+            {
+                var importe = x.Importe ?? 0;
+                var signo = x.Signo ?? "+";
+                return signo == "-" ? -importe : importe;
+            });
+
             var totalPersonas = lista
                         .Select(x => x.DTO.DNI)
                         .Distinct()
@@ -805,6 +812,43 @@ namespace API.Services
                          })
                          .ToList();
 
+
+            var totalOSPatronal = lista
+                        .Where(x =>
+                        {
+                            if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
+                                return false;
+
+                            if (!conceptos.TryGetValue(x.CodigoLiquidacionNumero, out var conc))
+                                return false;
+
+                            return conc.CodConcepto == "3285";
+                        })
+                        .Sum(i =>
+                        {
+                            var importe = i.Importe ?? 0;
+                            var signo = i.Signo ?? "+";
+                            return signo == "-" ? -importe : importe;
+                        });
+
+            var totalOSPersonal = lista
+                        .Where(x =>
+                        {
+                            if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
+                                return false;
+
+                            if (!conceptos.TryGetValue(x.CodigoLiquidacionNumero, out var conc))
+                                return false;
+
+                            return conc.CodConcepto == "1285";
+                        })
+                        .Sum(i =>
+                        {
+                            var importe = i.Importe ?? 0;
+                            var signo = i.Signo ?? "+";
+                            return signo == "-" ? -importe : importe;
+                        });
+
             var agrupados = listaDepurada
                 .GroupBy(x => x.DTO.DNI)
                 .Select(g => new MecReportePersona
@@ -869,7 +913,10 @@ namespace API.Services
                 TotalConAporte = totalConAporte,
                 TotalSinAporte = totalSinAporte,
                 TotalSalario = totalSalario,
-                TotalIps = totalIps
+                TotalIps = totalIps,
+                OSPatronal = totalOSPatronal,
+                OSPersonal = totalOSPersonal,
+                ImporteNeto = importeNetoTotal
             };
         }
 

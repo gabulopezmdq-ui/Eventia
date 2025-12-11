@@ -127,4 +127,7 @@ public class MecReporteRespuestaDTO
     public decimal TotalSinAporte { get; set; }
     public decimal TotalSalario { get; set; }
     public decimal TotalIps { get; set; }
+    public decimal OSPatronal { get; set; }
+    public decimal OSPersonal { get; set; }
+    public decimal ImporteNeto { get; set; }
 }
