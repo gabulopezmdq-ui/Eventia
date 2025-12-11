@@ -90,6 +90,7 @@ public class MecReportePersona
     public string SinSubvencion { get; set; }
     public string SinHaberes { get; set; }
     public List<CodigoLiquidacionDTO> CodigosLiquidacionDetallados { get; set; } = new();
+    public List<CodigoLiquidacionDTO> TotalesPorConcepto { get; set; } = new();
 }
 
 public class CodigoLiquidacionDTO
@@ -100,4 +101,30 @@ public class CodigoLiquidacionDTO
     public string Signo { get; set; }
     public string Patronal { get; set; }
     public string ConAporte { get; set; }
+    public int? Docentes { get; set; }
+    public decimal? CAportes { get; set; }
+    public decimal? SAportes { get; set; }
+    public decimal? Salario { get; set; }
+    public decimal? totalIps { get; set; }
+}
+
+
+public class CodigoLiqResumenDTO
+{
+    public string Codigos { get; set; }
+    public string Descripciones { get; set; }
+    public decimal Importes { get; set; }
+    public string Signos { get; set; }
+    public string Patronales { get; set; }
+    public string ConAportes { get; set; }
+}
+public class MecReporteRespuestaDTO
+{
+    public List<MecReportePersona> Personas { get; set; }
+    public List<CodigoLiquidacionDTO> TotalesPorConcepto { get; set; }
+    public int TotalPersonas { get; set; }
+    public decimal TotalConAporte { get; set; }
+    public decimal TotalSinAporte { get; set; }
+    public decimal TotalSalario { get; set; }
+    public decimal TotalIps { get; set; }
 }
