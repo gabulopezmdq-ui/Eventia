@@ -307,6 +307,70 @@ const HaberesPDF = async (reporteData) => {
     doc.text(linea, margenX, y);
   };
   drawLineaSimple(65);
+  // Grupo 1: conAporte = "S" y patronal = "N"
+  const grupo1 = totalesFinales.filter((x) => x.conAporte === "S" && x.patronal === "N");
+
+  // Normalizar texto
+  const normalize = (s) => (s || "").toUpperCase();
+
+  // Grupo 2: conAporte = "N" y descripcion NO contiene IPS ni OBRA SOCIAL
+  const grupo2 = totalesFinales.filter((x) => {
+    if (x.conAporte !== "N") return false;
+
+    const desc = normalize(x.descripcion);
+    return !desc.includes("IPS") && !desc.includes("OBRA SOCIAL");
+  });
+
+  // Grupo 3: conAporte = "N" y descripcion SI contiene IPS u OBRA SOCIAL
+  const grupo3 = totalesFinales.filter((x) => {
+    if (x.conAporte !== "N") return false;
+
+    const desc = normalize(x.descripcion);
+    return desc.includes("IPS") || desc.includes("OBRA SOCIAL");
+  });
+
+  // Función de dibujo
+  const drawTotalesFinales = (items, startY) => {
+    let y = startY;
+
+    items.forEach((item) => {
+      doc.text(item.codigo?.toString() || "", 31, y);
+      doc.text(item.descripcion || "", 50, y);
+
+      const importeStr = doc.formatNumber
+        ? doc.formatNumber(item.importe)
+        : item.importe?.toFixed(2)?.toString() || "";
+
+      doc.text(importeStr, 120, y, { align: "right" });
+
+      y += 3;
+    });
+
+    return y;
+  };
+
+  // Secuencia de impresión
+  let y = 69;
+
+  // Grupo 1
+  y = drawTotalesFinales(grupo1, y);
+  y += 4;
+  doc.text("TOTAL C/ APORTES. EN PESOS", 31, y);
+  doc.text(`${totales.totalConAporte.toFixed(2)}`, 100, y);
+  y += 6;
+
+  // Grupo 2
+  y = drawTotalesFinales(grupo2, y);
+  y += 4;
+  doc.text("TOTAL S/ APORTES. EN PESOS", 31, y);
+  y += 6;
+
+  // Grupo 3
+  y = drawTotalesFinales(grupo3, y);
+  y += 4;
+  doc.text("TOTAL DESCUENTOS", 50, y);
+  doc.text(`${totales.totalIps.toFixed(2)}`, 100, y);
+
   addFooters();
   doc.output("dataurlnewwindow");
 };
