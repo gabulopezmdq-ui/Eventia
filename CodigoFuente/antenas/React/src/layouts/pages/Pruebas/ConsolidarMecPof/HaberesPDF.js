@@ -356,20 +356,21 @@ const HaberesPDF = async (reporteData) => {
   y = drawTotalesFinales(grupo1, y);
   y += 4;
   doc.text("TOTAL C/ APORTES. EN PESOS", 31, y);
-  doc.text(`${totales.totalConAporte.toFixed(2)}`, 100, y);
+  doc.text(`${totales.totalConAporte.toFixed(2)}`, 102, y);
   y += 6;
 
   // Grupo 2
   y = drawTotalesFinales(grupo2, y);
   y += 4;
   doc.text("TOTAL S/ APORTES. EN PESOS", 31, y);
+  doc.text(`${totales.totalSinAportesEnPesos.toFixed(2)}`, 102, y);
   y += 6;
 
   // Grupo 3
   y = drawTotalesFinales(grupo3, y);
   y += 4;
   doc.text("TOTAL DESCUENTOS", 50, y);
-  doc.text(`${totales.totalIps.toFixed(2)}`, 100, y);
+  doc.text(`${totales.totalIps.toFixed(2)}`, 102, y);
 
   addFooters();
   doc.output("dataurlnewwindow");

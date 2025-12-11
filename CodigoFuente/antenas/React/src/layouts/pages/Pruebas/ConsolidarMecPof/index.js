@@ -509,6 +509,7 @@ function ConsolidarMecPOF() {
           totalSalario: dataParaReporte.totalSalario || 0,
           totalSinAporte: dataParaReporte.totalSinAporte || 0,
           importeNeto: dataParaReporte.importeNeto || 0,
+          totalSinAportesEnPesos: dataParaReporte.totalSinAportesEnPesos || 0,
           osPatronal: dataParaReporte.osPatronal || 0,
           osPersona: dataParaReporte.osPersona || 0,
         },
