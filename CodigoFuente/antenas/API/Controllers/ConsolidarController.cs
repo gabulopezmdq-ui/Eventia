@@ -271,11 +271,10 @@ namespace API.Controllers
         }
 
         [HttpGet("Reporte")]
-
         public async Task<IActionResult> ObtenerReporte(int idCabecera, int idEstablecimiento)
         {
-            var mecanizadas = await _consolidarMecanizadaService.ObtenerReporte(idCabecera, idEstablecimiento);
-            return Ok(mecanizadas.ToList());
+            var reporte = await _consolidarMecanizadaService.ObtenerReporte(idCabecera, idEstablecimiento);
+            return Ok(reporte);
         }
     }
 }
