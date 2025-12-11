@@ -39,12 +39,40 @@ const HaberesPDF = async (reporteData) => {
   // ================================
   const drawHeader = () => {
     doc.text("PROVINCIA DE BUENOS AIRES - SERVICIOS DPTI -", 14, 15);
+
+    const getMonthName = (monthNumber) => {
+      const months = [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+      ];
+      const index = parseInt(monthNumber, 10) - 1;
+      return months[index] || "";
+    };
+
     doc.text("DIRECCION GENERAL DE CULTURA Y EDUCACION", 14, 19);
     doc.text("DIRECCION DE EDUCACION DE GESTION PRIVADA", 14, 23);
+    const liquidacionText = `${getMonthName(establecimiento.mesLiquidacion)} de ${
+      establecimiento.anioLiquidacion
+    }`;
+    doc.text(liquidacionText.toUpperCase(), 230, 27);
     doc.text("- P L A N I L L A  D E  H A B E R E S -", 17, 30);
 
     doc.text("Di.E.Ge.P", 100, 30);
-    doc.text(`N/R PESOS ${establecimiento.ordenPago}  Sueldos Conv ME 421/09`, 180, 34);
+    doc.text(
+      `N/R PESOS ${String(establecimiento.ordenPago).slice(-4)}  Sueldos Conv ME 421/09 Cajero`,
+      180,
+      34
+    );
 
     doc.text("DISTRITO :043  G Pueyrredon", 14, 37);
     doc.text(`TIPO ORG :${establecimiento.tipoEst} ${establecimiento.tipoEstDesc}`, 90, 37);
@@ -106,13 +134,13 @@ const HaberesPDF = async (reporteData) => {
   // ================================
   // PIE DE PÁGINA
   // ================================
-  const drawFooter = () => {
-    doc.setFontSize(8);
-    doc.text(
-      `Página ${doc.internal.getCurrentPageInfo().pageNumber}`,
-      14,
-      doc.internal.pageSize.height - 10
-    );
+  const addFooters = () => {
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(`Página ${i} de ${totalPages}`, 14, doc.internal.pageSize.height - 10);
+    }
   };
 
   // ================================
@@ -137,7 +165,6 @@ const HaberesPDF = async (reporteData) => {
     const alturaDocente = 10 + alturaConceptos + 6;
 
     if (posY + alturaDocente > endContentY) {
-      drawFooter();
       doc.addPage();
       drawHeader();
       posY = startContentY;
@@ -145,19 +172,27 @@ const HaberesPDF = async (reporteData) => {
 
     // DATOS PRINCIPALES
     doc.text(`${d.dni}/${d.secuencia}`, 16, posY);
-    doc.text(`AFEC:${d.anioMesAfectacion} CATEG. ${d.categoria}`, 16, posY + 3);
+    doc.text(`AFEC:${d.anioMesAfectacion}`, 16, posY + 3);
+    doc.text(`CATEG. ${d.categoria}`, 41, posY + 3);
     if (Number(d.cantHsCs) !== 0) {
       const hsFormateado = Number(d.cantHsCs).toFixed(2);
       doc.text(`HS.CS      ${hsFormateado}`, 55, posY + 3);
     }
-    doc.text(`ANT:${d.anioAntiguedad}/${d.mesAntiguedad}`, 16, posY + 6);
-    doc.text(`${d.apellido} ${d.nombre}`, 45, posY);
+    doc.text(
+      `ANT:${String(d.anioAntiguedad).padStart(2, "0")}/${String(d.mesAntiguedad).padStart(
+        2,
+        "0"
+      )}`,
+      16,
+      posY + 6
+    );
+    doc.text(`${d.apellido} ${d.nombre}`, 41, posY);
     doc.text(`${d.carRevista} ${d.tipoFuncion}`, 84, posY);
 
     // SI ES "SIN HABERES" → SOLO IMPRIME MENSAJE Y LÍNEA
     if (d.sinHaberes === "S") {
       doc.setFontSize(8);
-      doc.text("<--- SIN HABERES --->", 120, posY + 3);
+      doc.text("<--- SIN HABERES --->", 92, posY + 3);
 
       // Línea de separación
       const lineaY = posY + 10;
@@ -168,7 +203,7 @@ const HaberesPDF = async (reporteData) => {
     }
     if (d.sinSubvencion === "S") {
       doc.setFontSize(8);
-      doc.text("<--- SIN SUBVENCION --->", 120, posY + 3);
+      doc.text("<--- SIN SUBVENCION --->", 92, posY + 3);
 
       const lineaY = posY + 10;
       drawSeparationLine(lineaY);
@@ -249,7 +284,8 @@ const HaberesPDF = async (reporteData) => {
   doc.text(`-${totalDescuentos.toFixed(2)}`, 150, posY);
   posY += 3;
 
-  drawFooter();
+  addFooters();
+
   doc.output("dataurlnewwindow");
 };
 
