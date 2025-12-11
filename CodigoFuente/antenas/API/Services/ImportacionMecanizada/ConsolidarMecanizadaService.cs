@@ -548,7 +548,7 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
         }
-        public async Task<List<MecReportePersona>> ObtenerReporte(int idCabecera, int idEstablecimiento)
+        public async Task<MecReporteRespuestaDTO> ObtenerReporte(int idCabecera, int idEstablecimiento)
         {
             var mecanizadas = await _context.MEC_Mecanizadas
                 .AsNoTracking()
@@ -845,17 +845,12 @@ namespace API.Services
                                 Importe = grp.Sum(i => i.Importe ?? 0),
                                 Signo = grp.First().Signo,
                                 Patronal = conc?.Patronal,
-                                ConAporte = conc?.ConAporte,
-                                Docentes = totalPersonas,
-                                CAportes = totalConAporte,
-                                SAportes = totalSinAporte,
-                                Salario = totalSalario,
-                                totalIps = totalIps
+                                ConAporte = conc?.ConAporte
                             };
                         })
                         .ToList(),
 
-                    TotalesPorConcepto = totalesGlobales,
+                    //TotalesPorConcepto = totalesGlobales,
 
                     Neto = g.Sum(i =>
                     {
@@ -866,7 +861,16 @@ namespace API.Services
                 })
                 .ToList();
 
-            return agrupados;
+            return new MecReporteRespuestaDTO
+            {
+                Personas = agrupados,
+                TotalesPorConcepto = totalesGlobales,
+                TotalPersonas = totalPersonas,
+                TotalConAporte = totalConAporte,
+                TotalSinAporte = totalSinAporte,
+                TotalSalario = totalSalario,
+                TotalIps = totalIps
+            };
         }
 
     }

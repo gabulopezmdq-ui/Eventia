@@ -118,3 +118,13 @@ public class CodigoLiqResumenDTO
     public string Patronales { get; set; }
     public string ConAportes { get; set; }
 }
+public class MecReporteRespuestaDTO
+{
+    public List<MecReportePersona> Personas { get; set; }
+    public List<CodigoLiquidacionDTO> TotalesPorConcepto { get; set; }
+    public int TotalPersonas { get; set; }
+    public decimal TotalConAporte { get; set; }
+    public decimal TotalSinAporte { get; set; }
+    public decimal TotalSalario { get; set; }
+    public decimal TotalIps { get; set; }
+}
