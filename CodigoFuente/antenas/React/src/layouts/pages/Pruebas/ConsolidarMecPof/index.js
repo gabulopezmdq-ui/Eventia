@@ -46,6 +46,7 @@ function ConsolidarMecPOF() {
   const [selectedCabeceraData, setSelectedCabeceraData] = useState(null);
   const [reporteData, setReporteData] = useState({});
   const [haberesButtonState, setHaberesButtonState] = useState({});
+  const [docentesSupleA, setDocentesSupleA] = useState([]);
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -195,6 +196,36 @@ function ConsolidarMecPOF() {
         });
       })
       .finally(() => setLoadingSuplentes(false));
+    // 👉 Endpoint DOCENTES para ese establecimiento
+    // 👉 Endpoint DOCENTES para ese establecimiento
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}Consolidar/Docentes?idestablecimiento=${row.idEstablecimiento}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        const docentes = (response.data || []).map((item) => ({
+          ...item,
+          nombreApellidoDni: `${item.nombre} ${item.apellido} ${item.dni}`,
+        }));
+
+        console.log("DOCENTES del estab:", row.idEstablecimiento, docentes);
+
+        setDocentesSupleA(
+          (response.data || []).map((item) => ({
+            id: item.idPOF,
+            nombreCompleto: `${item.nombre} ${item.apellido}`,
+            dni: item.dni,
+          }))
+        );
+      })
+      .catch(() => {
+        setErrorAlert({
+          show: true,
+          message: "Error al obtener los docentes para 'Suple A'.",
+          type: "error",
+        });
+      });
   };
 
   // Boton delete de la tabla MEC
@@ -746,6 +777,25 @@ function ConsolidarMecPOF() {
                           Cell: ({ row }) => row.original?.dni || "N/A",
                         },
                         { Header: "Nombre Completo", accessor: "nombreCompleto" },
+                        {
+                          Header: "Suple A",
+                          accessor: "supleA",
+                          Cell: ({ row }) => {
+                            const { supleA } = row.original; // idPOF del titular
+
+                            if (!supleA) return "-";
+
+                            // Buscamos en la lista cargada desde /Consolidar/Docentes
+                            const docente = docentesSupleA.find(
+                              (d) => Number(d.id) === Number(supleA)
+                            );
+
+                            if (!docente) return "-";
+
+                            // Misma forma que en el popup: dni / nombreCompleto
+                            return `${docente.dni} / ${docente.nombreCompleto}`;
+                          },
+                        },
                         {
                           Header: "Acción",
                           accessor: "accion",
