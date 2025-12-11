@@ -1,14 +1,9 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-// ---------------------------------------------
-// FUNCIONES AUXILIARES PARA TABLAS ASCII
-// ---------------------------------------------
-const repeat = (char, count) => Array(count + 1).join(char);
-
 const HaberesPDF = async (reporteData) => {
-  const { establecimiento, docentes, totales } = reporteData;
-  console.log("Totales: ", totales);
+  const { establecimiento, docentes, totales, totalesFinales } = reporteData;
+  console.log("TotalesConceptos: ", totalesFinales);
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "mm",
@@ -18,26 +13,22 @@ const HaberesPDF = async (reporteData) => {
   doc.setFont("courier", "normal");
   doc.setFontSize(8);
 
-  // ================================
-  // FUNCION PARA LÍNEA DE SEPARACIÓN
-  // ================================
+  // ================================================
+  // AUXILIAR PARA LINEA SEPARADORA DE CADA DOCENTE
+  // ================================================
   const drawSeparationLine = (y) => {
     const inicioX = 92;
     const anchoPagina = doc.internal.pageSize.getWidth();
     const largo = anchoPagina - inicioX - 14;
     let linea = "";
-
-    while (doc.getTextWidth(linea + "*") < largo) {
-      linea += "*";
-    }
-
+    while (doc.getTextWidth(linea + "*") < largo) linea += "*";
     doc.text(linea, inicioX, y);
   };
 
-  // ================================
-  // FUNCION PARA DIBUJAR ENCABEZADO
-  // ================================
-  const drawHeader = () => {
+  // ================================================
+  // ENCABEZADO BASE (SE USA EN TODAS LAS PÁGINAS)
+  // ================================================
+  const drawHeaderBase = () => {
     doc.text("PROVINCIA DE BUENOS AIRES - SERVICIOS DPTI -", 14, 15);
 
     const getMonthName = (monthNumber) => {
@@ -55,16 +46,17 @@ const HaberesPDF = async (reporteData) => {
         "Noviembre",
         "Diciembre",
       ];
-      const index = parseInt(monthNumber, 10) - 1;
-      return months[index] || "";
+      return months[parseInt(monthNumber, 10) - 1] || "";
     };
 
     doc.text("DIRECCION GENERAL DE CULTURA Y EDUCACION", 14, 19);
     doc.text("DIRECCION DE EDUCACION DE GESTION PRIVADA", 14, 23);
+
     const liquidacionText = `${getMonthName(establecimiento.mesLiquidacion)} de ${
       establecimiento.anioLiquidacion
     }`;
     doc.text(liquidacionText.toUpperCase(), 230, 27);
+
     doc.text("- P L A N I L L A  D E  H A B E R E S -", 17, 30);
 
     doc.text("Di.E.Ge.P", 100, 30);
@@ -82,29 +74,29 @@ const HaberesPDF = async (reporteData) => {
     doc.text(`SECCS: ${establecimiento.cantSecciones}`, 110, 41);
     doc.text(`TURNOS: ${establecimiento.cantTurnos}`, 160, 41);
     doc.text(`SUBVENCION: ${establecimiento.subvencion} %`, 220, 41);
+  };
 
-    // Línea divisoria
+  // =====================================================
+  // ENCABEZADO DE TABLA ASCII (NO SE USA EN ÚLTIMA PÁGINA)
+  // =====================================================
+  const drawHeaderTabla = () => {
     const margenX = 14;
-    const anchoPagina2 = doc.internal.pageSize.getWidth();
-    const anchoDisponible = anchoPagina2 - margenX * 2;
+    const anchoPag = doc.internal.pageSize.getWidth();
+    const anchoDisponible = anchoPag - margenX * 2;
 
     const inicio = "#";
     const patron = " -";
     const fin = " #";
-    const anchoExtra = doc.getTextWidth("-");
+    const extra = doc.getTextWidth("-");
 
     let linea = inicio;
-    while (doc.getTextWidth(linea + patron + fin) < anchoDisponible + anchoExtra) {
-      linea += patron;
-    }
+    while (doc.getTextWidth(linea + patron + fin) < anchoDisponible + extra) linea += patron;
     linea += fin;
-
     doc.text(linea, margenX, 46);
 
-    // Encabezado columnas
-    const posY_Enc1 = 50;
-    const posY_Enc2 = posY_Enc1 + 3;
-    const posY_Enc3 = posY_Enc2 + 3;
+    const y1 = 50,
+      y2 = 53,
+      y3 = 56;
 
     const enc1 =
       "*            *        DATOS       *R F*                      *              *     DESCUENTOS    *            *Nro. Cheque  Y  *  Nro. *";
@@ -113,64 +105,64 @@ const HaberesPDF = async (reporteData) => {
     const enc3 =
       "*   CARGO    *     PERSONALES     *V N*    REMUNERACIONES    *              * INASIST + JUBILAC *            *RECIBI CONFORME *DE PAGO*";
 
-    const anchoDisponible2 = anchoDisponible;
-    const calcCharSpace = (texto) =>
-      (anchoDisponible2 - doc.getTextWidth(texto)) / (texto.length - 1);
+    const calcSpace = (txt) => (anchoDisponible - doc.getTextWidth(txt)) / (txt.length - 1);
 
-    doc.text(enc1, margenX, posY_Enc1, { charSpace: calcCharSpace(enc1) });
-    doc.text(enc2, margenX, posY_Enc2, { charSpace: calcCharSpace(enc2) });
-    doc.text(enc3, margenX, posY_Enc3, { charSpace: calcCharSpace(enc3) });
+    doc.text(enc1, margenX, y1, { charSpace: calcSpace(enc1) });
+    doc.text(enc2, margenX, y2, { charSpace: calcSpace(enc2) });
+    doc.text(enc3, margenX, y3, { charSpace: calcSpace(enc3) });
 
-    // Línea debajo encabezado
     let linea2 = inicio;
-    while (doc.getTextWidth(linea2 + patron + fin) < anchoDisponible + anchoExtra) {
-      linea2 += patron;
-    }
+    while (doc.getTextWidth(linea2 + patron + fin) < anchoDisponible + extra) linea2 += patron;
     linea2 += fin;
-
-    doc.text(linea2, margenX, posY_Enc3 + 4);
+    doc.text(linea2, margenX, y3 + 4);
   };
 
-  // ================================
+  // ================================================
   // PIE DE PÁGINA
-  // ================================
+  // ================================================
   const addFooters = () => {
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
-      doc.setFontSize(8);
       doc.text(`Página ${i} de ${totalPages}`, 14, doc.internal.pageSize.height - 10);
     }
   };
 
-  // ================================
-  // INICIO PRIMERA PÁGINA
-  // ================================
+  // ==================================================
+  // PRIMERA PÁGINA: BASE + TABLA
+  // ==================================================
+  const drawHeader = () => {
+    drawHeaderBase();
+    drawHeaderTabla();
+  };
+
   drawHeader();
 
-  const startContentY = 65;
-  const endContentY = doc.internal.pageSize.height - 15;
-  let posY = startContentY;
+  const startY = 65;
+  const endY = doc.internal.pageSize.height - 15;
+  let posY = startY;
 
+  // ================================================
+  // LOOP DE DOCENTES
+  // ================================================
   docentes.forEach((d) => {
-    const cantidadConceptos = d.codigosLiquidacionDetallados.length;
-    const alturaConceptos = cantidadConceptos * 4;
-    const alturaDocente = 10 + alturaConceptos + 6;
+    const cant = d.codigosLiquidacionDetallados.length;
+    const altura = 10 + cant * 4 + 6;
 
-    if (posY + alturaDocente > endContentY) {
+    if (posY + altura > endY) {
       doc.addPage();
       drawHeader();
-      posY = startContentY;
+      posY = startY;
     }
 
-    // DATOS PRINCIPALES
     doc.text(`${d.dni}/${d.secuencia}`, 16, posY);
     doc.text(`AFEC:${d.anioMesAfectacion}`, 16, posY + 3);
     doc.text(`CATEG. ${d.categoria}`, 41, posY + 3);
+
     if (Number(d.cantHsCs) !== 0) {
-      const hsFormateado = Number(d.cantHsCs).toFixed(2);
-      doc.text(`HS.CS      ${hsFormateado}`, 55, posY + 3);
+      doc.text(`HS.CS ${Number(d.cantHsCs).toFixed(2)}`, 55, posY + 3);
     }
+
     doc.text(
       `ANT:${String(d.anioAntiguedad).padStart(2, "0")}/${String(d.mesAntiguedad).padStart(
         2,
@@ -182,81 +174,53 @@ const HaberesPDF = async (reporteData) => {
     doc.text(`${d.apellido} ${d.nombre}`, 41, posY);
     doc.text(`${d.carRevista} ${d.tipoFuncion}`, 84, posY);
 
-    // SI ES "SIN HABERES" → SOLO IMPRIME MENSAJE Y LÍNEA
     if (d.sinHaberes === "S") {
-      doc.setFontSize(8);
       doc.text("<--- SIN HABERES --->", 92, posY + 3);
-
-      // Línea de separación
-      const lineaY = posY + 10;
-      drawSeparationLine(lineaY);
-
-      posY = lineaY + 4;
-      return; // NO imprime conceptos ni neto
-    }
-    if (d.sinSubvencion === "S") {
-      doc.setFontSize(8);
-      doc.text("<--- SIN SUBVENCION --->", 92, posY + 3);
-
-      const lineaY = posY + 10;
-      drawSeparationLine(lineaY);
-
-      posY = lineaY + 4;
+      const y = posY + 10;
+      drawSeparationLine(y);
+      posY = y + 4;
       return;
     }
 
-    // ----------- SI *NO* ES SIN HABERES CONTINÚA NORMAL -----------
+    if (d.sinSubvencion === "S") {
+      doc.text("<--- SIN SUBVENCION --->", 92, posY + 3);
+      const y = posY + 10;
+      drawSeparationLine(y);
+      posY = y + 4;
+      return;
+    }
 
     doc.text(`NETO : ${d.neto}`, 205, posY);
 
-    // DETALLE DE CONCEPTOS
-    let detalleY = posY;
+    let yConcepto = posY;
 
     d.codigosLiquidacionDetallados.forEach((c) => {
       if (c.descripcion.toUpperCase().includes("PATRONAL")) return;
 
-      const codigoFormateado = c.codigo.slice(0, -1) + "." + c.codigo.slice(-1);
-      const linea = `${codigoFormateado} ${c.descripcion}`;
-      doc.text(linea, 92, detalleY);
+      const codigoForm = c.codigo.slice(0, -1) + "." + c.codigo.slice(-1);
+      doc.text(`${codigoForm} ${c.descripcion}`, 92, yConcepto);
 
-      const importeNum = Number(c.importe);
-      const importeTexto = `${c.signo === "-" ? "-" : ""}${importeNum.toFixed(2)}`;
-      const descUpper = c.descripcion.trim().toUpperCase();
+      const num = Number(c.importe);
+      const text = `${c.signo === "-" ? "-" : ""}${num.toFixed(2)}`;
+      const desc = c.descripcion.trim().toUpperCase();
 
-      // SUMA DE TOTALES
-      if (descUpper.includes("C/APORT")) totalCAportes += importeNum;
-      if (descUpper.includes("S/APORT") || descUpper.includes("NO SALARIO"))
-        totalSAportes += importeNum;
-      if (descUpper.includes("SALARIO FAMILIAR")) totalSalarioFamiliar += importeNum;
-      /*if (c.signo === "-") totalDescuentos += importeNum;*/
+      let x = 160;
+      if (desc === "IPS") x += 35;
 
-      const xRightBase = 160;
-      const esIPS = descUpper === "IPS";
-      const extraOffset = esIPS ? 35 : 0;
-      const xRight = xRightBase + extraOffset;
+      doc.text(text, x - doc.getTextWidth(text), yConcepto);
 
-      const textWidth = doc.getTextWidth(importeTexto);
-      doc.text(importeTexto, xRight - textWidth, detalleY);
-
-      detalleY += 4;
+      yConcepto += 4;
     });
 
-    // LÍNEA DE SEPARACIÓN FINAL
-    const ultimaLineaDatos = posY + 6;
-    const lineaY = Math.max(ultimaLineaDatos + 4, detalleY + 2);
-    drawSeparationLine(lineaY);
-
-    posY = lineaY + 4;
+    const yLinea = Math.max(posY + 10, yConcepto + 2);
+    drawSeparationLine(yLinea);
+    posY = yLinea + 4;
   });
 
-  // ======================
-  // IMPRESIÓN DE TOTALES
-  // ======================
-  posY;
-
-  doc.setFontSize(8);
-  doc.text(`TOTAL DEL DISTRIRO 043 INSTITUTO ${establecimiento.nroDiegep}`, 14, posY);
-
+  // ================================================
+  // TOTALES
+  // ================================================
+  doc.text(`TOTAL DEL DISTRITO 043 INSTITUTO ${establecimiento.nroDiegep}`, 14, posY);
   doc.text(`DOCENTES: `, 92, posY);
   doc.text(`${totales.totalPersonas}`, 150, posY);
   posY += 3;
@@ -277,8 +241,73 @@ const HaberesPDF = async (reporteData) => {
   doc.text(`${totales.totalIps.toFixed(2)}`, 150, posY);
   posY += 3;
 
-  addFooters();
+  // ================================================
+  // ÚLTIMA PÁGINA: SOLO ENCABEZADO BASE
+  // ================================================
+  doc.addPage();
+  drawHeaderBase();
+  const drawLineaConceptosFinales = (y) => {
+    const margenX = 14;
+    const anchoPagina = doc.internal.pageSize.getWidth();
+    const anchoDisponible = anchoPagina - margenX * 2;
 
+    const inicio = "#";
+    const patron = " -";
+    const fin = " #";
+    const anchoExtra = doc.getTextWidth("-");
+
+    let linea = inicio;
+    while (doc.getTextWidth(linea + patron + fin) < anchoDisponible + anchoExtra) {
+      linea += patron;
+    }
+    linea += fin;
+
+    doc.text(linea, margenX, y);
+  };
+  drawLineaConceptosFinales(45);
+  const drawLineMatchingText = (text, x, y) => {
+    const targetWidth = doc.getTextWidth(text);
+    const pattern = " -";
+    let line = "-";
+    // Expandir la línea hasta igualar o superar el ancho del texto
+    while (doc.getTextWidth(line) < targetWidth) {
+      line += pattern;
+    }
+
+    doc.text(line, x, y);
+  };
+  const titulo = "C O N T R I B U C I O N  D E L  E S T A D O";
+
+  // Dibujar la línea exactamente debajo del texto
+  drawLineMatchingText(titulo, 30, 53);
+
+  // Texto original
+  doc.text(titulo, 30, 49);
+  doc.text("CONCEPTOS", 31, 57);
+  doc.text("DESCRIPCIONES", 55, 57);
+  doc.text("IMPORTES", 95, 57);
+  doc.text("D E V O L U C I O N E S", 215, 49);
+  doc.text("IMPORTES", 225, 57);
+  doc.text("BAJAS", 215, 61);
+  doc.text("INASISTENCIAS", 235, 61);
+  const drawLineaSimple = (y) => {
+    const margenX = 14;
+    const anchoPagina = doc.internal.pageSize.getWidth();
+    const anchoDisponible = anchoPagina - margenX * 2;
+
+    const patron = " -";
+    const anchoExtra = doc.getTextWidth("-");
+
+    let linea = "-";
+
+    while (doc.getTextWidth(linea + patron) < anchoDisponible + anchoExtra) {
+      linea += patron;
+    }
+
+    doc.text(linea, margenX, y);
+  };
+  drawLineaSimple(65);
+  addFooters();
   doc.output("dataurlnewwindow");
 };
 
