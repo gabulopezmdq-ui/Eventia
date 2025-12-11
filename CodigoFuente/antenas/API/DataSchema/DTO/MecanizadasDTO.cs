@@ -131,4 +131,7 @@ public class MecReporteRespuestaDTO
     public decimal OSPersonal { get; set; }
     public decimal ImporteNeto { get; set; }
     public decimal TotalSinAportesEnPesos { get; set; }
+    public decimal TotalDescuentos { get; set; }
+    public decimal TotalIpsPatronal { get; set; }
+    public decimal TotalIpsSac { get; set; }
 }

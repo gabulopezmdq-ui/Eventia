@@ -791,6 +791,44 @@ namespace API.Services
                     return signo == "-" ? -importe : importe;
                 });
 
+            var totalIpsPatronal = lista
+                            .Where(x =>
+                            {
+                                if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
+                                    return false;
+
+                                if (!conceptos.TryGetValue(x.CodigoLiquidacionNumero, out var conc))
+                                    return false;
+
+                                return conc.CodConcepto == "3060"; // IPS Patronal
+                            })
+                            .Sum(i =>
+                            {
+                                var importe = i.Importe ?? 0;
+                                var signo = i.Signo ?? "+";
+                                return signo == "-" ? -importe : importe;
+                            });
+
+            var totalIpsSac = lista
+                            .Where(x =>
+                            {
+                                if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
+                                    return false;
+
+                                if (!conceptos.TryGetValue(x.CodigoLiquidacionNumero, out var conc))
+                                    return false;
+
+                                return conc.CodConcepto == "1069"; // IPS del SAC
+                            })
+                            .Sum(i =>
+                            {
+                                var importe = i.Importe ?? 0;
+                                var signo = i.Signo ?? "+";
+                                return signo == "-" ? -importe : importe;
+                            });
+
+            var totalIpsGeneral = totalIps + totalIpsPatronal + totalIpsSac;
+
             var totalesGlobales = lista
                          .Where(x => !string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
                          .GroupBy(x => x.CodigoLiquidacionNumero)
@@ -922,7 +960,10 @@ namespace API.Services
                 OSPatronal = totalOSPatronal,
                 OSPersonal = totalOSPersonal,
                 ImporteNeto = importeNetoTotal,
-                TotalSinAportesEnPesos = totalSinAportesEnPesos
+                TotalSinAportesEnPesos = totalSinAportesEnPesos,
+                TotalIpsPatronal = totalIpsPatronal,
+                TotalIpsSac = totalIpsSac,
+                TotalDescuentos = totalIpsGeneral
             };
         }
 
