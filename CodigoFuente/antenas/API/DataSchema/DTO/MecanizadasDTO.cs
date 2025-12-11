@@ -130,4 +130,5 @@ public class MecReporteRespuestaDTO
     public decimal OSPatronal { get; set; }
     public decimal OSPersonal { get; set; }
     public decimal ImporteNeto { get; set; }
+    public decimal TotalSinAportesEnPesos { get; set; }
 }

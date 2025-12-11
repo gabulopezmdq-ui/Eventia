@@ -750,6 +750,8 @@ namespace API.Services
                                 return signo == "-" ? -importe : importe;
                             });
 
+        
+
             var totalSalario = lista
                 .Where(x =>
                 {
@@ -767,6 +769,9 @@ namespace API.Services
                     var signo = i.Signo ?? "+";
                     return signo == "-" ? -importe : importe;
                 });
+
+            //salaria familiar + s/aportes no salario
+            var totalSinAportesEnPesos = totalSalario + totalSinAporte;
 
             var totalIps = lista
                 .Where(x =>
@@ -916,7 +921,8 @@ namespace API.Services
                 TotalIps = totalIps,
                 OSPatronal = totalOSPatronal,
                 OSPersonal = totalOSPersonal,
-                ImporteNeto = importeNetoTotal
+                ImporteNeto = importeNetoTotal,
+                TotalSinAportesEnPesos = totalSinAportesEnPesos
             };
         }
 
