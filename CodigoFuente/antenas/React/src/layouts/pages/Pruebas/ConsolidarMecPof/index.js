@@ -478,6 +478,7 @@ function ConsolidarMecPOF() {
           totalSalario: dataParaReporte.totalSalario || 0,
           totalSinAporte: dataParaReporte.totalSinAporte || 0,
         },
+        totalesFinales: dataParaReporte.totalesPorConcepto,
       };
 
       console.log(
