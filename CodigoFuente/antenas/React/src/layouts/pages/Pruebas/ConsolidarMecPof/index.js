@@ -450,10 +450,12 @@ function ConsolidarMecPOF() {
     const { idEstablecimiento } = row;
     const dataParaReporte = reporteData[idEstablecimiento];
 
+    // Obtener cabecera seleccionada
+    const cabeceraSeleccionada = idCabeceras.find((c) => c.id === selectedCabecera);
+
     if (Array.isArray(dataParaReporte) && dataParaReporte.length > 0) {
       const primerRegistro = dataParaReporte[0];
 
-      // Buscar el primer docente que tenga ordenPago
       const docenteConOrdenPago = dataParaReporte.find(
         (d) => d.ordenPago !== undefined && d.ordenPago !== null
       );
@@ -469,6 +471,8 @@ function ConsolidarMecPOF() {
           tipoEst: primerRegistro.tipoEst,
           tipoEstDesc: primerRegistro.tipoEstDesc,
           ordenPago: docenteConOrdenPago ? docenteConOrdenPago.ordenPago : null,
+          anioLiquidacion: cabeceraSeleccionada?.anioLiquidacion || null,
+          mesLiquidacion: cabeceraSeleccionada?.mesLiquidacion || null,
         },
         docentes: dataParaReporte,
       };
