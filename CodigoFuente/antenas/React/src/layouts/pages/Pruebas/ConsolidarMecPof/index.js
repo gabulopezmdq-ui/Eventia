@@ -449,17 +449,13 @@ function ConsolidarMecPOF() {
   const handleVerReporteClick = async (row) => {
     const { idEstablecimiento } = row;
     const dataParaReporte = reporteData[idEstablecimiento];
-
-    // Obtener cabecera seleccionada
     const cabeceraSeleccionada = idCabeceras.find((c) => c.id === selectedCabecera);
 
-    if (Array.isArray(dataParaReporte) && dataParaReporte.length > 0) {
-      const primerRegistro = dataParaReporte[0];
-
-      const docenteConOrdenPago = dataParaReporte.find(
+    if (dataParaReporte && dataParaReporte.personas && dataParaReporte.personas.length > 0) {
+      const primerRegistro = dataParaReporte.personas[0];
+      const docenteConOrdenPago = dataParaReporte.personas.find(
         (d) => d.ordenPago !== undefined && d.ordenPago !== null
       );
-
       const reporteParseado = {
         establecimiento: {
           nombrePcia: primerRegistro.nombrePcia,
@@ -474,7 +470,14 @@ function ConsolidarMecPOF() {
           anioLiquidacion: cabeceraSeleccionada?.anioLiquidacion || null,
           mesLiquidacion: cabeceraSeleccionada?.mesLiquidacion || null,
         },
-        docentes: dataParaReporte,
+        docentes: dataParaReporte.personas,
+        totales: {
+          totalConAporte: dataParaReporte.totalConAporte || 0,
+          totalIps: dataParaReporte.totalIps || 0,
+          totalPersonas: dataParaReporte.totalPersonas || 0,
+          totalSalario: dataParaReporte.totalSalario || 0,
+          totalSinAporte: dataParaReporte.totalSinAporte || 0,
+        },
       };
 
       console.log(

@@ -7,8 +7,8 @@ import "jspdf-autotable";
 const repeat = (char, count) => Array(count + 1).join(char);
 
 const HaberesPDF = async (reporteData) => {
-  const { establecimiento, docentes } = reporteData;
-
+  const { establecimiento, docentes, totales } = reporteData;
+  console.log("Totales: ", totales);
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "mm",
@@ -152,13 +152,6 @@ const HaberesPDF = async (reporteData) => {
   const endContentY = doc.internal.pageSize.height - 15;
   let posY = startContentY;
 
-  // ===== ACUMULADORES GLOBALES =====
-  let totalDocentes = docentes.length;
-  let totalCAportes = 0;
-  let totalSAportes = 0;
-  let totalSalarioFamiliar = 0;
-  let totalDescuentos = 0;
-
   docentes.forEach((d) => {
     const cantidadConceptos = d.codigosLiquidacionDetallados.length;
     const alturaConceptos = cantidadConceptos * 4;
@@ -235,7 +228,7 @@ const HaberesPDF = async (reporteData) => {
       if (descUpper.includes("S/APORT") || descUpper.includes("NO SALARIO"))
         totalSAportes += importeNum;
       if (descUpper.includes("SALARIO FAMILIAR")) totalSalarioFamiliar += importeNum;
-      if (c.signo === "-") totalDescuentos += importeNum;
+      /*if (c.signo === "-") totalDescuentos += importeNum;*/
 
       const xRightBase = 160;
       const esIPS = descUpper === "IPS";
@@ -265,23 +258,23 @@ const HaberesPDF = async (reporteData) => {
   doc.text(`TOTAL DEL DISTRIRO 043 INSTITUTO ${establecimiento.nroDiegep}`, 14, posY);
 
   doc.text(`DOCENTES: `, 92, posY);
-  doc.text(`${totalDocentes}`, 150, posY);
+  doc.text(`${totales.totalPersonas}`, 150, posY);
   posY += 3;
 
   doc.text(`C/APORTES:`, 92, posY);
-  doc.text(`${totalCAportes.toFixed(2)}`, 150, posY);
+  doc.text(`${totales.totalConAporte.toFixed(2)}`, 150, posY);
   posY += 3;
 
   doc.text(`S/APORTES - No Salario:`, 92, posY);
-  doc.text(`${totalSAportes.toFixed(2)}`, 150, posY);
+  doc.text(`${totales.totalSinAporte.toFixed(2)}`, 150, posY);
   posY += 3;
 
   doc.text(`SALARIO FAMILIAR:`, 92, posY);
-  doc.text(`${totalSalarioFamiliar.toFixed(2)}`, 150, posY);
+  doc.text(`${totales.totalSalario.toFixed(2)}`, 150, posY);
   posY += 3;
 
   doc.text(`DESCUENTOS:`, 92, posY);
-  doc.text(`-${totalDescuentos.toFixed(2)}`, 150, posY);
+  doc.text(`${totales.totalIps.toFixed(2)}`, 150, posY);
   posY += 3;
 
   addFooters();
