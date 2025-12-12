@@ -225,12 +225,8 @@ namespace API.Controllers
 
 
         [HttpPost("Consolidar")]
-        public async Task<IActionResult> Consolidar(int idCabecera, int idEstablecimiento)
+        public async Task<IActionResult> Consolidar([FromBody] ConsolidarRequest request)
         {
-            if (idCabecera <= 0 || idEstablecimiento <= 0)
-            {
-                return BadRequest("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
-            }
 
             try
             {
@@ -238,7 +234,11 @@ namespace API.Controllers
                 var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
                 int usuario = int.Parse(idUsuario.Value);
 
-                await _consolidarMecanizadaService.ConsolidarRegistrosAsync(idCabecera, idEstablecimiento, usuario);
+                await _consolidarMecanizadaService.ConsolidarRegistrosAsync(request.IdCabecera,
+                                                                        request.IdEstablecimiento,
+                                                                        request.Usuario,
+                                                                        request.Retenciones
+                                                                    );
                 return Ok("Registros consolidados exitosamente.");
             }
             catch (Exception ex)
