@@ -499,30 +499,48 @@ namespace API.Services
         }
 
 
-        public async Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario)
-        {
-            if (idCabecera <= 0 || idEstablecimiento <= 0)
-                throw new ArgumentException("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
+        public async Task ConsolidarRegistrosAsync(
+                    int idCabecera,
+                    int idEstablecimiento,
+                    int usuario,
+                    List<RetencionDTO> retenciones)
+                        {
+                            if (idCabecera <= 0 || idEstablecimiento <= 0)
+                                throw new ArgumentException("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
 
-            // Obtener los registros de MEC_Mecanizada que coincidan con la cabecera y el establecimiento
-            var registros = await _context.MEC_Mecanizadas
-                .Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
-                .ToListAsync();
+                            var registros = await _context.MEC_Mecanizadas
+                                .Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
+                                .ToListAsync();
 
-            if (!registros.Any())
-                throw new InvalidOperationException("No hay registros para consolidar.");
+                            if (!registros.Any())
+                                throw new InvalidOperationException("No hay registros para consolidar.");
 
-            // Actualizar los campos requeridos
-            foreach (var registro in registros)
-            {
-                registro.FechaConsolidacion = DateTime.Now;
-                registro.IdUsuario = usuario;
-                registro.Consolidado = "S";
-            }
+                            foreach (var mec in registros)
+                            {
+                                mec.FechaConsolidacion = DateTime.Now;
+                                mec.IdUsuario = usuario;
+                                mec.Consolidado = "S";
+                            }
 
-            // Guardar los cambios en la base de datos
-            await _context.SaveChangesAsync();
-        }
+                            // AGREGAR LAS RETENCIONES EN BASE A LA LISTA RECIBIDA DEL FRONT
+                            foreach (var mecanizada in registros)
+                            {
+                                foreach (var ret in retenciones)
+                                {
+                                    var nuevaRetencion = new MEC_RetencionesXMecanizadas
+                                    {
+                                        IdRetencion = ret.IdRetencion,
+                                        IdMecanizada = mecanizada.IdMecanizada,
+                                        IdEstablecimiento = idEstablecimiento,
+                                        Importe = ret.Importe
+                                    };
+
+                                    _context.MEC_RetencionesXMecanizadas.Add(nuevaRetencion);
+                                }
+                            }
+
+                            await _context.SaveChangesAsync();
+                        }
 
         public async Task CambiarEstadoCabeceraAsync(int idCabecera, int usuario)
         {
