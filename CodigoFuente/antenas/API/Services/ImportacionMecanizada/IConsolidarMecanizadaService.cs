@@ -27,11 +27,7 @@ namespace API.Services.ImportacionMecanizada
         Task<List<MecanizadasDTO>> ObtenerMecanizadas(int idCabecera, int idEstablecimiento);
         Task<List<object>> ObtenerPOFsSimplificadoAsync(int idEstablecimiento);
         Task ActualizarMEC_POFDetalle(int idPOF, int supleAId, int idCabecera, DateTime supleDesde, DateTime supleHasta);
-        Task ConsolidarRegistrosAsync(
-                            int idCabecera,
-                            int idEstablecimiento,
-                            int usuario,
-                            List<RetencionDTO> retenciones);
+        Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario);
         Task CambiarEstadoCabeceraAsync(int idCabecera, int usuario);
         Task<MecReporteRespuestaDTO> ObtenerReporte(int idCabecera, int idEstablecimiento);
     }
