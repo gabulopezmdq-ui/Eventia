@@ -982,5 +982,13 @@ namespace API.Services
             };
         }
 
+        public async Task<List<MEC_RetencionesXMecanizadas>> ObtenerRetencionesAsync(int idEstablecimiento, int idMecanizada)
+        {
+            return await _context.MEC_RetencionesXMecanizadas
+                .Where(x => x.IdEstablecimiento == idEstablecimiento
+                         && x.IdMecanizada == idMecanizada)
+                .ToListAsync();
+        }
+
     }
 }

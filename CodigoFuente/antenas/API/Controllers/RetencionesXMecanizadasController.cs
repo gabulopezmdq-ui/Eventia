@@ -1,5 +1,6 @@
 ﻿using  API.DataSchema;
 using  API.Services;
+using API.Services.ImportacionMecanizada;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -18,11 +19,13 @@ namespace API.Controllers
     {
         private readonly DataContext _context;
         private readonly ICRUDService<MEC_RetencionesXMecanizadas> _serviceGenerico;
+        private readonly IConsolidarMecanizadaService _consolidarMecanizadaService;
 
-        public RetencionesXMecanizadasController(DataContext context, ILogger<MEC_RetencionesXMecanizadas> logger, ICRUDService<MEC_RetencionesXMecanizadas> serviceGenerico)
+        public RetencionesXMecanizadasController(DataContext context, ILogger<MEC_RetencionesXMecanizadas> logger, ICRUDService<MEC_RetencionesXMecanizadas> serviceGenerico, IConsolidarMecanizadaService consolidarMecanizadaService)
         {
             _context = context;
             _serviceGenerico = serviceGenerico;
+            _consolidarMecanizadaService = consolidarMecanizadaService;
         }
         
         [HttpGet("GetAll")]
@@ -37,6 +40,14 @@ namespace API.Controllers
             var result = await _serviceGenerico.GetByVigente(vigente);
             return Ok(result);
         }
+
+        [HttpGet("GetByMec")]
+        public async Task<ActionResult<IEnumerable<MEC_RetencionesXMecanizadas>>> GetByMEC([FromQuery] int idEstablecimiento, int idMecanizada)
+        {
+            var result = await _consolidarMecanizadaService.ObtenerRetencionesAsync(idEstablecimiento, idMecanizada);
+            return Ok(result);
+        }
+
 
         [HttpGet("GetAllN")]
         public async Task<ActionResult<IEnumerable<MEC_RetencionesXMecanizadas>>> GetAllVigente() //Trae TODOS los registros independientemente de que son Vigente S o N
