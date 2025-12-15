@@ -28,7 +28,7 @@ const HaberesPDF = async (reporteData) => {
   // ================================================
   // ENCABEZADO BASE (SE USA EN TODAS LAS PÁGINAS)
   // ================================================
-  const drawHeaderBase = () => {
+  const drawHeaderBase = (isLastPage = false) => {
     doc.text("PROVINCIA DE BUENOS AIRES - SERVICIOS DPTI -", 14, 15);
 
     const getMonthName = (monthNumber) => {
@@ -57,9 +57,14 @@ const HaberesPDF = async (reporteData) => {
     }`;
     doc.text(liquidacionText.toUpperCase(), 230, 27);
 
-    doc.text("- P L A N I L L A  D E  H A B E R E S -", 17, 30);
+    if (isLastPage) {
+      // Aquí puedes poner el texto que quieres que aparezca solo en la última página
+      doc.text("- P L A N I L L A  D E  S U B V E N C I O N  D E L  E S T A D O -", 17, 30);
+    } else {
+      doc.text("- P L A N I L L A  D E  H A B E R E S -", 17, 30);
+      doc.text("Di.E.Ge.P", 100, 30);
+    }
 
-    doc.text("Di.E.Ge.P", 100, 30);
     doc.text(
       `N/R PESOS ${String(establecimiento.ordenPago).slice(-4)}  Sueldos Conv ME 421/09 Cajero`,
       180,
@@ -124,7 +129,7 @@ const HaberesPDF = async (reporteData) => {
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
-      doc.text(`Página ${i} de ${totalPages}`, 14, doc.internal.pageSize.height - 10);
+      doc.text(`Página ${i} de ${totalPages}`, 98, doc.internal.pageSize.height - 10);
     }
   };
 
@@ -245,7 +250,7 @@ const HaberesPDF = async (reporteData) => {
   // ÚLTIMA PÁGINA: SOLO ENCABEZADO BASE
   // ================================================
   doc.addPage();
-  drawHeaderBase();
+  drawHeaderBase(true); // Se pasa 'true' para indicar que es la última página
   const drawLineaConceptosFinales = (y) => {
     const margenX = 14;
     const anchoPagina = doc.internal.pageSize.getWidth();
@@ -290,6 +295,11 @@ const HaberesPDF = async (reporteData) => {
   doc.text("IMPORTES", 225, 57);
   doc.text("BAJAS", 215, 61);
   doc.text("INASISTENCIAS", 235, 61);
+  // Línea de guiones tipo "- - - -"
+  // ------------------------------------------------------
+  // DIBUJO DE LÍNEAS
+  // ------------------------------------------------------
+
   const drawLineaSimple = (y) => {
     const margenX = 14;
     const anchoPagina = doc.internal.pageSize.getWidth();
@@ -306,71 +316,192 @@ const HaberesPDF = async (reporteData) => {
 
     doc.text(linea, margenX, y);
   };
-  drawLineaSimple(65);
-  // Grupo 1: conAporte = "S" y patronal = "N"
+
+  // Línea vertical izquierda y derecha
+  const drawLateral = (y) => {
+    doc.text("|", 13, y);
+    doc.text("|", 283, y);
+  };
+
+  // laterales continuos (clave)
+  const drawLateralesContinuos = (yInicio, yFin) => {
+    let y = yInicio;
+    while (y <= yFin) {
+      drawLateral(y);
+      y += 3;
+    }
+  };
+
+  // Fila con laterales y contenido
+  const drawRow = (y, drawContent) => {
+    drawContent();
+    return y + 3;
+  };
+
+  // Fila vacía CON laterales
+  const drawBlankRow = (y) => {
+    return y + 3;
+  };
+
+  // ------------------------------------------------------
+  // AGRUPAMIENTO DE ÍTEMS
+  // ------------------------------------------------------
+
   const grupo1 = totalesFinales.filter((x) => x.conAporte === "S" && x.patronal === "N");
 
-  // Normalizar texto
   const normalize = (s) => (s || "").toUpperCase();
 
-  // Grupo 2: conAporte = "N" y descripcion NO contiene IPS ni OBRA SOCIAL
   const grupo2 = totalesFinales.filter((x) => {
     if (x.conAporte !== "N") return false;
-
     const desc = normalize(x.descripcion);
     return !desc.includes("IPS") && !desc.includes("OBRA SOCIAL");
   });
 
-  // Grupo 3: conAporte = "N" y descripcion SI contiene IPS u OBRA SOCIAL
   const grupo3 = totalesFinales.filter((x) => {
     if (x.conAporte !== "N") return false;
-
     const desc = normalize(x.descripcion);
     return desc.includes("IPS") || desc.includes("OBRA SOCIAL");
   });
 
-  // Función de dibujo
+  // ------------------------------------------------------
+  // IMPRESIÓN DE ÍTEMS
+  // ------------------------------------------------------
+
   const drawTotalesFinales = (items, startY) => {
     let y = startY;
 
     items.forEach((item) => {
-      doc.text(item.codigo?.toString() || "", 31, y);
-      doc.text(item.descripcion || "", 50, y);
+      y = drawRow(y, () => {
+        const codigoStr = item.codigo?.toString() || "";
+        let codigoFormateado = "";
 
-      const importeStr = doc.formatNumber
-        ? doc.formatNumber(item.importe)
-        : item.importe?.toFixed(2)?.toString() || "";
+        if (codigoStr.length > 1) {
+          codigoFormateado = codigoStr.slice(0, -1) + "." + codigoStr.slice(-1);
+        }
 
-      doc.text(importeStr, 120, y, { align: "right" });
+        doc.text(codigoFormateado, 31, y);
+        doc.text(item.descripcion || "", 50, y);
 
-      y += 3;
+        const importeStr = doc.formatNumber
+          ? doc.formatNumber(item.importe)
+          : item.importe?.toFixed(2)?.toString() || "";
+
+        doc.text(importeStr, 120, y, { align: "right" });
+      });
     });
 
     return y;
   };
 
-  // Secuencia de impresión
+  // ------------------------------------------------------
+  // IMPRESIÓN FINAL DE BLOQUES
+  // ------------------------------------------------------
+
   let y = 69;
 
-  // Grupo 1
+  // Línea superior
+  drawLineaSimple(65);
+  drawLateral(6);
+
+  // ------------------- GRUPO 1 -------------------
   y = drawTotalesFinales(grupo1, y);
-  y += 4;
-  doc.text("TOTAL C/ APORTES. EN PESOS", 31, y);
-  doc.text(`${totales.totalConAporte.toFixed(2)}`, 102, y);
-  y += 6;
 
-  // Grupo 2
+  y = drawRow(y, () => {
+    doc.text("TOTAL C/ APORTES. EN PESOS", 50, y);
+    doc.text(`${totales.totalConAporte.toFixed(2)}`, 102, y);
+  });
+
+  // Espacio con laterales
+  y = drawBlankRow(y);
+  y = drawBlankRow(y);
+
+  // ------------------- GRUPO 2 -------------------
   y = drawTotalesFinales(grupo2, y);
-  y += 4;
-  doc.text("TOTAL S/ APORTES. EN PESOS", 31, y);
-  doc.text(`${totales.totalSinAportesEnPesos.toFixed(2)}`, 102, y);
-  y += 6;
 
-  // Grupo 3
+  y = drawRow(y, () => {
+    doc.text("TOTAL S/ APORTES. EN PESOS", 50, y);
+    doc.text(`${totales.totalSinAportesEnPesos.toFixed(2)}`, 102, y);
+  });
+
+  // Espacio con laterales
+  y = drawBlankRow(y);
+  y = drawBlankRow(y);
+
+  // ------------------- GRUPO 3 -------------------
   y = drawTotalesFinales(grupo3, y);
-  y += 4;
-  doc.text("TOTAL DESCUENTOS", 50, y);
-  doc.text(`${totales.totalIps.toFixed(2)}`, 102, y);
+
+  // Totales finales
+  y = drawRow(y, () => {
+    doc.text("TOTAL DESCUENTOS", 31, y);
+    doc.text(`${totales.totalIps.toFixed(2)}`, 102, y);
+  });
+
+  y = drawRow(y, () => {
+    doc.text("IMPORTE NETO EN PESOS", 31, y);
+    doc.text(`${totales.importeNeto.toFixed(2)}`, 102, y);
+  });
+
+  y = drawRow(y, () => {
+    doc.text("TOTAL RETEN. DENO 7", 31, y);
+  });
+
+  y = drawRow(y, () => {
+    doc.text("IMPORTE RECIBIDO EN PESOS", 31, y);
+  });
+
+  // Línea inferior final
+  const yLineaFinal = y + 3;
+  drawLineaSimple(yLineaFinal);
+  drawLateral(yLineaFinal - 2);
+  doc.text("DEPOSITO DE I. P. S.", 31, yLineaFinal + 8);
+  doc.text("PATRONAL 12%", 31, yLineaFinal + 12);
+  doc.text(`${totales.totalIpsPatronal}`, 102, yLineaFinal + 12);
+  doc.text("PERSONAL 16%", 31, yLineaFinal + 16);
+  doc.text("T O T A L  I. P. S.", 31, yLineaFinal + 20);
+  doc.text(`${totales.totalIps}`, 102, yLineaFinal + 20);
+  doc.text("OBRA SOCIAL", 31, yLineaFinal + 24);
+  doc.text("PATRONAL 5%", 31, yLineaFinal + 28);
+  doc.text(`${totales.osPatronal}`, 102, yLineaFinal + 28);
+  doc.text("PERSONAL 3%", 31, yLineaFinal + 32);
+  doc.text(`${totales.osPersonal}`, 102, yLineaFinal + 32);
+  doc.text("T O T A L  O B R A  S O C I A L", 31, yLineaFinal + 36);
+  const yTotalObraSocial = yLineaFinal + 36;
+  const yLineaCierre = yTotalObraSocial + 5;
+
+  drawLineaSimple(yLineaCierre);
+  drawLateralesContinuos(67, yLineaCierre);
+  const drawLineaCentradaConTexto = (y, texto) => {
+    const margenX = 14;
+    const anchoPagina = doc.internal.pageSize.getWidth();
+    const anchoDisponible = anchoPagina - margenX * 2;
+    const anchoExtra = doc.getTextWidth("-");
+
+    // 1. Generamos la línea base de guiones, igual que en drawLineaSimple
+    const patron = " -";
+    let lineaBase = "-";
+    while (doc.getTextWidth(lineaBase + patron) < anchoDisponible + anchoExtra) {
+      lineaBase += patron;
+    }
+    const textoFinal = texto.toUpperCase();
+    const espacioEntreChevronYTexto = "   ";
+    const parteCentral = espacioEntreChevronYTexto + textoFinal + espacioEntreChevronYTexto;
+    const anchoParteCentral = doc.getTextWidth(parteCentral);
+    const anchoTotalLinea = doc.getTextWidth(lineaBase);
+    const anchoRellenoDisponible = anchoTotalLinea - anchoParteCentral;
+    if (anchoRellenoDisponible <= 0) {
+      doc.text(textoFinal, margenX + anchoTotalLinea / 2, y, { align: "center" });
+      return;
+    }
+    const anchoParaCadaLado = anchoRellenoDisponible / 2;
+    const anchoChevron = doc.getTextWidth("<");
+    const cant = Math.floor(anchoParaCadaLado / anchoChevron);
+    const izquierda = "<".repeat(cant);
+    const derecha = ">".repeat(cant);
+    const lineaFinal = izquierda + parteCentral + derecha;
+    doc.text(lineaFinal, margenX + anchoTotalLinea / 2, y, { align: "center" });
+  };
+  drawLineaCentradaConTexto(yLineaCierre + 5, "P    E    S   O    S");
+  drawLineaSimple(yLineaCierre + 10);
 
   addFooters();
   doc.output("dataurlnewwindow");
