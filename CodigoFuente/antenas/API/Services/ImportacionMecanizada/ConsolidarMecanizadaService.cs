@@ -520,6 +520,21 @@ namespace API.Services
                 registro.Consolidado = "S";
             }
 
+            foreach (var registro in registros)
+            {
+                // EJEMPLO: suponemos que cada mecanizada genera UNA retención fija.
+                // Si tenés otra regla, lo cambiamos.
+                var nuevaRetencion = new MEC_RetencionesXMecanizadas
+                {
+                    IdRetencion = 1, // Cambiá según la lógica real
+                    IdMecanizada = registro.IdMecanizada,
+                    IdEstablecimiento = idEstablecimiento,
+                    Importe = 0m // Cambiar según cálculo real
+                };
+
+                _context.MEC_RetencionesXMecanizadas.Add(nuevaRetencion);
+            }
+
             // Guardar los cambios en la base de datos
             await _context.SaveChangesAsync();
         }
@@ -965,6 +980,14 @@ namespace API.Services
                 TotalIpsSac = totalIpsSac,
                 TotalDescuentos = totalIpsGeneral
             };
+        }
+
+        public async Task<List<MEC_RetencionesXMecanizadas>> ObtenerRetencionesAsync(int idEstablecimiento, int idMecanizada)
+        {
+            return await _context.MEC_RetencionesXMecanizadas
+                .Where(x => x.IdEstablecimiento == idEstablecimiento
+                         && x.IdMecanizada == idMecanizada)
+                .ToListAsync();
         }
 
     }
