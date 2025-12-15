@@ -505,13 +505,16 @@ function ConsolidarMecPOF() {
         totales: {
           totalConAporte: dataParaReporte.totalConAporte || 0,
           totalIps: dataParaReporte.totalIps || 0,
+          totalIpsPatronal: dataParaReporte.totalIpsPatronal || 0,
           totalPersonas: dataParaReporte.totalPersonas || 0,
+          totalIpsSac: dataParaReporte.totalIpsSac || 0,
           totalSalario: dataParaReporte.totalSalario || 0,
           totalSinAporte: dataParaReporte.totalSinAporte || 0,
+          totalDescuentos: dataParaReporte.totalDescuentos || 0,
           importeNeto: dataParaReporte.importeNeto || 0,
           totalSinAportesEnPesos: dataParaReporte.totalSinAportesEnPesos || 0,
           osPatronal: dataParaReporte.osPatronal || 0,
-          osPersona: dataParaReporte.osPersona || 0,
+          osPersonal: dataParaReporte.osPersonal || 0,
         },
         totalesFinales: dataParaReporte.totalesPorConcepto,
       };
