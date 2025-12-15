@@ -135,3 +135,18 @@ public class MecReporteRespuestaDTO
     public decimal TotalIpsPatronal { get; set; }
     public decimal TotalIpsSac { get; set; }
 }
+
+public class ConsolidarRequest
+{
+    public int IdCabecera { get; set; }
+    public int IdEstablecimiento { get; set; }
+    public int Usuario { get; set; }
+
+    public List<RetencionDTO> Retenciones { get; set; }
+}
+
+public class RetencionDTO
+{
+    public int IdRetencion { get; set; }
+    public decimal Importe { get; set; }
+}
