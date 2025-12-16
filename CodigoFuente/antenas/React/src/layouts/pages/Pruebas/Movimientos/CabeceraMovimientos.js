@@ -35,8 +35,8 @@ function CabeceraMovimientos() {
   const [devolucionObs, setDevolucionObs] = useState("");
   const [devolverCabeceraId, setDevolverCabeceraId] = useState(null);
 
-  // Dashboard states
-  const [allData, setAllData] = useState([]); // To store original data
+  // Dashboard
+  const [allData, setAllData] = useState([]);
   const [filterEstado, setFilterEstado] = useState(null);
   const [filterEstablecimiento, setFilterEstablecimiento] = useState(null);
   const [counts, setCounts] = useState({
@@ -72,7 +72,6 @@ function CabeceraMovimientos() {
         );
         data = movimientosResponse.data;
       } else {
-        // Traer ids de establecimientos asociados y roles
         const rolesResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}MovimientosCabecera/RolesEst?id=${userId}`,
           {
@@ -86,8 +85,6 @@ function CabeceraMovimientos() {
 
         const { idsEstablecimientos, roles } = rolesResponse.data;
         setUserRoles(roles);
-
-        // Luego traigo todos los movimientos
         const movimientosResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAllCabeceras`,
           {
@@ -96,8 +93,6 @@ function CabeceraMovimientos() {
             },
           }
         );
-
-        // filtro en base a idsEstablecimientos
         data = movimientosResponse.data.filter((movimiento) =>
           idsEstablecimientos.includes(movimiento.idEstablecimiento)
         );
@@ -148,22 +143,14 @@ function CabeceraMovimientos() {
     setCounts(newCounts);
   };
 
-  // Filter effect
-  // Filter effect
   useEffect(() => {
     let dataForCounts = [...allData];
-
-    // 1. Apply Establishment Filter first (affects both Cards and Table)
     if (filterEstablecimiento) {
       dataForCounts = dataForCounts.filter(
         (item) => item.establecimientos?.nroEstablecimiento === filterEstablecimiento.label
       );
     }
-
-    // Update Counts based on Establishment context (ignoring State filter)
     calculateCounts(dataForCounts);
-
-    // 2. Apply State Filter (affects only Table)
     let dataForTable = [...dataForCounts];
     if (filterEstado) {
       dataForTable = dataForTable.filter((item) => {
@@ -175,8 +162,6 @@ function CabeceraMovimientos() {
     }
     setDataTableData(dataForTable);
   }, [filterEstado, filterEstablecimiento, allData]);
-
-  // Unique Establishments for Filter
   const establishmentOptions = [
     ...new Set(allData.map((item) => item.establecimientos?.nroEstablecimiento)),
   ]
@@ -186,14 +171,11 @@ function CabeceraMovimientos() {
 
   const handleCardClick = (estado) => {
     if (filterEstado && filterEstado.value === estado.value) {
-      // Si se hace clic en la tarjeta ya seleccionada, se limpia el filtro
       setFilterEstado(null);
     } else {
       setFilterEstado(estado);
     }
   };
-
-  // State Options
   const stateOptions = [
     { label: "Pendiente", value: "P" },
     { label: "Enviado a Educación", value: "E" },
@@ -214,7 +196,6 @@ function CabeceraMovimientos() {
 
   const handleImprimir = async (movimiento) => {
     try {
-      // 1. Obtener la cabecera con los docentes incluidos
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}MovimientosCabecera/Reporte?idcabecera=${movimiento.idMovimientoCabecera}`,
         {
@@ -400,7 +381,6 @@ function CabeceraMovimientos() {
   };
   const handleAbrirModalDevolver = (movimiento) => {
     setDevolverCabeceraId(movimiento.idMovimientoCabecera);
-    // Si quisieras precargar algo, lo ponés acá. Por ahora lo dejamos vacío:
     setDevolucionObs(movimiento.observaciones || "");
     setOpenDevolver(true);
   };
@@ -418,14 +398,14 @@ function CabeceraMovimientos() {
         `${process.env.REACT_APP_API_URL}MovimientosCabecera/DevolverMov`,
         {
           idCabecera: devolverCabeceraId,
-          observaciones: devolucionObs, // nombre de campo: observaciones
+          observaciones: devolucionObs,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      // Refrescamos y avisamos
+      // Refresca y espera
       await fetchConceptos();
       setErrorAlert({
         show: true,
@@ -489,7 +469,6 @@ function CabeceraMovimientos() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
-        {/* Dashboard Cards */}
         <MDBox mt={1.5} mb={3}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6} lg={3}>
@@ -586,8 +565,6 @@ function CabeceraMovimientos() {
             </Grid>
           </Grid>
         </MDBox>
-
-        {/* Filters */}
         <MDBox mb={3}>
           <Card>
             <MDBox p={2}>
