@@ -321,6 +321,7 @@ const HaberesPDF = async (reporteData) => {
   const drawLateral = (y) => {
     doc.text("|", 13, y);
     doc.text("|", 283, y);
+    doc.text("|", 97, y);
   };
 
   // laterales continuos (clave)
@@ -401,7 +402,6 @@ const HaberesPDF = async (reporteData) => {
 
   // Línea superior
   drawLineaSimple(65);
-  drawLateral(6);
 
   // ------------------- GRUPO 1 -------------------
   y = drawTotalesFinales(grupo1, y);
