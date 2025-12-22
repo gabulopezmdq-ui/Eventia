@@ -9,6 +9,7 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions.Common;
 
 namespace API.Controllers
 {
@@ -275,6 +276,13 @@ namespace API.Controllers
         {
             var reporte = await _consolidarMecanizadaService.ObtenerReporte(idCabecera, idEstablecimiento);
             return Ok(reporte);
+        }
+
+        [HttpPost("Desconsolidar")]
+        public async Task<IActionResult> Desconsolidar(int idCabecera, int idEstablecimiento)
+        {
+            await _consolidarMecanizadaService.DesconsolidarAsync(idCabecera, idEstablecimiento);
+            return Ok();
         }
     }
 }

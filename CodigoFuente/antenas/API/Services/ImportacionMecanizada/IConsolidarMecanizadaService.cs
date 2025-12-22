@@ -31,5 +31,6 @@ namespace API.Services.ImportacionMecanizada
         Task CambiarEstadoCabeceraAsync(int idCabecera, int usuario);
         Task<MecReporteRespuestaDTO> ObtenerReporte(int idCabecera, int idEstablecimiento);
         Task<List<MEC_RetencionesXMecanizadas>> ObtenerRetencionesAsync(int idEstablecimiento, int idMecanizada);
+        Task DesconsolidarAsync(int idCabecera, int idEstablecimiento);
     }
 }
