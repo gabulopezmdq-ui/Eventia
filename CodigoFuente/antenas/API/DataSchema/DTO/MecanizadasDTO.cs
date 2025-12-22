@@ -106,6 +106,7 @@ public class CodigoLiquidacionDTO
     public decimal? SAportes { get; set; }
     public decimal? Salario { get; set; }
     public decimal? totalIps { get; set; }
+    public string AnioMesAfectacion { get; set; }
 }
 
 
