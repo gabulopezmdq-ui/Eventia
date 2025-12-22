@@ -564,6 +564,7 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
         }
+
         public async Task<MecReporteRespuestaDTO> ObtenerReporte(int idCabecera, int idEstablecimiento)
         {
             var mecanizadas = await _context.MEC_Mecanizadas
@@ -695,27 +696,20 @@ namespace API.Services
                     SinHaberes = horasCs?.SinHaberes ?? "",
                 });
             }
-
             var listaDepurada = lista
-                .Where(x =>
-                {
-                    if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
-                        return true;
+                    .Where(x =>
+                    {
+                        if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
+                            return true;
 
-                    if (!conceptos.TryGetValue(x.CodigoLiquidacionNumero, out var concepto))
-                        return true;
+                        if (!conceptos.TryGetValue(x.CodigoLiquidacionNumero, out var concepto))
+                            return true;
 
-                    return concepto.Patronal != "S";
-                })
-                .GroupBy(x => new
-                {
-                    x.DTO.DNI,
-                    x.CodigoLiquidacionNumero,
-                    x.DTO.OrdenPago,
-                    x.AnioMesAfectacion
-                })
-                .Select(g => g.First())
-                .ToList();
+                        return concepto.Patronal != "S";
+                    })
+                     .GroupBy(x => new { x.DTO.DNI, x.DTO.Secuencia, x.AnioMesAfectacion, x.CodigoLiquidacionNumero })
+                        .Select(g => g.First())
+                        .ToList();
 
             var importeNetoTotal = lista.Sum(x =>
             {
@@ -907,67 +901,64 @@ namespace API.Services
                             var signo = i.Signo ?? "+";
                             return signo == "-" ? -importe : importe;
                         });
-
-            var agrupados = listaDepurada //separar tambien por AñoMesAfectacion, no solo secuencia
-                 .GroupBy(x => new
-                 {
-                     x.DTO.DNI,
-                     x.DTO.Secuencia,
-                     x.AnioMesAfectacion
-                 })
-                .Select(g => new MecReportePersona
-                {
-                    OrdenPago = g.First().DTO.OrdenPago,
-                    DNI = g.First().DTO.DNI,
-                    Nombre = g.First().DTO.Nombre,
-                    Apellido = g.First().DTO.Apellido,
-                    Secuencia = g.First().DTO.Secuencia,
-                    Categoria = g.First().Categoria,
-                    CantHsCs = g.First().CantHsCs,
-                    MesAntiguedad = g.First().MesAntiguedad,
-                    AnioAntiguedad = g.First().AnioAntiguedad,
-                    AnioMesAfectacion = g.First().AnioMesAfectacion,
-                    TipoFuncion = g.First().TipoFuncion,
-                    CarRevista = g.First().CarRevista,
-                    NroDiegep = g.First().NroDiegep,
-                    NombrePcia = g.First().NombrePcia,
-                    Subvencion = g.First().Subvencion,
-                    CantTurnos = g.First().CantTurnos,
-                    CantSecciones = g.First().CantSecciones,
-                    Ruralidad = g.First().Ruralidad,
-                    TipoEst = g.First().TipoEst,
-                    TipoEstDesc = g.First().TipoEstDesc,
-                    SinHaberes = g.First().SinHaberes,
-                    SinSubvencion = g.First().SinSubvencion,
-
-                    CodigosLiquidacionDetallados = g
-                        .GroupBy(x => x.CodigoLiquidacionNumero)
-                        .Select(grp =>
-                        {
-                            conceptos.TryGetValue(grp.Key, out var conc);
-
-                            return new CodigoLiquidacionDTO
-                            {
-                                Codigo = grp.Key,
-                                Descripcion = grp.First().CodigoLiquidacionDescripcion,
-                                Importe = grp.Sum(i => i.Importe ?? 0),
-                                Signo = grp.First().Signo,
-                                Patronal = conc?.Patronal,
-                                ConAporte = conc?.ConAporte
-                            };
-                        })
-                        .ToList(),
-
-                    //TotalesPorConcepto = totalesGlobales,
-
-                    Neto = g.Sum(i =>
+            var agrupados = listaDepurada
+                    .GroupBy(x => new
                     {
-                        var importe = i.Importe ?? 0;
-                        var signo = i.Signo ?? "+";
-                        return signo == "-" ? -importe : importe;
+                        x.DTO.DNI,
+                        x.DTO.Secuencia,
+                        x.AnioMesAfectacion
                     })
-                })
-                .ToList();
+                    .Select(g => new MecReportePersona
+                    {
+                        DNI = g.Key.DNI,
+                        Secuencia = g.Key.Secuencia,
+                        AnioMesAfectacion = g.Key.AnioMesAfectacion,
+
+                        Nombre = g.First().DTO.Nombre,
+                        Apellido = g.First().DTO.Apellido,
+                        Categoria = g.First().Categoria,
+                        CantHsCs = g.First().CantHsCs,
+                        MesAntiguedad = g.First().MesAntiguedad,
+                        AnioAntiguedad = g.First().AnioAntiguedad,
+                        TipoFuncion = g.First().TipoFuncion,
+                        CarRevista = g.First().CarRevista,
+                        NroDiegep = g.First().NroDiegep,
+                        NombrePcia = g.First().NombrePcia,
+                        Subvencion = g.First().Subvencion,
+                        CantTurnos = g.First().CantTurnos,
+                        CantSecciones = g.First().CantSecciones,
+                        Ruralidad = g.First().Ruralidad,
+                        TipoEst = g.First().TipoEst,
+                        TipoEstDesc = g.First().TipoEstDesc,
+                        SinHaberes = g.First().SinHaberes,
+                        SinSubvencion = g.First().SinSubvencion,
+
+                        CodigosLiquidacionDetallados = g
+                            .Select(x =>
+                            {
+                                conceptos.TryGetValue(x.CodigoLiquidacionNumero, out var conc);
+                                return new CodigoLiquidacionDTO
+                                {
+                                    Codigo = x.CodigoLiquidacionNumero,
+                                    Descripcion = x.CodigoLiquidacionDescripcion,
+                                    Importe = x.Importe ?? 0,
+                                    Signo = x.Signo,
+                                    Patronal = conc?.Patronal,
+                                    ConAporte = conc?.ConAporte
+                                };
+                            })
+                            .ToList(),
+
+                        Neto = g.Sum(i =>
+                        {
+                            var importe = i.Importe ?? 0;
+                            var signo = i.Signo ?? "+";
+                            return signo == "-" ? -importe : importe;
+                        })
+                    })
+                    .OrderBy(x => x.DNI)
+                    .ThenBy(x => x.AnioMesAfectacion)
+                    .ToList();
 
             return new MecReporteRespuestaDTO
             {
