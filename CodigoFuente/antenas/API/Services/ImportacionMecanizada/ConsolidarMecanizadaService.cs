@@ -907,7 +907,7 @@ namespace API.Services
                             return signo == "-" ? -importe : importe;
                         });
 
-            var agrupados = listaDepurada
+            var agrupados = listaDepurada //separar tambien por AñoMesAfectacion, no solo secuencia
                 .GroupBy(x => x.DTO.DNI)
                 .Select(g => new MecReportePersona
                 {

@@ -10,6 +10,6 @@ namespace API.DataSchema {
         public string Descripcion { get; set; }
         public string Vigente { get; set; }
 
-        public ICollection<MEC_RetencionesXMecanizadas> RetencionesXMecanizadas { get; set; }
+        public ICollection<MEC_RetencionesXMecanizadas>? RetencionesXMecanizadas { get; set; }
     }
 }
