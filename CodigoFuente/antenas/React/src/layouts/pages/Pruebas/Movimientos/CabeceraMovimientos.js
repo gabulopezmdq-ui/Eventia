@@ -20,6 +20,10 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import { BajasModificacionesPDF } from "./BajasModificacionesPDF";
 import "../../Pruebas/pruebas.css";
+// Dashboard components
+import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
+import Autocomplete from "@mui/material/Autocomplete";
+import Icon from "@mui/material/Icon";
 
 function CabeceraMovimientos() {
   const navigate = useNavigate();
@@ -30,6 +34,17 @@ function CabeceraMovimientos() {
   const [openDevolver, setOpenDevolver] = useState(false);
   const [devolucionObs, setDevolucionObs] = useState("");
   const [devolverCabeceraId, setDevolverCabeceraId] = useState(null);
+
+  // Dashboard
+  const [allData, setAllData] = useState([]);
+  const [filterEstado, setFilterEstado] = useState(null);
+  const [filterEstablecimiento, setFilterEstablecimiento] = useState(null);
+  const [counts, setCounts] = useState({
+    pendientes: 0,
+    enviadosEducacion: 0,
+    enviadosProvincia: 0,
+    rechazados: 0,
+  });
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -45,6 +60,7 @@ function CabeceraMovimientos() {
       const userRolesFromToken = decodedToken[rolesKey] || [];
 
       setUserRoles(userRolesFromToken);
+      let data = [];
       if (userRolesFromToken.includes("SuperAdmin")) {
         const movimientosResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAllCabeceras`,
@@ -54,9 +70,8 @@ function CabeceraMovimientos() {
             },
           }
         );
-        setDataTableData(movimientosResponse.data);
+        data = movimientosResponse.data;
       } else {
-        // Traer ids de establecimientos asociados y roles
         const rolesResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}MovimientosCabecera/RolesEst?id=${userId}`,
           {
@@ -70,8 +85,6 @@ function CabeceraMovimientos() {
 
         const { idsEstablecimientos, roles } = rolesResponse.data;
         setUserRoles(roles);
-
-        // Luego traigo todos los movimientos
         const movimientosResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}MovimientosCabecera/GetAllCabeceras`,
           {
@@ -80,13 +93,14 @@ function CabeceraMovimientos() {
             },
           }
         );
-
-        // filtro en base a idsEstablecimientos
-        const movimientosFiltrados = movimientosResponse.data.filter((movimiento) =>
+        data = movimientosResponse.data.filter((movimiento) =>
           idsEstablecimientos.includes(movimiento.idEstablecimiento)
         );
-        setDataTableData(movimientosFiltrados);
       }
+
+      setAllData(data);
+      setDataTableData(data);
+      calculateCounts(data);
     } catch (error) {
       console.error(error);
       if (error.response) {
@@ -109,6 +123,66 @@ function CabeceraMovimientos() {
     }
   };
 
+  const calculateCounts = (data) => {
+    const newCounts = {
+      pendientes: 0,
+      enviadosEducacion: 0,
+      enviadosProvincia: 0,
+      rechazados: 0,
+    };
+
+    data.forEach((item) => {
+      const estado = String(item.estado ?? "")
+        .trim()
+        .toUpperCase();
+      if (estado === "P") newCounts.pendientes++;
+      else if (estado === "E") newCounts.enviadosEducacion++;
+      else if (estado === "V") newCounts.enviadosProvincia++;
+      else if (estado === "R" || estado === "RECHAZADO") newCounts.rechazados++;
+    });
+    setCounts(newCounts);
+  };
+
+  useEffect(() => {
+    let dataForCounts = [...allData];
+    if (filterEstablecimiento) {
+      dataForCounts = dataForCounts.filter(
+        (item) => item.establecimientos?.nroEstablecimiento === filterEstablecimiento.label
+      );
+    }
+    calculateCounts(dataForCounts);
+    let dataForTable = [...dataForCounts];
+    if (filterEstado) {
+      dataForTable = dataForTable.filter((item) => {
+        const estado = String(item.estado ?? "")
+          .trim()
+          .toUpperCase();
+        return estado === filterEstado.value;
+      });
+    }
+    setDataTableData(dataForTable);
+  }, [filterEstado, filterEstablecimiento, allData]);
+  const establishmentOptions = [
+    ...new Set(allData.map((item) => item.establecimientos?.nroEstablecimiento)),
+  ]
+    .filter(Boolean)
+    .sort()
+    .map((nro) => ({ label: nro, id: nro }));
+
+  const handleCardClick = (estado) => {
+    if (filterEstado && filterEstado.value === estado.value) {
+      setFilterEstado(null);
+    } else {
+      setFilterEstado(estado);
+    }
+  };
+  const stateOptions = [
+    { label: "Pendiente", value: "P" },
+    { label: "Enviado a Educación", value: "E" },
+    { label: "Enviado a Provincia", value: "V" },
+    { label: "Rechazado", value: "R" },
+  ];
+
   const handleNuevoMovimiento = () => {
     navigate("/CabeceraMovimientos/Nuevo");
   };
@@ -122,7 +196,6 @@ function CabeceraMovimientos() {
 
   const handleImprimir = async (movimiento) => {
     try {
-      // 1. Obtener la cabecera con los docentes incluidos
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}MovimientosCabecera/Reporte?idcabecera=${movimiento.idMovimientoCabecera}`,
         {
@@ -308,7 +381,6 @@ function CabeceraMovimientos() {
   };
   const handleAbrirModalDevolver = (movimiento) => {
     setDevolverCabeceraId(movimiento.idMovimientoCabecera);
-    // Si quisieras precargar algo, lo ponés acá. Por ahora lo dejamos vacío:
     setDevolucionObs(movimiento.observaciones || "");
     setOpenDevolver(true);
   };
@@ -326,14 +398,14 @@ function CabeceraMovimientos() {
         `${process.env.REACT_APP_API_URL}MovimientosCabecera/DevolverMov`,
         {
           idCabecera: devolverCabeceraId,
-          observaciones: devolucionObs, // nombre de campo: observaciones
+          observaciones: devolucionObs,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      // Refrescamos y avisamos
+      // Refresca y espera
       await fetchConceptos();
       setErrorAlert({
         show: true,
@@ -397,6 +469,140 @@ function CabeceraMovimientos() {
     <>
       <DashboardLayout>
         <DashboardNavbar />
+        <MDBox mt={1.5} mb={3}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={3}>
+              <MDBox mb={1.5} sx={{ position: "relative" }}>
+                <ComplexStatisticsCard
+                  color="warning"
+                  icon="schedule"
+                  title="Pendientes"
+                  count={counts.pendientes}
+                  percentage={{
+                    color: "success",
+                    amount: "",
+                  }}
+                />
+                <MDButton
+                  variant="text"
+                  color="dark"
+                  size="small"
+                  onClick={() => handleCardClick({ label: "Pendiente", value: "P" })}
+                  sx={{ position: "absolute", bottom: 8, right: 8 }}
+                >
+                  Ver
+                </MDButton>
+              </MDBox>
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
+              <MDBox mb={1.5} sx={{ position: "relative" }}>
+                <ComplexStatisticsCard
+                  color="info"
+                  icon="school"
+                  title="Enviados a Educación"
+                  count={counts.enviadosEducacion}
+                  percentage={{
+                    color: "success",
+                    amount: "",
+                  }}
+                />
+                <MDButton
+                  variant="text"
+                  color="dark"
+                  size="small"
+                  onClick={() => handleCardClick({ label: "Enviado a Educación", value: "E" })}
+                  sx={{ position: "absolute", bottom: 8, right: 8 }}
+                >
+                  Ver
+                </MDButton>
+              </MDBox>
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
+              <MDBox mb={1.5} sx={{ position: "relative" }}>
+                <ComplexStatisticsCard
+                  color="success"
+                  icon="account_balance"
+                  title="Provincia"
+                  count={counts.enviadosProvincia}
+                  percentage={{
+                    color: "success",
+                    amount: "",
+                  }}
+                />
+                <MDButton
+                  variant="text"
+                  color="dark"
+                  size="small"
+                  onClick={() => handleCardClick({ label: "Enviado a Provincia", value: "V" })}
+                  sx={{ position: "absolute", bottom: 8, right: 8 }}
+                >
+                  Ver
+                </MDButton>
+              </MDBox>
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
+              <MDBox mb={1.5} sx={{ position: "relative" }}>
+                <ComplexStatisticsCard
+                  color="error"
+                  icon="error"
+                  title="Rechazados"
+                  count={counts.rechazados}
+                  percentage={{
+                    color: "success",
+                    amount: "",
+                  }}
+                />
+                <MDButton
+                  variant="text"
+                  color="dark"
+                  size="small"
+                  onClick={() => handleCardClick({ label: "Rechazado", value: "R" })}
+                  sx={{ position: "absolute", bottom: 8, right: 8 }}
+                >
+                  Ver
+                </MDButton>
+              </MDBox>
+            </Grid>
+          </Grid>
+        </MDBox>
+        <MDBox mb={3}>
+          <Card>
+            <MDBox p={2}>
+              <Grid container spacing={3} alignItems="center">
+                <Grid item xs={12}>
+                  <Autocomplete
+                    options={establishmentOptions}
+                    getOptionLabel={(option) => String(option.label)}
+                    value={filterEstablecimiento}
+                    onChange={(event, newValue) => {
+                      setFilterEstablecimiento(newValue);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Filtrar por Establecimiento"
+                        variant="standard"
+                      />
+                    )}
+                  />
+                </Grid>
+                {filterEstado && (
+                  <Grid item xs={12} display="flex" justifyContent="flex-end">
+                    <MDButton
+                      variant="gradient"
+                      color="primary"
+                      size="small"
+                      onClick={() => setFilterEstado(null)}
+                    >
+                      Quitar Filtro ({filterEstado.label})
+                    </MDButton>
+                  </Grid>
+                )}
+              </Grid>
+            </MDBox>
+          </Card>
+        </MDBox>
+
         <MDBox display="flex" justifyContent="space-between" alignItems="center" my={2}>
           <MDButton variant="gradient" size="small" color="success" onClick={handleNuevoMovimiento}>
             Agregar

@@ -148,7 +148,8 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
 
     try {
       setLoading(true);
-      await fetch(`${process.env.REACT_APP_API_URL}pof`, {
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}POF`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -157,17 +158,26 @@ const EditarModal = ({ isOpen, onClose, idPof, token, onEditSuccess }) => {
         body: JSON.stringify({
           idPOF: idPof,
           ...formData,
+          Barra: barras.map((b) => b.barra).join(","), // 👈 CLAVE
         }),
       });
-      setLoading(false);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw result;
+      }
+
       if (onEditSuccess) {
         onEditSuccess();
       }
+
       onClose();
     } catch (error) {
-      console.error("Error al actualizar los datos:", error);
+      console.error("Error al actualizar:", error);
+      alert(error?.errors?.Barra?.[0] || "Hubo un error al actualizar los datos.");
+    } finally {
       setLoading(false);
-      alert("Hubo un error al actualizar los datos.");
     }
   };
 

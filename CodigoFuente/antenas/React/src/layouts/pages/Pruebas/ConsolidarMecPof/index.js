@@ -19,6 +19,7 @@ import DataTable from "examples/Tables/DataTable";
 import SupleAPopup from "./SupleAPopUp";
 import MecPopup from "./MecPopUp";
 import HaberesPDF from "./HaberesPDF";
+import MDInput from "components/MDInput";
 function ConsolidarMecPOF() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [errorAlertDelete, setErrorAlertDelete] = useState({
@@ -505,13 +506,16 @@ function ConsolidarMecPOF() {
         totales: {
           totalConAporte: dataParaReporte.totalConAporte || 0,
           totalIps: dataParaReporte.totalIps || 0,
+          totalIpsPatronal: dataParaReporte.totalIpsPatronal || 0,
           totalPersonas: dataParaReporte.totalPersonas || 0,
+          totalIpsSac: dataParaReporte.totalIpsSac || 0,
           totalSalario: dataParaReporte.totalSalario || 0,
           totalSinAporte: dataParaReporte.totalSinAporte || 0,
+          totalDescuentos: dataParaReporte.totalDescuentos || 0,
           importeNeto: dataParaReporte.importeNeto || 0,
           totalSinAportesEnPesos: dataParaReporte.totalSinAportesEnPesos || 0,
           osPatronal: dataParaReporte.osPatronal || 0,
-          osPersona: dataParaReporte.osPersona || 0,
+          osPersonal: dataParaReporte.osPersonal || 0,
         },
         totalesFinales: dataParaReporte.totalesPorConcepto,
       };
@@ -661,6 +665,42 @@ function ConsolidarMecPOF() {
           <>
             {mecData.length > 0 && !loadingMec && (
               <MDBox my={3}>
+                <MDAlert className="custom-alert" sx={{ mb: 2 }}>
+                  <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
+                  <MDTypography ml={1} variant="button">
+                    Agregar Retención
+                  </MDTypography>
+                </MDAlert>
+
+                <MDBox
+                  display="flex"
+                  alignItems="center"
+                  gap={2}
+                  px={3}
+                  py={2}
+                  mb={2}
+                  sx={{
+                    backgroundColor: "#ffffff",
+                    borderRadius: 2,
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <FormControl size="small" sx={{ minWidth: 280 }}>
+                    <InputLabel id="retencion-label">Retención</InputLabel>
+                    <Select
+                      labelId="retencion-label"
+                      label="Retención"
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      {/* MenuItem */}
+                    </Select>
+                  </FormControl>
+                  <MDInput size="small" label="Importe" type="number" sx={{ width: 150 }} />
+
+                  <MDButton size="small" variant="gradient" color="info">
+                    Agregar
+                  </MDButton>
+                </MDBox>
                 <MDAlert className="custom-alert">
                   <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
                   <MDTypography ml={1} variant="button">
