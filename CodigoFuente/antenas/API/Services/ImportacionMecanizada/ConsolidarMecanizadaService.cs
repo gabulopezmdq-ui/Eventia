@@ -1,5 +1,6 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
+using API.Migrations;
 using API.Services.ImportacionMecanizada;
 using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.EntityFrameworkCore;
@@ -908,7 +909,12 @@ namespace API.Services
                         });
 
             var agrupados = listaDepurada //separar tambien por AñoMesAfectacion, no solo secuencia
-                .GroupBy(x => x.DTO.DNI)
+                 .GroupBy(x => new
+                 {
+                     x.DTO.DNI,
+                     x.DTO.Secuencia,
+                     x.AnioMesAfectacion
+                 })
                 .Select(g => new MecReportePersona
                 {
                     OrdenPago = g.First().DTO.OrdenPago,
@@ -990,5 +996,28 @@ namespace API.Services
                 .ToListAsync();
         }
 
+        public async Task DesconsolidarAsync(int idCabecera, int idEstablecimiento)
+        {
+            if (idCabecera <= 0 || idEstablecimiento <= 0)
+                throw new ArgumentException("Parámetros inválidos.");
+
+            var registros = await _context.MEC_Mecanizadas
+                .Where(x => x.IdCabecera == idCabecera
+                         && x.IdEstablecimiento == idEstablecimiento
+                         && x.Consolidado == "S")
+                .ToListAsync();
+
+            if (!registros.Any())
+                return;
+
+            foreach (var r in registros)
+            {
+                r.Consolidado = "N";
+                r.FechaConsolidacion = null;
+                r.IdUsuario = null;
+            }
+
+            await _context.SaveChangesAsync();
+        }
     }
 }
