@@ -356,10 +356,10 @@ namespace API.Services
 
                 if (!exists)
                 {
+                    throw new InvalidOperationException($"No se puede eliminar el registro porque la relación {relatedEntityType.Name} está vacía o inconsistente.");
                     return true; // Si no se encuentran entidades relacionadas, devolvemos 'true' (relación vacía)
                 }
             }
-            throw new InvalidOperationException($"No se puede eliminar el registro porque la relación {relatedEntityType.Name} está vacía o inconsistente.");
             return false; // Si no se encontró ninguna relación vacía, devolvemos 'false'
         }
 
