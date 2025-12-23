@@ -97,7 +97,8 @@ function ConsolidarMecPOF() {
       });
   }, [token]);
 
-  useEffect(() => {
+  /* Refactor: Función para obtener los datos de la tabla, reutilizable */
+  const fetchDataTable = () => {
     if (!selectedCabecera) return;
     axios
       .get(
@@ -129,6 +130,11 @@ function ConsolidarMecPOF() {
           type: "error",
         });
       });
+  };
+
+  /* UseEffect que usa la función refactorizada */
+  useEffect(() => {
+    fetchDataTable();
   }, [selectedCabecera, token, establecimientos]);
 
   useEffect(() => {
@@ -599,6 +605,33 @@ function ConsolidarMecPOF() {
     }
   };
 
+  const handleDesconsolidar = async (row) => {
+    try {
+      /* Petición para desconsolidar */
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}Consolidar/Desconsolidar?IdCabecera=${selectedCabecera}&idEstablecimiento=${row.idEstablecimiento}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setShowSuccessAlert(true); // O usar setErrorAlert con type="success" si prefieren
+      setErrorAlert({
+        show: true,
+        message: "Desconsolidación realizada correctamente.",
+        type: "success",
+      });
+      fetchDataTable(); // Actualizar la tabla
+    } catch (error) {
+      console.error("Error al desconsolidar:", error);
+      setErrorAlert({
+        show: true,
+        message: "Error al intentar desconsolidar.",
+        type: "error",
+      });
+    }
+  };
+
   const handleHaberesClick = async (row) => {
     const { idEstablecimiento } = row;
     setHaberesButtonState((prev) => ({ ...prev, [idEstablecimiento]: "loading" }));
@@ -743,6 +776,18 @@ function ConsolidarMecPOF() {
                                 sx={{ mr: 1 }}
                               >
                                 Consolidar
+                              </MDButton>
+                            )}
+                            {/* Botón de Desconsolidar - Solo si NO hay nada para consolidar (N=0) */}
+                            {countConsolidadoN === 0 && countConsolidadoS >= 0 && (
+                              <MDButton
+                                size="small"
+                                color="warning" // Color diferente para distinguir
+                                variant="gradient"
+                                onClick={() => handleDesconsolidar(row.original)}
+                                sx={{ mr: 1 }}
+                              >
+                                Desconsolidar
                               </MDButton>
                             )}
                             {countConsolidadoS > 0 && (
