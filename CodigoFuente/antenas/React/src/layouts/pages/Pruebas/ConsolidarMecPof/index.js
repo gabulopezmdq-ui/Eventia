@@ -22,6 +22,7 @@ import HaberesPDF from "./HaberesPDF";
 import MDInput from "components/MDInput";
 function ConsolidarMecPOF() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
+  const [errorRetencion, setErrorRetencion] = useState({ show: false, message: "", type: "error" });
   const [errorAlertDelete, setErrorAlertDelete] = useState({
     show: false,
     message: "",
@@ -48,6 +49,9 @@ function ConsolidarMecPOF() {
   const [reporteData, setReporteData] = useState({});
   const [haberesButtonState, setHaberesButtonState] = useState({});
   const [docentesSupleA, setDocentesSupleA] = useState([]);
+  const [retenciones, setRetenciones] = useState([]);
+  const [selectedRetencion, setSelectedRetencion] = useState("");
+  const [importeRetencion, setImporteRetencion] = useState("");
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -119,6 +123,55 @@ function ConsolidarMecPOF() {
         });
       });
   }, [selectedCabecera, token, establecimientos]);
+
+  useEffect(() => {
+    axios
+      .get(process.env.REACT_APP_API_URL + "Retenciones/GetAll", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        const filteredRetenciones = (response.data || []).filter((item) => item.vigente === "S");
+        setRetenciones(filteredRetenciones);
+      })
+      .catch((error) => {
+        console.error("Error al obtener retenciones:", error);
+      });
+  }, [token]);
+
+  const handleAddRetencion = () => {
+    if (!selectedRetencion || !importeRetencion) {
+      setErrorAlert({
+        show: true,
+        message: "Debe seleccionar una retención e ingresar un importe.",
+        type: "error",
+      });
+      return;
+    }
+
+    const payload = {
+      IdRetencion: selectedRetencion,
+      IdMecanizada: selectedCabecera,
+      IdEstablecimiento: selectedIdEstablecimiento,
+      Importe: parseFloat(importeRetencion),
+    };
+
+    axios
+      .post(`${process.env.REACT_APP_API_URL}RetencionesXMecanizadas`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        setErrorRetencion({
+          show: true,
+          message: "Retención agregada correctamente.",
+          type: "success",
+        });
+        setImporteRetencion("");
+        setSelectedRetencion("");
+      })
+      .catch((error) => {
+        setErrorRetencion({ show: true, message: "Error al agregar la retención.", type: "error" });
+      });
+  };
 
   const allCountsZero = dataTableData.every((row) => row.countConsolidadoN === 0);
   //Boton de consolidar tabla MEC
@@ -671,6 +724,19 @@ function ConsolidarMecPOF() {
                     Agregar Retención
                   </MDTypography>
                 </MDAlert>
+                {errorAlert.show && (
+                  <Grid container justifyContent="center">
+                    <Grid item xs={12} lg={12}>
+                      <MDBox pt={2}>
+                        <MDAlert color={errorAlert.type} dismissible>
+                          <MDTypography variant="body2" color="white">
+                            {errorAlert.message}
+                          </MDTypography>
+                        </MDAlert>
+                      </MDBox>
+                    </Grid>
+                  </Grid>
+                )}
 
                 <MDBox
                   display="flex"
@@ -690,14 +756,32 @@ function ConsolidarMecPOF() {
                     <Select
                       labelId="retencion-label"
                       label="Retención"
+                      value={selectedRetencion}
+                      onChange={(e) => setSelectedRetencion(e.target.value)}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
                     >
-                      {/* MenuItem */}
+                      {retenciones.map((item) => (
+                        <MenuItem key={item.idRetencion} value={item.idRetencion}>
+                          {item.descripcion}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
-                  <MDInput size="small" label="Importe" type="number" sx={{ width: 150 }} />
+                  <MDInput
+                    size="small"
+                    label="Importe"
+                    type="number"
+                    sx={{ width: 150 }}
+                    value={importeRetencion}
+                    onChange={(e) => setImporteRetencion(e.target.value)}
+                  />
 
-                  <MDButton size="small" variant="gradient" color="info">
+                  <MDButton
+                    size="small"
+                    variant="gradient"
+                    color="info"
+                    onClick={handleAddRetencion}
+                  >
                     Agregar
                   </MDButton>
                 </MDBox>

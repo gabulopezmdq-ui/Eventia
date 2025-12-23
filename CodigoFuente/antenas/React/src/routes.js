@@ -20,6 +20,7 @@ import ProcesarArchivoImportado from "layouts/pages/Pruebas/ProcesarArchivoImpor
 import UsuariosEstablecimientos from "layouts/pages/Pruebas/UsuariosEstablecimientos/Index";
 import ListadoMotivosBajas from "layouts/pages/Pruebas/MotivoBaja/index";
 import ListadoTiposMovimientos from "layouts/pages/Pruebas/TiposMovimientos/index";
+import ListadoRetenciones from "layouts/pages/Pruebas/Retenciones/index";
 import Bajas from "layouts/pages/Pruebas/Bajas";
 import CabeceraMovimientos from "layouts/pages/Pruebas/Movimientos/CabeceraMovimientos";
 import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasistencia/index";
@@ -257,6 +258,13 @@ const routes = [
         key: "TipoMovimiento",
         route: "/TipoMovimientoFE",
         component: <ListadoTiposMovimientos />,
+        roles: ["admin", "superadmin"],
+      },
+      {
+        name: "Retenciones",
+        key: "Retenciones",
+        route: "/RetencionesFE",
+        component: <ListadoRetenciones />,
         roles: ["admin", "superadmin"],
       },
       /*{
