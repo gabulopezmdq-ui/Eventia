@@ -987,6 +987,7 @@ namespace API.Services
                 .Include(x => x.Retencion)
                 .Select(x => new RetencionDTO
                 {
+                    IdRetencionXMecanizada = x.IdRetencionXMecanizada,
                     IdRetencion = x.IdRetencion,
                     Descripcion = x.Retencion.Descripcion,
                     Importe = x.Importe
