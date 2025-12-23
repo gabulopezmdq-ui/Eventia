@@ -23,6 +23,7 @@ import MDInput from "components/MDInput";
 function ConsolidarMecPOF() {
   const [errorAlert, setErrorAlert] = useState({ show: false, message: "", type: "error" });
   const [errorRetencion, setErrorRetencion] = useState({ show: false, message: "", type: "error" });
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorAlertDelete, setErrorAlertDelete] = useState({
     show: false,
     message: "",
@@ -37,6 +38,8 @@ function ConsolidarMecPOF() {
   const [docentesData, setDocentesData] = useState([]);
   const [suplentesData, setSuplentesData] = useState([]);
   const [openPopup, setOpenPopup] = useState(false);
+  const [retencionConfirmada, setRetencionConfirmada] = useState(null);
+  const [formBloqueado, setFormBloqueado] = useState(false);
   const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
   const [openMecPopup, setOpenMecPopup] = useState(false);
   const [selectedIdEstablecimiento, setSelectedIdEstablecimiento] = useState(null);
@@ -165,14 +168,32 @@ function ConsolidarMecPOF() {
           message: "Retención agregada correctamente.",
           type: "success",
         });
-        setImporteRetencion("");
-        setSelectedRetencion("");
+
+        setRetencionConfirmada({
+          idRetencion: selectedRetencion,
+          importe: importeRetencion,
+        });
+
+        setFormBloqueado(true);
+        setShowSuccessAlert(true);
       })
-      .catch((error) => {
-        setErrorRetencion({ show: true, message: "Error al agregar la retención.", type: "error" });
+      .catch(() => {
+        setErrorRetencion({
+          show: true,
+          message: "Error al agregar la retención.",
+          type: "error",
+        });
       });
   };
+  useEffect(() => {
+    if (!showSuccessAlert) return;
 
+    const timer = setTimeout(() => {
+      setShowSuccessAlert(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [showSuccessAlert]);
   const allCountsZero = dataTableData.every((row) => row.countConsolidadoN === 0);
   //Boton de consolidar tabla MEC
   const handleButtonClick = (row) => {
@@ -737,6 +758,13 @@ function ConsolidarMecPOF() {
                     </Grid>
                   </Grid>
                 )}
+                {showSuccessAlert && (
+                  <MDAlert color="success" sx={{ mb: 2 }}>
+                    <MDTypography variant="body2" color="white">
+                      Retención registrada correctamente. No es posible modificarla.
+                    </MDTypography>
+                  </MDAlert>
+                )}
 
                 <MDBox
                   display="flex"
@@ -756,6 +784,7 @@ function ConsolidarMecPOF() {
                     <Select
                       labelId="retencion-label"
                       label="Retención"
+                      disabled={formBloqueado}
                       value={selectedRetencion}
                       onChange={(e) => setSelectedRetencion(e.target.value)}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -771,6 +800,7 @@ function ConsolidarMecPOF() {
                     size="small"
                     label="Importe"
                     type="number"
+                    disabled={formBloqueado}
                     sx={{ width: 150 }}
                     value={importeRetencion}
                     onChange={(e) => setImporteRetencion(e.target.value)}
@@ -780,6 +810,7 @@ function ConsolidarMecPOF() {
                     size="small"
                     variant="gradient"
                     color="info"
+                    disabled={formBloqueado}
                     onClick={handleAddRetencion}
                   >
                     Agregar
