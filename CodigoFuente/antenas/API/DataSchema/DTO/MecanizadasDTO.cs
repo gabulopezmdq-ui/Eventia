@@ -148,6 +148,7 @@ public class ConsolidarRequest
 
 public class RetencionDTO
 {
+    public int IdRetencionXMecanizada { get; set; }
     public int IdRetencion { get; set; }
     public string Descripcion { get; set; }
     public decimal Importe { get; set; }
