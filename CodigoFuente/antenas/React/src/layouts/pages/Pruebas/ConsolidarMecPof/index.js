@@ -48,6 +48,9 @@ function ConsolidarMecPOF() {
   const [loadingDocentes, setLoadingDocentes] = useState(false);
   const [loadingSuplentes, setLoadingSuplentes] = useState(false);
   const [loadingConsolidar, setLoadingConsolidar] = useState(false);
+  const [retencionExistente, setRetencionExistente] = useState(null);
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [loadingRetencion, setLoadingRetencion] = useState(false);
   const [selectedCabeceraData, setSelectedCabeceraData] = useState(null);
   const [reporteData, setReporteData] = useState({});
   const [haberesButtonState, setHaberesButtonState] = useState({});
@@ -140,6 +143,46 @@ function ConsolidarMecPOF() {
         console.error("Error al obtener retenciones:", error);
       });
   }, [token]);
+  useEffect(() => {
+    if (!selectedCabecera || !selectedIdEstablecimiento) return;
+
+    setLoadingRetencion(true);
+
+    axios
+      .get(
+        `${process.env.REACT_APP_API_URL}RetencionesXMecanizadas/GetByMec?idEstablecimiento=${selectedIdEstablecimiento}&idMecanizada=${selectedCabecera}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        const data = Array.isArray(response.data) ? response.data : [];
+
+        if (data.length > 0) {
+          // ✅ Existe retención
+          const retencion = data[0];
+
+          setRetencionExistente(retencion);
+          setSelectedRetencion(retencion.idRetencion);
+          setImporteRetencion(retencion.importe);
+          setFormBloqueado(true);
+          setModoEdicion(false);
+        } else {
+          // ✅ No existe retención
+          limpiarFormulario();
+        }
+      })
+      .catch(() => {
+        limpiarFormulario();
+      })
+      .finally(() => setLoadingRetencion(false));
+  }, [selectedCabecera, selectedIdEstablecimiento, token]);
+
+  const limpiarFormulario = () => {
+    setRetencionExistente(null);
+    setSelectedRetencion("");
+    setImporteRetencion("");
+    setFormBloqueado(false);
+    setModoEdicion(false);
+  };
 
   const handleAddRetencion = () => {
     if (!selectedRetencion || !importeRetencion) {
@@ -163,18 +206,9 @@ function ConsolidarMecPOF() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        setErrorRetencion({
-          show: true,
-          message: "Retención agregada correctamente.",
-          type: "success",
-        });
-
-        setRetencionConfirmada({
-          idRetencion: selectedRetencion,
-          importe: importeRetencion,
-        });
-
+        setRetencionExistente(payload);
         setFormBloqueado(true);
+        setModoEdicion(false);
         setShowSuccessAlert(true);
       })
       .catch(() => {
@@ -185,6 +219,39 @@ function ConsolidarMecPOF() {
         });
       });
   };
+
+  const handleHabilitarEdicion = () => {
+    setFormBloqueado(false);
+    setModoEdicion(true);
+  };
+
+  const handleUpdateRetencion = () => {
+    const payload = {
+      IdRetencion: selectedRetencion,
+      IdMecanizada: selectedCabecera,
+      IdEstablecimiento: selectedIdEstablecimiento,
+      Importe: parseFloat(importeRetencion),
+    };
+
+    axios
+      .put(`${process.env.REACT_APP_API_URL}RetencionesXMecanizadas`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        setRetencionExistente(payload);
+        setFormBloqueado(true);
+        setModoEdicion(false);
+        setShowSuccessAlert(true);
+      })
+      .catch(() => {
+        setErrorRetencion({
+          show: true,
+          message: "Error al actualizar la retención.",
+          type: "error",
+        });
+      });
+  };
+
   useEffect(() => {
     if (!showSuccessAlert) return;
 
@@ -806,15 +873,38 @@ function ConsolidarMecPOF() {
                     onChange={(e) => setImporteRetencion(e.target.value)}
                   />
 
-                  <MDButton
-                    size="small"
-                    variant="gradient"
-                    color="info"
-                    disabled={formBloqueado}
-                    onClick={handleAddRetencion}
-                  >
-                    Agregar
-                  </MDButton>
+                  {!retencionExistente && (
+                    <MDButton
+                      size="small"
+                      variant="gradient"
+                      color="info"
+                      onClick={handleAddRetencion}
+                    >
+                      Agregar
+                    </MDButton>
+                  )}
+
+                  {retencionExistente && !modoEdicion && (
+                    <MDButton
+                      size="small"
+                      variant="gradient"
+                      color="warning"
+                      onClick={handleHabilitarEdicion}
+                    >
+                      Editar
+                    </MDButton>
+                  )}
+
+                  {modoEdicion && (
+                    <MDButton
+                      size="small"
+                      variant="gradient"
+                      color="success"
+                      onClick={handleUpdateRetencion}
+                    >
+                      Guardar cambios
+                    </MDButton>
+                  )}
                 </MDBox>
                 <MDAlert className="custom-alert">
                   <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
