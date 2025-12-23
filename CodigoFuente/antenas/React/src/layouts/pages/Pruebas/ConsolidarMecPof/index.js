@@ -40,6 +40,7 @@ function ConsolidarMecPOF() {
   const [openPopup, setOpenPopup] = useState(false);
   const [retencionConfirmada, setRetencionConfirmada] = useState(null);
   const [formBloqueado, setFormBloqueado] = useState(false);
+  const [idRetencionXMecanizada, setIdRetencionXMecanizada] = useState(null);
   const [suplenteSeleccionado, setSuplenteSeleccionado] = useState(null);
   const [openMecPopup, setOpenMecPopup] = useState(false);
   const [selectedIdEstablecimiento, setSelectedIdEstablecimiento] = useState(null);
@@ -157,26 +158,24 @@ function ConsolidarMecPOF() {
         const data = Array.isArray(response.data) ? response.data : [];
 
         if (data.length > 0) {
-          // ✅ Existe retención
           const retencion = data[0];
 
           setRetencionExistente(retencion);
+          setIdRetencionXMecanizada(retencion.idRetencionXMecanizada);
           setSelectedRetencion(retencion.idRetencion);
           setImporteRetencion(retencion.importe);
           setFormBloqueado(true);
           setModoEdicion(false);
         } else {
-          // ✅ No existe retención
           limpiarFormulario();
         }
       })
-      .catch(() => {
-        limpiarFormulario();
-      })
+      .catch(limpiarFormulario)
       .finally(() => setLoadingRetencion(false));
   }, [selectedCabecera, selectedIdEstablecimiento, token]);
 
   const limpiarFormulario = () => {
+    setIdRetencionXMecanizada(null);
     setRetencionExistente(null);
     setSelectedRetencion("");
     setImporteRetencion("");
@@ -205,8 +204,11 @@ function ConsolidarMecPOF() {
       .post(`${process.env.REACT_APP_API_URL}RetencionesXMecanizadas`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then(() => {
-        setRetencionExistente(payload);
+      .then((response) => {
+        const data = response.data;
+
+        setIdRetencionXMecanizada(data.idRetencionXMecanizada);
+        setRetencionExistente(data);
         setFormBloqueado(true);
         setModoEdicion(false);
         setShowSuccessAlert(true);
@@ -226,7 +228,10 @@ function ConsolidarMecPOF() {
   };
 
   const handleUpdateRetencion = () => {
+    if (!idRetencionXMecanizada) return;
+
     const payload = {
+      IdRetencionXMecanizada: idRetencionXMecanizada,
       IdRetencion: selectedRetencion,
       IdMecanizada: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
@@ -238,7 +243,6 @@ function ConsolidarMecPOF() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        setRetencionExistente(payload);
         setFormBloqueado(true);
         setModoEdicion(false);
         setShowSuccessAlert(true);
@@ -828,7 +832,7 @@ function ConsolidarMecPOF() {
                 {showSuccessAlert && (
                   <MDAlert color="success" sx={{ mb: 2 }}>
                     <MDTypography variant="body2" color="white">
-                      Retención registrada correctamente. No es posible modificarla.
+                      Retención registrada correctamente.
                     </MDTypography>
                   </MDAlert>
                 )}
