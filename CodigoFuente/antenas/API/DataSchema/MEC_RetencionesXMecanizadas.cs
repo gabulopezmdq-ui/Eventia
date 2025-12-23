@@ -13,8 +13,8 @@ namespace API.DataSchema {
         public decimal Importe { get; set; }
 
         // Navegación
-        public MEC_Retenciones Retencion { get; set; }
-        public MEC_Mecanizadas Mecanizada { get; set; }
-        public MEC_Establecimientos Establecimiento { get; set; }
+        public MEC_Retenciones? Retencion { get; set; }
+        public MEC_Mecanizadas? Mecanizada { get; set; }
+        public MEC_Establecimientos? Establecimiento { get; set; }
     }
 }
