@@ -44,7 +44,7 @@ namespace API.Controllers
         [HttpGet("GetByMec")]
         public async Task<ActionResult<IEnumerable<MEC_RetencionesXMecanizadas>>> GetByMEC([FromQuery] int idEstablecimiento, int idMecanizada)
         {
-            var result = await _consolidarMecanizadaService.ObtenerRetencionesAsync(idEstablecimiento, idMecanizada);
+            var result = await _consolidarMecanizadaService.ObtenerRetencionesDTOAsync(idEstablecimiento, idMecanizada);
             return Ok(result);
         }
 

@@ -284,5 +284,22 @@ namespace API.Controllers
             await _consolidarMecanizadaService.DesconsolidarAsync(idCabecera, idEstablecimiento);
             return Ok();
         }
+
+        [HttpGet("Retenciones")]
+        public async Task<ActionResult<List<RetencionDTO>>> ObtenerRetenciones(
+       int idEstablecimiento,
+       int idMecanizada)
+        {
+            var result = await _consolidarMecanizadaService.ObtenerRetencionesDTOAsync(
+                idEstablecimiento,
+                idMecanizada);
+
+            if (!result.Any())
+            {
+                return NotFound("La mecanizada no posee retenciones asociadas.");
+            }
+
+            return Ok(result);
+        }
     }
 }

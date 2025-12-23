@@ -979,11 +979,18 @@ namespace API.Services
             };
         }
 
-        public async Task<List<MEC_RetencionesXMecanizadas>> ObtenerRetencionesAsync(int idEstablecimiento, int idMecanizada)
+        public async Task<List<RetencionDTO>> ObtenerRetencionesDTOAsync(int idEstablecimiento, int idMecanizada)
         {
             return await _context.MEC_RetencionesXMecanizadas
                 .Where(x => x.IdEstablecimiento == idEstablecimiento
                          && x.IdMecanizada == idMecanizada)
+                .Include(x => x.Retencion)
+                .Select(x => new RetencionDTO
+                {
+                    IdRetencion = x.IdRetencion,
+                    Descripcion = x.Retencion.Descripcion,
+                    Importe = x.Importe
+                })
                 .ToListAsync();
         }
 
