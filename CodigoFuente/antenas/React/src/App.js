@@ -62,6 +62,8 @@ import CargarInasistencia from "layouts/pages/Pruebas/Inasistencias/CargarInasis
 import VerificarInasistencia from "layouts/pages/Pruebas/Inasistencias/VerificarInasistencia/index";
 import SuperCabecera from "layouts/pages/Pruebas/SuperCabecera";
 import AltaSuperCabecera from "layouts/pages/Pruebas/SuperCabecera/AltaSuperCabecera";
+import Retenciones from "layouts/pages/Pruebas/Retenciones/index";
+import AltaRetenciones from "layouts/pages/Pruebas/Retenciones/AltaRetenciones";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -224,6 +226,11 @@ export default function App() {
       roles: ["admin", "superadmin", "secretario"],
     },
     {
+      path: "/RetencionesFE",
+      component: Retenciones,
+      roles: ["admin", "superadmin"],
+    },
+    {
       path: "/UsuariosEstablecimientosFE",
       component: UsuariosEstablecimientos,
       roles: ["admin", "superadmin"],
@@ -377,6 +384,11 @@ export default function App() {
       roles: ["admin", "superadmin"],
     },
     {
+      path: "/RetencionesFE/Edit/:id",
+      component: AltaRetenciones,
+      roles: ["admin", "superadmin"],
+    },
+    {
       path: "/GestionUsuariosFE/Edit/:id",
       component: AltaGestionUsuario,
       roles: ["admin", "superadmin"],
@@ -455,6 +467,11 @@ export default function App() {
     {
       path: "/PersonaFE/Nuevo",
       component: AltaPersona,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      path: "/RetencionesFE/Nuevo",
+      component: AltaRetenciones,
       roles: ["admin", "superadmin"],
     },
     {
