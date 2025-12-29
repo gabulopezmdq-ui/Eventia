@@ -459,7 +459,7 @@ const HaberesPDF = async (reporteData) => {
   doc.text("PERSONAL 16%", 31, yLineaFinal + 16);
   doc.text(`${totales.totalIps}`, 102, yLineaFinal + 16);
   doc.text("T O T A L  I. P. S.", 31, yLineaFinal + 20);
-  doc.text(`${totales.totalIps}`, 102, yLineaFinal + 20);
+  doc.text(`${totales.totalIpsGeneral}`, 102, yLineaFinal + 20);
   doc.text("OBRA SOCIAL", 31, yLineaFinal + 24);
   doc.text("PATRONAL 5%", 31, yLineaFinal + 28);
   doc.text(`${totales.osPatronal}`, 102, yLineaFinal + 28);
