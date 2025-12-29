@@ -123,6 +123,7 @@ public class MecReporteRespuestaDTO
 {
     public List<MecReportePersona> Personas { get; set; }
     public List<CodigoLiquidacionDTO> TotalesPorConcepto { get; set; }
+    public List<RetencionDTO> Retenciones { get; set; } = new();
     public int TotalPersonas { get; set; }
     public decimal TotalConAporte { get; set; }
     public decimal TotalSinAporte { get; set; }
@@ -139,6 +140,8 @@ public class MecReporteRespuestaDTO
 
     public decimal TotalIpsGeneral { get; set; }
 }
+
+
 
 public class ConsolidarRequest
 {

@@ -52,6 +52,17 @@ namespace API.DataSchema
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
+            builder
+               .HasOne(e => e.Cabecera)
+               .WithMany(e => e.RetencionesXMecanizadas)
+               .HasForeignKey(e => e.IdCabecera)
+               .IsRequired(true);
+
+            builder
+                .Navigation(e => e.Cabecera)
+                .AutoInclude()
+                .UsePropertyAccessMode(PropertyAccessMode.Property);
+
         }
     }
 

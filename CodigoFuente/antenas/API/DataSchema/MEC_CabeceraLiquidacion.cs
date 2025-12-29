@@ -35,5 +35,6 @@ namespace API.DataSchema
         public virtual ICollection<MEC_TMPInasistenciasDetalle>? TMPInasistenciasDetalle { get; set; } = new List<MEC_TMPInasistenciasDetalle>();
         public virtual ICollection<MEC_TMPErroresInasistenciasDetalle>? ErroresTMPInasistenciasDetalle { get; set; } = new List<MEC_TMPErroresInasistenciasDetalle>();
         public virtual ICollection<MEC_TMPEFI>? TMPEFI { get; set; } = new List<MEC_TMPEFI>();
+        public virtual ICollection<MEC_RetencionesXMecanizadas>? RetencionesXMecanizadas { get; set; } = new List<MEC_RetencionesXMecanizadas>();
     }
 }

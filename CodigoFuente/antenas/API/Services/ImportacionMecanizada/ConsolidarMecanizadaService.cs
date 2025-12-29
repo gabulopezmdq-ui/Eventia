@@ -505,7 +505,6 @@ namespace API.Services
             if (idCabecera <= 0 || idEstablecimiento <= 0)
                 throw new ArgumentException("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
 
-            // Obtener los registros de MEC_Mecanizada que coincidan con la cabecera y el establecimiento
             var registros = await _context.MEC_Mecanizadas
                 .Where(m => m.IdCabecera == idCabecera && m.IdEstablecimiento == idEstablecimiento)
                 .ToListAsync();
@@ -513,7 +512,7 @@ namespace API.Services
             if (!registros.Any())
                 throw new InvalidOperationException("No hay registros para consolidar.");
 
-            // Actualizar los campos requeridos
+            // Consolidar mecanizadas
             foreach (var registro in registros)
             {
                 registro.FechaConsolidacion = DateTime.Now;
@@ -521,24 +520,30 @@ namespace API.Services
                 registro.Consolidado = "S";
             }
 
-            foreach (var registro in registros)
+            // 🔒 EVITAR DUPLICADOS: verificar si ya existe la retención
+            var existeRetencion = await _context.MEC_RetencionesXMecanizadas.AnyAsync(r =>
+                r.IdCabecera == idCabecera &&
+                r.IdEstablecimiento == idEstablecimiento &&
+                r.IdRetencion == 1
+            );
+
+            if (!existeRetencion)
             {
-                // EJEMPLO: suponemos que cada mecanizada genera UNA retención fija.
-                // Si tenés otra regla, lo cambiamos.
                 var nuevaRetencion = new MEC_RetencionesXMecanizadas
                 {
-                    IdRetencion = 1, // Cambiá según la lógica real
-                    IdMecanizada = registro.IdMecanizada,
+                    IdRetencion = 1,
+                    IdCabecera = idCabecera,
                     IdEstablecimiento = idEstablecimiento,
-                    Importe = 0m // Cambiar según cálculo real
+                    Importe = 0m
+                    // ❌ NO IdMecanizada
                 };
 
                 _context.MEC_RetencionesXMecanizadas.Add(nuevaRetencion);
             }
 
-            // Guardar los cambios en la base de datos
             await _context.SaveChangesAsync();
         }
+
 
         public async Task CambiarEstadoCabeceraAsync(int idCabecera, int usuario)
         {
@@ -568,39 +573,62 @@ namespace API.Services
         public async Task<MecReporteRespuestaDTO> ObtenerReporte(int idCabecera, int idEstablecimiento)
         {
             var mecanizadas = await _context.MEC_Mecanizadas
+                   .AsNoTracking()
+                   .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
+                   .Select(p => new MecanizadasDTO
+                   {
+                       IdMecanizada = p.IdMecanizada,
+                       FechaConsolidacion = p.FechaConsolidacion,
+                       IdUsuario = p.IdUsuario,
+                       IdCabecera = p.IdCabecera,
+                       MesLiquidacion = p.MesLiquidacion,
+                       OrdenPago = p.OrdenPago,
+                       AnioMesAfectacion = p.AnioMesAfectacion,
+                       IdEstablecimiento = p.IdEstablecimiento,
+                       IdPOF = p.IdPOF,
+                       Importe = p.Importe,
+                       Signo = p.Signo,
+                       MarcaTransferido = p.MarcaTransferido,
+                       Moneda = p.Moneda,
+                       RegimenEstatutario = p.RegimenEstatutario,
+                       Dependencia = p.Dependencia,
+                       Distrito = p.Distrito,
+                       Subvencion = p.Subvencion,
+                       Origen = p.Origen,
+                       Consolidado = p.Consolidado,
+                       CodigoLiquidacion = p.CodigoLiquidacion,
+                       DNI = p.POF.Persona.DNI,
+                       Secuencia = p.POF.Secuencia,
+                       TipoCargo = p.POF.TipoCargo,
+                       Nombre = p.POF.Persona.Nombre,
+                       Apellido = p.POF.Persona.Apellido
+                   })
+                   .ToListAsync();
+
+            // =======================
+            // RETENCIONES (NUEVO)
+            // =======================
+            var retencionesXMecanizadas = await _context.MEC_RetencionesXMecanizadas
                 .AsNoTracking()
-                .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
-                .Select(p => new MecanizadasDTO
+                .Where(r => r.IdEstablecimiento == idEstablecimiento)
+                .Select(r => new
                 {
-                    IdMecanizada = p.IdMecanizada,
-                    FechaConsolidacion = p.FechaConsolidacion,
-                    IdUsuario = p.IdUsuario,
-                    IdCabecera = p.IdCabecera,
-                    MesLiquidacion = p.MesLiquidacion,
-                    OrdenPago = p.OrdenPago,
-                    AnioMesAfectacion = p.AnioMesAfectacion,
-                    IdEstablecimiento = p.IdEstablecimiento,
-                    IdPOF = p.IdPOF,
-                    Importe = p.Importe,
-                    Signo = p.Signo,
-                    MarcaTransferido = p.MarcaTransferido,
-                    Moneda = p.Moneda,
-                    RegimenEstatutario = p.RegimenEstatutario,
-                    Dependencia = p.Dependencia,
-                    Distrito = p.Distrito,
-                    Subvencion = p.Subvencion,
-                    Origen = p.Origen,
-                    Consolidado = p.Consolidado,
-                    CodigoLiquidacion = p.CodigoLiquidacion,
-                    DNI = p.POF.Persona.DNI,
-                    Secuencia = p.POF.Secuencia,
-                    TipoCargo = p.POF.TipoCargo,
-                    Nombre = p.POF.Persona.Nombre,
-                    Apellido = p.POF.Persona.Apellido
+                    r.IdRetencionXMecanizada,
+                    r.IdRetencion,
+                    r.IdMecanizada,
+                    r.Importe,
+                    Descripcion = r.Retencion.Descripcion
                 })
                 .ToListAsync();
 
-            // ✅ Precargas MASIVAS corregidas (SIN duplicados)
+            var retencionesPorMecanizada = retencionesXMecanizadas
+                .GroupBy(x => x.IdMecanizada)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var retencionesResponse = new List<RetencionDTO>();
+            // =======================
+
+            // Precargas
             var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
                 .ToDictionaryAsync(x => x.IdEstablecimiento);
 
@@ -642,29 +670,19 @@ namespace API.Services
 
             foreach (var dto in mecanizadas)
             {
-                if (!establecimientos.TryGetValue(dto.IdEstablecimiento, out var est))
-                    throw new Exception($"Establecimiento no encontrado: {dto.IdEstablecimiento}");
-
-                if (!pofs.TryGetValue(dto.IdPOF.Value, out var pof))
-                    throw new Exception($"POF no encontrado: {dto.IdPOF}");
-
-                if (!tiposEst.TryGetValue(est.IdTipoEstablecimiento, out var tipoEst))
-                    throw new Exception($"TipoEstablecimiento no encontrado: {est.IdTipoEstablecimiento}");
-
-                if (!carRevistas.TryGetValue(pof.IdCarRevista, out var carRevista))
-                    throw new Exception($"CarRevista no encontrado: {pof.IdCarRevista}");
-
-                if (!tiposFunciones.TryGetValue(pof.IdFuncion, out var tipoFuncion))
-                    throw new Exception($"TipoFuncion no encontrada: {pof.IdFuncion}");
+                var est = establecimientos[dto.IdEstablecimiento];
+                var pof = pofs[dto.IdPOF.Value];
+                var tipoEst = tiposEst[est.IdTipoEstablecimiento];
+                var carRevista = carRevistas[pof.IdCarRevista];
+                var tipoFuncion = tiposFunciones[pof.IdFuncion];
 
                 antiguedades.TryGetValue(pof.IdPersona, out var antiguedad);
-                antiguedad ??= new MEC_POF_Antiguedades { MesAntiguedad = 0, AnioAntiguedad = 0 };
+                antiguedad ??= new MEC_POF_Antiguedades();
 
                 pofDetalle.TryGetValue(pof.IdPOF, out var horasCs);
-                horasCs ??= new MEC_POFDetalle { CantHorasCS = 0 };
+                horasCs ??= new MEC_POFDetalle();
 
-                if (!categorias.TryGetValue(pof.IdCategoria, out var categoria))
-                    throw new Exception($"Categoria no encontrada: {pof.IdCategoria}");
+                var categoria = categorias[pof.IdCategoria];
 
                 var codigoLimpio = dto.CodigoLiquidacion?.Trim();
                 conceptos.TryGetValue(codigoLimpio ?? "", out var concepto);
@@ -692,9 +710,26 @@ namespace API.Services
                     CodigoLiquidacionDescripcion = concepto?.Descripcion ?? "",
                     Importe = dto.Importe,
                     Signo = dto.Signo ?? "+",
-                    SinSubvencion = horasCs?.NoSubvencionado ?? "",
-                    SinHaberes = horasCs?.SinHaberes ?? "",
+                    SinSubvencion = horasCs.NoSubvencionado ?? "",
+                    SinHaberes = horasCs.SinHaberes ?? ""
                 });
+
+                // =======================
+                // RETENCIONES POR MECANIZADA (NUEVO)
+                // =======================
+                if (retencionesPorMecanizada.TryGetValue(dto.IdMecanizada, out var retMec))
+                {
+                    foreach (var r in retMec)
+                    {
+                        retencionesResponse.Add(new RetencionDTO
+                        {
+                            IdRetencionXMecanizada = r.IdRetencionXMecanizada,
+                            IdRetencion = r.IdRetencion,
+                            Descripcion = r.Descripcion,
+                            Importe = r.Importe
+                        });
+                    }
+                }
             }
             var listaDepurada = lista
                     .Where(x =>
@@ -904,6 +939,8 @@ namespace API.Services
 
             var totalOSGeneral = totalOSPersonal + totalOSPatronal;
 
+
+
             var agrupados = listaDepurada
                     .GroupBy(x => new
                     {
@@ -958,15 +995,18 @@ namespace API.Services
                             var signo = i.Signo ?? "+";
                             return signo == "-" ? -importe : importe;
                         })
+
                     })
                     .OrderBy(x => x.DNI)
                     .ThenBy(x => x.AnioMesAfectacion)
                     .ToList();
 
+
             return new MecReporteRespuestaDTO
             {
                 Personas = agrupados,
                 TotalesPorConcepto = totalesGlobales,
+                Retenciones = retencionesResponse,
                 TotalPersonas = totalPersonas,
                 TotalConAporte = totalConAporte,
                 TotalSinAporte = totalSinAporte,
@@ -974,7 +1014,7 @@ namespace API.Services
                 TotalIps = totalIps,
                 OSPatronal = totalOSPatronal,
                 OSPersonal = totalOSPersonal,
-                ImporteNeto = importeNetoTotal,
+                ImporteNeto = importeNetoTotal, 
                 TotalSinAportesEnPesos = totalSinAportesEnPesos,
                 TotalIpsPatronal = totalIpsPatronal,
                 TotalIpsSac = totalIpsSac,
