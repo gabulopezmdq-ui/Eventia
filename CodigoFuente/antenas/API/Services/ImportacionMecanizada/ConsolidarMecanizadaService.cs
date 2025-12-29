@@ -783,7 +783,7 @@ namespace API.Services
             //salaria familiar + s/aportes no salario
             var totalSinAportesEnPesos = totalSalario + totalSinAporte;
 
-            var totalIps = lista
+            var totalIps = lista // patronal 16%
                 .Where(x =>
                 {
                     if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
@@ -801,7 +801,7 @@ namespace API.Services
                     return signo == "-" ? -importe : importe;
                 });
 
-            var totalIpsPatronal = lista
+            var totalIpsPatronal = lista // patronal 12%
                             .Where(x =>
                             {
                                 if (string.IsNullOrWhiteSpace(x.CodigoLiquidacionNumero))
@@ -901,6 +901,9 @@ namespace API.Services
                             var signo = i.Signo ?? "+";
                             return signo == "-" ? -importe : importe;
                         });
+
+            var totalOSGeneral = totalOSPersonal + totalOSPatronal;
+
             var agrupados = listaDepurada
                     .GroupBy(x => new
                     {
@@ -975,7 +978,8 @@ namespace API.Services
                 TotalSinAportesEnPesos = totalSinAportesEnPesos,
                 TotalIpsPatronal = totalIpsPatronal,
                 TotalIpsSac = totalIpsSac,
-                TotalDescuentos = totalIpsGeneral
+                TotalDescuentos = totalIpsGeneral,
+                TotalOSGeneral = totalOSGeneral
             };
         }
 
