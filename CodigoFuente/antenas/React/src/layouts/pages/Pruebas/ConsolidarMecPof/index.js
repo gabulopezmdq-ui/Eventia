@@ -694,6 +694,7 @@ function ConsolidarMecPOF() {
           totalSinAportesEnPesos: dataParaReporte.totalSinAportesEnPesos || 0,
           osPatronal: dataParaReporte.osPatronal || 0,
           osPersonal: dataParaReporte.osPersonal || 0,
+          totalOSGeneral: dataParaReporte.totalOSGeneral || 0,
         },
         totalesFinales: dataParaReporte.totalesPorConcepto,
       };
