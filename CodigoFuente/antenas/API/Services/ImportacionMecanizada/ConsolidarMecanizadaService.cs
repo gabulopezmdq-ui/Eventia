@@ -979,7 +979,8 @@ namespace API.Services
                 TotalIpsPatronal = totalIpsPatronal,
                 TotalIpsSac = totalIpsSac,
                 TotalDescuentos = totalIpsGeneral,
-                TotalOSGeneral = totalOSGeneral
+                TotalOSGeneral = totalOSGeneral,
+                TotalIpsGeneral = totalIpsGeneral
             };
         }
 

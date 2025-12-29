@@ -136,6 +136,8 @@ public class MecReporteRespuestaDTO
     public decimal TotalIpsPatronal { get; set; }
     public decimal TotalIpsSac { get; set; }
     public decimal TotalOSGeneral { get; set; }
+
+    public decimal TotalIpsGeneral { get; set; }
 }
 
 public class ConsolidarRequest
