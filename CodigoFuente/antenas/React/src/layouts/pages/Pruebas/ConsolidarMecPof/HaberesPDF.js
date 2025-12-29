@@ -457,6 +457,7 @@ const HaberesPDF = async (reporteData) => {
   doc.text("PATRONAL 12%", 31, yLineaFinal + 12);
   doc.text(`${totales.totalIpsPatronal}`, 102, yLineaFinal + 12);
   doc.text("PERSONAL 16%", 31, yLineaFinal + 16);
+  doc.text(`${totales.totalIps}`, 102, yLineaFinal + 16);
   doc.text("T O T A L  I. P. S.", 31, yLineaFinal + 20);
   doc.text(`${totales.totalIps}`, 102, yLineaFinal + 20);
   doc.text("OBRA SOCIAL", 31, yLineaFinal + 24);
@@ -465,6 +466,7 @@ const HaberesPDF = async (reporteData) => {
   doc.text("PERSONAL 3%", 31, yLineaFinal + 32);
   doc.text(`${totales.osPersonal}`, 102, yLineaFinal + 32);
   doc.text("T O T A L  O B R A  S O C I A L", 31, yLineaFinal + 36);
+  doc.text(`${totales.totalOSGeneral}`, 102, yLineaFinal + 36);
   const yTotalObraSocial = yLineaFinal + 36;
   const yLineaCierre = yTotalObraSocial + 5;
 
