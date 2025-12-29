@@ -32,6 +32,5 @@ namespace API.DataSchema
         public virtual MEC_POF? POF { get; set; }
         public virtual MEC_Usuarios? Usuario { get; set; }
 
-        public ICollection<MEC_RetencionesXMecanizadas> RetencionesXMecanizadas { get; set; }
     }
 }

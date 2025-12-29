@@ -499,7 +499,6 @@ namespace API.Services
             return result.Cast<object>().ToList();
         }
 
-
         public async Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario)
         {
             if (idCabecera <= 0 || idEstablecimiento <= 0)
@@ -512,33 +511,11 @@ namespace API.Services
             if (!registros.Any())
                 throw new InvalidOperationException("No hay registros para consolidar.");
 
-            // Consolidar mecanizadas
             foreach (var registro in registros)
             {
                 registro.FechaConsolidacion = DateTime.Now;
                 registro.IdUsuario = usuario;
                 registro.Consolidado = "S";
-            }
-
-            // 🔒 EVITAR DUPLICADOS: verificar si ya existe la retención
-            var existeRetencion = await _context.MEC_RetencionesXMecanizadas.AnyAsync(r =>
-                r.IdCabecera == idCabecera &&
-                r.IdEstablecimiento == idEstablecimiento &&
-                r.IdRetencion == 1
-            );
-
-            if (!existeRetencion)
-            {
-                var nuevaRetencion = new MEC_RetencionesXMecanizadas
-                {
-                    IdRetencion = 1,
-                    IdCabecera = idCabecera,
-                    IdEstablecimiento = idEstablecimiento,
-                    Importe = 0m
-                    // ❌ NO IdMecanizada
-                };
-
-                _context.MEC_RetencionesXMecanizadas.Add(nuevaRetencion);
             }
 
             await _context.SaveChangesAsync();
@@ -606,29 +583,26 @@ namespace API.Services
                    .ToListAsync();
 
             // =======================
-            // RETENCIONES (NUEVO)
+            // RETENCIONES (CORRECTO)
             // =======================
-            var retencionesXMecanizadas = await _context.MEC_RetencionesXMecanizadas
+            var retencionesResponse = await _context.MEC_RetencionesXMecanizadas
                 .AsNoTracking()
-                .Where(r => r.IdEstablecimiento == idEstablecimiento)
-                .Select(r => new
+                .Where(r =>
+                    r.IdCabecera == idCabecera &&
+                    r.IdEstablecimiento == idEstablecimiento)
+                .GroupBy(r => r.IdRetencion)
+                .Select(g => new RetencionDTO
                 {
-                    r.IdRetencionXMecanizada,
-                    r.IdRetencion,
-                    r.IdMecanizada,
-                    r.Importe,
-                    Descripcion = r.Retencion.Descripcion
+                    IdRetencionXMecanizada = g.Min(x => x.IdRetencionXMecanizada),
+                    IdRetencion = g.Key,
+                    Descripcion = g.First().Retencion.Descripcion,
+                    Importe = g.Sum(x => x.Importe)
                 })
                 .ToListAsync();
 
-            var retencionesPorMecanizada = retencionesXMecanizadas
-                .GroupBy(x => x.IdMecanizada)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var retencionesResponse = new List<RetencionDTO>();
             // =======================
-
-            // Precargas
+            // PRECARGAS
+            // =======================
             var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
                 .ToDictionaryAsync(x => x.IdEstablecimiento);
 
@@ -713,24 +687,22 @@ namespace API.Services
                     SinSubvencion = horasCs.NoSubvencionado ?? "",
                     SinHaberes = horasCs.SinHaberes ?? ""
                 });
-
-                // =======================
-                // RETENCIONES POR MECANIZADA (NUEVO)
-                // =======================
-                if (retencionesPorMecanizada.TryGetValue(dto.IdMecanizada, out var retMec))
-                {
-                    foreach (var r in retMec)
-                    {
-                        retencionesResponse.Add(new RetencionDTO
-                        {
-                            IdRetencionXMecanizada = r.IdRetencionXMecanizada,
-                            IdRetencion = r.IdRetencion,
-                            Descripcion = r.Descripcion,
-                            Importe = r.Importe
-                        });
-                    }
-                }
             }
+
+            // =======================
+            // NETO TOTAL (CON RETENCIONES)
+            // =======================
+            var importeNetoTotal = lista.Sum(x =>
+            {
+                var importe = x.Importe ?? 0;
+                var signo = x.Signo ?? "+";
+                return signo == "-" ? -importe : importe;
+            });
+
+            var totalRetenciones = retencionesResponse.Sum(r => r.Importe);
+
+            var importeNetoRetenciones = importeNetoTotal - totalRetenciones;
+
             var listaDepurada = lista
                     .Where(x =>
                     {
@@ -746,12 +718,6 @@ namespace API.Services
                         .Select(g => g.First())
                         .ToList();
 
-            var importeNetoTotal = lista.Sum(x =>
-            {
-                var importe = x.Importe ?? 0;
-                var signo = x.Signo ?? "+";
-                return signo == "-" ? -importe : importe;
-            });
 
             var totalPersonas = lista
                         .Select(x => x.DTO.DNI)
@@ -1014,7 +980,8 @@ namespace API.Services
                 TotalIps = totalIps,
                 OSPatronal = totalOSPatronal,
                 OSPersonal = totalOSPersonal,
-                ImporteNeto = importeNetoTotal, 
+                ImporteNeto = importeNetoTotal,
+                ImporteNetoRetenciones = importeNetoRetenciones,
                 TotalSinAportesEnPesos = totalSinAportesEnPesos,
                 TotalIpsPatronal = totalIpsPatronal,
                 TotalIpsSac = totalIpsSac,
@@ -1024,11 +991,11 @@ namespace API.Services
             };
         }
 
-        public async Task<List<RetencionDTO>> ObtenerRetencionesDTOAsync(int idEstablecimiento, int idMecanizada)
+        public async Task<List<RetencionDTO>> ObtenerRetencionesDTOAsync(int idEstablecimiento, int idCabecera)
         {
             return await _context.MEC_RetencionesXMecanizadas
                 .Where(x => x.IdEstablecimiento == idEstablecimiento
-                         && x.IdMecanizada == idMecanizada)
+                         && x.IdCabecera == idCabecera)
                 .Include(x => x.Retencion)
                 .Select(x => new RetencionDTO
                 {

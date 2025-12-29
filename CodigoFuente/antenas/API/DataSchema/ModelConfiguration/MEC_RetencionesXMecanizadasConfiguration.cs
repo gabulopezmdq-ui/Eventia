@@ -30,16 +30,6 @@ namespace API.DataSchema
                 .AutoInclude()
                 .UsePropertyAccessMode(PropertyAccessMode.Property);
 
-            builder
-               .HasOne(e => e.Mecanizada)
-               .WithMany(e => e.RetencionesXMecanizadas)
-               .HasForeignKey(e => e.IdMecanizada)
-               .IsRequired(true);
-
-            builder
-                .Navigation(e => e.Mecanizada)
-                .AutoInclude()
-                .UsePropertyAccessMode(PropertyAccessMode.Property);
 
             builder
                .HasOne(e => e.Establecimiento)
