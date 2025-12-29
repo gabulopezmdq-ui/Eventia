@@ -201,7 +201,7 @@ function ConsolidarMecPOF() {
 
     const payload = {
       IdRetencion: selectedRetencion,
-      IdMecanizada: selectedCabecera,
+      IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
       Importe: parseFloat(importeRetencion),
     };
@@ -239,7 +239,7 @@ function ConsolidarMecPOF() {
     const payload = {
       IdRetencionXMecanizada: idRetencionXMecanizada,
       IdRetencion: selectedRetencion,
-      IdMecanizada: selectedCabecera,
+      IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
       Importe: parseFloat(importeRetencion),
     };
