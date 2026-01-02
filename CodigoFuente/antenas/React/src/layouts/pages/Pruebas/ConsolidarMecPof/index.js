@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
@@ -49,16 +49,18 @@ function ConsolidarMecPOF() {
   const [loadingDocentes, setLoadingDocentes] = useState(false);
   const [loadingSuplentes, setLoadingSuplentes] = useState(false);
   const [loadingConsolidar, setLoadingConsolidar] = useState(false);
-  const [retencionExistente, setRetencionExistente] = useState(null);
-  const [modoEdicion, setModoEdicion] = useState(false);
-  const [loadingRetencion, setLoadingRetencion] = useState(false);
   const [selectedCabeceraData, setSelectedCabeceraData] = useState(null);
   const [reporteData, setReporteData] = useState({});
   const [haberesButtonState, setHaberesButtonState] = useState({});
   const [docentesSupleA, setDocentesSupleA] = useState([]);
   const [retenciones, setRetenciones] = useState([]);
+  const [retencionesTabla, setRetencionesTabla] = useState([]);
+  const [retencionEditando, setRetencionEditando] = useState(null);
   const [selectedRetencion, setSelectedRetencion] = useState("");
   const [importeRetencion, setImporteRetencion] = useState("");
+
+  const [loadingTabla, setLoadingTabla] = useState(false);
+
   const token = sessionStorage.getItem("token");
 
   useEffect(() => {
@@ -150,43 +152,32 @@ function ConsolidarMecPOF() {
         console.error("Error al obtener retenciones:", error);
       });
   }, [token]);
-  useEffect(() => {
+
+  const fetchRetencionesEstablecimiento = () => {
     if (!selectedCabecera || !selectedIdEstablecimiento) return;
 
-    setLoadingRetencion(true);
+    setLoadingTabla(true);
 
     axios
       .get(
         `${process.env.REACT_APP_API_URL}RetencionesXMecanizadas/GetByMec?idEstablecimiento=${selectedIdEstablecimiento}&idMecanizada=${selectedCabecera}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      .then((response) => {
-        const data = Array.isArray(response.data) ? response.data : [];
-
-        if (data.length > 0) {
-          const retencion = data[0];
-
-          setRetencionExistente(retencion);
-          setIdRetencionXMecanizada(retencion.idRetencionXMecanizada);
-          setSelectedRetencion(retencion.idRetencion);
-          setImporteRetencion(retencion.importe);
-          setFormBloqueado(true);
-          setModoEdicion(false);
-        } else {
-          limpiarFormulario();
-        }
+      .then((res) => {
+        setRetencionesTabla(Array.isArray(res.data) ? res.data : []);
       })
-      .catch(limpiarFormulario)
-      .finally(() => setLoadingRetencion(false));
+      .catch(() => setRetencionesTabla([]))
+      .finally(() => setLoadingTabla(false));
+  };
+
+  useEffect(() => {
+    fetchRetencionesEstablecimiento();
   }, [selectedCabecera, selectedIdEstablecimiento, token]);
 
   const limpiarFormulario = () => {
-    setIdRetencionXMecanizada(null);
-    setRetencionExistente(null);
+    setRetencionEditando(null);
     setSelectedRetencion("");
     setImporteRetencion("");
-    setFormBloqueado(false);
-    setModoEdicion(false);
   };
 
   const handleAddRetencion = () => {
@@ -210,13 +201,9 @@ function ConsolidarMecPOF() {
       .post(`${process.env.REACT_APP_API_URL}RetencionesXMecanizadas`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((response) => {
-        const data = response.data;
-
-        setIdRetencionXMecanizada(data.idRetencionXMecanizada);
-        setRetencionExistente(data);
-        setFormBloqueado(true);
-        setModoEdicion(false);
+      .then(() => {
+        limpiarFormulario();
+        fetchRetencionesEstablecimiento(); // 🔑
         setShowSuccessAlert(true);
       })
       .catch(() => {
@@ -228,16 +215,17 @@ function ConsolidarMecPOF() {
       });
   };
 
-  const handleHabilitarEdicion = () => {
-    setFormBloqueado(false);
-    setModoEdicion(true);
+  const handleEditarDesdeTabla = (retencion) => {
+    setRetencionEditando(retencion);
+    setSelectedRetencion(retencion.idRetencion);
+    setImporteRetencion(retencion.importe);
   };
 
   const handleUpdateRetencion = () => {
-    if (!idRetencionXMecanizada) return;
+    if (!retencionEditando) return;
 
     const payload = {
-      IdRetencionXMecanizada: idRetencionXMecanizada,
+      IdRetencionXMecanizada: retencionEditando.idRetencionXMecanizada,
       IdRetencion: selectedRetencion,
       IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
@@ -249,8 +237,8 @@ function ConsolidarMecPOF() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        setFormBloqueado(true);
-        setModoEdicion(false);
+        limpiarFormulario();
+        fetchRetencionesEstablecimiento(); // 🔑
         setShowSuccessAlert(true);
       })
       .catch(() => {
@@ -261,6 +249,39 @@ function ConsolidarMecPOF() {
         });
       });
   };
+  const retencionesColumns = [
+    {
+      Header: "Retención",
+      accessor: "descripcion",
+    },
+    {
+      Header: "Importe",
+      accessor: "importe",
+      Cell: ({ value }) => `$ ${value}`,
+    },
+    {
+      Header: "Acción",
+      accessor: "accion",
+      Cell: ({ row }) => (
+        <MDButton
+          size="small"
+          color="warning"
+          variant="gradient"
+          onClick={() => handleEditarDesdeTabla(row.original)}
+        >
+          Editar
+        </MDButton>
+      ),
+    },
+  ];
+  const retencionesRows = useMemo(() => {
+    return retencionesTabla.map((r) => ({
+      idRetencionXMecanizada: r.idRetencionXMecanizada,
+      idRetencion: r.idRetencion,
+      descripcion: r.descripcion,
+      importe: r.importe,
+    }));
+  }, [retencionesTabla]);
 
   useEffect(() => {
     if (!showSuccessAlert) return;
@@ -902,7 +923,6 @@ function ConsolidarMecPOF() {
                     <Select
                       labelId="retencion-label"
                       label="Retención"
-                      disabled={formBloqueado}
                       value={selectedRetencion}
                       onChange={(e) => setSelectedRetencion(e.target.value)}
                       style={{ height: "2.5rem", backgroundColor: "white" }}
@@ -918,45 +938,38 @@ function ConsolidarMecPOF() {
                     size="small"
                     label="Importe"
                     type="number"
-                    disabled={formBloqueado}
                     sx={{ width: 150 }}
                     value={importeRetencion}
                     onChange={(e) => setImporteRetencion(e.target.value)}
                   />
-
-                  {!retencionExistente && (
-                    <MDButton
-                      size="small"
-                      variant="gradient"
-                      color="info"
-                      onClick={handleAddRetencion}
-                    >
+                  {retencionEditando ? (
+                    <MDButton color="success" size="small" onClick={handleUpdateRetencion}>
+                      Guardar cambios
+                    </MDButton>
+                  ) : (
+                    <MDButton color="info" size="small" onClick={handleAddRetencion}>
                       Agregar
                     </MDButton>
                   )}
-
-                  {retencionExistente && !modoEdicion && (
-                    <MDButton
-                      size="small"
-                      variant="gradient"
-                      color="warning"
-                      onClick={handleHabilitarEdicion}
-                    >
-                      Editar
-                    </MDButton>
-                  )}
-
-                  {modoEdicion && (
-                    <MDButton
-                      size="small"
-                      variant="gradient"
-                      color="success"
-                      onClick={handleUpdateRetencion}
-                    >
-                      Guardar cambios
+                  {retencionEditando && (
+                    <MDButton color="secondary" size="small" onClick={limpiarFormulario}>
+                      Cancelar
                     </MDButton>
                   )}
                 </MDBox>
+                {selectedCabecera && selectedIdEstablecimiento && (
+                  <MDBox mt={3} mb={2}>
+                    <DataTable
+                      table={{
+                        columns: retencionesColumns,
+                        rows: retencionesRows,
+                      }}
+                      entriesPerPage={false}
+                      canSearch
+                    />
+                  </MDBox>
+                )}
+
                 <MDAlert className="custom-alert">
                   <Icon sx={{ color: "#4b6693" }}>info_outlined</Icon>
                   <MDTypography ml={1} variant="button">
