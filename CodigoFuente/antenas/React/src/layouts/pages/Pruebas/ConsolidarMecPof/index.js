@@ -58,7 +58,7 @@ function ConsolidarMecPOF() {
   const [retencionEditando, setRetencionEditando] = useState(null);
   const [selectedRetencion, setSelectedRetencion] = useState("");
   const [importeRetencion, setImporteRetencion] = useState("");
-
+  const [signo, setSigno] = useState("+");
   const [loadingTabla, setLoadingTabla] = useState(false);
 
   const token = sessionStorage.getItem("token");
@@ -195,6 +195,7 @@ function ConsolidarMecPOF() {
       IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
       Importe: parseFloat(importeRetencion),
+      Signo: signo,
     };
 
     axios
@@ -219,6 +220,7 @@ function ConsolidarMecPOF() {
     setRetencionEditando(retencion);
     setSelectedRetencion(retencion.idRetencion);
     setImporteRetencion(retencion.importe);
+    setSigno(retencion.signo);
   };
 
   const handleUpdateRetencion = () => {
@@ -230,6 +232,7 @@ function ConsolidarMecPOF() {
       IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
       Importe: parseFloat(importeRetencion),
+      Signo: signo,
     };
 
     axios
@@ -253,6 +256,10 @@ function ConsolidarMecPOF() {
     {
       Header: "Retención",
       accessor: "descripcion",
+    },
+    {
+      Header: "Signo",
+      accessor: "signo",
     },
     {
       Header: "Importe",
@@ -942,6 +949,19 @@ function ConsolidarMecPOF() {
                     value={importeRetencion}
                     onChange={(e) => setImporteRetencion(e.target.value)}
                   />
+                  <FormControl size="small" sx={{ minWidth: 100 }}>
+                    <InputLabel id="signo-label">Signo</InputLabel>
+                    <Select
+                      labelId="signo-label"
+                      label="Signo"
+                      value={signo}
+                      onChange={(e) => setSigno(e.target.value)}
+                      style={{ height: "2.5rem", backgroundColor: "white" }}
+                    >
+                      <MenuItem value="+">+</MenuItem>
+                      <MenuItem value="-">−</MenuItem>
+                    </Select>
+                  </FormControl>
                   {retencionEditando ? (
                     <MDButton color="success" size="small" onClick={handleUpdateRetencion}>
                       Guardar cambios
