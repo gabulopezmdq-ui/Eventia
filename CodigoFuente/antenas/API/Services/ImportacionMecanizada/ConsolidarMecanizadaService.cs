@@ -1002,6 +1002,7 @@ namespace API.Services
                     IdRetencionXMecanizada = x.IdRetencionXMecanizada,
                     IdRetencion = x.IdRetencion,
                     Descripcion = x.Retencion.Descripcion,
+                    Signo = x.Signo,
                     Importe = x.Importe
                 })
                 .ToListAsync();
