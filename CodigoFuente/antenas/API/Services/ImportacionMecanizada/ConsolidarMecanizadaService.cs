@@ -558,7 +558,7 @@ namespace API.Services
         {
             var mecanizadas = await _context.MEC_Mecanizadas
                    .AsNoTracking()
-                   .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera)
+                   .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera && m.Excluir != true)
                    .Select(p => new MecanizadasDTO
                    {
                        IdMecanizada = p.IdMecanizada,
