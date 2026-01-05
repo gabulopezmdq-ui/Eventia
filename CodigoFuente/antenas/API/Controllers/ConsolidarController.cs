@@ -226,7 +226,7 @@ namespace API.Controllers
 
 
         [HttpPost("Consolidar")]
-        public async Task<IActionResult> Consolidar(int idCabecera, int idEstablecimiento, Dictionary<int, bool?> excluirPorMecanizada)
+        public async Task<IActionResult> Consolidar(int idCabecera, int idEstablecimiento, ConsolidarRequestDTO request)
         {
             if (idCabecera <= 0 || idEstablecimiento <= 0)
             {
@@ -239,7 +239,7 @@ namespace API.Controllers
                 var idUsuario = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "id");
                 int usuario = int.Parse(idUsuario.Value);
 
-                await _consolidarMecanizadaService.ConsolidarRegistrosAsync(idCabecera, idEstablecimiento, usuario,  excluirPorMecanizada);
+                await _consolidarMecanizadaService.ConsolidarRegistrosAsync(idCabecera, idEstablecimiento, usuario, request);
                 return Ok("Registros consolidados exitosamente.");
             }
             catch (Exception ex)

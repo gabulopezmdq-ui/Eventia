@@ -499,7 +499,7 @@ namespace API.Services
             return result.Cast<object>().ToList();
         }
 
-        public async Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario, Dictionary<int, bool?> excluirPorMecanizada)
+        public async Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario, ConsolidarRequestDTO request)
         {
             if (idCabecera <= 0 || idEstablecimiento <= 0)
                 throw new ArgumentException("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
@@ -518,10 +518,10 @@ namespace API.Services
                 registro.Consolidado = "S";
 
                 //EXCLUIR
-                if (excluirPorMecanizada != null &&
-                    excluirPorMecanizada.TryGetValue(registro.IdMecanizada, out var excluir))
+                if (request?.ExcluirPorMecanizada != null &&
+                           request.ExcluirPorMecanizada.TryGetValue(registro.IdMecanizada, out var excluir))
                 {
-                    registro.Excluir = excluir; 
+                    registro.Excluir = excluir;
                 }
             }
 
