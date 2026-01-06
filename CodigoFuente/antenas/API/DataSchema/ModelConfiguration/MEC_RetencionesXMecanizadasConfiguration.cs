@@ -24,6 +24,11 @@ namespace API.DataSchema
            .IsFixedLength(true)
            .IsRequired(true);
 
+            builder.Property(e => e.Vigente)
+           .HasColumnType("char(1)")
+           .IsFixedLength(true)
+           .IsRequired(false);
+
             builder
                .HasOne(e => e.Retencion)
                .WithMany(e => e.RetencionesXMecanizadas)
