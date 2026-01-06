@@ -142,7 +142,11 @@ public class MecReporteRespuestaDTO
     public decimal TotalIpsGeneral { get; set; }
 }
 
-
+public class ConsolidarRequestDTO
+{
+    public bool AccionHabilitada { get; set; }
+    public Dictionary<int, bool?> ExcluirPorMecanizada { get; set; }
+}
 
 public class ConsolidarRequest
 {
@@ -158,6 +162,7 @@ public class RetencionDTO
     public int IdRetencionXMecanizada { get; set; }
     public int IdRetencion { get; set; }
     public string Descripcion { get; set; }
+    public string Signo { get; set; }
     public decimal Importe { get; set; }
 }
 
