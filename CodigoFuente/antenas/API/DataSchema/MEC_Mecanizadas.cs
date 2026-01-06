@@ -26,7 +26,6 @@ namespace API.DataSchema
         public string? Origen { get; set; }
         public string? Consolidado { get; set; }
 
-        public bool? Excluir { get; set; }
 
         // Propiedades de navegación
         public virtual MEC_CabeceraLiquidacion? Cabecera { get; set; }
