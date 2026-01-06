@@ -12,6 +12,7 @@ namespace API.DataSchema {
         public int IdCabecera { get; set; }
         public decimal Importe { get; set; }
         public string Signo { get; set; }
+        public string Vigente { get; set; }
 
         // Navegación
         public MEC_Retenciones? Retencion { get; set; }
