@@ -22,7 +22,7 @@ namespace API.DataSchema
             builder.Property(e => e.Signo)
            .HasColumnType("char(1)")
            .IsFixedLength(true)
-           .IsRequired(false);
+           .IsRequired(true);
 
             builder
                .HasOne(e => e.Retencion)
