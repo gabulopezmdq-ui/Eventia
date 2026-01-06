@@ -19,6 +19,11 @@ namespace API.DataSchema
                 .Property(p => p.Importe)
                 .IsRequired(true);
 
+            builder.Property(e => e.Signo)
+           .HasColumnType("char(1)")
+           .IsFixedLength(true)
+           .IsRequired(false);
+
             builder
                .HasOne(e => e.Retencion)
                .WithMany(e => e.RetencionesXMecanizadas)

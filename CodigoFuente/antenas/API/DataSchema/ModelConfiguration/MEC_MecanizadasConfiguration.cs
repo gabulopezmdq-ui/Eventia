@@ -130,6 +130,10 @@ namespace API.DataSchema.ModelConfiguration
            .HasColumnType("char(1)")
            .IsFixedLength(true)
            .IsRequired(false);
+
+            builder.Property(e => e.Excluir)
+           .HasColumnType("bool")
+           .IsRequired(false);
         }
     }
 }
