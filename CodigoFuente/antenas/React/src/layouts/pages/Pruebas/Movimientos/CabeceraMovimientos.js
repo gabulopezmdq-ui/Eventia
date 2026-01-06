@@ -678,19 +678,19 @@ function CabeceraMovimientos() {
                                 (userRoles.includes("Admin") ||
                                   userRoles.includes("SuperAdmin") ||
                                   userRoles.includes("Secretario")))) && (
-                                <MDButton
-                                  variant="gradient"
-                                  color="warning"
-                                  size="small"
-                                  onClick={() =>
-                                    navigate(
-                                      `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`
-                                    )
-                                  }
-                                >
-                                  Editar
-                                </MDButton>
-                              )}
+                              <MDButton
+                                variant="gradient"
+                                color="warning"
+                                size="small"
+                                onClick={() =>
+                                  navigate(
+                                    `/CabeceraMovimientos/Edit/${row.original.idMovimientoCabecera}`
+                                  )
+                                }
+                              >
+                                Editar
+                              </MDButton>
+                            )}
                             <MDButton
                               variant="gradient"
                               size="small"
