@@ -3,6 +3,7 @@ using  API.Services;
 using API.Services.ImportacionMecanizada;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -72,8 +73,23 @@ namespace API.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(int Id)
         {
-            await _serviceGenerico.Delete(Id);
-            return Ok();
+            if (Id <= 0)
+                return BadRequest("IdRetencionXMecanizada inválido.");
+
+            var retencion = await _context.MEC_RetencionesXMecanizadas
+                .FirstOrDefaultAsync(r => r.IdRetencionXMecanizada == Id);
+
+            if (retencion == null)
+                return NotFound("La retención no existe.");
+
+            if (retencion.Vigente == "N")
+                return Ok("La retención ya estaba desactivada.");
+
+            retencion.Vigente = "N";
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Retención eliminada correctamente.");
         }
 
         [HttpPut]
