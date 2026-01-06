@@ -499,7 +499,7 @@ namespace API.Services
             return result.Cast<object>().ToList();
         }
 
-        public async Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario, ConsolidarRequestDTO request)
+        public async Task ConsolidarRegistrosAsync(int idCabecera, int idEstablecimiento, int usuario)
         {
             if (idCabecera <= 0 || idEstablecimiento <= 0)
                 throw new ArgumentException("El ID de la cabecera y el establecimiento deben ser mayores a cero.");
@@ -517,12 +517,6 @@ namespace API.Services
                 registro.IdUsuario = usuario;
                 registro.Consolidado = "S";
 
-                //EXCLUIR
-                if (request?.ExcluirPorMecanizada != null &&
-                           request.ExcluirPorMecanizada.TryGetValue(registro.IdMecanizada, out var excluir))
-                {
-                    registro.Excluir = excluir;
-                }
             }
 
             await _context.SaveChangesAsync();
@@ -558,7 +552,7 @@ namespace API.Services
         {
             var mecanizadas = await _context.MEC_Mecanizadas
                    .AsNoTracking()
-                   .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera && m.Excluir != true)
+                   .Where(m => m.IdEstablecimiento == idEstablecimiento && m.IdCabecera == idCabecera )
                    .Select(p => new MecanizadasDTO
                    {
                        IdMecanizada = p.IdMecanizada,
