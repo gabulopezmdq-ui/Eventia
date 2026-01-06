@@ -286,6 +286,7 @@ function ConsolidarMecPOF() {
       idRetencionXMecanizada: r.idRetencionXMecanizada,
       idRetencion: r.idRetencion,
       descripcion: r.descripcion,
+      signo: r.signo,
       importe: r.importe,
     }));
   }, [retencionesTabla]);
