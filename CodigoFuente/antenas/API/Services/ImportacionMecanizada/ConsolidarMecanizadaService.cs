@@ -996,7 +996,7 @@ namespace API.Services
         {
             return await _context.MEC_RetencionesXMecanizadas
                 .Where(x => x.IdEstablecimiento == idEstablecimiento
-                         && x.IdCabecera == idCabecera)
+                         && x.IdCabecera == idCabecera && x.Vigente == "S")
                 .Include(x => x.Retencion)
                 .Select(x => new RetencionDTO
                 {
