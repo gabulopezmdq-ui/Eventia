@@ -252,6 +252,27 @@ function ConsolidarMecPOF() {
         });
       });
   };
+  const handleDeleteRetencion = (id) => {
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}RetencionesXMecanizadas?id=${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(() => {
+        fetchRetencionesEstablecimiento();
+        setErrorAlert({
+          show: true,
+          message: "Retención deshabilitada correctamente.",
+          type: "success",
+        });
+      })
+      .catch(() => {
+        setErrorAlert({
+          show: true,
+          message: "Error al deshabilitar la retención.",
+          type: "error",
+        });
+      });
+  };
   const retencionesColumns = [
     {
       Header: "Retención",
@@ -270,14 +291,25 @@ function ConsolidarMecPOF() {
       Header: "Acción",
       accessor: "accion",
       Cell: ({ row }) => (
-        <MDButton
-          size="small"
-          color="warning"
-          variant="gradient"
-          onClick={() => handleEditarDesdeTabla(row.original)}
-        >
-          Editar
-        </MDButton>
+        <>
+          <MDButton
+            size="small"
+            color="warning"
+            variant="gradient"
+            onClick={() => handleEditarDesdeTabla(row.original)}
+            sx={{ mr: 1 }}
+          >
+            Editar
+          </MDButton>
+          <MDButton
+            size="small"
+            color="error"
+            variant="gradient"
+            onClick={() => handleDeleteRetencion(row.original.idRetencionXMecanizada)}
+          >
+            Deshabilitar
+          </MDButton>
+        </>
       ),
     },
   ];
