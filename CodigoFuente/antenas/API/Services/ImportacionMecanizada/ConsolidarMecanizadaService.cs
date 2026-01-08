@@ -983,7 +983,7 @@ namespace API.Services
                 OSPatronal = totalOSPatronal,
                 OSPersonal = totalOSPersonal,
                 ImporteNeto = importeNetoTotal,
-                ImporteNetoRetenciones = importeNetoRetenciones,
+                ImporteNetoRetenciones = importeNetoRetenciones, // IMPORTE RECIBIDO EN PESOS
                 TotalSinAportesEnPesos = totalSinAportesEnPesos,
                 TotalIpsPatronal = totalIpsPatronal,
                 TotalIpsSac = totalIpsSac,
