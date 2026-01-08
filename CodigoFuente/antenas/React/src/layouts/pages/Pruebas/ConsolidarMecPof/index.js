@@ -195,6 +195,7 @@ function ConsolidarMecPOF() {
       IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
       Importe: parseFloat(importeRetencion),
+      Vigente: "S",
       Signo: signo,
     };
 
@@ -231,6 +232,7 @@ function ConsolidarMecPOF() {
       IdRetencion: selectedRetencion,
       IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
+      Vigente: "S",
       Importe: parseFloat(importeRetencion),
       Signo: signo,
     };
