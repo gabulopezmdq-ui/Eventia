@@ -597,7 +597,8 @@ namespace API.Services
                     IdRetencionXMecanizada = g.Min(x => x.IdRetencionXMecanizada),
                     IdRetencion = g.Key,
                     Descripcion = g.First().Retencion.Descripcion,
-                    Importe = g.Sum(x => x.Importe)
+                    Importe = g.Sum(x => x.Importe),
+                    Signo = g.First().Signo
                 })
                 .ToListAsync();
 
