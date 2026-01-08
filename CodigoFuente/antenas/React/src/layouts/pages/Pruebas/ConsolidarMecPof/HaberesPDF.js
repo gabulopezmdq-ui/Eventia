@@ -2,8 +2,8 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 const HaberesPDF = async (reporteData) => {
-  const { establecimiento, docentes, totales, totalesFinales } = reporteData;
-  console.log("TotalesConceptos: ", totalesFinales);
+  const { establecimiento, docentes, totales, totalesFinales, retenciones } = reporteData;
+  console.log("reporteData", reporteData);
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "mm",
@@ -168,14 +168,16 @@ const HaberesPDF = async (reporteData) => {
       doc.text(`HS.CS ${Number(d.cantHsCs).toFixed(2)}`, 55, posY + 3);
     }
 
-    doc.text(
-      `ANT:${String(d.anioAntiguedad).padStart(2, "0")}/${String(d.mesAntiguedad).padStart(
-        2,
-        "0"
-      )}`,
-      16,
-      posY + 6
-    );
+    if (d.anioAntiguedad != null && d.mesAntiguedad != null) {
+      doc.text(
+        `ANT:${String(d.anioAntiguedad).padStart(2, "0")}/${String(d.mesAntiguedad).padStart(
+          2,
+          "0"
+        )}`,
+        16,
+        posY + 6
+      );
+    }
     doc.text(`${d.apellido} ${d.nombre}`, 41, posY);
     doc.text(`${d.carRevista} ${d.tipoFuncion}`, 84, posY);
 
@@ -250,56 +252,6 @@ const HaberesPDF = async (reporteData) => {
   // ÚLTIMA PÁGINA: SOLO ENCABEZADO BASE
   // ================================================
   doc.addPage();
-  drawHeaderBase(true); // Se pasa 'true' para indicar que es la última página
-  const drawLineaConceptosFinales = (y) => {
-    const margenX = 14;
-    const anchoPagina = doc.internal.pageSize.getWidth();
-    const anchoDisponible = anchoPagina - margenX * 2;
-
-    const inicio = "#";
-    const patron = " -";
-    const fin = " #";
-    const anchoExtra = doc.getTextWidth("-");
-
-    let linea = inicio;
-    while (doc.getTextWidth(linea + patron + fin) < anchoDisponible + anchoExtra) {
-      linea += patron;
-    }
-    linea += fin;
-
-    doc.text(linea, margenX, y);
-  };
-  drawLineaConceptosFinales(45);
-  const drawLineMatchingText = (text, x, y) => {
-    const targetWidth = doc.getTextWidth(text);
-    const pattern = " -";
-    let line = "-";
-    // Expandir la línea hasta igualar o superar el ancho del texto
-    while (doc.getTextWidth(line) < targetWidth) {
-      line += pattern;
-    }
-
-    doc.text(line, x, y);
-  };
-  const titulo = "C O N T R I B U C I O N  D E L  E S T A D O";
-
-  // Dibujar la línea exactamente debajo del texto
-  drawLineMatchingText(titulo, 30, 53);
-
-  // Texto original
-  doc.text(titulo, 30, 49);
-  doc.text("CONCEPTOS", 31, 57);
-  doc.text("DESCRIPCIONES", 55, 57);
-  doc.text("IMPORTES", 95, 57);
-  doc.text("D E V O L U C I O N E S", 215, 49);
-  doc.text("IMPORTES", 225, 57);
-  doc.text("BAJAS", 215, 61);
-  doc.text("INASISTENCIAS", 235, 61);
-  // Línea de guiones tipo "- - - -"
-  // ------------------------------------------------------
-  // DIBUJO DE LÍNEAS
-  // ------------------------------------------------------
-
   const drawLineaSimple = (y) => {
     const margenX = 14;
     const anchoPagina = doc.internal.pageSize.getWidth();
@@ -317,31 +269,77 @@ const HaberesPDF = async (reporteData) => {
     doc.text(linea, margenX, y);
   };
 
-  // Línea vertical izquierda y derecha
   const drawLateral = (y) => {
     doc.text("|", 13, y);
     doc.text("|", 283, y);
     doc.text("|", 97, y);
   };
 
-  // laterales continuos (clave)
-  const drawLateralesContinuos = (yInicio, yFin) => {
-    let y = yInicio;
-    while (y <= yFin) {
-      drawLateral(y);
-      y += 3;
-    }
+  // Función para dibujar el encabezado de la sección de totales (reutilizable para saltos de página)
+  const drawTotalsHeader = () => {
+    drawHeaderBase(true);
+
+    const drawLineaConceptosFinales = (y) => {
+      const margenX = 14;
+      const anchoPagina = doc.internal.pageSize.getWidth();
+      const anchoDisponible = anchoPagina - margenX * 2;
+      const inicio = "#";
+      const patron = " -";
+      const fin = " #";
+      const anchoExtra = doc.getTextWidth("-");
+      let linea = inicio;
+      while (doc.getTextWidth(linea + patron + fin) < anchoDisponible + anchoExtra) {
+        linea += patron;
+      }
+      linea += fin;
+      doc.text(linea, margenX, y);
+    };
+    drawLineaConceptosFinales(45);
+
+    const drawLineMatchingText = (text, x, y) => {
+      const targetWidth = doc.getTextWidth(text);
+      const pattern = " -";
+      let line = "-";
+      while (doc.getTextWidth(line) < targetWidth) {
+        line += pattern;
+      }
+      doc.text(line, x, y);
+    };
+
+    const titulo = "C O N T R I B U C I O N  D E L  E S T A D O";
+    drawLineMatchingText(titulo, 30, 53);
+
+    doc.text(titulo, 30, 49);
+    doc.text("CONCEPTOS", 31, 57);
+    doc.text("DESCRIPCIONES", 55, 57);
+    doc.text("IMPORTES", 95, 57);
+    doc.text("D E V O L U C I O N E S", 215, 49);
+    doc.text("IMPORTES", 225, 57);
+    doc.text("BAJAS", 215, 61);
+    doc.text("INASISTENCIAS", 235, 61);
+
+    drawLineaSimple(65); // Línea superior de la caja
   };
 
-  // Fila con laterales y contenido
+  drawTotalsHeader(); // Dibujar encabezado inicial
+
+  // Fila con laterales, contenido y control de salto de página
   const drawRow = (y, drawContent) => {
-    drawContent();
+    // Si nos acercamos al final de la página (A4 landscape ~210mm alto)
+    if (y > 190) {
+      drawLineaSimple(y); // Cerrar caja en página actual
+      doc.addPage();
+      drawTotalsHeader(); // Nuevo encabezado
+      y = 69; // Reiniciar Y
+    }
+
+    if (drawContent) drawContent();
+    drawLateral(y - 2); // Dibujar laterales fila por fila
     return y + 3;
   };
 
-  // Fila vacía CON laterales
   const drawBlankRow = (y) => {
-    return y + 3;
+    return drawRow(y, null);
   };
 
   // ------------------------------------------------------
@@ -441,37 +439,65 @@ const HaberesPDF = async (reporteData) => {
     doc.text(`${totales.importeNeto.toFixed(2)}`, 102, y);
   });
 
-  y = drawRow(y, () => {
-    doc.text("TOTAL RETEN. DENO 7", 31, y);
-  });
+  if (retenciones && retenciones.length > 0) {
+    retenciones.forEach((ret) => {
+      y = drawRow(y, () => {
+        doc.text((ret.descripcion || "").toUpperCase(), 31, y);
+        const importeStr = `${ret.signo === "-" ? "-" : ""}${Number(ret.importe).toFixed(2)}`;
+        doc.text(importeStr, 102, y);
+      });
+    });
+  }
 
   y = drawRow(y, () => {
     doc.text("IMPORTE RECIBIDO EN PESOS", 31, y);
+    doc.text(`${totales.importeNetoRetenciones.toFixed(2)}`, 102, y);
   });
 
   // Línea inferior final
   const yLineaFinal = y + 3;
   drawLineaSimple(yLineaFinal);
-  drawLateral(yLineaFinal - 2);
-  doc.text("DEPOSITO DE I. P. S.", 31, yLineaFinal + 8);
-  doc.text("PATRONAL 12%", 31, yLineaFinal + 12);
-  doc.text(`${totales.totalIpsPatronal}`, 102, yLineaFinal + 12);
-  doc.text("PERSONAL 16%", 31, yLineaFinal + 16);
-  doc.text(`${totales.totalIps}`, 102, yLineaFinal + 16);
-  doc.text("T O T A L  I. P. S.", 31, yLineaFinal + 20);
-  doc.text(`${totales.totalIpsGeneral}`, 102, yLineaFinal + 20);
-  doc.text("OBRA SOCIAL", 31, yLineaFinal + 24);
-  doc.text("PATRONAL 5%", 31, yLineaFinal + 28);
-  doc.text(`${totales.osPatronal}`, 102, yLineaFinal + 28);
-  doc.text("PERSONAL 3%", 31, yLineaFinal + 32);
-  doc.text(`${totales.osPersonal}`, 102, yLineaFinal + 32);
-  doc.text("T O T A L  O B R A  S O C I A L", 31, yLineaFinal + 36);
-  doc.text(`${totales.totalOSGeneral}`, 102, yLineaFinal + 36);
-  const yTotalObraSocial = yLineaFinal + 36;
-  const yLineaCierre = yTotalObraSocial + 5;
 
-  drawLineaSimple(yLineaCierre);
-  drawLateralesContinuos(67, yLineaCierre);
+  // Sección de IPS y Obra Social usando drawRow para mantener laterales y salto de página
+  y = yLineaFinal; // Continuamos desde la línea final
+  y = drawBlankRow(y); // Espacio
+
+  y = drawRow(y, () => doc.text("DEPOSITO DE I. P. S.", 31, y));
+  y = drawBlankRow(y);
+
+  y = drawRow(y, () => {
+    doc.text("PATRONAL 12%", 31, y);
+    doc.text(`${totales.totalIpsPatronal}`, 102, y);
+  });
+  y = drawRow(y, () => {
+    doc.text("PERSONAL 16%", 31, y);
+    doc.text(`${totales.totalIps}`, 102, y);
+  });
+  y = drawRow(y, () => {
+    doc.text("T O T A L  I. P. S.", 31, y);
+    doc.text(`${totales.totalIpsGeneral}`, 102, y);
+  });
+
+  y = drawBlankRow(y);
+  y = drawRow(y, () => doc.text("OBRA SOCIAL", 31, y));
+  y = drawBlankRow(y);
+
+  y = drawRow(y, () => {
+    doc.text("PATRONAL 5%", 31, y);
+    doc.text(`${totales.osPatronal}`, 102, y);
+  });
+  y = drawRow(y, () => {
+    doc.text("PERSONAL 3%", 31, y);
+    doc.text(`${totales.osPersonal}`, 102, y);
+  });
+  y = drawRow(y, () => {
+    doc.text("T O T A L  O B R A  S O C I A L", 31, y);
+    doc.text(`${totales.totalOSGeneral}`, 102, y);
+  });
+
+  // Cierre final
+  drawLineaSimple(y);
+
   const drawLineaCentradaConTexto = (y, texto) => {
     const margenX = 14;
     const anchoPagina = doc.internal.pageSize.getWidth();
@@ -502,8 +528,8 @@ const HaberesPDF = async (reporteData) => {
     const lineaFinal = izquierda + parteCentral + derecha;
     doc.text(lineaFinal, margenX + anchoTotalLinea / 2, y, { align: "center" });
   };
-  drawLineaCentradaConTexto(yLineaCierre + 5, "P    E    S   O    S");
-  drawLineaSimple(yLineaCierre + 10);
+  drawLineaCentradaConTexto(y + 5, "P    E    S   O    S");
+  drawLineaSimple(y + 10);
 
   addFooters();
   doc.output("dataurlnewwindow");

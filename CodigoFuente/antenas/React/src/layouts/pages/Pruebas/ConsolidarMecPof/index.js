@@ -195,6 +195,7 @@ function ConsolidarMecPOF() {
       IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
       Importe: parseFloat(importeRetencion),
+      Vigente: "S",
       Signo: signo,
     };
 
@@ -231,6 +232,7 @@ function ConsolidarMecPOF() {
       IdRetencion: selectedRetencion,
       IdCabecera: selectedCabecera,
       IdEstablecimiento: selectedIdEstablecimiento,
+      Vigente: "S",
       Importe: parseFloat(importeRetencion),
       Signo: signo,
     };
@@ -741,6 +743,7 @@ function ConsolidarMecPOF() {
           anioLiquidacion: cabeceraSeleccionada?.anioLiquidacion || null,
           mesLiquidacion: cabeceraSeleccionada?.mesLiquidacion || null,
         },
+        retenciones: dataParaReporte.retenciones || [],
         docentes: dataParaReporte.personas,
         totales: {
           totalConAporte: dataParaReporte.totalConAporte || 0,
@@ -757,6 +760,7 @@ function ConsolidarMecPOF() {
           osPersonal: dataParaReporte.osPersonal || 0,
           totalIpsGeneral: dataParaReporte.totalIpsGeneral || 0,
           totalOSGeneral: dataParaReporte.totalOSGeneral || 0,
+          importeNetoRetenciones: dataParaReporte.importeNetoRetenciones || 0,
         },
         totalesFinales: dataParaReporte.totalesPorConcepto,
       };
