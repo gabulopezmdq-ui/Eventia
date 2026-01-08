@@ -665,7 +665,7 @@ namespace API.Services
 
                 if (POF != null)
                 {
-                    if (!mecanizadas.Any(m => m.IdPOF == POF.IdPOF && m.CodigoLiquidacion == registro.CodigoLiquidacion))
+                    if (!mecanizadas.Any(m => m.IdPOF == POF.IdPOF && m.CodigoLiquidacion == registro.CodigoLiquidacion && m.AnioMesAfectacion == registro.AnioMesAfectacion))
                     {
                         mecanizadas.Add(new MEC_Mecanizadas
                         {
