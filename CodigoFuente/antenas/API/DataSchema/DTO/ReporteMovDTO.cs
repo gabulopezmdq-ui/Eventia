@@ -21,6 +21,7 @@ namespace API.DataSchema.DTO
             public int? Mes { get; set; }
             public int? Anio { get; set; }
             public string? Area { get; set; }
+            public DateTime? Fecha { get; set; }
 
             // ► Array con todos los docentes/movimientos
             public List<ReporteDocenteDTO> Docentes { get; set; } = new();

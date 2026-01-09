@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -30,5 +31,6 @@ namespace API.DataSchema
         [ForeignKey(nameof(IdCabecera))]
         public virtual MEC_CabeceraLiquidacion? Cabecera { get; set; }
 
+      
     }
 }

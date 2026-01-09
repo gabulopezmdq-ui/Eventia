@@ -63,7 +63,7 @@ namespace API.Services
                 from nomen in nomenJoin.DefaultIfEmpty()
                 where cargo.CodDepend == codDepend
                 //where cargo.NroLegajo == 35642
-                where cargo.FechaBaja == new DateTime(1894, 4, 15) //esta es la fecha que es considerada NULL en EFImuni
+                //where cargo.FechaBaja == new DateTime(1894, 4, 15) //esta es la fecha que es considerada NULL en EFImuni
                 select new
                 {
                     cargo.NroOrden,
@@ -130,7 +130,7 @@ namespace API.Services
                         from nomen in nomenJoin.DefaultIfEmpty()
 
                         where cargo.CodDepend == codDepend
-                        where cargo.FechaBaja == new DateTime(1894, 4, 15)
+                       // where cargo.FechaBaja == new DateTime(1894, 4, 15)
 
                         select new
                         {
@@ -225,10 +225,10 @@ namespace API.Services
 
             var result =
                 from d in docentesExtendidos
-                join p in personas on d.NroDoc equals p.DNI into perJoin
-                from p in perJoin.DefaultIfEmpty()
-                join pf in pofs on p?.IdPersona equals pf.IdPersona into pofJoin
-                from pf in pofJoin.DefaultIfEmpty()
+join p in personas on d.NroDoc equals p.DNI into perJoin
+from p in perJoin.DefaultIfEmpty()
+join pf in pofs on (p != null ? p.IdPersona : 0) equals pf.IdPersona into pofJoin
+from pf in pofJoin.DefaultIfEmpty()
                 select new EFIDocPOFDTO
                 {
                     // LEGAJO EFI

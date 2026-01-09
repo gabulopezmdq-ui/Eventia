@@ -358,7 +358,8 @@ namespace API.Services
                     Subvencion = c.Establecimientos.Subvencion,
                     Mes = c.Mes,
                     Anio = c.Anio,
-                    Area = c.Area
+                    Area = c.Area,
+                    Fecha = c.Fecha
                 })
                 .FirstOrDefaultAsync();
 

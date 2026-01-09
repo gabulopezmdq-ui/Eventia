@@ -194,6 +194,8 @@ namespace API.Controllers
             return Ok("Movimiento enviado correctamente.");
         }
 
+
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpPut("MovimientoAlta")]
         public async Task<IActionResult> ActualizarYCrearDetalle([FromBody] MovimientosDetalleDTO dto)
         {
@@ -230,6 +232,8 @@ namespace API.Controllers
         }
 
         //BAJA
+
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpPost("MovimientosBajas")]
         public async Task<IActionResult> Baja([FromBody] MEC_MovimientosDetalle movimientos)
         {
@@ -239,6 +243,7 @@ namespace API.Controllers
 
         //REPORTE
 
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpGet("Reporte")]
         public async Task<IActionResult> GenerarReporte(int idCabecera)
         {
@@ -251,6 +256,7 @@ namespace API.Controllers
         }
 
         //ROLES Y EST
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpGet("RolesEst")]
         public async Task<ActionResult<UsuarioInfoDTO>> GetInfoUsuario()
         {
@@ -284,6 +290,8 @@ namespace API.Controllers
         }
 
         //Eliminar Detalle
+
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpDelete("EliminarDetalle")]
         public async Task<IActionResult> EliminarDetalle([FromQuery] int IdMovimientoDetalle)
         {
@@ -296,6 +304,7 @@ namespace API.Controllers
             return Ok(new { mensaje = "Registro eliminado correctamente" });
         }
 
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpPut("PutCabecera")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> UpdateCabecera([FromBody] MEC_MovimientosCabecera cabecera)
         {
@@ -311,6 +320,7 @@ namespace API.Controllers
             return Ok(cabecera);
         }
 
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         //devolucion de la cabecera
         [HttpPut("DevolverMov")]
         public async Task<ActionResult<MEC_MovimientosCabecera>> DevolverMovimiento([FromBody] DevolverMov request)
@@ -319,6 +329,7 @@ namespace API.Controllers
             return Ok("Cabecera Actualizada");
         }
 
+        [Authorize(Roles = "SuperAdmin, Admin, Secretario")]
         [HttpPut("EditarDetalle")]
         public async Task<ActionResult<MEC_MovimientosDetalle>> EditarDetalle([FromBody] MEC_MovimientosDetalle request)
         {
