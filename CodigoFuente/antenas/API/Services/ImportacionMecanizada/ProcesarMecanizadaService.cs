@@ -329,7 +329,8 @@ namespace API.Services
                 from persona in perJoin.DefaultIfEmpty()
 
                 join a in _context.MEC_POF_Antiguedades
-                    on persona.IdPersona equals a.IdPersona into antJoin
+                    on persona != null ? persona.IdPersona : 0
+                    equals a.IdPersona into antJoin
                 from antiguedad in antJoin.DefaultIfEmpty()
 
                 group new { t, antiguedad } by new
@@ -765,7 +766,12 @@ namespace API.Services
             var establecimientos = await _context.MEC_Establecimientos.AsNoTracking()
                                              .ToDictionaryAsync(e => e.NroDiegep);
 
-            var pofs = await _context.MEC_POF.AsNoTracking().ToListAsync();
+            var pofs = await _context.MEC_POF
+                                            .Include(p => p.Persona)
+                                            .Include(p => p.CarRevista)
+                                            .Include(p => p.Categoria)
+                                            .AsNoTracking()
+                                            .ToListAsync();
             var pofDict = pofs.GroupBy(p => (p.IdPersona, p.IdEstablecimiento, p.Secuencia))
                               .ToDictionary(g => g.Key, g => g.First());
 
@@ -809,9 +815,21 @@ namespace API.Services
                             Secuencia = registro.Secuencia,
                             TipoCargo = registro.TipoCargo,
                             UE = establecimiento.UE,
+
                             Apellido = persona.Apellido,
                             Nombre = persona.Nombre,
+
+                            // 🔹 DESDE MEC
                             LegajoMEC = persona.Legajo,
+                            LegajoEFI = pof.Persona.Legajo,
+                            //Barra = pof.POFBarras.,
+                            Cargo = pof.TipoCargo,
+                            Caracter = pof.CarRevista.CodPcia,
+                            Funcion = registro.Funcion,
+
+                            CargoMEC = pof.Categoria.IdTipoCategoria,
+                            CaracterMEC = pof.IdCarRevista,
+
                             Estado = "NP",
                             HorasDesignadas = registro.HorasDesignadas
                         };
