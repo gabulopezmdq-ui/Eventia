@@ -205,7 +205,7 @@ function ConsolidarMecPOF() {
       })
       .then(() => {
         limpiarFormulario();
-        fetchRetencionesEstablecimiento(); // 🔑
+        fetchRetencionesEstablecimiento();
         setShowSuccessAlert(true);
       })
       .catch(() => {
