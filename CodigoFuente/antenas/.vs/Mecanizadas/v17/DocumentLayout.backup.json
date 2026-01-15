@@ -1,0 +1,485 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\mec_tmpmecanizadas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\mec_tmpmecanizadas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\mec_carrevista.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\mec_carrevista.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\carrevistacontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\carrevistacontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\services\\pof\\pofservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\services\\pof\\pofservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\pofcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\pofcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\services\\aprobarinasistencias\\aprobarinasistenciasservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\services\\aprobarinasistencias\\aprobarinasistenciasservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\modelconfiguration\\mec_inasistenciascabeceraconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\modelconfiguration\\mec_inasistenciascabeceraconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\datacontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\datacontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\personascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\personascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\mec_tmperrorestiposestablecimientos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\mec_tmperrorestiposestablecimientos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\utility\\globalerrorhandlingmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\utility\\globalerrorhandlingmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\importarmecanizadascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\importarmecanizadascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\services\\importacionmecanizada\\consolidarmecanizadaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\services\\importacionmecanizada\\consolidarmecanizadaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\mec_personas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\mec_personas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\services\\importacionmecanizada\\procesarmecanizadaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\services\\importacionmecanizada\\procesarmecanizadaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\services\\basecrudservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\services\\basecrudservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\modelconfiguration\\mec_pofconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\modelconfiguration\\mec_pofconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\mec_pof_antiguedades.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\mec_pof_antiguedades.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\mec_pof.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\mec_pof.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\conceptoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\conceptoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\modelconfiguration\\mec_carrevistaconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\modelconfiguration\\mec_carrevistaconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\cabeceraliquidacioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\cabeceraliquidacioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\modelconfiguration\\mec_tiposfuncionesconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\modelconfiguration\\mec_tiposfuncionesconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\dataschema\\mec_tiposfunciones.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\dataschema\\mec_tiposfunciones.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\tiposliquidacionescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\tiposliquidacionescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\tiposestablecimientoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\tiposestablecimientoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\controllers\\tiposcategoriascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\controllers\\tiposcategoriascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|c:\\desarrollo\\mecanizadas\\codigofuente\\antenas\\api\\migrations\\20240920143632_tiposliquidaciones.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{427250E4-2D43-4C5D-B731-5480AF30ABAC}|API\\API.csproj|solutionrelative:api\\migrations\\20240920143632_tiposliquidaciones.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MEC_TMPMecanizadas.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_TMPMecanizadas.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\MEC_TMPMecanizadas.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_TMPMecanizadas.cs",
+              "RelativeToolTip": "API\\DataSchema\\MEC_TMPMecanizadas.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAA4wCcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-19T11:53:26.104Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MEC_CarRevista.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_CarRevista.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\MEC_CarRevista.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_CarRevista.cs",
+              "RelativeToolTip": "API\\DataSchema\\MEC_CarRevista.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-17T17:15:48.779Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "POFservice.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\POF\\POFservice.cs",
+              "RelativeDocumentMoniker": "API\\Services\\POF\\POFservice.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\POF\\POFservice.cs",
+              "RelativeToolTip": "API\\Services\\POF\\POFservice.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAowDEAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-17T17:14:11.907Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "MEC_InasistenciasCabeceraConfiguration.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_InasistenciasCabeceraConfiguration.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\ModelConfiguration\\MEC_InasistenciasCabeceraConfiguration.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_InasistenciasCabeceraConfiguration.cs",
+              "RelativeToolTip": "API\\DataSchema\\ModelConfiguration\\MEC_InasistenciasCabeceraConfiguration.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAxwBEAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-17T17:10:07.161Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "DataContext.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\DataContext.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\DataContext.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\DataContext.cs",
+              "RelativeToolTip": "API\\DataSchema\\DataContext.cs",
+              "ViewState": "AgIAADAAAAAAAAAAAAAxwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-17T17:09:34.092Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AprobarInasistenciasService.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\AprobarInasistencias\\AprobarInasistenciasService.cs",
+              "RelativeDocumentMoniker": "API\\Services\\AprobarInasistencias\\AprobarInasistenciasService.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\AprobarInasistencias\\AprobarInasistenciasService.cs",
+              "RelativeToolTip": "API\\Services\\AprobarInasistencias\\AprobarInasistenciasService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAqwBAAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-13T13:18:08.938Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "CabeceraLiquidacionController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\CabeceraLiquidacionController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\CabeceraLiquidacionController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\CabeceraLiquidacionController.cs",
+              "RelativeToolTip": "API\\Controllers\\CabeceraLiquidacionController.cs",
+              "ViewState": "AgIAACYAAAAAAAAAAAAgwC0AAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-10-08T17:40:59.737Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "BaseCRUDService.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\BaseCRUDService.cs",
+              "RelativeDocumentMoniker": "API\\Services\\BaseCRUDService.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\BaseCRUDService.cs",
+              "RelativeToolTip": "API\\Services\\BaseCRUDService.cs",
+              "ViewState": "AgIAAHgAAAAAAAAAAAAUwIsAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-12T13:50:07.095Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Program.cs",
+              "RelativeDocumentMoniker": "API\\Program.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Program.cs",
+              "RelativeToolTip": "API\\Program.cs",
+              "ViewState": "AgIAAGIAAAAAAAAAAAAUwHkAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-12T13:55:26.348Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "POFController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\POFController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\POFController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\POFController.cs",
+              "RelativeToolTip": "API\\Controllers\\POFController.cs",
+              "ViewState": "AgIAAEQAAAAAAAAAAAAqwF4AAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-03T11:38:48.892Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CarRevistaController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\CarRevistaController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\CarRevistaController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\CarRevistaController.cs",
+              "RelativeToolTip": "API\\Controllers\\CarRevistaController.cs",
+              "ViewState": "AgIAACwAAAAAAAAAAAAIwB4AAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-12T13:52:10.485Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "MEC_TMPErroresTiposEstablecimientos.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_TMPErroresTiposEstablecimientos.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\MEC_TMPErroresTiposEstablecimientos.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_TMPErroresTiposEstablecimientos.cs",
+              "RelativeToolTip": "API\\DataSchema\\MEC_TMPErroresTiposEstablecimientos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-13T13:16:49.245Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "PersonasController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\PersonasController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\PersonasController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\PersonasController.cs",
+              "RelativeToolTip": "API\\Controllers\\PersonasController.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-13T13:17:01.15Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ImportarMecanizadasController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\ImportarMecanizadasController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\ImportarMecanizadasController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\ImportarMecanizadasController.cs",
+              "RelativeToolTip": "API\\Controllers\\ImportarMecanizadasController.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAACsAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-12T14:01:13.108Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "MEC_CarRevistaConfiguration.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_CarRevistaConfiguration.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\ModelConfiguration\\MEC_CarRevistaConfiguration.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_CarRevistaConfiguration.cs",
+              "RelativeToolTip": "API\\DataSchema\\ModelConfiguration\\MEC_CarRevistaConfiguration.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T14:26:09.48Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "ConceptosController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\ConceptosController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\ConceptosController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\ConceptosController.cs",
+              "RelativeToolTip": "API\\Controllers\\ConceptosController.cs",
+              "ViewState": "AgIAADsAAAAAAAAAAAAswEsAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-12T13:53:42.678Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "GlobalErrorHandlingMiddleware.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Utility\\GlobalErrorHandlingMiddleware.cs",
+              "RelativeDocumentMoniker": "API\\Utility\\GlobalErrorHandlingMiddleware.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Utility\\GlobalErrorHandlingMiddleware.cs",
+              "RelativeToolTip": "API\\Utility\\GlobalErrorHandlingMiddleware.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAUwCgAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-07T17:57:07.487Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ConsolidarMecanizadaService.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\ImportacionMecanizada\\ConsolidarMecanizadaService.cs",
+              "RelativeDocumentMoniker": "API\\Services\\ImportacionMecanizada\\ConsolidarMecanizadaService.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\ImportacionMecanizada\\ConsolidarMecanizadaService.cs",
+              "RelativeToolTip": "API\\Services\\ImportacionMecanizada\\ConsolidarMecanizadaService.cs",
+              "ViewState": "AgIAALEAAAAAAAAAAAAewD0BAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-24T12:10:45.204Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "MEC_POF.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_POF.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\MEC_POF.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_POF.cs",
+              "RelativeToolTip": "API\\DataSchema\\MEC_POF.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-03T12:23:47.933Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "MEC_POFConfiguration.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_POFConfiguration.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\ModelConfiguration\\MEC_POFConfiguration.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_POFConfiguration.cs",
+              "RelativeToolTip": "API\\DataSchema\\ModelConfiguration\\MEC_POFConfiguration.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAABsAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-03T12:24:49.416Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "ProcesarMecanizadaService.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\ImportacionMecanizada\\ProcesarMecanizadaService.cs",
+              "RelativeDocumentMoniker": "API\\Services\\ImportacionMecanizada\\ProcesarMecanizadaService.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Services\\ImportacionMecanizada\\ProcesarMecanizadaService.cs",
+              "RelativeToolTip": "API\\Services\\ImportacionMecanizada\\ProcesarMecanizadaService.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAgwBIAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-12T13:47:08.075Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "MEC_Personas.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_Personas.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\MEC_Personas.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_Personas.cs",
+              "RelativeToolTip": "API\\DataSchema\\MEC_Personas.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-23T17:22:08.555Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "MEC_POF_Antiguedades.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_POF_Antiguedades.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\MEC_POF_Antiguedades.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_POF_Antiguedades.cs",
+              "RelativeToolTip": "API\\DataSchema\\MEC_POF_Antiguedades.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-12T13:51:53.761Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "20240920143632_tiposLiquidaciones.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Migrations\\20240920143632_tiposLiquidaciones.cs",
+              "RelativeDocumentMoniker": "API\\Migrations\\20240920143632_tiposLiquidaciones.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Migrations\\20240920143632_tiposLiquidaciones.cs",
+              "RelativeToolTip": "API\\Migrations\\20240920143632_tiposLiquidaciones.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T14:36:33.073Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "MEC_TiposFunciones.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_TiposFunciones.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\MEC_TiposFunciones.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\MEC_TiposFunciones.cs",
+              "RelativeToolTip": "API\\DataSchema\\MEC_TiposFunciones.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T14:39:08.044Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "MEC_TiposFuncionesConfiguration.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_TiposFuncionesConfiguration.cs",
+              "RelativeDocumentMoniker": "API\\DataSchema\\ModelConfiguration\\MEC_TiposFuncionesConfiguration.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\DataSchema\\ModelConfiguration\\MEC_TiposFuncionesConfiguration.cs",
+              "RelativeToolTip": "API\\DataSchema\\ModelConfiguration\\MEC_TiposFuncionesConfiguration.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAA4AAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-20T14:39:12.883Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "TiposLiquidacionesController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\TiposLiquidacionesController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\TiposLiquidacionesController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\TiposLiquidacionesController.cs",
+              "RelativeToolTip": "API\\Controllers\\TiposLiquidacionesController.cs",
+              "ViewState": "AgIAACMAAAAAAAAAAAAgwDAAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-12T13:55:09.784Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "TiposEstablecimientosController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\TiposEstablecimientosController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\TiposEstablecimientosController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\TiposEstablecimientosController.cs",
+              "RelativeToolTip": "API\\Controllers\\TiposEstablecimientosController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAB7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-12T13:54:39.806Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "TiposCategoriasController.cs",
+              "DocumentMoniker": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\TiposCategoriasController.cs",
+              "RelativeDocumentMoniker": "API\\Controllers\\TiposCategoriasController.cs",
+              "ToolTip": "C:\\Desarrollo\\mecanizadas\\CodigoFuente\\antenas\\API\\Controllers\\TiposCategoriasController.cs",
+              "RelativeToolTip": "API\\Controllers\\TiposCategoriasController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAABvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-09-12T13:54:21.178Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
