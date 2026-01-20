@@ -62,9 +62,7 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
-//configuracion para EFIMuni
-builder.Services.AddDbContext<EFIDBContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("EFIMuni")));
+
 
 // Configuraci�n de la base de datos
 builder.Services.AddDbContext<DataContext>(options =>
@@ -76,21 +74,9 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddHealthChecks();
 
 // Registro de servicios principales
-builder.Services.AddScoped(typeof(IImportacionMecanizadaService<>), typeof(ImportacionMecanizadaService<>));
-builder.Services.AddScoped<IMovimientosService, MovimientosService>();
-builder.Services.AddScoped<IAprobarInasistenciasService, AprobarInasistenciasService>();
+//builder.Services.AddScoped<IMovimientosService, MovimientosService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped(typeof(IProcesarMecanizadaService<>), typeof(ProcesarMecanizadaService<>));
-builder.Services.AddScoped<IPOFService, POFService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUsXRolService, UsXRolService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
-builder.Services.AddScoped<IConsolidarMecanizadaService, ConsolidarMecanizadaService>();
-builder.Services.AddHttpClient<IPartesDiariosService, PartesDiariosService>();
-builder.Services.AddScoped<IPartesDiariosService, PartesDiariosService>();
-builder.Services.AddScoped<ICabeceraLiquidacionService, CabeceraLiquidacionService>();
-builder.Services.AddScoped<ICabeceraInasistenciasService, CabeceraInasistenciasService>();
-builder.Services.AddScoped<IEFIMuniService, EFIMuniService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

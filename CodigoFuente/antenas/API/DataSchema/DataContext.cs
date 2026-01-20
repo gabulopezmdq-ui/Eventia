@@ -13,8 +13,13 @@ namespace API.DataSchema
             //this.Configuration.LazyLoadingEnabled = false;
             //ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
-        
-        public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
+
+        public DbSet<ef_usuarios> ef_usuarios { get; set; }
+        public DbSet<ef_roles> ef_roles { get; set; }
+        public DbSet<ef_roles> ef_usuarios_roles { get; set; }
+
+
+        /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
         public DbSet<MEC_TiposEstablecimientos> MEC_TiposEstablecimientos { get; set; }
         public DbSet<MEC_Establecimientos> MEC_Establecimientos { get; set; }
@@ -57,10 +62,15 @@ namespace API.DataSchema
         public DbSet<MEC_MovimientosSuperCabecera> MEC_MovimientosSuperCabecera { get; set; }
         public DbSet<MEC_RetencionesXMecanizadas> MEC_RetencionesXMecanizadas { get; set; }
         public DbSet<MEC_Retenciones> MEC_Retenciones { get; set; }
-        public DbSet<MEC_TMPEFI> MEC_TMPEFI { get; set; }
+        public DbSet<MEC_TMPEFI> MEC_TMPEFI { get; set; }*/
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_usuariosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_rolesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_usuarios_rolesConfiguration());
+
+            /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TiposEstablecimientosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_EstablecimientosConfiguration());
@@ -103,7 +113,8 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new MEC_MovimientosSuperCabeceraConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TMPEFIConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_RetencionesXMecanizadasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RetencionesConfiguration());
+            modelBuilder.ApplyConfiguration(new MEC_RetencionesConfiguration());*/
+
             base.OnModelCreating(modelBuilder);
         }
     }
