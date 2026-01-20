@@ -33,6 +33,8 @@ namespace API.Repositories
         Task<bool> HasRelatedEntities(int id);
         PropertyInfo GetPrimaryKeyProperty(T entity);
         Task<T> FindLong(long id);
+        
+        Task<T> FindShort(short id);
 
-        }
+    }
 }

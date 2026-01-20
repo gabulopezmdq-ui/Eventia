@@ -66,7 +66,7 @@ builder.Services.AddAuthorization(options =>
 
 // Configuraci�n de la base de datos
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"))
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Supabase"))
            .EnableSensitiveDataLogging()
            .LogTo(Console.WriteLine, LogLevel.Information));
 

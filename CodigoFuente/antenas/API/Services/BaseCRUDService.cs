@@ -73,6 +73,11 @@ namespace API.Services
                     .Where(x => EF.Property<bool>(x, "Activo") == boolValue.Value)
             );
         }
+
+        public async Task<T> GetByIDShort(short id)
+        {
+            return await _genericRepo.FindShort(id);
+        }
         public async Task<T> GetByID(long id)
         {
             return await _genericRepo.FindLong(id);

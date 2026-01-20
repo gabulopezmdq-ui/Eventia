@@ -44,6 +44,17 @@ namespace API.Repositories
             return await _context.FindAsync<T>(id);
         }
 
+        public virtual async Task<T> FindShort(short id)
+        {
+            var keyName = _context.Model.FindEntityType(typeof(T)).FindPrimaryKey().Properties
+                .Select(x => x.Name)
+                .Single();
+            var entity = await _context.Set<T>()
+           .AsNoTracking()
+           .Where(e => EF.Property<short>(e, keyName) == id)
+           .FirstOrDefaultAsync();
+            return entity;
+        }
 
         public virtual async Task<T> FindLong(long id)
         {

@@ -12,6 +12,8 @@ namespace API.Services
     {
         IEnumerable<T> GetAll();
         IEnumerable<T> GetAllVigente();
+
+        Task<T> GetByIDShort(short id);
         Task<T> GetByIDInt(int id);
         Task<T> GetByID(long id);
         Task Add(T genericClass);
