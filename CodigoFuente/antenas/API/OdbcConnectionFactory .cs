@@ -33,25 +33,25 @@ namespace API
             _infogestConnectionString = infogestConnectionString;
         }
 
-        public OdbcConnection GetConnectionForRepository<T>()
-        {
-            var entityType = typeof(T);
-            var connectionAttribute = entityType.GetCustomAttribute<ConnectionNameAttribute>();
+        //public OdbcConnection GetConnectionForRepository<T>()
+        //{
+        //    var entityType = typeof(T);
+        //    var connectionAttribute = entityType.GetCustomAttribute<ConnectionNameAttribute>();
 
-            if (connectionAttribute != null)
-            {
-                string connectionName = connectionAttribute.ConnectionName;
-                if (connectionName == "sigemdb")
-                {
-                    return new OdbcConnection(_sigemdbConnectionString);
-                }
-                else if (connectionName == "infogest")
-                {
-                    return new OdbcConnection(_infogestConnectionString);
-                }
-            }
+        //    if (connectionAttribute != null)
+        //    {
+        //        string connectionName = connectionAttribute.ConnectionName;
+        //        if (connectionName == "sigemdb")
+        //        {
+        //            return new OdbcConnection(_sigemdbConnectionString);
+        //        }
+        //        else if (connectionName == "infogest")
+        //        {
+        //            return new OdbcConnection(_infogestConnectionString);
+        //        }
+        //    }
 
-            throw new InvalidOperationException("No se pudo determinar la conexión para el repositorio.");
-        }
+        //    throw new InvalidOperationException("No se pudo determinar la conexión para el repositorio.");
+        //}
     }
 }

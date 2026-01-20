@@ -19,6 +19,6 @@ namespace API
 {
     public interface IOdbcConnectionFactory
     {
-        OdbcConnection GetConnectionForRepository<T>();
+       // OdbcConnection GetConnectionForRepository<T>();
     }
 }

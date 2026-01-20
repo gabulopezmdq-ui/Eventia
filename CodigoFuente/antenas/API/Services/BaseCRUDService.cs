@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
-using API.DataSchema.dInterfaz;
+using API.DataSchema.Interfaz;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Office2010.Excel;
@@ -75,7 +75,7 @@ namespace API.Services
         }
         public async Task<T> GetByID(long id)
         {
-            return await _genericRepo.Find(id);
+            return await _genericRepo.FindLong(id);
         }
 
         public async Task<T> GetByIDInt(int id)
