@@ -12520,23 +12520,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\gabu_\\.nuget\\packages\\": {},
+    "C:\\Users\\gabrielalopez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
       "projectName": "IdentityServer",
-      "projectPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
-      "packagesPath": "C:\\Users\\gabu_\\.nuget\\packages\\",
-      "outputPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
+      "projectPath": "C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\IdentityServer\\IdentityServer.csproj",
+      "packagesPath": "C:\\Users\\gabrielalopez\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\IdentityServer\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\gabu_\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\gabrielalopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -12545,14 +12545,15 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "https://www.nuget.org/api/v2/": {}
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj": {
-              "projectPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj"
+            "C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj": {
+              "projectPath": "C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj"
             }
           }
         }
@@ -12566,8 +12567,7 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.300"
+      }
     },
     "frameworks": {
       "net8.0": {
@@ -12631,7 +12631,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
       }
     }
   },
@@ -12639,7 +12639,7 @@
     {
       "code": "NU1605",
       "level": "Error",
-      "message": "Advertencia como error: Degradación del paquete detectada: Microsoft.AspNetCore.Identity.UI de 10.0.2 a 7.0.11. Haga referencia al paquete directamente desde el proyecto para seleccionar una versión diferente. \r\n IdentityServer -> API -> Microsoft.AspNetCore.Identity.UI (>= 10.0.2) \r\n IdentityServer -> Microsoft.AspNetCore.Identity.UI (>= 7.0.11)",
+      "message": "Warning As Error: Detected package downgrade: Microsoft.AspNetCore.Identity.UI from 10.0.2 to 7.0.11. Reference the package directly from the project to select a different version. \r\n IdentityServer -> API -> Microsoft.AspNetCore.Identity.UI (>= 10.0.2) \r\n IdentityServer -> Microsoft.AspNetCore.Identity.UI (>= 7.0.11)",
       "libraryId": "Microsoft.AspNetCore.Identity.UI",
       "targetGraphs": [
         "net8.0"
