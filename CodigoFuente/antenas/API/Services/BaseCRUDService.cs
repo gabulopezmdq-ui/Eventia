@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
-using API.DataSchema.Interfaz;
+using API.DataSchema.dInterfaz;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Office2010.Excel;
@@ -48,7 +48,7 @@ namespace API.Services
             if (!string.IsNullOrEmpty(vigenteStatus))
             {
                 // Filtra solo si el estado de "Vigente" es proporcionado ("S" o "N")
-                query = query.Where(x => EF.Property<string>(x, "Vigente") == vigenteStatus);
+                query = query.Where(x => EF.Property<string>(x, "activo") == vigenteStatus);
             }
             // Si el valor es nulo o vacío, retorna todos sin aplicar filtro
             return await Task.FromResult(query);
@@ -73,10 +73,16 @@ namespace API.Services
                     .Where(x => EF.Property<bool>(x, "Activo") == boolValue.Value)
             );
         }
-        public async Task<T> GetByID(int id)
+        public async Task<T> GetByID(long id)
         {
             return await _genericRepo.Find(id);
         }
+
+        public async Task<T> GetByIDInt(int id)
+        {
+            return await _genericRepo.Find(id);
+        }
+
         public async Task<IEnumerable<T>> GetByParam(Expression<Func<T, bool>> where)
         {
             return await _genericRepo.Find(where);
@@ -482,52 +488,52 @@ namespace API.Services
 
 
         // Método para verificar duplicados de usuario
-        public async Task<bool> IsUserDuplicate(T entity)
-        {
-            return await UserDuplicate(entity);
-        }
-        public async Task<bool> UserDuplicate(T entity)
-        {
-            if (entity is MEC_RolesXUsuarios rolesXUsuariosEntity)
-            {
-                // Verificar duplicados de RolesXUsuarios
-                var existingEntities = await _genericRepo.GetAllAsync();
-                return existingEntities.Any(x =>
-                    (x as MEC_RolesXUsuarios)?.IdUsuario == rolesXUsuariosEntity.IdUsuario &&
-                    (x as MEC_RolesXUsuarios)?.IdRol == rolesXUsuariosEntity.IdRol);
-            }
+        //public async Task<bool> IsUserDuplicate(T entity)
+        //{
+        //    return await UserDuplicate(entity);
+        //}
+        //public async Task<bool> UserDuplicate(T entity)
+        //{
+        //    if (entity is MEC_RolesXUsuarios rolesXUsuariosEntity)
+        //    {
+        //        // Verificar duplicados de RolesXUsuarios
+        //        var existingEntities = await _genericRepo.GetAllAsync();
+        //        return existingEntities.Any(x =>
+        //            (x as MEC_RolesXUsuarios)?.IdUsuario == rolesXUsuariosEntity.IdUsuario &&
+        //            (x as MEC_RolesXUsuarios)?.IdRol == rolesXUsuariosEntity.IdRol);
+        //    }
 
-            // No se encontró ningún duplicado para otras entidades
-            return false;
-        }
-        public async Task<bool> HasRelatedEntities(int id)
-        {
-            // Llamar al método HasRelatedEntities del repositorio y devolver su resultado
-            return await _genericRepo.HasRelatedEntities(id);
-        }
+        //    // No se encontró ningún duplicado para otras entidades
+        //    return false;
+        //}
+        //public async Task<bool> HasRelatedEntities(int id)
+        //{
+        //    // Llamar al método HasRelatedEntities del repositorio y devolver su resultado
+        //    return await _genericRepo.HasRelatedEntities(id);
+        //}
 
-        private string GetForeignKeyName(Type entityType)
-        {
-            // Obtener el modelo de EF Core para el tipo especificado
-            var entityTypeModel = _context.Model.FindEntityType(entityType);
-            if (entityTypeModel == null)
-            {
-                throw new InvalidOperationException($"El tipo '{entityType.Name}' no está definido en el modelo.");
-            }
+        //private string GetForeignKeyName(Type entityType)
+        //{
+        //    // Obtener el modelo de EF Core para el tipo especificado
+        //    var entityTypeModel = _context.Model.FindEntityType(entityType);
+        //    if (entityTypeModel == null)
+        //    {
+        //        throw new InvalidOperationException($"El tipo '{entityType.Name}' no está definido en el modelo.");
+        //    }
 
-            // Buscar las propiedades de clave foránea
-            var foreignKey = entityTypeModel.GetForeignKeys()
-                .FirstOrDefault();
+        //    // Buscar las propiedades de clave foránea
+        //    var foreignKey = entityTypeModel.GetForeignKeys()
+        //        .FirstOrDefault();
 
-            if (foreignKey == null)
-            {
-                throw new InvalidOperationException($"No se encontró una clave foránea en la entidad '{entityType.Name}'.");
-            }
+        //    if (foreignKey == null)
+        //    {
+        //        throw new InvalidOperationException($"No se encontró una clave foránea en la entidad '{entityType.Name}'.");
+        //    }
 
-            // Devolver el nombre de la propiedad de clave foránea
-            return foreignKey.Properties.FirstOrDefault()?.Name
-                ?? throw new InvalidOperationException($"La clave foránea en '{entityType.Name}' no tiene una propiedad válida.");
-        }
+        //    // Devolver el nombre de la propiedad de clave foránea
+        //    return foreignKey.Properties.FirstOrDefault()?.Name
+        //        ?? throw new InvalidOperationException($"La clave foránea en '{entityType.Name}' no tiene una propiedad válida.");
+        //}
         //metodo NUEVO
         public async Task<bool> UpdateVigenteAsync(int entityId, T entityToUpdate)
         {

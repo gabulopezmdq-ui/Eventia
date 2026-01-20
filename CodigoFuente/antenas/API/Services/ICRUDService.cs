@@ -12,8 +12,8 @@ namespace API.Services
     {
         IEnumerable<T> GetAll();
         IEnumerable<T> GetAllVigente();
-        Task<T> GetByID(int id);
-
+        Task<T> GetByIDInt(int id);
+        Task<T> GetByID(long id);
         Task Add(T genericClass);
 
         Task Delete(int id);
@@ -23,11 +23,11 @@ namespace API.Services
         Task<IEnumerable<T>> GetByParam(Expression<Func<T, bool>> where);
         Task<IEnumerable<T>> GetByActivo(bool? boolValue);
         Task<IEnumerable<T>> GetAllActivos();
-        Task<bool> UserDuplicate(T entity);
-        Task<bool> IsUserDuplicate(T entity);
+        //Task<bool> UserDuplicate(T entity);
+        //Task<bool> IsUserDuplicate(T entity);
         Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null);
         Task DeleteUsuario(int Id);
-        Task<bool> HasRelatedEntities(int id);
+        //Task<bool> HasRelatedEntities(int id);
 
         Task<T> UpdatePOF(T genericClass);
 
