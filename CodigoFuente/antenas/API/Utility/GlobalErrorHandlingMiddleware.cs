@@ -86,7 +86,16 @@ namespace API.Utility
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)status;
             //return context.Response.WriteAsync(exceptionResult);
-            var exceptionResult = JsonSerializer.Serialize(new { error = message, stackTrace, exception.InnerException });
+            var exceptionResult = JsonSerializer.Serialize(new
+            {
+                error = message,
+                stackTrace,
+                inner = exception.InnerException == null ? null : new
+                {
+                    type = exception.InnerException.GetType().Name,
+                    message = exception.InnerException.Message
+                }
+            });
             return context.Response.WriteAsync(exceptionResult);
 
         }
