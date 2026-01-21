@@ -141,7 +141,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapControllers().RequireAuthorization("ApiScope");
+//app.MapControllers().RequireAuthorization("ApiScope");
 app.Map("/health", app => app.UseHealthChecks("/health"));
 
 // Definici�n de la pol�tica de reintentos (esto puede quedarse al final ya que es un m�todo auxiliar)
