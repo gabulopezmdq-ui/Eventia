@@ -11,20 +11,23 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [AllowAnonymous]
+   // [AllowAnonymous]
     [Route("[controller]")]
-    public class rolesController : ControllerBase
+    public class RolesController : ControllerBase
     {
         private readonly DataContext _context;
         private readonly ICRUDService<ef_roles> _serviceGenerico;
-        private readonly ILogger<rolesController> _logger;
+        private readonly ILogger<RolesController> _logger;
 
-        public rolesController(DataContext context, ILogger<rolesController> logger, ICRUDService<ef_roles> serviceGenerico)
+        public RolesController(DataContext context, ILogger<RolesController> logger, ICRUDService<ef_roles> serviceGenerico)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
         }
+
+        [HttpGet("ping")]
+        public IActionResult Ping() => Ok("pong");
 
         //[Authorize(Roles = "SUPERADMIN")]
         [HttpGet("GetAll")]

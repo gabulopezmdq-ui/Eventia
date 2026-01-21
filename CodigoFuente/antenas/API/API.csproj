@@ -1,183 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <UserSecretsId>7added17-6cfa-48d7-a2fe-1ca9f0a14042</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-	<GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
-	<PlatformTarget>AnyCPU</PlatformTarget>
-	<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-	<Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <WarningLevel>6</WarningLevel>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <WarningLevel>6</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="DataSchema\Basic C# Model\**" />
-    <Content Remove="DataSchema\Basic C# Model\**" />
-    <EmbeddedResource Remove="DataSchema\Basic C# Model\**" />
-    <None Remove="DataSchema\Basic C# Model\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Controllers\AdministracionController.cs" />
-    <Compile Remove="Controllers\ANT_AntenasController.cs" />
-    <Compile Remove="Controllers\ANT_ApoderadosController.cs" />
-    <Compile Remove="Controllers\ANT_EstadoTramiteController.cs" />
-    <Compile Remove="Controllers\ANT_ExpedientesController.cs" />
-    <Compile Remove="Controllers\ANT_InspeccionesController.cs" />
-    <Compile Remove="Controllers\ANT_PrestadoresController.cs" />
-    <Compile Remove="Controllers\ANT_TipoAntenasController.cs" />
-    <Compile Remove="Controllers\ConservadoraController.cs" />
-    <Compile Remove="Controllers\MaquinaController.cs" />
-    <Compile Remove="Controllers\ObraController.cs" />
-    <Compile Remove="Controllers\PersonaController.cs" />
-    <Compile Remove="Controllers\RepTecnicoController.cs" />
-    <Compile Remove="Controllers\SeguroController.cs" />
-    <Compile Remove="Controllers\TipoEquipamientoController.cs" />
-    <Compile Remove="Controllers\TipoObraController.cs" />
-    <Compile Remove="Controllers\VelocidadController .cs" />
-    <Compile Remove="DataSchema\ANT_Antenas.cs" />
-    <Compile Remove="DataSchema\ANT_Apoderados.cs" />
-    <Compile Remove="DataSchema\ANT_EstadoTramites.cs" />
-    <Compile Remove="DataSchema\ANT_Expedientes.cs" />
-    <Compile Remove="DataSchema\ANT_Inspecciones.cs" />
-    <Compile Remove="DataSchema\ANT_Prestadores.cs" />
-    <Compile Remove="DataSchema\ANT_TipoAntenas.cs" />
-    <Compile Remove="DataSchema\ApoderadoXPrestador.cs" />
-    <Compile Remove="DataSchema\EV_Administracion.cs" />
-    <Compile Remove="DataSchema\EV_Conservadora.cs" />
-    <Compile Remove="DataSchema\EV_Maquina.cs" />
-    <Compile Remove="DataSchema\EV_Obra.cs" />
-    <Compile Remove="DataSchema\EV_Persona.cs" />
-    <Compile Remove="DataSchema\EV_RepTecnico.cs" />
-    <Compile Remove="DataSchema\EV_Seguro.cs" />
-    <Compile Remove="DataSchema\EV_TipoEquipamiento.cs" />
-    <Compile Remove="DataSchema\EV_TipoObra.cs" />
-    <Compile Remove="DataSchema\EV_Velocidades.cs" />
-    <Compile Remove="DataSchema\Leyendas.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ANT_AntenasConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ANT_ApoderadosConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ANT_EstadoTramiteConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ANT_ExpedientesConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ANT_InspeccionesConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ANT_PrestadoresConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ANT_TipoAntenasConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\ApoderadoXPrestadorConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_AdministracionConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_ConservadoraConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_MaquinaConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_ObraConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_PersonaConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_RepTecnicoConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_SeguroConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_TipoEquipamientoConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_TipoObraConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\EV_VelocidadesConfiguration.cs" />
-    <Compile Remove="DataSchema\ModelConfiguration\LeyendaConfiguration.cs" />
-    <Compile Remove="Migrations\20231017174800_sexta.cs" />
-    <Compile Remove="Migrations\20231017174800_sexta.Designer.cs" />
-    <Compile Remove="Migrations\20231018121730_septima.cs" />
-    <Compile Remove="Migrations\20231018121730_septima.Designer.cs" />
-    <Compile Remove="Migrations\20231018135154_octava.cs" />
-    <Compile Remove="Migrations\20231018135154_octava.Designer.cs" />
-    <Compile Remove="Migrations\20231019145738_novena.cs" />
-    <Compile Remove="Migrations\20231019145738_novena.Designer.cs" />
-    <Compile Remove="Migrations\20231019173002_decima.cs" />
-    <Compile Remove="Migrations\20231019173002_decima.Designer.cs" />
-    <Compile Remove="Migrations\20231024125339_once.cs" />
-    <Compile Remove="Migrations\20231024125339_once.Designer.cs" />
-    <Compile Remove="Migrations\20231024135728_doce.cs" />
-    <Compile Remove="Migrations\20231024135728_doce.Designer.cs" />
-    <Compile Remove="Migrations\20231024141327_trece.cs" />
-    <Compile Remove="Migrations\20231024141327_trece.Designer.cs" />
-    <Compile Remove="Migrations\20231024162250_catorce.cs" />
-    <Compile Remove="Migrations\20231024162250_catorce.Designer.cs" />
-    <Compile Remove="Migrations\20231025140633_quince.cs" />
-    <Compile Remove="Migrations\20231025140633_quince.Designer.cs" />
-    <Compile Remove="Migrations\20231026113743_dieciseis.cs" />
-    <Compile Remove="Migrations\20231026113743_dieciseis.Designer.cs" />
-    <Compile Remove="Migrations\20231026122220_diecisiete.cs" />
-    <Compile Remove="Migrations\20231026122220_diecisiete.Designer.cs" />
-    <Compile Remove="Migrations\20231030141844_dieciocho.cs" />
-    <Compile Remove="Migrations\20231030141844_dieciocho.Designer.cs" />
-    <Compile Remove="Migrations\20231030144156_diecinueve.cs" />
-    <Compile Remove="Migrations\20231030144156_diecinueve.Designer.cs" />
-    <Compile Remove="Migrations\20231030165918_veinte.cs" />
-    <Compile Remove="Migrations\20231030165918_veinte.Designer.cs" />
-    <Compile Remove="Migrations\20231106151154_veintiuno.cs" />
-    <Compile Remove="Migrations\20231106151154_veintiuno.Designer.cs" />
-    <Compile Remove="Migrations\20231114150211_veintidos.cs" />
-    <Compile Remove="Migrations\20231114150211_veintidos.Designer.cs" />
-    <Compile Remove="Migrations\DataContextModelSnapshot.cs" />
-    <Compile Remove="Repositories\ANT_ApoderadosRepository.cs" />
-    <Compile Remove="Repositories\ANT_ExpedientesRepository.cs" />
-    <Compile Remove="Repositories\ANT_InspeccionesRepository.cs" />
-    <Compile Remove="Repositories\ANT_PrestadoresRepository.cs" />
-    <Compile Remove="Repositories\CabLiquidacionRepository.cs" />
-    <Compile Remove="Repositories\EV_ConservadoraRepository.cs" />
-    <Compile Remove="Repositories\IANT_ApoderadosRepository.cs" />
-    <Compile Remove="Repositories\IANT_ExpedientesRepository.cs" />
-    <Compile Remove="Repositories\IANT_InspeccionesRepository.cs" />
-    <Compile Remove="Repositories\IANT_PrestadoresRepository.cs" />
-    <Compile Remove="Repositories\ICabLiquidacionRepository.cs" />
-    <Compile Remove="Services\ICF_ProcesoxGrupoService - Copy.cs" />
-    <Compile Remove="Startup.cs" />
-    <Compile Remove="Test\ImportacionMecanizadaServiceTests.cs" />
-    <Compile Remove="Test\ProcesarMecanizadaControllerTests.cs" />
-    <Compile Remove="Utility\ImageTools.cs" />
-    <Compile Remove="Utility\LdapConnectionProvider.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Configuraciones.sql" />
-    <None Remove="salida.sql" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Bogus" Version="34.0.2" />
-    <PackageReference Include="ClosedXML" Version="0.104.1" />
-    <PackageReference Include="EFCore.BulkExtensions" Version="7.0.1" />
-    <PackageReference Include="EPPlus" Version="7.3.1" />
-    <PackageReference Include="FluentAssertions" Version="7.0.0-alpha.3" />
-    <PackageReference Include="IdentityModel" Version="6.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.11" />
-    <!--<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.2" />-->
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.11" />
+    <!-- Paquetes de EF Core y PostgreSQL -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.11">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.2" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
-    <PackageReference Include="Moq" Version="4.20.69" />
-    <PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.6.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.10" />
+
+    <!-- JWT / Identity / Auth -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.11" />
+
+    <!-- Swagger -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <PackageReference Include="System.Data.Odbc" Version="7.0.0" />
+
+    <!-- Otros paquetes -->
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.9" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.2" />
+    <PackageReference Include="Moq" Version="4.20.69" />
     <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="FluentAssertions" Version="6.9.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.23.0" />
+    <PackageReference Include="IdentityModel" Version="6.1.3" />
+    <PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.7.0" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="System.Data.Odbc" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -185,6 +46,5 @@
     <Folder Include="Migrations\" />
     <Folder Include="Test\" />
   </ItemGroup>
-
 
 </Project>

@@ -1,30 +1,31 @@
+using API;
 using API.DataSchema;
 using API.Repositories;
 using API.Services;
 using API.Utility;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Extensions.Http;
 using System;
-using API;
 using System.IO;
-using FluentAssertions.Common;
-using System.Text;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 //using API.Services.UsXRol;
 //using API.Services.ImportacionMecanizada;
 using System.Net.Http;
-using Polly;
-using Polly.Extensions.Http;
+using System.Text;
 
 
 
@@ -47,7 +48,7 @@ builder.Configuration
 // Add services to the container.
 IdentityModelEventSource.ShowPII = true;
 
-builder.Services.AddControllers().AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+//builder.Services.AddControllers().AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
 // Configuraci�n de autenticaci�n JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -75,6 +76,10 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser();
     });
 });
+
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
 
 //builder.Services.AddIdentityCore<IdentityUser>()
 //    .AddEntityFrameworkStores<AppDbContext>();
@@ -132,6 +137,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+var endpointDataSource = app.Services.GetRequiredService<EndpointDataSource>();
+Console.WriteLine("==== Endpoints registrados ====");
+foreach (var endpoint in endpointDataSource.Endpoints)
+{
+    Console.WriteLine(endpoint.DisplayName);
+}
+Console.WriteLine("==== Fin de Endpoints ====");
+
+
 app.UseMiddleware<GlobalErrorHandlingMiddleware>();
 
 app.UseCors("CorsPolicy");
@@ -142,6 +156,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 //app.MapControllers().RequireAuthorization("ApiScope");
+app.MapGet("/ping", () => "pong");
 app.Map("/health", app => app.UseHealthChecks("/health"));
 
 // Definici�n de la pol�tica de reintentos (esto puede quedarse al final ya que es un m�todo auxiliar)
