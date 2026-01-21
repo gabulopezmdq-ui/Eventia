@@ -91,6 +91,12 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader());
 });
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(int.Parse(
+        Environment.GetEnvironmentVariable("PORT") ?? "8080"));
+});
+
 // Configuraci�n de IIS
 builder.Services.Configure<IISServerOptions>(options =>
 {
