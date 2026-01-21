@@ -11,7 +11,7 @@ COPY --from=build /app/out .
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080URLS=http://0.0.0.0:8080
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "Mecanizadas.dll"]
+ENTRYPOINT ["dotnet", "API.dll"]
 
 
 # FROM mcr.microsoft.com/dotnet/sdk:7.0 as buildAPI
