@@ -62,8 +62,8 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
-builder.Services.AddIdentityCore<IdentityUser>()
-    .AddEntityFrameworkStores<AppDbContext>();
+//builder.Services.AddIdentityCore<IdentityUser>()
+//    .AddEntityFrameworkStores<AppDbContext>();
 
 // Configuraci�n de la base de datos
 builder.Services.AddDbContext<DataContext>(options =>
