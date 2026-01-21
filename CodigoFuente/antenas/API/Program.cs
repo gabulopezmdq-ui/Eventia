@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System;
 using API;
+using System.IO;
 using FluentAssertions.Common;
 using System.Text;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
@@ -27,7 +28,20 @@ using Polly.Extensions.Http;
 
 
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = Directory.GetCurrentDirectory()
+});
+
+// Reconfigurar configuration SIN FileSystemWatcher
+builder.Configuration.Sources.Clear();
+
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables();
+
 
 
 // Add services to the container.
