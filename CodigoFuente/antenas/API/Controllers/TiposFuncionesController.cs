@@ -23,7 +23,7 @@
 //            _context = context;
 //            _serviceGenerico = serviceGenerico;
 //        }
-        
+
 //        [HttpGet("GetAll")]
 //        public async Task<ActionResult<IEnumerable<MEC_TiposFunciones>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
 //        {
@@ -50,12 +50,12 @@
 //            return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
 //        }
 
-//        [HttpPost]
-//        public async Task<ActionResult> Post([FromBody] MEC_TiposFunciones tiposFunciones)
-//        {
-//            await _serviceGenerico.Add(tiposFunciones);
-//            return Ok(tiposFunciones);
-//        }
+[HttpPost]
+public async Task<ActionResult> Post([FromBody] MEC_TiposFunciones tiposFunciones)
+{
+    await _serviceGenerico.Add(tiposFunciones);
+    return Ok(tiposFunciones);
+}
 
 //        [HttpDelete]
 //        public async Task<IActionResult> Delete(int Id)
