@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace API.Services
 {
-    public interface IloginService<T>
+    public interface IloginService
     {
         Task<auth_login_response> login_google(auth_google_request req);
     }
