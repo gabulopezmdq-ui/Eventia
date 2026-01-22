@@ -1,13 +1,17 @@
 # Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
-COPY . .
-RUN dotnet restore API.csproj
-RUN dotnet publish API.csproj -c Release -o out
+WORKDIR /src
 
+COPY API.csproj ./
+RUN dotnet restore ./API.csproj
+
+COPY . ./
+RUN dotnet publish ./API.csproj -c Release -o /app/out /p:UseAppHost=false
+
+# Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app/out .
+COPY --from=build /app/out ./
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "API.dll"]
