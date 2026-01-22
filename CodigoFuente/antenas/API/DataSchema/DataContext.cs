@@ -17,6 +17,14 @@ namespace API.DataSchema
         public DbSet<ef_usuarios> ef_usuarios { get; set; }
         public DbSet<ef_roles> ef_roles { get; set; }
         public DbSet<ef_roles> ef_usuarios_roles { get; set; }
+        public DbSet<ef_tipos_evento> ef_tipos_evento { get; set; }
+        public DbSet<ef_idiomas> ef_idiomas { get; set; }
+        public DbSet<ef_dress_code> ef_dress_code { get; set; }
+        public DbSet<ef_eventos> ef_eventos { get; set; }
+        public DbSet<ef_clientes> ef_clientes{ get; set; }
+        public DbSet<ef_cuentas> ef_cuentas { get; set; }
+        public DbSet<ef_cuentas> ef_cuenta_usuarios { get; set; }
+        public DbSet<ef_invitados> ef_invitados { get; set; }
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -69,6 +77,14 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_usuariosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_rolesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_usuarios_rolesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_tipos_eventoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_idiomasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_dress_codeConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_eventosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_clientesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuentasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuenta_usuariosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_invitadosConfiguration());
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
