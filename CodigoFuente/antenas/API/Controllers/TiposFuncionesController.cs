@@ -50,11 +50,11 @@
 //            return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
 //        }
 
-[HttpPost]
-public async Task<ActionResult> Post([FromBody] MEC_TiposFunciones tiposFunciones)
-{
-    await _serviceGenerico.Add(tiposFunciones);
-    return Ok(tiposFunciones);
+//[HttpPost]
+//public async Task<ActionResult> Post([FromBody] MEC_TiposFunciones tiposFunciones)
+//{
+//    await _serviceGenerico.Add(tiposFunciones);
+//    return Ok(tiposFunciones);
 }
 
 //        [HttpDelete]
