@@ -26,6 +26,9 @@ using System.IO;
 //using API.Services.ImportacionMecanizada;
 using System.Net.Http;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 
 
@@ -51,22 +54,45 @@ IdentityModelEventSource.ShowPII = true;
 //builder.Services.AddControllers().AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
 // Configuraci�n de autenticaci�n JWT
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddJwtBearer(options => {
+//        options.MapInboundClaims = false;
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateIssuer = true,
+//            ValidateAudience = true,
+//            ValidateLifetime = true,
+//            ValidateIssuerSigningKey = true,
+//            ValidIssuer = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+//            ValidAudience = builder.Configuration.GetValue<string>("Ldap:Dominio"),
+//            IssuerSigningKey = new SymmetricSecurityKey(
+//                Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Ldap:Key"))),
+//            ClockSkew = TimeSpan.Zero
+//        };
+//    });
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => {
-        options.MapInboundClaims = false;
+    .AddJwtBearer(options =>
+    {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+
             ValidateAudience = true,
-            ValidateLifetime = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration.GetValue<string>("Ldap:Dominio"),
-            ValidAudience = builder.Configuration.GetValue<string>("Ldap:Dominio"),
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Ldap:Key"))),
-            ClockSkew = TimeSpan.Zero
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+            ),
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(2)
         };
     });
+
+builder.Services.AddAuthorization();
 
 // Configuraci�n de pol�ticas de autorizaci�n
 builder.Services.AddAuthorization(options =>
@@ -95,6 +121,7 @@ builder.Services.AddHealthChecks();
 
 // Registro de servicios principales
 //builder.Services.AddScoped<IMovimientosService, MovimientosService>();
+builder.Services.AddScoped<loginService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 
