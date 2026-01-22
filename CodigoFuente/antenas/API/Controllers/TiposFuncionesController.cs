@@ -55,7 +55,7 @@
 //{
 //    await _serviceGenerico.Add(tiposFunciones);
 //    return Ok(tiposFunciones);
-}
+//}
 
 //        [HttpDelete]
 //        public async Task<IActionResult> Delete(int Id)
