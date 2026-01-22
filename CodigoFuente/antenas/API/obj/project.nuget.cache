@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "9rce7V45GBY=",
-  "success": true,
+  "dgSpecHash": "tpBsssSbWlw=",
+  "success": false,
   "projectFilePath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gabu_\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
@@ -210,6 +210,17 @@
       "warningLevel": 1,
       "filePath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
       "libraryId": "Novell.Directory.Ldap.NETStandard",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
+    {
+      "code": "NU1102",
+      "level": "Error",
+      "message": "No se encuentra el paquete BCrypt.Net con la versión (>= 0.1.3)\r\n  - Versiones encontradas en nuget.org: 1 [ versión más cercana: 0.1.0 ]\r\n  - Versiones encontradas en Microsoft Visual Studio Offline Packages: 0",
+      "projectPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
+      "filePath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
+      "libraryId": "BCrypt.Net",
       "targetGraphs": [
         "net8.0"
       ]
