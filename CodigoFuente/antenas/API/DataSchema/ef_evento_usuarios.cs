@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace API.DataSchema
 {
-    public class ef_evento_usuarios : IRegistroUnico
+    public class ef_evento_usuarios 
     {
         public long id_evento_usuario { get; set; }
 
