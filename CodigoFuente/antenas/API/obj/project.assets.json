@@ -9403,6 +9403,7 @@
             "version": "[2.23.0, )"
           },
           "FluentAssertions": {
+            "suppressParent": "All",
             "target": "Package",
             "version": "[6.9.0, )"
           },
@@ -9431,6 +9432,7 @@
             "version": "[7.0.11, )"
           },
           "Microsoft.EntityFrameworkCore.Design": {
+            "suppressParent": "All",
             "target": "Package",
             "version": "[7.0.11, )"
           },
@@ -9451,10 +9453,12 @@
             "version": "[10.0.2, )"
           },
           "Microsoft.NET.Test.Sdk": {
+            "suppressParent": "All",
             "target": "Package",
             "version": "[18.0.1, )"
           },
           "Moq": {
+            "suppressParent": "All",
             "target": "Package",
             "version": "[4.20.69, )"
           },
@@ -9479,10 +9483,12 @@
             "version": "[1.4.9, )"
           },
           "xunit": {
+            "suppressParent": "All",
             "target": "Package",
             "version": "[2.4.2, )"
           },
           "xunit.runner.visualstudio": {
+            "suppressParent": "All",
             "target": "Package",
             "version": "[2.8.2, )"
           }
