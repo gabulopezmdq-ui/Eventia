@@ -1,7 +1,8 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
-using Microsoft.EntityFrameworkCore;
+using DocumentFormat.OpenXml.Math;
 using Google.Apis.Auth;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -14,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace API.Services
 {
-    public class loginService
+    public class loginService : IloginService
     {
         private readonly DataContext _context;
         private readonly IConfiguration _config;
@@ -133,5 +134,58 @@ namespace API.Services
 
             return (new JwtSecurityTokenHandler().WriteToken(jwt), expiresAtUtc);
         }
+
+        public async Task<auth_login_response> register(auth_register_request req)
+        {
+            var existe = await _context.Set<ef_usuarios>()
+                .AnyAsync(u => u.email == req.email);
+
+            if (existe)
+                throw new InvalidOperationException("El email ya está registrado.");
+
+            var usuario = new ef_usuarios
+            {
+                email = req.email,
+                password_hash = BCrypt.Net.BCrypt.HashPassword(req.password),
+                nombre = req.nombre,
+                apellido = req.apellido,
+                email_verificado = false,
+                activo = true,
+                auth_provider = "local"
+            };
+
+            _context.Add(usuario);
+            await _context.SaveChangesAsync();
+
+            var jwt = generar_jwt(usuario);
+
+            return new auth_login_response
+            {
+                access_token = jwt.token,
+                expires_at_utc = jwt.expiresAtUtc
+            };
+        }
+
+        public async Task<auth_login_response> login(auth_login_request req)
+        {
+            var usuario = await _context.Set<ef_usuarios>()
+                .FirstOrDefaultAsync(u => u.email == req.email);
+
+            if (usuario == null || !usuario.activo)
+                throw new UnauthorizedAccessException("Credenciales inválidas.");
+
+            if (usuario.password_hash == null ||
+                !BCrypt.Net.BCrypt.Verify(req.password, usuario.password_hash))
+                throw new UnauthorizedAccessException("Credenciales inválidas.");
+
+            var jwt = generar_jwt(usuario);
+
+            return new auth_login_response
+            {
+                access_token = jwt.token,
+                expires_at_utc = jwt.expiresAtUtc
+            };
+        }
+
     }
 }

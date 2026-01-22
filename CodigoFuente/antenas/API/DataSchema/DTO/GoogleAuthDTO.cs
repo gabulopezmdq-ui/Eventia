@@ -15,4 +15,19 @@ namespace API.DataSchema.DTO
         public string access_token { get; set; } = null!;
         public DateTimeOffset expires_at_utc { get; set; }
     }
+
+    public class auth_register_request
+    {
+        public string email { get; set; } = null!;
+        public string password { get; set; } = null!;
+        public string nombre { get; set; } = null!;
+        public string apellido { get; set; } = null!;
+    }
+
+    public class auth_login_request
+    {
+        public string email { get; set; } = null!;
+        public string password { get; set; } = null!;
+    }
+
 }

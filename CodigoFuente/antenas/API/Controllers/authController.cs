@@ -70,5 +70,22 @@ namespace API.Controllers
                 roles = roles
             });
         }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<ActionResult<auth_login_response>> register([FromBody] auth_register_request req)
+        {
+            var result = await _loginService.register(req);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("login")]
+        public async Task<ActionResult<auth_login_response>> login([FromBody] auth_login_request req)
+        {
+            var result = await _loginService.login(req);
+            return Ok(result);
+        }
+
     }
 }
