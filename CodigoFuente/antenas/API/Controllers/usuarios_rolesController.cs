@@ -11,42 +11,39 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-   // [AllowAnonymous]
+    [AllowAnonymous]
     [Route("[controller]")]
-    public class RolesController : ControllerBase
+    public class usuarios_rolesController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly ICRUDService<ef_roles> _serviceGenerico;
-        private readonly ILogger<RolesController> _logger;
+        private readonly ICRUDService<ef_usuarios_roles> _serviceGenerico;
+        private readonly ILogger<usuarios_rolesController> _logger;
 
-        public RolesController(DataContext context, ILogger<RolesController> logger, ICRUDService<ef_roles> serviceGenerico)
+        public usuarios_rolesController(DataContext context, ILogger<usuarios_rolesController> logger, ICRUDService<ef_usuarios_roles> serviceGenerico)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
         }
 
-        [HttpGet("ping")]
-        public IActionResult Ping() => Ok("pong");
-
         //[Authorize(Roles = "SUPERADMIN")]
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<ef_roles>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<ef_usuarios_roles>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }
 
         [HttpGet("GetByActivo")]
-        public async Task<ActionResult<IEnumerable<ef_roles>>> GetByVigente([FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_usuarios_roles>>> GetByVigente([FromQuery] string activo = null)
         {
             var result = await _serviceGenerico.GetByVigente(activo);
             return Ok(result);
         }
 
         [HttpGet("GetById")]
-        public async Task<ActionResult<ef_roles>> Get(short Id)
+        public async Task<ActionResult<ef_usuarios_roles>> Get(long Id)
         {
-            return Ok(await _serviceGenerico.GetByIDShort(Id));
+            return Ok(await _serviceGenerico.GetByID(Id));
         }
 
         //[HttpGet("GetByName")]
@@ -56,10 +53,10 @@ namespace API.Controllers
         //}
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromBody] ef_roles rol)
+        public async Task<ActionResult> Post([FromBody] ef_usuarios_roles usuario_rol)
         {
-            await _serviceGenerico.Add(rol);
-            return Ok(rol);
+            await _serviceGenerico.Add(usuario_rol);
+            return Ok(usuario_rol);
         }
 
         [HttpDelete]
@@ -70,10 +67,10 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<ef_roles>> Update([FromBody] ef_roles rol)
+        public async Task<ActionResult<ef_usuarios_roles>> Update([FromBody] ef_usuarios_roles usuario_rol)
         {
-            await _serviceGenerico.Update(rol);
-            return Ok(rol);
+            await _serviceGenerico.Update(usuario_rol);
+            return Ok(usuario_rol);
         }
 
     }
