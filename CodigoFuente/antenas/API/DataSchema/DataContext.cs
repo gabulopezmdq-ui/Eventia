@@ -26,8 +26,7 @@ namespace API.DataSchema
         public DbSet<ef_clientes> ef_clientes{ get; set; }
         public DbSet<ef_cuentas> ef_cuentas { get; set; }
         public DbSet<ef_cuenta_usuarios> ef_cuenta_usuarios { get; set; }
-        public DbSet<ef_invitados> ef_invitados { get; set; 
-
+        public DbSet<ef_invitados> ef_invitados { get; set; }
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
         public DbSet<MEC_TiposEstablecimientos> MEC_TiposEstablecimientos { get; set; }
