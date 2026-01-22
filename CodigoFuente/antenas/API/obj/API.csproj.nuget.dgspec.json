@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\api\\API.csproj": {}
+    "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj": {}
   },
   "projects": {
-    "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\api\\API.csproj": {
+    "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\api\\API.csproj",
+        "projectUniqueName": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
         "projectName": "API",
-        "projectPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\api\\API.csproj",
+        "projectPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
         "packagesPath": "C:\\Users\\gabu_\\.nuget\\packages\\",
-        "outputPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\api\\obj\\",
+        "outputPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -127,10 +127,6 @@
               "version": "[6.5.0, )"
             },
             "System.Data.Odbc": {
-              "target": "Package",
-              "version": "[7.0.0, )"
-            },
-            "System.Drawing.Common": {
               "target": "Package",
               "version": "[7.0.0, )"
             },
