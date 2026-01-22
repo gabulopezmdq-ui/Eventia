@@ -1,4 +1,5 @@
-﻿using API.DataSchema.ModelConfiguration;
+﻿using API.DataSchema.Configurations;
+using API.DataSchema.ModelConfiguration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
