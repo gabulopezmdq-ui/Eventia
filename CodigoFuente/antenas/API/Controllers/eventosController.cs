@@ -56,12 +56,12 @@ namespace API.Controllers
         //    return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
         //}
 
-        [HttpPost]
-        public async Task<ActionResult> Post([FromBody] ef_eventos evento)
-        {
-            await _serviceGenerico.Add(evento);
-            return Ok(evento);
-        }
+        //[HttpPost]
+        //public async Task<ActionResult> Post([FromBody] ef_eventos evento)
+        //{
+        //    await _serviceGenerico.Add(evento);
+        //    return Ok(evento);
+        //}
 
         [HttpDelete]
         public async Task<IActionResult> Delete(int Id)
