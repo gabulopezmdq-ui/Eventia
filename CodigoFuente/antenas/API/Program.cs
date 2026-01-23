@@ -123,6 +123,7 @@ builder.Services.AddHealthChecks();
 //builder.Services.AddScoped<IMovimientosService, MovimientosService>();
 builder.Services.AddScoped<loginService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEventosService, EventosService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 
 // Registro de repositorios
