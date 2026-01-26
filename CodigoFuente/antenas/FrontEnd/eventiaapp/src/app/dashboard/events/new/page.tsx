@@ -36,11 +36,22 @@ export default function NewEventPage() {
     });
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
+        const { name, value, type } = e.target;
+
+        // Convert numeric values for specific fields
+        if (name === 'idTipoEvento' || name === 'idIdioma') {
+            setForm({
+                ...form,
+                [name]: parseInt(value, 10),
+            });
+            return;
+        }
+
         setForm({
             ...form,
-            [e.target.name]: e.target.value,
+            [name]: value,
         });
     };
 
@@ -136,13 +147,15 @@ export default function NewEventPage() {
                                 <div>
                                     <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2 ml-1">Tipo de Evento</label>
                                     <select
+                                        name="idTipoEvento"
+                                        value={form.idTipoEvento}
+                                        onChange={handleChange}
                                         className="w-full p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 focus:border-indigo-500/50 transition-all text-white outline-none appearance-none"
-                                        defaultValue="1"
                                     >
-                                        <option value="1">Boda / Casamiento</option>
-                                        <option value="2">Cumpleaños</option>
-                                        <option value="3">Evento Corporativo</option>
-                                        <option value="4">Otro</option>
+                                        <option value={1}>Boda / Casamiento</option>
+                                        <option value={2}>Cumpleaños</option>
+                                        <option value={3}>Evento Corporativo</option>
+                                        <option value={4}>Otro</option>
                                     </select>
                                 </div>
                             </div>
