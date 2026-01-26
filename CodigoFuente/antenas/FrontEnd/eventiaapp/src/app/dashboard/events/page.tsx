@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
-import { getAllEvents } from '@/src/features/events/event.service';
+import { getMyEvents } from '@/src/features/events/event.service';
 import type { Event } from '@/src/features/events/types';
 
 export default function DashboardEventsPage() {
@@ -13,7 +13,7 @@ export default function DashboardEventsPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getAllEvents()
+        getMyEvents()
             .then(setEvents)
             .catch(() => setError('No se pudieron cargar los eventos'))
             .finally(() => setLoading(false));
@@ -71,26 +71,31 @@ export default function DashboardEventsPage() {
             {!loading && !error && events.length > 0 && (
                 <div className="grid gap-4">
                     {events.map((event) => (
-                        <article
+                        <Link
                             key={event.id_evento}
-                            className="p-5 rounded-xl border border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900 transition-colors"
+                            href={`/dashboard/events/${event.id_evento}`}
+                            className="block"
                         >
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <h3 className="font-medium text-lg">
-                                        {event.anfitriones_texto}
-                                    </h3>
+                            <article
+                                className="p-5 rounded-xl border border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900 transition-colors"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <h3 className="font-medium text-lg">
+                                            {event.anfitriones_texto}
+                                        </h3>
 
-                                    <p className="text-sm text-neutral-400">
-                                        {event.lugar}
-                                    </p>
+                                        <p className="text-sm text-neutral-400">
+                                            {event.lugar}
+                                        </p>
+                                    </div>
+
+                                    <span className="text-xs px-2 py-1 rounded-full bg-neutral-800 text-neutral-300">
+                                        {new Date(event.fecha_hora).toLocaleDateString()}
+                                    </span>
                                 </div>
-
-                                <span className="text-xs px-2 py-1 rounded-full bg-neutral-800 text-neutral-300">
-                                    {new Date(event.fecha_hora).toLocaleDateString()}
-                                </span>
-                            </div>
-                        </article>
+                            </article>
+                        </Link>
                     ))}
                 </div>
             )}

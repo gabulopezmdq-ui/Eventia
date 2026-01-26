@@ -1,11 +1,61 @@
 import { Event, CreateEventPayload } from './types';
 
-const API_URL = 'https://eventia-kg28.onrender.com';
+const API_URL = '/api'; // Apuntamos a nuestro Proxy de Next.js
+
+export async function getMyEvents(): Promise<Event[]> {
+    const res = await fetch(`${API_URL}/events/mine`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener mis eventos');
+    }
+
+    const data = await res.json();
+
+    // El backend devuelve PascalCase (IdEvento, AnfitrionesTexto, etc.)
+    // Pero el frontend espera snake_case. Mapeamos:
+    return data.map((item: any) => ({
+        id_evento: item.idEvento,
+        id_tipo_evento: item.idTipoEvento,
+        id_idioma: item.idIdioma,
+        anfitriones_texto: item.anfitrionesTexto,
+        fecha_hora: item.fechaHora,
+        lugar: item.lugar,
+        direccion: item.direccion,
+        estado: item.estado,
+        fecha_alta: item.fechaAlta,
+    })) as Event[];
+}
+
+export async function getEventById(id: string): Promise<Event> {
+    const res = await fetch(`${API_URL}/events/${id}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener el detalle del evento');
+    }
+
+    const item = await res.json();
+
+    // Mapeo de PascalCase a snake_case
+    return {
+        id_evento: item.idEvento,
+        id_tipo_evento: item.idTipoEvento,
+        id_idioma: item.idIdioma,
+        anfitriones_texto: item.anfitrionesTexto,
+        fecha_hora: item.fechaHora,
+        lugar: item.lugar,
+        direccion: item.direccion,
+        estado: item.estado,
+        fecha_alta: item.fechaAlta,
+    } as Event;
+}
 
 export async function getAllEvents(): Promise<Event[]> {
-    const res = await fetch(`${API_URL}/eventos/getall`, {
+    const res = await fetch(`${API_URL}/events-all`, { // Necesitaremos esta ruta también si falla
         method: 'GET',
-        credentials: 'include', // IMPORTANTE (cookies)
     });
 
     if (!res.ok) {
@@ -18,12 +68,11 @@ export async function getAllEvents(): Promise<Event[]> {
 export async function createEvent(
     payload: CreateEventPayload
 ): Promise<Event> {
-    const res = await fetch(`${API_URL}/eventos`, {
+    const res = await fetch(`${API_URL}/events`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(payload),
     });
 

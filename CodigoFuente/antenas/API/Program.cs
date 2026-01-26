@@ -131,12 +131,15 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
 
 // Configuraci�n de CORS
+// Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy",
-        builder => builder.AllowAnyOrigin()
+        builder => builder
+        .WithOrigins("http://localhost:3000", "http://localhost:3005", "https://eventiaapp.vercel.app") 
         .AllowAnyMethod()
-        .AllowAnyHeader());
+        .AllowAnyHeader()
+        .AllowCredentials());
 });
 
 builder.WebHost.ConfigureKestrel(options =>
