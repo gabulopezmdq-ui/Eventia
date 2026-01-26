@@ -15,6 +15,7 @@ import {
     Clock,
     AlignLeft
 } from 'lucide-react';
+import MapPicker from '@/src/components/ui/MapPicker';
 
 export default function NewEventPage() {
     const router = useRouter();
@@ -40,6 +41,15 @@ export default function NewEventPage() {
         setForm({
             ...form,
             [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleLocationSelect = (location: { address: string; lat: number; lng: number }) => {
+        setForm({
+            ...form,
+            direccion: location.address,
+            latitud: location.lat,
+            longitud: location.lng
         });
     };
 
@@ -170,6 +180,14 @@ export default function NewEventPage() {
                                     required
                                     className="w-full p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 transition-all text-white outline-none placeholder:text-neutral-600"
                                 />
+                                {/* 
+                                <MapPicker
+                                    onLocationSelect={handleLocationSelect}
+                                    initialAddress={form.direccion}
+                                    initialLat={form.latitud || undefined}
+                                    initialLng={form.longitud || undefined}
+                                />
+                                */}
                             </div>
                         </div>
                     </div>
