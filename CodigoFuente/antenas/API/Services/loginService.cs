@@ -93,7 +93,8 @@ namespace API.Services
             }
 
             // 5) Generar JWT (SIN roles)
-            var jwtResult = generar_jwt(usuario);
+            //var jwtResult = generar_jwt(usuario);
+            var jwtResult = await generar_jwt_async(usuario);
 
             return new auth_login_response
             {
@@ -102,7 +103,40 @@ namespace API.Services
             };
         }
 
-        private (string token, DateTimeOffset expiresAtUtc) generar_jwt(ef_usuarios usuario)
+        //private (string token, DateTimeOffset expiresAtUtc) generar_jwt(ef_usuarios usuario)
+        //{
+        //    var issuer = _config["Jwt:Issuer"];
+        //    var audience = _config["Jwt:Audience"];
+        //    var key = _config["Jwt:Key"];
+
+        //    if (string.IsNullOrWhiteSpace(key))
+        //        throw new InvalidOperationException("Jwt:Key no configurado.");
+
+        //    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        //    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        //    var claims = new List<Claim>
+        //    {
+        //        new Claim(JwtRegisteredClaimNames.Sub, usuario.id_usuario.ToString()),
+        //        new Claim("id_usuario", usuario.id_usuario.ToString()),
+        //        new Claim(JwtRegisteredClaimNames.Email, usuario.email)
+        //    };
+
+        //    var expiresAtUtc = DateTimeOffset.UtcNow.AddHours(8);
+
+        //    var jwt = new JwtSecurityToken(
+        //        issuer: issuer,
+        //        audience: audience,
+        //        claims: claims,
+        //        notBefore: DateTime.UtcNow,
+        //        expires: expiresAtUtc.UtcDateTime,
+        //        signingCredentials: credentials
+        //    );
+
+        //    return (new JwtSecurityTokenHandler().WriteToken(jwt), expiresAtUtc);
+        //}
+
+        private async Task<(string token, DateTimeOffset expiresAtUtc)> generar_jwt_async(ef_usuarios usuario)
         {
             var issuer = _config["Jwt:Issuer"];
             var audience = _config["Jwt:Audience"];
@@ -115,11 +149,23 @@ namespace API.Services
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, usuario.id_usuario.ToString()),
-                new Claim("id_usuario", usuario.id_usuario.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, usuario.email)
-            };
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, usuario.id_usuario.ToString()),
+        new Claim("id_usuario", usuario.id_usuario.ToString()),
+        new Claim(JwtRegisteredClaimNames.Email, usuario.email)
+    };
+
+            var roles = await (
+                from ur in _context.Set<ef_usuarios_roles>()
+                join r in _context.Set<ef_roles>() on ur.id_rol equals r.id_rol
+                where ur.id_usuario == usuario.id_usuario
+                      && ur.activo == true
+                      && r.activo == true
+                select r.codigo
+            ).Distinct().ToListAsync();
+
+            foreach (var rol in roles)
+                claims.Add(new Claim(ClaimTypes.Role, rol)); // <-- SUPERADMIN entra acá
 
             var expiresAtUtc = DateTimeOffset.UtcNow.AddHours(8);
 
@@ -157,7 +203,8 @@ namespace API.Services
             _context.Add(usuario);
             await _context.SaveChangesAsync();
 
-            var jwt = generar_jwt(usuario);
+            //var jwt = generar_jwt(usuario);
+            var jwt = await generar_jwt_async(usuario);
 
             return new auth_login_response
             {
@@ -178,7 +225,8 @@ namespace API.Services
                 !BCrypt.Net.BCrypt.Verify(req.password, usuario.password_hash))
                 throw new UnauthorizedAccessException("Credenciales inválidas.");
 
-            var jwt = generar_jwt(usuario);
+            //var jwt = generar_jwt(usuario);
+            var jwt = await generar_jwt_async(usuario);
 
             return new auth_login_response
             {
