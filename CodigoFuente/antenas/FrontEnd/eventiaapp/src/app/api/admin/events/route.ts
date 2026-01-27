@@ -12,16 +12,18 @@ export async function GET() {
             return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
         }
 
-        const res = await fetch(`${API_URL}/eventos/mios`, {
+        const res = await fetch(`${API_URL}/admin/eventos`, {
             method: 'GET',
             headers: {
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
         });
 
         if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
             return NextResponse.json(
-                { message: 'Error en la API de backend' },
+                { message: 'Error en la API de backend', details: errorData },
                 { status: res.status }
             );
         }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const API_URL = 'https://eventia-kg28.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function POST(req: Request) {
     const body = await req.json();
