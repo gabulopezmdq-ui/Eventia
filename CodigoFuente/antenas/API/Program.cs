@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
@@ -18,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
 using Polly;
 using Polly.Extensions.Http;
 using System;
@@ -25,9 +27,8 @@ using System.IO;
 //using API.Services.UsXRol;
 //using API.Services.ImportacionMecanizada;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 
@@ -88,9 +89,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ),
 
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(2)
+            ClockSkew = TimeSpan.FromMinutes(2),
+
+            //lo agrego porque me dijo chatgpt despues de cambiar generar_jwt_async a async
+            RoleClaimType = ClaimTypes.Role
         };
-    });
+    }); 
 
 builder.Services.AddAuthorization();
 
