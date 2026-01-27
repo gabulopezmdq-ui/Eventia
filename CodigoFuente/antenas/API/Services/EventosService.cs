@@ -174,5 +174,50 @@ namespace API.Services
             Estado = e.estado,
             FechaAlta = e.fecha_alta
         };
+
+
+
+        public async Task<List<EventoResponse>> AdminListarEventosAsync(string? estado = null)
+        {
+            var q = _context.Set<ef_eventos>().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(estado))
+                q = q.Where(e => e.estado == estado);
+
+            var eventos = await q.AsNoTracking()
+                .OrderByDescending(e => e.fecha_alta)
+                .ToListAsync();
+
+            return eventos.Select(Map).ToList();
+        }
+
+        public async Task<EventoResponse> AdminGetEventoAsync(long idEvento)
+        {
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            return Map(ev);
+        }
+
+        public async Task ActivarEventoAdminAsync(long idEvento)
+        {
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            if (ev.estado != EventoEstado.Borrador)
+                throw new InvalidOperationException("Solo se puede activar un evento en borrador.");
+
+            ev.estado = EventoEstado.Activo;
+            ev.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }
