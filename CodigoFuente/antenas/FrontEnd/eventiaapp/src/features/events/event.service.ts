@@ -82,3 +82,47 @@ export async function createEvent(
 
     return res.json();
 }
+
+export async function getAdminEvents(): Promise<Event[]> {
+    const res = await fetch(`${API_URL}/admin/events`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener eventos de admin');
+    }
+
+    const data = await res.json();
+
+    // Mapeo de PascalCase a snake_case
+    return data.map((item: any) => ({
+        id_evento: item.idEvento,
+        id_tipo_evento: item.idTipoEvento,
+        id_idioma: item.idIdioma,
+        anfitriones_texto: item.anfitrionesTexto,
+        fecha_hora: item.fechaHora,
+        lugar: item.lugar,
+        direccion: item.direccion,
+        estado: item.estado,
+        fecha_alta: item.fechaAlta,
+    })) as Event[];
+}
+
+export interface CurrentUser {
+    email: string;
+    rol: string;
+    exp: number;
+}
+
+export async function getCurrentUser(): Promise<CurrentUser> {
+    const res = await fetch('/api/auth/me', {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener usuario actual');
+    }
+
+    return res.json();
+}
+
