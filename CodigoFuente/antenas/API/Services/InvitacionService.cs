@@ -1,11 +1,12 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
+using API.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
-using API.Utility;
 
 namespace API.Services
 {
@@ -73,12 +74,32 @@ namespace API.Services
                 fecha_rsvp = DateTimeOffset.UtcNow,
                 fecha_alta = DateTimeOffset.UtcNow,
                 activo = true,
-                rsvp_token = TokenUtility.Generate(64),
+                     = TokenUtility.Generate(64),
                 id_usuario_invitador = evento.id_usuario_rsvp_link_creator,
                 qr_token = null
             };
 
             _context.ef_invitados.Add(invitado);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CargarInvitadosAsync(CargaInvitadosRequest req, long idUsuario)
+        {
+            var invitados = req.Invitados.Select(i => new ef_invitados
+            {
+                id_evento = req.IdEvento,
+                nombre = i.Nombre,
+                apellido = i.Apellido,
+                email = i.Email,
+                celular = i.Celular,
+                rsvp_estado = "P",
+                rsvp_token = TokenUtility.Generate(64),
+                fecha_alta = DateTimeOffset.UtcNow,
+                activo = true,
+                id_usuario_invitador = idUsuario
+            });
+
+            _context.ef_invitados.AddRange(invitados);
             await _context.SaveChangesAsync();
         }
     }
