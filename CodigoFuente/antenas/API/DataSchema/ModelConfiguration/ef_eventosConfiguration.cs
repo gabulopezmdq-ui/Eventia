@@ -67,6 +67,28 @@ namespace API.DataSchema.ModelConfiguration
                    .HasDefaultValue("B")
                    .IsUnicode(false);
 
+            builder.Property(x => x.rsvp_public_token)
+                   .HasMaxLength(64);
+
+            builder.HasIndex(x => x.rsvp_public_token)
+                   .IsUnique()
+                   .HasDatabaseName("ef_eventos_rsvp_public_token_key");
+
+            builder.Property(x => x.id_usuario_rsvp_link_creator);
+
+            builder.Property(x => x.modo_acceso)
+                   .HasMaxLength(1)
+                   .IsRequired()
+                   .IsUnicode(false);
+
+            builder.Property(x => x.modo_asistencia)
+                   .HasMaxLength(1)
+                   .IsRequired()
+                   .IsUnicode(false);
+
+            builder.Property(x => x.es_publico)
+                   .IsRequired();
+
             // CHECK constraints (igual que en la BD)
             builder.HasCheckConstraint(
                 "ck_ef_eventos_lat",
@@ -97,6 +119,11 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasOne(x => x.cliente)
                    .WithMany()
                    .HasForeignKey(x => x.id_cliente)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.usuario_rsvp_link_creator)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_usuario_rsvp_link_creator)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

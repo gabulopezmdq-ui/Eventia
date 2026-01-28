@@ -9,7 +9,7 @@ namespace API.DataSchema
         public long id_invitado { get; set; }
 
         public long id_evento { get; set; }
-
+        public long? id_usuario_invitador { get; set; }
         public string nombre { get; set; } = null!;
         public string apellido { get; set; } = null!;
         public string? sobrenombre { get; set; }
@@ -27,10 +27,13 @@ namespace API.DataSchema
         public DateTimeOffset? fecha_modif { get; set; }
 
         public bool activo { get; set; }
+        public string? qr_token { get; set; }
 
         public string[] UniqueProperties => new[] { "rsvp_token" };
 
         // Navegación
         public virtual ef_eventos? evento { get; set; }
-    }   
+        public virtual ef_usuarios? usuario_invitador { get; set; }
+
+    }
 }

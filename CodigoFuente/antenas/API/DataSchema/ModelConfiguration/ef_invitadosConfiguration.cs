@@ -59,6 +59,16 @@ namespace API.DataSchema.ModelConfiguration
                    .IsRequired()
                    .HasDefaultValue(true);
 
+            builder.Property(x => x.qr_token)
+                   .HasMaxLength(64);
+
+            builder.HasIndex(x => x.qr_token)
+                .IsUnique();
+
+            builder.HasOne(x => x.usuario_invitador)
+                .WithMany()
+                .HasForeignKey(x => x.id_usuario_invitador);
+
             // CHECKs (igual que en BD)
             builder.HasCheckConstraint(
                 "ck_ef_invitados_rsvp_estado",
