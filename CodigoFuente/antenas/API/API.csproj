@@ -7,6 +7,7 @@
     <UserSecretsId>7added17-6cfa-48d7-a2fe-1ca9f0a14042</UserSecretsId>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

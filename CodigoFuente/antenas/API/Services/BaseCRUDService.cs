@@ -291,7 +291,7 @@ namespace API.Services
                                m.GetParameters()[1].ParameterType.Name == "Expression`1")
                     .MakeGenericMethod(relatedEntityType);
 
-                var hasActiveDependents = (bool)anyMethod.Invoke(null, new object[] { dbSet, lambda });
+                var hasActiveDependents = SafeInvokeBool(anyMethod, dbSet, lambda);
 
                 if (hasActiveDependents)
                 {
@@ -745,7 +745,7 @@ namespace API.Services
         //        throw new InvalidOperationException($"Error al verificar las dependencias: {ex.Message}", ex);
         //    }
         //}
-    }
+
 
         // Este método es para aplicar la lógica de actualización de 'Vigente' antes de la actualización genérica
         //public async Task<bool> UpdateWithVigenteAsync(int entityId, string vigenteValue, T entidad)
@@ -763,7 +763,13 @@ namespace API.Services
         //    // Si no se pudo actualizar 'Vigente' (por las relaciones), no actualizamos la entidad
         //    return false;
         //}
+        private static bool SafeInvokeBool(MethodInfo method, params object[] args)
+        {
+            var result = method.Invoke(null, args);
+            return result is bool b && b;
+        }
     }
+}
 
 
 
