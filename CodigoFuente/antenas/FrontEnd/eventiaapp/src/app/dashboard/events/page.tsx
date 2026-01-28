@@ -85,7 +85,7 @@ export default function DashboardEventsPage() {
 
                 <Link
                     href="/dashboard/events/new"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-colors text-sm font-medium"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-colors text-sm font-medium text-white"
                 >
                     <Plus className="w-4 h-4" />
                     Crear evento
@@ -108,18 +108,10 @@ export default function DashboardEventsPage() {
 
             {/* Empty state */}
             {!loading && !error && events.length === 0 && (
-                <div className="p-8 rounded-xl border border-dashed border-neutral-800 text-center">
+                <div className="p-8 text-center">
                     <p className="text-neutral-400 mb-4">
                         Todavía no tenés eventos creados.
                     </p>
-
-                    <Link
-                        href="/dashboard/events/new"
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-colors text-sm font-medium"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Crear mi primer evento
-                    </Link>
                 </div>
             )}
 

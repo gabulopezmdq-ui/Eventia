@@ -33,3 +33,17 @@ export async function register(payload: RegisterPayload) {
 
     return res.json();
 }
+
+export async function loginWithGoogle(idToken: string) {
+    const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al autenticar con Google');
+    }
+
+    return res.json();
+}
