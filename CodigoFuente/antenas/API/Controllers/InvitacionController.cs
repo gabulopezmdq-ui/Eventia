@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using API.Utility;
 
 namespace API.Controllers
 {
@@ -30,28 +31,36 @@ namespace API.Controllers
             _serviceGenerico = serviceGenerico;
             _invitacionService = invitacionService;
         }
-
-        [HttpGet("{token}")]
-        public async Task<IActionResult> GetEvento(string token)
+        [HttpGet("GetEvento")]
+        public async Task<IActionResult> GetEvento([FromQuery] string token)
         {
             return Ok(await _invitacionService.ObtenerEventoAsync(token));
         }
 
-        [HttpPost("{token}/confirmar")]
-        public async Task<IActionResult> Confirmar(string token, [FromBody] RsvpConfirmacionDTO dto)
+        [HttpPost("Confirmar")]
+        public async Task<IActionResult> Confirmar([FromBody] RsvpConfirmacionRequest request)
         {
-            await _invitacionService.ConfirmarAsync(token, dto);
+            await _invitacionService.ConfirmarAsync(
+                request.Token,
+                request.Datos
+            );
+
             return Ok();
         }
 
+
         [Authorize]
-        [HttpPost("{idEvento}/rsvp-link")]
-        public async Task<IActionResult> GenerarRsvp(long idEvento)
+        [HttpPost("GenerarLink")]
+        public async Task<IActionResult> GenerarLink([FromBody] GenerarLinkRequest req)
         {
             var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var link = await _invitacionService.GenerarLinkAsync(idEvento, userId);
+
+            var link = await _invitacionService.GenerarLinkAsync(
+                req.IdEvento,
+                userId
+            );
+
             return Ok(new { link });
         }
-
     }
 }
