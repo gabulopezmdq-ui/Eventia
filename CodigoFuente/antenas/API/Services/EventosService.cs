@@ -108,7 +108,11 @@ namespace API.Services
 
                 estado = EventoEstado.Borrador,
                 fecha_alta = now,
-                fecha_modif = null
+                fecha_modif = null,
+
+                es_publico = false,
+                modo_acceso = "I",
+                modo_asistencia = "R"
             };
 
             _context.Set<ef_eventos>().Add(evento);
