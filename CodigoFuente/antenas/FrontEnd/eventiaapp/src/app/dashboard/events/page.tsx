@@ -43,15 +43,14 @@ export default function DashboardEventsPage() {
 
     const EventCard = ({ event, isAdmin = false }: { event: Event; isAdmin?: boolean }) => (
         <Link
-            key={event.id_evento}
-            href={`/dashboard/events/${event.id_evento}`}
+            href={{
+                pathname: `/dashboard/events/${event.id_evento}`,
+                query: isAdmin ? { scope: 'admin' } : {},
+            }}
             className="block"
         >
             <article
-                className={`p-5 rounded-xl border transition-colors ${isAdmin
-                    ? 'border-amber-300 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 dark:hover:bg-amber-950/40'
-                    : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-900'
-                    }`}
+                className="p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
             >
                 <div className="flex items-start justify-between">
                     <div>
@@ -64,10 +63,7 @@ export default function DashboardEventsPage() {
                         </p>
                     </div>
 
-                    <span className={`text-xs px-2 py-1 rounded-full ${isAdmin
-                        ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
-                        }`}>
+                    <span className="text-xs px-2 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
                         {new Date(event.fecha_hora).toLocaleDateString()}
                     </span>
                 </div>
@@ -128,9 +124,9 @@ export default function DashboardEventsPage() {
             {isSuperAdmin && (
                 <div className="pt-6 border-t border-neutral-800">
                     <header className="flex items-center gap-3 mb-6">
-                        <ShieldCheck className="w-6 h-6 text-amber-500" />
-                        <h2 className="text-xl font-semibold text-amber-100">
-                            Eventos del Sistema (Admin)
+                        <ShieldCheck className="w-6 h-6 text-indigo-500" />
+                        <h2 className="text-xl font-semibold">
+                            Eventos del Sistema
                         </h2>
                     </header>
 
@@ -150,7 +146,7 @@ export default function DashboardEventsPage() {
 
                     {/* Admin Empty state */}
                     {!adminLoading && !adminError && adminEvents.length === 0 && (
-                        <div className="p-6 rounded-xl border border-dashed border-amber-800/50 text-center">
+                        <div className="p-6 rounded-xl border border-dashed border-neutral-800 text-center">
                             <p className="text-neutral-400">
                                 No hay eventos en el sistema.
                             </p>
@@ -161,7 +157,11 @@ export default function DashboardEventsPage() {
                     {!adminLoading && !adminError && adminEvents.length > 0 && (
                         <div className="grid gap-4">
                             {adminEvents.map((event) => (
-                                <EventCard key={`admin-${event.id_evento}`} event={event} isAdmin />
+                                <EventCard
+                                    key={`admin-${event.id_evento}`}
+                                    event={event}
+                                    isAdmin
+                                />
                             ))}
                         </div>
                     )}

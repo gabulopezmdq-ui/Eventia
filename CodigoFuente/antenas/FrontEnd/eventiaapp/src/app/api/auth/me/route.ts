@@ -1,6 +1,9 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+const ROLE_CLAIM =
+    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+
 export async function GET() {
     try {
         const cookieStore = await cookies();
@@ -10,14 +13,17 @@ export async function GET() {
             return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
         }
 
-        // Decodificar el JWT para obtener la info del usuario (sin verificar firma en cliente)
+        // Decode JWT (sin verificar firma, solo lectura)
         const payloadBase64 = token.split('.')[1];
         const payloadJson = Buffer.from(payloadBase64, 'base64').toString('utf-8');
         const payload = JSON.parse(payloadJson);
 
+        const role =
+            payload[ROLE_CLAIM]?.toLowerCase() ?? 'user';
+
         return NextResponse.json({
-            email: payload.sub || payload.email,
-            rol: payload.rol || payload.role || 'user',
+            email: payload.email ?? payload.sub,
+            rol: role, // ← superadmin
             exp: payload.exp,
         });
     } catch (error) {

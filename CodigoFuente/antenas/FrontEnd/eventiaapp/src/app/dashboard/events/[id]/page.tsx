@@ -1,24 +1,51 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Calendar, MapPin, Info, Clock } from 'lucide-react';
 
-import { getEventById } from '@/src/features/events/event.service';
+import { getEventById, getAdminEventById, activateEvent } from '@/src/features/events/event.service';
 import type { Event } from '@/src/features/events/types';
 
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
+    const searchParams = useSearchParams();
+    const scope = searchParams.get('scope');
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [activating, setActivating] = useState(false);
+
+    const isAdmin = scope === 'admin';
+
+    const handleActivate = async () => {
+        if (!confirm('¿Estás seguro de que deseas activar este evento?')) return;
+
+        setActivating(true);
+        try {
+            await activateEvent(id);
+            alert('Evento activado correctamente');
+            window.location.reload();
+        } catch (err) {
+            alert('Error al activar el evento');
+        } finally {
+            setActivating(false);
+        }
+    };
 
     useEffect(() => {
-        getEventById(id)
+        const isAdmin = scope === 'admin';
+
+        const request = isAdmin
+            ? getAdminEventById(id)
+            : getEventById(id);
+
+        request
             .then(setEvent)
             .catch(() => setError('No se pudo cargar el detalle del evento'))
             .finally(() => setLoading(false));
-    }, [id]);
+    }, [id, scope]);
 
     if (loading) {
         return (
@@ -124,6 +151,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="p-6 rounded-2xl bg-indigo-600/5 border border-indigo-500/10">
                         <h4 className="font-medium mb-2 text-foreground">Acciones rápidas</h4>
                         <div className="space-y-3">
+                            {isAdmin && (
+                                <button
+                                    onClick={handleActivate}
+                                    disabled={activating}
+                                    className="w-full px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 transition-colors text-sm font-medium text-white disabled:opacity-50"
+                                >
+                                    {activating ? 'Activando...' : 'Activar evento'}
+                                </button>
+                            )}
                             <button className="w-full px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-colors text-sm font-medium text-white">
                                 Editar evento
                             </button>
