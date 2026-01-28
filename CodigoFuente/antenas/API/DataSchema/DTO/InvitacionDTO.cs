@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace API.DataSchema.DTO
 {
@@ -21,5 +22,17 @@ namespace API.DataSchema.DTO
     {
         public long IdEvento { get; set; }
     }
+    public class CargaInvitadosRequest
+    {
+        public long IdEvento { get; set; }
+        public List<InvitadoCreateDTO> Invitados { get; set; } = new();
+    }
 
+    public class InvitadoCreateDTO
+    {
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string? Email { get; set; }
+        public string? Celular { get; set; }
+    }
 }

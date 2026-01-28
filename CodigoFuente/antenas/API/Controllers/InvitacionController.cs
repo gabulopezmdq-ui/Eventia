@@ -63,5 +63,15 @@ namespace API.Controllers
 
             return Ok(new { token });
         }
+
+        [HttpPost("CargarInvitados")]
+        public async Task<IActionResult> CargarInvitados([FromBody] CargaInvitadosRequest req)
+        {
+            var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            await _invitacionService.CargarInvitadosAsync(req, userId);
+
+            return Ok();
+        }
     }
 }

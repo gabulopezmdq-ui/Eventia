@@ -9,6 +9,7 @@ namespace API.Services
         Task<string> GenerarLinkAsync(long idEvento, long idUsuario);
         Task<object> ObtenerEventoAsync(string token);
         Task ConfirmarAsync(string token, RsvpConfirmacionDTO dto);
+        Task CargarInvitadosAsync(CargaInvitadosRequest req, long idUsuario);
 
     }
 }
