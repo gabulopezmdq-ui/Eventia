@@ -32,7 +32,7 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
 
-            return $"{_config["App:BaseUrl"]}/rsvp/{token}";
+            return token;
         }
 
         public async Task<object> ObtenerEventoAsync(string token)
