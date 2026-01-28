@@ -233,33 +233,24 @@ namespace API.Services
 
             var now = DateTimeOffset.UtcNow;
 
-            //1. actualiza estado del evento
+            // 1. Actualiza estado del evento
             ev.estado = EventoEstado.Activo;
             ev.fecha_modif = now;
 
-            //2. inserta histórico
+            // 2. Inserta histórico
             var hist = new ef_evento_estados_hist
             {
                 id_evento = idEvento,
-                id_usuario = idUsuarioAdmin,          //(superadmin)
+                id_usuario = idUsuarioAdmin,
                 fecha = now,
                 estado = EventoEstado.Activo,
                 observaciones = "Activación manual por pago"
             };
 
-
-            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
-            {
-                id_evento = idEvento,
-                id_usuario = idUsuarioAdmin, //quién activó
-                fecha = now,
-                estado = EventoEstado.Activo,
-                observaciones = "Activación manual por pago"
-            });
-
             _context.Set<ef_evento_estados_hist>().Add(hist);
 
             await _context.SaveChangesAsync();
         }
+
     }
 }
