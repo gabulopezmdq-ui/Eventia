@@ -64,6 +64,19 @@ namespace API.Services
 
             if (evento == null) throw new Exception("Evento inválido");
 
+            if (!string.IsNullOrEmpty(dto.Email))
+            {
+                var existe = await _context.ef_invitados.AnyAsync(x =>
+                    x.id_evento == evento.id_evento &&
+                    x.email != null &&
+                    x.email.ToLower() == dto.Email.ToLower() &&
+                    x.activo
+                );
+
+                if (existe)
+                    throw new Exception("Este email ya fue registrado para este evento");
+            }
+
             var invitado = new ef_invitados
             {
                 id_evento = evento.id_evento,
@@ -77,32 +90,56 @@ namespace API.Services
                 fecha_alta = DateTimeOffset.UtcNow,
                 activo = true,
                 rsvp_token = TokenUtility.Generate(64),
-                id_usuario_invitador = evento.id_usuario_rsvp_link_creator,
-                qr_token = null
+                id_usuario_invitador = evento.id_usuario_rsvp_link_creator
             };
 
             _context.ef_invitados.Add(invitado);
             await _context.SaveChangesAsync();
         }
 
+
         public async Task CargarInvitadosAsync(CargaInvitadosRequest req, long idUsuario)
         {
-            var invitados = req.Invitados.Select(i => new ef_invitados
-            {
-                id_evento = req.IdEvento,
-                nombre = i.Nombre,
-                apellido = i.Apellido,
-                email = i.Email,
-                celular = i.Celular,
-                rsvp_estado = "P",
-                rsvp_token = TokenUtility.Generate(64),
-                fecha_alta = DateTimeOffset.UtcNow,
-                activo = true,
-                id_usuario_invitador = idUsuario
-            });
+            var evento = await _context.ef_eventos.FindAsync(req.IdEvento);
+            if (evento == null) throw new Exception("Evento inexistente");
 
-            _context.ef_invitados.AddRange(invitados);
+            var emails = req.Invitados
+                .Where(x => !string.IsNullOrEmpty(x.Email))
+                .Select(x => x.Email!.ToLower())
+                .ToList();
+
+            var existentes = await _context.ef_invitados
+                .Where(x => x.id_evento == req.IdEvento &&
+                            x.email != null &&
+                            emails.Contains(x.email.ToLower()) &&
+                            x.activo)
+                .Select(x => x.email!.ToLower())
+                .ToListAsync();
+
+            var invitadosValidos = req.Invitados
+                .Where(x => string.IsNullOrEmpty(x.Email) ||
+                            !existentes.Contains(x.Email.ToLower()))
+                .Select(i => new ef_invitados
+                {
+                    id_evento = req.IdEvento,
+                    nombre = i.Nombre,
+                    apellido = i.Apellido,
+                    email = i.Email,
+                    celular = i.Celular,
+                    rsvp_estado = "P",
+                    rsvp_token = TokenUtility.Generate(64),
+                    fecha_alta = DateTimeOffset.UtcNow,
+                    activo = true,
+                    id_usuario_invitador = idUsuario
+                })
+                .ToList();
+
+            if (!invitadosValidos.Any())
+                throw new Exception("Todos los invitados ya existen para este evento");
+
+            _context.ef_invitados.AddRange(invitadosValidos);
             await _context.SaveChangesAsync();
         }
+
     }
 }
