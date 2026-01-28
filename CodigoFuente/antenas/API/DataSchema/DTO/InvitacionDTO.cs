@@ -17,4 +17,9 @@ namespace API.DataSchema.DTO
         public RsvpConfirmacionDTO Datos { get; set; } = null!;
     }
 
+    public class GenerarLinkRequest
+    {
+        public long IdEvento { get; set; }
+    }
+
 }
