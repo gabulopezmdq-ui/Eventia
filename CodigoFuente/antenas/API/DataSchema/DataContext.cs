@@ -23,10 +23,12 @@ namespace API.DataSchema
         public DbSet<ef_dress_code> ef_dress_code { get; set; }
         public DbSet<ef_eventos> ef_eventos { get; set; }
         public DbSet<ef_evento_usuarios> ef_evento_usuarios { get; set; }
+        public DbSet<ef_evento_estados_hist> ef_evento_estados_hist { get; set; }
         public DbSet<ef_clientes> ef_clientes{ get; set; }
         public DbSet<ef_cuentas> ef_cuentas { get; set; }
         public DbSet<ef_cuenta_usuarios> ef_cuenta_usuarios { get; set; }
         public DbSet<ef_invitados> ef_invitados { get; set; }
+
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
         public DbSet<MEC_TiposEstablecimientos> MEC_TiposEstablecimientos { get; set; }
@@ -82,6 +84,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_dress_codeConfiguration());
             modelBuilder.ApplyConfiguration(new ef_eventosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_usuariosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_estados_histConfiguration());
             modelBuilder.ApplyConfiguration(new ef_clientesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cuentasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cuenta_usuariosConfiguration());

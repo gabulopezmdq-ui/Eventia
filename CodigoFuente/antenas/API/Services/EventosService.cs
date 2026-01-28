@@ -14,14 +14,14 @@ namespace API.Services
     {
         private readonly DataContext _context;
 
-        public EventosService(DataContext db)
+        public EventosService(DataContext context)
         {
-            _context = db;
+            _context = context;
         }
 
         public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
         {
-            // === Validaciones base (alineadas a la doc) :contentReference[oaicite:3]{index=3}
+            // Validaciones base
             if (req.IdTipoEvento <= 0)
                 throw new InvalidOperationException("Tipo de evento obligatorio.");
 
@@ -40,7 +40,7 @@ namespace API.Services
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
-            // === Regla: 1 borrador por usuario (Fase 1) :contentReference[oaicite:4]{index=4}
+            // Regla: 1 borrador por usuario (Fase 1) 
             bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu =>
                     eu.id_usuario == idUsuario &&
@@ -50,7 +50,7 @@ namespace API.Services
             if (yaTieneBorrador)
                 throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
 
-            // === Chequeos FK (para errores claros y no “violación de FK” genérica)
+            // Chequeos FK 
             bool existeTipo = await _context.Set<ef_tipos_evento>()
                 .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
 
@@ -74,14 +74,16 @@ namespace API.Services
                     throw new InvalidOperationException("El dress code no existe o está inactivo.");
             }
 
-            // === Obtener id_rol para EVENT_OWNER
+            // Obtener id_rol para EVENT_OWNER
             short idRolOwner = await _context.Set<ef_roles>()
                 .Where(r => r.codigo == RolesCodigo.EventOwner && r.activo == true)
                 .Select(r => r.id_rol)
                 .SingleAsync();
 
-            // === Transacción: crear evento + vincular owner
+            // Transacción: crear evento + vincular owner + histórico estado
             await using var tx = await _context.Database.BeginTransactionAsync();
+
+            var now = DateTimeOffset.UtcNow;
 
             var evento = new ef_eventos
             {
@@ -105,7 +107,7 @@ namespace API.Services
                 notas = string.IsNullOrWhiteSpace(req.Notas) ? null : req.Notas.Trim(),
 
                 estado = EventoEstado.Borrador,
-                fecha_alta = DateTimeOffset.UtcNow,
+                fecha_alta = now,
                 fecha_modif = null
             };
 
@@ -117,11 +119,22 @@ namespace API.Services
                 id_evento = evento.id_evento,
                 id_usuario = idUsuario,
                 id_rol = idRolOwner,
-                fecha_alta = DateTimeOffset.UtcNow,
+                fecha_alta = now,
                 activo = true
             };
 
+            var hist = new ef_evento_estados_hist
+            {
+                id_evento = evento.id_evento,
+                id_usuario = idUsuario,
+                fecha = now,
+                estado = EventoEstado.Borrador,
+                observaciones = null
+            };
+
             _context.Set<ef_evento_usuarios>().Add(linkOwner);
+            _context.Set<ef_evento_estados_hist>().Add(hist);
+            
             await _context.SaveChangesAsync();
 
             await tx.CommitAsync();
@@ -203,7 +216,7 @@ namespace API.Services
             return Map(ev);
         }
 
-        public async Task ActivarEventoAdminAsync(long idEvento)
+        public async Task ActivarEventoAdminAsync(long idEvento, long idUsuarioAdmin)
         {
             var ev = await _context.Set<ef_eventos>()
                 .SingleOrDefaultAsync(e => e.id_evento == idEvento);
@@ -214,8 +227,33 @@ namespace API.Services
             if (ev.estado != EventoEstado.Borrador)
                 throw new InvalidOperationException("Solo se puede activar un evento en borrador.");
 
+            var now = DateTimeOffset.UtcNow;
+
+            //1. actualiza estado del evento
             ev.estado = EventoEstado.Activo;
-            ev.fecha_modif = DateTimeOffset.UtcNow;
+            ev.fecha_modif = now;
+
+            //2. inserta histórico
+            var hist = new ef_evento_estados_hist
+            {
+                id_evento = idEvento,
+                id_usuario = idUsuarioAdmin,          //(superadmin)
+                fecha = now,
+                estado = EventoEstado.Activo,
+                observaciones = "Activación manual por pago"
+            };
+
+
+            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
+            {
+                id_evento = idEvento,
+                id_usuario = idUsuarioAdmin, //quién activó
+                fecha = now,
+                estado = EventoEstado.Activo,
+                observaciones = "Activación manual por pago"
+            });
+
+            _context.Set<ef_evento_estados_hist>().Add(hist);
 
             await _context.SaveChangesAsync();
         }
