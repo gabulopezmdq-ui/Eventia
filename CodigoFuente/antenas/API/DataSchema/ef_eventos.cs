@@ -34,12 +34,19 @@ namespace API.DataSchema
 
         public string estado { get; set; } = null!; // char(1) en BD
 
+        public string? rsvp_public_token { get; set; }               // varchar(64)
+        public long? id_usuario_rsvp_link_creator { get; set; }      // FK ef_usuarios
+        public string modo_acceso { get; set; } = null!;             // char(1) NOT NULL
+        public string modo_asistencia { get; set; } = null!;         // char(1) NOT NULL
+        public bool es_publico { get; set; }                         // bool NOT NULL
+
         public string[] UniqueProperties => System.Array.Empty<string>();
 
         // Navegaciones 
         public virtual ef_tipos_evento? tipo_evento { get; set; }
         public virtual ef_idiomas? idioma { get; set; }
         public virtual ef_dress_code? dress_code { get; set; }
-        public virtual ef_clientes? cliente { get; set; } 
+        public virtual ef_clientes? cliente { get; set; }
+        public virtual ef_usuarios? usuario_rsvp_link_creator { get; set; }
     }   
 }
