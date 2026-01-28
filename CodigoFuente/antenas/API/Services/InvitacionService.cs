@@ -1,12 +1,11 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
-using API.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+using API.Utility;
 
 namespace API.Services
 {
@@ -74,7 +73,7 @@ namespace API.Services
                 fecha_rsvp = DateTimeOffset.UtcNow,
                 fecha_alta = DateTimeOffset.UtcNow,
                 activo = true,
-                     = TokenUtility.Generate(64),
+                rsvp_token = TokenUtility.Generate(64),
                 id_usuario_invitador = evento.id_usuario_rsvp_link_creator,
                 qr_token = null
             };
