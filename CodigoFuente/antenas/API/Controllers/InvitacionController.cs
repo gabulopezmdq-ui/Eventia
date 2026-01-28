@@ -1,6 +1,7 @@
 ﻿using  API.DataSchema;
 using API.DataSchema.DTO;
 using  API.Services;
+using API.Utility;
 using FluentAssertions.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,9 +9,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core.Tokenizer;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using API.Utility;
 
 namespace API.Controllers
 {
@@ -55,12 +56,12 @@ namespace API.Controllers
         {
             var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            var link = await _invitacionService.GenerarLinkAsync(
+            var token = await _invitacionService.GenerarLinkAsync(
                 req.IdEvento,
                 userId
             );
 
-            return Ok(new { link });
+            return Ok(new { token });
         }
     }
 }
