@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { LayoutDashboard, Calendar, Settings, LogOut, Sparkles, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { LayoutDashboard, Calendar, Settings, LogOut, Sparkles, X, Database } from "lucide-react";
 import { SidebarItem } from "@/src/components/layout/SidebarItem";
 import { DashboardHeader } from "@/src/components/layout/DashboardHeader";
 import { useRouter } from "next/navigation";
 import { logout } from "@/src/features/auth/auth.service";
+import { getCurrentUser } from "@/src/features/events/event.service";
 
 export default function DashboardLayout({
     children,
@@ -13,6 +14,19 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+    useEffect(() => {
+        getCurrentUser()
+            .then(user => {
+                if (user.rol === 'superadmin') {
+                    setIsSuperAdmin(true);
+                }
+            })
+            .catch(() => {
+                // Silently fail if user fetch fails (auth middleware should handle access anyway)
+            });
+    }, []);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const router = useRouter();
@@ -68,6 +82,15 @@ export default function DashboardLayout({
                     </div>
                     <SidebarItem href="/dashboard" icon={LayoutDashboard} label="Panel General" />
                     <SidebarItem href="/dashboard/events" icon={Calendar} label="Mis Eventos" />
+
+                    {isSuperAdmin && (
+                        <>
+                            <div className="px-4 mt-8 mb-4">
+                                <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-600 uppercase tracking-widest">Administración</span>
+                            </div>
+                            <SidebarItem href="/dashboard/parametricas" icon={Database} label="Altas Paramétricas" />
+                        </>
+                    )}
 
                     <div className="px-4 mt-8 mb-4">
                         <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-600 uppercase tracking-widest">Configuración</span>
