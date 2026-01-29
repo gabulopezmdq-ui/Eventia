@@ -80,11 +80,36 @@ namespace API.Repositories
 
         public async Task<T> FindByIdAsync(object id)
         {
-            // ✅ CAMBIO IMPORTANTE:
-            // EF necesita que el tipo del id coincida con el tipo real de la PK.
-            // Por eso lo casteamos al tipo real de la PK antes de llamar FindAsync.
-            var typedId = CastToPrimaryKeyType(id);
-            return await _context.Set<T>().FindAsync(typedId);
+            // ✅ devuelve SIN tracking, evita choque en Update
+            var entityType = _context.Model.FindEntityType(typeof(T))
+                ?? throw new InvalidOperationException($"No se encontró metadata para {typeof(T).Name}.");
+
+            var pk = entityType.FindPrimaryKey()
+                ?? throw new InvalidOperationException($"La entidad {typeof(T).Name} no tiene PK.");
+
+            var pkProp = pk.Properties[0];
+            var pkName = pkProp.Name;
+            var pkClrType = pkProp.ClrType;
+
+            var typedId = Convert.ChangeType(id, pkClrType);
+
+            var parameter = Expression.Parameter(typeof(T), "e");
+
+            // EF.Property<TPk>(e, "Id")
+            var propertyAccess = Expression.Call(
+                typeof(EF),
+                nameof(EF.Property),
+                new[] { pkClrType },
+                parameter,
+                Expression.Constant(pkName)
+            );
+
+            var equals = Expression.Equal(propertyAccess, Expression.Constant(typedId, pkClrType));
+            var lambda = Expression.Lambda<Func<T, bool>>(equals, parameter);
+
+            return await _context.Set<T>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(lambda);
         }
 
         public async Task DeleteByIdAsync(object id)
