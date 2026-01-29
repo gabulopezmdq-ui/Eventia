@@ -25,7 +25,7 @@ namespace API.DataSchema.DTO
     public class EventoResponse
     {
         public long IdEvento { get; set; }
-        public short IdTipoEvento { get; set; }
+        public int IdTipoEvento { get; set; }
         public short IdIdioma { get; set; }
         public string AnfitrionesTexto { get; set; } = null!;
         public DateTimeOffset FechaHora { get; set; }
