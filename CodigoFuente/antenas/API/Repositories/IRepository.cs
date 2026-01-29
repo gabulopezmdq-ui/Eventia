@@ -7,15 +7,25 @@ using System.Threading.Tasks;
 
 namespace API.Repositories
 {
-    public interface IRepository<T> :IDisposable where T : class
+    public interface IRepository<T> : IDisposable where T : class
     {
         IQueryable<T> AllAsNoTracking();
 
         Task<IEnumerable<T>> Find(Expression<Func<T, bool>> expr);
 
         Task<T> Find(Guid id);
-        
+
         Task<T> Find(int id);
+
+        Task<T> FindLong(long id);
+
+        Task<T> FindShort(short id);
+
+        // ✅ CAMBIO: ya lo tenías, lo dejamos porque sirve para cualquier PK
+        Task<T> FindByIdAsync(object id);
+
+        // ✅ CAMBIO: agregado por vos (opcional). Útil si alguna vez borrás físico por id genérico.
+        Task DeleteByIdAsync(object id);
 
         Task Add(T entity);
 
@@ -27,14 +37,21 @@ namespace API.Repositories
 
         Task<T> Update(T entity);
 
-        Task<IEnumerable<TResult>> GetAllDTO<TResult>(Expression<Func<T, bool>>? criterio, Expression<Func<T, TResult>>? selector, bool? orderbydescendin, int? page, int? limit, params Expression<Func<T, Object>>[]? order) where TResult : class;
-        Task<IEnumerable<T>> GetAllAsync();
-        public int Count(Expression<Func<T, bool>> criterio);
-        Task<bool> HasRelatedEntities(int id);
-        PropertyInfo GetPrimaryKeyProperty(T entity);
-        Task<T> FindLong(long id);
-        
-        Task<T> FindShort(short id);
+        Task<IEnumerable<TResult>> GetAllDTO<TResult>(
+            Expression<Func<T, bool>>? criterio,
+            Expression<Func<T, TResult>>? selector,
+            bool? orderbydescendin,
+            int? page,
+            int? limit,
+            params Expression<Func<T, Object>>[]? order) where TResult : class;
 
+        Task<IEnumerable<T>> GetAllAsync();
+
+        int Count(Expression<Func<T, bool>> criterio);
+
+        //// ✅ CAMBIO CRÍTICO: antes era int, ahora object (para PK short/long/guid)
+        //Task<bool> HasRelatedEntities(object id);
+
+        PropertyInfo GetPrimaryKeyProperty(T entity);
     }
 }
