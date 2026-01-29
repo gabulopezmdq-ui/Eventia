@@ -1,4 +1,4 @@
-﻿using  API.DataSchema;
+﻿using API.DataSchema;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -7,9 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using IdentityModel;
 
 namespace API.Repositories
 {
@@ -22,62 +20,81 @@ namespace API.Repositories
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
-        protected DbSet<T> EntitySet
-        {
-            get
-            {
-                return _context.Set<T>();
-            }
-        }
+
+        protected DbSet<T> EntitySet => _context.Set<T>();
 
         public virtual IQueryable<T> AllAsNoTracking()
         {
             return _context.Set<T>().AsNoTracking();
         }
+
         public async Task<IEnumerable<T>> Find(Expression<Func<T, bool>> expr)
         {
-            return (IEnumerable<T>)await EntitySet.AsNoTracking().Where(expr).ToListAsync();
+            return await EntitySet.AsNoTracking().Where(expr).ToListAsync();
         }
 
         public virtual async Task<T> Find(Guid id)
         {
-            return await _context.FindAsync<T>(id);
+            // ✅ CAMBIO: FindAsync directo funciona perfecto para Guid PK
+            return await _context.Set<T>().FindAsync(id);
         }
 
         public virtual async Task<T> FindShort(short id)
         {
-            var keyName = _context.Model.FindEntityType(typeof(T)).FindPrimaryKey().Properties
-                .Select(x => x.Name)
+            var keyName = _context.Model.FindEntityType(typeof(T))!
+                .FindPrimaryKey()!
+                .Properties.Select(x => x.Name)
                 .Single();
-            var entity = await _context.Set<T>()
-           .AsNoTracking()
-           .Where(e => EF.Property<short>(e, keyName) == id)
-           .FirstOrDefaultAsync();
-            return entity;
+
+            return await _context.Set<T>()
+                .AsNoTracking()
+                .Where(e => EF.Property<short>(e, keyName) == id)
+                .FirstOrDefaultAsync();
         }
 
         public virtual async Task<T> FindLong(long id)
         {
-            var keyName = _context.Model.FindEntityType(typeof(T)).FindPrimaryKey().Properties
-                .Select(x => x.Name)
+            var keyName = _context.Model.FindEntityType(typeof(T))!
+                .FindPrimaryKey()!
+                .Properties.Select(x => x.Name)
                 .Single();
-            var entity = await _context.Set<T>()
-           .AsNoTracking()
-           .Where(e => EF.Property<long>(e, keyName) == id)
-           .FirstOrDefaultAsync();
-            return entity;
+
+            return await _context.Set<T>()
+                .AsNoTracking()
+                .Where(e => EF.Property<long>(e, keyName) == id)
+                .FirstOrDefaultAsync();
         }
 
         public virtual async Task<T> Find(int id)
         {
-            var keyName = _context.Model.FindEntityType(typeof(T)).FindPrimaryKey().Properties
-                .Select(x => x.Name)
+            var keyName = _context.Model.FindEntityType(typeof(T))!
+                .FindPrimaryKey()!
+                .Properties.Select(x => x.Name)
                 .Single();
-            var entity = await _context.Set<T>()
-           .AsNoTracking()
-           .Where(e => EF.Property<int>(e, keyName) == id)
-           .FirstOrDefaultAsync();
-            return entity;
+
+            return await _context.Set<T>()
+                .AsNoTracking()
+                .Where(e => EF.Property<int>(e, keyName) == id)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<T> FindByIdAsync(object id)
+        {
+            // ✅ CAMBIO IMPORTANTE:
+            // EF necesita que el tipo del id coincida con el tipo real de la PK.
+            // Por eso lo casteamos al tipo real de la PK antes de llamar FindAsync.
+            var typedId = CastToPrimaryKeyType(id);
+            return await _context.Set<T>().FindAsync(typedId);
+        }
+
+        public async Task DeleteByIdAsync(object id)
+        {
+            // ✅ CAMBIO: borrado físico genérico (opcional)
+            var entity = await FindByIdAsync(id);
+            if (entity == null) return;
+
+            _context.Set<T>().Remove(entity);
+            await _context.SaveChangesAsync();
         }
 
         public async Task Add(T entity)
@@ -89,18 +106,18 @@ namespace API.Repositories
         public async Task Delete(Guid Id)
         {
             var post = await _context.Set<T>().FindAsync(Id);
+            if (post == null) return;
 
             _context.Set<T>().Remove(post);
-
             await _context.SaveChangesAsync();
         }
 
         public async Task Delete(int Id)
         {
             var post = await _context.Set<T>().FindAsync(Id);
+            if (post == null) return;
 
             _context.Set<T>().Remove(post);
-
             await _context.SaveChangesAsync();
         }
 
@@ -119,35 +136,32 @@ namespace API.Repositories
 
             if (propiedadArchivo != null)
             {
-                // Obtener el archivo de la propiedad IFormFile (suponemos que se llama "Archivo")
                 IFormFile archivo = propiedadArchivo.GetValue(entity) as IFormFile;
 
                 if (archivo != null)
                 {
                     byte[] datosArchivo;
 
-                    // Convertir el archivo a un arreglo de bytes
                     using (var memoryStream = new MemoryStream())
                     {
                         archivo.CopyTo(memoryStream);
                         datosArchivo = memoryStream.ToArray();
                     }
 
-                    // Buscar una propiedad de tipo byte[] en la entidad para almacenar los datos del archivo
                     PropertyInfo propiedadDatosArchivo = typeof(T).GetProperties()
                         .FirstOrDefault(p => p.PropertyType == typeof(byte[]));
 
                     if (propiedadDatosArchivo != null)
                     {
-                        // Asignar los datos del archivo a la propiedad correspondiente de la entidad
                         propiedadDatosArchivo.SetValue(entity, datosArchivo);
                     }
-
                 }
             }
+
             await _context.Set<T>().AddAsync(entity);
             await _context.SaveChangesAsync();
         }
+
         private bool disposed = false;
 
         protected virtual void Dispose(bool disposing)
@@ -165,148 +179,136 @@ namespace API.Repositories
             GC.SuppressFinalize(this);
         }
 
-        public async Task<IEnumerable<TResult>> GetAllDTO<TResult>(Expression<Func<T, bool>>? criterio, Expression<Func<T, TResult>>? selector, bool? orderbydescending, int? page, int? limit, params Expression<Func<T, Object>>[]? order) where TResult : class
+        public async Task<IEnumerable<TResult>> GetAllDTO<TResult>(
+            Expression<Func<T, bool>>? criterio,
+            Expression<Func<T, TResult>>? selector,
+            bool? orderbydescending,
+            int? page,
+            int? limit,
+            params Expression<Func<T, Object>>[]? order) where TResult : class
         {
             IQueryable<T> query = EntitySet.AsQueryable();
+
             if (criterio != null)
-            {
-                query = (IQueryable<T>)query.Where(criterio);
-            }
-            if (order != null)
+                query = query.Where(criterio);
+
+            if (order != null && order.Length > 0)
             {
                 if (orderbydescending == true)
                 {
                     var ordenado = query.OrderByDescending(order[0]);
                     for (int i = 1; i < order.Length; i++)
-                    {
                         ordenado = ((IOrderedQueryable<T>)ordenado).ThenByDescending(order[i]);
-                    }
                     query = ordenado;
                 }
                 else
                 {
                     var ordenado = query.OrderBy(order[0]);
                     for (int i = 1; i < order.Length; i++)
-                    {
                         ordenado = ((IOrderedQueryable<T>)ordenado).ThenBy(order[i]);
-                    }
                     query = ordenado;
                 }
             }
+
             IQueryable<TResult> queryFinal = selector != null ? query.Select(selector) : (IQueryable<TResult>)query;
 
             if (page != null)
-            {
-                queryFinal = queryFinal.Skip((page.Value) * limit.Value).Take(limit.Value);
-            }
-            return (IEnumerable<TResult>)await queryFinal.ToListAsync();
+                queryFinal = queryFinal.Skip(page.Value * limit.Value).Take(limit.Value);
+
+            return await queryFinal.ToListAsync();
         }
 
-        public int Count(Expression<Func<T, bool>>? criterio)
+        public int Count(Expression<Func<T, bool>> criterio)
         {
-            int cant = 0;
-            if (criterio != null)
-            {
-                cant = EntitySet.Where(criterio).Count();
-            }
-            else
-            {
-                cant = EntitySet.Count();
-            }
-            return cant;
+            return criterio != null ? EntitySet.Where(criterio).Count() : EntitySet.Count();
         }
+
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _context.Set<T>().ToListAsync();
         }
 
-        public async Task<bool> HasRelatedEntities(int id)
-        {
-            var entityType = typeof(T);
-            var navigationProperties = _context.Model.FindEntityType(entityType)?.GetNavigations();
+        // ✅ CAMBIO CRÍTICO: antes era int y te rompía con short/long
+        // ✅ CAMBIO CRÍTICO: arreglado para DbSet por Type (reflection)
+        //public async Task<bool> HasRelatedEntities(object id)
+        //{
+        //    var entityType = typeof(T);
+        //    var navigationProperties = _context.Model.FindEntityType(entityType)?.GetNavigations();
 
-            if (navigationProperties == null)
-            {
-                return false; // No hay propiedades de navegación, por lo tanto, no hay entidades relacionadas.
-            }
+        //    if (navigationProperties == null)
+        //        return false;
 
-            foreach (var navigation in navigationProperties)
-            {
-                // Obtiene el tipo de la entidad relacionada.
-                var relatedEntityType = navigation.TargetEntityType.ClrType;
+        //    foreach (var navigation in navigationProperties)
+        //    {
+        //        var relatedEntityType = navigation.TargetEntityType.ClrType;
 
-                // Obtiene la propiedad de la clave foránea.
-                var foreignKeyProperty = navigation.ForeignKey.Properties.FirstOrDefault();
-                if (foreignKeyProperty == null)
-                {
-                    continue; // Si no hay clave foránea, saltamos esta relación.
-                }
+        //        var foreignKeyProperty = navigation.ForeignKey.Properties.FirstOrDefault();
+        //        if (foreignKeyProperty == null)
+        //            continue;
 
-                // Utilizamos la versión genérica correcta de 'Set<T>()'
-                var relatedDbSetMethod = _context.GetType()
-                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .FirstOrDefault(m => m.Name == "Set" && m.IsGenericMethod && m.GetGenericArguments().Length == 1);
+        //        // ✅ CAMBIO: obtener IQueryable del DbSet<relatedEntityType> via reflection
+        //        var relatedDbSet = GetQueryable(relatedEntityType);
+        //        if (relatedDbSet == null)
+        //            continue;
 
-                if (relatedDbSetMethod == null)
-                {
-                    continue; // Si no se puede encontrar el método 'Set', continuamos con la siguiente relación.
-                }
+        //        var parameter = Expression.Parameter(relatedEntityType, "e");
 
-                // Invoca el DbSet de la entidad relacionada.
-                var relatedDbSet = relatedDbSetMethod.MakeGenericMethod(relatedEntityType)
-                    .Invoke(_context, null) as IQueryable;
-                if (relatedDbSet == null)
-                {
-                    continue;
-                }
+        //        // EF.Property<TFk>(e, "FkName")
+        //        var fkType = foreignKeyProperty.ClrType;
+        //        var propertyAccess = Expression.Call(
+        //            typeof(EF),
+        //            nameof(EF.Property),
+        //            new[] { fkType },
+        //            parameter,
+        //            Expression.Constant(foreignKeyProperty.Name)
+        //        );
 
-                // Construye una expresión para la consulta.
-                var parameter = Expression.Parameter(relatedEntityType, "e");
+        //        var typedId = Convert.ChangeType(id, fkType);
 
-                // Acceso dinámico a la propiedad de clave foránea.
-                var propertyAccess = Expression.Call(
-                    typeof(EF),
-                    nameof(EF.Property),
-                    new[] { foreignKeyProperty.PropertyInfo.PropertyType },
-                    parameter,
-                    Expression.Constant(foreignKeyProperty.Name)
-                );
+        //        var condition = Expression.Equal(propertyAccess, Expression.Constant(typedId, fkType));
+        //        var lambda = Expression.Lambda(condition, parameter);
 
-                var condition = Expression.Equal(propertyAccess, Expression.Constant(id));
-                var lambda = Expression.Lambda(condition, parameter);
+        //        var anyMethod = typeof(Queryable).GetMethods()
+        //            .First(m => m.Name == "Any" && m.GetParameters().Length == 2)
+        //            .MakeGenericMethod(relatedEntityType);
 
-                // Usamos el método `Any` para verificar si existe alguna entidad relacionada.
-                var method = typeof(Queryable).GetMethods()
-                    .First(m => m.Name == "Any" && m.GetParameters().Length == 2)
-                    .MakeGenericMethod(relatedEntityType);
+        //        var exists = (bool)anyMethod.Invoke(null, new object[] { relatedDbSet, lambda });
 
-                var exists = (bool)method.Invoke(null, new object[] { relatedDbSet, lambda });
+        //        if (exists)
+        //            return true;
+        //    }
 
-                if (exists)
-                {
-                    return true; // Si se encuentra alguna entidad relacionada, retornamos true.
-                }
-            }
+        //    return false;
+        //}
 
-            return false; // Si no se encontró ninguna relación, retornamos false.
-        }
         public PropertyInfo GetPrimaryKeyProperty(T entity)
         {
             var model = _context.Model;
             var entityType = model.FindEntityType(typeof(T));
 
-            var primaryKey = entityType.FindPrimaryKey();
-
+            var primaryKey = entityType?.FindPrimaryKey();
             if (primaryKey == null)
-            {
                 throw new InvalidOperationException("No se encontró una clave primaria configurada.");
-            }
 
-            var primaryKeyProperty = entity.GetType().GetProperty(primaryKey.Properties[0].Name);
-
-            return primaryKeyProperty;
+            return entity.GetType().GetProperty(primaryKey.Properties[0].Name);
         }
 
+        // ✅ NUEVO: helper para que FindByIdAsync funcione con PK short/int/long/guid
+        private object CastToPrimaryKeyType(object id)
+        {
+            var entityType = _context.Model.FindEntityType(typeof(T))
+                ?? throw new InvalidOperationException($"No se encontró metadata para {typeof(T).Name}.");
 
+            var pk = entityType.FindPrimaryKey()
+                ?? throw new InvalidOperationException($"La entidad {typeof(T).Name} no tiene PK.");
+
+            var pkType = pk.Properties[0].ClrType;
+
+            // Si ya viene del mismo tipo, perfecto
+            if (id != null && pkType.IsInstanceOfType(id))
+                return id;
+
+            return Convert.ChangeType(id, pkType);
+        }
     }
 }
