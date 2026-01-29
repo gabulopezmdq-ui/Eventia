@@ -17,3 +17,7 @@ export interface RegisterPayload {
 export interface RegisterResponse {
     success: boolean;
 }
+
+export interface GoogleAuthPayload {
+    idToken: string;
+}

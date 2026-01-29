@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { login } from './auth.service';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 export function LoginForm() {
     const [email, setEmail] = useState('');
@@ -58,6 +59,18 @@ export function LoginForm() {
             >
                 {loading ? 'Ingresando…' : 'Ingresar'}
             </button>
+
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-neutral-700"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                    <span className="bg-neutral-900 px-4 text-neutral-400">o continuar con</span>
+                </div>
+            </div>
+
+            <GoogleSignInButton />
         </form>
     );
 }
+
