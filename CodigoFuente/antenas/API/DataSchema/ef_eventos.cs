@@ -8,7 +8,7 @@ namespace API.DataSchema
     {
         public long id_evento { get; set; }
 
-        public short id_tipo_evento { get; set; }
+        public int id_tipo_evento { get; set; }
         public short id_idioma { get; set; }
         public long? id_cliente { get; set; }
 
