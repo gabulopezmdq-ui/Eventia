@@ -123,43 +123,33 @@ namespace API.Services
 
         public virtual async Task<T> Update(T genericClass)
         {
-            try
+            var pkProperty = _genericRepo.GetPrimaryKeyProperty(genericClass);
+            var id = pkProperty.GetValue(genericClass);
+
+            var originalEntity = await _genericRepo.FindByIdAsync(id);
+            if (originalEntity == null)
+                throw new InvalidOperationException("Entidad no encontrada.");
+
+            // VALIDACIONES DE VIGENTE (igual que ahora)
+            var vigenteProperty = typeof(T).GetProperty("Vigente");
+            var originalVigente = vigenteProperty?.GetValue(originalEntity)?.ToString();
+            var newVigente = vigenteProperty?.GetValue(genericClass)?.ToString();
+
+            if (vigenteProperty != null && originalVigente == "S" && newVigente == "N")
             {
-                var primaryKeyProperty = _genericRepo.GetPrimaryKeyProperty(genericClass);
-                if (primaryKeyProperty == null)
-                    throw new InvalidOperationException("No se encontró una clave primaria en la entidad.");
-
-                var id = primaryKeyProperty.GetValue(genericClass);
-                if (id == null)
-                    throw new ArgumentNullException("La clave primaria no puede ser nula.");
-
-                // ✅ CAMBIO: sin switch, sirve para short/int/long/guid
-                T originalEntity = await _genericRepo.FindByIdAsync(id);
-
-                if (originalEntity == null)
-                    throw new InvalidOperationException("Entidad no encontrada.");
-
-                var vigenteProperty = typeof(T).GetProperty("Vigente");
-                var originalVigente = vigenteProperty?.GetValue(originalEntity)?.ToString();
-                var newVigente = vigenteProperty?.GetValue(genericClass)?.ToString();
-
-                if (vigenteProperty != null && originalVigente == "S" && newVigente == "N")
-                {
-                    // ✅ CAMBIO: NO Convert.ToInt32(id)
-                    bool tieneRelacionesActivas = await TieneRelacionesActivas(id);
-
-                    if (tieneRelacionesActivas)
-                        throw new InvalidOperationException(
-                            "No se puede cambiar el estado 'Vigente' a 'N' porque existen entidades relacionadas con 'Vigente' = 'S'.");
-                }
-
-                return await _genericRepo.Update(genericClass);
+                bool tieneRelacionesActivas = await TieneRelacionesActivas(id);
+                if (tieneRelacionesActivas)
+                    throw new InvalidOperationException(
+                        "No se puede cambiar Vigente a 'N' porque existen relaciones activas.");
             }
-            catch (Exception e)
-            {
-                throw new Exception("Error al actualizar la entidad.", e);
-            }
+
+            // ✅ CLAVE: copiar valores al objeto TRACKED
+            _context.Entry(originalEntity).CurrentValues.SetValues(genericClass);
+
+            await _context.SaveChangesAsync();
+            return originalEntity;
         }
+
 
         // ✅ CAMBIO CRÍTICO: antes era int y asumía FK int.
         // Ahora acepta object y tipa id al tipo REAL de la FK.
