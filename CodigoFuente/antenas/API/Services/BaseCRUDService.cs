@@ -103,7 +103,7 @@ namespace API.Services
                     "No se puede desactivar el registro porque existen entidades relacionadas activas (Vigente = 'S').");
             }
 
-            typeof(T).GetProperty("Vigente")?.SetValue(entity, "N");
+            typeof(T).GetProperty("activo")?.SetValue(entity, false);
 
             await _genericRepo.Update(entity);
         }
