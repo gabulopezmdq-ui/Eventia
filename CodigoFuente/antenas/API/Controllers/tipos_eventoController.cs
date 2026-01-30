@@ -32,14 +32,11 @@ namespace API.Controllers
 
         //[Authorize(Roles = "SUPERADMIN")]
         [HttpGet("GetAll")]
-        public async Task<ActionResult<List<ParametricaDTO>>> GetAll(
-            [FromQuery] short idIdioma)
+        public async Task<ActionResult<List<ParametricaDTO>>> GetAll([FromQuery] short idIdioma)
         {
-            var result = await _parametricaService.GetAsync(
-                "TIPO_EVENTO",
-                idIdioma);
-
+            var result = await _parametricaService.GetTiposEventoAsync(idIdioma);
             return Ok(result);
+
         }
 
         [HttpGet("GetByActivo")]
