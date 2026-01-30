@@ -11,5 +11,6 @@ namespace API.DataSchema
         public bool activo { get; set; }
 
         public string[] UniqueProperties => new[] { "codigo" };
+        public long Id => id_tipo_evento;
     }   
 }
