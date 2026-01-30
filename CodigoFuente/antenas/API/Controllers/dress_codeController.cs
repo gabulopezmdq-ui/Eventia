@@ -1,4 +1,5 @@
 ﻿using  API.DataSchema;
+using API.DataSchema.DTO;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,19 +19,26 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<ef_dress_code> _serviceGenerico;
         private readonly ILogger<dress_codeController> _logger;
+        private readonly IParametricaService _parametricaService;
 
-        public dress_codeController(DataContext context, ILogger<dress_codeController> logger, ICRUDService<ef_dress_code> serviceGenerico)
+        public dress_codeController(DataContext context, ILogger<dress_codeController> logger, ICRUDService<ef_dress_code> serviceGenerico, IParametricaService parametricaService)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
+            _parametricaService = parametricaService;
         }
 
         //[Authorize(Roles = "SUPERADMIN")]
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<ef_dress_code>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<List<ParametricaDTO>>> GetAll(
+                   [FromQuery] short idIdioma)
         {
-            return Ok(_serviceGenerico.GetAll());
+            var result = await _parametricaService.GetAsync(
+                "DRESS_CODE",
+                idIdioma);
+
+            return Ok(result);
         }
 
         [HttpGet("GetByActivo")]

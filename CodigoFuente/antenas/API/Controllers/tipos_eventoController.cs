@@ -1,4 +1,5 @@
 ﻿using  API.DataSchema;
+using API.DataSchema.DTO;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,19 +19,27 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<ef_tipos_evento> _serviceGenerico;
         private readonly ILogger<tipos_eventoController> _logger;
+        private readonly IParametricaService _parametricaService;
 
-        public tipos_eventoController(DataContext context, ILogger<tipos_eventoController> logger, ICRUDService<ef_tipos_evento> serviceGenerico)
+
+        public tipos_eventoController(DataContext context, ILogger<tipos_eventoController> logger, ICRUDService<ef_tipos_evento> serviceGenerico, IParametricaService parametricaService)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
+            _parametricaService = parametricaService;
         }
 
         //[Authorize(Roles = "SUPERADMIN")]
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<ef_tipos_evento>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<List<ParametricaDTO>>> GetAll(
+            [FromQuery] short idIdioma)
         {
-            return Ok(_serviceGenerico.GetAll());
+            var result = await _parametricaService.GetAsync(
+                "TIPO_EVENTO",
+                idIdioma);
+
+            return Ok(result);
         }
 
         [HttpGet("GetByActivo")]
