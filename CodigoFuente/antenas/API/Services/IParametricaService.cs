@@ -6,8 +6,7 @@ namespace API.Services
 {
     public interface IParametricaService
     {
-        Task<List<ParametricaDTO>> GetAsync(
-            string entidad,
-            short idIdioma);
+        Task<List<ParametricaDTO>> GetTiposEventoAsync(short idIdioma);
+        Task<List<ParametricaDTO>> GetDressCodeAsync(short idIdioma);
     }
 }

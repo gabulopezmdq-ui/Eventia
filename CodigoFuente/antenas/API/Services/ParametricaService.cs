@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace API.Services
@@ -17,44 +18,61 @@ namespace API.Services
         {
             _context = context;
         }
-
-        public async Task<List<ParametricaDTO>> GetAsync(
+        private async Task<List<ParametricaDTO>> GetParametricaAsync<TEntity>(
+            IQueryable<TEntity> baseQuery,
             string entidad,
+            Expression<Func<TEntity, long>> idSelector,
+            Expression<Func<TEntity, string>> codigoSelector,
+            Expression<Func<TEntity, bool>> activoSelector,
             short idIdioma)
+            where TEntity : class
         {
-            var baseQuery = ResolveBase(entidad);
-
-            return await (
-                from tr in _context.ef_param_traducciones
-                join b in baseQuery
-                    on tr.id_item equals b.Id
+            var query =
+                from b in baseQuery.Where(activoSelector)
+                join tr in _context.ef_param_traducciones
+                    on EF.Property<long>(b, ((MemberExpression)idSelector.Body).Member.Name)
+                    equals tr.id_item
                 where tr.entidad == entidad
                    && tr.id_idioma == idIdioma
                    && tr.activo
-                   && b.Activo
                 orderby tr.orden ?? 999, tr.texto
-                select new ParametricaDTO
+                select new
                 {
-                    Id = b.Id,
-                    Codigo = b.Codigo,
-                    Texto = tr.texto,
-                    Orden = tr.orden
-                }
-            ).ToListAsync();
-        }
+                    Id = EF.Property<long>(b, ((MemberExpression)idSelector.Body).Member.Name),
+                    Codigo = EF.Property<string>(b, ((MemberExpression)codigoSelector.Body).Member.Name),
+                    tr.texto,
+                    tr.orden
+                };
 
-        private IQueryable<IParametricaBase> ResolveBase(string entidad)
-        {
-            return entidad switch
+            var data = await query.ToListAsync();
+
+            return data.Select(x => new ParametricaDTO
             {
-                "TIPO_EVENTO" => _context.ef_tipos_evento
-                                    .Select(x => (IParametricaBase)x),
-
-                "DRESS_CODE" => _context.ef_dress_code
-                                    .Select(x => (IParametricaBase)x),
-
-                _ => throw new ArgumentException($"Entidad paramétrica no soportada: {entidad}")
-            };
+                Id = x.Id,
+                Codigo = x.Codigo,
+                Texto = x.texto,
+                Orden = x.orden
+            }).ToList();
         }
+
+        public Task<List<ParametricaDTO>> GetTiposEventoAsync(short idIdioma)
+            => GetParametricaAsync(
+                _context.ef_tipos_evento,
+                "TIPO_EVENTO",
+                t => t.id_tipo_evento,
+                t => t.codigo,
+                t => t.activo,
+                idIdioma
+            );
+
+        public Task<List<ParametricaDTO>> GetDressCodeAsync(short idIdioma)
+            => GetParametricaAsync(
+                _context.ef_dress_code,
+                "DRESS_CODE",
+                d => d.id_dress_code,
+                d => d.codigo,
+                d => d.activo,
+                idIdioma
+            );
     }
 }
