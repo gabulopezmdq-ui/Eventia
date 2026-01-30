@@ -55,24 +55,46 @@ namespace API.Services
             }).ToList();
         }
 
-        public Task<List<ParametricaDTO>> GetTiposEventoAsync(short idIdioma)
-            => GetParametricaAsync(
-                _context.ef_tipos_evento,
-                "TIPO_EVENTO",
-                t => t.id_tipo_evento,
-                t => t.codigo,
-                t => t.activo,
-                idIdioma
-            );
+        public async Task<List<ParametricaDTO>> GetTiposEventoAsync(short idIdioma)
+        {
+            return await (
+                from t in _context.ef_tipos_evento
+                join tr in _context.ef_param_traducciones
+                    on t.id_tipo_evento equals tr.id_item
+                where tr.entidad == "TIPO_EVENTO"
+                   && tr.id_idioma == idIdioma
+                   && tr.activo
+                   && t.activo
+                orderby tr.orden ?? 999, tr.texto
+                select new ParametricaDTO
+                {
+                    Id = t.id_tipo_evento,
+                    Codigo = t.codigo,
+                    Texto = tr.texto,
+                    Orden = tr.orden
+                }
+            ).ToListAsync();
+        }
 
-        public Task<List<ParametricaDTO>> GetDressCodeAsync(short idIdioma)
-            => GetParametricaAsync(
-                _context.ef_dress_code,
-                "DRESS_CODE",
-                d => d.id_dress_code,
-                d => d.codigo,
-                d => d.activo,
-                idIdioma
-            );
+        public async Task<List<ParametricaDTO>> GetDressCodeAsync(short idIdioma)
+        {
+            return await (
+                from d in _context.ef_dress_code
+                join tr in _context.ef_param_traducciones
+                    on d.id_dress_code equals tr.id_item
+                where tr.entidad == "DRESS_CODE"
+                   && tr.id_idioma == idIdioma
+                   && tr.activo
+                   && d.activo
+                orderby tr.orden ?? 999, tr.texto
+                select new ParametricaDTO
+                {
+                    Id = d.id_dress_code,
+                    Codigo = d.codigo,
+                    Texto = tr.texto,
+                    Orden = tr.orden
+                }
+            ).ToListAsync();
+        }
     }
 }
