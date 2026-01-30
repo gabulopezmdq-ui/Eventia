@@ -51,7 +51,7 @@ namespace API.Services
         public async Task<IEnumerable<T>> GetAllActivos()
         {
             return await Task.FromResult(
-                _genericRepo.AllAsNoTracking().Where(x => EF.Property<bool>(x, "Activo") == true)
+                _genericRepo.AllAsNoTracking().Where(x => EF.Property<bool>(x, "activo") == true)
             );
         }
 
@@ -61,7 +61,7 @@ namespace API.Services
                 return await Task.FromResult(_genericRepo.AllAsNoTracking());
 
             return await Task.FromResult(
-                _genericRepo.AllAsNoTracking().Where(x => EF.Property<bool>(x, "Activo") == boolValue.Value)
+                _genericRepo.AllAsNoTracking().Where(x => EF.Property<bool>(x, "activo") == boolValue.Value)
             );
         }
 
