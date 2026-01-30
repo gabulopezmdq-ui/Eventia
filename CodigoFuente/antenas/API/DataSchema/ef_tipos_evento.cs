@@ -7,9 +7,9 @@ namespace API.DataSchema
     public class ef_tipos_evento : IRegistroUnico
     {
         public int id_tipo_evento { get; set; }
-        public string descripcion { get; set; } = null!;
+        public string codigo { get; set; } = null!;
         public bool activo { get; set; }
 
-        public string[] UniqueProperties => new[] { "descripcion" };
+        public string[] UniqueProperties => new[] { "codigo" };
     }   
 }

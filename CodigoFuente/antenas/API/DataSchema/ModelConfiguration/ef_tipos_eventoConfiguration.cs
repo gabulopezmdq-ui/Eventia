@@ -14,16 +14,16 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_tipo_evento)
                    .ValueGeneratedOnAdd();
               
-            builder.Property(x => x.descripcion)
+            builder.Property(x => x.codigo)
                     .HasMaxLength(100);
 
             builder.Property(x => x.activo)
                    .HasDefaultValue(true)
                    .IsRequired();
 
-            builder.HasIndex(x => x.descripcion)
+            builder.HasIndex(x => x.codigo)
                    .IsUnique()
-                   .HasDatabaseName("ux_ef_tipos_evento_descripcion");
+                   .HasDatabaseName("ux_ef_tipos_evento_codigo");
         }
     }
 }
