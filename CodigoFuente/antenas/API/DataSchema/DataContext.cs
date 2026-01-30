@@ -28,6 +28,7 @@ namespace API.DataSchema
         public DbSet<ef_cuentas> ef_cuentas { get; set; }
         public DbSet<ef_cuenta_usuarios> ef_cuenta_usuarios { get; set; }
         public DbSet<ef_invitados> ef_invitados { get; set; }
+        public DbSet<ef_param_traducciones> ef_param_traducciones { get; set; }
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -89,6 +90,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_cuentasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cuenta_usuariosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_invitadosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_traduccionesConfiguration());
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
