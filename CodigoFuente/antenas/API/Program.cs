@@ -129,6 +129,7 @@ builder.Services.AddScoped<loginService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEventosService, EventosService>();
 builder.Services.AddScoped<IInvitacionService, InvitacionService>();
+builder.Services.AddScoped<IParametricaService, ParametricaService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 
 // Registro de repositorios
