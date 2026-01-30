@@ -14,7 +14,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_dress_code)
                    .ValueGeneratedOnAdd();
 
-            builder.Property(x => x.descripcion)
+            builder.Property(x => x.codigo)
                    .HasMaxLength(100)
                    .IsRequired();
 
@@ -22,9 +22,9 @@ namespace API.DataSchema.ModelConfiguration
                    .HasDefaultValue(true)
                    .IsRequired();
 
-            builder.HasIndex(x => x.descripcion)
+            builder.HasIndex(x => x.codigo)
                    .IsUnique()
-                   .HasDatabaseName("ux_ef_dress_code_descripcion");
+                   .HasDatabaseName("ux_ef_dress_code_codigo");
         }
     }
 }

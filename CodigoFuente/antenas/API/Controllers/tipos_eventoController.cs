@@ -49,7 +49,7 @@ namespace API.Controllers
         [HttpGet("GetByName")]
         public async Task<ActionResult<ef_usuarios>> Get(string Name)
         {
-            return Ok(await _serviceGenerico.GetByParam(u => u.descripcion == Name));
+            return Ok(await _serviceGenerico.GetByParam(u => u.codigo == Name));
         }
 
         [HttpPost]
