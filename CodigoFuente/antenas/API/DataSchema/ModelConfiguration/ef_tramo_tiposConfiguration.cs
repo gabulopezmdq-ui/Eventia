@@ -21,9 +21,9 @@ namespace API.DataSchema.ModelConfiguration
                     .WithOne(t => t.tramo_tipo)
                     .HasForeignKey(t => t.id_tramo_tipo);
 
-            //builder.HasMany(x => x.plantilla_tramos)
-            //        .WithOne(t => t.tramo_tipo)
-            //        .HasForeignKey(t => t.id_tramo_tipo);
+            builder.HasMany(x => x.plantilla_tramos)
+                    .WithOne(t => t.tramo_tipo)
+                    .HasForeignKey(t => t.id_tramo_tipo);
         }
     }
 }

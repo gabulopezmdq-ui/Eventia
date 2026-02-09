@@ -29,6 +29,15 @@ namespace API.DataSchema
         public DbSet<ef_cuenta_usuarios> ef_cuenta_usuarios { get; set; }
         public DbSet<ef_invitados> ef_invitados { get; set; }
         public DbSet<ef_param_traducciones> ef_param_traducciones { get; set; }
+        public DbSet<ef_tramo_tipos> ef_tramo_tipos { get; set; }
+        public DbSet<ef_evento_tramos> ef_evento_tramos { get; set; }
+        public DbSet<ef_evento_accesos> ef_evento_accesos { get; set; }
+        public DbSet<ef_evento_acceso_tramos> ef_evento_acceso_tramos { get; set; }
+
+        public DbSet<ef_plantillas_evento> ef_plantillas_evento { get; set; }
+        public DbSet<ef_plantilla_tramos> ef_plantilla_tramos { get; set; }
+        public DbSet<ef_plantilla_accesos> ef_plantilla_accesos { get; set; }
+        public DbSet<ef_plantilla_acceso_tramos> ef_plantilla_acceso_tramos { get; set; }
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -91,6 +100,15 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_cuenta_usuariosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_invitadosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_traduccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_tramo_tiposConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_tramosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_accesosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_acceso_tramosConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_plantillas_eventoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_plantilla_tramosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_plantilla_accesosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_plantilla_acceso_tramosConfiguration());
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
