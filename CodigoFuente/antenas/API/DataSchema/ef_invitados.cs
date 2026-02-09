@@ -29,6 +29,8 @@ namespace API.DataSchema
         public bool activo { get; set; }
         public string? qr_token { get; set; }
 
+        public long? id_acceso { get; set; }
+
         public string[] UniqueProperties => new[] { "rsvp_token" };
 
         // Navegación
