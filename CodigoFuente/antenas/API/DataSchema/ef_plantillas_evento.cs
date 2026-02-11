@@ -9,9 +9,11 @@ namespace API.DataSchema
         public short id_plantilla { get; set; }
         public string codigo { get; set; }
         public bool activo { get; set; }
+        public short? id_tipo_evento { get; set; }
 
         // Nav
         public ICollection<ef_plantilla_tramos>? tramos { get; set; } = new List<ef_plantilla_tramos>();
         public ICollection<ef_plantilla_accesos>? accesos { get; set; } = new List<ef_plantilla_accesos>();
+        public ef_tipos_evento? tipo_evento { get; set; }
     }
 }
