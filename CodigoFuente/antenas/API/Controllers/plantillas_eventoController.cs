@@ -43,6 +43,19 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByParam(x => x.codigo == codigo));
         }
 
+        [HttpGet("GetByTipo")]
+        public async Task<ActionResult<IEnumerable<ef_plantillas_evento>>> GetByTipo([FromQuery] short idTipoEvento, [FromQuery] string activo = null)
+        {
+            // Si no mandás activo, devuelve todas las plantillas del tipo
+            // Si mandás activo ("true"/"false"), filtra también por activo
+            var list = await _serviceGenerico.GetListByParam(p =>
+                p.id_tipo_evento == idTipoEvento &&
+                (activo == null || p.activo == (activo.ToLower() == "true" || activo == "1" || activo.ToLower() == "t"))
+            );
+
+            return Ok(list);
+        }
+
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] ef_plantillas_evento item)
         {

@@ -23,6 +23,7 @@ namespace API.Services
         Task<T> Update(T genericClass);
         //Task<bool> Update(T entityToUpdate);
         Task<IEnumerable<T>> GetByParam(Expression<Func<T, bool>> where);
+        Task<List<T>> GetListByParam(System.Linq.Expressions.Expression<Func<T, bool>> predicate);
         Task<IEnumerable<T>> GetByActivo(bool? boolValue);
         Task<IEnumerable<T>> GetAllActivos();
         //Task<bool> UserDuplicate(T entity);

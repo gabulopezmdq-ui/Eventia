@@ -24,6 +24,12 @@ namespace API.Controllers
             _serviceGenerico = serviceGenerico;
         }
 
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<ef_plantilla_tramos>>> Get() 
+        {
+            return Ok(_serviceGenerico.GetAll());
+        }
+
         [HttpGet("GetByActivo")]
         public async Task<ActionResult<IEnumerable<ef_plantilla_tramos>>> GetByVigente([FromQuery] string activo = null)
         {
@@ -35,6 +41,24 @@ namespace API.Controllers
         public async Task<ActionResult<ef_plantilla_tramos>> Get(long Id)
         {
             return Ok(await _serviceGenerico.GetByID(Id));
+        }
+
+        [HttpGet("GetByPlantilla")]
+        public async Task<ActionResult<IEnumerable<ef_plantilla_tramos>>> GetByPlantilla([FromQuery] short idPlantilla, [FromQuery] string activo = null)
+        {
+            bool? act = null;
+            if (!string.IsNullOrWhiteSpace(activo))
+                act = (activo.ToLower() == "true" || activo == "1" || activo.ToLower() == "t");
+
+            var result = await _serviceGenerico.GetListByParam(x =>
+                x.id_plantilla == idPlantilla &&
+                (act == null || x.activo == act.Value)
+            );
+
+            // si querés ordenados:
+            result = result.OrderBy(x => x.orden).ToList();
+
+            return Ok(result);
         }
 
         [HttpPost]

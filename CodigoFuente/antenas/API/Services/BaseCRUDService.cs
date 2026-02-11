@@ -65,6 +65,7 @@ namespace API.Services
             );
         }
 
+
         public async Task<T> GetByIDShort(short id) => await _genericRepo.FindShort(id);
 
         public async Task<T> GetByID(long id) => await _genericRepo.FindLong(id);
@@ -74,6 +75,11 @@ namespace API.Services
         public async Task<IEnumerable<T>> GetByParam(Expression<Func<T, bool>> where)
         {
             return await _genericRepo.Find(where);
+        }
+
+        public async Task<List<T>> GetListByParam(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().Where(predicate).ToListAsync();
         }
 
         public async Task Add(T genericClass)

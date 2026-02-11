@@ -30,12 +30,37 @@ namespace API.Controllers
         public async Task<IActionResult> GetByPlantilla([FromQuery] short idPlantilla)
         {
             var data = await _context.ef_plantilla_acceso_tramos
+                .AsNoTracking()
                 .Include(x => x.plantilla_acceso)
                 .Include(x => x.plantilla_tramo)
-                .AsNoTracking()
+                .Where(x => x.plantilla_acceso != null && x.plantilla_acceso.id_plantilla == idPlantilla)
                 .ToListAsync();
 
-            data = data.FindAll(x => x.plantilla_acceso != null && x.plantilla_acceso.id_plantilla == idPlantilla);
+            return Ok(data);
+        }
+
+        [HttpGet("GetTramosByAcceso")]
+        public async Task<IActionResult> GetTramosByAcceso([FromQuery] long idPlantillaAcceso)
+        {
+            var data = await _context.ef_plantilla_acceso_tramos
+                .AsNoTracking()
+                .Include(x => x.plantilla_tramo)
+                .Where(x => x.id_plantilla_acceso == idPlantillaAcceso)
+                .Select(x => x.plantilla_tramo)
+                .ToListAsync();
+
+            return Ok(data);
+        }
+
+        [HttpGet("GetAccesosByTramo")]
+        public async Task<IActionResult> GetAccesosByTramo([FromQuery] long idPlantillaTramo)
+        {
+            var data = await _context.ef_plantilla_acceso_tramos
+                .AsNoTracking()
+                .Include(x => x.plantilla_acceso)
+                .Where(x => x.id_plantilla_tramo == idPlantillaTramo)
+                .Select(x => x.plantilla_acceso)
+                .ToListAsync();
 
             return Ok(data);
         }
