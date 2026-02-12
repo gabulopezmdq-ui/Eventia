@@ -131,6 +131,8 @@ builder.Services.AddScoped<IEventosService, EventosService>();
 builder.Services.AddScoped<IInvitacionService, InvitacionService>();
 builder.Services.AddScoped<IParametricaService, ParametricaService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
+builder.Services.AddScoped<IEventoPlantillasService, EventoPlantillasService>();
+
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
