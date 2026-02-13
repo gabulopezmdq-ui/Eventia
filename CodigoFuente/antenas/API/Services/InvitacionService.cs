@@ -49,9 +49,6 @@ namespace API.Services
             return new
             {
                 evento.anfitriones_texto,
-                evento.fecha_hora,
-                evento.lugar,
-                evento.direccion,
                 evento.saludo,
                 evento.mensaje_bienvenida
             };
