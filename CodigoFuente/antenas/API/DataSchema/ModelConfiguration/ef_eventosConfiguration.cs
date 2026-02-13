@@ -26,21 +26,6 @@ namespace API.DataSchema.ModelConfiguration
                    .HasMaxLength(500)
                    .IsRequired();
 
-            builder.Property(x => x.fecha_hora)
-                   .IsRequired();
-
-            builder.Property(x => x.lugar)
-                   .HasMaxLength(200);
-
-            builder.Property(x => x.direccion)
-                   .HasMaxLength(200);
-
-            builder.Property(x => x.latitud)
-                   .HasPrecision(9, 6);
-
-            builder.Property(x => x.longitud)
-                   .HasPrecision(9, 6);
-
             builder.Property(x => x.id_dress_code);
 
             builder.Property(x => x.dress_code_descripcion)
@@ -89,16 +74,6 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.es_publico)
                    .IsRequired();
 
-            // CHECK constraints (igual que en la BD)
-            builder.HasCheckConstraint(
-                "ck_ef_eventos_lat",
-                "(latitud is null) or (latitud >= -90 and latitud <= 90)"
-            );
-
-            builder.HasCheckConstraint(
-                "ck_ef_eventos_lng",
-                "(longitud is null) or (longitud >= -180 and longitud <= 180)"
-            );
 
             // Relaciones (FKs)
             builder.HasOne(x => x.tipo_evento)

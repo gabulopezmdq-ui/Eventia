@@ -14,14 +14,6 @@ namespace API.DataSchema
 
         public string anfitriones_texto { get; set; } = null!;
 
-        public DateTimeOffset fecha_hora { get; set; }
-
-        public string? lugar { get; set; }
-        public string? direccion { get; set; }
-
-        public decimal? latitud { get; set; }     // numeric(9,6)
-        public decimal? longitud { get; set; }    // numeric(9,6)
-
         public short? id_dress_code { get; set; }
         public string? dress_code_descripcion { get; set; }
 

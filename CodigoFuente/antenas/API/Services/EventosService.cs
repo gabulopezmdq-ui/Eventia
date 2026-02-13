@@ -92,13 +92,7 @@ namespace API.Services
                 id_cliente = null,
 
                 anfitriones_texto = req.AnfitrionesTexto.Trim(),
-                fecha_hora = req.FechaHora,
-
-                lugar = string.IsNullOrWhiteSpace(req.Lugar) ? null : req.Lugar.Trim(),
-                direccion = string.IsNullOrWhiteSpace(req.Direccion) ? null : req.Direccion.Trim(),
-                latitud = req.Latitud,
-                longitud = req.Longitud,
-
+          
                 id_dress_code = req.IdDressCode,
                 dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim(),
 
@@ -153,7 +147,6 @@ namespace API.Services
                 from eu in _context.Set<ef_evento_usuarios>()
                 join ev in _context.Set<ef_eventos>() on eu.id_evento equals ev.id_evento
                 where eu.id_usuario == idUsuario && eu.activo == true
-                orderby ev.fecha_hora descending
                 select ev;
 
             var eventos = await query.AsNoTracking().ToListAsync();
@@ -185,9 +178,6 @@ namespace API.Services
             IdTipoEvento = e.id_tipo_evento,
             IdIdioma = e.id_idioma,
             AnfitrionesTexto = e.anfitriones_texto,
-            FechaHora = e.fecha_hora,
-            Lugar = e.lugar,
-            Direccion = e.direccion,
             Estado = e.estado,
             FechaAlta = e.fecha_alta
         };
