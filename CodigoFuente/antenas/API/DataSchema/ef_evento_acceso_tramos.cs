@@ -10,7 +10,7 @@ namespace API.DataSchema
         public long id_tramo { get; set; }
 
         // Nav
-        public ef_evento_accesos acceso { get; set; }
-        public ef_evento_tramos tramo { get; set; }
+        public ef_evento_accesos? acceso { get; set; }
+        public ef_evento_tramos? tramo { get; set; }
     }
 }
