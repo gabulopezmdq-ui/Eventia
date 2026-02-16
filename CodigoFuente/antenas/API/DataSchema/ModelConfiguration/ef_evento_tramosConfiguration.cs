@@ -14,7 +14,9 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_tramo).ValueGeneratedOnAdd();
             builder.Property(x => x.nombre).HasMaxLength(80).IsRequired();
             builder.Property(x => x.leyenda_visible).HasMaxLength(200);
-            builder.Property(x => x.notas_internas).HasMaxLength(500);
+            builder.Property(x => x.notas_internas)
+                .HasMaxLength(500)
+                .IsRequired(false);
 
             builder.Property(x => x.fecha_hora_inicio).IsRequired();
             builder.Property(x => x.fecha_hora_fin);
