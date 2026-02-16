@@ -30,10 +30,10 @@ namespace API.DataSchema
         public DateTimeOffset? fecha_modif { get; set; }
 
         // Nav
-        public ef_eventos evento { get; set; }               // tabla existente
-        public ef_tramo_tipos tramo_tipo { get; set; }
+        public ef_eventos? evento { get; set; }               // tabla existente
+        public ef_tramo_tipos? tramo_tipo { get; set; }
 
-        public ICollection<ef_evento_acceso_tramos> acceso_tramos { get; set; } = new List<ef_evento_acceso_tramos>();
+        public ICollection<ef_evento_acceso_tramos>? acceso_tramos { get; set; } = new List<ef_evento_acceso_tramos>();
     }
 
 }

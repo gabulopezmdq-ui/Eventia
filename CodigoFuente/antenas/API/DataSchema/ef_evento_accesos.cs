@@ -23,8 +23,8 @@ namespace API.DataSchema
         public DateTimeOffset? fecha_modif { get; set; }
 
         // Nav
-        public ef_eventos evento { get; set; }               // tabla existente
-        public ICollection<ef_evento_acceso_tramos> acceso_tramos { get; set; } = new List<ef_evento_acceso_tramos>();
-        public ICollection<ef_invitados> invitados { get; set; } = new List<ef_invitados>(); // existente (le agregamos id_acceso)
+        public ef_eventos? evento { get; set; }               // tabla existente
+        public ICollection<ef_evento_acceso_tramos>? acceso_tramos { get; set; } = new List<ef_evento_acceso_tramos>();
+        public ICollection<ef_invitados>? invitados { get; set; } = new List<ef_invitados>(); // existente (le agregamos id_acceso)
     }
 }

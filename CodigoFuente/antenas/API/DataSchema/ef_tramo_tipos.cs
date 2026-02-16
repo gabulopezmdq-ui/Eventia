@@ -11,7 +11,7 @@ namespace API.DataSchema
         public bool activo { get; set; }
 
         // Nav
-        public ICollection<ef_evento_tramos> evento_tramos { get; set; } = new List<ef_evento_tramos>();
-        public ICollection<ef_plantilla_tramos> plantilla_tramos { get; set; } = new List<ef_plantilla_tramos>();
+        public ICollection<ef_evento_tramos>? evento_tramos { get; set; } = new List<ef_evento_tramos>();
+        public ICollection<ef_plantilla_tramos>? plantilla_tramos { get; set; } = new List<ef_plantilla_tramos>();
     }
 }
