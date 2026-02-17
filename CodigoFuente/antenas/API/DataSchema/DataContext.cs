@@ -39,6 +39,8 @@ namespace API.DataSchema
         public DbSet<ef_plantilla_accesos> ef_plantilla_accesos { get; set; }
         public DbSet<ef_plantilla_acceso_tramos> ef_plantilla_acceso_tramos { get; set; }
 
+        public DbSet<ef_solicitudes_plantilla> ef_solicitudes_plantilla { get; set; }
+
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
         public DbSet<MEC_TiposEstablecimientos> MEC_TiposEstablecimientos { get; set; }
@@ -109,6 +111,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_plantilla_tramosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_plantilla_accesosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_plantilla_acceso_tramosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_solicitudes_plantillaConfiguration());
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());

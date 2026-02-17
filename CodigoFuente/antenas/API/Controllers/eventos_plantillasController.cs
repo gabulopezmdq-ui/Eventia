@@ -40,5 +40,12 @@ namespace API.Controllers
             var dto = await _service.GetEstructuraEventoAsync(idEvento);
             return Ok(dto);
         }
+
+        [HttpPost("CrearEstructuraManual")]
+        public async Task<IActionResult> CrearEstructuraManual([FromQuery] long idEvento, [FromBody] CrearEstructuraManualRequestDTO req)
+        {
+            await _service.CrearEstructuraManualAsync(idEvento, req, null);
+            return Ok(new { ok = true });
+        }
     }
 }
