@@ -31,11 +31,6 @@ namespace API.Services
             if (req.AnfitrionesTexto.Length > 500)
                 throw new InvalidOperationException("Anfitriones supera 500 caracteres.");
 
-            if (req.Latitud.HasValue && (req.Latitud < -90 || req.Latitud > 90))
-                throw new InvalidOperationException("Latitud fuera de rango (-90 a 90).");
-
-            if (req.Longitud.HasValue && (req.Longitud < -180 || req.Longitud > 180))
-                throw new InvalidOperationException("Longitud fuera de rango (-180 a 180).");
 
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
@@ -240,6 +235,70 @@ namespace API.Services
             _context.Set<ef_evento_estados_hist>().Add(hist);
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req)
+        {
+            // seguridad: pertenece?
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);
+
+            if (!pertenece)
+                throw new UnauthorizedAccessException("No tienes acceso a este evento.");
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            // Reglas mínimas
+            if (req.AnfitrionesTexto != null)
+            {
+                if (string.IsNullOrWhiteSpace(req.AnfitrionesTexto))
+                    throw new InvalidOperationException("Anfitriones no puede quedar vacío.");
+
+                if (req.AnfitrionesTexto.Length > 500)
+                    throw new InvalidOperationException("Anfitriones supera 500 caracteres.");
+
+                ev.anfitriones_texto = req.AnfitrionesTexto.Trim();
+            }
+
+            if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
+                throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+
+            if (req.IdDressCode.HasValue)
+            {
+                bool existeDress = await _context.Set<ef_dress_code>()
+                    .AnyAsync(d => d.id_dress_code == req.IdDressCode.Value && d.activo == true);
+
+                if (!existeDress)
+                    throw new InvalidOperationException("El dress code no existe o está inactivo.");
+
+                ev.id_dress_code = req.IdDressCode.Value;
+                ev.dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim();
+            }
+            else if (req.IdDressCode == null && req.DressCodeDescripcion != null)
+            {
+                // Si explícitamente te mandan null, limpiamos ambos
+                ev.id_dress_code = null;
+                ev.dress_code_descripcion = null;
+            }
+
+            if (req.Saludo != null)
+                ev.saludo = string.IsNullOrWhiteSpace(req.Saludo) ? null : req.Saludo.Trim();
+
+            if (req.MensajeBienvenida != null)
+                ev.mensaje_bienvenida = string.IsNullOrWhiteSpace(req.MensajeBienvenida) ? null : req.MensajeBienvenida.Trim();
+
+            if (req.Notas != null)
+                ev.notas = string.IsNullOrWhiteSpace(req.Notas) ? null : req.Notas.Trim();
+
+            ev.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Map(ev);
         }
 
     }

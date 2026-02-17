@@ -12,6 +12,9 @@ namespace API.Services
         Task<List<EventoResponse>> AdminListarEventosAsync(string? estado = null);
         Task<EventoResponse> AdminGetEventoAsync(long idEvento);
         Task ActivarEventoAdminAsync(long idEvento, long idUsuarioAdmin);
+        Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req);
+
+
 
     }
 }
