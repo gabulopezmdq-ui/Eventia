@@ -114,6 +114,167 @@ namespace API.Controllers
             return Ok(data);
         }
 
+        [Authorize]
+        [HttpPost("{idSolicitud:long}/confirmar")]
+        public async Task<IActionResult> Confirmar(long idSolicitud)
+        {
+            var idUsuario = User.GetUserId();
+
+            var ent = await _context.Set<ef_solicitudes_plantilla>()
+                .SingleOrDefaultAsync(x => x.id_solicitud == idSolicitud);
+
+            if (ent == null) return NotFound();
+
+            if (ent.id_usuario_solicita != idUsuario)
+                throw new UnauthorizedAccessException("No tienes permiso para confirmar esta solicitud.");
+
+            if (ent.estado != "D")
+                throw new InvalidOperationException("Solo se pueden confirmar solicitudes en estado D (draft).");
+
+            ent.estado = "P";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { ok = true, id_solicitud = idSolicitud, estado = "P" });
+        }
+
+
+        // 1) Crear DRAFT para arrancar wizard
+        // POST /solicitudes_plantilla/draft
+        [Authorize]
+        [HttpPost("draft")]
+        public async Task<IActionResult> CrearDraft([FromBody] SolicitudPlantillaDraftDTO req)
+        {
+            if (req == null) throw new ArgumentNullException(nameof(req));
+            if (req.id_evento <= 0) throw new InvalidOperationException("id_evento obligatorio.");
+            if (req.id_tipo_evento <= 0) throw new InvalidOperationException("id_tipo_evento obligatorio.");
+
+            var idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                throw new UnauthorizedAccessException("No tienes acceso a este evento.");
+
+            // Reusar draft existente del mismo usuario + evento
+            var draftExistente = await _context.Set<ef_solicitudes_plantilla>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.id_evento == req.id_evento &&
+                    x.id_usuario_solicita == idUsuario &&
+                    x.estado == "D");
+
+            if (draftExistente != null)
+            {
+                return Ok(new SolicitudPlantillaDraftResponseDTO
+                {
+                    id_solicitud = draftExistente.id_solicitud,
+                    estado = "D"
+                });
+            }
+
+            var motivo = string.IsNullOrWhiteSpace(req.motivo)
+                ? "NINGUNA_SE_ADAPTA"
+                : req.motivo.Trim().ToUpperInvariant();
+
+            if (motivo != "NO_HABIA_PLANTILLAS" && motivo != "NINGUNA_SE_ADAPTA")
+                throw new InvalidOperationException("motivo inválido. Use NO_HABIA_PLANTILLAS o NINGUNA_SE_ADAPTA.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            var ent = new ef_solicitudes_plantilla
+            {
+                id_evento = req.id_evento,
+                id_tipo_evento = req.id_tipo_evento,
+                id_plantilla_referida = null,
+                motivo = motivo,
+                detalle = null,
+                payload = "{}",         // jsonb NOT NULL
+                estado = "D",           // DRAFT
+                id_usuario_solicita = idUsuario,
+                fecha_alta = now,
+
+                fecha_revision = null,
+                id_usuario_revisa = null,
+                observaciones_admin = null,
+                evento = null
+            };
+
+            _context.Set<ef_solicitudes_plantilla>().Add(ent);
+            await _context.SaveChangesAsync();
+
+            return Ok(new SolicitudPlantillaDraftResponseDTO
+            {
+                id_solicitud = ent.id_solicitud,
+                estado = "D"
+            });
+        }
+
+        // 2) Traer draft por evento (para reanudar wizard)
+        // GET /solicitudes_plantilla/draft/byEvento?idEvento=123
+        [Authorize]
+        [HttpGet("draft/byEvento")]
+        public async Task<IActionResult> GetDraftByEvento([FromQuery] long idEvento)
+        {
+            if (idEvento <= 0) throw new InvalidOperationException("idEvento obligatorio.");
+
+            var idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                throw new UnauthorizedAccessException("No tienes acceso a este evento.");
+
+            var draft = await _context.Set<ef_solicitudes_plantilla>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento && x.id_usuario_solicita == idUsuario && x.estado == "D")
+                .OrderByDescending(x => x.fecha_alta)
+                .FirstOrDefaultAsync();
+
+            if (draft == null) return Ok(null);
+
+            return Ok(new
+            {
+                draft.id_solicitud,
+                draft.estado,
+                draft.motivo,
+                draft.payload,
+                draft.fecha_alta
+            });
+        }
+
+        // 3) Cancelar draft (dejarlo “C” cancelado)
+        // POST /solicitudes_plantilla/{idSolicitud}/cancelar-draft
+        [Authorize]
+        [HttpPost("{idSolicitud:long}/cancelar-draft")]
+        public async Task<IActionResult> CancelarDraft(long idSolicitud, [FromBody] SolicitudPlantillaCancelarDraftRequestDTO? req)
+        {
+            var idUsuario = User.GetUserId();
+
+            var ent = await _context.Set<ef_solicitudes_plantilla>()
+                .SingleOrDefaultAsync(x => x.id_solicitud == idSolicitud);
+
+            if (ent == null) return NotFound();
+
+            if (ent.id_usuario_solicita != idUsuario)
+                throw new UnauthorizedAccessException("No puedes cancelar un draft de otro usuario.");
+
+            if (ent.estado != "D")
+                throw new InvalidOperationException("Solo se pueden cancelar solicitudes en estado D (draft).");
+
+            ent.estado = "C"; // Cancelado (nuevo estado simple)
+            ent.observaciones_admin = string.IsNullOrWhiteSpace(req?.observaciones) ? ent.observaciones_admin : req!.observaciones!.Trim();
+            ent.fecha_revision = DateTimeOffset.UtcNow;  // opcional
+            ent.id_usuario_revisa = null;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { ok = true });
+        }
+
+
+
+
         // -------------------------
         // ADMIN
         // -------------------------

@@ -15,9 +15,13 @@ namespace API.DataSchema.DTO
 
         // para registrar “no encontré mi plantilla”
         public bool registrar_solicitud { get; set; } = true;
-        public string motivo { get; set; } = "NO_ENCONTRO_PLANTILLA";
-        public string detalle { get; set; } // texto libre opcional
-        public short? id_plantilla_referida { get; set; } // opcional
+        public string motivo { get; set; } = "NO_HAY_PLANTILLAS";
+        // valores permitidos:
+        // "NO_HAY_PLANTILLAS"
+        // "NINGUNA_SE_ADAPTA"
+
+        public long? id_solicitud_draft { get; set; }  // opcional, pero en este flujo lo vas a mandar
+
 
         public List<TramoManualDTO> tramos { get; set; } = new();
         public List<AccesoManualDTO> accesos { get; set; } = new();

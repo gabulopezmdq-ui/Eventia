@@ -261,28 +261,66 @@ namespace API.Services
             };
         }
 
-        public async Task CrearEstructuraManualAsync(long idEvento, CrearEstructuraManualRequestDTO req, long? idUsuario = null)
+        public async Task<long?> CrearEstructuraManualAsync(long idEvento, CrearEstructuraManualRequestDTO req, long? idUsuario = null)
         {
-            // Validaciones mínimas (backend)
             if (req == null) throw new ArgumentNullException(nameof(req));
-            if (req.fecha_base == default) throw new InvalidOperationException("fecha_base es obligatoria.");
-            if (req.tramos == null || req.tramos.Count == 0) throw new InvalidOperationException("Debe informar al menos 1 tramo.");
-            if (req.accesos == null || req.accesos.Count == 0) throw new InvalidOperationException("Debe informar al menos 1 acceso.");
-            if (!req.accesos.Any(a => a.es_default)) throw new InvalidOperationException("Debe existir un acceso default.");
-            if (req.accesos.Count(a => a.es_default) > 1) throw new InvalidOperationException("Solo puede existir un acceso default.");
 
-            // ordenes únicos
+            // Validaciones mínimas
+            if (req.fecha_base == default)
+                throw new InvalidOperationException("fecha_base es obligatoria.");
+
+            if (req.tramos == null || req.tramos.Count == 0)
+                throw new InvalidOperationException("Debe informar al menos 1 tramo.");
+
+            if (req.accesos == null || req.accesos.Count == 0)
+                throw new InvalidOperationException("Debe informar al menos 1 acceso.");
+
+            if (!req.accesos.Any(a => a.es_default))
+                throw new InvalidOperationException("Debe existir un acceso default.");
+
+            if (req.accesos.Count(a => a.es_default) > 1)
+                throw new InvalidOperationException("Solo puede existir un acceso default.");
+
             if (req.tramos.Select(t => t.orden).Distinct().Count() != req.tramos.Count)
                 throw new InvalidOperationException("Los tramos tienen orden repetido.");
+
             if (req.accesos.Select(a => a.orden).Distinct().Count() != req.accesos.Count)
                 throw new InvalidOperationException("Los accesos tienen orden repetido.");
 
+            if (req.relaciones == null || req.relaciones.Count == 0)
+                throw new InvalidOperationException("Debe informar relaciones acceso-tramo.");
+
+            // EXIGIR draft para que el circuito sea prolijo
+            if (!req.id_solicitud_draft.HasValue || req.id_solicitud_draft.Value <= 0)
+                throw new InvalidOperationException("id_solicitud_draft es obligatorio para confirmar el wizard.");
+
             await using var tx = await _context.Database.BeginTransactionAsync();
 
-            var ev = await _context.Set<ef_eventos>().SingleOrDefaultAsync(e => e.id_evento == idEvento);
-            if (ev == null) throw new InvalidOperationException("Evento inexistente.");
+            var now = DateTimeOffset.UtcNow;
 
-            // borrar existente (igual que aplicar plantilla)
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new InvalidOperationException("Evento inexistente.");
+
+            // Traer solicitud draft y validar estado D + evento
+            var solicitud = await _context.Set<ef_solicitudes_plantilla>()
+                .SingleOrDefaultAsync(s =>
+                    s.id_solicitud == req.id_solicitud_draft.Value &&
+                    s.id_evento == idEvento);
+
+            if (solicitud == null)
+                throw new InvalidOperationException("Solicitud draft inexistente para este evento.");
+
+            if (solicitud.estado != "D")
+                throw new InvalidOperationException("La solicitud debe estar en estado D (draft).");
+
+            // (Opcional) si querés asegurar que el usuario que confirma es el que creó el draft
+            if (idUsuario.HasValue && solicitud.id_usuario_solicita.HasValue && solicitud.id_usuario_solicita.Value != idUsuario.Value)
+                throw new UnauthorizedAccessException("No puedes confirmar el wizard con un draft de otro usuario.");
+
+            // 1) Borrar estructura existente si corresponde
             if (req.borrar_existente)
             {
                 var accesosExistentesIds = await _context.Set<ef_evento_accesos>()
@@ -302,12 +340,12 @@ namespace API.Services
                 _context.RemoveRange(_context.Set<ef_evento_tramos>().Where(t => t.id_evento == idEvento));
 
                 ev.id_acceso_default = null;
-                ev.fecha_modif = DateTimeOffset.UtcNow;
+                ev.fecha_modif = now;
 
                 await _context.SaveChangesAsync();
             }
 
-            // 1) Crear tramos reales y mapear por orden
+            // 2) Crear tramos y mapear por orden
             var mapTramoPorOrden = new Dictionary<short, long>();
 
             foreach (var t in req.tramos.OrderBy(x => x.orden))
@@ -321,11 +359,13 @@ namespace API.Services
                     id_tramo_tipo = t.id_tramo_tipo,
                     nombre = t.nombre.Trim(),
                     leyenda_visible = string.IsNullOrWhiteSpace(t.leyenda_visible) ? null : t.leyenda_visible.Trim(),
+
+                    // OJO: si tu entity notas_internas NO es nullable, poné "" en lugar de null
                     notas_internas = null,
-                    fecha_hora_inicio = req.fecha_base, // NOT NULL
+
+                    fecha_hora_inicio = req.fecha_base,
                     fecha_hora_fin = null,
 
-                    // defaults base (editables luego por tramo)
                     lugar = req.lugar_base,
                     direccion = req.direccion_base,
                     latitud = req.latitud_base,
@@ -334,7 +374,7 @@ namespace API.Services
                     orden = t.orden,
                     cupo = null,
                     activo = t.activo,
-                    fecha_alta = DateTimeOffset.UtcNow,
+                    fecha_alta = now,
                     fecha_modif = null
                 };
 
@@ -344,7 +384,7 @@ namespace API.Services
                 mapTramoPorOrden[t.orden] = tramo.id_tramo;
             }
 
-            // 2) Crear accesos reales y mapear por orden
+            // 3) Crear accesos y mapear por orden
             var mapAccesoPorOrden = new Dictionary<short, long>();
             long? idAccesoDefault = null;
 
@@ -358,12 +398,12 @@ namespace API.Services
                     id_evento = idEvento,
                     nombre = a.nombre.Trim(),
                     mensaje_rsvp = string.IsNullOrWhiteSpace(a.mensaje_rsvp) ? null : a.mensaje_rsvp.Trim(),
-                    es_publico = false, // por ahora fijo
+                    es_publico = false,
                     cupo = null,
                     precio = null,
                     activo = a.activo,
                     orden = a.orden,
-                    fecha_alta = DateTimeOffset.UtcNow,
+                    fecha_alta = now,
                     fecha_modif = null
                 };
 
@@ -379,8 +419,7 @@ namespace API.Services
             if (idAccesoDefault == null)
                 idAccesoDefault = mapAccesoPorOrden.Values.FirstOrDefault();
 
-            // 3) Crear relaciones (checklist)
-            // Validación: cada acceso tenga al menos 1 relación
+            // 4) Relaciones (validar que cada acceso tenga al menos 1 tramo)
             var relacionesPorAccesoOrden = req.relaciones
                 .GroupBy(r => r.acceso_orden)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.tramo_orden).Distinct().ToList());
@@ -393,7 +432,7 @@ namespace API.Services
 
             var relEntities = new List<ef_evento_acceso_tramos>();
 
-            foreach (var r in req.relaciones)
+            foreach (var r in req.relaciones.Distinct())
             {
                 if (!mapAccesoPorOrden.TryGetValue(r.acceso_orden, out var idAcceso))
                     throw new InvalidOperationException($"Relación inválida: acceso_orden {r.acceso_orden} no existe.");
@@ -410,45 +449,37 @@ namespace API.Services
 
             _context.Set<ef_evento_acceso_tramos>().AddRange(relEntities);
 
-            // 4) Setear default
+            // 5) Default
             ev.id_acceso_default = idAccesoDefault;
-            ev.fecha_modif = DateTimeOffset.UtcNow;
+            ev.fecha_modif = now;
 
-            // 5) Registrar solicitud para admin (snapshot)
-            if (req.registrar_solicitud)
+            // 6) Actualizar solicitud: D -> P y snapshot payload
+            var payloadJson = JsonSerializer.Serialize(req, new JsonSerializerOptions
             {
-                // Serializamos el request entero como snapshot (jsonb)
-                var payloadJson = JsonSerializer.Serialize(req, new JsonSerializerOptions { PropertyNamingPolicy = null });
+                PropertyNamingPolicy = null,
+                WriteIndented = false
+            });
 
-                var solicitud = new ef_solicitudes_plantilla
-                {
-                    id_evento = idEvento,
-                    id_tipo_evento = Convert.ToInt32(ev.id_tipo_evento),
-                    id_plantilla_referida = req.id_plantilla_referida,
-                    motivo = req.motivo,
-                    detalle = req.detalle,
-                    payload = payloadJson, // ver nota abajo
-                    estado = "P",
-                    id_usuario_solicita = idUsuario,
-                    fecha_alta = DateTimeOffset.UtcNow,
-                    fecha_revision = null,
-                    id_usuario_revisa = null,
-                    observaciones_admin = null
-                };
+            solicitud.payload = payloadJson;
+            solicitud.estado = "P";
 
-                _context.Set<ef_solicitudes_plantilla>().Add(solicitud);
-            }
+            // (opcional) normalizar motivo según tu enfoque simple
+            if (string.IsNullOrWhiteSpace(solicitud.motivo))
+                solicitud.motivo = "NINGUNA_SE_ADAPTA";
 
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
+
+            return solicitud.id_solicitud;
         }
+    
 
         public async Task<long> ConvertirSolicitudEnPlantillaAsync(
-    long idSolicitud,
-    string codigo,
-    long idUsuarioAdmin,
-    string observacionesAdmin = null,
-    bool activo = true)
+            long idSolicitud,
+            string codigo,
+            long idUsuarioAdmin,
+            string observacionesAdmin = null,
+            bool activo = true)
         {
             if (string.IsNullOrWhiteSpace(codigo))
                 throw new InvalidOperationException("codigo es obligatorio.");
