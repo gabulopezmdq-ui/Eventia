@@ -18,7 +18,8 @@ namespace API.Services
         );
 
         Task<EventoEstructuraDTO> GetEstructuraEventoAsync(long idEvento);
-        Task CrearEstructuraManualAsync(long idEvento, CrearEstructuraManualRequestDTO req, long? idUsuario = null);
+        Task<long?> CrearEstructuraManualAsync(long idEvento, CrearEstructuraManualRequestDTO req, long? idUsuario = null);
+
         Task<long> ConvertirSolicitudEnPlantillaAsync(long idSolicitud, string codigo, long idUsuarioAdmin, string observacionesAdmin = null, bool activo = true);
 
 
