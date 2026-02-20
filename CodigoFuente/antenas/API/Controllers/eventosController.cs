@@ -4,6 +4,7 @@ using API.Security;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -74,6 +75,39 @@ namespace API.Controllers
             long idUsuario = User.GetUserId();
             var updated = await _eventos.UpdateGeneralAsync(idUsuario, idEvento, req);
             return Ok(updated);
+        }
+
+        [Authorize]
+        [HttpPut("{idEvento:long}/acceso-default")]
+        public async Task<IActionResult> SetAccesoDefault([FromRoute] long idEvento, [FromQuery] long idAcceso)
+        {
+            long idUsuario = User.GetUserId();
+
+            // seguridad: el usuario debe pertenecer al evento
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            // validar que el acceso exista y sea del evento
+            bool accesoOk = await _context.Set<ef_evento_accesos>()
+                .AnyAsync(a => a.id_acceso == idAcceso && a.id_evento == idEvento && a.activo == true);
+
+            if (!accesoOk)
+                return BadRequest("El acceso no existe, no pertenece al evento, o está inactivo.");
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null) return NotFound("Evento inexistente.");
+
+            ev.id_acceso_default = idAcceso;
+            ev.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { ok = true, id_evento = idEvento, id_acceso_default = idAcceso });
         }
 
     }
