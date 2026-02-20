@@ -73,7 +73,7 @@ namespace API.Controllers
 
         // ✅ DETALLE PARA ARMAR CARDS BIEN (tramos/accesos/relaciones)
         // GET /plantillas_evento/2/Detalle
-        [HttpGet("{idPlantilla:short}/Detalle")]
+        [HttpGet("{idPlantilla:int}/Detalle")]
         public async Task<ActionResult<PlantillaDetalleDTO>> Detalle(short idPlantilla)
         {
             var p = await _context.Set<ef_plantillas_evento>()
