@@ -96,5 +96,26 @@ namespace API.Services
                 }
             ).ToListAsync();
         }
+
+        public async Task<List<ParametricaDTO>> GetTramosTipoAsync(short idIdioma)
+        {
+            return await (
+                from d in _context.ef_tramo_tipos
+                join tr in _context.ef_param_traducciones
+                    on d.id_tramo_tipo equals tr.id_item
+                where tr.entidad == "TRAMO_TIPO"
+                   && tr.id_idioma == idIdioma
+                   && tr.activo
+                   && d.activo
+                orderby tr.orden ?? 999, tr.texto
+                select new ParametricaDTO
+                {
+                    Id = d.id_tramo_tipo,
+                    Codigo = d.codigo,
+                    Texto = tr.texto,
+                    Orden = tr.orden
+                }
+            ).ToListAsync();
+        }
     }
 }

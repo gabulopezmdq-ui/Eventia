@@ -18,11 +18,21 @@ namespace API.Controllers
     {
         private readonly ICRUDService<ef_tramo_tipos> _serviceGenerico;
         private readonly ILogger<tramo_tiposController> _logger;
+        private readonly IParametricaService _parametricaService;
 
-        public tramo_tiposController(ILogger<tramo_tiposController> logger, ICRUDService<ef_tramo_tipos> serviceGenerico)
+        public tramo_tiposController(ILogger<tramo_tiposController> logger, ICRUDService<ef_tramo_tipos> serviceGenerico, IParametricaService parametricaService)
         {
             _logger = logger;
             _serviceGenerico = serviceGenerico;
+            _parametricaService = parametricaService;
+        }
+
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<List<ParametricaDTO>>> GetAll([FromQuery] short idIdioma)
+        {
+            var result = await _parametricaService.GetTiposEventoAsync(idIdioma);
+            return Ok(result);
+
         }
 
         [HttpGet("GetByActivo")]

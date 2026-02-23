@@ -8,5 +8,6 @@ namespace API.Services
     {
         Task<List<ParametricaDTO>> GetTiposEventoAsync(short idIdioma);
         Task<List<ParametricaDTO>> GetDressCodeAsync(short idIdioma);
+        Task<List<ParametricaDTO>> GetTramosTipoAsync(short idIdioma);
     }
 }
