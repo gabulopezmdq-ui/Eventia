@@ -266,9 +266,6 @@ namespace API.Services
             if (req == null) throw new ArgumentNullException(nameof(req));
 
             // Validaciones mínimas
-            if (req.fecha_base == default)
-                throw new InvalidOperationException("fecha_base es obligatoria.");
-
             if (req.tramos == null || req.tramos.Count == 0)
                 throw new InvalidOperationException("Debe informar al menos 1 tramo.");
 
@@ -290,12 +287,11 @@ namespace API.Services
             if (req.relaciones == null || req.relaciones.Count == 0)
                 throw new InvalidOperationException("Debe informar relaciones acceso-tramo.");
 
-            // EXIGIR draft para que el circuito sea prolijo
+            // EXIGIR draft (porque el circuito es: draft -> guardar -> confirmar)
             if (!req.id_solicitud_draft.HasValue || req.id_solicitud_draft.Value <= 0)
-                throw new InvalidOperationException("id_solicitud_draft es obligatorio para confirmar el wizard.");
+                throw new InvalidOperationException("id_solicitud_draft es obligatorio.");
 
             await using var tx = await _context.Database.BeginTransactionAsync();
-
             var now = DateTimeOffset.UtcNow;
 
             var ev = await _context.Set<ef_eventos>()
@@ -316,9 +312,25 @@ namespace API.Services
             if (solicitud.estado != "D")
                 throw new InvalidOperationException("La solicitud debe estar en estado D (draft).");
 
-            // (Opcional) si querés asegurar que el usuario que confirma es el que creó el draft
+            // (Opcional) asegurar usuario dueño del draft
             if (idUsuario.HasValue && solicitud.id_usuario_solicita.HasValue && solicitud.id_usuario_solicita.Value != idUsuario.Value)
-                throw new UnauthorizedAccessException("No puedes confirmar el wizard con un draft de otro usuario.");
+                throw new UnauthorizedAccessException("No puedes guardar un draft de otro usuario.");
+
+            // Validación por tramo (fechas)
+            foreach (var t in req.tramos)
+            {
+                if (t.fecha_hora_inicio == default)
+                    throw new InvalidOperationException($"El tramo orden {t.orden} no tiene fecha_hora_inicio.");
+
+                if (t.fecha_hora_fin.HasValue && t.fecha_hora_fin.Value <= t.fecha_hora_inicio)
+                    throw new InvalidOperationException($"El tramo orden {t.orden} tiene fecha_hora_fin <= fecha_hora_inicio.");
+
+                if (t.latitud.HasValue && (t.latitud < -90 || t.latitud > 90))
+                    throw new InvalidOperationException($"Latitud fuera de rango en tramo orden {t.orden}.");
+
+                if (t.longitud.HasValue && (t.longitud < -180 || t.longitud > 180))
+                    throw new InvalidOperationException($"Longitud fuera de rango en tramo orden {t.orden}.");
+            }
 
             // 1) Borrar estructura existente si corresponde
             if (req.borrar_existente)
@@ -360,19 +372,18 @@ namespace API.Services
                     nombre = t.nombre.Trim(),
                     leyenda_visible = string.IsNullOrWhiteSpace(t.leyenda_visible) ? null : t.leyenda_visible.Trim(),
 
-                    // OJO: si tu entity notas_internas NO es nullable, poné "" en lugar de null
+                    // si tu columna NO es nullable, poner "" en lugar de null:
                     notas_internas = null,
 
-                    fecha_hora_inicio = req.fecha_base,
-                    fecha_hora_fin = null,
-
-                    lugar = req.lugar_base,
-                    direccion = req.direccion_base,
-                    latitud = req.latitud_base,
-                    longitud = req.longitud_base,
+                    fecha_hora_inicio = t.fecha_hora_inicio,
+                    fecha_hora_fin = t.fecha_hora_fin,
+                    lugar = string.IsNullOrWhiteSpace(t.lugar) ? null : t.lugar.Trim(),
+                    direccion = string.IsNullOrWhiteSpace(t.direccion) ? null : t.direccion.Trim(),
+                    latitud = t.latitud,
+                    longitud = t.longitud,
 
                     orden = t.orden,
-                    cupo = null,
+                    cupo = t.cupo,
                     activo = t.activo,
                     fecha_alta = now,
                     fecha_modif = null
@@ -432,7 +443,10 @@ namespace API.Services
 
             var relEntities = new List<ef_evento_acceso_tramos>();
 
-            foreach (var r in req.relaciones.Distinct())
+            // Evitar duplicados por seguridad
+            foreach (var r in req.relaciones
+                .GroupBy(x => new { x.acceso_orden, x.tramo_orden })
+                .Select(g => g.First()))
             {
                 if (!mapAccesoPorOrden.TryGetValue(r.acceso_orden, out var idAcceso))
                     throw new InvalidOperationException($"Relación inválida: acceso_orden {r.acceso_orden} no existe.");
@@ -453,7 +467,7 @@ namespace API.Services
             ev.id_acceso_default = idAccesoDefault;
             ev.fecha_modif = now;
 
-            // 6) Actualizar solicitud: D -> P y snapshot payload
+            // 6) Snapshot payload (SE QUEDA EN D)
             var payloadJson = JsonSerializer.Serialize(req, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = null,
@@ -461,18 +475,35 @@ namespace API.Services
             });
 
             solicitud.payload = payloadJson;
-            solicitud.estado = "P";
-
-            // (opcional) normalizar motivo según tu enfoque simple
-            if (string.IsNullOrWhiteSpace(solicitud.motivo))
-                solicitud.motivo = "NINGUNA_SE_ADAPTA";
+            solicitud.motivo = req.motivo; // "NO_HAY_PLANTILLAS" o "NINGUNA_SE_ADAPTA"
+                                           // NO CAMBIAR ESTADO ACÁ → sigue en D
 
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
             return solicitud.id_solicitud;
         }
-    
+
+        public async Task ConfirmarSolicitudAsync(long idSolicitud, long? idUsuario)
+        {
+            var sol = await _context.Set<ef_solicitudes_plantilla>()
+                .SingleOrDefaultAsync(x => x.id_solicitud == idSolicitud);
+
+            if (sol == null)
+                throw new InvalidOperationException("Solicitud inexistente.");
+
+            if (sol.estado != "D")
+                throw new InvalidOperationException("Solo se puede confirmar una solicitud en estado D.");
+
+            // opcional: validar dueño
+            if (sol.id_usuario_solicita.HasValue && sol.id_usuario_solicita.Value != idUsuario)
+                throw new UnauthorizedAccessException("No puedes confirmar una solicitud de otro usuario.");
+
+            sol.estado = "P";
+            // podés setear fecha_revision? NO, eso es admin.
+            // si querés marca de modif, agregá fecha_modif en tabla (no la tenés)
+            await _context.SaveChangesAsync();
+        }
 
         public async Task<long> ConvertirSolicitudEnPlantillaAsync(
             long idSolicitud,
