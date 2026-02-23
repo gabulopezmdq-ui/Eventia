@@ -30,7 +30,7 @@ namespace API.Controllers
         [HttpGet("GetAll")]
         public async Task<ActionResult<List<ParametricaDTO>>> GetAll([FromQuery] short idIdioma)
         {
-            var result = await _parametricaService.GetTiposEventoAsync(idIdioma);
+            var result = await _parametricaService.GetTramosTipoAsync(idIdioma);
             return Ok(result);
 
         }
