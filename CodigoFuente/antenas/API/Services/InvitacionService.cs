@@ -23,77 +23,124 @@ namespace API.Services
             _config = config;
         }
 
-        public async Task<string> GenerarLinkAsync(long idEvento, long idUsuario)
-        {
-            var evento = await _context.ef_eventos.FindAsync(idEvento);
-            if (evento == null) throw new Exception("Evento inexistente");
-
-            var token = TokenUtility.Generate(64);
-
-            evento.rsvp_public_token = token;
-            evento.id_usuario_rsvp_link_creator = idUsuario;
-
-            await _context.SaveChangesAsync();
-
-            return token;
-        }
-
-        public async Task<object> ObtenerEventoAsync(string token)
-        {
-            var evento = await _context.ef_eventos
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.rsvp_public_token == token);
-
-            if (evento == null) throw new Exception("Link inválido");
-
-            return new
-            {
-                evento.anfitriones_texto,
-                evento.saludo,
-                evento.mensaje_bienvenida
-            };
-        }
-
         public async Task ConfirmarAsync(string token, RsvpConfirmacionDTO dto)
         {
-            var evento = await _context.ef_eventos
-                .FirstOrDefaultAsync(x => x.rsvp_public_token == token);
+            var accesoLink = await _context.ef_evento_acceso_links
+                .Include(x => x.acceso)
+                .FirstOrDefaultAsync(x => x.token == token && x.activo);
 
-            if (evento == null) throw new Exception("Evento inválido");
+            if (accesoLink == null)
+                throw new Exception("Link inválido");
 
-            if (!string.IsNullOrEmpty(dto.Email))
+            var acceso = accesoLink.acceso;
+
+            //----------------------------------------
+            // CALCULAR TOTAL ANTES DE INSERTAR
+            //----------------------------------------
+
+            int total = 1; // responsable
+
+            if (dto.Ninos != null)
+                total += dto.Ninos.Count;
+
+            //----------------------------------------
+            // CREAR GRUPO CON cantidad_total CORRECTO
+            //----------------------------------------
+
+            var grupo = new ef_rsvp_grupos
             {
-                var existe = await _context.ef_invitados.AnyAsync(x =>
-                    x.id_evento == evento.id_evento &&
-                    x.email != null &&
-                    x.email.ToLower() == dto.Email.ToLower() &&
-                    x.activo
-                );
+                id_evento = acceso.id_evento,
+                id_acceso = accesoLink.id_acceso,
+                id_acceso_link = accesoLink.id_acceso_link,
 
-                if (existe)
-                    throw new Exception("Este email ya fue registrado para este evento");
-            }
+                max_personas_total = accesoLink.max_personas_total,
+                max_adultos = accesoLink.max_adultos,
 
-            var invitado = new ef_invitados
-            {
-                id_evento = evento.id_evento,
-                nombre = dto.Nombre,
-                apellido = dto.Apellido,
-                email = dto.Email,
-                celular = dto.Celular,
+                cantidad_total = total,   // ← AHORA ES >= 1
+
                 rsvp_estado = dto.Asiste ? "Y" : "N",
                 rsvp_mensaje = dto.Mensaje,
+
+                fecha_rsvp = DateTimeOffset.UtcNow,
+                fecha_alta = DateTimeOffset.UtcNow,
+                activo = true
+            };
+
+            //----------------------------------------
+            // CREAR RESPONSABLE
+            //----------------------------------------
+
+            var responsable = new ef_invitados
+            {
+                id_evento = acceso.id_evento,
+
+                nombre = dto.Nombre.Trim(),
+                apellido = dto.Apellido.Trim(),
+
+                email = dto.Email,
+                celular = PhoneUtilHelper.NormalizeE164(dto.Celular, "AR"),
+
+                rsvp_estado = dto.Asiste ? "Y" : "N",
+
                 fecha_rsvp = DateTimeOffset.UtcNow,
                 fecha_alta = DateTimeOffset.UtcNow,
                 activo = true,
+
                 rsvp_token = TokenUtility.Generate(64),
-                id_usuario_invitador = evento.id_usuario_rsvp_link_creator
+                qr_token = TokenUtility.Generate(64),
+
+                id_acceso = accesoLink.id_acceso
             };
 
-            _context.ef_invitados.Add(invitado);
+            grupo.integrantes.Add(new ef_rsvp_grupo_integrantes
+            {
+                invitado = responsable,
+                rol = "T",
+                rol_evento = "R",
+                orden = 1
+            });
+
+            //----------------------------------------
+            // NIÑOS
+            //----------------------------------------
+
+            int orden = 2;
+
+            if (dto.Ninos != null)
+            {
+                foreach (var n in dto.Ninos)
+                {
+                    var nino = new ef_invitados
+                    {
+                        id_evento = acceso.id_evento,
+                        nombre = n.Nombre.Trim(),
+                        apellido = n.Apellido.Trim(),
+                        rsvp_estado = dto.Asiste ? "Y" : "N",
+                        fecha_alta = DateTimeOffset.UtcNow,
+                        activo = true,
+                        rsvp_token = TokenUtility.Generate(64),
+                        qr_token = TokenUtility.Generate(64),
+                        id_acceso = accesoLink.id_acceso
+                    };
+
+                    grupo.integrantes.Add(new ef_rsvp_grupo_integrantes
+                    {
+                        invitado = nino,
+                        rol = "A",
+                        rol_evento = "N",
+                        orden = orden++
+                    });
+                }
+            }
+
+            //----------------------------------------
+            // GUARDAR TODO JUNTO
+            //----------------------------------------
+
+            _context.ef_rsvp_grupos.Add(grupo);
+
             await _context.SaveChangesAsync();
         }
-
 
         public async Task CargarInvitadosAsync(CargaInvitadosRequest req, long idUsuario)
         {

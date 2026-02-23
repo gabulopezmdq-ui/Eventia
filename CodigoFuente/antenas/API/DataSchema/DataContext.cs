@@ -41,6 +41,22 @@ namespace API.DataSchema
 
         public DbSet<ef_solicitudes_plantilla> ef_solicitudes_plantilla { get; set; }
 
+        public DbSet<ef_rsvp_grupos> ef_rsvp_grupos { get; set; }
+
+        public DbSet<ef_rsvp_grupo_integrantes> ef_rsvp_grupo_integrantes { get; set; }
+
+        public DbSet<ef_evento_edad_rangos> ef_evento_edad_rangos { get; set; }
+
+        public DbSet<ef_param_edad_rangos> ef_param_edad_rangos { get; set; }
+
+        public DbSet<ef_evento_acceso_links> ef_evento_acceso_links { get; set; }
+        public DbSet<ef_qr_scans> ef_qr_scans { get; set; }
+
+        public DbSet<ef_autorizaciones> ef_autorizaciones { get; set; }
+        public DbSet<ef_retiros> ef_retiros { get; set; }
+        public DbSet<ef_param_restricciones_alimentarias> ef_param_restricciones_alimentarias { get; set; }
+        public DbSet<ef_rsvp_integrante_restricciones> ef_rsvp_integrante_restricciones { get; set; }
+
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
         public DbSet<MEC_TiposEstablecimientos> MEC_TiposEstablecimientos { get; set; }
@@ -112,7 +128,18 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_plantilla_accesosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_plantilla_acceso_tramosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_solicitudes_plantillaConfiguration());
-
+            modelBuilder.ApplyConfiguration(new ef_autorizacionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_rsvp_gruposConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_rsvp_grupo_integrantesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_edad_rangosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_edad_rangosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_acceso_linksConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_qr_scansConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_retirosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_restricciones_alimentariasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_rsvp_integrante_restriccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_acceso_linksConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_rsvp_gruposConfiguration());
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TiposEstablecimientosConfiguration());
