@@ -119,81 +119,64 @@ namespace API.Controllers
         public async Task<IActionResult> Confirmar(long idSolicitud)
         {
             var idUsuario = User.GetUserId();
-
-            var ent = await _context.Set<ef_solicitudes_plantilla>()
-                .SingleOrDefaultAsync(x => x.id_solicitud == idSolicitud);
-
-            if (ent == null) return NotFound();
-
-            if (ent.id_usuario_solicita != idUsuario)
-                throw new UnauthorizedAccessException("No tienes permiso para confirmar esta solicitud.");
-
-            if (ent.estado != "D")
-                throw new InvalidOperationException("Solo se pueden confirmar solicitudes en estado D (draft).");
-
-            ent.estado = "P";
-            await _context.SaveChangesAsync();
+            await _service.ConfirmarSolicitudAsync(idSolicitud, idUsuario);
 
             return Ok(new { ok = true, id_solicitud = idSolicitud, estado = "P" });
         }
 
 
         // 1) Crear DRAFT para arrancar wizard
-        // POST /solicitudes_plantilla/draft
+        // POST /solicitudes_plantilla/draft?idEvento=123&motivo=NO_HAY_PLANTILLAS
         [Authorize]
         [HttpPost("draft")]
-        public async Task<IActionResult> CrearDraft([FromBody] SolicitudPlantillaDraftDTO req)
+        public async Task<IActionResult> CrearDraft([FromQuery] long idEvento, [FromQuery] string? motivo = "NO_HAY_PLANTILLAS")
         {
-            if (req == null) throw new ArgumentNullException(nameof(req));
-            if (req.id_evento <= 0) throw new InvalidOperationException("id_evento obligatorio.");
-            if (req.id_tipo_evento <= 0) throw new InvalidOperationException("id_tipo_evento obligatorio.");
+            if (idEvento <= 0) throw new InvalidOperationException("idEvento obligatorio.");
 
             var idUsuario = User.GetUserId();
 
             bool pertenece = await _context.Set<ef_evento_usuarios>()
-                .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
                 throw new UnauthorizedAccessException("No tienes acceso a este evento.");
+
+            // Obtener id_tipo_evento desde ef_eventos (no lo mandes desde front)
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null) throw new InvalidOperationException("Evento inexistente.");
 
             // Reusar draft existente del mismo usuario + evento
             var draftExistente = await _context.Set<ef_solicitudes_plantilla>()
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x =>
-                    x.id_evento == req.id_evento &&
+                    x.id_evento == idEvento &&
                     x.id_usuario_solicita == idUsuario &&
                     x.estado == "D");
 
             if (draftExistente != null)
-            {
-                return Ok(new SolicitudPlantillaDraftResponseDTO
-                {
-                    id_solicitud = draftExistente.id_solicitud,
-                    estado = "D"
-                });
-            }
+                return Ok(new { ok = true, id_solicitud_draft = draftExistente.id_solicitud, estado = "D" });
 
-            var motivo = string.IsNullOrWhiteSpace(req.motivo)
-                ? "NINGUNA_SE_ADAPTA"
-                : req.motivo.Trim().ToUpperInvariant();
+            var m = string.IsNullOrWhiteSpace(motivo) ? "NO_HAY_PLANTILLAS" : motivo.Trim().ToUpperInvariant();
 
-            if (motivo != "NO_HABIA_PLANTILLAS" && motivo != "NINGUNA_SE_ADAPTA")
-                throw new InvalidOperationException("motivo inválido. Use NO_HABIA_PLANTILLAS o NINGUNA_SE_ADAPTA.");
+            if (m != "NO_HAY_PLANTILLAS" && m != "NINGUNA_SE_ADAPTA")
+                throw new InvalidOperationException("motivo inválido. Use NO_HAY_PLANTILLAS o NINGUNA_SE_ADAPTA.");
 
             var now = DateTimeOffset.UtcNow;
 
             var ent = new ef_solicitudes_plantilla
             {
-                id_evento = req.id_evento,
-                id_tipo_evento = req.id_tipo_evento,
+                id_evento = idEvento,
+                id_tipo_evento = Convert.ToInt32(ev.id_tipo_evento),
                 id_plantilla_referida = null,
-                motivo = motivo,
+                motivo = m,
                 detalle = null,
                 payload = "{}",         // jsonb NOT NULL
-                estado = "D",           // DRAFT
+                estado = "D",           // Draft
                 id_usuario_solicita = idUsuario,
                 fecha_alta = now,
-
                 fecha_revision = null,
                 id_usuario_revisa = null,
                 observaciones_admin = null,
@@ -203,11 +186,7 @@ namespace API.Controllers
             _context.Set<ef_solicitudes_plantilla>().Add(ent);
             await _context.SaveChangesAsync();
 
-            return Ok(new SolicitudPlantillaDraftResponseDTO
-            {
-                id_solicitud = ent.id_solicitud,
-                estado = "D"
-            });
+            return Ok(new { ok = true, id_solicitud_draft = ent.id_solicitud, estado = "D" });
         }
 
         // 2) Traer draft por evento (para reanudar wizard)
