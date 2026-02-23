@@ -132,6 +132,10 @@ builder.Services.AddScoped<IInvitacionService, InvitacionService>();
 builder.Services.AddScoped<IParametricaService, ParametricaService>();
 builder.Services.AddScoped(typeof(ICRUDService<>), typeof(BaseCRUDService<>));
 builder.Services.AddScoped<IEventoPlantillasService, EventoPlantillasService>();
+builder.Services.AddScoped<IAutorizacionesService, AutorizacionesService>();
+builder.Services.AddScoped<IQrService, QrService>();
+builder.Services.AddScoped<IPorteroService, PorteroService>();
+builder.Services.AddScoped<IAlimentacionService, AlimentacionService>();
 
 
 // Registro de repositorios
