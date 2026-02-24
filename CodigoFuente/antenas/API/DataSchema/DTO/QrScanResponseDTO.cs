@@ -18,9 +18,9 @@ namespace API.DataSchema.DTO
 
         public List<AutorizacionDTO> AutorizadosRetiro { get; set; } = new();
     }
-    public class QrScanRequestDTO
+    public class ScanRequest
     {
-        public string? DeviceId { get; set; }
+        public string QrToken { get; set; } = null!;
     }
 
     public class QrScanResponseRetiroDTO

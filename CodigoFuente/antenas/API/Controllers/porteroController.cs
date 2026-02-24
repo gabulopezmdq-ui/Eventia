@@ -27,20 +27,24 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<ef_usuarios> _service;
         private readonly IPorteroService _svc;
-        public porteroController(IPorteroService svc) => _svc = svc;
-
+        public porteroController(IPorteroService svc )
+        {
+            _svc = svc;
+            // otros assignments
+        }
 
 
         // 1) Escanear QR (devuelve ficha + autorizados)
-        [HttpPost("scan/{qrToken}")]
-        public async Task<IActionResult> Scan(string qrToken, [FromBody] QrScanRequestDTO dto)
+        [HttpPost("scan")]
+        public async Task<IActionResult> Scan([FromBody] ScanRequest request)
         {
-            // Si tenés auth, acá sacás idUsuarioOperador del token
+            // Opcional: obtener deviceId desde header si lo deseas
+            string? deviceId = Request.Headers["Device-Id"].FirstOrDefault();
             long? idUsuarioOperador = null;
             string? ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             string? ua = Request.Headers.UserAgent.ToString();
 
-            var result = await _svc.ScanQrAsync(qrToken, dto?.DeviceId, idUsuarioOperador, ip, ua);
+            var result = await _svc.ScanQrAsync(request.QrToken, deviceId, idUsuarioOperador, ip, ua);
             if (result == null) return NotFound("QR inválido.");
             return Ok(result);
         }
@@ -58,9 +62,9 @@ namespace API.Controllers
             catch (ArgumentException ex) { return BadRequest(ex.Message); }
             catch (InvalidOperationException ex) { return Conflict(ex.Message); }
         }
-    
 
-     [HttpGet("retiros")]
+
+        [HttpGet("retiros")]
         public async Task<IActionResult> Retiros(long idEvento, [FromQuery] DateTimeOffset? desde = null, [FromQuery] DateTimeOffset? hasta = null)
         {
             var result = await _svc.ListRetirosAsync(idEvento, desde, hasta);
@@ -87,5 +91,29 @@ namespace API.Controllers
             var result = await _svc.GetResumenAsync(idEvento);
             return Ok(result);
         }
-    } 
+
+
+        [HttpPost("retiroQR")]
+        public async Task<IActionResult> ConfirmarRetiroQR([FromBody] RetiroConfirmRequestDTO request)
+        {
+            try
+            {
+                long? idUsuarioOperador = null; // Si hay autenticación
+                var result = await _svc.ConfirmarRetiroAsyncQR(request.qrToken, request, idUsuarioOperador);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Error interno del servidor." });
+            }
+        }
+    }
 }

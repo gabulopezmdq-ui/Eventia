@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace API.DataSchema.DTO
 {
@@ -13,13 +14,6 @@ namespace API.DataSchema.DTO
 
     }
 
-    public class RetiroConfirmResponseDTO
-    {
-        public long IdRetiro { get; set; }
-        public long IdEvento { get; set; }
-        public long IdInvitadoNino { get; set; }
-        public DateTimeOffset FechaRetiro { get; set; }
-    }
 
     public class UltimoRetiroDTO
     {
@@ -56,4 +50,40 @@ namespace API.DataSchema.DTO
 
         public int CantAutorizadosRetiro { get; set; }
     }
+
+
+    public class RetiroPorResponsableRequestDTO
+    {
+        public string NombreRetirador { get; set; } = null!;
+        public string? TelefonoRetirador { get; set; }
+        public string? Observaciones { get; set; }
+        // ✅ SOLO datos de identificación del retirador
+        // ❌ NO incluímos IDs de niños (eso lo decide el backend)
+    }
+
+    public class RetiroPorResponsableResponseDTO
+    {
+        public string Mensaje { get; set; } = null!;
+        public List<long> IdsRetiros { get; set; } = new();
+        public int CantidadNinosRetirados { get; set; }
+        public List<NinoRetiradoDTO> NinosRetirados { get; set; } = new();
+    }
+
+    public class NinoRetiradoDTO
+    {
+        public long IdNino { get; set; }
+        public string NombreCompleto { get; set; } = null!;
+        public bool YaEstabaRetirado { get; set; }
+    }
+
+    public class RetiroConfirmResponseDTO
+    {
+        public long IdRetiro { get; set; }
+        public long IdEvento { get; set; }
+        public long IdInvitadoNino { get; set; }
+        public DateTimeOffset FechaRetiro { get; set; }
+        public int CantidadRetirados { get; set; }
+        public string Mensaje { get; set; }
+    }
+
 }

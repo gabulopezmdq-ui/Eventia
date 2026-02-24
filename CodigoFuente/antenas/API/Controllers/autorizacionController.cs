@@ -25,19 +25,21 @@ namespace API.Controllers
     {
         private readonly IConfiguration _config;
         private readonly DataContext _context;
-        private readonly ICRUDService<ef_usuarios> _service;
+        private readonly ICRUDService<ef_autorizaciones> _service;
         private readonly IAutorizacionesService _svc;
-        public autorizacionController(IAutorizacionesService svc) => _svc = svc;
 
 
-
-        public autorizacionController(IConfiguration config, DataContext context, ICRUDService<ef_usuarios> service)
+        public autorizacionController(
+            IConfiguration config,
+            DataContext context,
+            ICRUDService<ef_autorizaciones> service,
+            IAutorizacionesService svc)
         {
             _config = config;
             _context = context;
             _service = service;
+            _svc = svc;
         }
-
         [HttpPost]
         public async Task<IActionResult> Create(long idEvento, [FromBody] AutorizacionCreateDTO dto)
         {

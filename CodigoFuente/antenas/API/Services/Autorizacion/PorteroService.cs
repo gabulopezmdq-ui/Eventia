@@ -1,11 +1,12 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
+using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 
 namespace API.Services
@@ -29,7 +30,6 @@ namespace API.Services
             //----------------------------------------
             // 1. Buscar invitado + grupo + rol
             //----------------------------------------
-
             var data = await (
                 from i in _context.ef_invitados
                 join gi in _context.ef_rsvp_grupo_integrantes
@@ -45,81 +45,19 @@ namespace API.Services
 
             if (data == null)
             {
-                await LogScan(null, qrToken, null, "ERROR", "QR inexistente",
+                await LogScan(null, qrToken, null, "E", "QR inexistente",
                     deviceId, idUsuarioOperador, ip, userAgent);
-
                 return null;
             }
 
-            if (data.Rol != "N")
-            {
-                await LogScan(data.Invitado.id_evento, qrToken, data.Invitado.id_invitado,
-                    "ERROR", "No es menor",
-                    deviceId, idUsuarioOperador, ip, userAgent);
-
-                throw new InvalidOperationException("El QR no corresponde a un menor.");
-            }
-
             //----------------------------------------
-            // 2. Buscar grupo info
+            // 2. Registrar scan exitoso (código 'O' = OK)
             //----------------------------------------
-
-            var grupo = await _context.ef_rsvp_grupos
-                .AsNoTracking()
-                .FirstOrDefaultAsync(g => g.id_rsvp_grupo == data.GrupoId);
-
-            //----------------------------------------
-            // 3. Verificar si ya fue retirado
-            //----------------------------------------
-
-            var ultimoRetiro = await _context.ef_retiros
-                .Where(r => r.id_invitado_nino == data.Invitado.id_invitado)
-                .OrderByDescending(r => r.fecha_retiro)
-                .Select(r => new UltimoRetiroDTO
-                {
-                    IdRetiro = r.id_retiro,
-                    FechaRetiro = r.fecha_retiro,
-                    NombreRetirador = r.nombre_retirador,
-                    CelularRetirador = r.celular_retirador
-                })
-                .FirstOrDefaultAsync();
-
-            var yaRetirado = ultimoRetiro != null;
-
-            //----------------------------------------
-            // 4. Buscar autorizados
-            //----------------------------------------
-
-            var autorizados = await _context.ef_autorizaciones
-                .AsNoTracking()
-                .Where(a =>
-                    a.id_evento == data.Invitado.id_evento &&
-                    a.id_invitado_objetivo == data.Invitado.id_invitado &&
-                    a.tipo == "R" &&
-                    a.activo)
-                .Select(a => new AutorizacionDTO
-                {
-                    IdAutorizacion = a.id_autorizacion,
-                    IdEvento = a.id_evento,
-                    IdInvitadoObjetivo = a.id_invitado_objetivo,
-                    Tipo = a.tipo,
-                    NombreAutorizado = a.nombre_autorizado,
-                    TelefonoAutorizado = a.telefono_autorizado,
-                    Relacion = a.relacion,
-                    Observaciones = a.observaciones,
-                    Activo = a.activo
-                })
-                .ToListAsync();
-
-            //----------------------------------------
-            // 5. Registrar scan OK
-            //----------------------------------------
-
             await LogScan(
                 data.Invitado.id_evento,
                 qrToken,
                 data.Invitado.id_invitado,
-                "OK",
+                "O",                // ← valor permitido por la constraint
                 null,
                 deviceId,
                 idUsuarioOperador,
@@ -127,101 +65,224 @@ namespace API.Services
                 userAgent);
 
             //----------------------------------------
-            // 6. Construir respuesta FINAL
+            // 3. Obtener información del grupo
             //----------------------------------------
+            var grupo = await _context.ef_rsvp_grupos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(g => g.id_rsvp_grupo == data.GrupoId);
 
+            //----------------------------------------
+            // 4. Determinar niños involucrados y autorizaciones
+            //----------------------------------------
+            List<long> idsNinos = new();
+            List<AutorizacionDTO> autorizados = new();
+
+            if (data.Rol == "N")
+            {
+                // Es un niño: solo él mismo
+                idsNinos.Add(data.Invitado.id_invitado);
+
+                // Autorizaciones de este niño
+                autorizados = await _context.ef_autorizaciones
+                    .AsNoTracking()
+                    .Where(a => a.id_evento == data.Invitado.id_evento
+                             && a.id_invitado_objetivo == data.Invitado.id_invitado
+                             && a.tipo == "R"
+                             && a.activo)
+                    .Select(a => new AutorizacionDTO
+                    {
+                        IdAutorizacion = a.id_autorizacion,
+                        IdEvento = a.id_evento,
+                        IdInvitadoObjetivo = a.id_invitado_objetivo,
+                        Tipo = a.tipo,
+                        NombreAutorizado = a.nombre_autorizado,
+                        TelefonoAutorizado = a.telefono_autorizado,
+                        Relacion = a.relacion,
+                        Observaciones = a.observaciones,
+                        Activo = a.activo
+                    })
+                    .ToListAsync();
+            }
+            else // Rol == "R" (responsable) u otros
+            {
+                // Es responsable: obtener todos los niños del grupo
+                idsNinos = await _context.ef_rsvp_grupo_integrantes
+                    .Where(x => x.id_rsvp_grupo == data.GrupoId && x.rol_evento == "N")
+                    .Select(x => x.id_invitado)
+                    .ToListAsync();
+
+                if (idsNinos.Any())
+                {
+                    // Autorizaciones de TODOS los niños del grupo (para mostrarlas en la UI)
+                    autorizados = await _context.ef_autorizaciones
+                        .AsNoTracking()
+                        .Where(a => a.id_evento == data.Invitado.id_evento
+                                 && idsNinos.Contains(a.id_invitado_objetivo)
+                                 && a.tipo == "R"
+                                 && a.activo)
+                        .Select(a => new AutorizacionDTO
+                        {
+                            IdAutorizacion = a.id_autorizacion,
+                            IdEvento = a.id_evento,
+                            IdInvitadoObjetivo = a.id_invitado_objetivo,
+                            Tipo = a.tipo,
+                            NombreAutorizado = a.nombre_autorizado,
+                            TelefonoAutorizado = a.telefono_autorizado,
+                            Relacion = a.relacion,
+                            Observaciones = a.observaciones,
+                            Activo = a.activo
+                        })
+                        .ToListAsync();
+                }
+            }
+
+            //----------------------------------------
+            // 5. Verificar si ya fue retirado (solo si es niño)
+            //----------------------------------------
+            UltimoRetiroDTO? ultimoRetiro = null;
+            bool yaRetirado = false;
+            if (data.Rol == "N")
+            {
+                ultimoRetiro = await _context.ef_retiros
+                    .Where(r => r.id_invitado_nino == data.Invitado.id_invitado)
+                    .OrderByDescending(r => r.fecha_retiro)
+                    .Select(r => new UltimoRetiroDTO
+                    {
+                        IdRetiro = r.id_retiro,
+                        FechaRetiro = r.fecha_retiro,
+                        NombreRetirador = r.nombre_retirador,
+                        CelularRetirador = r.celular_retirador
+                    })
+                    .FirstOrDefaultAsync();
+                yaRetirado = ultimoRetiro != null;
+            }
+
+            //----------------------------------------
+            // 6. Construir respuesta
+            //----------------------------------------
             return new QrScanResponseRetiroDTO
             {
                 IdEvento = data.Invitado.id_evento,
                 IdInvitado = data.Invitado.id_invitado,
-
                 Nombre = data.Invitado.nombre,
                 Apellido = data.Invitado.apellido,
-
                 RolEvento = data.Rol,
-
                 RsvpEstado = data.Invitado.rsvp_estado,
-
                 IdRsvpGrupo = data.GrupoId,
-
-                GrupoResumen = grupo != null
-                    ? $"{grupo.cantidad_total} personas"
-                    : null,
-
+                GrupoResumen = grupo != null ? $"{grupo.cantidad_total} personas" : null,
+                // Si es niño, estos campos aplican; si es responsable, se envían vacíos o con valores genéricos
                 YaRetirado = yaRetirado,
-
                 UltimoRetiro = ultimoRetiro,
-
+                // Lista de autorizados (para el niño o para todos los niños del grupo)
                 AutorizadosRetiro = autorizados
             };
         }
         public async Task<RetiroConfirmResponseDTO> ConfirmarRetiroAsync(string qrToken, RetiroConfirmRequestDTO dto, long? idUsuarioOperador)
         {
-            var inv = await _context.Set<ef_invitados>().SingleOrDefaultAsync(i => i.qr_token == qrToken);
-            if (inv == null) throw new ArgumentException("QR inválido.");
+            // 1. Buscar invitado por QR
+            var invitado = await _context.ef_invitados
+                .FirstOrDefaultAsync(i => i.qr_token == qrToken);
+            if (invitado == null)
+                throw new ArgumentException("QR inválido.");
 
-            // Validación: el objetivo debe ser un niño (rol_evento = 'N')
-            var rolEvento = await _context.Set<ef_rsvp_grupo_integrantes>()
-                .AsNoTracking()
-                .Where(x => x.id_rsvp_grupo == inv.id_rsvp_grupo && x.id_invitado == inv.id_invitado)
-                .Select(x => x.rol_evento)
-                .SingleOrDefaultAsync();
+            // 2. Obtener su grupo y rol
+            var integrante = await _context.ef_rsvp_grupo_integrantes
+                .Where(x => x.id_invitado == invitado.id_invitado)
+                .Select(x => new { x.rol_evento, x.id_rsvp_grupo })
+                .FirstOrDefaultAsync();
+            if (integrante == null)
+                throw new InvalidOperationException("El invitado no pertenece a un grupo.");
 
-            if (rolEvento != "N")
-                throw new InvalidOperationException("Este QR no corresponde a un menor.");
+            // 3. Obtener todos los niños del grupo (rol_evento = 'N')
+            var ninosDelGrupo = await _context.ef_rsvp_grupo_integrantes
+                .Where(x => x.id_rsvp_grupo == integrante.id_rsvp_grupo && x.rol_evento == "N")
+                .Select(x => x.id_invitado)
+                .ToListAsync();
 
-            // Evitar doble retiro si decidiste esa regla
-            var yaRetirado = await _context.Set<ef_retiros>().AsNoTracking()
-                .AnyAsync(r => r.id_invitado_nino == inv.id_invitado);
+            if (!ninosDelGrupo.Any())
+                throw new InvalidOperationException("El grupo no tiene niños a cargo.");
 
-            if (yaRetirado)
-                throw new InvalidOperationException("Este menor ya fue retirado.");
+            // 4. Filtrar los niños que aún no han sido retirados
+            var idsYaRetirados = await _context.ef_retiros
+                .Where(r => ninosDelGrupo.Contains(r.id_invitado_nino))
+                .Select(r => r.id_invitado_nino)
+                .ToListAsync();
 
-            // Normalizar celular del retirador (si vino)
-            var cel = PhoneUtilHelper.NormalizeE164(dto.CelularRetirador, "AR");
-            if (dto.CelularRetirador != null && cel == null)
-                throw new ArgumentException("Celular del retirador inválido.");
+            var idsPendientes = ninosDelGrupo.Except(idsYaRetirados).ToList();
 
-            // Si informan IdAutorizacion, validar que sea para este niño y activa
-            long? idAutOk = null;
-            if (dto.IdAutorizacion.HasValue)
+            if (!idsPendientes.Any())
+                throw new InvalidOperationException("Todos los niños del grupo ya fueron retirados.");
+
+            // 5. Validar que el nombre del retirador esté autorizado para CADA niño pendiente
+            var autorizaciones = await _context.ef_autorizaciones
+                .Where(a => a.id_evento == invitado.id_evento
+                         && idsPendientes.Contains(a.id_invitado_objetivo)
+                         && a.tipo == "R"
+                         && a.activo)
+                .ToListAsync();
+
+            // Verificar por cada niño si existe una autorización con ese nombre
+            var nombresAutorizadosPorNino = autorizaciones
+                .GroupBy(a => a.id_invitado_objetivo)
+                .ToDictionary(g => g.Key, g => g.Select(a => a.nombre_autorizado).Distinct().ToList());
+
+            foreach (var idNino in idsPendientes)
             {
-                var aut = await _context.Set<ef_autorizaciones>()
-                    .AsNoTracking()
-                    .SingleOrDefaultAsync(a => a.id_autorizacion == dto.IdAutorizacion.Value
-                                               && a.id_evento == inv.id_evento
-                                               && a.id_invitado_objetivo == inv.id_invitado
-                                               && a.tipo == "R"
-                                               && a.activo);
-
-                if (aut == null)
-                    throw new InvalidOperationException("La autorización indicada no es válida para este menor.");
-
-                idAutOk = aut.id_autorizacion;
+                if (!nombresAutorizadosPorNino.ContainsKey(idNino) ||
+                    !nombresAutorizadosPorNino[idNino].Contains(dto.NombreRetirador, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new UnauthorizedAccessException($"'{dto.NombreRetirador}' no está autorizado para retirar al niño con ID {idNino}.");
+                }
             }
 
-            var retiro = new ef_retiros
+            // 6. Normalizar celular (opcional)
+            string? cel = null;
+            if (!string.IsNullOrWhiteSpace(dto.CelularRetirador))
             {
-                id_evento = inv.id_evento,
-                id_invitado_nino = inv.id_invitado,
-                id_autorizacion = idAutOk,
-                nombre_retirador = dto.NombreRetirador,
-                celular_retirador = cel,
-                metodo_validacion = dto.MetodoValidacion,
-                observaciones = dto.Observaciones,
-                fecha_retiro = DateTimeOffset.UtcNow,
-                id_usuario_operador = idUsuarioOperador
-            };
+                cel = PhoneUtilHelper.NormalizeE164(dto.CelularRetirador, "AR");
+                if (cel == null)
+                    throw new ArgumentException("Celular del retirador inválido.");
+            }
 
-            _context.Add(retiro);
+            // 7. Registrar retiros para todos los niños pendientes
+            var retiros = new List<ef_retiros>();
+            foreach (var idNino in idsPendientes)
+            {
+                // Buscar la autorización específica (opcional, puede haber varias)
+                var autorizacion = autorizaciones.FirstOrDefault(a => a.id_invitado_objetivo == idNino && a.nombre_autorizado == dto.NombreRetirador);
+
+                var retiro = new ef_retiros
+                {
+                    id_evento = invitado.id_evento,
+                    id_invitado_nino = idNino,
+                    id_autorizacion = autorizacion?.id_autorizacion,
+                    nombre_retirador = dto.NombreRetirador,
+                    celular_retirador = cel,
+                    metodo_validacion = dto.MetodoValidacion,
+                    observaciones = dto.Observaciones,
+                    fecha_retiro = DateTimeOffset.UtcNow,
+                    id_usuario_operador = idUsuarioOperador
+                };
+                retiros.Add(retiro);
+            }
+
+            _context.ef_retiros.AddRange(retiros);
             await _context.SaveChangesAsync();
 
+            // 8. Log del scan (opcional, con código 'R' para retiro)
+            await LogScan(invitado.id_evento, qrToken, invitado.id_invitado, "O",
+                $"Retiro de {retiros.Count} niños por {dto.NombreRetirador}",
+                null, idUsuarioOperador, null, null);
+
+            // 9. Respuesta (podemos devolver el primer retiro o un resumen)
             return new RetiroConfirmResponseDTO
             {
-                IdRetiro = retiro.id_retiro,
-                IdEvento = retiro.id_evento,
-                IdInvitadoNino = retiro.id_invitado_nino,
-                FechaRetiro = retiro.fecha_retiro
+                IdRetiro = retiros.First().id_retiro,
+                IdEvento = retiros.First().id_evento,
+                IdInvitadoNino = retiros.First().id_invitado_nino,
+                FechaRetiro = retiros.First().fecha_retiro,
+                // Opcional: agregar cantidad
+                CantidadRetirados = retiros.Count
             };
         }
 
@@ -444,6 +505,138 @@ namespace API.Services
                 PorcentajeRetirado = porcentaje,
                 UltimosScans = ultimosScans
             };
+        }
+
+        public async Task<RetiroConfirmResponseDTO> ConfirmarRetiroAsyncQR(
+    string qrToken,
+    RetiroConfirmRequestDTO dto,
+    long? idUsuarioOperador = null)
+        {
+            // 1. Buscar invitado por QR
+            var invitado = await _context.ef_invitados
+                .FirstOrDefaultAsync(i => i.qr_token == qrToken);
+
+            if (invitado == null)
+                throw new ArgumentException("QR inválido.");
+
+            // 2. Obtener su grupo y rol
+            var integrante = await _context.ef_rsvp_grupo_integrantes
+                .Where(x => x.id_invitado == invitado.id_invitado)
+                .Select(x => new { x.rol_evento, x.id_rsvp_grupo })
+                .FirstOrDefaultAsync();
+
+            if (integrante == null)
+                throw new InvalidOperationException("El invitado no pertenece a un grupo.");
+
+            // 3. Determinar los niños a retirar
+            List<long> idsNinosARetirar = new();
+
+            if (integrante.rol_evento == "N")
+            {
+                // Es un niño: retiro individual
+                idsNinosARetirar.Add(invitado.id_invitado);
+            }
+            else if (integrante.rol_evento == "R")
+            {
+                // Es responsable: retirar todos los niños del grupo
+                idsNinosARetirar = await _context.ef_rsvp_grupo_integrantes
+                    .Where(x => x.id_rsvp_grupo == integrante.id_rsvp_grupo && x.rol_evento == "N")
+                    .Select(x => x.id_invitado)
+                    .ToListAsync();
+
+                if (!idsNinosARetirar.Any())
+                    throw new InvalidOperationException("El responsable no tiene niños a cargo.");
+            }
+            else
+            {
+                throw new InvalidOperationException("El QR no corresponde a un niño ni a un responsable.");
+            }
+
+            // 4. Verificar qué niños no han sido retirados aún
+            var idsYaRetirados = await _context.ef_retiros
+                .Where(r => idsNinosARetirar.Contains(r.id_invitado_nino))
+                .Select(r => r.id_invitado_nino)
+                .ToListAsync();
+
+            var idsPendientes = idsNinosARetirar.Except(idsYaRetirados).ToList();
+
+            if (!idsPendientes.Any())
+                throw new InvalidOperationException("Todos los niños seleccionados ya fueron retirados.");
+
+            // 5. VALIDAR que el nombre del retirador esté autorizado para al menos uno de los niños pendientes
+            var autorizado = await _context.ef_autorizaciones
+                .AnyAsync(a => a.id_evento == invitado.id_evento
+                            && idsPendientes.Contains(a.id_invitado_objetivo)
+                            && a.tipo == "R"
+                            && a.activo
+                            && a.nombre_autorizado == dto.NombreRetirador);
+
+            if (!autorizado)
+                throw new UnauthorizedAccessException($"'{dto.NombreRetirador}' no está autorizado para retirar a estos niños.");
+
+            // 6. Registrar retiros
+            var retiros = new List<ef_retiros>();
+            foreach (var idNino in idsPendientes)
+            {
+                retiros.Add(new ef_retiros
+                {
+                    id_evento = invitado.id_evento,
+                    id_invitado_nino = idNino,
+                    nombre_retirador = dto.NombreRetirador,
+                    metodo_validacion = dto.MetodoValidacion,
+                    observaciones = dto.Observaciones,
+                    fecha_retiro = DateTimeOffset.UtcNow,
+                    id_usuario_operador = idUsuarioOperador
+                });
+            }
+
+            _context.ef_retiros.AddRange(retiros);
+            await _context.SaveChangesAsync();
+
+            // 7. Log del scan
+            await LogScanRetiro(invitado, idsPendientes, idUsuarioOperador, dto.NombreRetirador);
+
+            // 8. Respuesta
+            return new RetiroConfirmResponseDTO
+            {
+                IdRetiro = retiros.First().id_retiro,
+                IdEvento = invitado.id_evento,
+                IdInvitadoNino = idsPendientes.First(),
+                FechaRetiro = DateTimeOffset.UtcNow,
+                Mensaje = $"Se retiraron {retiros.Count} niño(s) correctamente. Retirador: {dto.NombreRetirador}"
+            };
+        }
+
+        private async Task LogScanRetiro(ef_invitados invitado, List<long> idsNinosRetirados, long? idUsuarioOperador, string nombreRetirador)
+        {
+            var scan = new ef_qr_scans
+            {
+                id_evento = invitado.id_evento,
+                qr_token = invitado.qr_token,
+                id_invitado = invitado.id_invitado,
+                resultado = "RETIRO_EXITOSO",
+                mensaje = $"Retirados {idsNinosRetirados.Count} niños por {nombreRetirador}",
+                fecha_scan = DateTimeOffset.UtcNow,
+                id_usuario_operador = idUsuarioOperador
+            };
+            _context.ef_qr_scans.Add(scan);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task LogScanRetiro(ef_invitados invitado, List<long> idsNinosRetirados, long? idUsuarioOperador)
+        {
+            var scan = new ef_qr_scans
+            {
+                id_evento = invitado.id_evento,
+                qr_token = invitado.qr_token,
+                id_invitado = invitado.id_invitado,
+                resultado = "RETIRO_EXITOSO",
+                mensaje = $"Se retiraron {idsNinosRetirados.Count} niños",
+                fecha_scan = DateTimeOffset.UtcNow,
+                id_usuario_operador = idUsuarioOperador
+            };
+            _context.ef_qr_scans.Add(scan);
+            await _context.SaveChangesAsync();
         }
     }
 }

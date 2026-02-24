@@ -10,7 +10,9 @@ namespace API.Services
         Task<List<AutorizacionDTO>> ListAsync(long idEvento, long idInvitadoObjetivo, string tipo);
         Task DisableAsync(long idEvento, long idAutorizacion);
         Task<AutorizacionDTO> UpdateAsync(long idEvento, long idAutorizacion, AutorizacionUpdateDTO dto);
-        Task<AutorizacionDTO> CreateFromPersonalLinkAsync(string rsvpToken, AutorizacionFromPersonalLinkDTO dto);
+        Task<List<AutorizacionDTO>> CreateFromPersonalLinkAsync(
+                 string rsvpToken,
+                 AutorizacionFromPersonalLinkDTO dto);
 
     }
 
