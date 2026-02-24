@@ -29,8 +29,7 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
-using System.Text;
-
+using QuestPDF.Infrastructure;
 
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -38,6 +37,9 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     Args = args,
     ContentRootPath = Directory.GetCurrentDirectory()
 });
+
+QuestPDF.Settings.License = LicenseType.Community;
+
 
 // Reconfigurar configuration SIN FileSystemWatcher
 builder.Configuration.Sources.Clear();
