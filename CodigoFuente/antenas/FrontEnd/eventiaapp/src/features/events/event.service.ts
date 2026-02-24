@@ -1,4 +1,4 @@
-import { Event, CreateEventPayload } from './types';
+import { Event, CreateEventPayload, TipoEvento, Idioma, PlantillaEvento, PlantillaTramo } from './types';
 
 const API_URL = '/api'; // Apuntamos a nuestro Proxy de Next.js
 
@@ -161,3 +161,52 @@ export async function activateEvent(id: string): Promise<void> {
         throw new Error('Error al activar el evento');
     }
 }
+
+export async function getTiposEvento(idIdioma: number = 2): Promise<TipoEvento[]> {
+    const res = await fetch(`${API_URL}/tipos-evento?idIdioma=${idIdioma}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener tipos de evento');
+    }
+
+    return res.json();
+}
+
+export async function getIdiomasActivos(): Promise<Idioma[]> {
+    const res = await fetch(`${API_URL}/idiomas`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener idiomas');
+    }
+
+    return res.json();
+}
+
+export async function getPlantillasByTipo(idTipoEvento: number): Promise<PlantillaEvento[]> {
+    const res = await fetch(`${API_URL}/plantillas-evento?idTipoEvento=${idTipoEvento}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener plantillas de evento');
+    }
+
+    return res.json();
+}
+
+export async function getTramosByPlantilla(idPlantilla: number): Promise<PlantillaTramo[]> {
+    const res = await fetch(`${API_URL}/plantilla-tramos?idPlantilla=${idPlantilla}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener tramos de plantilla');
+    }
+
+    return res.json();
+}
+
