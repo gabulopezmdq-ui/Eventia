@@ -1,43 +1,53 @@
-﻿using  API.DataSchema;
-using API.DataSchema.DTO;
-using  API.Services;
-using  API.Utility;
-using Microsoft.AspNetCore.Authorization;
+﻿using API.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using rsAPIElevador.DataSchema;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace API.Controllers
+[ApiController]
+[Route("[controller]")]
+public class qrController : ControllerBase
 {
-    [ApiController]
-    [AllowAnonymous]
-    [Route("[controller]")]
-    public class qrController : ControllerBase
+    private readonly IQrService _svc;
+    private readonly ILogger<qrController> _logger;
+
+    public qrController(IQrService svc, ILogger<qrController> logger)
     {
-        private readonly IQrService _svc;
-        public qrController(IQrService svc) => _svc = svc;
+        _svc = svc;
+        _logger = logger;
+    }
 
-
-        public qrController(IConfiguration config, DataContext context, ICRUDService<ef_usuarios> service)
+    [HttpGet("{qrToken}")]
+    public async Task<IActionResult> Get(string qrToken)
+    {
+        try
         {
- 
-        }
+            _logger.LogInformation("Iniciando Get para QR: {QrToken}", qrToken);
 
-        [HttpGet("{qrToken}")]
-        public async Task<IActionResult> Get(string qrToken)
-        {
+            if (string.IsNullOrEmpty(qrToken))
+            {
+                _logger.LogWarning("QR token vacío o nulo");
+                return BadRequest("QR token requerido");
+            }
+
+            _logger.LogInformation("Llamando a GetByQrTokenAsync");
             var result = await _svc.GetByQrTokenAsync(qrToken);
-            if (result == null) return NotFound("QR inválido.");
+
+            _logger.LogInformation("Resultado obtenido: {Result}", result != null ? "OK" : "NULL");
+
+            if (result == null)
+            {
+                _logger.LogWarning("QR no encontrado: {QrToken}", qrToken);
+                return NotFound("QR inválido.");
+            }
+
+            _logger.LogInformation("Retornando OK con resultado");
             return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error en Get para QR: {QrToken}", qrToken);
+            return StatusCode(500, new { error = "Error interno del servidor", details = ex.Message });
         }
     }
 }

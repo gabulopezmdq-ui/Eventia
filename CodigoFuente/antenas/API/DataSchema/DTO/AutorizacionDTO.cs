@@ -26,9 +26,8 @@ namespace API.DataSchema.DTO
 
     public class AutorizacionFromPersonalLinkDTO
     {
-        public long IdInvitadoObjetivo { get; set; } // niño
-        public string NombreAutorizado { get; set; } = null!;
-        public string? TelefonoAutorizado { get; set; }
+        public string NombreAutorizado { get; set; } 
+        public string TelefonoAutorizado { get; set; }
         public string? Relacion { get; set; }
     }
 

@@ -141,51 +141,68 @@ namespace API.Services
             };
         }
 
-        public async Task<AutorizacionDTO> CreateFromPersonalLinkAsync(string rsvpToken, AutorizacionFromPersonalLinkDTO dto)
+        public async Task<List<AutorizacionDTO>> CreateFromPersonalLinkAsync(
+            string rsvpToken,
+            AutorizacionFromPersonalLinkDTO dto)
         {
+            // Log 1: Verificar que encontramos al titular
             var titular = await _context.Set<ef_invitados>()
                 .SingleOrDefaultAsync(x => x.rsvp_token == rsvpToken);
 
             if (titular == null)
                 throw new ArgumentException("Link inválido.");
 
-            // Verificar que sea responsable
+            // Log 2: Ver datos del titular
+            Console.WriteLine($"Titular encontrado: Id={titular.id_invitado}, Grupo={titular.id_rsvp_grupo}");
+
+            // Buscar el rol_evento del titular en el grupo
             var rol = await _context.Set<ef_rsvp_grupo_integrantes>()
                 .Where(x => x.id_rsvp_grupo == titular.id_rsvp_grupo
-                            && x.id_invitado == titular.id_invitado)
+                         && x.id_invitado == titular.id_invitado)
                 .Select(x => x.rol_evento)
-                .SingleOrDefaultAsync();
+                .FirstOrDefaultAsync();
+
+            // Log 3: Ver qué rol_evento tiene el titular
+            Console.WriteLine($"Rol_evento del titular: {rol}");
 
             if (rol != "R")
                 throw new InvalidOperationException("Solo el responsable puede agregar autorizados.");
 
-            // Verificar que el niño pertenezca al mismo grupo
-            var esDelGrupo = await _context.Set<ef_rsvp_grupo_integrantes>()
-                .AnyAsync(x => x.id_rsvp_grupo == titular.id_rsvp_grupo
-                               && x.id_invitado == dto.IdInvitadoObjetivo
-                               && x.rol_evento == "N");
+            // Log 4: Ver menores del grupo
+            var menores = await _context.Set<ef_rsvp_grupo_integrantes>()
+                .Where(x => x.id_rsvp_grupo == titular.id_rsvp_grupo
+                         && x.rol_evento == "N")
+                .Select(x => x.id_invitado)
+                .ToListAsync();
 
-            if (!esDelGrupo)
-                throw new InvalidOperationException("El invitado objetivo no pertenece al grupo o no es menor.");
+            Console.WriteLine($"Menores encontrados: {menores.Count}");
+
+            if (!menores.Any())
+                throw new InvalidOperationException("No hay menores en el grupo.");
 
             var tel = PhoneUtilHelper.NormalizeE164(dto.TelefonoAutorizado, "AR");
 
-            var ent = new ef_autorizaciones
-            {
-                id_evento = titular.id_evento,
-                id_invitado_objetivo = dto.IdInvitadoObjetivo,
-                tipo = "R",
-                nombre_autorizado = dto.NombreAutorizado,
-                telefono_autorizado = tel,
-                relacion = dto.Relacion,
-                activo = true,
-                fecha_alta = DateTimeOffset.UtcNow
-            };
+            var autorizaciones = new List<ef_autorizaciones>();
 
-            _context.Add(ent);
+            foreach (var idMenor in menores)
+            {
+                autorizaciones.Add(new ef_autorizaciones
+                {
+                    id_evento = titular.id_evento,
+                    id_invitado_objetivo = idMenor,
+                    tipo = "R",
+                    nombre_autorizado = dto.NombreAutorizado,
+                    telefono_autorizado = tel,
+                    relacion = dto.Relacion,
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                });
+            }
+
+            _context.AddRange(autorizaciones);
             await _context.SaveChangesAsync();
 
-            return new AutorizacionDTO
+            return autorizaciones.Select(ent => new AutorizacionDTO
             {
                 IdAutorizacion = ent.id_autorizacion,
                 IdEvento = ent.id_evento,
@@ -195,7 +212,7 @@ namespace API.Services
                 TelefonoAutorizado = ent.telefono_autorizado,
                 Relacion = ent.relacion,
                 Activo = ent.activo
-            };
+            }).ToList();
         }
     }
 }

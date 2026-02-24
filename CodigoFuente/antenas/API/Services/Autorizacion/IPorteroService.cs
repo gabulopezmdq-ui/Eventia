@@ -18,6 +18,7 @@ namespace API.Services
         Task<List<ScanListItemDTO>> ListScansAsync(long idEvento, DateTimeOffset? desde, DateTimeOffset? hasta, string? resultado);
         Task<List<PendienteRetiroDTO>> ListPendientesRetiroAsync(long idEvento);
         Task<PorteroResumenDTO> GetResumenAsync(long idEvento);
+        Task<RetiroConfirmResponseDTO> ConfirmarRetiroAsyncQR(string qrToken, RetiroConfirmRequestDTO dto, long? idUsuarioOperador = null);
 
 
     }
