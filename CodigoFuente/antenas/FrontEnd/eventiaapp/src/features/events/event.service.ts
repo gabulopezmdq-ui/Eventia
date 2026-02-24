@@ -1,4 +1,9 @@
-import { Event, CreateEventPayload, TipoEvento, Idioma, PlantillaEvento, PlantillaTramo } from './types';
+import {
+    Event, CreateEventPayload, TipoEvento, Idioma,
+    PlantillaEvento, PlantillaTramo, DressCode,
+    PlantillaDetalle, AplicarPlantillaPayload,
+    EstructuraEvento, TramoEvento, AccesoEvento,
+} from './types';
 
 const API_URL = '/api'; // Apuntamos a nuestro Proxy de Next.js
 
@@ -208,5 +213,132 @@ export async function getTramosByPlantilla(idPlantilla: number): Promise<Plantil
     }
 
     return res.json();
+}
+
+// ═══════════ Nuevos services para flujo "Crear Evento CON Plantilla" ═══════════
+
+export async function getDressCodes(idIdioma: number): Promise<DressCode[]> {
+    const res = await fetch(`${API_URL}/dress-codes?idIdioma=${idIdioma}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener dress codes');
+    }
+
+    return res.json();
+}
+
+export async function getPlantillaDetalle(idPlantilla: number): Promise<PlantillaDetalle> {
+    const res = await fetch(`${API_URL}/plantillas-evento/${idPlantilla}/detalle`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener detalle de plantilla');
+    }
+
+    return res.json();
+}
+
+export async function aplicarPlantilla(idEvento: number, payload: AplicarPlantillaPayload): Promise<{ ok: boolean }> {
+    const res = await fetch(`${API_URL}/eventos-plantillas/aplicar?idEvento=${idEvento}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al aplicar plantilla al evento');
+    }
+
+    return res.json();
+}
+
+export async function getEstructuraEvento(idEvento: number): Promise<EstructuraEvento> {
+    const res = await fetch(`${API_URL}/eventos-plantillas/estructura?idEvento=${idEvento}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener estructura del evento');
+    }
+
+    return res.json();
+}
+
+export async function updateTramo(idTramo: number, payload: Partial<TramoEvento>): Promise<TramoEvento> {
+    const res = await fetch(`${API_URL}/evento-tramos/${idTramo}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al actualizar el tramo');
+    }
+
+    return res.json();
+}
+
+export async function updateAcceso(idAcceso: number, payload: Partial<AccesoEvento>): Promise<AccesoEvento> {
+    const res = await fetch(`${API_URL}/evento-accesos/${idAcceso}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al actualizar el acceso');
+    }
+
+    return res.json();
+}
+
+export async function setAccesoDefault(
+    idEvento: number,
+    idAcceso: number
+): Promise<{ ok: boolean; id_evento: number; id_acceso_default: number }> {
+    const res = await fetch(`${API_URL}/events/${idEvento}/acceso-default?idAcceso=${idAcceso}`, {
+        method: 'PUT',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al setear acceso default');
+    }
+
+    return res.json();
+}
+
+// ═══════════ Relaciones Acceso-Tramo (Matriz editable) ═══════════
+
+export async function createRelacionAccesoTramo(
+    idAcceso: number,
+    idTramo: number
+): Promise<{ id_acceso: number; id_tramo: number }> {
+    const res = await fetch(`${API_URL}/evento-acceso-tramos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_acceso: idAcceso, id_tramo: idTramo }),
+    });
+    if (!res.ok) throw new Error('Error al crear relación acceso-tramo');
+    return res.json();
+}
+
+export async function deleteRelacionAccesoTramo(
+    idAcceso: number,
+    idTramo: number
+): Promise<void> {
+    const res = await fetch(
+        `${API_URL}/evento-acceso-tramos?idAcceso=${idAcceso}&idTramo=${idTramo}`,
+        { method: 'DELETE' }
+    );
+    if (!res.ok) throw new Error('Error al eliminar relación acceso-tramo');
 }
 
