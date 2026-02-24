@@ -25,20 +25,22 @@ export interface Event {
     cliente: unknown | null;
 }
 
-// Payload del POST
+// Payload del POST /eventos (Paso 1 - Crear evento base)
 export interface CreateEventPayload {
     idTipoEvento: number;
     idIdioma: number;
     idPlantilla?: number;
-    fechaHora: string;
+    idDressCode?: number;
     anfitrionesTexto: string;
-    lugar: string;
-    direccion: string;
-    latitud: number;
-    longitud: number;
-    saludo: string;
-    mensajeBienvenida: string;
+    saludo?: string;
+    mensajeBienvenida?: string;
     notas?: string;
+    // Campos opcionales que pueden enviarse pero normalmente van en AplicarPlantilla
+    fechaHora?: string;
+    lugar?: string;
+    direccion?: string;
+    latitud?: number;
+    longitud?: number;
 }
 
 // Tipos de evento (ParametricaDTO del backend)
@@ -77,4 +79,101 @@ export interface PlantillaTramo {
     leyenda_default: string;
     orden: number;
     activo: boolean;
+}
+
+// Dress Code
+export interface DressCode {
+    id: number;
+    codigo: string;
+    texto: string;
+    orden: number | null;
+}
+
+// Detalle completo de una plantilla (incluye tramos, accesos y relaciones)
+export interface PlantillaDetalle {
+    id_plantilla: number;
+    id_tipo_evento: number;
+    codigo: string;
+    nombre: string;
+    activo: boolean;
+    tramos: PlantillaTramo[];
+    accesos: PlantillaAccesoDetalle[];
+    relaciones: PlantillaRelacion[];
+    tramos_count: number;
+    accesos_count: number;
+}
+
+// Accesos dentro de una plantilla detallada
+export interface PlantillaAccesoDetalle {
+    id_plantilla_acceso: number;
+    nombre_default: string;
+    mensaje_rsvp_default: string;
+    es_publico_default: boolean;
+    orden: number;
+    es_default: boolean;
+    activo: boolean;
+}
+
+// Relaciones acceso-tramo dentro de una plantilla
+export interface PlantillaRelacion {
+    id_plantilla_acceso: number;
+    id_plantilla_tramo: number;
+}
+
+// Payload para aplicar una plantilla a un evento
+export interface AplicarPlantillaPayload {
+    id_plantilla: number;
+    borrar_existente: boolean;
+    fecha_base: string;
+    lugar_base?: string;
+    direccion_base?: string;
+    latitud_base?: number;
+    longitud_base?: number;
+}
+
+// Estructura completa de un evento (después de aplicar plantilla)
+export interface EstructuraEvento {
+    id_evento: number;
+    id_acceso_default: number | null;
+    tramos: TramoEvento[];
+    accesos: AccesoEvento[];
+    relaciones: RelacionAccesoTramo[];
+}
+
+// Tramo de un evento (instancia real, editable)
+export interface TramoEvento {
+    id_tramo: number;
+    id_evento: number;
+    id_tramo_tipo: number;
+    nombre: string;
+    leyenda_visible: string | null;
+    notas_internas: string | null;
+    fecha_hora_inicio: string | null;
+    fecha_hora_fin: string | null;
+    lugar: string | null;
+    direccion: string | null;
+    latitud: number | null;
+    longitud: number | null;
+    orden: number;
+    cupo: number | null;
+    activo: boolean;
+}
+
+// Acceso de un evento (instancia real, editable)
+export interface AccesoEvento {
+    id_acceso: number;
+    id_evento: number;
+    nombre: string;
+    mensaje_rsvp: string | null;
+    es_publico: boolean;
+    cupo: number | null;
+    precio: number | null;
+    orden: number;
+    activo: boolean;
+}
+
+// Relación acceso-tramo de un evento
+export interface RelacionAccesoTramo {
+    id_acceso: number;
+    id_tramo: number;
 }
