@@ -49,6 +49,7 @@ namespace API.DataSchema
         public DbSet<ef_param_feature_dependencias> ef_param_feature_dependencias { get; set; }
         public DbSet<ef_evento_musica_bloqueos> ef_evento_musica_bloqueos { get; set; }
         public DbSet<ef_evento_links> ef_evento_links { get; set; }
+        public DbSet<ef_param_entidades> ef_param_entidades { get; set; }
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -133,6 +134,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_invitado_musica_votosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_musica_bloqueosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_linksConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_entidadesConfiguration());
 
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
