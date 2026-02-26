@@ -352,7 +352,12 @@ namespace API.Controllers
             // Cuenta idiomas distintos con traducción activa (por item)
             var items = await (
                 from t in _context.ef_param_traducciones
-                where t.entidad == ent && t.activo
+                join i in _context.ef_idiomas on t.id_idioma equals i.id_idioma
+                where t.entidad == ent
+                      && t.activo
+                      && i.activo
+                      && t.texto != null
+                      && t.texto.Trim() != ""
                 group t by t.id_item into g
                 select new
                 {
