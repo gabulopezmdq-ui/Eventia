@@ -58,6 +58,24 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByParam(u => u.codigo == Name));
         }
 
+        [HttpGet("Search")]
+        public async Task<ActionResult<IEnumerable<ef_tipos_evento>>> Search(
+            [FromQuery] string field,
+            [FromQuery] string q = null,
+            [FromQuery] string modo = "contains",
+            [FromQuery] bool? activo = null)
+        {
+            try
+            {
+                var result = await _serviceGenerico.SearchStringAsync(field, q, modo, activo);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] ef_tipos_evento tipo_evento)
         {

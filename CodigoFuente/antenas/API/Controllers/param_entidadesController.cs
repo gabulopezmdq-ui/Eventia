@@ -23,12 +23,14 @@ namespace API.Controllers
             _logger = logger;
         }
 
-        // GET /param_entidades/GetAll?soloActivas=true
         [HttpGet("GetAll")]
-        public async Task<ActionResult<List<ef_param_entidades>>> GetAll([FromQuery] bool soloActivas = true)
+        [Authorize(Roles = "SUPERADMIN")]
+        public async Task<ActionResult<List<ef_param_entidades>>> GetAll([FromQuery] bool? activo = null)
         {
             var q = _context.ef_param_entidades.AsQueryable();
-            if (soloActivas) q = q.Where(x => x.activo);
+
+            if (activo.HasValue)
+                q = q.Where(x => x.activo == activo.Value);
 
             var data = await q
                 .OrderBy(x => x.grupo_menu)
