@@ -36,10 +36,10 @@ namespace API.DataSchema.ModelConfiguration
                    .WithOne(x => x.acceso)
                    .HasForeignKey(x => x.id_acceso);
 
-            // Invitados -> Acceso (cuando agregues id_acceso en ef_invitados)
             builder.HasMany(x => x.invitados)
-                   .WithOne() // si no agregás nav en ef_invitados
-                   .HasForeignKey(i => i.id_acceso);
+                   .WithOne(i => i.acceso)
+                   .HasForeignKey(i => i.id_acceso)
+                   .HasPrincipalKey(a => a.id_acceso);
         }
     }
 }
