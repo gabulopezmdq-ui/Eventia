@@ -32,11 +32,11 @@ namespace API.Controllers
             _serviceGenerico = serviceGenerico;
             _invitacionService = invitacionService;
         }
-        [HttpGet("GetEvento")]
-        public async Task<IActionResult> GetEvento([FromQuery] string token)
-        {
-            return Ok(await _invitacionService.ObtenerEventoAsync(token));
-        }
+        //[HttpGet("GetEvento")]
+        //public async Task<IActionResult> GetEvento([FromQuery] string token)
+        //{
+        //    return Ok(await _invitacionService.ObtenerEventoAsync(token));
+        //}
 
         [HttpPost("Confirmar")]
         public async Task<IActionResult> Confirmar([FromBody] RsvpConfirmacionRequest request)
@@ -50,19 +50,19 @@ namespace API.Controllers
         }
 
 
-        [Authorize]
-        [HttpPost("GenerarLink")]
-        public async Task<IActionResult> GenerarLink([FromBody] GenerarLinkRequest req)
-        {
-            var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        //[Authorize]
+        //[HttpPost("GenerarLink")]
+        //public async Task<IActionResult> GenerarLink([FromBody] GenerarLinkRequest req)
+        //{
+        //    var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            var token = await _invitacionService.GenerarLinkAsync(
-                req.IdEvento,
-                userId
-            );
+        //    var token = await _invitacionService.GenerarLinkAsync(
+        //        req.IdEvento,
+        //        userId
+        //    );
 
-            return Ok(new { token });
-        }
+        //    return Ok(new { token });
+        //}
 
         [HttpPost("CargarInvitados")]
         public async Task<IActionResult> CargarInvitados([FromBody] CargaInvitadosRequest req)
