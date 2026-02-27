@@ -179,15 +179,6 @@
   ],
   "logs": [
     {
-      "code": "Undefined",
-      "level": "Warning",
-      "message": "Problema al leer el archivo de caché C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\obj\\project.nuget.cache : '<' is an invalid start of a property name. Expected a '\"'. Path: $ | LineNumber: 2 | BytePositionInLine: 0.",
-      "projectPath": "C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
-      "targetGraphs": []
-    },
-    {
       "code": "NU1603",
       "level": "Warning",
       "message": "API depende de DocumentFormat.OpenXml (>= 2.23.0), pero no se encontró DocumentFormat.OpenXml 2.23.0. DocumentFormat.OpenXml 3.0.0 se resolvió en su lugar.",
