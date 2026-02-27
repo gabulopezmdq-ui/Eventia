@@ -77,6 +77,82 @@ namespace API.Services
             return await _genericRepo.Find(where);
         }
 
+        public async Task<List<T>> SearchStringAsync(string fieldName, string q, string modo = "contains", bool? activo = null)
+        {
+            fieldName = (fieldName ?? "").Trim();
+            q = (q ?? "").Trim();
+            modo = (modo ?? "contains").Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(fieldName))
+                throw new ArgumentException("fieldName requerido.");
+
+            // Validar propiedad string (case-insensitive)
+            var prop = typeof(T).GetProperty(fieldName,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+            if (prop == null)
+                throw new ArgumentException($"No existe el campo '{fieldName}' en {typeof(T).Name}.");
+
+            if (prop.PropertyType != typeof(string))
+                throw new ArgumentException($"El campo '{prop.Name}' no es string.");
+
+            var realFieldName = prop.Name;
+
+            // Query base (NO tracking)
+            IQueryable<T> query = _genericRepo.AllAsNoTracking();
+
+            // Filtro activo tri-estado (si viene)
+            if (activo.HasValue)
+            {
+                // Si la entidad NO tiene "activo", EF.Property<bool> va a fallar.
+                // Preferimos detectar antes y dar error claro.
+                var activoProp = typeof(T).GetProperty("activo",
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                if (activoProp == null || (activoProp.PropertyType != typeof(bool) && activoProp.PropertyType != typeof(bool?)))
+                    throw new ArgumentException($"La entidad {typeof(T).Name} no tiene campo 'activo' (bool) para filtrar.");
+
+                // nombre real (por si es Activo/activo)
+                var realActivoName = activoProp.Name;
+
+                query = query.Where(x => EF.Property<bool>(x, realActivoName) == activo.Value);
+            }
+
+            // Si q viene vacío => “ver todos literal” (con filtro activo si se pidió)
+            if (string.IsNullOrWhiteSpace(q))
+                return await query.ToListAsync();
+
+            // Armar patrón según modo (PostgreSQL ILIKE)
+            string pattern;
+            switch (modo)
+            {
+                case "contains":
+                    pattern = $"%{q}%";
+                    break;
+                case "startswith":
+                    pattern = $"{q}%";
+                    break;
+                case "equals":
+                    pattern = $"{q}";
+                    break;
+                default:
+                    throw new ArgumentException("Modo inválido. Permitidos: contains, startswith, equals.");
+            }
+
+            if (modo == "equals")
+            {
+                // equals case-insensitive (Postgres): ILIKE 'texto' (sin %)
+                query = query.Where(x => EF.Functions.ILike(EF.Property<string>(x, realFieldName), pattern));
+            }
+            else
+            {
+                // contains / startswith
+                query = query.Where(x => EF.Functions.ILike(EF.Property<string>(x, realFieldName), pattern));
+            }
+
+            return await query.ToListAsync();
+        }
+
         public async Task<List<T>> GetListByParam(Expression<Func<T, bool>> predicate)
         {
             return await _context.Set<T>().Where(predicate).ToListAsync();
