@@ -3,6 +3,7 @@ import {
     PlantillaEvento, PlantillaTramo, DressCode,
     PlantillaDetalle, AplicarPlantillaPayload,
     EstructuraEvento, TramoEvento, AccesoEvento,
+    TramoTipo, CrearEstructuraManualPayload // Agregados para manual flow
 } from './types';
 
 const API_URL = '/api'; // Apuntamos a nuestro Proxy de Next.js
@@ -340,5 +341,57 @@ export async function deleteRelacionAccesoTramo(
         { method: 'DELETE' }
     );
     if (!res.ok) throw new Error('Error al eliminar relación acceso-tramo');
+}
+
+// ═══════════ Nuevos services para flujo "Crear Evento SIN Plantilla" ═══════════
+
+export async function getTramoTipos(idIdioma: number = 2): Promise<TramoTipo[]> {
+    const res = await fetch(`${API_URL}/tramo-tipos?idIdioma=${idIdioma}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener tipos de tramo');
+    }
+
+    return res.json();
+}
+
+export async function iniciarSolicitudDraft(
+    idEvento: number,
+    motivo: string
+): Promise<{ ok: boolean; id_solicitud_draft: number; estado: string }> {
+    const res = await fetch(
+        `${API_URL}/solicitudes-plantilla/draft?idEvento=${idEvento}&motivo=${motivo}`,
+        { method: 'POST' }
+    );
+
+    if (!res.ok) {
+        throw new Error('Error al iniciar solicitud draft');
+    }
+
+    return res.json();
+}
+
+export async function crearEstructuraManual(
+    idEvento: number,
+    payload: CrearEstructuraManualPayload
+): Promise<any> {
+    const res = await fetch(
+        `${API_URL}/eventos-plantillas/crear-estructura-manual?idEvento=${idEvento}`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        }
+    );
+
+    if (!res.ok) {
+        throw new Error('Error al enviar estructura manual');
+    }
+
+    return res.json();
 }
 
