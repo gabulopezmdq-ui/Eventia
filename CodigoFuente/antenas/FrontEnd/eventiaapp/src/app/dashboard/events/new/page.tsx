@@ -10,6 +10,7 @@ import {
     getDressCodes,
     getPlantillaDetalle,
     aplicarPlantilla,
+    iniciarSolicitudDraft,
 } from '@/src/features/events/event.service';
 import type {
     TipoEvento,
@@ -264,6 +265,25 @@ export default function NewEventPage() {
             setCurrentStep(4);
         } catch {
             setError('No se pudo aplicar la plantilla. Por favor, intenta de nuevo.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Alternar a Flujo Manual SIN Plantilla
+    const handleIrAlWizardManual = async () => {
+        if (!idEvento) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await iniciarSolicitudDraft(idEvento, 'NO_HAY_PLANTILLAS');
+            if (result.ok && result.id_solicitud_draft) {
+                router.push(`/dashboard/events/new/manual?idEvento=${idEvento}&draftId=${result.id_solicitud_draft}&idIdioma=${basicInfo.idIdioma}`);
+            } else {
+                setError('No se pudo iniciar el borrador manual.');
+            }
+        } catch {
+            setError('Ocurrió un error al intentar crear la estructura manualmente.');
         } finally {
             setLoading(false);
         }
@@ -690,11 +710,9 @@ export default function NewEventPage() {
                         <div className="mt-6 pt-4 border-t border-card-border">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    // TODO: Redirigir al wizard manual (otro documento)
-                                    alert('Funcionalidad próximamente: Crear estructura manualmente');
-                                }}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-card-border text-muted hover:text-foreground hover:border-muted/60 hover:bg-muted/5 transition-all text-sm"
+                                onClick={handleIrAlWizardManual}
+                                disabled={loading}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-card-border text-muted hover:text-foreground hover:border-muted/60 hover:bg-muted/5 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Layers className="w-4 h-4" />
                                 {plantillaDetalles.length > 0

@@ -177,3 +177,33 @@ export interface RelacionAccesoTramo {
     id_acceso: number;
     id_tramo: number;
 }
+
+// ═══════════ Interfaces para Flujo SIN Plantilla (Manual) ═══════════
+
+// Tramo Tipo (Paramétrica para Select)
+export interface TramoTipo {
+    id: number;
+    codigo: string;
+    texto: string;
+    orden: number | null;
+}
+
+// Payload manual para el POST /eventos_plantillas/CrearEstructuraManual
+export interface RelacionManualPayload {
+    acceso_orden: number;
+    tramo_orden: number;
+}
+
+export interface AccesoManualPayload extends Partial<AccesoEvento> {
+    es_default?: boolean;
+}
+
+export interface CrearEstructuraManualPayload {
+    borrar_existente: boolean;
+    id_solicitud_draft?: number;
+    motivo?: string;
+    tramos: Partial<TramoEvento>[];
+    accesos: AccesoManualPayload[];
+    relaciones: RelacionManualPayload[];
+    id_acceso_default_orden?: number;
+}
