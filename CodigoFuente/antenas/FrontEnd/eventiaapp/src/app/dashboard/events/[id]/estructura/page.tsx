@@ -10,6 +10,7 @@ import {
     createRelacionAccesoTramo,
     deleteRelacionAccesoTramo,
 } from '@/src/features/events/event.service';
+import { listarSolicitudes, confirmarSolicitud } from '@/src/features/plantillas/solicitudes-plantilla.service';
 import type {
     EstructuraEvento,
     TramoEvento,
@@ -18,7 +19,7 @@ import type {
 import {
     ArrowLeft, Clock, Users, LayoutGrid, Save, CheckCircle2,
     MapPin, AlignLeft, Sparkles, Globe, Hash, Power,
-    Star, MessageSquare, Check, X,
+    Star, MessageSquare, Check, X, AlertTriangle, Send
 } from 'lucide-react';
 
 /* ═══════════ TABS ═══════════ */
@@ -56,6 +57,9 @@ export default function EstructuraPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<TabId>('tramos');
+    const [solicitudDraftId, setSolicitudDraftId] = useState<number | null>(null);
+    const [isConfirming, setIsConfirming] = useState(false);
+    const [confirmedSuccess, setConfirmedSuccess] = useState(false);
 
     // Tramo editing
     const [tramoEdits, setTramoEdits] = useState<Record<number, Partial<TramoEvento>>>({});
@@ -77,8 +81,15 @@ export default function EstructuraPage() {
         async function load() {
             setLoading(true);
             try {
-                const data = await getEstructuraEvento(idEvento);
+                const [data, solicitudes] = await Promise.all([
+                    getEstructuraEvento(idEvento),
+                    listarSolicitudes({ idEvento, estado: 'D' }).catch(() => []) // Catch preventivo
+                ]);
                 setEstructura(data);
+
+                if (solicitudes.length > 0) {
+                    setSolicitudDraftId(solicitudes[0].id_solicitud);
+                }
             } catch {
                 setError('No se pudo cargar la estructura del evento.');
             } finally {
@@ -193,6 +204,21 @@ export default function EstructuraPage() {
         }
     };
 
+    // ── Acciones de Solicitud ──
+    const handleConfirmarSolicitud = async () => {
+        if (!solicitudDraftId) return;
+        setIsConfirming(true);
+        try {
+            await confirmarSolicitud(solicitudDraftId);
+            setConfirmedSuccess(true);
+            setSolicitudDraftId(null); // Ocultar el banner
+        } catch {
+            setError('Error al confirmar la solicitud de estructura. Intenta de nuevo.');
+        } finally {
+            setIsConfirming(false);
+        }
+    };
+
     // ── Value helpers ──
     const tv = (tramo: TramoEvento, field: keyof TramoEvento) =>
         tramoEdits[tramo.id_tramo]?.[field] ?? tramo[field];
@@ -246,6 +272,45 @@ export default function EstructuraPage() {
                     </span>
                 </div>
             </div>
+
+            {/* ── Banner de Draft ── */}
+            {solicitudDraftId && (
+                <div className="mb-6 px-5 py-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-sm font-semibold text-amber-200">Estructura en Borrador</p>
+                            <p className="text-xs text-muted mt-1 max-w-lg">
+                                La estructura de este evento no ha sido confirmada y enviada a revisión.
+                                Un administrador debe aprobarla para que el evento esté 100% operativo.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleConfirmarSolicitud}
+                        disabled={isConfirming}
+                        className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all disabled:opacity-50 w-full sm:w-auto justify-center"
+                    >
+                        {isConfirming ? (
+                            <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Confirmando...</>
+                        ) : (
+                            <><Send className="w-4 h-4" /> Confirmar Solicitud</>
+                        )}
+                    </button>
+                </div>
+            )}
+
+            {/* ── Mensaje de Éxito de Confirmación ── */}
+            {confirmedSuccess && (
+                <div className="mb-6 px-5 py-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3 animate-in fade-in zoom-in-95 duration-500">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <div>
+                        <p className="text-sm font-semibold text-emerald-200">¡Estructura enviada a revisión!</p>
+                        <p className="text-xs text-emerald-400/80 mt-0.5">El estado de la solicitud ha pasado a Pendiente.</p>
+                    </div>
+                    <button onClick={() => setConfirmedSuccess(false)} className="ml-auto text-emerald-400 hover:text-emerald-300"><X className="w-4 h-4" /></button>
+                </div>
+            )}
 
             {/* ── Error banner ── */}
             {error && (
@@ -509,9 +574,9 @@ export default function EstructuraPage() {
                                                                         onClick={() => handleToggleRelation(acceso.id_acceso, tramo.id_tramo, !!hasRelation)}
                                                                         disabled={isToggling}
                                                                         className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${isToggling ? 'opacity-50 cursor-wait' :
-                                                                                hasRelation
-                                                                                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
-                                                                                    : 'bg-background border-card-border hover:border-muted'
+                                                                            hasRelation
+                                                                                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                                                                                : 'bg-background border-card-border hover:border-muted'
                                                                             }`}
                                                                         title={hasRelation ? 'Quitar acceso a este tramo' : 'Dar acceso a este tramo'}
                                                                     >

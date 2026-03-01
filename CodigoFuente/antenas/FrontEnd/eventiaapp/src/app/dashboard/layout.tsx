@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Calendar, Settings, LogOut, Sparkles, X, Database } from "lucide-react";
+import { LayoutDashboard, Calendar, Settings, LogOut, Sparkles, X, Database, FileCheck2 } from "lucide-react";
 import { SidebarItem } from "@/src/components/layout/SidebarItem";
 import { DashboardHeader } from "@/src/components/layout/DashboardHeader";
 import { useRouter } from "next/navigation";
@@ -89,6 +89,7 @@ export default function DashboardLayout({
                                 <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-600 uppercase tracking-widest">Administración</span>
                             </div>
                             <SidebarItem href="/dashboard/parametricas" icon={Database} label="Altas Paramétricas" />
+                            <SidebarItem href="/dashboard/admin/solicitudes-plantillas" icon={FileCheck2} label="Solicitudes Plantillas" />
                         </>
                     )}
 
