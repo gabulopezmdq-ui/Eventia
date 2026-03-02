@@ -26,8 +26,8 @@ namespace API.Controllers
         private readonly IConfiguration _config;
         private readonly DataContext _context;
         private readonly ICRUDService<ef_usuarios> _service;
-        private readonly IAlimentacionService _svc;
-        public alimentacionController(IAlimentacionService svc) => _svc = svc;
+        private readonly IRestriccionesService _serviceRestricttion;
+        public alimentacionController(IRestriccionesService svc) => _serviceRestricttion = svc;
 
 
 
@@ -38,24 +38,23 @@ namespace API.Controllers
             _service = service;
         }
 
-        [HttpGet("restricciones-alimentarias")]
-        public async Task<IActionResult> GetRestricciones([FromQuery] bool soloActivas = true)
-       => Ok(await _svc.GetCatalogoAsync(soloActivas));
-
-        [HttpPut("p/{rsvpToken}/ninos/{idInvitadoNino:long}/alimentacion")]
-        public async Task<IActionResult> UpdateAlimentacion(string rsvpToken, long idInvitadoNino, [FromBody] NinoAlimentacionUpdateDTO dto)
+        [HttpGet("mis-restricciones/{token}")]
+        public async Task<IActionResult> GetMis(string token)
         {
-            try
-            {
-                await _svc.UpdateNinoAlimentacionFromPersonalAsync(rsvpToken, idInvitadoNino, dto);
-                return NoContent();
-            }
-            catch (ArgumentException ex) { return BadRequest(ex.Message); }
-            catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+            return Ok(await _serviceRestricttion.GetMisRestriccionesAsync(token));
         }
 
-        [HttpGet("ninos-alertas")]
-        public async Task<IActionResult> NinosAlertas(long idEvento, [FromQuery] short minSeveridad = 4)
-        => Ok(await _svc.ListNinosAlertasAsync(idEvento, minSeveridad));
+        [HttpPost("mis-restricciones/{token}")]
+        public async Task<IActionResult> Save(string token, RestriccionesGrupoUpsertDTO dto)
+        {
+            await _serviceRestricttion.SaveMisRestriccionesAsync(token, dto);
+            return Ok();
+        }
+
+        [HttpGet("catalogo/{locale}")]
+        public async Task<IActionResult> Catalogo(string locale)
+        {
+            return Ok(await _serviceRestricttion.GetCatalogoAsync(locale));
+        }
     }
 }
