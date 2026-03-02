@@ -16,11 +16,13 @@ namespace API.Services
     {
         private readonly DataContext _context;
         private readonly IConfiguration _config;
+        private readonly IRestriccionesService _restriccionesService;
 
-        public InvitacionService(DataContext context, IConfiguration config)
+        public InvitacionService(DataContext context, IConfiguration config, IRestriccionesService restriccionesService)
         {
             _context = context;
             _config = config;
+            _restriccionesService = restriccionesService;
         }
 
         public async Task ConfirmarAsync(string token, RsvpConfirmacionDTO dto)
@@ -196,6 +198,18 @@ namespace API.Services
 
             // 11. Guardar cambios finales
             await _context.SaveChangesAsync();
+            if (dto.Restricciones != null && dto.Restricciones.Any())
+            {
+                var restrDto = new RestriccionesGrupoUpsertDTO
+                {
+                    Integrantes = dto.Restricciones
+                };
+
+                await _restriccionesService.SaveMisRestriccionesAsync(
+                    responsable.rsvp_token,
+                    restrDto);
+
+            }
         }
 
         public async Task CargarInvitadosAsync(CargaInvitadosRequest req, long idUsuario)

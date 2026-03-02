@@ -41,6 +41,7 @@ namespace API.DataSchema.DTO
         public string Mensaje { get; set; }
 
         public List<RsvpNinoDTO> Ninos { get; set; }
+        public List<IntegranteRestriccionesUpsertDTO>? Restricciones { get; set; }
     }
 
     public class RsvpNinoDTO
