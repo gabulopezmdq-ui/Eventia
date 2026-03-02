@@ -49,4 +49,5 @@ namespace API.DataSchema.DTO
         public string Nombre { get; set; }
         public string Apellido { get; set; }
     }
+
 }

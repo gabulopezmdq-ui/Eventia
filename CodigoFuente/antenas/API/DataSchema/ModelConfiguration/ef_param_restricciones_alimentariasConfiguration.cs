@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
 {
-    public class EfParamRestriccionesAlimentariasConfiguration : IEntityTypeConfiguration<API.DataSchema.ef_param_restricciones_alimentarias>
+    public class ef_param_restricciones_alimentariasConfiguration : IEntityTypeConfiguration<API.DataSchema.ef_param_restricciones_alimentarias>
     {
         public void Configure(EntityTypeBuilder<API.DataSchema.ef_param_restricciones_alimentarias> builder)
         {

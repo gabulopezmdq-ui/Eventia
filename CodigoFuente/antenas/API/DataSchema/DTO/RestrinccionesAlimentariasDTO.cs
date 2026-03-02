@@ -46,4 +46,33 @@ namespace API.DataSchema.DTO
         public long IdGrupo { get; set; }
         public List<IntegranteRestriccionesUpsertDTO> Integrantes { get; set; } = new();
     }
+
+    public class NinoAlimentacionUpdateDTO
+    {
+        public List<long> IdsRestricciones { get; set; } = new();
+        public string? Detalle { get; set; }
+    }
+
+    public class RestriccionAlimDTO
+    {
+        public long IdRestriccionAlim { get; set; }
+        public string Codigo { get; set; }
+        public string Nombre { get; set; }
+    }
+
+    public class NinoAlertaStaffDTO
+    {
+        public long IdInvitadoNino { get; set; }
+
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+
+        public string ResponsableNombre { get; set; }
+        public string ResponsableApellido { get; set; }
+        public string ResponsableCelular { get; set; }
+
+        public List<RestriccionAlimDTO> Restricciones { get; set; } = new();
+
+        public string? Detalle { get; set; }
+    }
 }

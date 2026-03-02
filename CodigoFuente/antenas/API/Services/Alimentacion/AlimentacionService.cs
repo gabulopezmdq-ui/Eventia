@@ -75,7 +75,7 @@ namespace API.Services
                 {
                     id_rsvp_grupo_integrante = integNino.id_rsvp_grupo_integrante,
                     id_restriccion_alim = idRestr,
-                    fecha_alta = DateTimeOffset.UtcNow.UtcDateTime
+                    observaciones = null
                 });
             }
 
@@ -116,77 +116,43 @@ namespace API.Services
 
             // alertas por integrante (join m2m + catálogo)
             var alertas = await (
-                from rir in _context.Set<ef_rsvp_integrante_restricciones>().AsNoTracking()
-                join cat in _context.Set<ef_param_restricciones_alimentarias>().AsNoTracking()
-                    on rir.id_restriccion_alim equals cat.id_restriccion_alim
-                where idsIntegrantes.Contains(rir.id_rsvp_grupo_integrante)
-                      && cat.activo
-                      && (cat.requiere_alerta || cat.severidad >= minSeveridad)
-                select new { rir.id_rsvp_grupo_integrante, cat }
-            ).ToListAsync();
+                    from rir in _context.Set<ef_rsvp_integrante_restricciones>().AsNoTracking()
+                    join cat in _context.Set<ef_param_restricciones_alimentarias>().AsNoTracking()
+                        on rir.id_restriccion_alim equals cat.id_restriccion_alim
+                    where idsIntegrantes.Contains(rir.id_rsvp_grupo_integrante)
+                          && cat.activo
+                    select new
+                    {
+                        rir.id_rsvp_grupo_integrante,
+                        cat.id_restriccion_alim,
+                        cat.codigo
+                    }
+                ).ToListAsync();
 
-            var alertasDict = alertas
-                .GroupBy(x => x.id_rsvp_grupo_integrante)
-                .ToDictionary(g => g.Key, g => g.Select(x => new RestriccionAlimDTO
-                {
-                    IdRestriccionAlim = x.cat.id_restriccion_alim,
-                    Codigo = x.cat.codigo,
-                    Nombre = x.cat.nombre,
-                    EsAlergia = x.cat.es_alergia,
-                    Severidad = x.cat.severidad,
-                    RequiereAlerta = x.cat.requiere_alerta,
-                    EtiquetaCorta = x.cat.etiqueta_corta
-                }).OrderByDescending(r => r.Severidad).ToList());
+
 
             // armar salida solo para los que tienen alertas o detalle
             var res = new List<NinoAlertaStaffDTO>();
 
-            foreach (var x in ninos)
-            {
-                alertasDict.TryGetValue(x.rgiN.id_rsvp_grupo_integrante, out var listAlertas);
-                var det = x.rgiN.alimentacion_detalle;
+            
 
-                if ((listAlertas == null || listAlertas.Count == 0) && string.IsNullOrWhiteSpace(det))
-                    continue;
-
-                respDict.TryGetValue(x.invN.id_rsvp_grupo ?? -1, out var resp);
-
-                short sevMax = 0;
-                if (listAlertas != null && listAlertas.Count > 0)
-                    sevMax = listAlertas.Max(a => a.Severidad);
-
-                res.Add(new NinoAlertaStaffDTO
-                {
-                    IdInvitadoNino = x.invN.id_invitado,
-                    Nombre = x.invN.nombre,
-                    Apellido = x.invN.apellido,
-                    ResponsableNombre = resp?.nombre,
-                    ResponsableApellido = resp?.apellido,
-                    ResponsableCelular = resp?.celular,
-                    Alertas = listAlertas ?? new List<RestriccionAlimDTO>(),
-                    Detalle = det,
-                    SeveridadMax = sevMax
-                });
-            }
-
-            return res.OrderByDescending(x => x.SeveridadMax).ThenBy(x => x.Apellido).ThenBy(x => x.Nombre).ToList();
+            return res.OrderByDescending(x => x.Apellido).ThenBy(x => x.Nombre).ToList();
         }
 
         public async Task<List<RestriccionAlimDTO>> GetCatalogoAsync(bool soloActivas = true)
         {
             var q = _context.Set<ef_param_restricciones_alimentarias>().AsNoTracking();
-            if (soloActivas) q = q.Where(x => x.activo);
 
-            return await q.OrderBy(x => x.orden).ThenBy(x => x.nombre)
+            if (soloActivas)
+                q = q.Where(x => x.activo);
+
+            return await q
+                .OrderBy(x => x.orden)
                 .Select(x => new RestriccionAlimDTO
                 {
                     IdRestriccionAlim = x.id_restriccion_alim,
                     Codigo = x.codigo,
-                    Nombre = x.nombre,
-                    EsAlergia = x.es_alergia,
-                    Severidad = x.severidad,
-                    RequiereAlerta = x.requiere_alerta,
-                    EtiquetaCorta = x.etiqueta_corta
+                    Nombre = x.codigo
                 })
                 .ToListAsync();
         }
