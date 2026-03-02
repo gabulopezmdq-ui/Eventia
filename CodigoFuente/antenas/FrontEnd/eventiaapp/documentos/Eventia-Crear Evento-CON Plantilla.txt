@@ -1,0 +1,542 @@
+Eventia - Crear Evento con Plantillas
+
+Conceptos 
+Tramos = agenda/partes del evento en el tiempo (cada tramo puede tener su propia dirección/horario).
+Accesos = tipos de invitación (qué combinación de tramos ve/puede confirmar un invitado).
+Relaciones acceso–tramo = matriz que define “este acceso incluye estos tramos”. 
+
+1) Qué son los “TRAMOS”
+Tramos = partes del evento en el tiempo.
+Ejemplo boda:
+Tramo 1: Iglesia (19:00)
+Tramo 2: Cena (21:00)
+Tramo 3: Fiesta (23:00)
+Cada tramo puede tener:
+hora inicio/fin
+lugar/dirección (puede ser distinta)
+leyenda/nota visible (“llegar 15 min antes”)
+Esto es lo que el invitado ve como “agenda” del evento.
+
+2) Qué son los “ACCESOS”
+Accesos = tipos de invitación.
+Es “a qué partes está invitada esta persona”.
+Ejemplo de boda:
+Acceso A: “Solo Iglesia”
+Acceso B: “Iglesia + Cena + Fiesta” (el clásico)
+Acceso C: “Cena + Fiesta”
+Acceso D: “Solo Fiesta”
+Cuando invitamos a alguien, le asignamos un acceso.
+Ese acceso define automáticamente qué tramos puede ver/confirmar.
+Resumiendo:
+Tramos = agenda del evento
+Accesos = quién está invitado a qué parte de esa agenda
+
+3) Qué es la tabla “acceso_tramos”
+Es el “mapa” que dice este acceso incluye este tramo
+Ejemplo (boda):
+Acceso “Solo Iglesia” incluye tramo “Iglesia”
+Acceso “Cena + Fiesta” incluye tramo “Cena” y “Fiesta”
+Acceso “Iglesia + Cena + Fiesta” incluye los 3
+Esto permite que el front pueda mostrar un “checklist”:
+? Iglesia / ? Cena / ? Fiesta
+
+
+A continuación se listan los pasos a seguir cuando se crea un evento para cuyo tipo evento existen plantillas o al menos existe una plantilla que le cuadra al usuario:
+POST/auth/login
+
+Paso 1-Crea Evento Base:
+Pantalla 1: Crea tu Evento
+UI (campos que debe pedir)
+Idioma (obligatorio-dropdown)
+Tipo de evento (obligatorio-dropdown): ejemplo: Boda GET /tipos_evento/GetAll?idIdioma=2
+Anfitriones (obligatorio)
+Saludo  (opcional)
+Mensaje bienvenida (opcional)
+Dress code (opcional-dropdown)  GET /dress_code/GetAll?idIdioma=2
+Notas (opcional)
+Botón: Continuar
+Endpoint:
+POST /eventos
+
+Body (ejemplo mínimo para Boda):
+{
+"idTipoEvento": 3,
+"idIdioma": 1,
+"anfitrionesTexto": "Luisa y Pablo",
+"saludo": "Bienvenidos a nuestra boda",
+"mensajeBienvenida": "Gracias por acompañarnos en este día tan especial",
+"notas": "Boda prueba"
+}
+Backend responde
+{
+    "idEvento": 8,
+    "idTipoEvento": 3,
+    "idIdioma": 1,
+    "anfitrionesTexto": "Luisa y Pablo",
+    "estado": "B",
+    "fechaAlta": "2026-02-19T22:00:04.1957668+00:00"
+}
+
+El front guarda idEvento=8.
+
+
+
+Paso 2-Mostrar plantillas disponibles para ese tipo de evento:
+Objetivo: que el usuario elija “la estructura” que va a tener el evento (agenda + tipos de invitación).
+Endpoint:
+GET /plantillas_evento/GetByTipo?idTipoEvento=3&activo=true
+
+Backend responde (ejemplo)
+[
+    {
+        "id_plantilla": 2,
+        "codigo": "BODA_IGLESIA_CENA_FIESTA",
+        "activo": true,
+        "id_tipo_evento": 3,
+        "tramos": [],
+        "accesos": [],
+        "tipo_evento": null
+    },
+    {
+        "id_plantilla": 3,
+        "codigo": "BODA_CIVIL_ALMUERZO",
+        "activo": true,
+        "id_tipo_evento": 3,
+        "tramos": [],
+        "accesos": [],
+        "tipo_evento": null
+    }
+]
+
+Pantalla 2: Elegí una estructura para tu evento
+UI:
+Subtítulo: Después vas a poder editar horarios, lugares y accesos
+Mostrar Cards de las plantillas para el tipo de evento seleccionado.
+Cada Card muestra:
+Nombre (o título): detalle.nombre
+Descripción: “Incluye: Iglesia - Cena - Fiesta”
+Footer: “Accesos: 4 opciones”
+Botón de la card Usar esta estructura o un radio button en cada card (pero si se pone un radio button al final de las cards tiene que haber un botón Usar la estructura seleccionada)
+
+Endpoint para detalle de cada card:
+GET /plantillas_evento/{idPlantilla}/Detalle
+Devuelve:
+{
+    "id_plantilla": 2,
+    "id_tipo_evento": 3,
+    "codigo": "BODA_IGLESIA_CENA_FIESTA",
+    "nombre": "Boda Iglesia Cena Fiesta",
+    "activo": true,
+    "tramos": [
+        {
+            "id_plantilla_tramo": 2,
+            "id_tramo_tipo": 1,
+            "nombre_default": "Iglesia",
+            "leyenda_default": "Ceremonia religiosa · llegar 15 minutos antes",
+            "orden": 1,
+            "activo": true
+        },
+        {
+            "id_plantilla_tramo": 3,
+            "id_tramo_tipo": 3,
+            "nombre_default": "Cena",
+            "leyenda_default": "Recepción y cena formal",
+            "orden": 2,
+            "activo": true
+        },
+        {
+            "id_plantilla_tramo": 4,
+            "id_tramo_tipo": 5,
+            "nombre_default": "Fiesta",
+            "leyenda_default": "Barra libre y pista de baile",
+            "orden": 3,
+            "activo": true
+        }
+    ],
+    "accesos": [
+        {
+            "id_plantilla_acceso": 2,
+            "nombre_default": "Iglesia",
+            "mensaje_rsvp_default": "Gracias por acompañarnos en la ceremonia ??",
+            "es_publico_default": false,
+            "orden": 1,
+            "es_default": false,
+            "activo": true
+        },
+        {
+            "id_plantilla_acceso": 3,
+            "nombre_default": "Iglesia + Cena + Fiesta",
+            "mensaje_rsvp_default": "Te esperamos para compartir este día completo con nosotros ?",
+            "es_publico_default": false,
+            "orden": 2,
+            "es_default": true,
+            "activo": true
+        },
+        {
+            "id_plantilla_acceso": 4,
+            "nombre_default": "Cena + Fiesta",
+            "mensaje_rsvp_default": "Te esperamos desde la recepción para celebrar juntos ??",
+            "es_publico_default": false,
+            "orden": 3,
+            "es_default": false,
+            "activo": true
+        },
+        {
+            "id_plantilla_acceso": 5,
+            "nombre_default": "Fiesta",
+            "mensaje_rsvp_default": "Te esperamos en la fiesta ??",
+            "es_publico_default": false,
+            "orden": 4,
+            "es_default": false,
+            "activo": true
+        }
+    ],
+    "relaciones": [
+        {
+            "id_plantilla_acceso": 2,
+            "id_plantilla_tramo": 2
+        },
+        {
+            "id_plantilla_acceso": 3,
+            "id_plantilla_tramo": 2
+        },
+        {
+            "id_plantilla_acceso": 3,
+            "id_plantilla_tramo": 3
+        },
+        {
+            "id_plantilla_acceso": 3,
+            "id_plantilla_tramo": 4
+        },
+        {
+            "id_plantilla_acceso": 4,
+            "id_plantilla_tramo": 3
+        },
+        {
+            "id_plantilla_acceso": 4,
+            "id_plantilla_tramo": 4
+        },
+        {
+            "id_plantilla_acceso": 5,
+            "id_plantilla_tramo": 4
+        }
+    ],
+    "tramos_count": 3,
+    "accesos_count": 4
+}
+
+Debajo de las cards debe haber un botón Voy a crear la estructura de mi evento / No encontré la estructura que se adapte a mi evento. Es el mismo botón que cambia de etiqueta de acuerdo a:
+Si GetByTipo devuelve vacío: botón secundario “Voy a crear la estructura de mi evento”
+Si devuelve con opciones: botón secundario “No encontré la estructura que se adapte a mi evento”
+(Al hacer click, redirige al wizard manual que está documentado en el otro documento; en esta pantalla sólo mostrar el botón)
+
+Usuario elige por ejemplo la card 1, haciendo clic en Usar esta estructura de la card 1 (si se implementó botón)
+
+
+Paso 3- Antes de aplicar plantilla, pedir “Fecha base” y (opcional) Ubicación base
+Luego de elegir una plantilla (desde una card):
+Se abre un mini formulario o pantalla: 
+Pantalla 3: Datos base para inicializar el evento
+Subtítulo: Usaremos estos datos como base para todos los tramos. Luego vas a poder editarlos tramo por tramo.
+Fecha y Hora de inicio: fecha_base (obligatoria)
+Lugar (opcional): lugar_base
+Dirección (opcional): direccion_base
+Latitud / Longitud (opcionales): latitud_base / longitud_base
+
+Botón Aplicar plantilla
+
+Paso 4- Aplicar la plantilla elegida al evento
+Al hacer clic en el botón Aplicar plantilla
+Llama al endpoint:
+POST /eventos_plantillas/Aplicar?idEvento=8
+(dejé el endpoint en la carpeta “Evento - Tramos - Accesos - Relaciones (con Plantilla)”)
+Esto es solo un default para que los tramos no nazcan vacíos.
+
+Body (ejemplo para plantilla 2: Iglesia + Cena + Fiesta):
+{
+  "id_plantilla": 2,
+  "borrar_existente": true,
+  "fecha_base": "2026-11-22T19:00:00-03:00",
+  "lugar_base": "Estancia Santa Clara",
+  "direccion_base": "Ruta 2 Km 395",
+  "latitud_base": -37.995100,
+  "longitud_base": -57.573400
+}
+Backend automáticamente:
+crea los tramos del evento (Iglesia, Cena, Fiesta)
+crea los accesos del evento (Solo Iglesia, Completo, etc.)
+crea la matriz acceso-tramo
+setea id_acceso_default en el evento
+Backend responde
+{ "ok": true }
+
+Paso 5- Cargar estructura completa para la pantalla editor
+Endpoint:
+GET /eventos_plantillas/Estructura?idEvento=8
+(dejé el endpoint en la carpeta “Evento - Tramos - Accesos - Relaciones (con Plantilla)”)
+
+Backend devuelve
+{
+    "id_evento": 8,
+    "id_acceso_default": 10,
+    "tramos": [
+        {
+            "id_tramo": 7,
+            "id_tramo_tipo": 1,
+            "nombre": "Iglesia",
+            "leyenda_visible": "Ceremonia religiosa · llegar 15 minutos antes",
+            "notas_internas": null,
+            "fecha_hora_inicio": "2026-11-22T22:00:00+00:00",
+            "fecha_hora_fin": null,
+            "lugar": "Estancia Santa Clara",
+            "direccion": "Ruta 2 Km 395",
+            "latitud": -37.995100,
+            "longitud": -57.573400,
+            "orden": 1,
+            "cupo": null,
+            "activo": true
+        },
+        {
+            "id_tramo": 8,
+            "id_tramo_tipo": 3,
+            "nombre": "Cena",
+            "leyenda_visible": "Recepción y cena formal",
+            "notas_internas": null,
+            "fecha_hora_inicio": "2026-11-22T22:00:00+00:00",
+            "fecha_hora_fin": null,
+            "lugar": "Estancia Santa Clara",
+            "direccion": "Ruta 2 Km 395",
+            "latitud": -37.995100,
+            "longitud": -57.573400,
+            "orden": 2,
+            "cupo": null,
+            "activo": true
+        },
+        {
+            "id_tramo": 9,
+            "id_tramo_tipo": 5,
+            "nombre": "Fiesta",
+            "leyenda_visible": "Barra libre y pista de baile",
+            "notas_internas": null,
+            "fecha_hora_inicio": "2026-11-22T22:00:00+00:00",
+            "fecha_hora_fin": null,
+            "lugar": "Estancia Santa Clara",
+            "direccion": "Ruta 2 Km 395",
+            "latitud": -37.995100,
+            "longitud": -57.573400,
+            "orden": 3,
+            "cupo": null,
+            "activo": true
+        }
+    ],
+    "accesos": [
+        {
+            "id_acceso": 9,
+            "nombre": "Iglesia",
+            "mensaje_rsvp": "Gracias por acompañarnos en la ceremonia ??",
+            "es_publico": false,
+            "cupo": null,
+            "precio": null,
+            "orden": 1,
+            "activo": true
+        },
+        {
+            "id_acceso": 10,
+            "nombre": "Iglesia + Cena + Fiesta",
+            "mensaje_rsvp": "Te esperamos para compartir este día completo con nosotros ?",
+            "es_publico": false,
+            "cupo": null,
+            "precio": null,
+            "orden": 2,
+            "activo": true
+        },
+        {
+            "id_acceso": 11,
+            "nombre": "Cena + Fiesta",
+            "mensaje_rsvp": "Te esperamos desde la recepción para celebrar juntos ??",
+            "es_publico": false,
+            "cupo": null,
+            "precio": null,
+            "orden": 3,
+            "activo": true
+        },
+        {
+            "id_acceso": 12,
+            "nombre": "Fiesta",
+            "mensaje_rsvp": "Te esperamos en la fiesta ??",
+            "es_publico": false,
+            "cupo": null,
+            "precio": null,
+            "orden": 4,
+            "activo": true
+        }
+    ],
+    "relaciones": [
+        {
+            "id_acceso": 9,
+            "id_tramo": 7
+        },
+        {
+            "id_acceso": 10,
+            "id_tramo": 7
+        },
+        {
+            "id_acceso": 10,
+            "id_tramo": 8
+        },
+        {
+            "id_acceso": 10,
+            "id_tramo": 9
+        },
+        {
+            "id_acceso": 11,
+            "id_tramo": 8
+        },
+        {
+            "id_acceso": 11,
+            "id_tramo": 9
+        },
+        {
+            "id_acceso": 12,
+            "id_tramo": 9
+        }
+    ]
+}
+Esto va a alimentar todo el editor.
+
+Paso 6- Pantalla Editor (3 tabs o pasos) 
+Tab 1: Agenda / Tramos
+Mostrar lista de tramos tipo cards, una card por tramo
+No se permiten agregar tramos ya que vino de una plantilla (sólo editar)
+Cada card tiene su botón Guardar, es decir se guarda de a un tramo
+1- Iglesia
+Nombre (editable)
+Fecha/Hora inicio (editable)
+Fecha/Hora fin (opcional)
+Lugar, Dirección, Lat/Long (editable)
+Leyenda visible (editable)
+Orden (editable)
+Activo (true/false)
+Guardar (llama al endpoint siguiente)
+Endpoint:
+PUT /evento_tramos/{idTramo}
+(dejé el endpoint en la carpeta “Evento - Tramos - Accesos - Relaciones (con Plantilla)”)
+Ejemplo json:
+{
+  "id_tramo": 7,
+  "id_evento": 8,
+  "id_tramo_tipo": 1,
+  "nombre": "Iglesia (Parroquia San José)",
+  "leyenda_visible": "Llegar 20 minutos antes · estacionamiento en el lateral",
+  "notas_internas": null,
+  "fecha_hora_inicio": "2026-11-22T19:00:00-03:00",
+  "fecha_hora_fin": null,
+  "lugar": "Parroquia San José",
+  "direccion": "Calle 123, Mar del Plata",
+  "latitud": -38.005500,
+  "longitud": -57.542600,
+  "orden": 1,
+  "cupo": null,
+  "activo": true
+}
+
+
+
+2- Cena
+Idem tramo 1
+Con su botón Guardar
+
+3-Fiesta
+Idem tramo 1
+Con su botón Guardar
+
+Tab 2: Accesos / Tipos de invitación
+Mostrar lista de accesos tipo cards.
+Cada card o acceso tiene su botón Guardar
+No se permite agregar (si vino de plantilla), sólo editar los siguientes datos:
+Acceso 1 - Iglesia
+Nombre
+Mensaje RSVP
+Cupo (por ahora oculto)
+Precio (por ahora oculto)
+Es público (por ahora oculto)
+Orden
+Activo
+Marcar “Default” (uno solo – radio button)
+Botón Guardar (llama al endpoint siguiente)
+Endpoint:
+PUT /evento_accesos/{idAcceso} (uno por cada acceso)
+(dejé el endpoint en la carpeta “Evento - Tramos - Accesos - Relaciones (con Plantilla)”)
+
+
+Acceso 2 – Iglesia + Cena + Fiesta
+Idem Acceso 1
+Con su botón Guardar
+
+Acceso 3: Cena + Fiesta
+Idem Acceso 1
+Con su botón Guardar
+
+Acceso 4 – Fiesta
+Idem Acceso 1
+Con su botón Guardar
+
+Para el Acceso Default:
+Además hay que setear el default. No lo hacemos “implícito” editando el acceso, ya que con el siguiente endpoint actualizamos ef_eventos.id_acceso_default. Le mandamos el id que el usuario marcó como default en el radio button.
+Estaría bueno pintar o resaltar la card que se marcó como “default”.
+Con esta condición:
+Checked si acceso.id_acceso === estructura.id_acceso_default
+Ejemplo: si id_acceso_default = 10, la card cuyo id_acceso = 10 aparece seleccionada.
+
+Endpoint:
+PUT /eventos/{idEvento}/acceso-default?idAcceso=11
+(dejé el endpoint en la carpeta “Evento - Tramos - Accesos - Relaciones (con Plantilla)”)
+Backend responde:
+{
+    "ok": true,
+    "id_evento": 8,
+    "id_acceso_default": 11
+}
+
+
+Tab 3: Matriz “Qué incluye cada tipo de Invitación?”
+Una grilla tipo:
+Acceso \ Tramo	Iglesia	Cena	Fiesta
+Iglesia	?		
+Iglesia + Cena + Fiesta (default)	?	?	?
+Cena + Fiesta		?	?
+Fiesta			?
+
+Columnas = tramos (ordenados por orden)
+Filas = accesos (ordenados por orden)
+Checkbox tildado si existe relación {idAcceso, idTramo} en ef_evento_acceso_tramos
+
+Con qué datos se arma:
+Endpoint:
+GET /eventos_plantillas/Estructura?idEvento=8
+
+El front recibe:
+tramos[] con { idTramo, nombre, orden }
+accesos[] con { idAcceso, nombre, orden }
+relaciones[] con pares { idAcceso, idTramo }
+
+Cómo el front decide si tilda un checkbox:
+Para cada celda (acceso, tramo):
+está tildado si relaciones contiene {idAcceso, idTramo}
+
+
+¿Qué ve el invitado cuando entra?
+Si tiene acceso "Cena + Fiesta":
+Pantalla invitado:
+María y Lucas
+?? 22 Noviembre 2026
+Tu invitación incluye:
+Cena (21:00)
+Fiesta (23:00)
+Dress code: Elegante
+Botón: Confirmar asistencia
+
+No ve Iglesia.
+No sabe si existía.
+
+

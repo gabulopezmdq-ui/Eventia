@@ -1,0 +1,177 @@
+Eventia - Aprobar Plantillas SuperAdmin
+
+Caso: los usuarios que no encontraron plantillas para aplicar a su evento crearon sus propios tramos, accesos y relaciones y dejaron pendientes solicitudes de plantillas que el SuperAdmin deberá aprobar o rechazar
+
+El SuperAdmin tendrá:
+Bandeja de solicitudes 
+Vista detalle 
+Acciones (aprobar/rechazar/convertir)
+
+
+Menú (sidebar): Plantillas
+
+Solicitudes de Plantillas
+	Objetivo: que el SuperAdmin vea qué usuarios no encontraron plantillas (o ninguna le sirvió) y pueda:
+revisar
+aprobar y convertir en plantilla
+rechazar con motivo
+
+Columnas de la Bandeja:
+ID Solicitud (id_solicitud)
+Fecha (fecha_alta)
+Estado (D / P / A / R)
+Tipo de evento (id_tipo_evento + texto traducido según idioma admin)
+Evento (id_evento + botón “Ver estructura del evento”? ver si suma algo)
+Usuario (id_usuario_solicita)
+Motivo 
+Detalle (preview 1 línea)
+Acciones: Ver | Convertir | Rechazar
+Filtros (arriba)
+Estado: Pendientes (default) / Draft / Aprobadas / Rechazadas / Todas
+Tipo evento (combo)
+Fecha desde / hasta (opcional)
+Defaults 
+Entrar con estado P (pendientes)
+Orden: más nuevas primero
+
+Endpoints
+Pendientes por tipo de evento:
+GET /solicitudes_plantilla/pendientes?idTipoEvento=4 (opcional)
+Pendientes cualquier tipo de evento:
+GET /solicitudes_plantilla/pendientes
+Devuelve:
+{
+        "id_solicitud": 1,
+        "id_evento": 6,
+        "id_tipo_evento": 4,
+        "id_plantilla_referida": null,
+        "motivo": "NO_HAY_PLANTILLAS",
+        "detalle": null,
+        "payload": "{\"motivo\": \"NO_HAY_PLANTILLAS\", \"tramos\": [{\"cupo\": null, \"lugar\": \"Salón La Arboleda\", \"orden\": 1, \"activo\": true, \"nombre\": \"Bienvenida\", \"latitud\": -38.005500, \"longitud\": -57.542600, \"direccion\": \"Av. Siempre Viva 742, Mar del Plata\", \"id_tramo_tipo\": 10, \"fecha_hora_fin\": \"2026-11-22T20:00:00-03:00\", \"leyenda_visible\": \"Llegá con tiempo para fotos\", \"fecha_hora_inicio\": \"2026-11-22T19:30:00-03:00\"}, {\"cupo\": null, \"lugar\": \"Salón La Arboleda\", \"orden\": 2, \"activo\": true, \"nombre\": \"Merienda\", \"latitud\": -38.005500, \"longitud\": -57.542600, \"direccion\": \"Av. Siempre Viva 742, Mar del Plata\", \"id_tramo_tipo\": 14, \"fecha_hora_fin\": \"2026-11-22T21:00:00-03:00\", \"leyenda_visible\": \"Incluye mesa dulce\", \"fecha_hora_inicio\": \"2026-11-22T20:00:00-03:00\"}, {\"cupo\": null, \"lugar\": \"Salón La Arboleda\", \"orden\": 3, \"activo\": true, \"nombre\": \"Fiesta\", \"latitud\": -38.005500, \"longitud\": -57.542600, \"direccion\": \"Av. Siempre Viva 742, Mar del Plata\", \"id_tramo_tipo\": 5, \"fecha_hora_fin\": \"2026-11-23T03:00:00-03:00\", \"leyenda_visible\": \"Pista + DJ\", \"fecha_hora_inicio\": \"2026-11-22T21:00:00-03:00\"}], \"accesos\": [{\"orden\": 1, \"activo\": true, \"nombre\": \"Solo fiesta\", \"es_default\": false, \"mensaje_rsvp\": \"Te esperamos directo en la fiesta ??\"}, {\"orden\": 2, \"activo\": true, \"nombre\": \"Merienda + fiesta\", \"es_default\": true, \"mensaje_rsvp\": \"Te esperamos desde la merienda ??\"}, {\"orden\": 3, \"activo\": true, \"nombre\": \"Evento completo\", \"es_default\": false, \"mensaje_rsvp\": \"Te esperamos desde la bienvenida ?\"}], \"relaciones\": [{\"tramo_orden\": 3, \"acceso_orden\": 1}, {\"tramo_orden\": 2, \"acceso_orden\": 2}, {\"tramo_orden\": 3, \"acceso_orden\": 2}, {\"tramo_orden\": 1, \"acceso_orden\": 3}, {\"tramo_orden\": 2, \"acceso_orden\": 3}, {\"tramo_orden\": 3, \"acceso_orden\": 3}], \"borrar_existente\": true, \"id_solicitud_draft\": 1, \"registrar_solicitud\": true}",
+        "estado": "P",
+        "id_usuario_solicita": 3,
+        "fecha_alta": "2026-02-23T17:55:59.129617+00:00",
+        "fecha_revision": null,
+        "id_usuario_revisa": null,
+        "observaciones_admin": null,
+        "evento": null
+    }
+]
+
+
+Listado General:
+GET /solicitudes_plantilla/listar?estado=P&idTipoEvento=4
+GET /solicitudes_plantilla/listar?estado=P
+GET /solicitudes_plantilla/listar
+
+
+(Para mostrar el texto del tipo de evento: el front ya puede resolverlo con la parametrica de tipos_evento + traducciones.)
+
+Detalle de Solicitud (revisión):
+	Endpoint:
+GET /solicitudes_plantilla/{idSolicitud}
+GET /solicitudes_plantilla/1
+
+Al hacer click en Ver o Convertir:
+Cabecera
+id_solicitud
+estado
+id_evento
+id_tipo_evento (y su nombre traducido)
+motivo
+detalle
+fecha_alta
+id_usuario_solicita
+observaciones_admin (si ya fue revisada)
+
+Vista de estructura (lo más importante)
+Mostrar 3 tabs:
+Tab 1: Tramos
+Tabla:
+orden
+id_tramo_tipo (y texto traducido)
+nombre
+leyenda_visible
+Tab 2: Accesos
+Tabla:
+orden
+nombre
+mensaje_rsvp
+es_default (sí/no)
+Tab 3: Relaciones
+Matriz de relaciones - checks (la misma del wizard):
+filas: accesos
+columnas: tramos
+checks según payload
+
+Acciones del Superadmin (workflow final)
+A) Rechazar
+Botón: Rechazar
+Campo obligatorio: observaciones_admin (“por qué no sirve / qué corregir”)
+Cambia: estado ? R
+
+Endpoint:
+PUT /solicitudes_plantilla/{idSolicitud}/revisar
+
+{
+  "estado": "R",
+  "observaciones_admin": "No es reutilizable como plantilla general porque falta xxxxxx"
+}
+
+Resultado:
+estado = R
+fecha_revision set
+id_usuario_revisa set
+
+
+B) Aprobar y convertir en plantilla
+Botón: Convertir en plantilla
+Abre modal/pantalla con:
+codigo (obligatorio, único). Ejemplo: CUMPLE15_RECEPCION_CENA_FIESTA
+activo (default true)
+observaciones_admin (opcional)
+
+Endpoint:
+POST /solicitudes_plantilla/{idSolicitud}/convertir
+
+{
+  "codigo": "CUMPLE15_RECEPCION_CENA_FIESTA",
+  "observaciones_admin": "Aprobada. Buena estructura estándar para 15.",
+  "activo": true
+}
+Resultado:
+Crea:
+ef_plantillas_evento
+ef_plantilla_tramos
+ef_plantilla_accesos
+ef_plantilla_acceso_tramos
+Actualiza solicitud:
+estado = A
+fecha_revision
+id_usuario_revisa
+observaciones_admin
+{
+    "ok": true,
+    "id_plantilla": 4
+}
+
+
+Plantillas por Tipo de Evento
+Esto le sirve al SuperAdmin para auditar y visualizar rápidamente qué plantillas hay por tipo:
+Filtros:
+Tipo de evento
+Activo (sí/no/todas)
+Buscar por código
+
+Tabla o Lista:
+id_plantilla
+id_tipo_evento (texto traducido en UI)
+codigo
+activo
+cant tramos (se puede calcular en backend o UI)
+cant accesos
+Acciones: Ver detalle
+
+Endpoint:
+GET /plantillas_evento/GetByTipo?idTipoEvento=... 
+

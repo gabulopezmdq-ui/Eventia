@@ -1,0 +1,636 @@
+Eventia - Crear Evento - SIN Plantilla
+
+Caso: el usuario no encuentra una plantilla para su estructura de evento
+
+Mini resumen de este circuito:
+Usuario entra al wizard
+Se crea solicitud en D
+Usuario arma todo
+Usuario aprieta Guardar estructura
+Backend:
+Crea estructura real
+Actualiza solicitud a P
+
+
+A continuación se listan los pasos a seguir cuando se crea un evento para cuyo tipo evento no existen plantillas o las que existen no le cuadran al usuario:
+
+POST/auth/login
+
+Paso 1-Crea Evento Base:
+Pantalla 1: Crea tu Evento
+UI (campos que debe pedir)
+Idioma (obligatorio-dropdown)
+Tipo de evento (obligatorio-dropdown): ejemplo: Boda GET /tipos_evento/GetAll?idIdioma=1
+Anfitriones (obligatorio)
+Saludo  (opcional)
+Mensaje bienvenida (opcional)
+Dress code (opcional-dropdown)  GET /dress_code/GetAll?idIdioma=1
+Notas (opcional)
+Botón: Continuar
+Endpoint:
+POST /eventos
+
+Body (ejemplo mínimo para cumple 15):
+{
+  "idTipoEvento": 4,
+  "idIdioma": 1,
+  "anfitrionesTexto": "Familia Pérez",
+  "saludo": "¡Mis 15!",
+  "mensajeBienvenida": "Los espero para compartir una noche inolvidable",
+  "notas": "Prueba sin plantilla"
+}
+Backend responde
+{
+"idEvento": 6,
+"estado": "B"
+}
+El front guarda id_evento=6.
+
+
+Paso 2-Mostrar plantillas disponibles para ese tipo de evento:
+Endpoint:
+GET /plantillas_evento/GetByTipo?idTipoEvento=4&activo=true
+
+El back puede responder con plantillas si hay para ese tipo de evento o null.
+Cualquiera sea la respuesta, estamos en el caso en que el usuario hará una carga manual de sus Tramos, Accesos y Relaciones, por lo que no seleccionará ninguna plantilla si es que trae alguna.
+Habrá un botón Voy a crear la estructura de mi evento / No encontré la estructura que se adapte a mi evento. Es el mismo botón que cambia de etiqueta de acuerdo a:
+Si GetByTipo devuelve vacío: botón secundario “Voy a crear la estructura de mi evento”
+Si devuelve con opciones: botón secundario “No encontré la estructura que se adapte a mi evento”
+
+Al hacer click en ambos casos, redirige al wizard manual, para armar:
+Step 1: armar array tramos[]
+Step 2: armar array accesos[] + marcar uno como default
+Step 3: armar array relaciones[] (checklist)
+Front guarda todo en memoria 
+
+
+Paso 3-Iniciar Solicitud DRAFT
+Endpoint:
+POST / solicitudes_plantilla/draft?idEvento=6&motivo=NO_HAY_PLANTILLAS
+
+Backend responde
+{
+    "ok": true,
+    "id_solicitud_draft": 1,
+    "estado": "D"
+}
+devuelve un objeto con id_solicitud_draft. 
+Está en estado “D”, o sea que no es visible para el admin todavía.
+
+
+Paso 4- WIZARD
+3 tabs o pasos:
+Tab o Step 1: Agenda / Tramos 
+En una card mostar los campos del tramo:
+Tramo (dropdown, obligatorio): ejemplo: Recepción, GET /tramo_tipos/GetAll?idIdioma=1
+Nombre (editable)
+Fecha/Hora inicio (editable)
+Fecha/Hora fin (opcional)
+Lugar
+Dirección, Lat/Long (editable)
+Latitud / Longitud (opcional)
+Leyenda visible (opcional)
+Orden (automático)
+Activo (true/false)
+Botones:
+Agregar tramo
+Siguiente
+(Lo marco con resaltador porque no sé si poner un botón Guardar y que eso habilite otra card, o un botón Guardar + botón Agregar otro Tramo)
+Validar:
+Que haya al menos 1 tramo
+la fecha de inicio obligatoria
+orden único (lo da el front)
+
+Tab o Step 2: Accesos / Tipos de invitación)
+En una card mostar los campos del acceso:
+Nombre (ejemplo: “Completo”, “Cena + Fiesta”, “Solo Fiesta”)
+Mensaje RSVP (texto que verá el invitado)
+Es público (bool) (lo ocultamos por ahora y dejarlo en false)
+Cupo (opcional) (ocultarlo por ahora)
+Default (radio button: solo uno)
+Orden (automático)
+Activo
+Botones:
+Agregar acceso
+Siguiente
+Idem anteriore
+Validar:
+Que haya al menos 1 acceso
+1 solo default
+
+Tab o Step 3: Matriz “Qué incluye cada tipo de Invitación?”
+UI checklist por acceso:
+Para cada Acceso:
+Check Tramo 1 Recepción
+Check Tramo 2 Cena
+Check Tramo 3 Fiesta
+Validar:
+cada acceso debe tener 1 o más tramos 1 tramo
+el acceso default debe tener relación con 1 o más tramos
+
+UI matriz?
+Mostrar una tabla tipo “grilla”:
+Columnas = Tramos (por orden)
+Filas = Accesos (por orden)
+Celdas = checkbox
+Ejemplo (Cumpleaños de 15: Recepción/Cena/Fiesta):
+Acceso | Tramo	1. Recepción	2. Cena	3. Fiesta
+1. Completo (default)	?	?	?
+2. Cena + Fiesta	?	?	?
+3. Solo Fiesta	?	?	?
+
+El usuario tilda/destilda checkboxes.
+
+Cómo se arma el array relaciones[] desde esa UI
+Cuando el usuario tilda una celda:
+wizard.relaciones.push({
+  acceso_orden: X,
+  tramo_orden: Y
+})
+agregás { acceso_orden: X, tramo_orden: Y }
+Cuando destilda:
+eliminás ese par del array
+Ejemplo final del cuadro de arriba:
+"relaciones": [
+  { "acceso_orden": 1, "tramo_orden": 1 },
+  { "acceso_orden": 1, "tramo_orden": 2 },
+  { "acceso_orden": 1, "tramo_orden": 3 },
+
+  { "acceso_orden": 2, "tramo_orden": 2 },
+  { "acceso_orden": 2, "tramo_orden": 3 },
+
+  { "acceso_orden": 3, "tramo_orden": 3 }
+]
+
+	Validar:
+Cada acceso debe tener al menos un tramo asignado	
+
+Paso 5- Guardar Estructura Completa
+Botón final: Guardar Borrador
+
+Endpoint:
+POST /eventos_plantillas/CrearEstructuraManual?idEvento=6
+
+{
+"borrar_existente": true,
+"id_solicitud_draft": 123,
+"motivo": "NO_HAY_PLANTILLAS",
+
+"tramos": [
+{
+"id_tramo_tipo": 10,
+"nombre": "Bienvenida",
+"leyenda_visible": "Llegá con tiempo para fotos",
+"fecha_hora_inicio": "2026-11-22T19:30:00-03:00",
+"fecha_hora_fin": "2026-11-22T20:00:00-03:00",
+"lugar": "Salón La Arboleda",
+"direccion": "Av. Siempre Viva 742, Mar del Plata",
+"latitud": -38.005500,
+"longitud": -57.542600,
+"orden": 1,
+"cupo": null,
+"activo": true
+},
+{
+"id_tramo_tipo": 14,
+"nombre": "Merienda",
+"leyenda_visible": "Incluye mesa dulce",
+"fecha_hora_inicio": "2026-11-22T20:00:00-03:00",
+"fecha_hora_fin": "2026-11-22T21:00:00-03:00",
+"lugar": "Salón La Arboleda",
+"direccion": "Av. Siempre Viva 742, Mar del Plata",
+"latitud": -38.005500,
+"longitud": -57.542600,
+"orden": 2,
+"cupo": null,
+"activo": true
+},
+{
+"id_tramo_tipo": 5,
+"nombre": "Fiesta",
+"leyenda_visible": "Pista + DJ",
+"fecha_hora_inicio": "2026-11-22T21:00:00-03:00",
+"fecha_hora_fin": "2026-11-23T03:00:00-03:00",
+"lugar": "Salón La Arboleda",
+"direccion": "Av. Siempre Viva 742, Mar del Plata",
+"latitud": -38.005500,
+"longitud": -57.542600,
+"orden": 3,
+"cupo": null,
+"activo": true
+}
+],
+
+"accesos": [
+{
+"nombre": "Solo fiesta",
+"mensaje_rsvp": "Te esperamos directo en la fiesta ??",
+"orden": 1,
+"es_default": false,
+"activo": true
+},
+{
+"nombre": "Merienda + fiesta",
+"mensaje_rsvp": "Te esperamos desde la merienda ??",
+"orden": 2,
+"es_default": true,
+"activo": true
+},
+{
+"nombre": "Evento completo",
+"mensaje_rsvp": "Te esperamos desde la bienvenida ?",
+"orden": 3,
+"es_default": false,
+"activo": true
+}
+],
+
+"relaciones": [
+{ "acceso_orden": 1, "tramo_orden": 3 },
+
+{ "acceso_orden": 2, "tramo_orden": 2 },
+{ "acceso_orden": 2, "tramo_orden": 3 },
+
+{ "acceso_orden": 3, "tramo_orden": 1 },
+{ "acceso_orden": 3, "tramo_orden": 2 },
+{ "acceso_orden": 3, "tramo_orden": 3 }
+]
+}
+
+Backend devuelve:
+{
+    "ok": true,
+    "id_solicitud": 1
+}
+
+Los datos ingresados en el wizard se guardan en el estado del front (memoria del navegador) mientras el usuario está en el wizard.
+Recién cuando toca “Guardar Borrador” se manda 1 solo POST con todo (en estado D: Draft)
+El front arma todo en memoria (wizard) y guarda una sola vez al final con el endpoint anterior.
+
+
+
+Paso 6- Confirmar Solicitud (D  P)
+Recién cuando el usuario esté seguro que su estructura es la definitiva, hará clic en el botón “Confirma Estructura Evento”.
+Endpoint: 
+POST /solicitudes_plantilla/{idSolicitud}/confirmar
+
+Este endpoint valida:
+Solo el usuario que la creó puede confirmarla
+Solo si está en estado D
+Pasa a P
+Y devuelve:
+{
+    "ok": true,
+    "id_solicitud": 1,
+    "estado": "P"
+}
+
+Ahora el SuperAdmin puede revisar la solicitud para aprobarla como futura plantilla.
+Estados Solicitud	Significado
+D	Draft (usuario todavía armando)
+P	Pendiente (usuario terminó wizard)
+A	Aprobada
+R	Rechazada
+
+
+RESUMEN
+Diferencia Sin Plantilla vs Con Plantilla
+Con Plantilla	Sin Plantilla
+Backend crea tramos/accesos desde plantilla	Front crea todo en memoria
+Usuario solo edita	Usuario construye desde cero
+No se agregan tramos	Se agregan libremente
+No se modifican relaciones	Se construyen manualmente
+
+El wizard no llama al backend hasta el final.
+Todo se arma en memoria.
+El backend recibe todo junto.
+
+¿Qué pasa si el usuario cierra la pantalla?
+Hoy:
+Se crea solicitud D al iniciar wizard
+Se guarda el wizard en localStorage
+No se llamó todavía al backend de estructura
+Entonces:
+La solicitud queda en estado D
+No hay tramos creados
+No hay accesos creados
+No hay nada aplicado al evento
+Solo existe un registro D vacío o semi vacío.
+
+¿El usuario puede retomar el wizard?
+Actualmente: NO (para no complicar esta fase)
+A futuro podría (si así lo decidimos)
+
+
+Paso 7- Modificar Datos
+Una vez creados los tramos, accesos y relaciones del Evento, el usuario podría modificar datos 
+TRAMOS: 
+Editar un tramo ya creado:
+PUT /evento_tramos/{idTramo} 
+PUT/evento_tramos/12
+Ejemplo
+{
+  "nombre": "Fiesta (actualizada)",
+  "leyenda_visible": "DJ + barra libre hasta las 03:30",
+  "fecha_hora_inicio": "2026-11-22T21:15:00-03:00",
+  "fecha_hora_fin": "2026-11-23T03:30:00-03:00",
+  "lugar": "Salón La Arboleda",
+  "direccion": "Av. Siempre Viva 742, Mar del Plata",
+  "latitud": -38.005500,
+  "longitud": -57.542600,
+  "orden": 3,
+  "activo": true
+}
+
+Devuelve:
+{
+    "id_tramo": 12,
+    "id_evento": 6,
+    "id_tramo_tipo": 5,
+    "nombre": "Fiesta (actualizada)",
+    "leyenda_visible": "DJ + barra libre hasta las 03:30",
+    "notas_internas": null,
+    "fecha_hora_inicio": "2026-11-22T21:15:00-03:00",
+    "fecha_hora_fin": "2026-11-23T03:30:00-03:00",
+    "lugar": "Salón La Arboleda",
+    "direccion": "Av. Siempre Viva 742, Mar del Plata",
+    "latitud": -38.005500,
+    "longitud": -57.542600,
+    "orden": 3,
+    "cupo": null,
+    "activo": true,
+    "fecha_alta": "2026-02-23T17:58:14.286705+00:00",
+    "fecha_modif": "2026-02-23T18:52:05.5721744+00:00",
+    "evento": null,
+    "tramo_tipo": null,
+    "acceso_tramos": []
+}
+
+
+ACCESOS: 
+Editar nombre / mensaje
+PUT /evento_accesos/{idAcceso} 
+PUT /evento_accesos/{idAcceso} 
+Ejemplo:
+{
+  "nombre": "Merienda + Fiesta (actualizado)",
+  "mensaje_rsvp": "Te esperamos desde la merienda ?? Confirmá tu asistencia",
+  "orden": 2,
+  "activo": true
+}
+
+Devuelve:
+{
+    "id_acceso": 14,
+    "id_evento": 6,
+    "nombre": "Merienda + Fiesta (actualizado)",
+    "mensaje_rsvp": "Te esperamos desde la merienda ?? Confirmá tu asistencia",
+    "es_publico": false,
+    "cupo": null,
+    "precio": null,
+    "activo": true,
+    "orden": 2,
+    "fecha_alta": "2026-02-23T17:58:14.286705+00:00",
+    "fecha_modif": "2026-02-23T18:55:03.6279218+00:00",
+    "evento": null,
+    "acceso_tramos": [],
+    "invitados": []
+}
+
+
+Cambiar el default:
+PUT /eventos/{idEvento}/acceso-default?idAcceso=... 
+PUT /eventos/6/acceso-default?idAcceso=14 
+
+Devuelve:
+{
+    "ok": true,
+    "id_evento": 6,
+    "id_acceso_default": 14
+}
+
+
+Juanchi esto es para vos… yo no entendía y sigo sin entender cómo se guarda en memoria así que le pregunté mil veces al chatgpt y me respondió esto, ojo que algunos campos quedaron desactualizados porque cambié la estructura de tablas unas cuantas veces, pero te lo copio de todas formas porque capaz algo de esto te es útil:
+Cómo se guardan en el front (sin complicar)
+Opción recomendada (para MVP)
+?? Guardado en memoria + persistencia en localStorage
+Así si el usuario:
+vuelve para atrás
+refresca la página
+cierra y vuelve
+no pierde todo.
+Estructura en el front (un solo objeto)
+El front maneja un objeto tipo:
+wizard = {
+  fecha_base,
+  lugar_base,
+  direccion_base,
+  latitud_base,
+  longitud_base,
+  tramos: [],
+  accesos: [],
+  relaciones: []
+}
+Cada vez que agrega un tramo:
+lo pushea al array tramos
+lo guarda en state
+(opcional) lo serializa en localStorage
+Lo mismo con accesos.
+
+¿Cómo permite “ir y volver” en el wizard?
+Porque los steps leen del mismo estado.
+Step 1 (Tramos)
+Muestra wizard.tramos
+Botón “Agregar tramo” abre modal/form
+Al guardar:
+wizard.tramos = [...wizard.tramos, nuevoTramo]
+Step 2 (Accesos)
+Muestra wizard.accesos
+Agregar acceso ? push al array
+Step 3 (Relaciones)
+Dibuja la matriz en base a:
+wizard.tramos
+wizard.accesos
+Y los checks salen de wizard.relaciones
+Si vuelve para atrás:
+nada se pierde porque todo sigue en el estado.
+
+¿Y cómo se maneja “orden”?
+En el front lo más simple es:
+El orden se calcula automáticamente:
+orden = tramos.length + 1
+orden = accesos.length + 1
+Si borra o reordena, recalculás.
+
+Recomendación práctica (para evitar dolores)
+? Guardar el wizard en localStorage con clave por evento:
+eventia:wizardEstructura:{idEvento}
+Ejemplo:
+eventia:wizardEstructura:10
+Entonces:
+si el usuario sale sin guardar, cuando vuelve recuperás estado
+cuando guardó todo OK, borrás esa clave
+
+¿Cuándo se manda al backend?
+Solo al final:
+? Botón: Guardar estructura
+Hace:
+POST /eventos_plantillas/CrearEstructuraManual?idEvento=10
+Body = wizard completo.
+
+Validaciones por step (para que no se rompa)
+Step tramos
+debe haber al menos 1 tramo para pasar al step accesos
+Step accesos
+debe haber al menos 1 acceso
+debe existir 1 acceso default
+Step relaciones
+cada acceso debe tener al menos 1 relación
+(opcional) warning si hay tramos sin uso o accesos vacíos
+
+Te dejo el “contrato” completo para que el front lo implemente sin pensar: estructura del state, actions tipo Redux (aunque usen Zustand/Context/Redux da igual), validaciones por step y el payload final que se manda al backend.
+
+1) State único del wizard (por evento)
+Clave en localStorage:
+eventia:wizardEstructura:{idEvento}
+Estructura (TypeScript-friendly):
+type WizardEstructuraState = {
+  idEvento: number;
+
+  // base común (para no pedir ubicación/fecha en cada tramo)
+  fecha_base: string;        // ISO DateTimeOffset
+  lugar_base: string;
+  direccion_base: string;
+  latitud_base?: number | null;
+  longitud_base?: number | null;
+
+  registrar_solicitud: boolean;   // default true
+  motivo: "NO_ENCONTRO_PLANTILLA" | "NINGUNA_ME_SIRVIO";
+  detalle?: string | null;
+  id_plantilla_referida?: number | null;
+
+  tramos: TramoDraft[];
+  accesos: AccesoDraft[];
+  relaciones: RelacionDraft[]; // par acceso_orden + tramo_orden
+
+  // control UX
+  step: 1 | 2 | 3;
+  last_saved_at?: string | null;
+};
+
+type TramoDraft = {
+  orden: number;                 // 1..n
+  id_tramo_tipo?: number | null; // smallint
+  nombre: string;
+  leyenda_visible?: string | null;
+  activo: boolean;               // default true
+};
+
+type AccesoDraft = {
+  orden: number;                 // 1..n
+  nombre: string;
+  mensaje_rsvp?: string | null;
+  es_default: boolean;           // exactamente 1 true
+  activo: boolean;               // default true
+};
+
+type RelacionDraft = {
+  acceso_orden: number;
+  tramo_orden: number;
+};
+?? Nota: todo se guarda en memoria del front + localStorage.
+El backend se llama solo al final.
+
+2) Actions (Redux-style)
+Estas acciones cubren el 100% del wizard (agregar/editar/borrar, reordenar, relacionar).
+Wizard base
+INIT_WIZARD_FROM_EVENT(idEvento, defaults)
+LOAD_WIZARD_FROM_STORAGE(idEvento)
+RESET_WIZARD(idEvento) (borra state + storage)
+SET_STEP(step)
+SET_BASE_FIELDS({ fecha_base, lugar_base, direccion_base, latitud_base, longitud_base })
+SET_SOLICITUD_META({ motivo, detalle, id_plantilla_referida, registrar_solicitud })
+Tramos
+ADD_TRAMO(tramoSinOrden) ? asigna orden = tramos.length + 1
+UPDATE_TRAMO(orden, patch)
+DELETE_TRAMO(orden) ? reordenar 1..n y limpiar relaciones que apunten al tramo eliminado
+REORDER_TRAMOS(fromOrden, toOrden) ? recalcula orden + actualiza relaciones
+Accesos
+ADD_ACCESO(accesoSinOrden) ? asigna orden = accesos.length + 1
+UPDATE_ACCESO(orden, patch)
+DELETE_ACCESO(orden) ? reordenar 1..n y limpiar relaciones que apunten al acceso eliminado
+REORDER_ACCESOS(fromOrden, toOrden)
+SET_DEFAULT_ACCESO(orden) ? pone ese es_default=true y el resto false
+Relaciones (matriz)
+TOGGLE_RELACION(acceso_orden, tramo_orden, checked)
+si checked=true ? agrega si no existe
+si checked=false ? elimina si existe
+SET_ACCESO_INCLUYE_TODOS(acceso_orden, checked)
+checked=true ? crea relaciones con todos los tramos
+checked=false ? elimina todas las relaciones de ese acceso
+CLEAR_RELACIONES() (si querés reset)
+Persistencia
+PERSIST_TO_STORAGE() (se llama en cada action o con debounce)
+MARK_SAVED(timestamp) (cuando vuelve OK del backend)
+
+3) Validaciones por step (bloquean “Siguiente”)
+Step 1 — Tramos
+? Reglas:
+tramos.length >= 1
+cada tramo:
+nombre requerido (1..80)
+leyenda_visible opcional (<=200)
+id_tramo_tipo opcional (pero recomendado)
+Step 2 — Accesos
+? Reglas:
+accesos.length >= 1
+exactamente 1 acceso con es_default=true
+cada acceso:
+nombre requerido (1..80)
+mensaje opcional
+Step 3 — Relaciones
+? Reglas:
+para cada acceso activo: debe tener al menos 1 relación
+toda relación debe apuntar a un orden existente de acceso y tramo
+Warnings (no bloqueantes):
+hay tramos sin ningún acceso
+hay accesos con pocos tramos (raro pero permitido)
+
+4) Payload final al backend (1 solo POST)
+Endpoint:
+POST /eventos_plantillas/CrearEstructuraManual?idEvento=10
+Body: es prácticamente el state, solo que sin idEvento, step, etc.
+Ejemplo:
+{
+  "borrar_existente": true,
+
+  "fecha_base": "2026-07-20T17:00:00-03:00",
+  "lugar_base": "Salón Piruetas",
+  "direccion_base": "Av. X 1234, Mar del Plata",
+  "latitud_base": -38.0055,
+  "longitud_base": -57.5426,
+
+  "registrar_solicitud": true,
+  "motivo": "NINGUNA_ME_SIRVIO",
+  "detalle": null,
+  "id_plantilla_referida": null,
+
+  "tramos": [
+    { "id_tramo_tipo": 5, "nombre": "Cumple", "leyenda_visible": "De 17 a 20 hs", "orden": 1, "activo": true }
+  ],
+  "accesos": [
+    { "nombre": "General", "mensaje_rsvp": "¡Te esperamos! ??", "orden": 1, "es_default": true, "activo": true }
+  ],
+  "relaciones": [
+    { "acceso_orden": 1, "tramo_orden": 1 }
+  ]
+}
+
+5) Persistencia en localStorage (regla simple)
+Guardar automáticamente cada vez que cambia el state (debounce 300–800ms)
+Al entrar al wizard:
+si existe storage para ese idEvento ? ofrecer “Continuar donde lo dejaste”
+Al guardar en backend OK:
+borrar storage
+
+
