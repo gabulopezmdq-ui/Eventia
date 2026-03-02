@@ -38,6 +38,14 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("id_tipo_evento")]
         public int IdTipoEvento { get; set; }
 
+        // NUEVO: código opcional (útil para íconos en front)
+        [JsonPropertyName("tipo_evento_codigo")]
+        public string? TipoEventoCodigo { get; set; }
+
+        // NUEVO: descripción traducida
+        [JsonPropertyName("tipo_evento_descripcion")]
+        public string? TipoEventoDescripcion { get; set; }
+
         [JsonPropertyName("id_idioma")]
         public short IdIdioma { get; set; }
 
