@@ -4,9 +4,8 @@ using API.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
-
+using System.Threading.Tasks;
 
 namespace API.Services
 {
@@ -14,14 +13,71 @@ namespace API.Services
     {
         private readonly DataContext _context;
 
+        // Debe coincidir con ef_param_traducciones.entidad
+        private const string ENT_TIPO_EVENTO = "TIPO_EVENTO";
+
         public EventosService(DataContext context)
         {
             _context = context;
         }
 
+        // =========================================================
+        // Query base enriquecido: eventos + tipo_evento + traducción
+        // =========================================================
+        private IQueryable<EventoResponse> QueryEventosConTipo()
+        {
+            // OJO: tu ef_tipos_evento tiene: id_tipo_evento, activo, codigo
+            // y ef_param_traducciones: entidad, id_item (bigint), id_idioma, texto, activo
+            var q =
+                from ev in _context.Set<ef_eventos>()
+                join te in _context.Set<ef_tipos_evento>() on ev.id_tipo_evento equals te.id_tipo_evento
+
+                join tr in _context.Set<ef_param_traducciones>()
+                    on new
+                    {
+                        entidad = ENT_TIPO_EVENTO,
+                        id_item = (long)ev.id_tipo_evento,
+                        id_idioma = ev.id_idioma,
+                        activo = true
+                    }
+                    equals new
+                    {
+                        entidad = tr.entidad,
+                        id_item = tr.id_item,
+                        id_idioma = tr.id_idioma,
+                        activo = tr.activo
+                    }
+                    into trj
+                from tr in trj.DefaultIfEmpty()
+
+                select new EventoResponse
+                {
+                    IdEvento = ev.id_evento,
+                    IdTipoEvento = ev.id_tipo_evento,
+
+                    // Siempre va a venir porque tu SQL confirma que no es null
+                    TipoEventoCodigo = te.codigo,
+
+                    // Traducción o fallback al código
+                    TipoEventoDescripcion =
+                        (tr != null && !string.IsNullOrWhiteSpace(tr.texto))
+                            ? tr.texto
+                            : te.codigo,
+
+                    IdIdioma = ev.id_idioma,
+                    AnfitrionesTexto = ev.anfitriones_texto,
+                    Estado = ev.estado,
+                    FechaAlta = ev.fecha_alta
+                };
+
+            return q;
+        }
+
+        // =========================
+        // CREAR EVENTO
+        // =========================
         public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
         {
-            // Validaciones base
             if (req.IdTipoEvento <= 0)
                 throw new InvalidOperationException("Tipo de evento obligatorio.");
 
@@ -31,11 +87,9 @@ namespace API.Services
             if (req.AnfitrionesTexto.Length > 500)
                 throw new InvalidOperationException("Anfitriones supera 500 caracteres.");
 
-
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
-            // Regla: 1 borrador por usuario (Fase 1) 
             bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu =>
                     eu.id_usuario == idUsuario &&
@@ -45,7 +99,6 @@ namespace API.Services
             if (yaTieneBorrador)
                 throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
 
-            // Chequeos FK 
             bool existeTipo = await _context.Set<ef_tipos_evento>()
                 .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
 
@@ -69,13 +122,11 @@ namespace API.Services
                     throw new InvalidOperationException("El dress code no existe o está inactivo.");
             }
 
-            // Obtener id_rol para EVENT_OWNER
             short idRolOwner = await _context.Set<ef_roles>()
                 .Where(r => r.codigo == RolesCodigo.EventOwner && r.activo == true)
                 .Select(r => r.id_rol)
                 .SingleAsync();
 
-            // Transacción: crear evento + vincular owner + histórico estado
             await using var tx = await _context.Database.BeginTransactionAsync();
 
             var now = DateTimeOffset.UtcNow;
@@ -87,7 +138,7 @@ namespace API.Services
                 id_cliente = null,
 
                 anfitriones_texto = req.AnfitrionesTexto.Trim(),
-          
+
                 id_dress_code = req.IdDressCode,
                 dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim(),
 
@@ -105,106 +156,102 @@ namespace API.Services
             };
 
             _context.Set<ef_eventos>().Add(evento);
-            await _context.SaveChangesAsync(); // acá ya tenés evento.id_evento
+            await _context.SaveChangesAsync();
 
-            var linkOwner = new ef_evento_usuarios
+            _context.Set<ef_evento_usuarios>().Add(new ef_evento_usuarios
             {
                 id_evento = evento.id_evento,
                 id_usuario = idUsuario,
                 id_rol = idRolOwner,
                 fecha_alta = now,
                 activo = true
-            };
+            });
 
-            var hist = new ef_evento_estados_hist
+            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
             {
                 id_evento = evento.id_evento,
                 id_usuario = idUsuario,
                 fecha = now,
                 estado = EventoEstado.Borrador,
                 observaciones = null
-            };
+            });
 
-            _context.Set<ef_evento_usuarios>().Add(linkOwner);
-            _context.Set<ef_evento_estados_hist>().Add(hist);
-            
             await _context.SaveChangesAsync();
-
             await tx.CommitAsync();
 
-            return Map(evento);
+            // DEVOLVER ENRIQUECIDO
+            return await GetEventoMioAsync(idUsuario, evento.id_evento);
         }
 
+        // =========================
+        // MIS EVENTOS
+        // =========================
         public async Task<List<EventoResponse>> MisEventosAsync(long idUsuario)
         {
-            // Solo los eventos donde el usuario tiene relación activa en ef_evento_usuarios :contentReference[oaicite:5]{index=5}
-            var query =
+            // seguridad por pertenencia + proyección enriquecida
+            var q =
                 from eu in _context.Set<ef_evento_usuarios>()
-                join ev in _context.Set<ef_eventos>() on eu.id_evento equals ev.id_evento
+                join evDto in QueryEventosConTipo() on eu.id_evento equals evDto.IdEvento
                 where eu.id_usuario == idUsuario && eu.activo == true
-                select ev;
+                select evDto;
 
-            var eventos = await query.AsNoTracking().ToListAsync();
-            return eventos.Select(Map).ToList();
+            return await q.AsNoTracking().ToListAsync();
         }
 
+        // =========================
+        // GET EVENTO MÍO
+        // =========================
         public async Task<EventoResponse> GetEventoMioAsync(long idUsuario, long idEvento)
         {
-            // Chequeo de seguridad por pertenencia :contentReference[oaicite:6]{index=6}
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);
 
             if (!pertenece)
                 throw new UnauthorizedAccessException("No tienes acceso a este evento.");
 
-            var ev = await _context.Set<ef_eventos>()
+            var dto = await QueryEventosConTipo()
                 .AsNoTracking()
-                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+                .SingleOrDefaultAsync(e => e.IdEvento == idEvento);
 
-            if (ev == null)
+            if (dto == null)
                 throw new KeyNotFoundException("Evento inexistente.");
 
-            return Map(ev);
+            return dto;
         }
 
-        private static EventoResponse Map(ef_eventos e) => new EventoResponse
-        {
-            IdEvento = e.id_evento,
-            IdTipoEvento = e.id_tipo_evento,
-            IdIdioma = e.id_idioma,
-            AnfitrionesTexto = e.anfitriones_texto,
-            Estado = e.estado,
-            FechaAlta = e.fecha_alta
-        };
-
-
-
+        // =========================
+        // ADMIN: LISTAR
+        // =========================
         public async Task<List<EventoResponse>> AdminListarEventosAsync(string? estado = null)
         {
-            var q = _context.Set<ef_eventos>().AsQueryable();
+            var q = QueryEventosConTipo();
 
             if (!string.IsNullOrWhiteSpace(estado))
-                q = q.Where(e => e.estado == estado);
+                q = q.Where(e => e.Estado == estado);
 
-            var eventos = await q.AsNoTracking()
-                .OrderByDescending(e => e.fecha_alta)
+            return await q.AsNoTracking()
+                .OrderByDescending(e => e.FechaAlta)
                 .ToListAsync();
-
-            return eventos.Select(Map).ToList();
         }
 
+        // =========================
+        // ADMIN: GET
+        // =========================
         public async Task<EventoResponse> AdminGetEventoAsync(long idEvento)
         {
-            var ev = await _context.Set<ef_eventos>()
+            var dto = await QueryEventosConTipo()
                 .AsNoTracking()
-                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+                .SingleOrDefaultAsync(e => e.IdEvento == idEvento);
 
-            if (ev == null)
+            if (dto == null)
                 throw new KeyNotFoundException("Evento inexistente.");
 
-            return Map(ev);
+            return dto;
         }
 
+        // =========================
+        // ACTIVAR (ADMIN)
+        // =========================
         public async Task ActivarEventoAdminAsync(long idEvento, long idUsuarioAdmin)
         {
             var ev = await _context.Set<ef_eventos>()
@@ -218,28 +265,26 @@ namespace API.Services
 
             var now = DateTimeOffset.UtcNow;
 
-            // 1. Actualiza estado del evento
             ev.estado = EventoEstado.Activo;
             ev.fecha_modif = now;
 
-            // 2. Inserta histórico
-            var hist = new ef_evento_estados_hist
+            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
             {
                 id_evento = idEvento,
                 id_usuario = idUsuarioAdmin,
                 fecha = now,
                 estado = EventoEstado.Activo,
                 observaciones = "Activación manual por pago"
-            };
-
-            _context.Set<ef_evento_estados_hist>().Add(hist);
+            });
 
             await _context.SaveChangesAsync();
         }
 
+        // =========================
+        // UPDATE GENERAL
+        // =========================
         public async Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req)
         {
-            // seguridad: pertenece?
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);
 
@@ -252,7 +297,6 @@ namespace API.Services
             if (ev == null)
                 throw new KeyNotFoundException("Evento inexistente.");
 
-            // Reglas mínimas
             if (req.AnfitrionesTexto != null)
             {
                 if (string.IsNullOrWhiteSpace(req.AnfitrionesTexto))
@@ -280,7 +324,6 @@ namespace API.Services
             }
             else if (req.IdDressCode == null && req.DressCodeDescripcion != null)
             {
-                // Si explícitamente te mandan null, limpiamos ambos
                 ev.id_dress_code = null;
                 ev.dress_code_descripcion = null;
             }
@@ -298,8 +341,8 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
 
-            return Map(ev);
+            // devolver enriquecido
+            return await GetEventoMioAsync(idUsuario, idEvento);
         }
-
     }
 }
