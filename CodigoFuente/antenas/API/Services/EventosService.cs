@@ -15,6 +15,7 @@ namespace API.Services
 
         // Debe coincidir con ef_param_traducciones.entidad
         private const string ENT_TIPO_EVENTO = "TIPO_EVENTO";
+        private const string ENT_DRESS_CODE = "DRESS_CODE";
 
         public EventosService(DataContext context)
         {
@@ -50,24 +51,50 @@ namespace API.Services
                     into trj
                 from tr in trj.DefaultIfEmpty()
 
+                    // DRESS CODE (LEFT)
+                join dc in _context.Set<ef_dress_code>()
+                    on ev.id_dress_code equals dc.id_dress_code into dcJ
+                from dc in dcJ.DefaultIfEmpty()
+
+                    // TRADUCCIÓN DRESS CODE (LEFT, depende de dc)
+                join trDc in _context.Set<ef_param_traducciones>()
+                    on new
+                    {
+                        entidad = ENT_DRESS_CODE,
+                        id_item = (long?)dc.id_dress_code,
+                        id_idioma = (short?)ev.id_idioma,
+                        activo = (bool?)true
+                    }
+                    equals new
+                    {
+                        entidad = trDc.entidad,
+                        id_item = (long?)trDc.id_item,
+                        id_idioma = (short?)trDc.id_idioma,
+                        activo = (bool?)trDc.activo
+                    }
+                    into trDcJ
+                from trDc in trDcJ.DefaultIfEmpty()
+
                 select new EventoResponse
                 {
                     IdEvento = ev.id_evento,
                     IdTipoEvento = ev.id_tipo_evento,
-
-                    // Siempre va a venir porque tu SQL confirma que no es null
                     TipoEventoCodigo = te.codigo,
-
-                    // Traducción o fallback al código
-                    TipoEventoDescripcion =
-                        (tr != null && !string.IsNullOrWhiteSpace(tr.texto))
-                            ? tr.texto
-                            : te.codigo,
 
                     IdIdioma = ev.id_idioma,
                     AnfitrionesTexto = ev.anfitriones_texto,
                     Estado = ev.estado,
-                    FechaAlta = ev.fecha_alta
+                    FechaAlta = ev.fecha_alta,
+
+                    IdDressCode = ev.id_dress_code,
+                    DressCodeDescripcion = ev.dress_code_descripcion,
+                    DressCodeTexto =
+                        (trDc != null && !string.IsNullOrWhiteSpace(trDc.texto))
+                            ? trDc.texto
+                            : (dc != null ? dc.codigo : null),
+
+                    Saludo = ev.saludo,
+                    MensajeBienvenida = ev.mensaje_bienvenida
                 };
 
             return q;

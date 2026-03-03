@@ -57,5 +57,19 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("fecha_alta")]
         public DateTimeOffset FechaAlta { get; set; }
+        [JsonPropertyName("id_dress_code")]
+        public short? IdDressCode { get; set; }
+
+        [JsonPropertyName("dress_code_descripcion")]
+        public string? DressCodeDescripcion { get; set; }
+
+        [JsonPropertyName("dress_code_texto")]
+        public string? DressCodeTexto { get; set; }
+
+        [JsonPropertyName("saludo")]
+        public string? Saludo { get; set; }
+
+        [JsonPropertyName("mensaje_bienvenida")]
+        public string? MensajeBienvenida { get; set; }
     }
 }

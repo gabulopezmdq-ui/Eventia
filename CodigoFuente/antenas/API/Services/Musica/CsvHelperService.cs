@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace API.Services
+namespace API.Services.Musica
 {
     public static class CsvHelper
     {
@@ -10,7 +10,7 @@ namespace API.Services
         {
             if (string.IsNullOrEmpty(value)) return "";
             var v = value.Replace("\"", "\"\"");
-            return (v.Contains(",") || v.Contains("\n") || v.Contains("\r")) ? $"\"{v}\"" : v;
+            return v.Contains(",") || v.Contains("\n") || v.Contains("\r") ? $"\"{v}\"" : v;
         }
 
         public static byte[] ToCsvBytes(IEnumerable<string[]> rows)
