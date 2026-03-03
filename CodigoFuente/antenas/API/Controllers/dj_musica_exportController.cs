@@ -1,5 +1,5 @@
 ﻿using API.DataSchema;
-using API.Services;
+using API.Services.Musica;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

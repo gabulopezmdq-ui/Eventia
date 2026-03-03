@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace API.Services
+namespace API.Services.Musica
 {
     public static class TokenHelper
     {

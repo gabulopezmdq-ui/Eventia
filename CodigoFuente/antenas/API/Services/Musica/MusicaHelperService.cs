@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace API.Services
+namespace API.Services.Musica
 {
     public class MusicaHelperService
     {

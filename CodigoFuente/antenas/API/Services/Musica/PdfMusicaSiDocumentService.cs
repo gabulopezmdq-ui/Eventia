@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace API.Services
+namespace API.Services.Musica
 {
     public class PdfMusicaSiDocument : IDocument
     {

@@ -66,6 +66,7 @@ namespace API.DataSchema
         public DbSet<ef_retiros> ef_retiros { get; set; }
         public DbSet<ef_param_restricciones_alimentarias> ef_param_restricciones_alimentarias { get; set; }
         public DbSet<ef_rsvp_integrante_restricciones> ef_rsvp_integrante_restricciones { get; set; }
+        public DbSet<ef_evento_musica_sugerencias_estado> ef_evento_musica_sugerencias_estado { get; set; }
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -149,6 +150,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_invitado_musica_votosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_musica_bloqueosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_linksConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_musica_sugerencias_estadoConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_entidadesConfiguration());
 
 
@@ -164,6 +166,8 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_rsvp_integrante_restriccionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_acceso_linksConfiguration());
             modelBuilder.ApplyConfiguration(new ef_rsvp_gruposConfiguration());
+
+
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_TiposEstablecimientosConfiguration());
