@@ -33,10 +33,10 @@ namespace API.Controllers
             return Ok(_serviceGenerico.GetAll());
         }
 
-        [HttpGet("GetByActivo")]
-        public async Task<ActionResult<IEnumerable<ef_idiomas>>> GetByVigente([FromQuery] string activo = null)
+        [HttpGet("GetByActivoBool")]
+        public async Task<ActionResult<IEnumerable<ef_idiomas>>> GetByActivoBool([FromQuery] bool? activo = null)
         {
-            var result = await _serviceGenerico.GetByVigente(activo);
+            var result = await _serviceGenerico.GetByActivo(activo);
             return Ok(result);
         }
 
