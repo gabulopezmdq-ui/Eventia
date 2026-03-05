@@ -138,6 +138,7 @@ builder.Services.AddScoped<IAutorizacionesService, AutorizacionesService>();
 builder.Services.AddScoped<IQrService, QrService>();
 builder.Services.AddScoped<IPorteroService, PorteroService>();
 builder.Services.AddScoped<IAlimentacionService, AlimentacionService>();
+builder.Services.AddScoped<IRestriccionesService, RestriccionesService>();
 
 
 // Registro de repositorios
