@@ -32,6 +32,7 @@ namespace API.DataSchema
         public string modo_asistencia { get; set; } = null!;         // char(1) NOT NULL
         public bool es_publico { get; set; }                         // bool NOT NULL
         public long? id_acceso_default { get; set; }
+        public long? id_plan { get; set; }
 
         public string[] UniqueProperties => System.Array.Empty<string>();
 
