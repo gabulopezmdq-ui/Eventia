@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
     ChevronLeft, Calendar, MapPin, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
-    ArrowRight, MessageSquare, Tag, Globe, CheckCircle2
+    ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
+    Link as LinkIcon
 } from 'lucide-react';
 
 import {
@@ -200,14 +201,23 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                                 <h3 className="text-[10px] font-black text-muted uppercase tracking-widest">Próximos Tramos</h3>
                                 <div className="space-y-2">
                                     {estructura?.tramos.slice(0, 3).map((tramo, idx) => (
-                                        <div key={tramo.id_tramo} className="flex items-center justify-between p-3 rounded-xl bg-background/50 border border-card-border/50 text-sm">
+                                        <div key={tramo.id_tramo} className="flex items-center justify-between p-3 rounded-xl bg-background/50 border border-card-border/50 text-sm gap-4">
                                             <div className="flex items-center gap-3">
                                                 <span className="text-muted/50 font-mono text-xs">{idx + 1}.</span>
-                                                <span className="font-medium text-foreground">{tramo.nombre}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-foreground">{tramo.nombre}</span>
+                                                    <span className="text-muted text-xs">
+                                                        {tramo.fecha_hora_inicio ? new Date(tramo.fecha_hora_inicio).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '--:--'} hs
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <span className="text-muted text-xs">
-                                                {tramo.fecha_hora_inicio ? new Date(tramo.fecha_hora_inicio).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '--:--'} hs
-                                            </span>
+                                            <button
+                                                onClick={() => alert('Próximamente: Link masivo para ' + tramo.nombre)}
+                                                className="flex-shrink-0 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-500/20 hover:text-indigo-300 transition-all"
+                                                title="Link Invitación Masiva"
+                                            >
+                                                <LinkIcon className="w-3 h-3" /> Masivo
+                                            </button>
                                         </div>
                                     ))}
                                     {(!estructura || estructura.tramos.length === 0) && (
@@ -293,13 +303,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                             <Users className="w-5 h-5" />
                         </div>
                         <div>
-                            <h4 className="font-bold text-foreground text-sm">Próximo paso: Invitados</h4>
+                            <h4 className="font-bold text-foreground text-sm">Gestión de Invitados</h4>
                             <p className="text-muted text-xs mt-1 leading-relaxed">
-                                Cuando termines de configurar la estructura, podrás empezar a cargar tus invitados y asignarles un tipo de acceso.
+                                Administrá la lista de invitados, supervisá sus estados y generá invitaciones personalizadas (1-a-1).
                             </p>
                         </div>
-                        <button className="w-full py-3 rounded-xl bg-white/5 border border-indigo-500/30 text-indigo-400 font-bold text-xs hover:bg-white/10 transition-all cursor-not-allowed">
-                            Ir a Invitados (Próximamente)
+                        <button
+                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/invitados`)}
+                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 transition-all"
+                        >
+                            <Users className="w-3.5 h-3.5" />
+                            Ver Invitados
                         </button>
                     </div>
 
