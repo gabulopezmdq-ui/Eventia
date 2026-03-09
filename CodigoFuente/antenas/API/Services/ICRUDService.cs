@@ -19,6 +19,7 @@ namespace API.Services
         Task Add(T genericClass);
 
         Task Delete(int id);
+        //Task DeleteLong(long id);
 
         Task<T> Update(T genericClass);
         //Task<bool> Update(T entityToUpdate);

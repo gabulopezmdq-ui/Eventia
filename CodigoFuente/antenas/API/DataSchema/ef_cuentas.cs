@@ -15,6 +15,7 @@ namespace API.DataSchema
 
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
+        public long? id_plan { get; set; }
 
         public string[] UniqueProperties => new[] { "nombre_cuenta" };
 
