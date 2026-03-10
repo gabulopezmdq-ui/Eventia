@@ -125,22 +125,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                             {isBorrador ? 'Borrador' : 'Activo'}
                         </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted">
-                        <div className="flex items-center gap-1.5">
-                            <Calendar className="w-4 h-4" />
-                            <span>{eventDate.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <Clock className="w-4 h-4" />
-                            <span>{eventDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs</span>
-                        </div>
-                        {event.lugar && (
-                            <div className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4" />
-                                <span>{event.lugar}</span>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">

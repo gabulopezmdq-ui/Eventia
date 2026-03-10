@@ -45,7 +45,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
             // Assume the response returns an array and we take the first item
             if (response && response.length > 0) {
                 const baseUrl = window.location.origin;
-                setGeneratedLink(`${baseUrl}/rsvp/${response[0].rsvp_token}`);
+                setGeneratedLink(`${baseUrl}/rsvp/${response[0].rsvpToken}`);
             } else {
                 throw new Error("El backend no devolvió el token de la invitación");
             }
