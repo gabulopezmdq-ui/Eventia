@@ -67,6 +67,18 @@ namespace API.DataSchema
         public DbSet<ef_param_restricciones_alimentarias> ef_param_restricciones_alimentarias { get; set; }
         public DbSet<ef_rsvp_integrante_restricciones> ef_rsvp_integrante_restricciones { get; set; }
         public DbSet<ef_evento_musica_sugerencias_estado> ef_evento_musica_sugerencias_estado { get; set; }
+        public DbSet<ef_planes> ef_planes { get; set; }
+        public DbSet<ef_plan_features> ef_plan_features { get; set; }
+        public DbSet<ef_plan_limites> ef_plan_limites { get; set; }
+
+        public DbSet<ef_addons> ef_addons { get; set; }
+        public DbSet<ef_addon_features> ef_addon_features { get; set; }
+        public DbSet<ef_scope_addons> ef_scope_addons { get; set; }
+
+        public DbSet<ef_precios> ef_precios { get; set; }
+        public DbSet<ef_suscripciones> ef_suscripciones { get; set; }
+        public DbSet<ef_pagos> ef_pagos { get; set; }
+        public DbSet<ef_webhook_eventos> ef_webhook_eventos { get; set; }
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -166,6 +178,19 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_rsvp_integrante_restriccionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_acceso_linksConfiguration());
             modelBuilder.ApplyConfiguration(new ef_rsvp_gruposConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_planesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_plan_featuresConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_plan_limitesConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_addonsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_addon_featuresConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_scope_addonsConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_preciosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_suscripcionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_pagosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_webhook_eventosConfiguration());
 
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());

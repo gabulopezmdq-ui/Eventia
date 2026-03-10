@@ -35,6 +35,12 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasIndex(x => x.nombre_cuenta)
                    .IsUnique()
                    .HasDatabaseName("ux_ef_cuentas_nombre");
+            
+            builder.Property(x => x.id_plan)
+                    .IsRequired(false);
+
+            builder.HasIndex(x => x.id_plan)
+                   .HasDatabaseName("ix_ef_cuentas_id_plan");
         }
     }
 }

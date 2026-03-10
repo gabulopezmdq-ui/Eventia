@@ -1,6 +1,7 @@
 {
   "format": 1,
   "restore": {
+<<<<<<< HEAD
     "E:\\JUANCHI\\Portfolio\\EventiaAPP\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj": {}
   },
   "projects": {
@@ -12,12 +13,29 @@
         "projectPath": "E:\\JUANCHI\\Portfolio\\EventiaAPP\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
         "packagesPath": "C:\\Users\\Juanchi\\.nuget\\packages\\",
         "outputPath": "E:\\JUANCHI\\Portfolio\\EventiaAPP\\Eventia\\CodigoFuente\\antenas\\API\\obj\\",
+=======
+    "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj": {}
+  },
+  "projects": {
+    "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
+        "projectName": "API",
+        "projectPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
+        "packagesPath": "C:\\Users\\gabu_\\.nuget\\packages\\",
+        "outputPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\obj\\",
+>>>>>>> e7ec571b23bb50cda91eb1670582125d0b258316
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
+<<<<<<< HEAD
           "C:\\Users\\Juanchi\\AppData\\Roaming\\NuGet\\NuGet.Config",
+=======
+          "C:\\Users\\gabu_\\AppData\\Roaming\\NuGet\\NuGet.Config",
+>>>>>>> e7ec571b23bb50cda91eb1670582125d0b258316
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -194,7 +212,11 @@
               "privateAssets": "all"
             }
           },
+<<<<<<< HEAD
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json"
+=======
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+>>>>>>> e7ec571b23bb50cda91eb1670582125d0b258316
         }
       }
     }

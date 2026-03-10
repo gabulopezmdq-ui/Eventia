@@ -45,19 +45,18 @@ namespace API.Services
 
             if (invitadoPrecargado != null)
             {
-                // Caso 1: invitado precargado
+                // Caso invitado precargado
                 idEvento = invitadoPrecargado.id_evento;
                 responsable = invitadoPrecargado;
 
-                // Verificar que no haya confirmado ya
                 if (responsable.rsvp_estado != "P")
                     throw new Exception("Este invitado ya ha confirmado previamente.");
             }
             else
             {
-                // Caso 2: link genérico
+                // Caso link genérico
                 idEvento = accesoLink.acceso.id_evento;
-                // Crear nuevo responsable (sin datos precargados)
+
                 responsable = new ef_invitados
                 {
                     id_evento = idEvento,
@@ -69,19 +68,22 @@ namespace API.Services
                     fecha_rsvp = DateTimeOffset.UtcNow,
                     fecha_alta = DateTimeOffset.UtcNow,
                     activo = true,
-                    rsvp_token = TokenUtility.Generate(64), // nuevo token personal para futuras gestiones
+                    rsvp_token = TokenUtility.Generate(64),
                     qr_token = TokenUtility.Generate(64),
                     id_acceso = accesoLink.id_acceso
                 };
+
+                _context.ef_invitados.Add(responsable);
             }
 
-            // 4. Obtener el evento (necesario para valores por defecto en caso precargado)
+            // 4. Obtener evento
             var evento = await _context.ef_eventos
                 .FirstOrDefaultAsync(e => e.id_evento == idEvento);
+
             if (evento == null)
                 throw new Exception("Evento no encontrado.");
 
-            // 5. Determinar id_acceso e id_acceso_link para el grupo
+            // 5. Determinar acceso y link
             long idAcceso;
             long idAccesoLink;
             int? maxPersonasTotal = null;
@@ -89,7 +91,6 @@ namespace API.Services
 
             if (accesoLink != null)
             {
-                // Caso link genérico: usamos los datos del link
                 idAcceso = accesoLink.id_acceso;
                 idAccesoLink = accesoLink.id_acceso_link;
                 maxPersonasTotal = accesoLink.max_personas_total;
@@ -97,8 +98,6 @@ namespace API.Services
             }
             else
             {
-                // Caso invitado precargado: necesitamos obtener acceso y link por defecto
-                // Primero el acceso
                 if (responsable.id_acceso.HasValue)
                 {
                     idAcceso = responsable.id_acceso.Value;
@@ -109,36 +108,40 @@ namespace API.Services
                 }
                 else
                 {
-                    // Buscar cualquier acceso activo del evento
                     var accesoDefault = await _context.ef_evento_accesos
                         .Where(a => a.id_evento == idEvento && a.activo)
                         .OrderBy(a => a.orden)
                         .FirstOrDefaultAsync();
+
                     if (accesoDefault == null)
                         throw new Exception("El evento no tiene accesos configurados.");
+
                     idAcceso = accesoDefault.id_acceso;
                 }
 
-                // Luego el link activo para ese acceso
                 var linkDefault = await _context.ef_evento_acceso_links
                     .Where(l => l.id_acceso == idAcceso && l.activo)
                     .OrderBy(l => l.fecha_alta)
                     .FirstOrDefaultAsync();
+
                 if (linkDefault == null)
                     throw new Exception("No hay link de acceso activo para el acceso seleccionado.");
+
                 idAccesoLink = linkDefault.id_acceso_link;
                 maxPersonasTotal = linkDefault.max_personas_total;
                 maxAdultos = linkDefault.max_adultos;
             }
 
-            // 6. Crear grupo (con valores ya resueltos)
-            int total = 1 + (dto.Ninos?.Count ?? 0);
+            // 6. Calcular cantidad total
+            int total = 1 + (dto.Acompanantes?.Count ?? 0);
+
+            // 7. Crear grupo
             var grupo = new ef_rsvp_grupos
             {
                 id_evento = idEvento,
                 id_acceso = idAcceso,
                 id_acceso_link = idAccesoLink,
-                max_personas_total = maxPersonasTotal ?? 100, // valor por defecto si no hay
+                max_personas_total = maxPersonasTotal ?? 100,
                 max_adultos = maxAdultos,
                 cantidad_total = total,
                 rsvp_estado = dto.Asiste ? "Y" : "N",
@@ -148,7 +151,7 @@ namespace API.Services
                 activo = true
             };
 
-            // 7. Asignar responsable al grupo
+            // 8. Responsable del grupo
             grupo.integrantes.Add(new ef_rsvp_grupo_integrantes
             {
                 invitado = responsable,
@@ -157,47 +160,43 @@ namespace API.Services
                 orden = 1
             });
 
-            // 8. Agregar niños
+            // 9. Acompañantes
             int orden = 2;
-            var ninos = new List<ef_invitados>();
-            if (dto.Ninos != null)
+
+            if (dto.Acompanantes != null && dto.Acompanantes.Any())
             {
-                foreach (var n in dto.Ninos)
+                foreach (var a in dto.Acompanantes)
                 {
-                    var nino = new ef_invitados
+                    var invitadoAcompanante = new ef_invitados
                     {
                         id_evento = idEvento,
-                        nombre = n.Nombre.Trim(),
-                        apellido = n.Apellido.Trim(),
-                        rsvp_estado = dto.Asiste ? "Y" : "N",
+                        nombre = a.Nombre,
+                        apellido = a.Apellido,
                         fecha_alta = DateTimeOffset.UtcNow,
-                        activo = true,
-                        rsvp_token = TokenUtility.Generate(64),
-                        qr_token = TokenUtility.Generate(64),
-                        id_acceso = idAcceso // usamos el mismo acceso que el grupo
+                        activo = true
                     };
+
                     grupo.integrantes.Add(new ef_rsvp_grupo_integrantes
                     {
-                        invitado = nino,
+                        invitado = invitadoAcompanante,
                         rol = "A",
-                        rol_evento = "N",
-                        orden = orden++
+                        orden = orden++,
+                        edad_anios = a.EdadAnios,
+                        id_evento_edad_rango = a.IdEventoEdadRango
                     });
-                    ninos.Add(nino);
                 }
             }
 
-            // 9. Guardar grupo (primera vez, se generan las identidades)
+            // 10. Guardar grupo
             _context.ef_rsvp_grupos.Add(grupo);
+
+            // actualizar estado del responsable
+            responsable.rsvp_estado = dto.Asiste ? "Y" : "N";
+            responsable.fecha_rsvp = DateTimeOffset.UtcNow;
+
             await _context.SaveChangesAsync();
 
-            // 10. Asignar id_rsvp_grupo a responsable y niños
-            responsable.id_rsvp_grupo = grupo.id_rsvp_grupo;
-            foreach (var nino in ninos)
-                nino.id_rsvp_grupo = grupo.id_rsvp_grupo;
-
-            // 11. Guardar cambios finales
-            await _context.SaveChangesAsync();
+            // 11. Guardar restricciones
             if (dto.Restricciones != null && dto.Restricciones.Any())
             {
                 var restrDto = new RestriccionesGrupoUpsertDTO
@@ -207,8 +206,8 @@ namespace API.Services
 
                 await _restriccionesService.SaveMisRestriccionesAsync(
                     responsable.rsvp_token,
-                    restrDto);
-
+                    restrDto
+                );
             }
         }
 
@@ -254,6 +253,103 @@ namespace API.Services
             _context.ef_invitados.AddRange(invitadosValidos);
             await _context.SaveChangesAsync();
         }
+        public async Task<List<InvitadoLinkDTO>> ObtenerInvitadosParaEnvioAsync(long idEvento)
+        {
+            return await _context.ef_invitados
+                .Where(x => x.id_evento == idEvento && x.activo)
+                .Select(x => new InvitadoLinkDTO
+                {
+                    IdInvitado = x.id_invitado,
+                    Nombre = x.nombre,
+                    Apellido = x.apellido,
+                    Email = x.email,
+                    Celular = x.celular,
+                    Token = x.rsvp_token
+                })
+                .ToListAsync();
+        }
 
+        public async Task<string> CrearLinkGenericoAsync(CrearLinkGenericoDTO dto)
+        {
+            var token = TokenUtility.Generate(64);
+
+            var link = new ef_evento_acceso_links
+            {
+                id_acceso = dto.IdAcceso,
+                titulo = dto.Titulo,
+                token = token,
+                max_personas_total = dto.MaxPersonasTotal ?? 0,
+                max_adultos = dto.MaxAdultos ?? 0,
+                fecha_alta = DateTimeOffset.UtcNow,
+                activo = true
+            };
+
+            _context.ef_evento_acceso_links.Add(link);
+            await _context.SaveChangesAsync();
+
+            return token;
+        }
+
+        public async Task<string> GenerarLinkInvitacionAsync(string userId)
+        {
+            var clienteId = long.Parse(userId);
+
+            var evento = await _context.ef_eventos
+                .FirstOrDefaultAsync(e => e.id_cliente == clienteId);
+
+            if (evento == null)
+                throw new Exception("Evento no encontrado");
+
+            var acceso = await _context.ef_evento_accesos
+                .FirstOrDefaultAsync(a => a.id_evento == evento.id_evento && a.activo);
+
+            if (acceso == null)
+                throw new Exception("Acceso no encontrado");
+
+            var token = TokenUtility.Generate(64);
+
+            var link = new ef_evento_acceso_links
+            {
+                id_acceso = acceso.id_acceso,
+                token = token,
+                activo = true,
+                fecha_alta = DateTimeOffset.UtcNow
+            };
+
+            _context.ef_evento_acceso_links.Add(link);
+            await _context.SaveChangesAsync();
+
+            return token;
+        }
+        public async Task<InvitacionEventoDTO?> ObtenerDatosInvitacionAsync(string token)
+        {
+            var link = await _context.ef_evento_acceso_links
+                .FirstOrDefaultAsync(x => x.token == token && x.activo);
+
+            if (link == null)
+                return null;
+
+            var acceso = await _context.ef_evento_accesos
+                .FirstOrDefaultAsync(a => a.id_acceso == link.id_acceso);
+
+            if (acceso == null)
+                return null;
+
+            var evento = await _context.ef_eventos
+                .FirstOrDefaultAsync(e => e.id_evento == acceso.id_evento);
+
+            if (evento == null)
+                return null;
+
+            return new InvitacionEventoDTO
+            {
+                IdEvento = evento.id_evento,
+                IdAcceso = acceso.id_acceso,
+                Anfitriones = evento.anfitriones_texto,
+                MensajeBienvenida = evento.mensaje_bienvenida,
+                DressCode = evento.dress_code_descripcion,
+                NombreAcceso = acceso.nombre
+            };
+        }
     }
 }
