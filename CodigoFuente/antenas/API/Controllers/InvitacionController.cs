@@ -32,20 +32,46 @@ namespace API.Controllers
             _serviceGenerico = serviceGenerico;
             _invitacionService = invitacionService;
         }
-        //[HttpGet("GetEvento")]
-        //public async Task<IActionResult> GetEvento([FromQuery] string token)
-        //{
-        //    return Ok(await _invitacionService.ObtenerEventoAsync(token));
-        //}
 
-        [HttpGet("Invitados")]
+        [HttpPost("CrearLinkGenerico")] //invitacion generica
+        public async Task<IActionResult> CrearLinkGenerico([FromBody] CrearLinkGenericoDTO dto)
+        {
+            var token = await _invitacionService.CrearLinkGenericoAsync(dto);
+            return Ok(new { token });
+        }
+
+        [HttpPost("GenerarLinkInvitacion")]//token generico
+        public async Task<IActionResult> GenerarLinkInvitacion()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var token = await _invitacionService.GenerarLinkInvitacionAsync(userId);
+
+            return Ok(new
+            {
+                token
+            });
+        }
+
+        [HttpGet("DatosInvitacion/{token}")]//datos de la invitacion con el token generico
+        public async Task<IActionResult> DatosInvitacion(string token)
+        {
+            var data = await _invitacionService.ObtenerDatosInvitacionAsync(token);
+
+            if (data == null)
+                return NotFound();
+
+            return Ok(data);
+        }
+
+        [HttpGet("Invitados")] //obtener tokens
         public async Task<IActionResult> GetInvitados([FromQuery] long idEvento)
         {
             var result = await _invitacionService.ObtenerInvitadosParaEnvioAsync(idEvento);
             return Ok(result);
         }
 
-        [HttpPost("Confirmar")]
+        [HttpPost("Confirmar")]//confirmacion de asistencia
         public async Task<IActionResult> Confirmar([FromBody] RsvpConfirmacionRequest request)
         {
             await _invitacionService.ConfirmarAsync(
@@ -57,21 +83,8 @@ namespace API.Controllers
         }
 
 
-        //[Authorize]
-        //[HttpPost("GenerarLink")]
-        //public async Task<IActionResult> GenerarLink([FromBody] GenerarLinkRequest req)
-        //{
-        //    var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-        //    var token = await _invitacionService.GenerarLinkAsync(
-        //        req.IdEvento,
-        //        userId
-        //    );
-
-        //    return Ok(new { token });
-        //}
-
-        [HttpPost("CargarInvitados")]
+        [HttpPost("CargarInvitados")] //precarga de invitados
         public async Task<IActionResult> CargarInvitados([FromBody] CargaInvitadosRequest req)
         {
             var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

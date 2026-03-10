@@ -40,16 +40,39 @@ namespace API.DataSchema.DTO
 
         public string Mensaje { get; set; }
 
-        public List<RsvpNinoDTO> Ninos { get; set; }
+        public List<RsvpAcompanianteDTO> Acompanantes { get; set; }
         public List<IntegranteRestriccionesUpsertDTO>? Restricciones { get; set; }
     }
+    public class ConfirmarInvitacionDTO
+    {
+        public string Token { get; set; }
 
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+
+        public string Email { get; set; }
+        public string Celular { get; set; }
+
+        public bool Asiste { get; set; }
+
+        public string Mensaje { get; set; }
+
+        public List<RsvpAcompanianteDTO> Acompanantes { get; set; }
+    }
     public class RsvpNinoDTO
     {
         public string Nombre { get; set; }
         public string Apellido { get; set; }
     }
+    public class RsvpAcompanianteDTO
+    {
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
 
+        public short? EdadAnios { get; set; }
+
+        public long? IdEventoEdadRango { get; set; }
+    }
     public class InvitadoLinkDTO
     {
         public long IdInvitado { get; set; }
@@ -59,5 +82,26 @@ namespace API.DataSchema.DTO
         public string Celular { get; set; }
         public string Token { get; set; }
     }
+    public class CrearLinkGenericoDTO
+    {
+        public long IdAcceso { get; set; }
 
+        public string Titulo { get; set; }
+
+        public int? MaxPersonasTotal { get; set; }
+
+        public int? MaxAdultos { get; set; }
+    }
+
+    public class InvitacionEventoDTO
+    {
+        public long IdEvento { get; set; }
+        public long IdAcceso { get; set; }
+
+        public string Anfitriones { get; set; }
+        public string? MensajeBienvenida { get; set; }
+        public string? DressCode { get; set; }
+
+        public string NombreAcceso { get; set; }
+    }
 }
