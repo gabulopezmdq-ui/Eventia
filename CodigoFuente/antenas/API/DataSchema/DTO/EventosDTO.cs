@@ -28,6 +28,9 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("notas")]
         public string? Notas { get; set; }
+        
+        [JsonPropertyName("codigo_plan")]
+        public string? CodigoPlan { get; set; } // "B2C_FREE", "B2C_BASIC", "B2C_PLUS", "B2C_PRO"
     }
 
     public class EventoResponse
@@ -71,5 +74,15 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("mensaje_bienvenida")]
         public string? MensajeBienvenida { get; set; }
+
+        // info del plan (para mostrar en UI)
+        [JsonPropertyName("id_plan")]
+        public long? IdPlan { get; set; }
+
+        [JsonPropertyName("plan_codigo")]
+        public string? PlanCodigo { get; set; }
+
+        [JsonPropertyName("plan_nombre")]
+        public string? PlanNombre { get; set; }
     }
 }
