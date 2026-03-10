@@ -1,6 +1,7 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
+using API.Utility;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -128,14 +129,6 @@ namespace API.Services
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
-            //bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
-            //    .AnyAsync(eu =>
-            //        eu.id_usuario == idUsuario &&
-            //        eu.activo == true &&
-            //        _context.Set<ef_eventos>().Any(ev => ev.id_evento == eu.id_evento && ev.estado == EventoEstado.Borrador));
-
-            //if (yaTieneBorrador)
-            //    throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
 
             bool existeTipo = await _context.Set<ef_tipos_evento>()
                 .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
@@ -196,7 +189,6 @@ namespace API.Services
                 id_tipo_evento = req.IdTipoEvento,
                 id_idioma = idIdioma,
                 id_cliente = null,
-
                 anfitriones_texto = req.AnfitrionesTexto.Trim(),
 
                 id_dress_code = req.IdDressCode,
@@ -224,6 +216,49 @@ namespace API.Services
             _context.Set<ef_eventos>().Add(evento);
             await _context.SaveChangesAsync();
 
+
+            // =====================================================
+            // CREAR ACCESO DEFAULT DEL EVENTO
+            // =====================================================
+            var acceso = new ef_evento_accesos
+            {
+                id_evento = evento.id_evento,
+                nombre = "General",
+                orden = 1,
+                activo = true,
+                fecha_alta = now
+            };
+
+            _context.Set<ef_evento_accesos>().Add(acceso);
+            await _context.SaveChangesAsync();
+
+
+            // =====================================================
+            // CREAR LINK DEFAULT DEL ACCESO
+            // =====================================================
+            var link = new ef_evento_acceso_links
+            {
+                id_acceso = acceso.id_acceso,
+                titulo = "Principal",
+                token = TokenUtility.Generate(64),
+                max_personas_total = 200,
+                max_adultos = 200,
+                activo = true,
+                fecha_alta = now
+            };
+
+            _context.Set<ef_evento_acceso_links>().Add(link);
+            await _context.SaveChangesAsync();
+
+
+            // guardar acceso default en el evento
+            evento.id_acceso_default = acceso.id_acceso;
+            await _context.SaveChangesAsync();
+
+
+            // =====================================================
+            // RELACIÓN USUARIO DUEÑO
+            // =====================================================
             _context.Set<ef_evento_usuarios>().Add(new ef_evento_usuarios
             {
                 id_evento = evento.id_evento,
@@ -233,6 +268,10 @@ namespace API.Services
                 activo = true
             });
 
+
+            // =====================================================
+            // HISTORIAL DE ESTADO
+            // =====================================================
             _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
             {
                 id_evento = evento.id_evento,
@@ -281,7 +320,6 @@ namespace API.Services
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
-            // DEVOLVER ENRIQUECIDO
             return await GetEventoMioAsync(idUsuario, evento.id_evento);
         }
 
