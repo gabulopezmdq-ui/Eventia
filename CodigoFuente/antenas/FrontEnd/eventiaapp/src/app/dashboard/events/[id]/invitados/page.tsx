@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     ChevronLeft, Plus, Users, Search, Filter,
-    MoreVertical, Mail, MessageCircle, X, Check, Copy, AlertCircle
+    MoreVertical, Mail, Phone, X, Check, Copy, AlertCircle, RefreshCw, Loader2
 } from 'lucide-react';
-import { cargarInvitacion } from '@/src/features/invitations/invitation.service';
+import { cargarInvitacion, listarInvitados, InvitadoListado } from '@/src/features/invitations/invitation.service';
 
 export default function InvitadosPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -25,6 +25,49 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
     const [generatedLink, setGeneratedLink] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // ── Guest list state ──
+    const [invitados, setInvitados] = useState<InvitadoListado[]>([]);
+    const [listLoading, setListLoading] = useState(true);
+    const [listError, setListError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [copiedId, setCopiedId] = useState<number | null>(null);
+
+    // ── Fetch guest list ──
+    const fetchInvitados = useCallback(async () => {
+        setListLoading(true);
+        setListError(null);
+        try {
+            const data = await listarInvitados(Number(id));
+            setInvitados(data);
+        } catch (err) {
+            setListError(err instanceof Error ? err.message : 'Error al cargar invitados');
+        } finally {
+            setListLoading(false);
+        }
+    }, [id]);
+
+    useEffect(() => {
+        fetchInvitados();
+    }, [fetchInvitados]);
+
+    // ── Derived / filtered list ──
+    const filteredInvitados = invitados.filter((inv) => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+            inv.nombre.toLowerCase().includes(q) ||
+            inv.apellido.toLowerCase().includes(q) ||
+            (inv.email && inv.email.toLowerCase().includes(q)) ||
+            (inv.celular && inv.celular.toLowerCase().includes(q))
+        );
+    });
+
+    // ── Stats ──
+    const totalInvitados = invitados.length;
+    const confirmados = invitados.filter(i => i.rsvpEstado === 'C').length;
+    const pendientes = invitados.filter(i => i.rsvpEstado === 'P').length;
+    const rechazados = invitados.filter(i => i.rsvpEstado === 'R').length;
 
     const handleCreateInvitation = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,6 +89,8 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
             if (response && response.length > 0) {
                 const baseUrl = window.location.origin;
                 setGeneratedLink(`${baseUrl}/rsvp/${response[0].rsvpToken}`);
+                // Refresh the guest list after successful creation
+                fetchInvitados();
             } else {
                 throw new Error("El backend no devolvió el token de la invitación");
             }
@@ -60,6 +105,21 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         if (generatedLink) {
             navigator.clipboard.writeText(generatedLink);
             alert("¡Link copiado al portapapeles!");
+        }
+    };
+
+    const copyInvitadoLink = (inv: InvitadoListado) => {
+        const link = `${window.location.origin}/rsvp/${inv.rsvpToken}`;
+        navigator.clipboard.writeText(link);
+        setCopiedId(inv.idInvitado);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    const estadoLabel = (estado: string) => {
+        switch (estado) {
+            case 'C': return { text: 'Confirmado', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+            case 'R': return { text: 'Rechazado', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+            default: return { text: 'Pendiente', className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
         }
     };
 
@@ -89,10 +149,21 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                 <div>
                     <h1 className="text-3xl font-bold text-foreground">Gestión de Invitados</h1>
                     <p className="text-muted text-sm mt-1">
-                        Controlá la lista de asistentes, estados de confirmación y generá nuevas invitaciones.
+                        {totalInvitados > 0
+                            ? `${totalInvitados} invitado${totalInvitados !== 1 ? 's' : ''} · ${confirmados} confirmado${confirmados !== 1 ? 's' : ''} · ${pendientes} pendiente${pendientes !== 1 ? 's' : ''} · ${rechazados} rechazado${rechazados !== 1 ? 's' : ''}`
+                            : 'Controlá la lista de asistentes, estados de confirmación y generá nuevas invitaciones.'
+                        }
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={fetchInvitados}
+                        disabled={listLoading}
+                        className="p-3 rounded-xl bg-card-bg border border-card-border text-muted hover:text-foreground transition-all disabled:opacity-50"
+                        title="Refrescar lista"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${listLoading ? 'animate-spin' : ''}`} />
+                    </button>
                     <button
                         onClick={() => setIsInviteModalOpen(true)}
                         className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all"
@@ -110,6 +181,8 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                     <input
                         type="text"
                         placeholder="Buscar por nombre, apellido, email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-11 pr-4 py-3 rounded-xl bg-card-bg border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm outline-none text-foreground"
                     />
                 </div>
@@ -119,22 +192,120 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
             </div>
 
             {/* ── Invitados List / Empty State ── */}
-            <div className="p-8 sm:p-12 rounded-2xl bg-card-bg border border-card-border text-center flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6">
-                    <Users className="w-8 h-8 text-indigo-400" />
+            {listLoading && invitados.length === 0 ? (
+                <div className="p-12 rounded-2xl bg-card-bg border border-card-border flex flex-col items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-4" />
+                    <p className="text-muted text-sm">Cargando invitados...</p>
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-2">Aún no hay invitados</h3>
-                <p className="text-muted max-w-sm text-sm mb-6">
-                    Empezá a generar invitaciones personalizadas o utilizá los links masivos para que la gente comience a registrarse.
-                </p>
-                <button
-                    onClick={() => setIsInviteModalOpen(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-indigo-500/30 text-indigo-400 text-sm font-bold hover:bg-indigo-500/10 transition-colors"
-                >
-                    <Plus className="w-4 h-4" />
-                    Crear primera invitación
-                </button>
-            </div>
+            ) : listError ? (
+                <div className="p-8 rounded-2xl bg-card-bg border border-red-500/20 text-center flex flex-col items-center">
+                    <AlertCircle className="w-8 h-8 text-red-400 mb-4" />
+                    <p className="text-red-400 text-sm mb-4">{listError}</p>
+                    <button onClick={fetchInvitados} className="text-sm text-indigo-400 hover:underline">Reintentar</button>
+                </div>
+            ) : invitados.length === 0 ? (
+                <div className="p-8 sm:p-12 rounded-2xl bg-card-bg border border-card-border text-center flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6">
+                        <Users className="w-8 h-8 text-indigo-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-2">Aún no hay invitados</h3>
+                    <p className="text-muted max-w-sm text-sm mb-6">
+                        Empezá a generar invitaciones personalizadas o utilizá los links masivos para que la gente comience a registrarse.
+                    </p>
+                    <button
+                        onClick={() => setIsInviteModalOpen(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-indigo-500/30 text-indigo-400 text-sm font-bold hover:bg-indigo-500/10 transition-colors"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Crear primera invitación
+                    </button>
+                </div>
+            ) : (
+                <div className="rounded-2xl bg-card-bg border border-card-border overflow-hidden">
+                    {/* ── Table Header ── */}
+                    <div className="hidden sm:grid sm:grid-cols-[2fr_1.5fr_1fr_auto] gap-4 px-6 py-3 border-b border-card-border/50 text-[10px] font-bold text-muted uppercase tracking-widest">
+                        <span>Invitado</span>
+                        <span>Contacto</span>
+                        <span>Estado</span>
+                        <span className="text-right">Acciones</span>
+                    </div>
+
+                    {/* ── Rows ── */}
+                    {filteredInvitados.length === 0 ? (
+                        <div className="p-8 text-center text-muted text-sm">
+                            No se encontraron invitados con "{searchQuery}"
+                        </div>
+                    ) : (
+                        filteredInvitados.map((inv) => {
+                            const badge = estadoLabel(inv.rsvpEstado);
+                            const isCopied = copiedId === inv.idInvitado;
+                            return (
+                                <div
+                                    key={inv.idInvitado}
+                                    className="grid grid-cols-1 sm:grid-cols-[2fr_1.5fr_1fr_auto] gap-2 sm:gap-4 items-center px-6 py-4 border-b border-card-border/30 last:border-b-0 hover:bg-background/50 transition-colors"
+                                >
+                                    {/* Name */}
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs font-bold shrink-0">
+                                            {inv.nombre.charAt(0)}{inv.apellido.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-foreground">{inv.nombre} {inv.apellido}</p>
+                                            <p className="text-[11px] text-muted sm:hidden mt-0.5">
+                                                {inv.email || inv.celular || '—'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact – hidden on mobile (shown inline above) */}
+                                    <div className="hidden sm:flex flex-col gap-0.5">
+                                        {inv.email && (
+                                            <span className="text-xs text-muted flex items-center gap-1.5">
+                                                <Mail className="w-3 h-3" /> {inv.email}
+                                            </span>
+                                        )}
+                                        {inv.celular && (
+                                            <span className="text-xs text-muted flex items-center gap-1.5">
+                                                <Phone className="w-3 h-3" /> {inv.celular}
+                                            </span>
+                                        )}
+                                        {!inv.email && !inv.celular && (
+                                            <span className="text-xs text-muted">—</span>
+                                        )}
+                                    </div>
+
+                                    {/* Estado */}
+                                    <div>
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${badge.className}`}>
+                                            {inv.rsvpEstado === 'C' && <Check className="w-3 h-3" />}
+                                            {inv.rsvpEstado === 'R' && <X className="w-3 h-3" />}
+                                            {badge.text}
+                                        </span>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-end gap-2">
+                                        <button
+                                            onClick={() => copyInvitadoLink(inv)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${isCopied
+                                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                    : 'bg-card-bg border-card-border text-muted hover:text-foreground hover:border-indigo-500/30'
+                                                }`}
+                                            title="Copiar link de invitación"
+                                        >
+                                            {isCopied ? (
+                                                <><Check className="w-3 h-3" /> Copiado</>
+                                            ) : (
+                                                <><Copy className="w-3 h-3" /> Link</>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            )}
 
             {/* ── Modal Invitación Personalizada ── */}
             {isInviteModalOpen && (
