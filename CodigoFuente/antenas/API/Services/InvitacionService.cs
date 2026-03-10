@@ -254,6 +254,20 @@ namespace API.Services
             _context.ef_invitados.AddRange(invitadosValidos);
             await _context.SaveChangesAsync();
         }
-
+        public async Task<List<InvitadoLinkDTO>> ObtenerInvitadosParaEnvioAsync(long idEvento)
+        {
+            return await _context.ef_invitados
+                .Where(x => x.id_evento == idEvento && x.activo)
+                .Select(x => new InvitadoLinkDTO
+                {
+                    IdInvitado = x.id_invitado,
+                    Nombre = x.nombre,
+                    Apellido = x.apellido,
+                    Email = x.email,
+                    Celular = x.celular,
+                    Token = x.rsvp_token
+                })
+                .ToListAsync();
+        }
     }
 }

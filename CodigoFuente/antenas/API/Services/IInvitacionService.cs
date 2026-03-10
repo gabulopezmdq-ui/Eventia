@@ -10,6 +10,7 @@ namespace API.Services
         //Task<object> ObtenerEventoAsync(string token);
         Task ConfirmarAsync(string token, RsvpConfirmacionDTO dto);
         Task CargarInvitadosAsync(CargaInvitadosRequest req, long idUsuario);
+        Task<List<InvitadoLinkDTO>> ObtenerInvitadosParaEnvioAsync(long idEvento);
 
     }
 }
