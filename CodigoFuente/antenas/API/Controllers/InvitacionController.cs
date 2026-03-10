@@ -38,6 +38,13 @@ namespace API.Controllers
         //    return Ok(await _invitacionService.ObtenerEventoAsync(token));
         //}
 
+        [HttpGet("Invitados")]
+        public async Task<IActionResult> GetInvitados([FromQuery] long idEvento)
+        {
+            var result = await _invitacionService.ObtenerInvitadosParaEnvioAsync(idEvento);
+            return Ok(result);
+        }
+
         [HttpPost("Confirmar")]
         public async Task<IActionResult> Confirmar([FromBody] RsvpConfirmacionRequest request)
         {
