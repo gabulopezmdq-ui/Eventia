@@ -5,6 +5,7 @@ export interface InvitadoPayload {
     apellido: string;
     email?: string;
     celular?: string;
+    idAcceso?: number;
 }
 
 export interface CargarInvitadoPayload {
@@ -41,6 +42,7 @@ export async function cargarInvitacion(payload: CargarInvitadoPayload): Promise<
                 apellido: inv.apellido,
                 email: inv.email ?? null,
                 celular: inv.celular ?? null,
+                idAcceso: inv.idAcceso ?? null,
             }))
         }),
     });
