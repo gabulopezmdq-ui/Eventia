@@ -19,7 +19,8 @@ import type {
 import {
     ArrowLeft, Clock, Users, LayoutGrid, Save, CheckCircle2,
     MapPin, AlignLeft, Sparkles, Globe, Hash, Power,
-    Star, MessageSquare, Check, X, AlertTriangle, Send
+    Star, MessageSquare, Check, X, AlertTriangle, Send,
+    Link as LinkIcon
 } from 'lucide-react';
 
 /* ═══════════ TABS ═══════════ */
@@ -559,9 +560,18 @@ export default function EstructuraPage() {
                                             return (
                                                 <tr key={acceso.id_acceso} className={`${isDefaultRow ? 'bg-purple-500/5' : idx % 2 === 0 ? 'bg-transparent' : 'bg-background/30'}`}>
                                                     <td className="p-3 border-r border-card-border">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-foreground text-xs font-medium">{acceso.nombre}</span>
-                                                            {isDefaultRow && <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 font-bold uppercase">default</span>}
+                                                        <div className="flex flex-col gap-1.5 align-start mt-1 mb-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-foreground text-xs font-medium">{acceso.nombre}</span>
+                                                                {isDefaultRow && <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 font-bold uppercase">default</span>}
+                                                            </div>
+                                                            <button
+                                                                onClick={() => alert(`Próximamente: Copiar link masivo para acceso ${acceso.nombre}`)}
+                                                                className="flex items-center gap-1.5 px-2 py-1 mt-0.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-bold uppercase tracking-widest rounded hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors w-fit"
+                                                            >
+                                                                <LinkIcon className="w-2.5 h-2.5" />
+                                                                Link Masivo
+                                                            </button>
                                                         </div>
                                                     </td>
                                                     {sortedTramos.map(tramo => {
