@@ -13,13 +13,19 @@ export async function POST(req: Request) {
 
         const body = await req.json();
 
+        // Backend expects: { token: "...", datos: { nombre, apellido, ... } }
+        const backendBody = {
+            token,
+            datos: body,
+        };
+
         // Guest endpoint, no need for access_token cookie
-        const res = await fetch(`${API_URL}/invitaciones/confirmar?token=${token}`, {
+        const res = await fetch(`${API_URL}/invitacion/Confirmar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify(backendBody),
         });
 
         if (!res.ok) {
@@ -36,7 +42,8 @@ export async function POST(req: Request) {
             );
         }
 
-        const data = await res.json();
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : { success: true };
         return NextResponse.json(data);
     } catch (error) {
         console.error('Proxy Error /invitaciones/confirmar:', error);

@@ -75,7 +75,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         setError(null);
 
         try {
-            const response = await cargarInvitacion({
+            await cargarInvitacion({
                 idEvento: Number(id),
                 invitados: [{
                     nombre,
@@ -85,15 +85,10 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                 }]
             });
 
-            // Assume the response returns an array and we take the first item
-            if (response && response.length > 0) {
-                const baseUrl = window.location.origin;
-                setGeneratedLink(`${baseUrl}/rsvp/${response[0].rsvpToken}`);
-                // Refresh the guest list after successful creation
-                fetchInvitados();
-            } else {
-                throw new Error("El backend no devolvió el token de la invitación");
-            }
+            // Backend returns {success:true}. Fetch updated list to get the token.
+            await fetchInvitados();
+            // Use a sentinel value to trigger the success screen in the modal
+            setGeneratedLink('__success__');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al generar la invitación');
         } finally {
@@ -288,8 +283,8 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                                         <button
                                             onClick={() => copyInvitadoLink(inv)}
                                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${isCopied
-                                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                                    : 'bg-card-bg border-card-border text-muted hover:text-foreground hover:border-indigo-500/30'
+                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                : 'bg-card-bg border-card-border text-muted hover:text-foreground hover:border-indigo-500/30'
                                                 }`}
                                             title="Copiar link de invitación"
                                         >
@@ -402,19 +397,9 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                                     <p className="text-sm text-muted mt-2">
                                         Se generó un link único para <span className="text-foreground font-semibold">{nombre} {apellido}</span>.
                                     </p>
-                                </div>
-
-                                <div className="p-4 rounded-xl bg-background border border-card-border relative group">
-                                    <p className="text-xs font-mono text-muted break-all pr-10 text-left">
-                                        {generatedLink}
+                                    <p className="text-xs text-muted mt-3 px-4">
+                                        Podés copiar el link desde el botón <span className="text-indigo-400 font-semibold">Link</span> en la tabla de invitados.
                                     </p>
-                                    <button
-                                        onClick={copyToClipboard}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-card-bg border border-card-border text-foreground hover:bg-indigo-500 hover:border-indigo-500 hover:text-white transition-all"
-                                        title="Copiar link"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                    </button>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-card-border/50">
