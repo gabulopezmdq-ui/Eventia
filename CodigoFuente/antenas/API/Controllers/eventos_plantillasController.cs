@@ -1,9 +1,11 @@
-﻿using API.DataSchema.DTO;
+﻿using API.DataSchema;
+using API.DataSchema.DTO;
 using API.Security;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -13,10 +15,12 @@ namespace API.Controllers
     public class eventos_plantillasController : ControllerBase
     {
         private readonly IEventoPlantillasService _service;
+        private readonly DataContext _context;
 
-        public eventos_plantillasController(IEventoPlantillasService service)
+        public eventos_plantillasController(IEventoPlantillasService service, DataContext context)
         {
             _service = service;
+            _context = context;
         }
 
         // Aplica plantilla existente a un evento
@@ -62,6 +66,25 @@ namespace API.Controllers
         public async Task<IActionResult> CrearEstructuraManual([FromQuery] long idEvento, [FromBody] CrearEstructuraManualRequestDTO req)
         {
             long idUsuario = User.GetUserId();
+
+            // ✅ Bloqueo por plan: PERMITIR_WIZARD_SIN_PLANTILLA = 0
+            var idPlan = await _context.Set<ef_eventos>()
+                .Where(e => e.id_evento == idEvento)
+                .Select(e => e.id_plan)
+                .FirstOrDefaultAsync();
+
+            if (idPlan != null)
+            {
+                var permitir = await _context.Set<ef_plan_limites>()
+                    .Where(l => l.id_plan == idPlan.Value
+                             && l.codigo_limite == "PERMITIR_WIZARD_SIN_PLANTILLA"
+                             && l.activo == true)
+                    .Select(l => l.valor_int)
+                    .FirstOrDefaultAsync();
+
+                if (permitir == 0)
+                    return BadRequest("Tu plan no permite crear estructura manual. Elegí una plantilla o actualizá el plan.");
+            }
 
             var idSolicitud = await _service.CrearEstructuraManualAsync(idEvento, req, idUsuario);
 
