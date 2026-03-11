@@ -1,0 +1,773 @@
+1. MÓDULO INVITACIONES
+1.1. Confirmar Asistencia
+Endpoint
+:
+ 
+POST /
+invitacion
+/Confirmar
+¿De dónde obtiene los datos el 
+frontend
+?
+token
+: Viene como 
+query
+ 
+parameter
+ en la URL:
+text
+https://tusitio.com/invitacion?token=abc123def
+datos
+: Datos ingresados por el usuario en el formulario.
+Body
+ que debe enviar:
+json
+{
+  
+"
+token
+"
+:
+ 
+"abc123def"
+,
+  
+"datos"
+:
+ 
+{
+    
+"nombre"
+:
+ 
+"Juan"
+,
+    
+"apellido"
+:
+ 
+"Pérez"
+,
+    
+"email"
+:
+ 
+"juan@email.com"
+,
+    
+"celular"
+:
+ 
+"+5491122334455"
+,
+    
+"asiste"
+:
+ 
+true
+,
+    
+"mensaje"
+:
+ 
+"Texto opcional"
+,
+    
+"
+ninos
+"
+:
+ 
+[
+      
+{
+ 
+"
+nombre"
+:
+ 
+"Ana"
+,
+ 
+"apellido"
+:
+ 
+"Pérez"
+ 
+}
+    
+]
+  
+}
+}
+Nota:
+ Si el 
+token
+ es de invitado precargado, algunos campos pueden venir prefijados en la respuesta de un 
+endpoint
+ previo (aunque en el código no hay uno para obtener datos del invitado antes de confirmar). En ese caso, el 
+frontend
+ debe mostrar esos campos como solo lectura o editables según decisión de negocio.
+1.2. Carga Masiva de Invitados
+Endpoint
+:
+ 
+POST /
+invitacion
+/
+CargarInvitados
+Headers
+:
+text
+Authorization
+: 
+Bearer
+ <
+token
+>
+¿De dónde obtiene los datos el 
+frontend
+?
+idEvento
+: Seleccionado por el usuario desde un listado de sus eventos.
+invitados
+: Cargados desde un archivo CSV/Excel o ingresados manualmente.
+Body
+:
+json
+{
+  
+"
+idEvento
+"
+:
+ 
+123
+,
+  
+"invitados"
+:
+ 
+[
+    
+{
+      
+"nombre"
+:
+ 
+"Carlos"
+,
+      
+"apellido"
+:
+ 
+"López"
+,
+      
+"email"
+:
+ 
+"carlos@email.com"
+,
+      
+"celular"
+:
+ 
+"+5491122336677"
+    
+}
+  
+]
+}
+2. MÓDULO QR
+2.1. Obtener Datos por QR
+Endpoint
+:
+ 
+GET /
+qr
+/{
+qrToken
+}
+¿De dónde obtiene el 
+token
+?
+qrToken
+: Obtenido al escanear el código QR del invitado (físico o digital).
+Ejemplo de llamada:
+text
+GET /
+qr
+/abc123qrcode
+Respuesta (para que el 
+frontend
+ sepa qué mostrar):
+json
+{
+  
+"
+idEvento
+"
+:
+ 
+123
+,
+  
+"
+idInvitado
+"
+:
+ 
+456
+,
+  
+"nombre"
+:
+ 
+"Juan"
+,
+  
+"apellido"
+:
+ 
+"Pérez"
+,
+  
+"
+rolEvento
+"
+:
+ 
+"R"
+,
+        
+// "R" = Responsable, "N" = Niño
+  
+"
+rsvpEstado
+"
+:
+ 
+"Y"
+,
+       
+// "Y" = Confirmado
+  
+"
+idRsvpGrupo
+"
+:
+ 
+789
+,
+  
+"
+grupoResumen
+"
+:
+ 
+"Menores: Ana Pérez | 
+Resp
+: Juan Pérez"
+,
+  
+"
+autorizadosRetiro
+"
+:
+ 
+[
+   
+// Solo si 
+rolEvento
+ = "N"
+    
+{
+      
+"
+nombreAutorizado
+"
+:
+ 
+"María García"
+,
+      
+"
+telefonoAutorizado
+"
+:
+ 
+"+5491122334455"
+,
+      
+"
+relacion
+"
+:
+ 
+"Madre"
+    
+}
+  
+]
+}
+3. MÓDULO PORTERO (RETIROS)
+3.1. Escanear QR (Registro de escaneo)
+Endpoint
+:
+ 
+POST /portero/
+scan
+¿De dónde obtiene los datos?
+qrToken
+: Del QR escaneado.
+deviceId
+, 
+ip
+, 
+userAgent
+: Se envían automáticamente desde el 
+frontend
+ (opcional).
+Body
+:
+json
+{
+  
+"
+qrToken
+"
+:
+ 
+"abc123qrcode"
+}
+Headers
+ opcionales que puede enviar el 
+frontend
+:
+Device
+-Id
+: Identificador del dispositivo.
+User-Agent
+: Se envía automáticamente.
+3.2. Confirmar Retiro (Opción 1)
+Endpoint
+:
+ 
+POST /portero/retiro
+¿De dónde obtiene los datos?
+qrToken
+: Del QR escaneado.
+nombreRetirador
+, 
+celularRetirador
+, 
+metodoValidacion
+, 
+observaciones
+: Ingresados por el portero en un formulario.
+Body
+:
+json
+{
+  
+"
+qrToken
+"
+:
+ 
+"abc123qrcode"
+,
+  
+"
+nombreRetirador
+"
+:
+ 
+"María García"
+,
+  
+"
+celularRetirador
+"
+:
+ 
+"+5491122334455"
+,
+  
+"
+metodoValidacion
+"
+:
+ 
+"DNI"
+,
+  
+"observaciones"
+:
+ 
+"Retira la abuela"
+}
+3.3. Confirmar Retiro (Opción 2 - Simplificada)
+Endpoint
+:
+ 
+POST /portero/
+retiroQR
+Mismo 
+body
+ que el anterior.
+3.4. Listar Retiros Realizados
+Endpoint
+:
+ 
+GET /portero/retiros
+Query
+ 
+parameters
+ (opcionales):
+idEvento
+ (requerido)
+desde
+ (ISO date)
+hasta
+ (ISO date)
+Ejemplo:
+text
+GET /portero/retiros
+?
+idEvento=123&desde=2024-12-01T00:00:00Z&hasta=2024-12-02T00:00:00Z
+3.5. Listar Escaneos Realizados
+Endpoint
+:
+ 
+GET /portero/
+scanList
+Query
+ 
+parameters
+:
+idEvento
+ (requerido)
+desde
+ (opcional)
+hasta
+ (opcional)
+resultado
+ (opcional) // "O", "E", "RETIRO_EXITOSO"
+3.6. Listar Niños Pendientes de Retiro
+Endpoint
+:
+ 
+GET /portero/
+pendientesRetiro
+Query
+ 
+parameter
+:
+idEvento
+ (requerido)
+3.7. Resumen del Evento para Portero
+Endpoint
+:
+ 
+GET /portero/resumen
+Query
+ 
+parameter
+:
+idEvento
+ (requerido)
+4. MÓDULO AUTORIZACIONES
+4.1. Crear Autorización desde Link Personal (Responsable)
+Endpoint
+:
+ 
+POST /
+autorizacion
+/p
+/{
+rsvpToken
+}/autorizaciones
+¿De dónde obtiene los datos?
+rsvpToken
+: Viene en la URL:
+text
+https://tusitio.com/autorizaciones?token=rsvpToken123
+Datos del formulario: Ingresados por el responsable.
+Body
+:
+json
+{
+  
+"
+nombreAutorizado
+"
+:
+ 
+"Carlos Rodríguez"
+,
+  
+"
+telefonoAutorizado
+"
+:
+ 
+"+5491122337788"
+,
+  
+"
+relacion
+"
+:
+ 
+"Tío"
+}
+Nota:
+ Este 
+endpoint
+ crea automáticamente una autorización para 
+cada niño
+ del grupo del responsable.
+4.2. Crear Autorización Individual (Organizador)
+Endpoint
+:
+ 
+POST /
+autorizacion
+Headers
+:
+ Requiere 
+token
+ JWT.
+Query
+ 
+parameter
+:
+idEvento
+ (requerido)
+Body
+:
+json
+{
+  
+"
+idInvitadoObjetivo
+"
+:
+ 
+456
+,
+  
+"tipo"
+:
+ 
+"R"
+,
+  
+"
+nombreAutorizado
+"
+:
+ 
+"Ana"
+,
+  
+"
+telefonoAutorizado
+"
+:
+ 
+"+5491122334455"
+,
+  
+"
+relacion
+"
+:
+ 
+"Madre"
+,
+  
+"observaciones"
+:
+ 
+"Solo para emergencias"
+}
+4.3. Listar Autorizaciones de un Niño
+Endpoint
+:
+ 
+GET /
+autorizacion
+/invitado
+/{
+idInvitadoObjetivo
+}
+Query
+ 
+parameters
+:
+idEvento
+ (requerido)
+tipo
+ (opcional, default "R")
+Ejemplo:
+text
+GET /
+autorizacion
+/invitado/456?idEvento=123&tipo=R
+4.4. Desactivar Autorización (Baja Lógica)
+Endpoint
+:
+ 
+DELETE /
+autorizacion
+/{
+idAutorizacion
+}
+Query
+ 
+parameter
+:
+idEvento
+ (requerido)
+4.5. Actualizar Autorización
+Endpoint
+:
+ 
+PUT /
+autorizacion
+/{
+idAutorizacion
+}
+Query
+ 
+parameter
+:
+idEvento
+ (requerido)
+Body
+ (todos los campos son opcionales, solo se actualizan los enviados):
+json
+{
+  
+"
+nombreAutorizado
+"
+:
+ 
+"Ana María"
+,
+  
+"
+telefonoAutorizado
+"
+:
+ 
+"+5491122334466"
+,
+  
+"
+relacion
+"
+:
+ 
+"Madre y tutora"
+,
+  
+"observaciones"
+:
+ 
+"Nueva observación"
+,
+  
+"activo"
+:
+ 
+true
+}
+📌
+ Resumen de Origen de Datos por 
+Endpoint
+Endpoint
+Token
+/ID viene de
+Datos de usuario vienen de
+POST /
+invitacion
+/Confirmar
+URL (
+query
+ 
+param
+ 
+token
+)
+Formulario de confirmación
+POST /
+invitacion
+/
+CargarInvitados
+JWT (
+header
+) + ID evento seleccionado
+Archivo subido o ingreso manual
+GET /
+qr
+/{
+qrToken
+}
+Escaneo de QR
+-
+POST /portero/
+scan
+Escaneo de QR
+-
+POST /portero/retiro
+Escaneo de QR
+Formulario del portero
+POST /portero/
+retiroQR
+Escaneo de QR
+Formulario del portero
+GET /portero/*
+JWT (
+header
+) + ID evento seleccionado
+Filtros del panel
+POST /
+autorizacion
+/p/{
+rsvpToken
+}/autorizaciones
+URL (
+param
+ 
+rsvpToken
+)
+Formulario del responsable
+POST /
+autorizacion
+JWT (
+header
+) + ID evento seleccionado
+Formulario del organizador
+GET /
+autorizacion
+/*
+JWT (
+header
+) + 
+IDs
+ de la URL
+-
+PUT/DELETE /
+autorizacion
+/*
+JWT (
+header
+) + 
+IDs
+ de la URL
+Formulario (para PUT)
