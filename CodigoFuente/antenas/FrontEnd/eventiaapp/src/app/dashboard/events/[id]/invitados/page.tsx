@@ -8,6 +8,8 @@ import {
     MoreVertical, Mail, Phone, X, Check, Copy, AlertCircle, RefreshCw, Loader2
 } from 'lucide-react';
 import { cargarInvitacion, listarInvitados, InvitadoListado } from '@/src/features/invitations/invitation.service';
+import { getEstructuraEvento } from '@/src/features/events/event.service';
+import { AccesoEvento } from '@/src/features/events/types';
 
 export default function InvitadosPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -20,6 +22,8 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
     const [apellido, setApellido] = useState('');
     const [email, setEmail] = useState('');
     const [celular, setCelular] = useState('');
+    const [idAcceso, setIdAcceso] = useState<number | ''>('');
+    const [accesos, setAccesos] = useState<AccesoEvento[]>([]);
 
     // Status state
     const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -51,6 +55,25 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         fetchInvitados();
     }, [fetchInvitados]);
 
+    // ── Fetch event structure (accesos) ──
+    useEffect(() => {
+        const fetchStructure = async () => {
+            try {
+                const structure = await getEstructuraEvento(Number(id));
+                setAccesos(structure.accesos || []);
+                // Set default access if available
+                if (structure.id_acceso_default) {
+                    setIdAcceso(structure.id_acceso_default);
+                } else if (structure.accesos && structure.accesos.length > 0) {
+                    setIdAcceso(structure.accesos[0].id_acceso);
+                }
+            } catch (err) {
+                console.error("Error fetching event structure:", err);
+            }
+        };
+        fetchStructure();
+    }, [id]);
+
     // ── Derived / filtered list ──
     const filteredInvitados = invitados.filter((inv) => {
         if (!searchQuery.trim()) return true;
@@ -81,7 +104,8 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                     nombre,
                     apellido,
                     email: email || undefined,
-                    celular: celular || undefined
+                    celular: celular || undefined,
+                    idAcceso: idAcceso !== '' ? Number(idAcceso) : undefined
                 }]
             });
 
@@ -126,6 +150,13 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         setApellido('');
         setEmail('');
         setCelular('');
+        // Re-set default access on close if possible or just reset
+        if (accesos.length > 0) {
+            const def = accesos.find(a => a.es_default) || accesos[0];
+            setIdAcceso(def.id_acceso);
+        } else {
+            setIdAcceso('');
+        }
     };
 
     return (
@@ -364,6 +395,23 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                                             placeholder="+54 9 11 1234-5678"
                                             className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm outline-none text-foreground"
                                         />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Acceso <span className="text-indigo-400">*</span></label>
+                                        <select
+                                            required
+                                            value={idAcceso}
+                                            onChange={(e) => setIdAcceso(Number(e.target.value))}
+                                            className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm outline-none text-foreground appearance-none shadow-sm"
+                                        >
+                                            <option value="" disabled>Seleccionar acceso</option>
+                                            {accesos.map((acc) => (
+                                                <option key={acc.id_acceso} value={acc.id_acceso}>
+                                                    {acc.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     <div className="pt-4 flex items-center justify-end gap-3 border-t border-card-border/50">
