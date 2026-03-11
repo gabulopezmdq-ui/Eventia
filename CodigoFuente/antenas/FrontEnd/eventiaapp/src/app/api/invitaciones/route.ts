@@ -20,7 +20,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: 'Falta idEvento' }, { status: 400 });
         }
 
-        const res = await fetch(`${API_URL}/invitaciones?idEvento=${idEvento}`, {
+        const res = await fetch(`${API_URL}/invitacion/Invitados?idEvento=${idEvento}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`
@@ -38,7 +38,11 @@ export async function GET(req: Request) {
         }
 
         const data = await res.json();
-        return NextResponse.json(data);
+        // Map backend field `token` → `rsvpToken` expected by the frontend types
+        const mapped = Array.isArray(data)
+            ? data.map((inv: Record<string, unknown>) => ({ ...inv, rsvpToken: inv.token ?? inv.rsvpToken }))
+            : data;
+        return NextResponse.json(mapped);
     } catch (error) {
         console.error('Proxy Error GET /invitaciones:', error);
         return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });

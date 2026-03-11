@@ -7,7 +7,7 @@ import {
     ArrowRight, HeartPulse, ChevronRight, Apple, Baby, Phone, Mail
 } from 'lucide-react';
 import {
-    confirmarRsvp, getMisRestricciones, getCatalogoRestricciones,
+    confirmarRsvp, getMisRestricciones, getCatalogoRestricciones, getDatosInvitacion,
     guardarRestricciones, NinosPayload, GrupoRsvpInfo, CatalogoRestriccion
 } from '@/src/features/rsvp/rsvp.service';
 
@@ -43,14 +43,22 @@ export default function RsvpPage({ params }: { params: Promise<{ token: string }
     const verificarEstado = async () => {
         setStep('VERIFYING');
         try {
+            // First, get basic invitation data to pre-fill the name
+            const inviteData = await getDatosInvitacion(token);
+            if (inviteData) {
+                setNombre(inviteData.nombre || '');
+                setApellido(inviteData.apellido || '');
+                setEmail(inviteData.email || '');
+                setCelular(inviteData.celular || '');
+            }
+
+            // Then check if they already have restrictions (meaning they confirmed)
             const data = await getMisRestricciones(token);
-            // If this succeeds, it means they already RSVP'd and have a group!
             setGrupoInfo(data);
             await cargarCatalogo();
             setStep('RESTRICTIONS');
         } catch (error) {
-            // El grupo no existe (404 o string de error), lo cual es normal si no confirmaron.
-            // Move to RSVP step.
+            // If getMisRestricciones fails, it's normal (they haven't confirmed yet)
             setStep('RSVP');
         }
     };
@@ -90,7 +98,8 @@ export default function RsvpPage({ params }: { params: Promise<{ token: string }
         try {
             await confirmarRsvp(token, {
                 nombre, apellido, email, celular, asiste, mensaje: mensaje || undefined,
-                ninos: ninos.length > 0 ? ninos : undefined
+                acompanantes: ninos,
+                extras: ninos.length
             });
 
             if (!asiste) {

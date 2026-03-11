@@ -22,7 +22,8 @@ export interface ConfirmarRsvpPayload {
     celular: string;
     asiste: boolean;
     mensaje?: string;
-    ninos?: NinosPayload[];
+    acompanantes?: NinosPayload[];
+    extras?: number;
 }
 
 export interface RestriccionItem {
@@ -67,6 +68,23 @@ export async function confirmarRsvp(token: string, payload: ConfirmarRsvpPayload
     }
 
     return res.json().catch(() => ({}));
+}
+
+/**
+ * PASO 2.5: Obtener datos básicos de la invitación antes de confirmar.
+ * GET /api/invitaciones/datos?token={token}
+ */
+export async function getDatosInvitacion(token: string): Promise<any> {
+    const res = await fetch(`/api/invitaciones/datos?token=${token}`);
+
+    if (!res.ok) {
+        const errText = await res.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { message: errText }; }
+        throw new Error(errData?.message || 'Error al obtener datos de la invitación');
+    }
+
+    return res.json();
 }
 
 /**
