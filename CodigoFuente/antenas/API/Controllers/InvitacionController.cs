@@ -70,17 +70,17 @@ namespace API.Controllers
             return Ok(data);
         }
 
-        //[AllowAnonymous]
-        //[HttpPost("confirmar")]
-        //public async Task<IActionResult> ConfirmarAsistencia([FromBody] RsvpConfirmacionRequest request)
-        //{
-        //    await _invitacionService.ConfirmarAsync(
-        //        request.Token,
-        //        request.Datos
-        //    );
+        [AllowAnonymous]
+        [HttpPost("confirmar")]
+        public async Task<IActionResult> ConfirmarAsistencia([FromBody] RsvpConfirmacionRequest request)
+        {
+            await _invitacionService.ConfirmarAsync(
+                request.Token,
+                request.Datos
+            );
 
-        //    return Ok();
-        //}
+            return Ok();
+        }
 
     }
 }
