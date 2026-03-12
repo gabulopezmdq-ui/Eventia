@@ -32,6 +32,8 @@ namespace API.DataSchema
 
         public bool activo { get; set; } = true;
 
+        public string nombre_grupo { get; set; }
+
         // Navigation
         public ef_eventos evento { get; set; } = null!;
         public ef_evento_accesos acceso { get; set; } = null!;

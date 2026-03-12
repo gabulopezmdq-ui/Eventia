@@ -31,9 +31,15 @@ namespace API.DataSchema
         /// </summary>
         public string rol_evento { get; set; } = "A";
 
+        public string asiste { get; set; } // P Y N
+
+        public DateTimeOffset? fecha_respuesta { get; set; }
+
+        public ef_invitados invitado { get; set; }
+
         // Navigation properties
         public ef_rsvp_grupos rsvp_grupo { get; set; } = null!;
-        public ef_invitados invitado { get; set; } = null!;
         public ef_evento_edad_rangos? evento_edad_rango { get; set; }
+
     }
 }

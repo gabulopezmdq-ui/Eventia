@@ -104,4 +104,51 @@ namespace API.DataSchema.DTO
 
         public string NombreAcceso { get; set; }
     }
+
+    public class CrearGrupoInvitacionRequest
+    {
+        public long IdEvento { get; set; }
+
+        public long IdAcceso { get; set; }
+
+        public string NombreGrupo { get; set; }
+
+        public int MaxPersonasTotal { get; set; }
+
+        public List<PersonaInvitacionDTO> Personas { get; set; }
+    }
+
+    public class PersonaInvitacionDTO
+    {
+        public string Nombre { get; set; }
+
+        public string Apellido { get; set; }
+
+        public string Email { get; set; }
+
+        public string Celular { get; set; }
+
+        public bool Titular { get; set; }
+
+        public string RolEvento { get; set; } // A / N
+    }
+
+    public class RsvpPersonaConfirmacionDTO
+    {
+        public long? IdInvitado { get; set; }
+
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+
+        public string Email { get; set; }
+        public string Celular { get; set; }
+
+        public bool Asiste { get; set; }
+
+        public string RolEvento { get; set; }
+
+        public string Mensaje { get; set; }
+
+        public string MensajeGrupo { get; set; }
+    }
 }

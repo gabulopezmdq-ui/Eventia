@@ -9,7 +9,7 @@ namespace API.DataSchema
         public long id_acceso_link { get; set; }
 
         public long id_acceso { get; set; }
-
+        public long id_evento { get; set; }
         public string titulo { get; set; } = null!;
         public string? leyenda_publica { get; set; }
 
@@ -32,6 +32,7 @@ namespace API.DataSchema
         public ef_evento_accesos acceso { get; set; } = null!;
         public ef_usuarios? usuario_creador { get; set; }
 
+        public ef_eventos? ef_eventos { get; set; }
         public ICollection<ef_rsvp_grupos> rsvp_grupos { get; set; }
             = new List<ef_rsvp_grupos>();
     }

@@ -25,232 +25,167 @@ namespace API.Services
             _restriccionesService = restriccionesService;
         }
 
-        public async Task ConfirmarAsync(string token, RsvpConfirmacionDTO dto)
+        public async Task ConfirmarAsync(string token, List<RsvpPersonaConfirmacionDTO> datos)
         {
-            // 1. Buscar primero como invitado precargado (rsvp_token)
-            var invitadoPrecargado = await _context.ef_invitados
-                .FirstOrDefaultAsync(i => i.rsvp_token == token && i.activo);
+            var titular = await _context.ef_invitados
+                .Include(x => x.id_rsvp_grupo)
+                .FirstOrDefaultAsync(x => x.rsvp_token == token && x.activo);
 
-            // 2. Si no, buscar como link de acceso genérico
-            var accesoLink = await _context.ef_evento_acceso_links
-                .Include(x => x.acceso)
-                .FirstOrDefaultAsync(x => x.token == token && x.activo);
+            if (titular == null)
+                throw new Exception("Invitación inválida");
 
-            if (invitadoPrecargado == null && accesoLink == null)
-                throw new Exception("Link inválido o inactivo.");
+            var grupo = await _context.ef_rsvp_grupos
+                .Include(g => g.integrantes)
+                    .ThenInclude(i => i.invitado)
+                .FirstOrDefaultAsync(g => g.id_rsvp_grupo == titular.id_rsvp_grupo);
 
-            // 3. Determinar el evento y el responsable
-            long idEvento;
-            ef_invitados responsable;
+            if (grupo == null)
+                throw new Exception("Grupo inexistente");
 
-            if (invitadoPrecargado != null)
+            var ahora = DateTimeOffset.UtcNow;
+
+            foreach (var persona in datos)
             {
-                // Caso invitado precargado
-                idEvento = invitadoPrecargado.id_evento;
-                responsable = invitadoPrecargado;
+                ef_rsvp_grupo_integrantes integrante = null;
 
-                if (responsable.rsvp_estado != "P")
-                    throw new Exception("Este invitado ya ha confirmado previamente.");
-            }
-            else
-            {
-                // Caso link genérico
-                idEvento = accesoLink.acceso.id_evento;
-
-                responsable = new ef_invitados
+                if (persona.IdInvitado != null)
                 {
-                    id_evento = idEvento,
-                    nombre = dto.Nombre.Trim(),
-                    apellido = dto.Apellido.Trim(),
-                    email = dto.Email,
-                    celular = PhoneUtilHelper.NormalizeE164(dto.Celular, "AR"),
-                    rsvp_estado = dto.Asiste ? "Y" : "N",
-                    fecha_rsvp = DateTimeOffset.UtcNow,
-                    fecha_alta = DateTimeOffset.UtcNow,
-                    activo = true,
-                    rsvp_token = TokenUtility.Generate(64),
-                    qr_token = TokenUtility.Generate(64),
-                    id_acceso = accesoLink.id_acceso
-                };
-
-                _context.ef_invitados.Add(responsable);
-            }
-
-            // 4. Obtener evento
-            var evento = await _context.ef_eventos
-                .FirstOrDefaultAsync(e => e.id_evento == idEvento);
-
-            if (evento == null)
-                throw new Exception("Evento no encontrado.");
-
-            // 5. Determinar acceso y link
-            long idAcceso;
-            long idAccesoLink;
-            int? maxPersonasTotal = null;
-            int? maxAdultos = null;
-
-            if (accesoLink != null)
-            {
-                idAcceso = accesoLink.id_acceso;
-                idAccesoLink = accesoLink.id_acceso_link;
-                maxPersonasTotal = accesoLink.max_personas_total;
-                maxAdultos = accesoLink.max_adultos;
-            }
-            else
-            {
-                if (responsable.id_acceso.HasValue)
-                {
-                    idAcceso = responsable.id_acceso.Value;
+                    integrante = grupo.integrantes
+                        .FirstOrDefault(x => x.id_invitado == persona.IdInvitado);
                 }
-                else if (evento.id_acceso_default.HasValue)
+
+                if (integrante != null)
                 {
-                    idAcceso = evento.id_acceso_default.Value;
+                    integrante.asiste = persona.Asiste ? "Y" : "N";
+                    integrante.fecha_respuesta = ahora;
+
+                    integrante.invitado.rsvp_estado = integrante.asiste;
+                    integrante.invitado.rsvp_mensaje = persona.Mensaje;
+                    integrante.invitado.fecha_rsvp = ahora;
+                    integrante.invitado.fecha_modif = ahora;
                 }
                 else
                 {
-                    var accesoDefault = await _context.ef_evento_accesos
-                        .Where(a => a.id_evento == idEvento && a.activo)
-                        .OrderBy(a => a.orden)
-                        .FirstOrDefaultAsync();
+                    if (grupo.integrantes.Count >= grupo.max_personas_total)
+                        throw new Exception("Se superó la cantidad máxima de invitados del grupo");
 
-                    if (accesoDefault == null)
-                        throw new Exception("El evento no tiene accesos configurados.");
+                    var nuevoInvitado = new ef_invitados
+                    {
+                        id_evento = titular.id_evento,
+                        id_acceso = titular.id_acceso,
+                        nombre = persona.Nombre,
+                        apellido = persona.Apellido,
+                        sobrenombre = null,
+                        email = persona.Email,
+                        celular = persona.Celular,
+                        activo = true,
+                        fecha_alta = ahora,
+                        id_usuario_invitador = titular.id_usuario_invitador,
+                        qr_token = TokenUtility.Generate(64),
+                        id_rsvp_grupo = grupo.id_rsvp_grupo,
+                        es_titular_grupo = false,
+                        rsvp_estado = persona.Asiste ? "Y" : "N",
+                        rsvp_mensaje = persona.Mensaje,
+                        fecha_rsvp = ahora,
+                        fecha_modif = ahora
+                    };
 
-                    idAcceso = accesoDefault.id_acceso;
+                    _context.ef_invitados.Add(nuevoInvitado);
+
+                    var nuevoIntegrante = new ef_rsvp_grupo_integrantes
+                    {
+                        id_rsvp_grupo = grupo.id_rsvp_grupo,
+                        invitado = nuevoInvitado,
+                        rol = "A",
+                        orden = grupo.integrantes.Count + 1,
+                        rol_evento = persona.RolEvento,
+                        asiste = persona.Asiste ? "Y" : "N",
+                        fecha_respuesta = ahora
+                    };
+
+                    grupo.integrantes.Add(nuevoIntegrante);
                 }
-
-                var linkDefault = await _context.ef_evento_acceso_links
-                    .Where(l => l.id_acceso == idAcceso && l.activo)
-                    .OrderBy(l => l.fecha_alta)
-                    .FirstOrDefaultAsync();
-
-                if (linkDefault == null)
-                    throw new Exception("No hay link de acceso activo para el acceso seleccionado.");
-
-                idAccesoLink = linkDefault.id_acceso_link;
-                maxPersonasTotal = linkDefault.max_personas_total;
-                maxAdultos = linkDefault.max_adultos;
             }
 
-            // 6. Calcular cantidad total
-            int total = 1 + (dto.Acompanantes?.Count ?? 0);
+            var todos = grupo.integrantes.Select(x => x.asiste).ToList();
 
-            // 7. Crear grupo
+            if (todos.All(x => x == "Y"))
+                grupo.rsvp_estado = "Y";
+            else if (todos.All(x => x == "N"))
+                grupo.rsvp_estado = "N";
+            else
+                grupo.rsvp_estado = "Y";
+
+            grupo.rsvp_mensaje = datos.FirstOrDefault()?.MensajeGrupo;
+            grupo.fecha_rsvp = ahora;
+            grupo.fecha_modif = ahora;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CargarInvitadosAsync(CrearGrupoInvitacionRequest req, long idUsuario)
+        {
+            var evento = await _context.ef_eventos.FindAsync(req.IdEvento);
+
+            if (evento == null)
+                throw new Exception("Evento inexistente");
+
             var grupo = new ef_rsvp_grupos
             {
-                id_evento = idEvento,
-                id_acceso = idAcceso,
-                id_acceso_link = idAccesoLink,
-                max_personas_total = maxPersonasTotal ?? 100,
-                max_adultos = maxAdultos,
-                cantidad_total = total,
-                rsvp_estado = dto.Asiste ? "Y" : "N",
-                rsvp_mensaje = dto.Mensaje,
-                fecha_rsvp = DateTimeOffset.UtcNow,
+                id_evento = req.IdEvento,
+                id_acceso = req.IdAcceso,
+                nombre_grupo = req.NombreGrupo,
+                max_personas_total = req.MaxPersonasTotal,
+                max_adultos = req.Personas.Count(x => x.RolEvento == "A"),
+                cantidad_total = req.MaxPersonasTotal,
+                rsvp_estado = "P",
                 fecha_alta = DateTimeOffset.UtcNow,
                 activo = true
             };
 
-            // 8. Responsable del grupo
-            grupo.integrantes.Add(new ef_rsvp_grupo_integrantes
-            {
-                invitado = responsable,
-                rol = "T",
-                rol_evento = "R",
-                orden = 1
-            });
-
-            // 9. Acompañantes
-            int orden = 2;
-
-            if (dto.Acompanantes != null && dto.Acompanantes.Any())
-            {
-                foreach (var a in dto.Acompanantes)
-                {
-                    var invitadoAcompanante = new ef_invitados
-                    {
-                        id_evento = idEvento,
-                        nombre = a.Nombre,
-                        apellido = a.Apellido,
-                        fecha_alta = DateTimeOffset.UtcNow,
-                        activo = true
-                    };
-
-                    grupo.integrantes.Add(new ef_rsvp_grupo_integrantes
-                    {
-                        invitado = invitadoAcompanante,
-                        rol = "A",
-                        orden = orden++,
-                        edad_anios = a.EdadAnios,
-                        id_evento_edad_rango = a.IdEventoEdadRango
-                    });
-                }
-            }
-
-            // 10. Guardar grupo
             _context.ef_rsvp_grupos.Add(grupo);
-
-            // actualizar estado del responsable
-            responsable.rsvp_estado = dto.Asiste ? "Y" : "N";
-            responsable.fecha_rsvp = DateTimeOffset.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            // 11. Guardar restricciones
-            if (dto.Restricciones != null && dto.Restricciones.Any())
+            int orden = 1;
+
+            foreach (var persona in req.Personas)
             {
-                var restrDto = new RestriccionesGrupoUpsertDTO
-                {
-                    Integrantes = dto.Restricciones
-                };
-
-                await _restriccionesService.SaveMisRestriccionesAsync(
-                    responsable.rsvp_token,
-                    restrDto
-                );
-            }
-        }
-
-        public async Task CargarInvitadosAsync(CargaInvitadosRequest req, long idUsuario)
-        {
-            var evento = await _context.ef_eventos.FindAsync(req.IdEvento);
-            if (evento == null) throw new Exception("Evento inexistente");
-
-            var emails = req.Invitados
-                .Where(x => !string.IsNullOrEmpty(x.Email))
-                .Select(x => x.Email!.ToLower())
-                .ToList();
-
-            var existentes = await _context.ef_invitados
-                .Where(x => x.id_evento == req.IdEvento &&
-                            x.email != null &&
-                            emails.Contains(x.email.ToLower()) &&
-                            x.activo)
-                .Select(x => x.email!.ToLower())
-                .ToListAsync();
-
-            var invitadosValidos = req.Invitados
-                .Where(x => string.IsNullOrEmpty(x.Email) ||
-                            !existentes.Contains(x.Email.ToLower()))
-                .Select(i => new ef_invitados
+                var invitado = new ef_invitados
                 {
                     id_evento = req.IdEvento,
-                    nombre = i.Nombre,
-                    apellido = i.Apellido,
-                    email = i.Email,
-                    celular = i.Celular,
+                    nombre = persona.Nombre,
+                    apellido = persona.Apellido,
+                    email = persona.Email,
+                    celular = persona.Celular,
+                    id_acceso = req.IdAcceso,
                     rsvp_estado = "P",
                     rsvp_token = TokenUtility.Generate(64),
+                    qr_token = TokenUtility.Generate(64),
                     fecha_alta = DateTimeOffset.UtcNow,
                     activo = true,
-                    id_usuario_invitador = idUsuario
-                })
-                .ToList();
+                    id_usuario_invitador = idUsuario,
+                    id_rsvp_grupo = grupo.id_rsvp_grupo,
+                    es_titular_grupo = persona.Titular
+                };
 
-            if (!invitadosValidos.Any())
-                throw new Exception("Todos los invitados ya existen para este evento");
+                _context.ef_invitados.Add(invitado);
 
-            _context.ef_invitados.AddRange(invitadosValidos);
+                await _context.SaveChangesAsync();
+
+                var integrante = new ef_rsvp_grupo_integrantes
+                {
+                    id_rsvp_grupo = grupo.id_rsvp_grupo,
+                    id_invitado = invitado.id_invitado,
+                    rol = persona.Titular ? "T" : "A",
+                    orden = orden++,
+                    rol_evento = persona.RolEvento,
+                    asiste = "P"
+                };
+
+                _context.ef_rsvp_grupo_integrantes.Add(integrante);
+            }
+
             await _context.SaveChangesAsync();
         }
         public async Task<List<InvitadoLinkDTO>> ObtenerInvitadosParaEnvioAsync(long idEvento)
@@ -290,33 +225,27 @@ namespace API.Services
             return token;
         }
 
-        public async Task<string> GenerarLinkInvitacionAsync(string userId)
+        public async Task<string> GenerarLinkInvitacionAsync(long idUsuario, long idAcceso)
         {
-            var clienteId = long.Parse(userId);
-
-            var evento = await _context.ef_eventos
-                .FirstOrDefaultAsync(e => e.id_cliente == clienteId);
-
-            if (evento == null)
-                throw new Exception("Evento no encontrado");
-
             var acceso = await _context.ef_evento_accesos
-                .FirstOrDefaultAsync(a => a.id_evento == evento.id_evento && a.activo);
+                .FirstOrDefaultAsync(x => x.id_acceso == idAcceso);
 
             if (acceso == null)
-                throw new Exception("Acceso no encontrado");
+                throw new Exception("Acceso inexistente");
 
             var token = TokenUtility.Generate(64);
 
             var link = new ef_evento_acceso_links
             {
-                id_acceso = acceso.id_acceso,
+                id_evento = acceso.id_evento,
+                id_acceso = idAcceso,
                 token = token,
-                activo = true,
-                fecha_alta = DateTimeOffset.UtcNow
+                fecha_alta = DateTimeOffset.UtcNow,
+                activo = true
             };
 
             _context.ef_evento_acceso_links.Add(link);
+
             await _context.SaveChangesAsync();
 
             return token;
