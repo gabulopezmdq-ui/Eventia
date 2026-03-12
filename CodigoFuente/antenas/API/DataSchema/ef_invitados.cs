@@ -40,8 +40,11 @@ namespace API.DataSchema
             public long? id_acceso { get; set; }
             public long? id_rsvp_grupo { get; set; }
 
+        public bool es_titular_grupo { get; set; }
+
+       
         // Navigation
-            public ef_eventos? evento { get; set; } = null!;
+        public ef_eventos? evento { get; set; } = null!;
             public ef_evento_accesos? acceso { get; set; }
             public ef_usuarios? usuario_invitador { get; set; }
             public ef_rsvp_grupos? rsvp_grupo { get; set; }

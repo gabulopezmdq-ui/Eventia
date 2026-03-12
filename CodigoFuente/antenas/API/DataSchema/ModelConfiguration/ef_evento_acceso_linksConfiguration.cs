@@ -82,6 +82,11 @@ namespace API.DataSchema.ModelConfiguration
                 .HasForeignKey(x => x.id_usuario_creador)
                 .HasConstraintName("fk_eal_usuario_creador");
 
+            builder.HasOne(x => x.ef_eventos)
+                    .WithMany()
+                    .HasForeignKey(x => x.id_evento);
+
+
             // Check constraints
             builder.HasCheckConstraint(
                 "ck_eal_max_adultos",
