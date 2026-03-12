@@ -8,7 +8,7 @@ namespace API.Services
     {
         //Task<string> GenerarLinkAsync(long idEvento, long idUsuario);
         //Task<object> ObtenerEventoAsync(string token);
-        Task ConfirmarAsync(string token, List<RsvpPersonaConfirmacionDTO> datos);
+        Task ConfirmarAsync(string token, RsvpConfirmacionDTO datos);
         Task<List<InvitadoLinkDTO>> ObtenerInvitadosParaEnvioAsync(long idEvento);
         Task<string> CrearLinkGenericoAsync(CrearLinkGenericoDTO dto);
         Task<InvitacionEventoDTO?> ObtenerDatosInvitacionAsync(string token);

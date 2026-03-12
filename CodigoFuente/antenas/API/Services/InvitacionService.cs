@@ -25,8 +25,38 @@ namespace API.Services
             _restriccionesService = restriccionesService;
         }
 
-        public async Task ConfirmarAsync(string token, List<RsvpPersonaConfirmacionDTO> datos)
+        public async Task ConfirmarAsync(string token, RsvpConfirmacionDTO datos)
         {
+            var personas = new List<RsvpPersonaConfirmacionDTO>();
+
+            personas.Add(new RsvpPersonaConfirmacionDTO
+            {
+                Nombre = datos.Nombre,
+                Apellido = datos.Apellido,
+                Email = datos.Email,
+                Celular = datos.Celular,
+                Asiste = datos.Asiste,
+                RolEvento = "A",
+                Mensaje = datos.Mensaje,
+                MensajeGrupo = datos.Mensaje
+            });
+
+            if (datos.Acompanantes != null)
+            {
+                foreach (var a in datos.Acompanantes)
+                {
+                    personas.Add(new RsvpPersonaConfirmacionDTO
+                    {
+                        Nombre = a.Nombre,
+                        Apellido = a.Apellido,
+                        RolEvento = "A",
+                        Asiste = true,
+                        Mensaje = datos.Mensaje,
+                        MensajeGrupo = datos.Mensaje
+                    });
+                }
+            }
+
             var titular = await _context.ef_invitados
                 .Include(x => x.id_rsvp_grupo)
                 .FirstOrDefaultAsync(x => x.rsvp_token == token && x.activo);
@@ -44,7 +74,7 @@ namespace API.Services
 
             var ahora = DateTimeOffset.UtcNow;
 
-            foreach (var persona in datos)
+            foreach (var persona in personas)
             {
                 ef_rsvp_grupo_integrantes integrante = null;
 
@@ -75,7 +105,6 @@ namespace API.Services
                         id_acceso = titular.id_acceso,
                         nombre = persona.Nombre,
                         apellido = persona.Apellido,
-                        sobrenombre = null,
                         email = persona.Email,
                         celular = persona.Celular,
                         activo = true,
@@ -107,6 +136,8 @@ namespace API.Services
                 }
             }
 
+            grupo.rsvp_mensaje = personas.FirstOrDefault()?.MensajeGrupo;
+
             var todos = grupo.integrantes.Select(x => x.asiste).ToList();
 
             if (todos.All(x => x == "Y"))
@@ -116,7 +147,6 @@ namespace API.Services
             else
                 grupo.rsvp_estado = "Y";
 
-            grupo.rsvp_mensaje = datos.FirstOrDefault()?.MensajeGrupo;
             grupo.fecha_rsvp = ahora;
             grupo.fecha_modif = ahora;
 
