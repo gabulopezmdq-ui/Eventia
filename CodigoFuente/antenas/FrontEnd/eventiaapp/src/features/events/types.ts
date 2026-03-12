@@ -20,6 +20,7 @@ export interface Event {
     estado: string;
     uniqueProperties: unknown[];
     tipo_evento: unknown | null;
+    tipo_evento_codigo?: string;
     idioma: unknown | null;
     dress_code: unknown | null;
     cliente: unknown | null;
