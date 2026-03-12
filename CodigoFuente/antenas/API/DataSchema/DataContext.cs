@@ -80,6 +80,9 @@ namespace API.DataSchema
         public DbSet<ef_pagos> ef_pagos { get; set; }
         public DbSet<ef_webhook_eventos> ef_webhook_eventos { get; set; }
 
+        public DbSet<ef_b2b_prospectos> ef_b2b_prospectos { get; set; }
+        public DbSet<ef_b2b_prospectos_hist> ef_b2b_prospectos_hist { get; set; }
+
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
         public DbSet<MEC_TiposEstablecimientos> MEC_TiposEstablecimientos { get; set; }
@@ -191,6 +194,9 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_suscripcionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_pagosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_webhook_eventosConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_b2b_prospectosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_b2b_prospectos_histConfiguration());
 
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());

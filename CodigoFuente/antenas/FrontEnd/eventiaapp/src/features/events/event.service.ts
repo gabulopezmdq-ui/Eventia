@@ -31,6 +31,8 @@ export async function getMyEvents(): Promise<Event[]> {
         direccion: item.direccion,
         estado: item.estado,
         fecha_alta: item.fechaAlta,
+        tipo_evento: item.tipoEvento,
+        tipo_evento_codigo: item.tipoEventoCodigo,
     })) as Event[];
 }
 
@@ -56,6 +58,8 @@ export async function getEventById(id: string): Promise<Event> {
         direccion: item.direccion,
         estado: item.estado,
         fecha_alta: item.fechaAlta,
+        tipo_evento: item.tipoEvento,
+        tipo_evento_codigo: item.tipoEventoCodigo,
     } as Event;
 }
 
@@ -111,6 +115,8 @@ export async function getAdminEvents(): Promise<Event[]> {
         direccion: item.direccion,
         estado: item.estado,
         fecha_alta: item.fechaAlta,
+        tipo_evento: item.tipoEvento,
+        tipo_evento_codigo: item.tipoEventoCodigo,
     })) as Event[];
 }
 
@@ -155,6 +161,7 @@ export async function getAdminEventById(id: string): Promise<Event> {
         direccion: item.direccion,
         estado: item.estado,
         fecha_alta: item.fechaAlta,
+        tipo_evento_codigo: item.tipoEventoCodigo,
     } as Event;
 }
 
