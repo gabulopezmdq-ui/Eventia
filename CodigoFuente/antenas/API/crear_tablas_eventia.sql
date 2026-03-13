@@ -614,6 +614,9 @@ CREATE TABLE IF NOT EXISTS public.ef_evento_acceso_links (
     CONSTRAINT ck_eal_max_adultos  CHECK (max_adultos IS NULL OR max_adultos >= 0),
     CONSTRAINT ck_eal_max_personas CHECK (max_personas_total >= 1)
 );
+ALTER TABLE public.ef_evento_acceso_links ADD COLUMN IF NOT EXISTS id_evento          bigint;
+-- Populate existing rows with a default/dummy value if null (optional) or leave nullable if postgres allows, but schema says NOT NULL. 
+-- For safety we will leave it as is if it was already migrated.
 ALTER TABLE public.ef_evento_acceso_links ADD COLUMN IF NOT EXISTS id_usuario_creador bigint;
 ALTER TABLE public.ef_evento_acceso_links ADD COLUMN IF NOT EXISTS leyenda_publica    varchar(200);
 ALTER TABLE public.ef_evento_acceso_links ADD COLUMN IF NOT EXISTS max_adultos        integer;
