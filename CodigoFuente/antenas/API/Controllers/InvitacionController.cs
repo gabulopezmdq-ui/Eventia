@@ -4,6 +4,7 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -82,5 +83,47 @@ namespace API.Controllers
             return Ok();
         }
 
+        [HttpGet("{token}")]
+        public async Task<ActionResult<InvitacionTitularDTO>> GetInvitacion(string token)
+        {
+            try
+            {
+                var result = await _invitacionService.ObtenerInvitacionTitularAsync(token);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("{token}/confirmar")]
+        public async Task<IActionResult> Confirmar(string token, RsvpConfirmacionDTO datos)
+        {
+            try
+            {
+                await _invitacionService.ConfirmarAsync(token, datos);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("registro")]
+        public async Task<IActionResult> RegistrarDesdeLink([FromBody] RegistroLinkRequest request)
+        {
+            try
+            {
+                var tokenTitular = await _invitacionService.RegistrarGrupoDesdeLinkAsync(request.TokenLink, request);
+                return Ok(new { token = tokenTitular });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

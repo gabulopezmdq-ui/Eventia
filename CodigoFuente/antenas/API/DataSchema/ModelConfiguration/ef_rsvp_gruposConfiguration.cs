@@ -26,7 +26,7 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.id_acceso_link)
                 .HasColumnName("id_acceso_link")
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(x => x.max_personas_total)
                 .HasColumnName("max_personas_total")
@@ -107,8 +107,7 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired();
 
             builder.Property(x => x.id_acceso_link)
-                .HasColumnName("id_acceso_link")
-                .IsRequired();
+                .HasColumnName("id_acceso_link");
 
             builder.Property(x => x.fecha_alta)
                 .HasColumnName("fecha_alta")
@@ -139,6 +138,13 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasCheckConstraint(
                 "ck_rg_cantidad_total",
                 "cantidad_total >= 1 AND cantidad_total <= max_personas_total");
+
+            builder.Property(x => x.cant_adultos_sin_nombre)
+                    .IsRequired(false);
+
+            builder.Property(x => x.cant_menores_sin_nombre)
+        .IsRequired(false);
+
         }
     }
 }
