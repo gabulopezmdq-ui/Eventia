@@ -10,7 +10,7 @@ namespace API.DataSchema
 
         public long id_evento { get; set; }
         public long id_acceso { get; set; }
-        public long id_acceso_link { get; set; }
+        public long? id_acceso_link { get; set; }
 
         public int max_personas_total { get; set; }
         public int? max_adultos { get; set; }
@@ -33,6 +33,8 @@ namespace API.DataSchema
         public bool activo { get; set; } = true;
 
         public string nombre_grupo { get; set; }
+        public int? cant_adultos_sin_nombre { get; set; }
+        public int? cant_menores_sin_nombre { get; set; }
 
         // Navigation
         public ef_eventos evento { get; set; } = null!;

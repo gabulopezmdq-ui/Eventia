@@ -14,6 +14,7 @@ namespace API.Services
         Task<InvitacionEventoDTO?> ObtenerDatosInvitacionAsync(string token);
         Task<string> GenerarLinkInvitacionAsync(long idUsuario, long idAcceso);
         Task CargarInvitadosAsync(CrearGrupoInvitacionRequest req, long idUsuario);
-
+        Task<InvitacionTitularDTO> ObtenerInvitacionTitularAsync(string token);
+        Task<string> RegistrarGrupoDesdeLinkAsync(string tokenLink, RegistroLinkRequest request);
     }
 }

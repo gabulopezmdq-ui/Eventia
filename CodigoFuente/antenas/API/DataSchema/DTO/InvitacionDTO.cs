@@ -28,21 +28,21 @@ namespace API.DataSchema.DTO
         public string? Celular { get; set; }
     }
 
-    public class RsvpConfirmacionDTO
-    {
-        public string Nombre { get; set; }
-        public string Apellido { get; set; }
+    //public class RsvpConfirmacionDTO
+    //{
+    //    public string Nombre { get; set; }
+    //    public string Apellido { get; set; }
 
-        public string Email { get; set; }
-        public string Celular { get; set; }
+    //    public string Email { get; set; }
+    //    public string Celular { get; set; }
 
-        public bool Asiste { get; set; }
+    //    public bool Asiste { get; set; }
 
-        public string Mensaje { get; set; }
+    //    public string Mensaje { get; set; }
 
-        public List<RsvpAcompanianteDTO> Acompanantes { get; set; }
-        public List<IntegranteRestriccionesUpsertDTO>? Restricciones { get; set; }
-    }
+    //    public List<RsvpAcompanianteDTO> Acompanantes { get; set; }
+    //    public List<IntegranteRestriccionesUpsertDTO>? Restricciones { get; set; }
+    //}
     public class ConfirmarInvitacionDTO
     {
         public string Token { get; set; }
@@ -80,7 +80,7 @@ namespace API.DataSchema.DTO
         public string Apellido { get; set; }
         public string Email { get; set; }
         public string Celular { get; set; }
-        public string Token { get; set; }
+        public string? Token { get; set; }
     }
     public class CrearLinkGenericoDTO
     {
@@ -108,16 +108,13 @@ namespace API.DataSchema.DTO
     public class CrearGrupoInvitacionRequest
     {
         public long IdEvento { get; set; }
-
         public long IdAcceso { get; set; }
-
         public string NombreGrupo { get; set; }
-
         public int MaxPersonasTotal { get; set; }
-
+        public int CantAdultosSinNombre { get; set; }   // <-- nuevo
+        public int CantMenoresSinNombre { get; set; }   // <-- nuevo
         public List<PersonaInvitacionDTO> Personas { get; set; }
     }
-
     public class PersonaInvitacionDTO
     {
         public string Nombre { get; set; }
@@ -133,22 +130,70 @@ namespace API.DataSchema.DTO
         public string RolEvento { get; set; } // A / N
     }
 
-    public class RsvpPersonaConfirmacionDTO
-    {
+public class RsvpPersonaConfirmacionDTO
+{
         public long? IdInvitado { get; set; }
-
         public string Nombre { get; set; }
         public string Apellido { get; set; }
-
         public string Email { get; set; }
         public string Celular { get; set; }
-
-        public bool Asiste { get; set; }
-
+        public int? Edad { get; set; }
         public string RolEvento { get; set; }
+        public bool Asiste { get; set; }
+        public string? Mensaje { get; set; } // Ahora nullable
+    }
 
-        public string Mensaje { get; set; }
-
+    public class RsvpConfirmacionDTO
+    {
         public string MensajeGrupo { get; set; }
+        public List<RsvpPersonaConfirmacionDTO> Personas { get; set; }
+    }
+
+    public class InvitacionTitularDTO
+    {
+        public long IdGrupo { get; set; }
+        public string NombreGrupo { get; set; }
+        public string Saludo { get; set; }
+        public string Anfitriones { get; set; }
+        public string MensajeBienvenida { get; set; }
+        public List<AccesoAgendaDTO> Agenda { get; set; }  // Ahora cada acceso tiene sus tramos
+        public List<PersonaExistenteDTO> Personas { get; set; }
+        public int CuposAdultosRestantes { get; set; }
+        public int CuposMenoresRestantes { get; set; }
+    }
+
+    public class AccesoAgendaDTO
+    {
+        public string NombreAcceso { get; set; }      // Ej: "Iglesia"
+        public List<TramoAgendaDTO> Tramos { get; set; }
+    }
+    public class TramoAgendaDTO
+    {
+        public string Nombre { get; set; }             // Ej: "Ceremonia religiosa"
+        public string Descripcion { get; set; }        // Ej: "llegar 15 minutos antes"
+        public string Lugar { get; set; }               // Ej: "Estancia Santa Clara"
+        public string Direccion { get; set; }           // Ej: "Ruta 2 Km 395"
+        public int Orden { get; set; }
+    }
+    public class PersonaExistenteDTO
+    {
+        public long IdInvitado { get; set; }
+        public string NombreCompleto { get; set; }
+        public string RolEvento { get; set; }   // "A" o "N"
+    }
+
+    public class RegistroLinkRequest
+    {
+        public string TokenLink { get; set; }
+        public string NombreGrupo { get; set; } // opcional
+        public PersonaRegistroDTO Titular { get; set; }
+    }
+
+    public class PersonaRegistroDTO
+    {
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string Email { get; set; }
+        public string Celular { get; set; }
     }
 }
