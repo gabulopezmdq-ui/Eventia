@@ -24,6 +24,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
     const [celular, setCelular] = useState('');
     const [idAcceso, setIdAcceso] = useState<number | ''>('');
     const [accesos, setAccesos] = useState<AccesoEvento[]>([]);
+    const [defaultAccesoId, setDefaultAccesoId] = useState<number | null>(null);
 
     // Status state
     const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -64,8 +65,10 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                 // Set default access if available
                 if (structure.id_acceso_default) {
                     setIdAcceso(structure.id_acceso_default);
+                    setDefaultAccesoId(structure.id_acceso_default);
                 } else if (structure.accesos && structure.accesos.length > 0) {
                     setIdAcceso(structure.accesos[0].id_acceso);
+                    setDefaultAccesoId(structure.accesos[0].id_acceso);
                 }
             } catch (err) {
                 console.error("Error fetching event structure:", err);
@@ -151,9 +154,10 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         setEmail('');
         setCelular('');
         // Re-set default access on close if possible or just reset
-        if (accesos.length > 0) {
-            const def = accesos.find(a => a.es_default) || accesos[0];
-            setIdAcceso(def.id_acceso);
+        if (defaultAccesoId) {
+            setIdAcceso(defaultAccesoId);
+        } else if (accesos.length > 0) {
+            setIdAcceso(accesos[0].id_acceso);
         } else {
             setIdAcceso('');
         }
