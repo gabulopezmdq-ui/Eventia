@@ -57,6 +57,9 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.fecha_modif)
                 .HasColumnName("fecha_modif");
 
+            builder.Property(x => x.requiere_nombres_acompanantes)
+               .HasColumnName("requiere_nombres_acompanantes");
+
             builder.Property(x => x.id_usuario_creador)
                 .HasColumnName("id_usuario_creador");
 
@@ -95,6 +98,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasCheckConstraint(
                 "ck_eal_max_personas",
                 "max_personas_total >= 1");
+
         }
     }
 }

@@ -85,14 +85,11 @@ namespace API.DataSchema.DTO
     public class CrearLinkGenericoDTO
     {
         public long IdAcceso { get; set; }
-
         public string Titulo { get; set; }
-
         public int? MaxPersonasTotal { get; set; }
-
         public int? MaxAdultos { get; set; }
+        public bool RequiereNombresAcompanantes { get; set; } // nuevo
     }
-
     public class InvitacionEventoDTO
     {
         public long IdEvento { get; set; }
@@ -185,8 +182,9 @@ public class RsvpPersonaConfirmacionDTO
     public class RegistroLinkRequest
     {
         public string TokenLink { get; set; }
-        public string NombreGrupo { get; set; } // opcional
+        public string NombreGrupo { get; set; }
         public PersonaRegistroDTO Titular { get; set; }
+        public List<PersonaRegistroDTO> Acompanantes { get; set; } // opcional
     }
 
     public class PersonaRegistroDTO
@@ -195,5 +193,6 @@ public class RsvpPersonaConfirmacionDTO
         public string Apellido { get; set; }
         public string Email { get; set; }
         public string Celular { get; set; }
+        public string RolEvento { get; set; } // "A" o "N"
     }
 }
