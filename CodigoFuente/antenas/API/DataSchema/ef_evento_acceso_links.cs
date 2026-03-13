@@ -28,6 +28,8 @@ namespace API.DataSchema
 
         public long? id_usuario_creador { get; set; }
 
+        public bool requiere_nombres_acompanantes { get; set; } = false;
+
         // Navigation
         public ef_evento_accesos acceso { get; set; } = null!;
         public ef_usuarios? usuario_creador { get; set; }

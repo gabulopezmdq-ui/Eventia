@@ -237,6 +237,7 @@ namespace API.Services
                 token = token,
                 max_personas_total = dto.MaxPersonasTotal ?? 0,
                 max_adultos = dto.MaxAdultos ?? 0,
+                requiere_nombres_acompanantes = dto.RequiereNombresAcompanantes, // nuevo
                 fecha_alta = DateTimeOffset.UtcNow,
                 activo = true
             };
@@ -391,29 +392,40 @@ namespace API.Services
             if (link.max_adultos < 1)
                 throw new Exception("El link no permite adultos");
 
-            // Calcular cupos sin nombre
-            int adultosSinNombre = link.max_adultos - 1;
-            int menoresSinNombre = link.max_personas_total - link.max_adultos;
+            // Calcular cupos totales
+            int totalPersonas = 1; // titular
+            if (request.Acompanantes != null)
+                totalPersonas += request.Acompanantes.Count;
 
-            if (adultosSinNombre < 0 || menoresSinNombre < 0)
-                throw new Exception("Los cupos del link son inconsistentes");
+            if (totalPersonas > link.max_personas_total)
+                throw new Exception($"El link permite hasta {link.max_personas_total} personas. Has excedido el límite.");
+
+            // Validar cantidad de adultos
+            int adultosSolicitados = (request.Titular.RolEvento == "A" ? 1 : 0) +
+                                      (request.Acompanantes?.Count(x => x.RolEvento == "A") ?? 0);
+            if (adultosSolicitados > link.max_adultos)
+                throw new Exception($"El link permite hasta {link.max_adultos} adultos.");
+
+            // Si el link requiere nombres de acompañantes, deben venir todos
+            if (link.requiere_nombres_acompanantes && (request.Acompanantes == null || request.Acompanantes.Count == 0))
+                throw new Exception("Debes proporcionar los datos de todos los acompañantes.");
 
             var ahora = DateTimeOffset.UtcNow;
 
-            // Crear grupo
+            // Crear grupo con cupos sin nombre = 0 (ya se asignan todos)
             var grupo = new ef_rsvp_grupos
             {
                 id_evento = acceso.id_evento,
                 id_acceso = acceso.id_acceso,
-                id_acceso_link = link.id_acceso_link, // asumiendo que existe
+                id_acceso_link = link.id_acceso_link,
                 nombre_grupo = string.IsNullOrWhiteSpace(request.NombreGrupo)
                     ? $"Invitación de {request.Titular.Nombre} {request.Titular.Apellido}"
                     : request.NombreGrupo,
                 max_personas_total = link.max_personas_total,
                 max_adultos = link.max_adultos,
-                cant_adultos_sin_nombre = adultosSinNombre,
-                cant_menores_sin_nombre = menoresSinNombre,
-                cantidad_total = link.max_personas_total,
+                cant_adultos_sin_nombre = 0, // ya no hay cupos libres
+                cant_menores_sin_nombre = 0,
+                cantidad_total = totalPersonas,
                 rsvp_estado = "P",
                 fecha_alta = ahora,
                 activo = true
@@ -422,43 +434,72 @@ namespace API.Services
             _context.ef_rsvp_grupos.Add(grupo);
             await _context.SaveChangesAsync();
 
-            // Crear titular
-            var titularInvitado = new ef_invitados
-            {
-                id_evento = acceso.id_evento,
-                id_acceso = acceso.id_acceso,
-                nombre = request.Titular.Nombre,
-                apellido = request.Titular.Apellido,
-                email = request.Titular.Email,
-                celular = request.Titular.Celular,
-                activo = true,
-                fecha_alta = ahora,
-                id_usuario_invitador = null, // o podríamos buscar quién creó el link si hay campo
-                qr_token = TokenUtility.Generate(64),
-                rsvp_token = TokenUtility.Generate(64),
-                id_rsvp_grupo = grupo.id_rsvp_grupo,
-                es_titular_grupo = true,
-                rsvp_estado = "P"
-            };
+            int orden = 1;
 
+            // Crear titular
+            var titularInvitado = CrearInvitado(acceso, request.Titular, ahora, grupo.id_rsvp_grupo, true);
             _context.ef_invitados.Add(titularInvitado);
             await _context.SaveChangesAsync();
 
-            // Crear integrante
-            var integrante = new ef_rsvp_grupo_integrantes
+            _context.ef_rsvp_grupo_integrantes.Add(new ef_rsvp_grupo_integrantes
             {
                 id_rsvp_grupo = grupo.id_rsvp_grupo,
                 id_invitado = titularInvitado.id_invitado,
                 rol = "T",
-                orden = 1,
-                rol_evento = "A",
+                orden = orden++,
+                rol_evento = request.Titular.RolEvento,
                 asiste = "P"
-            };
+            });
 
-            _context.ef_rsvp_grupo_integrantes.Add(integrante);
+            // Crear acompañantes si existen
+            if (request.Acompanantes != null)
+            {
+                foreach (var acomp in request.Acompanantes)
+                {
+                    var invitado = CrearInvitado(acceso, acomp, ahora, grupo.id_rsvp_grupo, false);
+                    _context.ef_invitados.Add(invitado);
+                    await _context.SaveChangesAsync();
+
+                    _context.ef_rsvp_grupo_integrantes.Add(new ef_rsvp_grupo_integrantes
+                    {
+                        id_rsvp_grupo = grupo.id_rsvp_grupo,
+                        id_invitado = invitado.id_invitado,
+                        rol = "A",
+                        orden = orden++,
+                        rol_evento = acomp.RolEvento,
+                        asiste = "P"
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Opcional: desactivar el link si es de un solo uso
+            link.activo = false;
             await _context.SaveChangesAsync();
 
             return titularInvitado.rsvp_token;
+        }
+
+        private ef_invitados CrearInvitado(ef_evento_accesos acceso, PersonaRegistroDTO data, DateTimeOffset ahora, long idGrupo, bool esTitular)
+        {
+            return new ef_invitados
+            {
+                id_evento = acceso.id_evento,
+                id_acceso = acceso.id_acceso,
+                nombre = data.Nombre,
+                apellido = data.Apellido,
+                email = data.Email,
+                celular = data.Celular,
+                activo = true,
+                fecha_alta = ahora,
+                id_usuario_invitador = null,
+                qr_token = TokenUtility.Generate(64),
+                rsvp_token = esTitular ? TokenUtility.Generate(64) : null,
+                id_rsvp_grupo = idGrupo,
+                es_titular_grupo = esTitular,
+                rsvp_estado = "P"
+            };
         }
     }
 }
