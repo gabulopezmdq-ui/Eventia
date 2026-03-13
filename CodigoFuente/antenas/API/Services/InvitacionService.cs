@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -230,8 +230,12 @@ namespace API.Services
         {
             var token = TokenUtility.Generate(64);
 
+            var acceso = await _context.ef_evento_accesos.FindAsync(dto.IdAcceso);
+            if (acceso == null) throw new Exception("Acceso no encontrado");
+
             var link = new ef_evento_acceso_links
             {
+                id_evento = acceso.id_evento,
                 id_acceso = dto.IdAcceso,
                 titulo = dto.Titulo,
                 token = token,
