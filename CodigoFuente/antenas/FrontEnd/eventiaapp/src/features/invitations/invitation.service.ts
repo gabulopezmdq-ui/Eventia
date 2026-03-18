@@ -29,7 +29,51 @@ export interface InvitadoListado {
     rsvpEstado: 'P' | 'C' | 'R'; // P=Pendiente, C=Confirmado, R=Rechazado
 }
 
+// ── Tipos para Grupo Manual ──
+
+export interface PersonaGrupo {
+    nombre: string;
+    apellido: string;
+    email?: string;
+    celular?: string;
+    titular: boolean;
+    rolEvento: 'A' | 'N'; // A = Adulto, N = Niño
+}
+
+export interface CrearGrupoPayload {
+    idEvento: number;
+    idAcceso: number;
+    nombreGrupo: string;
+    maxPersonasTotal: number;
+    cantAdultosSinNombre: number;
+    cantMenoresSinNombre: number;
+    personas: PersonaGrupo[];
+}
+
 // Services
+
+/**
+ * Crear un grupo de invitados manualmente.
+ * POST /api/invitaciones/grupo → POST /invitacion/grupo
+ */
+export async function crearGrupoManual(payload: CrearGrupoPayload): Promise<void> {
+    const res = await fetch('/api/invitaciones/grupo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        const errText = await res.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { message: errText }; }
+        throw new Error(
+            errData?.details
+                ? (typeof errData.details === 'string' ? errData.details : JSON.stringify(errData.details))
+                : errData?.message || 'Error al crear el grupo de invitados'
+        );
+    }
+}
 
 export async function cargarInvitacion(payload: CargarInvitadoPayload): Promise<InvitacionResponse[]> {
     const res = await fetch('/api/invitaciones/cargar', {
