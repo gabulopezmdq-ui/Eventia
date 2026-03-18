@@ -7,7 +7,7 @@ import {
     ChevronLeft, Plus, Users, Search, Filter,
     MoreVertical, Mail, Phone, X, Check, Copy, AlertCircle, RefreshCw, Loader2
 } from 'lucide-react';
-import { cargarInvitacion, listarInvitados, InvitadoListado } from '@/src/features/invitations/invitation.service';
+import { crearGrupoManual, cargarInvitacion, listarInvitados, InvitadoListado } from '@/src/features/invitations/invitation.service';
 import { getEstructuraEvento } from '@/src/features/events/event.service';
 import { AccesoEvento } from '@/src/features/events/types';
 
@@ -25,6 +25,11 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
     const [idAcceso, setIdAcceso] = useState<number | ''>('');
     const [accesos, setAccesos] = useState<AccesoEvento[]>([]);
     const [defaultAccesoId, setDefaultAccesoId] = useState<number | null>(null);
+
+    // Group fields
+    const [nombreGrupo, setNombreGrupo] = useState('');
+    const [cantAdultosExtra, setCantAdultosExtra] = useState(0);
+    const [cantMenores, setCantMenores] = useState(0);
 
     // Status state
     const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -101,20 +106,34 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         setError(null);
 
         try {
-            await cargarInvitacion({
+            // Build the grupo name automatically if not provided
+            const grupoName = nombreGrupo.trim()
+                || (cantAdultosExtra + cantMenores > 0
+                    ? `${nombre} + ${cantAdultosExtra + cantMenores}`
+                    : `${nombre} ${apellido}`);
+
+            // 1 titular (adulto) + extra adults + children
+            const maxPersonasTotal = 1 + cantAdultosExtra + cantMenores;
+
+            await crearGrupoManual({
                 idEvento: Number(id),
-                invitados: [{
+                idAcceso: idAcceso !== '' ? Number(idAcceso) : 0,
+                nombreGrupo: grupoName,
+                maxPersonasTotal,
+                cantAdultosSinNombre: cantAdultosExtra,
+                cantMenoresSinNombre: cantMenores,
+                personas: [{
                     nombre,
                     apellido,
                     email: email || undefined,
                     celular: celular || undefined,
-                    idAcceso: idAcceso !== '' ? Number(idAcceso) : undefined
-                }]
+                    titular: true,
+                    rolEvento: 'A',
+                }],
             });
 
-            // Backend returns {success:true}. Fetch updated list to get the token.
+            // Refresh guest list to show the new group
             await fetchInvitados();
-            // Use a sentinel value to trigger the success screen in the modal
             setGeneratedLink('__success__');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al generar la invitación');
@@ -153,6 +172,9 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         setApellido('');
         setEmail('');
         setCelular('');
+        setNombreGrupo('');
+        setCantAdultosExtra(0);
+        setCantMenores(0);
         // Re-set default access on close if possible or just reset
         if (defaultAccesoId) {
             setIdAcceso(defaultAccesoId);
@@ -416,6 +438,53 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                                                 </option>
                                             ))}
                                         </select>
+                                    </div>
+
+                                    {/* ── Grupo / Acompañantes ── */}
+                                    <div className="pt-4 border-t border-card-border/30">
+                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Grupo / Acompañantes</p>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Nombre del grupo <span className="text-muted/50">(opcional)</span></label>
+                                            <input
+                                                value={nombreGrupo}
+                                                onChange={(e) => setNombreGrupo(e.target.value)}
+                                                placeholder={`Ej: ${nombre || 'María'} + familia`}
+                                                className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm outline-none text-foreground"
+                                            />
+                                            <p className="text-[10px] text-muted/60 mt-1">Si lo dejás vacío se genera automáticamente.</p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 mt-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Adultos extra</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={20}
+                                                    value={cantAdultosExtra}
+                                                    onChange={(e) => setCantAdultosExtra(Math.max(0, Number(e.target.value)))}
+                                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm outline-none text-foreground"
+                                                />
+                                                <p className="text-[10px] text-muted/60 mt-1">Sin nombre por ahora</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Menores</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={20}
+                                                    value={cantMenores}
+                                                    onChange={(e) => setCantMenores(Math.max(0, Number(e.target.value)))}
+                                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm outline-none text-foreground"
+                                                />
+                                                <p className="text-[10px] text-muted/60 mt-1">Sin nombre por ahora</p>
+                                            </div>
+                                        </div>
+                                        {(cantAdultosExtra + cantMenores > 0) && (
+                                            <div className="mt-3 px-3 py-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-xs text-indigo-300">
+                                                Total del grupo: <span className="font-bold">{1 + cantAdultosExtra + cantMenores}</span> persona{1 + cantAdultosExtra + cantMenores !== 1 ? 's' : ''}
+                                                {' '}({1 + cantAdultosExtra} adulto{1 + cantAdultosExtra !== 1 ? 's' : ''}, {cantMenores} menor{cantMenores !== 1 ? 'es' : ''})
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="pt-4 flex items-center justify-end gap-3 border-t border-card-border/50">
