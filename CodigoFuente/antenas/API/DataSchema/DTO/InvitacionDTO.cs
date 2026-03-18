@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace API.DataSchema.DTO
@@ -137,7 +137,9 @@ public class RsvpPersonaConfirmacionDTO
         public int? Edad { get; set; }
         public string RolEvento { get; set; }
         public bool Asiste { get; set; }
-        public string? Mensaje { get; set; } // Ahora nullable
+        public string? Mensaje { get; set; }
+        public string? AlimentacionDetalle { get; set; }
+        public List<long>? IdsRestricciones { get; set; }
     }
 
     public class RsvpConfirmacionDTO
