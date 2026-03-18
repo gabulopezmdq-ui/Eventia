@@ -65,6 +65,16 @@ namespace API.Services
                     invitado.rsvp_mensaje = persona.Mensaje;
                     invitado.fecha_rsvp = ahora;
                     invitado.fecha_modif = ahora;
+
+                    // Actualizar edad y alimentación si vienen
+                    integranteExistente.edad_anios = (short?)(persona.Edad ?? integranteExistente.edad_anios);
+                    integranteExistente.alimentacion_detalle = persona.AlimentacionDetalle ?? integranteExistente.alimentacion_detalle;
+
+                    // Procesar restricciones (chips seleccionados)
+                    if (persona.IdsRestricciones != null)
+                    {
+                        await GuardarRestriccionesManualAsync(integranteExistente.id_rsvp_grupo_integrante, persona.IdsRestricciones);
+                    }
                 }
                 else
                 {
@@ -120,10 +130,22 @@ namespace API.Services
                         orden = grupo.integrantes.Count + 1,
                         rol_evento = persona.RolEvento,
                         asiste = persona.Asiste ? "Y" : "N",
+                        edad_anios = (short?)persona.Edad,
+                        alimentacion_detalle = persona.AlimentacionDetalle,
                         fecha_respuesta = ahora
                     };
 
                     _context.ef_rsvp_grupo_integrantes.Add(nuevoIntegrante);
+                    await _context.SaveChangesAsync(); // Para tener el id_rsvp_grupo_integrante
+
+                    // Procesar restricciones (chips seleccionados)
+                    if (persona.IdsRestricciones != null)
+                    {
+                        await GuardarRestriccionesManualAsync(nuevoIntegrante.id_rsvp_grupo_integrante, persona.IdsRestricciones);
+                    }
+                    
+                    // IMPORTANTE: agregar a la colección para que el cálculo de estados lo tome en cuenta
+                    grupo.integrantes.Add(nuevoIntegrante);
                 }
             }
 
@@ -141,6 +163,27 @@ namespace API.Services
             grupo.fecha_modif = ahora;
 
             await _context.SaveChangesAsync();
+        }
+
+        private async Task GuardarRestriccionesManualAsync(long idIntegrante, List<long> idsRestricciones)
+        {
+            // Borramos existentes y re-insertamos
+            var existentes = await _context.ef_rsvp_integrante_restricciones
+                .Where(x => x.id_rsvp_grupo_integrante == idIntegrante)
+                .ToListAsync();
+
+            if (existentes.Any())
+                _context.ef_rsvp_integrante_restricciones.RemoveRange(existentes);
+
+            foreach (var idR in idsRestricciones)
+            {
+                _context.ef_rsvp_integrante_restricciones.Add(new ef_rsvp_integrante_restricciones
+                {
+                    id_rsvp_grupo_integrante = idIntegrante,
+                    id_restriccion_alim = idR,
+                    fecha_alta = DateTime.UtcNow
+                });
+            }
         }
 
         public async Task CargarInvitadosAsync(CrearGrupoInvitacionRequest req, long idUsuario)

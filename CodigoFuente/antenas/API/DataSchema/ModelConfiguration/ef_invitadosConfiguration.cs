@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -45,7 +45,7 @@ namespace API.DataSchema.ModelConfiguration
                 builder.Property(x => x.rsvp_token)
                     .HasColumnName("rsvp_token")
                     .HasMaxLength(64)
-                    .IsRequired();
+                    .IsRequired(false);
 
                 builder.Property(x => x.rsvp_estado)
                     .HasColumnName("rsvp_estado")
