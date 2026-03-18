@@ -26,13 +26,42 @@ namespace API.Controllers
         [HttpGet("Pendientes")]
         public async Task<IActionResult> Pendientes()
         {
-            var list = await _context.Set<ef_b2b_prospectos>()
-                .AsNoTracking()
-                .Where(x => x.activo == true && (x.estado == "NUEVO" || x.estado == "CONTACTADO" || x.estado == "CALIFICADO"))
-                .OrderBy(x => x.proximo_contacto == null)
-                .ThenBy(x => x.proximo_contacto)
-                .ThenByDescending(x => x.fecha_alta)
-                .ToListAsync();
+            var list = await (
+                from p in _context.Set<ef_b2b_prospectos>().AsNoTracking()
+
+                    // LEFT JOIN usuarios asignados (puede ser null)
+                join u in _context.Set<ef_usuarios>().AsNoTracking()
+                    on p.id_usuario_asignado equals u.id_usuario into uJ
+                from u in uJ.DefaultIfEmpty()
+
+                where p.activo == true &&
+                      (p.estado == "NUEVO" || p.estado == "CONTACTADO" || p.estado == "CALIFICADO")
+
+                orderby (p.proximo_contacto == null), p.proximo_contacto, p.fecha_alta descending
+
+                select new ProspectoB2BPendienteGridDTO
+                {
+                    id_prospecto = p.id_prospecto,
+                    fecha_alta = p.fecha_alta,
+
+                    estado = p.estado,
+                    empresa_nombre = p.empresa_nombre,
+                    nombre_apellido = p.nombre_apellido,
+                    ciudad = p.ciudad,
+                    pais = p.pais,
+
+                    whatsapp = p.whatsapp,
+                    email = p.email,
+                    eventos_por_mes = p.eventos_por_mes,
+
+                    proximo_contacto = p.proximo_contacto,
+
+                    id_usuario_asignado = p.id_usuario_asignado,
+
+                    asignado_nombre = (u != null ? (u.nombre + " " + u.apellido) : null),
+                    asignado_email = (u != null ? u.email : null)
+                }
+            ).ToListAsync();
 
             return Ok(list);
         }
