@@ -39,6 +39,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 });
 
 QuestPDF.Settings.License = LicenseType.Community;
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 
 // Reconfigurar configuration SIN FileSystemWatcher
@@ -122,7 +123,6 @@ builder.Services.AddDbContext<DataContext>(options =>
            .EnableSensitiveDataLogging()
            .LogTo(Console.WriteLine, LogLevel.Information));
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddHealthChecks();
 
 // Registro de servicios principales

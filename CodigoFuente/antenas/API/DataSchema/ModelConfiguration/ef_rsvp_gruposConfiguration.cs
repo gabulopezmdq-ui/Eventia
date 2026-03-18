@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -139,11 +139,19 @@ namespace API.DataSchema.ModelConfiguration
                 "ck_rg_cantidad_total",
                 "cantidad_total >= 1 AND cantidad_total <= max_personas_total");
 
+            builder.Property(x => x.nombre_grupo)
+                .HasColumnName("nombre_grupo")
+                .IsRequired();
+
             builder.Property(x => x.cant_adultos_sin_nombre)
-                    .IsRequired(false);
+                .HasColumnName("cant_adultos_sin_nombre")
+                .HasDefaultValue(0)
+                .IsRequired();
 
             builder.Property(x => x.cant_menores_sin_nombre)
-        .IsRequired(false);
+                .HasColumnName("cant_menores_sin_nombre")
+                .HasDefaultValue(0)
+                .IsRequired();
 
         }
     }
