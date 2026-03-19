@@ -27,17 +27,24 @@ namespace API.Services
 
         public async Task ConfirmarAsync(string token, RsvpConfirmacionDTO datos)
         {
+            if (string.IsNullOrWhiteSpace(token))
+                throw new Exception("Token de invitación inválido (vacío)");
+
             // Buscar al titular a través del token
             var titular = await _context.ef_invitados
                 .FirstOrDefaultAsync(x => x.rsvp_token == token && x.activo);
 
             if (titular == null)
-                throw new Exception("Invitación inválida");
+                throw new Exception("Invitación no encontrada o token inválido");
+
+            if (titular.id_rsvp_grupo == null)
+                throw new Exception("El invitado no pertenece a ningún grupo RSVP");
 
             var grupo = await _context.ef_rsvp_grupos
                 .Include(g => g.integrantes)
                     .ThenInclude(i => i.invitado)
                 .FirstOrDefaultAsync(g => g.id_rsvp_grupo == titular.id_rsvp_grupo);
+
 
             if (grupo == null)
                 throw new Exception("Grupo inexistente");
@@ -82,15 +89,15 @@ namespace API.Services
                     // Verificar cupos disponibles según el rol
                     if (persona.RolEvento == "A")
                     {
-                        if (grupo.cant_adultos_sin_nombre <= 0)
+                        if ((grupo.cant_adultos_sin_nombre ?? 0) <= 0)
                             throw new Exception("No hay cupos disponibles para adultos adicionales");
-                        grupo.cant_adultos_sin_nombre--;
+                        grupo.cant_adultos_sin_nombre = (grupo.cant_adultos_sin_nombre ?? 0) - 1;
                     }
                     else if (persona.RolEvento == "N")
                     {
-                        if (grupo.cant_menores_sin_nombre <= 0)
+                        if ((grupo.cant_menores_sin_nombre ?? 0) <= 0)
                             throw new Exception("No hay cupos disponibles para menores adicionales");
-                        grupo.cant_menores_sin_nombre--;
+                        grupo.cant_menores_sin_nombre = (grupo.cant_menores_sin_nombre ?? 0) - 1;
                     }
                     else
                     {
@@ -399,7 +406,8 @@ namespace API.Services
                 {
                     IdInvitado = i.id_invitado,
                     NombreCompleto = $"{i.invitado.nombre} {i.invitado.apellido}",
-                    RolEvento = i.rol_evento
+                    RolEvento = i.rol_evento,
+                    Asiste = i.asiste
                 })
                 .ToList();
 
