@@ -13,19 +13,17 @@ export async function POST(req: Request) {
 
         const body = await req.json();
 
-        // Backend expects: { token: "...", datos: { nombre, apellido, ... } }
-        const backendBody = {
-            token,
-            datos: body,
-        };
+        // El backend espera la nueva estructura recibiendo el token en la URL:
+        // POST /invitacion/{token}/confirmar
+        // Body: { "mensajeGrupo": "...", "personas": [ ... ] }
 
         // Guest endpoint, no need for access_token cookie
-        const res = await fetch(`${API_URL}/invitacion/Confirmar`, {
+        const res = await fetch(`${API_URL}/invitacion/${token}/confirmar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(backendBody),
+            body: JSON.stringify(body),
         });
 
         if (!res.ok) {
