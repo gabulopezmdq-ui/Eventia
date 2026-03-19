@@ -17,7 +17,8 @@ namespace API.DataSchema
             public string? email { get; set; }
             public string? celular { get; set; }
 
-            public string rsvp_token { get; set; } = null!;
+            public string? rsvp_token { get; set; }
+
 
             /// <summary>
             /// P = Pendiente, Y = Yes, N = No

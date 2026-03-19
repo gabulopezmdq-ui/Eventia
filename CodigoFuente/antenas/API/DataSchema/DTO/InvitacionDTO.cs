@@ -179,6 +179,7 @@ public class RsvpPersonaConfirmacionDTO
         public long IdInvitado { get; set; }
         public string NombreCompleto { get; set; }
         public string RolEvento { get; set; }   // "A" o "N"
+        public string Asiste { get; set; }      // "P", "Y", "N"
     }
 
     public class RegistroLinkRequest

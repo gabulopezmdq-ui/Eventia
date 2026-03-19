@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -97,6 +97,7 @@ namespace API.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("{token}/confirmar")]
         public async Task<IActionResult> Confirmar(string token, RsvpConfirmacionDTO datos)
         {
