@@ -129,7 +129,6 @@ namespace API.Services
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
-
             bool existeTipo = await _context.Set<ef_tipos_evento>()
                 .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
 
@@ -164,7 +163,7 @@ namespace API.Services
             if (plan == null)
                 throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
 
-            // ✅ Regla actual (un borrador por usuario) – la dejamos como la tenías
+            //Regla actual (un borrador por usuario) 
             bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu =>
                     eu.id_usuario == idUsuario &&
@@ -205,10 +204,10 @@ namespace API.Services
                 modo_acceso = "I",
                 modo_asistencia = "R",
 
-                // ✅ plan
+                // asignar plan
                 id_plan = plan.id_plan,
 
-                // ✅ estado inicial según plan
+                // estado inicial según plan
                 estado = (plan.codigo == "B2C_FREE") ? EventoEstado.Borrador : EventoEstado.PendientePago
 
             };
