@@ -96,7 +96,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
 
     // ── Stats ──
     const totalInvitados = invitados.length;
-    const confirmados = invitados.filter(i => i.rsvpEstado === 'C').length;
+    const confirmados = invitados.filter(i => i.rsvpEstado === 'Y').length;
     const pendientes = invitados.filter(i => i.rsvpEstado === 'P').length;
     const rechazados = invitados.filter(i => i.rsvpEstado === 'R').length;
 
@@ -158,7 +158,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
 
     const estadoLabel = (estado: string) => {
         switch (estado) {
-            case 'C': return { text: 'Confirmado', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+            case 'Y': return { text: 'Confirmado', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
             case 'R': return { text: 'Rechazado', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
             default: return { text: 'Pendiente', className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
         }
@@ -329,7 +329,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                                     {/* Estado */}
                                     <div>
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${badge.className}`}>
-                                            {inv.rsvpEstado === 'C' && <Check className="w-3 h-3" />}
+                                            {inv.rsvpEstado === 'Y' && <Check className="w-3 h-3" />}
                                             {inv.rsvpEstado === 'R' && <X className="w-3 h-3" />}
                                             {badge.text}
                                         </span>

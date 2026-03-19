@@ -60,6 +60,7 @@ export default function RsvpPage({ params }: { params: Promise<{ token: string }
             let inviteData: InvitacionPersonalResponse | null = null;
             try {
                 inviteData = await getInvitacionPersonal(token);
+                console.log('=== INFO DEL TOKEN ===', inviteData);
                 setInvitacion(inviteData);
             } catch {
                 // Fallback: try legacy endpoint for basic data
@@ -183,7 +184,7 @@ export default function RsvpPage({ params }: { params: Promise<{ token: string }
         try {
             // Build the personas payload
             const personasPayload: PersonaConfirmarPayload[] = personas.map(p => ({
-                ...(p.idInvitado ? { idInvitado: p.idInvitado } : {}),
+                idInvitado: p.idInvitado || 0,
                 nombre: p.nombre,
                 apellido: p.apellido,
                 email: p.email || undefined,
@@ -193,10 +194,14 @@ export default function RsvpPage({ params }: { params: Promise<{ token: string }
                 mensaje: p.mensaje || undefined,
             }));
 
-            await confirmarRsvp(token, {
+            const payloadAEnviar = {
                 mensajeGrupo: mensajeGrupo || undefined,
                 personas: personasPayload,
-            });
+            };
+
+            console.log('=== INFO DEL RSVP A ENVIAR ===', payloadAEnviar);
+
+            await confirmarRsvp(token, payloadAEnviar);
 
             if (!globalAsiste) {
                 setStep('SUCCESS');

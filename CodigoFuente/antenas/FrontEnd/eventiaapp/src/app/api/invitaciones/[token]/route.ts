@@ -30,6 +30,8 @@ export async function GET(
         }
 
         const data = await res.json();
+        console.log(`--- RAW RESPUESTA BACKEND (GET /invitacion/${token}) ---`);
+        console.dir(data, { depth: null });
         return NextResponse.json(data);
     } catch (error) {
         console.error('Proxy Error GET /invitaciones/[token]:', error);
