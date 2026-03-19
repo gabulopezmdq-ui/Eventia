@@ -407,7 +407,8 @@ namespace API.Services
                     IdInvitado = i.id_invitado,
                     NombreCompleto = $"{i.invitado.nombre} {i.invitado.apellido}",
                     RolEvento = i.rol_evento,
-                    Asiste = i.asiste
+                    Asiste = i.asiste,
+                    EsTitular = i.rol == "T"
                 })
                 .ToList();
 

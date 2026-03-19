@@ -180,6 +180,7 @@ public class RsvpPersonaConfirmacionDTO
         public string NombreCompleto { get; set; }
         public string RolEvento { get; set; }   // "A" o "N"
         public string Asiste { get; set; }      // "P", "Y", "N"
+        public bool EsTitular { get; set; }
     }
 
     public class RegistroLinkRequest
