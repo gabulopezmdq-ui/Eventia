@@ -81,6 +81,8 @@ namespace API.DataSchema.DTO
         public string Email { get; set; }
         public string Celular { get; set; }
         public string? Token { get; set; }
+        public string RsvpEstado { get; set; } // "P", "Y", "N"
+        public long? IdRsvpGrupo { get; set; }
     }
     public class CrearLinkGenericoDTO
     {
@@ -130,10 +132,10 @@ namespace API.DataSchema.DTO
 public class RsvpPersonaConfirmacionDTO
 {
         public long? IdInvitado { get; set; }
-        public string Nombre { get; set; }
-        public string Apellido { get; set; }
-        public string Email { get; set; }
-        public string Celular { get; set; }
+        public string Nombre { get; set; } = null!;
+        public string Apellido { get; set; } = null!;
+        public string? Email { get; set; }
+        public string? Celular { get; set; }
         public int? Edad { get; set; }
         public string RolEvento { get; set; }
         public bool Asiste { get; set; }

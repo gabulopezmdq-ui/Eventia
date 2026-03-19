@@ -27,15 +27,16 @@ namespace API.Services
 
         public async Task ConfirmarAsync(string token, RsvpConfirmacionDTO datos)
         {
+            token = token?.Trim();
             if (string.IsNullOrWhiteSpace(token))
                 throw new Exception("Token de invitación inválido (vacío)");
 
-            // Buscar al titular a través del token
+            // Buscar al titular a través del token (insensible a mayúsculas para descartar collation)
             var titular = await _context.ef_invitados
-                .FirstOrDefaultAsync(x => x.rsvp_token == token && x.activo);
+                .FirstOrDefaultAsync(x => x.rsvp_token.ToLower() == token.ToLower() && x.activo);
 
             if (titular == null)
-                throw new Exception("Invitación no encontrada o token inválido");
+                throw new Exception($"Invitación no encontrada o token inválido para: {token}");
 
             if (titular.id_rsvp_grupo == null)
                 throw new Exception("El invitado no pertenece a ningún grupo RSVP");
@@ -54,9 +55,19 @@ namespace API.Services
             // 1. Procesar cada persona enviada en la confirmación
             foreach (var persona in datos.Personas)
             {
+                // Validación: El titular debe tener email y celular obligatoriamente
+                if (persona.IdInvitado == titular.id_invitado)
+                {
+                    if (string.IsNullOrWhiteSpace(persona.Email))
+                        throw new Exception($"El email del titular ({persona.Nombre}) es obligatorio.");
+                    if (string.IsNullOrWhiteSpace(persona.Celular))
+                        throw new Exception($"El celular del titular ({persona.Nombre}) es obligatorio.");
+                }
+
                 // Buscar si ya existe como integrante (por IdInvitado)
                 var integranteExistente = grupo.integrantes
                     .FirstOrDefault(i => i.id_invitado == persona.IdInvitado);
+
 
                 if (integranteExistente != null)
                 {
@@ -271,7 +282,9 @@ namespace API.Services
                     Apellido = x.apellido,
                     Email = x.email,
                     Celular = x.celular,
-                    Token = x.rsvp_token // se asume que no es null, pero si lo fuera, el DTO debería ser nullable
+                    Token = x.rsvp_token,
+                    RsvpEstado = x.rsvp_estado,
+                    IdRsvpGrupo = x.id_rsvp_grupo
                 })
                 .ToListAsync();
         }
