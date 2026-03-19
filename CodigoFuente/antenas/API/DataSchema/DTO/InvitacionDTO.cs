@@ -81,6 +81,8 @@ namespace API.DataSchema.DTO
         public string Email { get; set; }
         public string Celular { get; set; }
         public string? Token { get; set; }
+        public string RsvpEstado { get; set; } // "P", "Y", "N"
+        public long? IdRsvpGrupo { get; set; }
     }
     public class CrearLinkGenericoDTO
     {

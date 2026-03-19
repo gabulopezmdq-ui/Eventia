@@ -41,7 +41,7 @@ namespace API.Controllers
             return Ok();
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpGet("tokens")]
         public async Task<IActionResult> ObtenerTokensInvitados([FromQuery] long idEvento)
         {
