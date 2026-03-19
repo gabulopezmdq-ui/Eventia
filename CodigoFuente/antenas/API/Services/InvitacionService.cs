@@ -282,7 +282,9 @@ namespace API.Services
                     Apellido = x.apellido,
                     Email = x.email,
                     Celular = x.celular,
-                    Token = x.rsvp_token // se asume que no es null, pero si lo fuera, el DTO debería ser nullable
+                    Token = x.rsvp_token,
+                    RsvpEstado = x.rsvp_estado,
+                    IdRsvpGrupo = x.id_rsvp_grupo
                 })
                 .ToListAsync();
         }
