@@ -99,7 +99,7 @@ namespace API.Controllers
 
         [AllowAnonymous]
         [HttpPost("{token}/confirmar")]
-        public async Task<IActionResult> Confirmar(string token, RsvpConfirmacionDTO datos)
+        public async Task<IActionResult> Confirmar([FromRoute] string token, [FromBody] RsvpConfirmacionDTO datos)
         {
             try
             {
