@@ -22,9 +22,10 @@ namespace API.DataSchema.ModelConfiguration
                    .HasMaxLength(20)
                    .IsRequired();
 
-            builder.Property(x => x.activo)
-                   .IsRequired()
-                   .HasDefaultValue(true);
+            builder.Property(x => x.estado)
+                .HasMaxLength(1)
+                .IsRequired()
+                .HasDefaultValue("P");
 
             builder.Property(x => x.fecha_alta)
                    .IsRequired()

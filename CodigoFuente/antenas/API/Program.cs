@@ -30,6 +30,7 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using QuestPDF.Infrastructure;
+using API.Services.Cuentas;
 
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -139,6 +140,8 @@ builder.Services.AddScoped<IQrService, QrService>();
 builder.Services.AddScoped<IPorteroService, PorteroService>();
 builder.Services.AddScoped<IAlimentacionService, AlimentacionService>();
 builder.Services.AddScoped<IRestriccionesService, RestriccionesService>();
+builder.Services.AddScoped<ICuentaContextService, CuentaContextService>();
+builder.Services.AddScoped<ICuentasService, CuentasService>();
 
 
 // Registro de repositorios

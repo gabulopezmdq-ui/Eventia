@@ -11,7 +11,7 @@ namespace API.DataSchema
         public string nombre_cuenta { get; set; } = null!;
         public string tipo { get; set; } = null!;
 
-        public bool activo { get; set; }
+        public string estado { get; set; }
 
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
@@ -20,7 +20,6 @@ namespace API.DataSchema
         public string[] UniqueProperties => new[] { "nombre_cuenta" };
 
         // Navegaciones
-        public virtual ICollection<ef_clientes> clientes { get; set; }
-            = new List<ef_clientes>();
+        public virtual ICollection<ef_clientes>? clientes { get; set; } = new List<ef_clientes>();
     }   
 }
