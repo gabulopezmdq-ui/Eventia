@@ -31,6 +31,7 @@ namespace API.Services
             if (string.IsNullOrWhiteSpace(token))
                 throw new Exception("Token de invitación inválido (vacío)");
 
+            // Buscar al titular a través del token (insensible a mayúsculas para descartar collation)
             var titular = await _context.ef_invitados
                 .FirstOrDefaultAsync(x => x.rsvp_token.ToLower() == token.ToLower() && x.activo);
 
@@ -45,14 +46,16 @@ namespace API.Services
                     .ThenInclude(i => i.invitado)
                 .FirstOrDefaultAsync(g => g.id_rsvp_grupo == titular.id_rsvp_grupo);
 
+
             if (grupo == null)
                 throw new Exception("Grupo inexistente");
 
             var ahora = DateTimeOffset.UtcNow;
 
+            // 1. Procesar cada persona enviada en la confirmación
             foreach (var persona in datos.Personas)
             {
-                // Validación de titular
+                // Validación: El titular debe tener email y celular obligatoriamente
                 if (persona.IdInvitado == titular.id_invitado)
                 {
                     if (string.IsNullOrWhiteSpace(persona.Email))
@@ -61,29 +64,77 @@ namespace API.Services
                         throw new Exception($"El celular del titular ({persona.Nombre}) es obligatorio.");
                 }
 
-                var integranteExistente = grupo.integrantes
-                    .FirstOrDefault(i => i.id_invitado == persona.IdInvitado && persona.IdInvitado > 0);
+                // Buscar si ya existe como integrante
+                // Si IdInvitado > 0, buscar por ID; si es 0 (persona nueva sin ID asignado),
+                // buscar por email o nombre+apellido entre los integrantes ya persistidos
+                ef_rsvp_grupo_integrantes? integranteExistente = null;
+                if (persona.IdInvitado > 0)
+                {
+                    integranteExistente = grupo.integrantes
+                        .FirstOrDefault(i => i.id_invitado == persona.IdInvitado);
+                }
+                else
+                {
+                    // Persona nueva (sin ID asignado): buscar en BD para evitar duplicados
+                    // en caso de que el endpoint sea llamado más de una vez con los mismos datos
+                    if (!string.IsNullOrWhiteSpace(persona.Email))
+                    {
+                        // Buscar directamente en BD por email dentro del grupo
+                        var invExistente = await _context.ef_invitados
+                            .FirstOrDefaultAsync(i =>
+                                i.id_rsvp_grupo == grupo.id_rsvp_grupo &&
+                                i.email.ToLower() == persona.Email.ToLower() &&
+                                i.activo);
+
+                        if (invExistente != null)
+                        {
+                            // Buscar su integrante (puede estar o no en la colección en memoria)
+                            integranteExistente = grupo.integrantes
+                                .FirstOrDefault(i => i.id_invitado == invExistente.id_invitado);
+
+                            // Si no estaba en la colección cargada, buscarlo en BD
+                            if (integranteExistente == null)
+                            {
+                                integranteExistente = await _context.ef_rsvp_grupo_integrantes
+                                    .Include(i => i.invitado)
+                                    .FirstOrDefaultAsync(i => i.id_invitado == invExistente.id_invitado);
+
+                                if (integranteExistente != null)
+                                    grupo.integrantes.Add(integranteExistente);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Sin email: buscar por nombre+apellido en la colección en memoria
+                        integranteExistente = grupo.integrantes
+                            .FirstOrDefault(i => i.invitado != null &&
+                                string.Equals(i.invitado.nombre, persona.Nombre, StringComparison.OrdinalIgnoreCase) &&
+                                string.Equals(i.invitado.apellido, persona.Apellido, StringComparison.OrdinalIgnoreCase));
+                    }
+                }
+
 
                 if (integranteExistente != null)
                 {
-                    // Actualizar integrante conocido
+                    // Actualizar persona conocida
                     integranteExistente.asiste = persona.Asiste ? "Y" : "N";
                     integranteExistente.fecha_respuesta = ahora;
 
+                    // Actualizar datos del invitado (email, celular, mensaje personal)
                     var invitado = integranteExistente.invitado;
-                    if (invitado != null)
-                    {
-                        invitado.email = persona.Email ?? invitado.email;
-                        invitado.celular = persona.Celular ?? invitado.celular;
-                        invitado.rsvp_estado = integranteExistente.asiste;
-                        invitado.rsvp_mensaje = persona.Mensaje;
-                        invitado.fecha_rsvp = ahora;
-                        invitado.fecha_modif = ahora;
-                    }
+                    invitado.email = persona.Email ?? invitado.email;
+                    invitado.celular = persona.Celular ?? invitado.celular;
+                    invitado.rsvp_estado = integranteExistente.asiste;
+                    invitado.rsvp_mensaje = persona.Mensaje;
+                    invitado.fecha_rsvp = ahora;
+                    invitado.fecha_modif = ahora;
 
+                    // Actualizar edad y alimentación si vienen
                     integranteExistente.edad_anios = (short?)(persona.Edad ?? integranteExistente.edad_anios);
                     integranteExistente.alimentacion_detalle = persona.AlimentacionDetalle ?? integranteExistente.alimentacion_detalle;
 
+                    // Procesar restricciones (chips seleccionados)
                     if (persona.IdsRestricciones != null)
                     {
                         await GuardarRestriccionesManualAsync(integranteExistente.id_rsvp_grupo_integrante, persona.IdsRestricciones);
@@ -91,27 +142,17 @@ namespace API.Services
                 }
                 else
                 {
-                    // Nueva persona
-                    if (persona.RolEvento == "A")
-                    {
-                        if ((grupo.cant_adultos_sin_nombre ?? 0) <= 0)
-                            throw new Exception("No hay cupos disponibles para adultos adicionales");
-                        grupo.cant_adultos_sin_nombre -= 1;
-                    }
-                    else if (persona.RolEvento == "N")
-                    {
-                        if ((grupo.cant_menores_sin_nombre ?? 0) <= 0)
-                            throw new Exception("No hay cupos disponibles para menores adicionales");
-                        grupo.cant_menores_sin_nombre -= 1;
-                    }
-                    else
-                    {
+                    // Es una persona nueva (se está agregando ahora)
+                    // Verificar cupo total disponible: integrantes actuales vs max_personas_total
+                    var ocupacionActual = grupo.integrantes.Count;
+                    var maxTotal = grupo.max_personas_total;
+                    if (ocupacionActual >= maxTotal)
+                        throw new Exception($"No hay cupos disponibles en el grupo (máximo: {maxTotal})");
+
+                    if (persona.RolEvento != "A" && persona.RolEvento != "N")
                         throw new Exception("Rol de evento inválido");
-                    }
 
-                    // Incrementar el contador total del grupo para mantener consistencia con los cupos
-                    grupo.cantidad_total += 1;
-
+                    // Crear nuevo invitado
                     var nuevoInvitado = new ef_invitados
                     {
                         id_evento = titular.id_evento,
@@ -132,11 +173,15 @@ namespace API.Services
                         fecha_modif = ahora
                     };
 
+                    _context.ef_invitados.Add(nuevoInvitado);
+                    await _context.SaveChangesAsync(); // Para obtener el ID generado
+
+                    // Crear nuevo integrante
                     var nuevoIntegrante = new ef_rsvp_grupo_integrantes
                     {
                         id_rsvp_grupo = grupo.id_rsvp_grupo,
-                        invitado = nuevoInvitado, // Vinculación por objeto
-                        rol = "A",
+                        id_invitado = nuevoInvitado.id_invitado,
+                        rol = "A", // acompañante (no titular)
                         orden = grupo.integrantes.Count + 1,
                         rol_evento = persona.RolEvento,
                         asiste = persona.Asiste ? "Y" : "N",
@@ -146,43 +191,33 @@ namespace API.Services
                     };
 
                     _context.ef_rsvp_grupo_integrantes.Add(nuevoIntegrante);
-                    grupo.integrantes.Add(nuevoIntegrante);
+                    await _context.SaveChangesAsync(); // Para tener el id_rsvp_grupo_integrante
 
-                    // Nota: Las restricciones para nuevos integrantes se guardarán en el Save final
-                    // si persona.IdsRestricciones no es null, pero requiere que id_rsvp_grupo_integrante exista. 
-                    // Para simplificar, si hay restricciones para un NUEVO integrante, las procesamos después del save o usamos navegación.
+                    // Procesar restricciones (chips seleccionados)
+                    if (persona.IdsRestricciones != null)
+                    {
+                        await GuardarRestriccionesManualAsync(nuevoIntegrante.id_rsvp_grupo_integrante, persona.IdsRestricciones);
+                    }
+                    
+                    // IMPORTANTE: agregar a la colección para que el cálculo de estados lo tome en cuenta
+                    grupo.integrantes.Add(nuevoIntegrante);
                 }
             }
 
-            // Determinar estado final del grupo
+            // 2. Determinar el estado final del grupo
             var estados = grupo.integrantes.Select(x => x.asiste).ToList();
             if (estados.All(x => x == "Y"))
                 grupo.rsvp_estado = "Y";
             else if (estados.All(x => x == "N"))
                 grupo.rsvp_estado = "N";
             else
-                grupo.rsvp_estado = "Y"; 
+                grupo.rsvp_estado = "Y"; // Mixto, consideramos confirmado (o podrías usar "P" si prefieres)
 
             grupo.rsvp_mensaje = datos.MensajeGrupo;
             grupo.fecha_rsvp = ahora;
             grupo.fecha_modif = ahora;
 
             await _context.SaveChangesAsync();
-
-            // Si se agregaron restricciones para integrantes nuevos, se guardan ahora que ya tienen ID
-            foreach (var persona in datos.Personas.Where(p => p.IdInvitado <= 0 && p.IdsRestricciones != null && p.IdsRestricciones.Any()))
-            {
-                var integrante = grupo.integrantes.FirstOrDefault(i => i.invitado.nombre == persona.Nombre && i.invitado.apellido == persona.Apellido);
-                if (integrante != null)
-                {
-                    await GuardarRestriccionesManualAsync(integrante.id_rsvp_grupo_integrante, persona.IdsRestricciones);
-                }
-            }
-            
-            if (datos.Personas.Any(p => p.IdInvitado <= 0 && p.IdsRestricciones != null && p.IdsRestricciones.Any()))
-            {
-                await _context.SaveChangesAsync();
-            }
         }
 
         private async Task GuardarRestriccionesManualAsync(long idIntegrante, List<long> idsRestricciones)
