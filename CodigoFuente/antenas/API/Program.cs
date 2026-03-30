@@ -142,6 +142,7 @@ builder.Services.AddScoped<IAlimentacionService, AlimentacionService>();
 builder.Services.AddScoped<IRestriccionesService, RestriccionesService>();
 builder.Services.AddScoped<ICuentaContextService, CuentaContextService>();
 builder.Services.AddScoped<ICuentasService, CuentasService>();
+builder.Services.AddScoped<AuthContextService>();
 
 
 // Registro de repositorios

@@ -27,10 +27,12 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<ef_usuarios> _service;
         private readonly loginService _loginService;
+        private readonly AuthContextService _authContextService;
 
-        public authController(loginService loginService)
+        public authController(loginService loginService, AuthContextService authContextService)
         {
             _loginService = loginService;
+            _authContextService = authContextService;
         }
 
         // POST /auth/google
@@ -57,18 +59,25 @@ namespace API.Controllers
 
         [Authorize]
         [HttpGet("me")]
-        public ActionResult me()
+        public async Task<ActionResult<Auth_me_responseDTO>> me()
         {
-            var idUsuario = User.Claims.FirstOrDefault(c => c.Type == "id_usuario")?.Value;
-            var email = User.Claims.FirstOrDefault(c => c.Type.EndsWith("/emailaddress") || c.Type == "email")?.Value;
-            var roles = User.Claims.Where(c => c.Type.EndsWith("/role")).Select(c => c.Value).ToList();
-
-            return Ok(new
+            try
             {
-                id_usuario = idUsuario,
-                email = email,
-                roles = roles
-            });
+                var idUsuarioStr = User.Claims.FirstOrDefault(c => c.Type == "id_usuario")?.Value
+                                   ?? User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+
+                if (string.IsNullOrWhiteSpace(idUsuarioStr))
+                    return Unauthorized(new { message = "No se pudo obtener el id_usuario del token." });
+
+                long id_usuario = Convert.ToInt64(idUsuarioStr);
+
+                var result = await _authContextService.GetContext(id_usuario);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [AllowAnonymous]
