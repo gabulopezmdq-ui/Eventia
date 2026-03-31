@@ -310,20 +310,28 @@ namespace API.Services
         }
         public async Task<List<InvitadoLinkDTO>> ObtenerInvitadosParaEnvioAsync(long idEvento)
         {
-            return await _context.ef_invitados
-                .Where(x => x.id_evento == idEvento && x.activo && x.es_titular_grupo) // solo titulares
-                .Select(x => new InvitadoLinkDTO
-                {
-                    IdInvitado = x.id_invitado,
-                    Nombre = x.nombre,
-                    Apellido = x.apellido,
-                    Email = x.email,
-                    Celular = x.celular,
-                    Token = x.rsvp_token,
-                    RsvpEstado = x.rsvp_estado,
-                    IdRsvpGrupo = x.id_rsvp_grupo
-                })
+            var invitados = await _context.ef_invitados
+                .Include(x => x.rsvp_grupo)
+                    .ThenInclude(g => g.acceso)
+                        .ThenInclude(a => a.acceso_tramos)
+                            .ThenInclude(at => at.tramo)
+                .Where(x => x.id_evento == idEvento && x.activo && x.es_titular_grupo)
                 .ToListAsync();
+
+            return invitados.Select(x => new InvitadoLinkDTO
+            {
+                IdInvitado = x.id_invitado,
+                Nombre = x.nombre,
+                Apellido = x.apellido,
+                Email = x.email,
+                Celular = x.celular,
+                Token = x.rsvp_token,
+                RsvpEstado = x.rsvp_estado,
+                IdRsvpGrupo = x.id_rsvp_grupo,
+                Tramos = x.rsvp_grupo?.acceso?.acceso_tramos != null 
+                    ? string.Join(", ", x.rsvp_grupo.acceso.acceso_tramos.Where(at => at.tramo != null).Select(at => at.tramo!.nombre))
+                    : ""
+            }).ToList();
         }
 
         public async Task<string> CrearLinkGenericoAsync(CrearLinkGenericoDTO dto)
