@@ -7,5 +7,6 @@ namespace API.Services.Cuentas
     {
         Task<CuentaResponseDTO> GetMiCuentaAsync(long id_usuario);
         Task<CuentaResponseDTO> UpdateMiCuentaAsync(long id_usuario, CuentaUpdateRequestDTO request);
+        Task<cuenta_solicitar_response> SolicitarCuentaAsync(long id_usuario, cuenta_solicitar_request request);
     }
 }

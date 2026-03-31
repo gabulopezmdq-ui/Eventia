@@ -78,5 +78,32 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Ocurrió un error interno." });
             }
         }
+
+        [HttpPost("SolicitarCuenta")]
+        public async Task<ActionResult<cuenta_solicitar_response>> SolicitarCuenta([FromBody] cuenta_solicitar_request request)
+        {
+            try
+            {
+                long id_usuario = Security.ClaimsExtensions.GetUserId(User);
+
+                var result = await _cuentasService.SolicitarCuentaAsync(id_usuario, request);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, "No autorizado al solicitar cuenta.");
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Error de negocio al solicitar cuenta.");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al solicitar cuenta.");
+                return StatusCode(500, new { message = "Ocurrió un error interno." });
+            }
+        }
     }
 }
