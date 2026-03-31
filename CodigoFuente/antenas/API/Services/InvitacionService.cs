@@ -328,6 +328,7 @@ namespace API.Services
                 Token = x.rsvp_token,
                 RsvpEstado = x.rsvp_estado,
                 IdRsvpGrupo = x.id_rsvp_grupo,
+                IdAcceso = x.id_acceso,
                 Tramos = x.rsvp_grupo?.acceso?.acceso_tramos != null 
                     ? string.Join(", ", x.rsvp_grupo.acceso.acceso_tramos.Where(at => at.tramo != null).Select(at => at.tramo!.nombre))
                     : ""
