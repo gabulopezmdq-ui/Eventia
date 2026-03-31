@@ -117,5 +117,65 @@ namespace API.Services
                 }
             ).ToListAsync();
         }
+
+        public async Task<List<ParametricaDTO>> GetPaisesAsync(short idIdioma)
+        {
+            var query =
+                from p in _context.ef_paises
+                join t in _context.ef_param_traducciones
+                    on new { entidad = "PAIS", id_item = (long)p.id_pais, id_idioma = idIdioma }
+                    equals new { t.entidad, t.id_item, t.id_idioma }
+                where p.activo && t.activo
+                orderby p.orden, t.texto
+                select new ParametricaDTO
+                {
+                    Id = p.id_pais,
+                    Codigo = p.codigo_iso2,
+                    Texto = t.texto,
+                    Orden = p.orden
+                };
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<ParametricaDTO>> GetTiposIdentificacionFiscalAsync(short idIdioma)
+        {
+            var query =
+                from x in _context.ef_tipos_identificacion_fiscal
+                join t in _context.ef_param_traducciones
+                    on new { entidad = "TIPO_IDENTIFICACION_FISCAL", id_item = (long)x.id_tipo_identificacion_fiscal, id_idioma = idIdioma }
+                    equals new { t.entidad, t.id_item, t.id_idioma }
+                where x.activo && t.activo
+                orderby x.orden, t.texto
+                select new ParametricaDTO
+                {
+                    Id = x.id_tipo_identificacion_fiscal,
+                    Codigo = x.codigo,
+                    Texto = t.texto,
+                    Orden = x.orden
+                };
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<ParametricaDTO>> GetTiposIdentificacionFiscalByPaisAsync(short idPais, short idIdioma)
+        {
+            var query =
+                from x in _context.ef_tipos_identificacion_fiscal
+                join t in _context.ef_param_traducciones
+                    on new { entidad = "TIPO_IDENTIFICACION_FISCAL", id_item = (long)x.id_tipo_identificacion_fiscal, id_idioma = idIdioma }
+                    equals new { t.entidad, t.id_item, t.id_idioma }
+                where x.activo && t.activo && x.id_pais == idPais
+                orderby x.orden, t.texto
+                select new ParametricaDTO
+                {
+                    Id = x.id_tipo_identificacion_fiscal,
+                    Codigo = x.codigo,
+                    Texto = t.texto,
+                    Orden = x.orden
+                };
+
+            return await query.ToListAsync();
+        }
     }
 }
