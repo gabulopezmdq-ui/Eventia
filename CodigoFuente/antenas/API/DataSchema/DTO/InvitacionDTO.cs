@@ -84,6 +84,7 @@ namespace API.DataSchema.DTO
         public string? Tramos { get; set; }
         public string RsvpEstado { get; set; } // "P", "Y", "N"
         public long? IdRsvpGrupo { get; set; }
+        public long? IdAcceso { get; set; }
     }
     public class CrearLinkGenericoDTO
     {
