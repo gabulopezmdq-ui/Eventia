@@ -1,5 +1,4 @@
-﻿using API.DataSchema;
-using API.DataSchema.DTO;
+﻿using API.DataSchema.DTO;
 using API.DataSchema.DTO.Cuentas;
 using API.Services.Cuentas;
 using Microsoft.AspNetCore.Authorization;
@@ -15,16 +14,13 @@ namespace API.Controllers
     [Route("[controller]")]
     public class cuentasController : ControllerBase
     {
-        private readonly DataContext _context;
         private readonly ILogger<cuentasController> _logger;
         private readonly ICuentasService _cuentasService;
 
         public cuentasController(
-            DataContext context,
             ILogger<cuentasController> logger,
             ICuentasService cuentasService)
         {
-            _context = context;
             _logger = logger;
             _cuentasService = cuentasService;
         }
@@ -39,10 +35,20 @@ namespace API.Controllers
                 var result = await _cuentasService.GetMiCuentaAsync(id_usuario);
                 return Ok(result);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, "No autorizado al obtener la cuenta del usuario.");
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Error de negocio al obtener la cuenta del usuario.");
+                return BadRequest(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener la cuenta del usuario.");
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "Error inesperado al obtener la cuenta del usuario.");
+                return StatusCode(500, new { message = "Ocurrió un error interno." });
             }
         }
 
@@ -56,10 +62,20 @@ namespace API.Controllers
                 var result = await _cuentasService.UpdateMiCuentaAsync(id_usuario, request);
                 return Ok(result);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, "No autorizado al actualizar la cuenta del usuario.");
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Error de negocio al actualizar la cuenta del usuario.");
+                return BadRequest(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar la cuenta del usuario.");
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "Error inesperado al actualizar la cuenta del usuario.");
+                return StatusCode(500, new { message = "Ocurrió un error interno." });
             }
         }
     }
