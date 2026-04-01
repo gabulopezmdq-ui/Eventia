@@ -5,11 +5,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function POST(req: Request) {
     const { idToken } = await req.json();
 
+    console.time('External-API-Call');
     const res = await fetch(`${API_URL}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token: idToken }), // Backend expects id_token (snake_case)
     });
+    console.timeEnd('External-API-Call');
 
     if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
