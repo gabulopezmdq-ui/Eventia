@@ -1,27 +1,25 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// POST /api/invitaciones/grupo → Crear grupo de invitados manualmente
 export async function POST(req: Request) {
     try {
-        const { searchParams } = new URL(req.url);
-        const token = searchParams.get('token');
+        const cookieStore = await cookies();
+        const authToken = cookieStore.get('access_token')?.value;
 
-        if (!token) {
-            return NextResponse.json({ message: 'Missing token' }, { status: 400 });
+        if (!authToken) {
+            return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
         }
 
         const body = await req.json();
 
-        // El backend espera la nueva estructura recibiendo el token en la URL:
-        // POST /invitacion/{token}/confirmar
-        // Body: { "mensajeGrupo": "...", "personas": [ ... ] }
-
-        // Guest endpoint, no need for access_token cookie
-        const res = await fetch(`${API_URL}/invitacion/${token}/confirmar`, {
+        const res = await fetch(`${API_URL}/invitacion/grupo`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
             },
             body: JSON.stringify(body),
         });
@@ -31,7 +29,7 @@ export async function POST(req: Request) {
             let errorData;
             try {
                 errorData = JSON.parse(errorText);
-            } catch (e) {
+            } catch {
                 errorData = errorText;
             }
             return NextResponse.json(
@@ -44,7 +42,7 @@ export async function POST(req: Request) {
         const data = text ? JSON.parse(text) : { success: true };
         return NextResponse.json(data);
     } catch (error) {
-        console.error('Proxy Error /invitaciones/confirmar:', error);
+        console.error('Proxy Error POST /invitaciones/grupo:', error);
         return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
     }
 }

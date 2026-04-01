@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// GET /api/invitaciones?idEvento=15 → listado de invitados del evento
+// GET /api/invitaciones/tokens?idEvento=1
+// Obtener tokens de invitados (titulares) con token RSVP.
 export async function GET(req: Request) {
     try {
         const cookieStore = await cookies();
@@ -38,13 +39,9 @@ export async function GET(req: Request) {
         }
 
         const data = await res.json();
-        // Map backend field `token` → `rsvpToken` expected by the frontend types
-        const mapped = Array.isArray(data)
-            ? data.map((inv: Record<string, unknown>) => ({ ...inv, rsvpToken: inv.token ?? inv.rsvpToken }))
-            : data;
-        return NextResponse.json(mapped);
+        return NextResponse.json(data);
     } catch (error) {
-        console.error('Proxy Error GET /invitaciones:', error);
+        console.error('Proxy Error GET /invitaciones/tokens:', error);
         return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
     }
 }

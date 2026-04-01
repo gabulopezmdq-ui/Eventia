@@ -2,22 +2,21 @@ import { NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function POST(req: Request) {
+// POST /api/invitaciones/[token]/confirmar → POST /invitacion/{token}/confirmar
+// Confirma asistencia RSVP del grupo
+export async function POST(
+    req: Request,
+    { params }: { params: Promise<{ token: string }> }
+) {
     try {
-        const { searchParams } = new URL(req.url);
-        const token = searchParams.get('token');
+        const { token } = await params;
 
         if (!token) {
-            return NextResponse.json({ message: 'Missing token' }, { status: 400 });
+            return NextResponse.json({ message: 'Token requerido' }, { status: 400 });
         }
 
         const body = await req.json();
 
-        // El backend espera la nueva estructura recibiendo el token en la URL:
-        // POST /invitacion/{token}/confirmar
-        // Body: { "mensajeGrupo": "...", "personas": [ ... ] }
-
-        // Guest endpoint, no need for access_token cookie
         const res = await fetch(`${API_URL}/invitacion/${token}/confirmar`, {
             method: 'POST',
             headers: {
@@ -29,11 +28,7 @@ export async function POST(req: Request) {
         if (!res.ok) {
             const errorText = await res.text();
             let errorData;
-            try {
-                errorData = JSON.parse(errorText);
-            } catch (e) {
-                errorData = errorText;
-            }
+            try { errorData = JSON.parse(errorText); } catch { errorData = errorText; }
             return NextResponse.json(
                 { message: 'Error en la API de backend', details: errorData },
                 { status: res.status }
@@ -44,7 +39,7 @@ export async function POST(req: Request) {
         const data = text ? JSON.parse(text) : { success: true };
         return NextResponse.json(data);
     } catch (error) {
-        console.error('Proxy Error /invitaciones/confirmar:', error);
+        console.error('Proxy Error POST /invitaciones/[token]/confirmar:', error);
         return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
     }
 }

@@ -1,4 +1,4 @@
-// Tipos
+// ── Tipos ──
 
 export interface CatalogoRestriccion {
     idRestriccion: number;
@@ -8,22 +8,6 @@ export interface CatalogoRestriccion {
     categoria: string;
     iconKey?: string;
     orden: number;
-}
-
-export interface NinosPayload {
-    nombre: string;
-    apellido: string;
-}
-
-export interface ConfirmarRsvpPayload {
-    nombre: string;
-    apellido: string;
-    email: string;
-    celular: string;
-    asiste: boolean;
-    mensaje?: string;
-    acompanantes?: NinosPayload[];
-    extras?: number;
 }
 
 export interface RestriccionItem {
@@ -47,14 +31,90 @@ export interface GuardarRestriccionesPayload {
     integrantes: IntegranteRestriccion[];
 }
 
-// Services
+// ── Tipos para Invitación Personal (GET /invitacion/{token}) ──
+
+export interface TramoInvitacion {
+    nombre: string;
+    descripcion: string;
+    lugar: string;
+    direccion: string;
+    orden: number;
+}
+
+export interface AccesoInvitacion {
+    nombreAcceso: string;
+    tramos: TramoInvitacion[];
+}
+
+export interface PersonaInvitacion {
+    idInvitado: number;
+    nombreCompleto: string;
+    rolEvento: 'A' | 'N'; // A = Adulto, N = Niño
+}
+
+export interface InvitacionPersonalResponse {
+    idGrupo: number;
+    nombreGrupo: string;
+    saludo: string;
+    anfitriones: string;
+    mensajeBienvenida: string;
+    agenda: AccesoInvitacion[];
+    personas: PersonaInvitacion[];
+    cuposAdultosRestantes: number;
+    cuposMenoresRestantes: number;
+}
+
+// ── Tipos para Confirmar RSVP (POST /invitacion/{token}/confirmar) ──
+
+export interface PersonaConfirmarPayload {
+    idInvitado?: number;       // Si existe → persona conocida. Si no → se crea.
+    nombre: string;
+    apellido: string;
+    email?: string;
+    celular?: string;
+    rolEvento: 'A' | 'N';
+    asiste: boolean;
+    mensaje?: string;
+}
+
+export interface ConfirmarRsvpPayload {
+    mensajeGrupo?: string;
+    personas: PersonaConfirmarPayload[];
+}
+
+// ── Tipos legacy (mantener compatibilidad) ──
+
+export interface NinosPayload {
+    nombre: string;
+    apellido: string;
+}
+
+// ── Services ──
 
 /**
- * PASO 3: Confirmar asistencia del invitado.
- * POST /api/invitaciones/confirmar?token={token}
+ * Obtener la invitación personal completa (grupo, agenda, personas, cupos).
+ * GET /api/invitaciones/{token} → GET /invitacion/{token}
+ */
+export async function getInvitacionPersonal(token: string): Promise<InvitacionPersonalResponse> {
+    const res = await fetch(`/api/invitaciones/${token}`);
+
+    if (!res.ok) {
+        const errText = await res.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { message: errText }; }
+        throw new Error(errData?.message || 'Error al obtener la invitación');
+    }
+
+    return res.json();
+}
+
+/**
+ * Confirmar asistencia RSVP del grupo.
+ * POST /api/invitaciones/{token}/confirmar
+ * Envía: { mensajeGrupo, personas: [...] }
  */
 export async function confirmarRsvp(token: string, payload: ConfirmarRsvpPayload): Promise<any> {
-    const res = await fetch(`/api/invitaciones/confirmar?token=${token}`, {
+    const res = await fetch(`/api/invitaciones/${token}/confirmar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
