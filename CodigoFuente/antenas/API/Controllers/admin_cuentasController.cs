@@ -90,6 +90,22 @@ namespace API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPut("Reactivar")]
+        public async Task<ActionResult<admin_reactivar_cuenta_response>> Reactivar([FromBody] admin_reactivar_cuenta_request request)
+        {
+            try
+            {
+                long id_usuario_admin = Security.ClaimsExtensions.GetUserId(User);
+
+                var result = await _adminCuentasService.ReactivarAsync(request, id_usuario_admin);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al reactivar cuenta.");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
-

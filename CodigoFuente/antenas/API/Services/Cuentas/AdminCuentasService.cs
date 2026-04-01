@@ -223,5 +223,42 @@ namespace API.Services.Cuentas
                 codigo_plan_nuevo = planNuevo.codigo
             };
         }
+
+        public async Task<admin_reactivar_cuenta_response> ReactivarAsync(admin_reactivar_cuenta_request request, long id_usuario_admin)
+        {
+            if (request.id_cuenta <= 0)
+                throw new InvalidOperationException("Debe informar la cuenta.");
+
+            var cuenta = await _context.ef_cuentas
+                .FirstOrDefaultAsync(x => x.id_cuenta == request.id_cuenta);
+
+            if (cuenta == null)
+                throw new InvalidOperationException("La cuenta no existe.");
+
+            if (cuenta.estado != "S")
+                throw new InvalidOperationException("Solo se pueden reactivar cuentas suspendidas.");
+
+            cuenta.estado = "A";
+            cuenta.fecha_modif = DateTimeOffset.UtcNow;
+
+            var vinculosCuenta = await _context.ef_cuenta_usuarios
+                .Where(x => x.id_cuenta == request.id_cuenta)
+                .ToListAsync();
+
+            foreach (var item in vinculosCuenta)
+            {
+                item.activo = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new admin_reactivar_cuenta_response
+            {
+                ok = true,
+                id_cuenta = cuenta.id_cuenta,
+                estado = cuenta.estado
+            };
+        }
+
     }
 }

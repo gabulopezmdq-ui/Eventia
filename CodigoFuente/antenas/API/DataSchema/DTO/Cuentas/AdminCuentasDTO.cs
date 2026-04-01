@@ -58,4 +58,17 @@ namespace API.DataSchema.DTO
         public string codigo_plan_anterior { get; set; }
         public string codigo_plan_nuevo { get; set; }
     }
+
+    public class admin_reactivar_cuenta_request
+    {
+        public long id_cuenta { get; set; }
+        public string observacion { get; set; }
+    }
+
+    public class admin_reactivar_cuenta_response
+    {
+        public bool ok { get; set; }
+        public long id_cuenta { get; set; }
+        public string estado { get; set; }
+    }
 }
