@@ -44,65 +44,38 @@ namespace API.Services.Cuentas
 
         public async Task<admin_aprobar_cuenta_response> AprobarAsync(admin_aprobar_cuenta_request request, long id_usuario_admin)
         {
-            if (request.id_cuenta <= 0)
-                throw new InvalidOperationException("Debe informar la cuenta.");
+            var now = DateTimeOffset.UtcNow;
 
-            if (string.IsNullOrWhiteSpace(request.codigo_plan))
-                throw new InvalidOperationException("Debe informar el código de plan.");
-
-            var cuenta = await _context.ef_cuentas
-                .FirstOrDefaultAsync(x => x.id_cuenta == request.id_cuenta);
+            var cuenta = await _context.Set<ef_cuentas>()
+                .SingleOrDefaultAsync(c => c.id_cuenta == request.id_cuenta);
 
             if (cuenta == null)
-                throw new InvalidOperationException("La cuenta no existe.");
+                throw new InvalidOperationException("Cuenta inexistente.");
 
-            var plan = await _context.ef_planes
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.codigo == request.codigo_plan && x.activo);
+            var plan = await _context.Set<ef_planes>()
+                .SingleOrDefaultAsync(p => p.codigo == request.codigo_plan && p.activo == true && p.tipo == "B2B");
 
             if (plan == null)
-                throw new InvalidOperationException("El plan indicado no existe o está inactivo.");
+                throw new InvalidOperationException("Plan B2B inexistente o inactivo.");
 
+            await using var tx = await _context.Database.BeginTransactionAsync();
+
+            // 1) Activar cuenta + asignar plan
             cuenta.estado = "A";
             cuenta.id_plan = plan.id_plan;
-            cuenta.fecha_modif = DateTimeOffset.UtcNow;
+            cuenta.fecha_modif = now;
 
-            var vinculosCuenta = await _context.ef_cuenta_usuarios
-                .Where(x => x.id_cuenta == request.id_cuenta)
-                .ToListAsync();
+            // 2) (opcional recomendado) activar owner en ef_cuenta_usuarios si tu doc lo pide
+            //    ... (tu lógica actual)
 
-            foreach (var item in vinculosCuenta)
-            {
-                item.activo = true;
-            }
+            // 3) Cerrar suscripciones CUENTA previas (si existieran)
+            await CerrarSuscripcionesCuentaActivasAsync(cuenta.id_cuenta, now);
+
+            // 4) Crear suscripción CUENTA ACTIVA con end real
+            CrearSuscripcionCuentaActiva(cuenta.id_cuenta, plan, now);
 
             await _context.SaveChangesAsync();
-
-            var suscripcion = new ef_suscripciones
-            {
-                scope = "CUENTA",
-                id_cuenta = cuenta.id_cuenta,
-                id_evento = null,
-                id_plan = plan.id_plan,
-                estado = "ACTIVA",
-                auto_renueva = true,
-                periodo = "MENSUAL",
-                current_period_start = DateTimeOffset.UtcNow,
-                current_period_end = null,
-                cancel_at_period_end = false,
-                cancelled_at = null,
-                external_provider = null,
-                external_subscription_id = null,
-                external_customer_id = null,
-                activo = true,
-                config_json = null,
-                fecha_alta = DateTimeOffset.UtcNow,
-                fecha_modif = null,
-                trial_end = null
-            };
-
-            _context.ef_suscripciones.Add(suscripcion);
-            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
 
             return new admin_aprobar_cuenta_response
             {
@@ -110,6 +83,7 @@ namespace API.Services.Cuentas
                 id_cuenta = cuenta.id_cuenta,
                 estado = cuenta.estado,
                 codigo_plan = plan.codigo
+                // agregá campos si tu response los tiene
             };
         }
 
@@ -139,87 +113,133 @@ namespace API.Services.Cuentas
 
         public async Task<admin_cambiar_plan_response> CambiarPlanAsync(admin_cambiar_plan_request request, long id_usuario_admin)
         {
+            if (request == null)
+                throw new InvalidOperationException("Request inválido.");
+
             if (request.id_cuenta <= 0)
-                throw new InvalidOperationException("Debe informar la cuenta.");
+                throw new InvalidOperationException("id_cuenta inválido.");
 
             if (string.IsNullOrWhiteSpace(request.codigo_plan_nuevo))
-                throw new InvalidOperationException("Debe informar el nuevo código de plan.");
+                throw new InvalidOperationException("codigo_plan_nuevo es obligatorio.");
 
-            var cuenta = await _context.ef_cuentas
-                .FirstOrDefaultAsync(x => x.id_cuenta == request.id_cuenta);
+            var now = DateTimeOffset.UtcNow;
+
+            var cuenta = await _context.Set<ef_cuentas>()
+                .SingleOrDefaultAsync(c => c.id_cuenta == request.id_cuenta);
 
             if (cuenta == null)
-                throw new InvalidOperationException("La cuenta no existe.");
+                throw new InvalidOperationException("Cuenta inexistente.");
 
-            var planNuevo = await _context.ef_planes
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.codigo == request.codigo_plan_nuevo && x.activo);
+            // Solo si querés permitir cambiar plan en cuentas activas:
+            if (cuenta.estado != "A")
+                throw new InvalidOperationException("Solo se puede cambiar plan si la cuenta está Activa (estado = A).");
 
-            if (planNuevo == null)
-                throw new InvalidOperationException("El nuevo plan no existe o está inactivo.");
-
-            string codigoPlanAnterior = null;
-
+            // Plan anterior (por id_plan actual)
+            string? codigoPlanAnterior = null;
             if (cuenta.id_plan.HasValue)
             {
-                codigoPlanAnterior = await _context.ef_planes
-                    .AsNoTracking()
-                    .Where(x => x.id_plan == cuenta.id_plan.Value)
-                    .Select(x => x.codigo)
+                codigoPlanAnterior = await _context.Set<ef_planes>()
+                    .Where(p => p.id_plan == cuenta.id_plan.Value)
+                    .Select(p => p.codigo)
                     .FirstOrDefaultAsync();
             }
 
-            var suscripcionActiva = await _context.ef_suscripciones
-                .Where(x => x.scope == "CUENTA"
-                         && x.id_cuenta == cuenta.id_cuenta
-                         && x.estado == "ACTIVA"
-                         && x.activo)
-                .OrderByDescending(x => x.fecha_alta)
-                .FirstOrDefaultAsync();
+            // Plan nuevo por código
+            var planNuevo = await _context.Set<ef_planes>()
+                .SingleOrDefaultAsync(p =>
+                    p.codigo == request.codigo_plan_nuevo &&
+                    p.activo == true &&
+                    p.tipo == "B2B");
 
-            if (suscripcionActiva != null)
+            if (planNuevo == null)
+                throw new InvalidOperationException("Plan nuevo inexistente o inactivo (B2B).");
+
+            // Si es el mismo plan, no hagas lío (opcional)
+            if (string.Equals(codigoPlanAnterior, planNuevo.codigo, StringComparison.OrdinalIgnoreCase))
             {
-                suscripcionActiva.estado = "CANCELADA";
-                suscripcionActiva.current_period_end = DateTimeOffset.UtcNow;
-                suscripcionActiva.cancelled_at = DateTimeOffset.UtcNow;
-                suscripcionActiva.fecha_modif = DateTimeOffset.UtcNow;
+                return new admin_cambiar_plan_response
+                {
+                    ok = true,
+                    id_cuenta = cuenta.id_cuenta,
+                    codigo_plan_anterior = codigoPlanAnterior ?? planNuevo.codigo,
+                    codigo_plan_nuevo = planNuevo.codigo
+                };
             }
 
-            cuenta.id_plan = planNuevo.id_plan;
-            cuenta.fecha_modif = DateTimeOffset.UtcNow;
+            await using var tx = await _context.Database.BeginTransactionAsync();
 
-            var nuevaSuscripcion = new ef_suscripciones
+            // 1) Asignar plan nuevo en cuenta
+            cuenta.id_plan = planNuevo.id_plan;
+            cuenta.fecha_modif = now;
+
+            // 2) Cerrar suscripciones CUENTA activas previas (si existieran)
+            var subsPrev = await _context.Set<ef_suscripciones>()
+                .Where(s =>
+                    s.scope == "CUENTA" &&
+                    s.id_cuenta == cuenta.id_cuenta &&
+                    s.activo == true)
+                .ToListAsync();
+
+            foreach (var s in subsPrev)
+            {
+                s.activo = false;
+
+                // Dejamos trazabilidad de cierre
+                if (string.IsNullOrWhiteSpace(s.estado) || s.estado == "ACTIVA")
+                    s.estado = "CANCELADA";
+
+                s.cancel_at_period_end = true;
+                s.cancelled_at = now;
+                s.fecha_modif = now;
+
+                // Si querés guardar motivo, podés usar config_json:
+                // s.config_json = $"{{\"motivo\":\"{request.motivo}\"}}";
+            }
+
+            // 3) Crear suscripción CUENTA ACTIVA con vencimiento real
+            var start = now;
+            DateTimeOffset? end = null;
+
+            if (string.Equals(planNuevo.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase))
+                end = start.AddMonths(1);
+            else if (string.Equals(planNuevo.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase))
+                end = start.AddYears(1);
+            else
+                end = null; // UNICO
+
+            _context.Set<ef_suscripciones>().Add(new ef_suscripciones
             {
                 scope = "CUENTA",
                 id_cuenta = cuenta.id_cuenta,
-                id_evento = null,
                 id_plan = planNuevo.id_plan,
+
                 estado = "ACTIVA",
-                auto_renueva = true,
-                periodo = "MENSUAL",
-                current_period_start = DateTimeOffset.UtcNow,
-                current_period_end = null,
+                auto_renueva = false,
+                periodo = planNuevo.periodo ?? "MENSUAL",
+
+                current_period_start = start,
+                current_period_end = end,
+
                 cancel_at_period_end = false,
                 cancelled_at = null,
-                external_provider = null,
-                external_subscription_id = null,
-                external_customer_id = null,
-                activo = true,
-                config_json = null,
-                fecha_alta = DateTimeOffset.UtcNow,
-                fecha_modif = null,
-                trial_end = null
-            };
 
-            _context.ef_suscripciones.Add(nuevaSuscripcion);
+                activo = true,
+                config_json = string.IsNullOrWhiteSpace(request.motivo)
+                    ? null
+                    : $"{{\"motivo\":\"{request.motivo.Replace("\"", "'")}\"}}",
+
+                fecha_alta = now,
+                fecha_modif = null
+            });
 
             await _context.SaveChangesAsync();
+            await tx.CommitAsync();
 
             return new admin_cambiar_plan_response
             {
                 ok = true,
                 id_cuenta = cuenta.id_cuenta,
-                codigo_plan_anterior = codigoPlanAnterior,
+                codigo_plan_anterior = codigoPlanAnterior ?? "(SIN_PLAN)",
                 codigo_plan_nuevo = planNuevo.codigo
             };
         }
@@ -259,6 +279,65 @@ namespace API.Services.Cuentas
                 estado = cuenta.estado
             };
         }
+        private static DateTimeOffset? CalcularFinPeriodo(DateTimeOffset start, string? periodo)
+        {
+            if (string.Equals(periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase))
+                return start.AddMonths(1);
 
+            if (string.Equals(periodo, "ANUAL", StringComparison.OrdinalIgnoreCase))
+                return start.AddYears(1);
+
+            // UNICO u otros: sin vencimiento
+            return null;
+        }
+
+        private async Task CerrarSuscripcionesCuentaActivasAsync(long idCuenta, DateTimeOffset now)
+        {
+            var subsPrev = await _context.Set<ef_suscripciones>()
+                .Where(s => s.scope == "CUENTA"
+                            && s.id_cuenta == idCuenta
+                            && s.activo == true)
+                .ToListAsync();
+
+            foreach (var s in subsPrev)
+            {
+                s.activo = false;
+                if (string.IsNullOrWhiteSpace(s.estado) || s.estado == "ACTIVA")
+                    s.estado = "CANCELADA";
+
+                s.cancel_at_period_end = true;
+                s.cancelled_at = now;
+                s.fecha_modif = now;
+            }
+        }
+
+        private void CrearSuscripcionCuentaActiva(long idCuenta, ef_planes plan, DateTimeOffset now)
+        {
+            var start = now;
+            var end = CalcularFinPeriodo(start, plan.periodo);
+
+            _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+            {
+                scope = "CUENTA",
+                id_cuenta = idCuenta,
+                id_plan = plan.id_plan,
+
+                estado = "ACTIVA",
+                auto_renueva = false,
+                periodo = plan.periodo ?? "MENSUAL",
+
+                current_period_start = start,
+                current_period_end = end,
+
+                cancel_at_period_end = false,
+                cancelled_at = null,
+
+                activo = true,
+                config_json = null,
+
+                fecha_alta = now,
+                fecha_modif = null
+            });
+        }
     }
 }
