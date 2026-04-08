@@ -31,13 +31,16 @@ namespace API.Controllers
         [HttpGet("pendientes")]
         public async Task<ActionResult<CobranzasCuentasResponseDTO>> Pendientes([FromQuery] int diasProximo = 7)
         {
-            if (diasProximo <= 0) diasProximo = 7;
-            if (diasProximo > 365) diasProximo = 365;
+            // ✅ diasProximo = 0 => "ver todo"
+            bool verTodo = diasProximo == 0;
+
+            if (diasProximo < 0) diasProximo = 7;
+            if (diasProximo > 365 && !verTodo) diasProximo = 365;
 
             var now = DateTimeOffset.UtcNow;
-            var hasta = now.AddDays(diasProximo);
+            var hasta = verTodo ? (DateTimeOffset?)null : now.AddDays(diasProximo);
 
-            // 1) Traer TODAS las suscripciones CUENTA activas/past_due con info de cuenta y plan
+            // 1) Traer suscripciones CUENTA activas/past_due con info de cuenta y plan
             var subs = await (
                 from s in _context.Set<ef_suscripciones>().AsNoTracking()
                 join c in _context.Set<ef_cuentas>().AsNoTracking()
@@ -49,7 +52,7 @@ namespace API.Controllers
                       && s.scope == "CUENTA"
                       && s.id_cuenta != null
                       && (s.estado == "ACTIVA" || s.estado == "PAST_DUE")
-                      && c.estado == "A" // solo cuentas activas
+                      && c.estado == "A"
                 select new
                 {
                     c.id_cuenta,
@@ -61,7 +64,10 @@ namespace API.Controllers
                     id_suscripcion = s.id_suscripcion,
                     suscripcion_estado = s.estado,
                     periodo = s.periodo,
-                    end = s.current_period_end,
+
+                    // ✅ FIX: forzar nullable
+                    end = (DateTimeOffset?)s.current_period_end,
+
                     fecha_alta_sub = s.fecha_alta,
 
                     plan_codigo = pl != null ? pl.codigo : null,
@@ -69,7 +75,7 @@ namespace API.Controllers
                 }
             ).ToListAsync();
 
-            // 2) Deduplicar por cuenta (me quedo con la más nueva) + contar cuántas activas/past_due hay
+            // 2) Deduplicar por cuenta + contar
             var porCuenta = subs
                 .GroupBy(x => x.id_cuenta)
                 .Select(g => new
@@ -88,7 +94,7 @@ namespace API.Controllers
             {
                 var v = c.vigente;
 
-                // Inconsistencia 1: DUPLICADAS (más de una activa/past_due)
+                // DUPLICADAS
                 if (c.cantidad > 1)
                 {
                     inconsistencias.Add(new CobranzaCuentaItemDTO
@@ -108,12 +114,10 @@ namespace API.Controllers
                         concepto = $"INCONSISTENCIA: {c.cantidad} suscripciones CUENTA activas/past_due (duplicadas).",
                         inconsistente = true
                     });
-
-                    // Importante: no lo agrego a vencidas/porVencer para evitar doble listado
                     continue;
                 }
 
-                // Inconsistencia 2: end null en mensual/anual
+                // END_NULL en mensual/anual
                 bool esMensual = string.Equals(v.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase);
                 bool esAnual = string.Equals(v.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase);
                 if ((esMensual || esAnual) && !v.end.HasValue)
@@ -138,21 +142,30 @@ namespace API.Controllers
                     continue;
                 }
 
-                // UNICO sin end: no entra en vencidas/por vencer
-                if (!v.end.HasValue) continue;
+                // UNICO sin end: si verTodo, lo podés listar como “por_vencer” (opcional)
+                if (!v.end.HasValue)
+                {
+                    if (verTodo)
+                        porVencer.Add(MapCobranza(v, now));
+                    continue;
+                }
 
-                // Clasificación vencida/por_vencer
-                if (v.end.Value <= now)
+                var end = v.end.Value;
+
+                if (end <= now)
                 {
                     vencidas.Add(MapCobranza(v, now));
                 }
-                else if (v.end.Value <= hasta)
+                else
                 {
-                    porVencer.Add(MapCobranza(v, now));
+                    // verTodo => todo lo futuro entra
+                    // ventana => solo si end <= hasta
+                    if (verTodo || (hasta.HasValue && end <= hasta.Value))
+                        porVencer.Add(MapCobranza(v, now));
                 }
             }
 
-            // 3) Inconsistencias "cuenta activa sin suscripción activa/past_due" (las que no aparecen en subs)
+            // 3) SIN_SUSCRIPCION
             var cuentasA = await _context.Set<ef_cuentas>().AsNoTracking()
                 .Where(c => c.estado == "A")
                 .Select(c => new { c.id_cuenta, c.nombre_cuenta, c.tipo, cuenta_estado = c.estado, c.id_plan })
@@ -211,8 +224,20 @@ namespace API.Controllers
 
         private static CobranzaCuentaItemDTO MapCobranza(dynamic x, DateTimeOffset now)
         {
-            var dias = (int)Math.Ceiling((x.end.Value - now).TotalDays);
-            if (dias < 0) dias = 0;
+            // end puede venir como DateTimeOffset? o DateTimeOffset según cómo EF materialice el anon type.
+            DateTimeOffset? end = null;
+
+            if (x.end is DateTimeOffset)
+                end = (DateTimeOffset)x.end;
+            else if (x.end is DateTimeOffset?)
+                end = (DateTimeOffset?)x.end;
+
+            int? dias = null;
+            if (end.HasValue)
+            {
+                dias = (int)Math.Ceiling((end.Value - now).TotalDays);
+                if (dias < 0) dias = 0;
+            }
 
             return new CobranzaCuentaItemDTO
             {
@@ -220,15 +245,20 @@ namespace API.Controllers
                 nombre_cuenta = x.nombre_cuenta,
                 tipo = x.tipo,
                 cuenta_estado = x.cuenta_estado,
+
                 id_plan = x.id_plan,
                 plan_codigo = x.plan_codigo,
                 plan_nombre = x.plan_nombre,
+
                 id_suscripcion = x.id_suscripcion,
                 suscripcion_estado = x.suscripcion_estado,
                 periodo = x.periodo,
-                current_period_end = x.end,
+
+                current_period_end = end,
                 dias_para_vencer = dias,
-                inconsistente = false
+
+                inconsistente = false,
+                concepto = null
             };
         }
 
