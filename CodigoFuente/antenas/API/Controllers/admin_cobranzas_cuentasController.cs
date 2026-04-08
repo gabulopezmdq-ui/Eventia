@@ -31,10 +31,13 @@ namespace API.Controllers
         [HttpGet("pendientes")]
         public async Task<ActionResult<CobranzasCuentasResponseDTO>> Pendientes([FromQuery] int diasProximo = 7)
         {
+            if (diasProximo <= 0) diasProximo = 7;
+            if (diasProximo > 365) diasProximo = 365;
+
             var now = DateTimeOffset.UtcNow;
             var hasta = now.AddDays(diasProximo);
 
-            // Suscripciones de CUENTA activas/past_due con datos de cuenta + plan
+            // 1) Traer TODAS las suscripciones CUENTA activas/past_due con info de cuenta y plan
             var subs = await (
                 from s in _context.Set<ef_suscripciones>().AsNoTracking()
                 join c in _context.Set<ef_cuentas>().AsNoTracking()
@@ -46,6 +49,7 @@ namespace API.Controllers
                       && s.scope == "CUENTA"
                       && s.id_cuenta != null
                       && (s.estado == "ACTIVA" || s.estado == "PAST_DUE")
+                      && c.estado == "A" // solo cuentas activas
                 select new
                 {
                     c.id_cuenta,
@@ -58,89 +62,129 @@ namespace API.Controllers
                     suscripcion_estado = s.estado,
                     periodo = s.periodo,
                     end = s.current_period_end,
+                    fecha_alta_sub = s.fecha_alta,
 
                     plan_codigo = pl != null ? pl.codigo : null,
                     plan_nombre = pl != null ? pl.nombre : null
                 }
             ).ToListAsync();
 
-            var vencidas = subs
-                .Where(x => x.end.HasValue && x.end.Value <= now)
-                .OrderByDescending(x => x.end)
-                .Select(x => new CobranzaCuentaItemDTO
+            // 2) Deduplicar por cuenta (me quedo con la más nueva) + contar cuántas activas/past_due hay
+            var porCuenta = subs
+                .GroupBy(x => x.id_cuenta)
+                .Select(g => new
                 {
-                    id_cuenta = x.id_cuenta,
-                    nombre_cuenta = x.nombre_cuenta,
-                    tipo = x.tipo,
-                    cuenta_estado = x.cuenta_estado,
-                    id_plan = x.id_plan,
-                    plan_codigo = x.plan_codigo,
-                    plan_nombre = x.plan_nombre,
-                    id_suscripcion = x.id_suscripcion,
-                    suscripcion_estado = x.suscripcion_estado,
-                    periodo = x.periodo,
-                    current_period_end = x.end,
-                    dias_para_vencer = 0,
-                    inconsistente = false
+                    id_cuenta = g.Key,
+                    cantidad = g.Count(),
+                    vigente = g.OrderByDescending(x => x.fecha_alta_sub).First()
                 })
                 .ToList();
 
-            var porVencer = subs
-                .Where(x => x.end.HasValue && x.end.Value > now && x.end.Value <= hasta)
-                .OrderBy(x => x.end)
-                .Select(x => new CobranzaCuentaItemDTO
-                {
-                    id_cuenta = x.id_cuenta,
-                    nombre_cuenta = x.nombre_cuenta,
-                    tipo = x.tipo,
-                    cuenta_estado = x.cuenta_estado,
-                    id_plan = x.id_plan,
-                    plan_codigo = x.plan_codigo,
-                    plan_nombre = x.plan_nombre,
-                    id_suscripcion = x.id_suscripcion,
-                    suscripcion_estado = x.suscripcion_estado,
-                    periodo = x.periodo,
-                    current_period_end = x.end,
-                    dias_para_vencer = (int)Math.Ceiling((x.end!.Value - now).TotalDays),
-                    inconsistente = false
-                })
-                .ToList();
+            var vencidas = new System.Collections.Generic.List<CobranzaCuentaItemDTO>();
+            var porVencer = new System.Collections.Generic.List<CobranzaCuentaItemDTO>();
+            var inconsistencias = new System.Collections.Generic.List<CobranzaCuentaItemDTO>();
 
-            // Inconsistencias: cuenta activa sin suscripción CUENTA activa/past_due
+            foreach (var c in porCuenta)
+            {
+                var v = c.vigente;
+
+                // Inconsistencia 1: DUPLICADAS (más de una activa/past_due)
+                if (c.cantidad > 1)
+                {
+                    inconsistencias.Add(new CobranzaCuentaItemDTO
+                    {
+                        id_cuenta = v.id_cuenta,
+                        nombre_cuenta = v.nombre_cuenta,
+                        tipo = v.tipo,
+                        cuenta_estado = v.cuenta_estado,
+                        id_plan = v.id_plan,
+                        plan_codigo = v.plan_codigo,
+                        plan_nombre = v.plan_nombre,
+                        id_suscripcion = v.id_suscripcion,
+                        suscripcion_estado = v.suscripcion_estado,
+                        periodo = v.periodo,
+                        current_period_end = v.end,
+                        dias_para_vencer = null,
+                        concepto = $"INCONSISTENCIA: {c.cantidad} suscripciones CUENTA activas/past_due (duplicadas).",
+                        inconsistente = true
+                    });
+
+                    // Importante: no lo agrego a vencidas/porVencer para evitar doble listado
+                    continue;
+                }
+
+                // Inconsistencia 2: end null en mensual/anual
+                bool esMensual = string.Equals(v.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase);
+                bool esAnual = string.Equals(v.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase);
+                if ((esMensual || esAnual) && !v.end.HasValue)
+                {
+                    inconsistencias.Add(new CobranzaCuentaItemDTO
+                    {
+                        id_cuenta = v.id_cuenta,
+                        nombre_cuenta = v.nombre_cuenta,
+                        tipo = v.tipo,
+                        cuenta_estado = v.cuenta_estado,
+                        id_plan = v.id_plan,
+                        plan_codigo = v.plan_codigo,
+                        plan_nombre = v.plan_nombre,
+                        id_suscripcion = v.id_suscripcion,
+                        suscripcion_estado = v.suscripcion_estado,
+                        periodo = v.periodo,
+                        current_period_end = null,
+                        dias_para_vencer = null,
+                        concepto = "INCONSISTENCIA: Plan mensual/anual sin current_period_end.",
+                        inconsistente = true
+                    });
+                    continue;
+                }
+
+                // UNICO sin end: no entra en vencidas/por vencer
+                if (!v.end.HasValue) continue;
+
+                // Clasificación vencida/por_vencer
+                if (v.end.Value <= now)
+                {
+                    vencidas.Add(MapCobranza(v, now));
+                }
+                else if (v.end.Value <= hasta)
+                {
+                    porVencer.Add(MapCobranza(v, now));
+                }
+            }
+
+            // 3) Inconsistencias "cuenta activa sin suscripción activa/past_due" (las que no aparecen en subs)
             var cuentasA = await _context.Set<ef_cuentas>().AsNoTracking()
                 .Where(c => c.estado == "A")
                 .Select(c => new { c.id_cuenta, c.nombre_cuenta, c.tipo, cuenta_estado = c.estado, c.id_plan })
                 .ToListAsync();
 
-            var idsConSub = subs.Select(x => x.id_cuenta).Distinct().ToHashSet();
-            var inc = cuentasA.Where(c => !idsConSub.Contains(c.id_cuenta)).ToList();
+            var idsConSub = porCuenta.Select(x => x.id_cuenta).Distinct().ToHashSet();
+            var inc = cuentasA.Where(x => !idsConSub.Contains(x.id_cuenta)).ToList();
 
-            // Para devolver plan_codigo/plan_nombre en inconsistencias
-            var planIdsInc = inc.Where(x => x.id_plan != null).Select(x => x.id_plan!.Value).Distinct().ToList();
-            var planesById = await _context.Set<ef_planes>().AsNoTracking()
-                .Where(p => planIdsInc.Contains(p.id_plan))
-                .ToDictionaryAsync(p => p.id_plan, p => new { p.codigo, p.nombre });
+            if (inc.Count > 0)
+            {
+                var planIdsInc = inc.Where(x => x.id_plan != null).Select(x => x.id_plan!.Value).Distinct().ToList();
+                var planesById = await _context.Set<ef_planes>().AsNoTracking()
+                    .Where(p => planIdsInc.Contains(p.id_plan))
+                    .ToDictionaryAsync(p => p.id_plan, p => new { p.codigo, p.nombre });
 
-            var inconsistencias = inc
-                .OrderByDescending(x => x.id_cuenta)
-                .Select(c =>
+                foreach (var i in inc)
                 {
                     string? codigo = null;
                     string? nombre = null;
-
-                    if (c.id_plan != null && planesById.TryGetValue(c.id_plan.Value, out var p))
+                    if (i.id_plan != null && planesById.TryGetValue(i.id_plan.Value, out var p))
                     {
                         codigo = p.codigo;
                         nombre = p.nombre;
                     }
 
-                    return new CobranzaCuentaItemDTO
+                    inconsistencias.Add(new CobranzaCuentaItemDTO
                     {
-                        id_cuenta = c.id_cuenta,
-                        nombre_cuenta = c.nombre_cuenta,
-                        tipo = c.tipo,
-                        cuenta_estado = c.cuenta_estado,
-                        id_plan = c.id_plan,
+                        id_cuenta = i.id_cuenta,
+                        nombre_cuenta = i.nombre_cuenta,
+                        tipo = i.tipo,
+                        cuenta_estado = i.cuenta_estado,
+                        id_plan = i.id_plan,
                         plan_codigo = codigo,
                         plan_nombre = nombre,
                         id_suscripcion = null,
@@ -148,18 +192,44 @@ namespace API.Controllers
                         periodo = null,
                         current_period_end = null,
                         dias_para_vencer = null,
-                        concepto = "INCONSISTENCIA: Cuenta activa sin suscripción CUENTA activa",
+                        concepto = "INCONSISTENCIA: Cuenta activa sin suscripción CUENTA activa/past_due",
                         inconsistente = true
-                    };
-                })
-                .ToList();
+                    });
+                }
+            }
+
+            vencidas = vencidas.OrderBy(x => x.current_period_end).ToList();
+            porVencer = porVencer.OrderBy(x => x.current_period_end).ToList();
 
             return Ok(new CobranzasCuentasResponseDTO
             {
                 vencidas = vencidas,
                 por_vencer = porVencer,
-                inconsistencias = inconsistencias
+                inconsistencias = inconsistencias.OrderBy(x => x.nombre_cuenta).ToList()
             });
+        }
+
+        private static CobranzaCuentaItemDTO MapCobranza(dynamic x, DateTimeOffset now)
+        {
+            var dias = (int)Math.Ceiling((x.end.Value - now).TotalDays);
+            if (dias < 0) dias = 0;
+
+            return new CobranzaCuentaItemDTO
+            {
+                id_cuenta = x.id_cuenta,
+                nombre_cuenta = x.nombre_cuenta,
+                tipo = x.tipo,
+                cuenta_estado = x.cuenta_estado,
+                id_plan = x.id_plan,
+                plan_codigo = x.plan_codigo,
+                plan_nombre = x.plan_nombre,
+                id_suscripcion = x.id_suscripcion,
+                suscripcion_estado = x.suscripcion_estado,
+                periodo = x.periodo,
+                current_period_end = x.end,
+                dias_para_vencer = dias,
+                inconsistente = false
+            };
         }
 
         // =========================================================
@@ -346,62 +416,96 @@ namespace API.Controllers
         {
             var now = DateTimeOffset.UtcNow;
 
+            // Cuentas activas
             var cuentasA = await _context.Set<ef_cuentas>().AsNoTracking()
                 .Where(c => c.estado == "A")
                 .Select(c => new { c.id_cuenta, c.id_plan })
                 .ToListAsync();
 
-            var ids = cuentasA.Select(x => x.id_cuenta).ToList();
-
-            var conSub = await _context.Set<ef_suscripciones>().AsNoTracking()
-                .Where(s => s.scope == "CUENTA"
-                            && s.activo == true
-                            && s.id_cuenta != null
-                            && ids.Contains(s.id_cuenta.Value)
-                            && (s.estado == "ACTIVA" || s.estado == "PAST_DUE"))
-                .Select(s => s.id_cuenta!.Value)
-                .Distinct()
-                .ToListAsync();
-
-            var faltan = cuentasA.Where(c => !conSub.Contains(c.id_cuenta)).ToList();
-            if (faltan.Count == 0)
+            if (cuentasA.Count == 0)
                 return Ok(new { ok = true, corregidos = 0 });
 
-            var planIds = faltan.Where(x => x.id_plan != null).Select(x => x.id_plan!.Value).Distinct().ToList();
-            var planes = await _context.Set<ef_planes>().AsNoTracking()
-                .Where(p => planIds.Contains(p.id_plan) && p.activo == true && p.tipo == "B2B")
-                .ToDictionaryAsync(p => p.id_plan, p => p.periodo);
+            int corregidos = 0;
 
-            foreach (var c in faltan)
+            await using var tx = await _context.Database.BeginTransactionAsync();
+
+            foreach (var c in cuentasA)
             {
                 if (c.id_plan == null) continue;
 
-                if (!planes.TryGetValue(c.id_plan.Value, out var periodo))
-                    periodo = "MENSUAL";
+                var plan = await _context.Set<ef_planes>().AsNoTracking()
+                    .SingleOrDefaultAsync(p => p.id_plan == c.id_plan.Value && p.activo == true && p.tipo == "B2B");
 
-                DateTimeOffset? end = null;
-                if (string.Equals(periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase))
-                    end = now.AddMonths(1);
-                else if (string.Equals(periodo, "ANUAL", StringComparison.OrdinalIgnoreCase))
-                    end = now.AddYears(1);
+                if (plan == null) continue;
 
-                _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+                DateTimeOffset? CalcEnd(DateTimeOffset start)
                 {
-                    scope = "CUENTA",
-                    id_cuenta = c.id_cuenta,
-                    id_plan = c.id_plan.Value,
-                    estado = "ACTIVA",
-                    auto_renueva = false,
-                    periodo = periodo ?? "MENSUAL",
-                    current_period_start = now,
-                    current_period_end = end,
-                    activo = true,
-                    fecha_alta = now
-                });
+                    if (string.Equals(plan.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase)) return start.AddMonths(1);
+                    if (string.Equals(plan.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase)) return start.AddYears(1);
+                    return null;
+                }
+
+                var subsActivas = await _context.Set<ef_suscripciones>()
+                    .Where(s => s.scope == "CUENTA"
+                                && s.id_cuenta == c.id_cuenta
+                                && s.activo == true
+                                && (s.estado == "ACTIVA" || s.estado == "PAST_DUE"))
+                    .OrderByDescending(s => s.fecha_alta)
+                    .ToListAsync();
+
+                if (subsActivas.Count == 0)
+                {
+                    _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+                    {
+                        scope = "CUENTA",
+                        id_cuenta = c.id_cuenta,
+                        id_plan = plan.id_plan,
+                        estado = "ACTIVA",
+                        auto_renueva = false,
+                        periodo = plan.periodo ?? "MENSUAL",
+                        current_period_start = now,
+                        current_period_end = CalcEnd(now),
+                        activo = true,
+                        fecha_alta = now
+                    });
+
+                    corregidos++;
+                    continue;
+                }
+
+                // Deduplicar: cerrar todas menos la más nueva
+                if (subsActivas.Count > 1)
+                {
+                    foreach (var s in subsActivas.Skip(1))
+                    {
+                        s.activo = false;
+                        s.estado = "CANCELADA";
+                        s.cancel_at_period_end = true;
+                        s.cancelled_at = now;
+                        s.fecha_modif = now;
+                    }
+
+                    corregidos++;
+                }
+
+                // Completar end si corresponde
+                var vigente = subsActivas.First();
+                bool esMensual = string.Equals(plan.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase);
+                bool esAnual = string.Equals(plan.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase);
+
+                if ((esMensual || esAnual) && !vigente.current_period_end.HasValue)
+                {
+                    vigente.current_period_start = vigente.current_period_start ?? now;
+                    vigente.current_period_end = CalcEnd(vigente.current_period_start.Value);
+                    vigente.fecha_modif = now;
+                    corregidos++;
+                }
             }
 
             await _context.SaveChangesAsync();
-            return Ok(new { ok = true, corregidos = faltan.Count });
+            await tx.CommitAsync();
+
+            return Ok(new { ok = true, corregidos = corregidos });
         }
     }
 }
