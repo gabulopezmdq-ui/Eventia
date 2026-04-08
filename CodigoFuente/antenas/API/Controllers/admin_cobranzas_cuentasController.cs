@@ -238,53 +238,103 @@ namespace API.Controllers
         [HttpPost("corregir-inconsistencia")]
         public async Task<IActionResult> CorregirInconsistencia([FromQuery] long idCuenta)
         {
+            var now = DateTimeOffset.UtcNow;
+
             var cuenta = await _context.Set<ef_cuentas>()
                 .SingleOrDefaultAsync(c => c.id_cuenta == idCuenta);
 
             if (cuenta == null) return NotFound("Cuenta inexistente.");
             if (cuenta.estado != "A") return BadRequest("La cuenta no está activa (estado != A).");
-            if (cuenta.id_plan == null) return BadRequest("Cuenta activa sin id_plan.");
-
-            bool yaTiene = await _context.Set<ef_suscripciones>()
-                .AnyAsync(s => s.scope == "CUENTA"
-                               && s.id_cuenta == idCuenta
-                               && s.activo == true
-                               && (s.estado == "ACTIVA" || s.estado == "PAST_DUE"));
-
-            if (yaTiene)
-                return Ok(new { ok = true, mensaje = "La cuenta ya tiene suscripción activa." });
+            if (cuenta.id_plan == null) return BadRequest("Cuenta activa sin id_plan asignado.");
 
             var plan = await _context.Set<ef_planes>()
                 .SingleOrDefaultAsync(p => p.id_plan == cuenta.id_plan.Value && p.activo == true && p.tipo == "B2B");
 
-            if (plan == null)
-                return BadRequest("Plan asociado inválido o inactivo.");
+            if (plan == null) return BadRequest("Plan B2B inválido/inactivo para la cuenta.");
 
-            var now = DateTimeOffset.UtcNow;
+            // Traer suscripciones activas/past_due de CUENTA para esa cuenta
+            var subsActivas = await _context.Set<ef_suscripciones>()
+                .Where(s => s.scope == "CUENTA"
+                            && s.id_cuenta == idCuenta
+                            && s.activo == true
+                            && (s.estado == "ACTIVA" || s.estado == "PAST_DUE"))
+                .OrderByDescending(s => s.fecha_alta)
+                .ToListAsync();
 
-            DateTimeOffset? end = null;
-            if (string.Equals(plan.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase))
-                end = now.AddMonths(1);
-            else if (string.Equals(plan.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase))
-                end = now.AddYears(1);
+            var resp = new CobranzasCorregirResponseDTO { ok = true, corregidos = 0 };
 
-            _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+            // Helper fin de período
+            DateTimeOffset? CalcEnd(DateTimeOffset start)
             {
-                scope = "CUENTA",
-                id_cuenta = idCuenta,
-                id_plan = plan.id_plan,
-                estado = "ACTIVA",
-                auto_renueva = false,
-                periodo = plan.periodo ?? "MENSUAL",
-                current_period_start = now,
-                current_period_end = end,
-                activo = true,
-                fecha_alta = now
-            });
+                if (string.Equals(plan.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase)) return start.AddMonths(1);
+                if (string.Equals(plan.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase)) return start.AddYears(1);
+                return null;
+            }
+
+            await using var tx = await _context.Database.BeginTransactionAsync();
+
+            if (subsActivas.Count == 0)
+            {
+                // 1) Crear suscripción faltante
+                var end = CalcEnd(now);
+
+                _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+                {
+                    scope = "CUENTA",
+                    id_cuenta = idCuenta,
+                    id_plan = plan.id_plan,
+                    estado = "ACTIVA",
+                    auto_renueva = false,
+                    periodo = plan.periodo ?? "MENSUAL",
+                    current_period_start = now,
+                    current_period_end = end,
+                    cancel_at_period_end = false,
+                    cancelled_at = null,
+                    activo = true,
+                    fecha_alta = now
+                });
+
+                resp.corregidos++;
+                resp.detalle.Add("Se creó suscripción CUENTA ACTIVA faltante.");
+            }
+            else
+            {
+                // 2) Si hay duplicadas, cerrar todas menos la más nueva (subsActivas[0])
+                if (subsActivas.Count > 1)
+                {
+                    var keep = subsActivas.First();
+                    foreach (var s in subsActivas.Skip(1))
+                    {
+                        s.activo = false;
+                        s.estado = "CANCELADA";
+                        s.cancel_at_period_end = true;
+                        s.cancelled_at = now;
+                        s.fecha_modif = now;
+                    }
+
+                    resp.corregidos++;
+                    resp.detalle.Add($"Se cerraron {subsActivas.Count - 1} suscripciones activas duplicadas. Se conservó id_suscripcion={keep.id_suscripcion}.");
+                }
+
+                // 3) Si la suscripción “vigente” no tiene end y el plan es MENSUAL/ANUAL, setear end.
+                var vigente = subsActivas.First(); // la más nueva
+                if (!vigente.current_period_end.HasValue &&
+                    (string.Equals(plan.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(plan.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase)))
+                {
+                    vigente.current_period_start = vigente.current_period_start ?? now;
+                    vigente.current_period_end = CalcEnd(vigente.current_period_start.Value);
+                    vigente.fecha_modif = now;
+
+                    resp.corregidos++;
+                    resp.detalle.Add("Se completó current_period_end de la suscripción vigente.");
+                }
+            }
 
             await _context.SaveChangesAsync();
+            await tx.CommitAsync();
 
-            return Ok(new { ok = true, id_cuenta = idCuenta, current_period_end = end });
+            return Ok(resp);
         }
 
         // =========================================================
