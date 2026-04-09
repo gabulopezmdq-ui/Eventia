@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -28,6 +28,7 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.longitud).HasColumnType("numeric(9,6)");
 
             builder.Property(x => x.orden).IsRequired();
+            builder.Property(x => x.admite_mesas).IsRequired().HasDefaultValue(false);
             builder.Property(x => x.activo).IsRequired();
 
             builder.Property(x => x.fecha_alta).IsRequired();
