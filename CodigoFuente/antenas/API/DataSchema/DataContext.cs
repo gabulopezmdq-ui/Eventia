@@ -1,4 +1,4 @@
-﻿using API.DataSchema.Configurations;
+using API.DataSchema.Configurations;
 using API.DataSchema.ModelConfiguration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -33,6 +33,9 @@ namespace API.DataSchema
         public DbSet<ef_evento_tramos> ef_evento_tramos { get; set; }
         public DbSet<ef_evento_accesos> ef_evento_accesos { get; set; }
         public DbSet<ef_evento_acceso_tramos> ef_evento_acceso_tramos { get; set; }
+        public DbSet<ef_evento_mesas> ef_evento_mesas { get; set; }
+        public DbSet<ef_evento_mesa_invitados> ef_evento_mesa_invitados { get; set; }
+
 
         public DbSet<ef_plantillas_evento> ef_plantillas_evento { get; set; }
         public DbSet<ef_plantilla_tramos> ef_plantilla_tramos { get; set; }
@@ -151,6 +154,9 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_evento_tramosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_accesosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_acceso_tramosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_mesasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_mesa_invitadosConfiguration());
+
 
             modelBuilder.ApplyConfiguration(new ef_plantillas_eventoConfiguration());
             modelBuilder.ApplyConfiguration(new ef_plantilla_tramosConfiguration());
