@@ -149,8 +149,8 @@ namespace API.Services
                     if (ocupacionActual >= maxTotal)
                         throw new Exception($"No hay cupos disponibles en el grupo (máximo: {maxTotal})");
 
-                    if (persona.RolEvento != "A" && persona.RolEvento != "N")
-                        throw new Exception("Rol de evento inválido");
+                    if (persona.Asiste && persona.RolEvento != "A" && persona.RolEvento != "N")
+                        throw new Exception("El rol de evento (Adulto/Niño) es obligatorio para invitados que asisten.");
 
                     // Crear nuevo invitado
                     var nuevoInvitado = new ef_invitados
@@ -183,7 +183,7 @@ namespace API.Services
                         id_invitado = nuevoInvitado.id_invitado,
                         rol = "A", // acompañante (no titular)
                         orden = grupo.integrantes.Count + 1,
-                        rol_evento = persona.RolEvento,
+                        rol_evento = persona.RolEvento ?? "A", // Si no asiste, le asignamos Adulto por defecto para cumplir con el esquema
                         asiste = persona.Asiste ? "Y" : "N",
                         edad_anios = (short?)persona.Edad,
                         alimentacion_detalle = persona.AlimentacionDetalle,
