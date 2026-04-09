@@ -139,7 +139,7 @@ public class RsvpPersonaConfirmacionDTO
         public string? Email { get; set; }
         public string? Celular { get; set; }
         public int? Edad { get; set; }
-        public string RolEvento { get; set; }
+        public string? RolEvento { get; set; }
         public bool Asiste { get; set; }
         public string? Mensaje { get; set; }
         public string? AlimentacionDetalle { get; set; }
