@@ -39,6 +39,15 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.activo)
                    .IsRequired()
                    .HasDefaultValue(true);
+            builder.Property(x => x.id_unidad);
+
+            builder.HasOne(x => x.unidad)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_unidad)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(x => x.id_unidad)
+                   .HasDatabaseName("ix_ef_clientes_id_unidad");
 
             // Índices
             builder.HasIndex(x => x.id_cuenta)

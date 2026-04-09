@@ -84,6 +84,7 @@ namespace API.DataSchema
         public DbSet<ef_b2b_prospectos_hist> ef_b2b_prospectos_hist { get; set; }
         public DbSet<ef_paises> ef_paises { get; set; }
         public DbSet<ef_tipos_identificacion_fiscal> ef_tipos_identificacion_fiscal { get; set; }
+        public DbSet<ef_cuenta_unidades> ef_cuenta_unidades { get; set; }
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -202,6 +203,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_paisesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_tipos_identificacion_fiscalConfiguration());
 
+            modelBuilder.ApplyConfiguration(new ef_cuenta_unidadesConfiguration());
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
