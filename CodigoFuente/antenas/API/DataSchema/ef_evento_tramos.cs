@@ -24,6 +24,7 @@ namespace API.DataSchema
 
         public short orden { get; set; }
         public int? cupo { get; set; }
+        public bool admite_mesas { get; set; }
         public bool activo { get; set; }
 
         public DateTimeOffset fecha_alta { get; set; }
