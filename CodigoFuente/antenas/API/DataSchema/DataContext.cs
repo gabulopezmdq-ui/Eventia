@@ -1,5 +1,6 @@
 using API.DataSchema.Configurations;
 using API.DataSchema.ModelConfiguration;
+using API.DataSchema.QueryModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -88,6 +89,13 @@ namespace API.DataSchema
         public DbSet<ef_paises> ef_paises { get; set; }
         public DbSet<ef_tipos_identificacion_fiscal> ef_tipos_identificacion_fiscal { get; set; }
         public DbSet<ef_cuenta_unidades> ef_cuenta_unidades { get; set; }
+        public DbSet<ef_evento_hospedaje_bloques> ef_evento_hospedaje_bloques { get; set; }
+        public DbSet<ef_evento_hospedajes> ef_evento_hospedajes { get; set; }
+        public DbSet<ef_hospedaje_tags> ef_hospedaje_tags { get; set; }
+
+        public DbSet<vw_param_faltante_row> vw_param_faltante_row { get; set; }
+        public DbSet<vw_param_faltantes_resumen_row> vw_param_faltantes_resumen_row { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -210,6 +218,14 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_tipos_identificacion_fiscalConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_cuenta_unidadesConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_evento_hospedaje_bloquesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_hospedajesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_hospedaje_tagsConfiguration());
+
+            modelBuilder.Entity<vw_param_faltante_row>().HasNoKey();
+            modelBuilder.Entity<vw_param_faltantes_resumen_row>().HasNoKey();
+
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
             modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());

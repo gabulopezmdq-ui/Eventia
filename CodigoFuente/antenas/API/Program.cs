@@ -145,6 +145,9 @@ builder.Services.AddScoped<IAdminCuentasService, AdminCuentasService>();
 builder.Services.AddScoped<ICuentaContextService, CuentaContextService>();
 builder.Services.AddScoped<IMesasService, MesasService>();
 
+builder.Services.AddScoped<IEventoHospedajesService, EventoHospedajesService>();
+builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();
+
 
 
 // Registro de repositorios
