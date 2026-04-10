@@ -172,11 +172,11 @@ public class RsvpPersonaConfirmacionDTO
     }
     public class TramoAgendaDTO
     {
+        public long IdTramo { get; set; }
         public string Nombre { get; set; }             // Ej: "Ceremonia religiosa"
         public string Descripcion { get; set; }        // Ej: "llegar 15 minutos antes"
         public string Lugar { get; set; }               // Ej: "Estancia Santa Clara"
         public string Direccion { get; set; }           // Ej: "Ruta 2 Km 395"
-        public int Orden { get; set; }
     }
     public class PersonaExistenteDTO
     {

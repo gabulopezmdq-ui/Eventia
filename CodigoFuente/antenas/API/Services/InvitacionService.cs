@@ -449,11 +449,11 @@ namespace API.Services
                         .OrderBy(at => at.tramo.orden)
                         .Select(at => new TramoAgendaDTO
                         {
+                            IdTramo = at.tramo.id_tramo,
                             Nombre = at.tramo.nombre,
                             Descripcion = at.tramo.leyenda_visible,
                             Lugar = at.tramo.lugar,
-                            Direccion = at.tramo.direccion,
-                            Orden = at.tramo.orden
+                            Direccion = at.tramo.direccion
                         }).ToList()
                 })
                 .ToListAsync();
