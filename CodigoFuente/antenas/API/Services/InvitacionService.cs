@@ -330,8 +330,14 @@ namespace API.Services
                 IdRsvpGrupo = x.id_rsvp_grupo,
                 IdAcceso = x.id_acceso,
                 Tramos = x.rsvp_grupo?.acceso?.acceso_tramos != null 
-                    ? string.Join(", ", x.rsvp_grupo.acceso.acceso_tramos.Where(at => at.tramo != null).Select(at => at.tramo!.nombre))
-                    : ""
+                    ? x.rsvp_grupo.acceso.acceso_tramos.Where(at => at.tramo != null).OrderBy(at => at.tramo!.orden).Select(at => new TramoAgendaDTO {
+                        IdTramo = at.tramo!.id_tramo,
+                        Nombre = at.tramo.nombre,
+                        Descripcion = at.tramo.leyenda_visible,
+                        Lugar = at.tramo.lugar,
+                        Direccion = at.tramo.direccion
+                    }).ToList()
+                    : new List<TramoAgendaDTO>()
             }).ToList();
         }
 
@@ -443,6 +449,7 @@ namespace API.Services
                 .OrderBy(a => a.orden)
                 .Select(a => new AccesoAgendaDTO
                 {
+                    IdAcceso = a.id_acceso,
                     NombreAcceso = a.nombre,
                     Tramos = a.acceso_tramos
                         .Where(at => at.tramo.activo)
