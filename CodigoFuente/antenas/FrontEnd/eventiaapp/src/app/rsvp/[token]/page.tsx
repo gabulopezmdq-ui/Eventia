@@ -29,8 +29,16 @@ interface PersonaFormState {
     isNew: boolean; // true = persona agregada por el invitado
 }
 
-export default function RsvpPage({ params }: { params: Promise<{ token: string }> }) {
+export default function RsvpPage({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ token: string }>;
+    searchParams: Promise<{ idAcceso?: string }>;
+}) {
     const { token } = use(params);
+    const { idAcceso } = use(searchParams);
+    const idAccesoNum = idAcceso ? parseInt(idAcceso, 10) : null;
     const router = useRouter();
 
     const [step, setStep] = useState<Step>('VERIFYING');
@@ -350,12 +358,19 @@ export default function RsvpPage({ params }: { params: Promise<{ token: string }
                 </div>
 
                 {/* --- Agenda del Evento --- */}
-                {step === 'RSVP' && invitacion?.agenda && invitacion.agenda.length > 0 && (
+                {step === 'RSVP' && invitacion?.agenda && invitacion.agenda.length > 0 && (() => {
+                    // Filtrar por idAcceso de la URL; si no hay match mostramos toda la agenda
+                    const agendaFiltrada = idAccesoNum
+                        ? invitacion.agenda.filter(a => a.idAcceso === idAccesoNum)
+                        : invitacion.agenda;
+                    const agendaMostrar = agendaFiltrada.length > 0 ? agendaFiltrada : invitacion.agenda;
+
+                    return (
                     <div className="mb-10 space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
                         <h2 className="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-indigo-400" /> Agenda del Evento
+                            <Calendar className="w-4 h-4 text-indigo-400" /> Tu Acceso al Evento
                         </h2>
-                        {invitacion.agenda.map((acceso, aIdx) => (
+                        {agendaMostrar.map((acceso, aIdx) => (
                             <div key={aIdx} className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
                                 <div className="px-5 py-3 border-b border-white/5 bg-white/[0.03]">
                                     <h3 className="font-bold text-sm text-white">{acceso.nombreAcceso}</h3>
@@ -383,7 +398,8 @@ export default function RsvpPage({ params }: { params: Promise<{ token: string }
                             </div>
                         ))}
                     </div>
-                )}
+                    );
+                })()}
 
                 {/* --- PASO 1: Formulario RSVP --- */}
                 {step === 'RSVP' && (
