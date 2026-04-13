@@ -20,6 +20,8 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_idioma)
                    .IsRequired();
 
+            builder.Property(x => x.id_cuenta);
+            builder.Property(x => x.id_unidad);
             builder.Property(x => x.id_cliente);
 
             builder.Property(x => x.anfitriones_texto)
@@ -74,6 +76,27 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.es_publico)
                    .IsRequired();
 
+            builder.Property(x => x.id_acceso_default);
+            builder.Property(x => x.id_plan);
+
+            // Índices (como en tu DDL)
+            builder.HasIndex(x => x.id_plan)
+                   .HasDatabaseName("ix_ef_eventos_id_plan");
+
+            builder.HasIndex(x => x.id_cuenta)
+                   .HasDatabaseName("ix_ef_eventos_id_cuenta");
+
+            builder.HasIndex(x => x.id_cliente)
+                   .HasDatabaseName("ix_ef_eventos_id_cliente");
+
+            builder.HasIndex(x => x.id_unidad)
+                   .HasDatabaseName("ix_ef_eventos_id_unidad");
+
+            // Check constraint B2B ids (según tu tabla)
+            builder.HasCheckConstraint(
+                "ck_ef_eventos_b2b_ids",
+                "((id_cuenta is null and id_cliente is null and id_unidad is null) or (id_cuenta is not null))"
+            );
 
             // Relaciones (FKs)
             builder.HasOne(x => x.tipo_evento)
@@ -99,6 +122,26 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasOne(x => x.usuario_rsvp_link_creator)
                    .WithMany()
                    .HasForeignKey(x => x.id_usuario_rsvp_link_creator)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.plan)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_plan)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.acceso_default)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_acceso_default)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.cuenta)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_cuenta)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.unidad)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_unidad)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

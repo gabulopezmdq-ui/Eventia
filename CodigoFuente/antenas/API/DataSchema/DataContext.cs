@@ -96,6 +96,10 @@ namespace API.DataSchema
         public DbSet<vw_param_faltante_row> vw_param_faltante_row { get; set; }
         public DbSet<vw_param_faltantes_resumen_row> vw_param_faltantes_resumen_row { get; set; }
 
+        public DbSet<ef_cuenta_hospedaje_plantillas> ef_cuenta_hospedaje_plantillas { get; set; }
+        public DbSet<ef_cuenta_hospedaje_plantilla_items> ef_cuenta_hospedaje_plantilla_items { get; set; }
+        public DbSet<ef_cuenta_hospedaje_plantilla_item_bloques> ef_cuenta_hospedaje_plantilla_item_bloques { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -225,6 +229,10 @@ namespace API.DataSchema
 
             modelBuilder.Entity<vw_param_faltante_row>().HasNoKey();
             modelBuilder.Entity<vw_param_faltantes_resumen_row>().HasNoKey();
+
+            modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantillasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_itemsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_item_bloquesConfiguration());
 
 
             /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
