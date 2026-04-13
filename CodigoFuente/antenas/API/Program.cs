@@ -148,6 +148,8 @@ builder.Services.AddScoped<IMesasService, MesasService>();
 builder.Services.AddScoped<IEventoHospedajesService, EventoHospedajesService>();
 builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();
 
+builder.Services.AddScoped<ICuentaHospedajePlantillasService, CuentaHospedajePlantillasService>();
+
 
 
 // Registro de repositorios
