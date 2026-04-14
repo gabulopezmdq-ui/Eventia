@@ -12,7 +12,7 @@ export async function GET() {
             return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
         }
 
-        const res = await fetch(`${API_URL}/idiomas/GetByActivo`, {
+        const res = await fetch(`${API_URL}/idiomas/GetByActivoBool`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
