@@ -150,7 +150,10 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
     };
 
     const copyInvitadoLink = (inv: InvitadoListado) => {
-        const link = `${window.location.origin}/rsvp/${inv.rsvpToken}`;
+        let link = `${window.location.origin}/rsvp/${inv.rsvpToken}`;
+        if (inv.idAcceso) {
+            link += `?idAcceso=${inv.idAcceso}`;
+        }
         navigator.clipboard.writeText(link);
         setCopiedId(inv.idInvitado);
         setTimeout(() => setCopiedId(null), 2000);

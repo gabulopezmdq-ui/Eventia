@@ -27,6 +27,7 @@ export interface InvitadoListado {
     celular?: string;
     rsvpToken: string;
     rsvpEstado: 'P' | 'Y' | 'R'; // P=Pendiente, Y=Confirmado, R=Rechazado
+    idAcceso?: number;
 }
 
 // ── Tipos para Grupo Manual ──

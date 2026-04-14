@@ -42,6 +42,7 @@ export interface TramoInvitacion {
 }
 
 export interface AccesoInvitacion {
+    idAcceso?: number;
     nombreAcceso: string;
     tramos: TramoInvitacion[];
 }
