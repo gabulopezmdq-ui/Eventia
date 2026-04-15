@@ -11,7 +11,7 @@ namespace API.DataSchema
         public short? id_tramo_tipo { get; set; }
 
         public string nombre { get; set; }
-        public string leyenda_visible { get; set; }
+        public string? leyenda_visible { get; set; }
         public string? notas_internas { get; set; }
 
         public DateTimeOffset fecha_hora_inicio { get; set; }
