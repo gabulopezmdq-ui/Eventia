@@ -1,0 +1,86 @@
+# Plan de Implementación: Landing Page (Diseño Eventia)
+
+Este documento detalla el plan de acción para implementar el nuevo diseño de la primera pantalla (Landing Page - `src/app/page.tsx`) según las especificaciones del documento de *Planes, Pagos y Prospectos B2B*.
+
+## 1. Estructura General de la Página (`page.tsx`)
+La página principal se dividirá en las siguientes secciones principales, siguiendo el flujo del documento:
+1. **Hero Section (Inicio)**
+2. **Cómo funciona Eventia + Demo Visual**
+3. **Módulos Estrella (Cards)**
+4. **Selector y Visualizador de Planes (B2C y B2B)**
+5. **Modal "Quiero Info" (Prospectos B2B)**
+
+---
+
+## 2. Desglose por Componentes / Secciones
+
+### Fase 1: Hero Section (Sección Principal)
+- **Título Principal:** "Tu Evento organizado en un solo lugar"
+- **Subtítulo / Menciones:** Plantillas + RSVP + invitados + experiencias (música, álbum, votaciones).
+- **Botones de Acción (CTAs):**
+  - **"Crear mi Evento":** Redirige a `/registrarse?flow=b2c`.
+  - **"Ver planes" / "Quiero Info Planes":** Hace scroll hacia la sección de Planes.
+  - **"¿Tenés una Empresa, Salón u organizás eventos?":** Abre el **Modal de Captura B2B ("Quiero info")**.
+
+### Fase 2: Sección "Cómo funciona Eventia"
+- **Pasos a mostrar:**
+  1. Elegí tipo de evento + plantilla.
+  2. Cargá invitados y confirmaciones (RSVP).
+  3. "Viví el evento: música, álbum, momentos, etc."
+- **Demo Visual:** Espacio para imágenes/mockups (capturas de una invitación, panel del organizador y RSVP).
+
+### Fase 3: Sección "Módulos estrella" (Cards)
+Crear tarjetas informativas destacando las funcionalidades:
+- Invitación + RSVP
+- Segmentos / accesos
+- Música (sugerencias/votos)
+- Álbum colaborativo con QR
+- Votaciones y momentos
+
+### Fase 4: Sección de Planes (B2C y B2B)
+- **Selector/Combo:** Un `Toggle` o `Select` con la opción por defecto: "Para mi evento" (B2C) y la opción "Para Salón/Empresa" (B2B).
+- **Consumo de Endpoints:**
+  - `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C`
+  - `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2B`
+- **Renderizado Dinámico de Cards:**
+  - **Si B2C:** Mostrar Free ($0), Basic, Plus y Pro. Los botones "Elegir" llevan a `/registrarse?flow=b2c&plan=<codigo>`.
+  - **Si B2B:** Mostrar Starter, Team, y Premium. En esta etapa, el documento especifica que no llevan a registrar el plan automáticamente (se maneja manual), sino que probablemente abran el modal de "Quiero info" o deriven a `/registrarse?flow=b2b`.
+
+### Fase 5: Modal "Quiero Info" (Prospectos B2B)
+- **Activación:** Se abre al hacer clic en "¿Tenés una Empresa...?" o en botones B2B.
+- **Campos del Formulario:**
+  - Nombre y apellido (obligatorio)
+  - Nombre del salón / empresa / planner (obligatorio)
+  - Ciudad (obligatorio)
+  - País (default: AR) - Opcional consumir `GET /paises/GetAll?idIdioma=1` si es dinámico.
+  - Email (obligatorio al menos email o whatsapp)
+  - WhatsApp (obligatorio al menos email o whatsapp)
+  - Eventos por mes (opcional)
+- **Acción:**
+  - Hacer un `POST` a `/prospectos_b2b/QuieroInfo` con los datos capturados y la metadata (origen de la landing).
+  - Mostrar mensaje de éxito: "¡Listo! Te contactaremos a la brevedad." y cerrar el modal.
+
+---
+
+## 3. Tareas de Desarrollo (Paso a Paso)
+
+1. **Creación de Componentes UI:**
+   - Crear componente `HeroSection.tsx`.
+   - Crear componente `HowItWorks.tsx`.
+   - Crear componente `StarModules.tsx`.
+   - Crear componente `PricingSection.tsx` (con el toggle B2C/B2B).
+   - Crear componente `B2BLeadModal.tsx` (el modal "Quiero Info").
+
+2. **Integración API en PricingSection:**
+   - Implementar el fetch para el cátalogo de planes públicos y setear los estados `b2cPlans` y `b2bPlans`.
+
+3. **Integración API en Modal B2B:**
+   - Crear la función de submit para el endpoint `/prospectos_b2b/QuieroInfo`.
+   - Manejar validaciones de formulario (requerir Email o Whatsapp).
+   - Manejar estados de carga y mensajes de éxito/error.
+
+4. **Ensamblado en `page.tsx`:**
+   - Importar y ubicar ordenadamente todos los componentes en la página principal para construir la estructura de arriba hacia abajo.
+
+## Próximos pasos
+¿Con qué elemento te gustaría que empecemos? Te sugiero armar la estructura principal en el `page.tsx` y el **Hero Section**, o bien podemos comenzar preparando el **Modal B2B de Prospectos**.
