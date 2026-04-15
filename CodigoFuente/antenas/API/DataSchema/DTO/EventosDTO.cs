@@ -9,7 +9,23 @@ namespace API.DataSchema.DTO
         public int IdTipoEvento { get; set; }
 
         [JsonPropertyName("id_idioma")]
-        public short? IdIdioma { get; set; } // opcional
+        public short IdIdioma { get; set; } // opcional
+
+        // B2B
+        [JsonPropertyName("id_cuenta")]
+        public long? IdCuenta { get; set; }
+
+        [JsonPropertyName("id_unidad")]
+        public long? IdUnidad { get; set; }
+
+        [JsonPropertyName("id_cliente")]
+        public long? IdCliente { get; set; }
+
+        // Solo para UI / validación funcional
+        // Valores sugeridos: "PROPIO" | "CLIENTE"
+        [JsonPropertyName("modalidad")]
+        public string? Modalidad { get; set; }
+
 
         [JsonPropertyName("anfitriones_texto")]
         public string AnfitrionesTexto { get; set; } = null!;
@@ -52,6 +68,29 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("id_idioma")]
         public short IdIdioma { get; set; }
 
+
+        // B2B
+        [JsonPropertyName("id_cuenta")]
+        public long? IdCuenta { get; set; }
+
+        [JsonPropertyName("id_unidad")]
+        public long? IdUnidad { get; set; }
+
+        [JsonPropertyName("unidad_nombre")]
+        public string? UnidadNombre { get; set; }
+
+        [JsonPropertyName("id_cliente")]
+        public long? IdCliente { get; set; }
+
+        [JsonPropertyName("cliente_nombre")]
+        public string? ClienteNombre { get; set; }
+
+        // Derivado
+        [JsonPropertyName("modalidad")]
+        public string? Modalidad { get; set; } // "PROPIO" | "CLIENTE" | null
+
+
+
         [JsonPropertyName("anfitriones_texto")]
         public string AnfitrionesTexto { get; set; } = null!;
 
@@ -75,6 +114,9 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("mensaje_bienvenida")]
         public string? MensajeBienvenida { get; set; }
 
+        [JsonPropertyName("notas")]
+        public string? Notas { get; set; }
+
         // info del plan (para mostrar en UI)
         [JsonPropertyName("id_plan")]
         public long? IdPlan { get; set; }
@@ -84,5 +126,12 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("plan_nombre")]
         public string? PlanNombre { get; set; }
+
+        // Plan de cuenta (solo lectura útil en B2B)
+        [JsonPropertyName("cuenta_plan_codigo")]
+        public string? CuentaPlanCodigo { get; set; }
+
+        [JsonPropertyName("cuenta_plan_nombre")]
+        public string? CuentaPlanNombre { get; set; }
     }
 }

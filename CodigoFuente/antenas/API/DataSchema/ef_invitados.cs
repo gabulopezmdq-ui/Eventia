@@ -38,13 +38,19 @@ namespace API.DataSchema
         public long? id_acceso { get; set; }
         public long? id_rsvp_grupo { get; set; }
 
-        public bool es_titular_grupo { get; set; }
+            public bool es_titular_grupo { get; set; }
+            public long? id_acceso_link { get; set; }
+            public long? id_audiencia_persona { get; set; }
 
-        // Navigation
+
         public virtual ef_eventos? evento { get; set; }
         public virtual ef_evento_accesos? acceso { get; set; }
         public virtual ef_usuarios? usuario_invitador { get; set; }
         public virtual ef_rsvp_grupos? rsvp_grupo { get; set; }
+
+        public virtual ef_evento_acceso_links? acceso_link { get; set; }
+
+
 
         // Álbum
         public virtual ICollection<ef_evento_album_fotos> album_fotos { get; set; } = new List<ef_evento_album_fotos>();
