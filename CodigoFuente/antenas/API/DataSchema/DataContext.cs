@@ -100,6 +100,16 @@ namespace API.DataSchema
         public DbSet<ef_cuenta_hospedaje_plantilla_items> ef_cuenta_hospedaje_plantilla_items { get; set; }
         public DbSet<ef_cuenta_hospedaje_plantilla_item_bloques> ef_cuenta_hospedaje_plantilla_item_bloques { get; set; }
 
+        // Módulo Álbum
+        public DbSet<ef_evento_album_config> ef_evento_album_config { get; set; }
+        public DbSet<ef_evento_album_fotos> ef_evento_album_fotos { get; set; }
+        public DbSet<ef_evento_album_likes> ef_evento_album_likes { get; set; }
+        public DbSet<ef_evento_album_estados_hist> ef_evento_album_estados_hist { get; set; }
+        public DbSet<ef_evento_album_overlays> ef_evento_album_overlays { get; set; }
+        public DbSet<ef_evento_album_fotocabina_usos> ef_evento_album_fotocabina_usos { get; set; }
+        public DbSet<ef_evento_album_rankings> ef_evento_album_rankings { get; set; }
+        public DbSet<ef_evento_album_ranking_votos> ef_evento_album_ranking_votos { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -234,51 +244,20 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_itemsConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_item_bloquesConfiguration());
 
+            // Configuración Módulo Álbum
+            modelBuilder.Entity<ef_evento_album_config>(entity =>
+            {
+                entity.HasKey(e => e.id_evento);
+            });
 
-            /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposEstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_EstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposCategoriasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_PersonasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POFConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposLiquidacionesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_CabeceraLiquidacionConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposFuncionesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPMecanizadaConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresEstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresFuncionConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresConceptosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresCarRevistaConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresTipoEstablecimientoConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresMecanizadasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POF_AntiguedadesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MecanizadasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_UsuariosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RolesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RolesXUsuariosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_UsuariosEstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_CabeceraLiquidacionEstadosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_BajasCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_BajasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MotivosBajasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POFDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MotivosBajasDocConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposMovimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosBajasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POF_BarrasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasCodigosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPInasistenciasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresInasistenciasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasRechazoConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosSuperCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPEFIConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RetencionesXMecanizadasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RetencionesConfiguration());*/
+            // Likes: Clave primaria compuesta
+            modelBuilder.Entity<ef_evento_album_likes>()
+                .HasKey(l => new { l.id_foto, l.device_id });
+
+            // Votos de Ranking: Clave primaria autoincremental + Constrain de unicidad para evitar votos duplicados por dispositivo
+            modelBuilder.Entity<ef_evento_album_ranking_votos>()
+                .HasIndex(v => new { v.id_ranking, v.device_id })
+                .IsUnique();
 
             base.OnModelCreating(modelBuilder);
         }

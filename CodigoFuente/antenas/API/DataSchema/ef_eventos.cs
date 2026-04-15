@@ -1,5 +1,6 @@
-using API.DataSchema.Interfaz;
+﻿using API.DataSchema.Interfaz;
 using System;
+using System.Collections.Generic;
 
 namespace API.DataSchema
 {
@@ -14,7 +15,7 @@ namespace API.DataSchema
         public long? id_cuenta { get; set; }
         public long? id_unidad { get; set; }
 
-        // B2B (cliente final del sal�n)
+        // B2B (cliente final del salón)
         public long? id_cliente { get; set; }
 
         public string anfitriones_texto { get; set; } = null!;
@@ -55,5 +56,11 @@ namespace API.DataSchema
 
         public virtual ef_cuentas? cuenta { get; set; }
         public virtual ef_cuenta_unidades? unidad { get; set; }
+
+        // Álbum
+        public virtual ef_evento_album_config? album_config { get; set; }
+        public virtual ICollection<ef_evento_album_fotos> album_fotos { get; set; } = new List<ef_evento_album_fotos>();
+        public virtual ICollection<ef_evento_album_overlays> album_overlays { get; set; } = new List<ef_evento_album_overlays>();
+        public virtual ICollection<ef_evento_album_rankings> album_rankings { get; set; } = new List<ef_evento_album_rankings>();
     }
 }

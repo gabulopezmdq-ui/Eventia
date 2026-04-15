@@ -150,6 +150,13 @@ builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();
 
 builder.Services.AddScoped<ICuentaHospedajePlantillasService, CuentaHospedajePlantillasService>();
 
+// Módulo Álbum
+builder.Services.AddScoped<IStorageService, StorageService>();
+builder.Services.AddScoped<IFeatureGuardService, FeatureGuardService>();
+builder.Services.AddScoped<IAlbumService, AlbumService>();
+builder.Services.AddScoped<IFotocabinaService, FotocabinaService>();
+builder.Services.AddScoped<IRankingService, RankingService>();
+
 
 
 // Registro de repositorios
@@ -205,6 +212,7 @@ Console.WriteLine("==== Fin de Endpoints ====");
 
 app.UseMiddleware<GlobalErrorHandlingMiddleware>();
 
+app.UseStaticFiles();
 app.UseCors("CorsPolicy");
 app.UseRouting();
 
