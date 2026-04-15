@@ -63,6 +63,44 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_usuario_creador)
                 .HasColumnName("id_usuario_creador");
 
+            builder.Property(x => x.id_evento);
+
+            // NUEVO
+            builder.Property(x => x.es_captacion_publica)
+                   .IsRequired()
+                   .HasDefaultValue(false);
+
+            builder.Property(x => x.requiere_registro)
+                   .IsRequired()
+                   .HasDefaultValue(true);
+
+            builder.Property(x => x.cupo_beneficio);
+
+            builder.Property(x => x.id_tipo_beneficio_registro);
+
+            builder.Property(x => x.beneficio_titulo)
+                   .HasMaxLength(120);
+
+            builder.Property(x => x.beneficio_descripcion)
+                   .HasMaxLength(250);
+
+            builder.Property(x => x.beneficio_hasta);
+
+            builder.Property(x => x.mostrar_disponibles)
+                   .IsRequired()
+                   .HasDefaultValue(false);
+
+            builder.Property(x => x.mensaje_post_registro)
+                   .HasMaxLength(250);
+
+            builder.Property(x => x.origen_default)
+                   .HasMaxLength(30);
+
+            builder.Property(x => x.permite_reutilizar_audiencia)
+                   .IsRequired()
+                   .HasDefaultValue(true);
+
+
             // Índices
             builder.HasIndex(x => x.token)
                 .IsUnique()

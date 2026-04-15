@@ -102,6 +102,13 @@ namespace API.DataSchema.ModelConfiguration
                     .HasForeignKey(x => x.id_usuario_invitador)
                     .HasPrincipalKey(u => u.id_usuario)
                     .OnDelete(DeleteBehavior.Restrict);
-            }
+
+                builder.Property(x => x.id_acceso_link);
+                
+                builder.HasIndex(x => x.id_acceso_link)
+                    .HasDatabaseName("ix_ef_invitados_acceso_link");
+
+                builder.Property(x => x.id_audiencia_persona);
+        }
         }
     }

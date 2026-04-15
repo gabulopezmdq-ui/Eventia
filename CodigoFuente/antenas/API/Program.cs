@@ -150,12 +150,16 @@ builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();
 
 builder.Services.AddScoped<ICuentaHospedajePlantillasService, CuentaHospedajePlantillasService>();
 
+
 // Módulo Álbum
 builder.Services.AddScoped<IStorageService, StorageService>();
 builder.Services.AddScoped<IFeatureGuardService, FeatureGuardService>();
 builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IFotocabinaService, FotocabinaService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
+
+builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksService>();
+
 
 
 

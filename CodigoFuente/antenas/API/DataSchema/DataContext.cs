@@ -99,6 +99,8 @@ namespace API.DataSchema
         public DbSet<ef_cuenta_hospedaje_plantillas> ef_cuenta_hospedaje_plantillas { get; set; }
         public DbSet<ef_cuenta_hospedaje_plantilla_items> ef_cuenta_hospedaje_plantilla_items { get; set; }
         public DbSet<ef_cuenta_hospedaje_plantilla_item_bloques> ef_cuenta_hospedaje_plantilla_item_bloques { get; set; }
+        public DbSet<ef_param_tipos_beneficio_registro> ef_param_tipos_beneficio_registro { get; set; }
+        public DbSet<ef_evento_beneficios_registro> ef_evento_beneficios_registro { get; set; }
 
         // Módulo Álbum
         public DbSet<ef_evento_album_config> ef_evento_album_config { get; set; }
@@ -244,11 +246,15 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_itemsConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_item_bloquesConfiguration());
 
-            // Configuración Módulo Álbum
             modelBuilder.Entity<ef_evento_album_config>(entity =>
             {
                 entity.HasKey(e => e.id_evento);
             });
+
+            modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_beneficios_registroConfiguration());
+
+
 
             // Likes: Clave primaria compuesta
             modelBuilder.Entity<ef_evento_album_likes>()
