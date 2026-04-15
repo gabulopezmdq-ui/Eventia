@@ -10,7 +10,7 @@ namespace API.DataSchema
         public short id_plantilla { get; set; }
 
         public string nombre_default { get; set; }
-        public string mensaje_rsvp_default { get; set; }
+        public string? mensaje_rsvp_default { get; set; }
         public bool es_publico_default { get; set; }
 
         public short orden { get; set; }
