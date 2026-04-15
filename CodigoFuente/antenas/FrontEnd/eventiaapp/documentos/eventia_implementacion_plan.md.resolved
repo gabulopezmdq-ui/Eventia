@@ -1,0 +1,356 @@
+# 🗺️ Eventia — Plan de Implementación Frontend
+### Basado en: `Eventia-Planes-Pagos-Prospectos-B2B.docx`
+### Estado actual analizado: Abril 2026
+
+---
+
+> [!IMPORTANT]
+> Este plan cubre **todo lo que falta implementar** en el frontend, ordenado por prioridad y agrupado por módulo. Cada ítem incluye las rutas, endpoints y notas clave del documento.
+
+---
+
+## 📊 Estado Actual del Frontend
+
+### ✅ Ya implementado
+| Área | Archivos existentes |
+|------|---|
+| Auth (login/register) | `(auth)/login/`, `(auth)/register/` |
+| Dashboard base | `dashboard/layout.tsx`, `dashboard/page.tsx` |
+| Creación de evento (con plantilla) | `dashboard/events/new/page.tsx` |
+| Creación de evento (manual/sin plantilla) | `dashboard/events/new/manual/page.tsx` |
+| Lista "Mis eventos" | `dashboard/events/page.tsx` |
+| Detalle del evento | `dashboard/events/[id]/page.tsx` |
+| Gestión de estructura del evento | `dashboard/events/[id]/estructura/page.tsx` |
+| Gestión de invitados | `dashboard/events/[id]/invitados/page.tsx` |
+| Admin: Solicitudes de plantillas | `dashboard/admin/solicitudes-plantillas/` |
+| RSVP público | `rsvp/[token]/page.tsx` |
+| Paramétricas admin | `dashboard/parametricas/page.tsx` |
+
+### ❌ Lo que FALTA implementar (según el documento)
+Todo lo descripto a continuación.
+
+---
+
+## 🚦 MÓDULOS A IMPLEMENTAR — Prioridad Alta
+
+---
+
+### 📋 MÓDULO 1 — Landing Page (renovación completa)
+**Ruta:** `/` (`src/app/page.tsx`)
+
+La landing actual es un placeholder mínimo. Según el doc debe tener:
+
+#### 1.1 Secciones requeridas
+- [ ] **Hero** con 2 CTAs principales:
+  - `Crear mi evento` → `/registrarse?flow=b2c`
+  - `¿Tenés una empresa, salón u organizás eventos?` → abre popup de Prospecto B2B
+- [ ] **Cómo funciona Eventia** (3 pasos ilustrados)
+- [ ] **Demo visual** (screenshots o mockups de invitación, panel, RSVP)
+- [ ] **Módulos estrella** (cards): Invitación+RSVP, Segmentos, Música, Álbum, Votaciones
+  - Combo selector "Para mi evento" / "Para mi empresa" → cambia las cards
+- [ ] **Sección Planes B2C** (con combo y cards dinámicas)
+- [ ] **Sección Planes B2B** (cards estáticas — sin botón de compra, contact manual)
+
+#### 1.2 Sección de planes B2C — Endpoint
+```
+GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C
+```
+Renderizar cards: **Free / Basic / Plus / Pro**
+- Cada card tiene botón "Elegir [Plan]" → `/registrarse?flow=b2c&plan=B2C_PRO`
+
+#### 1.3 Sección de planes B2B — Endpoint
+```
+GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2B
+```
+Cards: **Starter / Team / Premium**
+- Sin botón de compra directo. Solo informativo (se gestiona manualmente).
+- Botón "Quiero info" → popup Prospecto B2B
+
+---
+
+### 📋 MÓDULO 2 — Registro con Flow y Plan
+**Ruta:** `/register` (`src/app/(auth)/register/page.tsx`)
+
+#### 2.1 Nuevo campo obligatorio en el form de registro
+Agregar combo **"¿Cómo querés empezar en Eventia?"**:
+- `Quiero crear mi evento` → `flow = "b2c"`
+- `Tengo un salón, planner o empresa` → `flow = "b2b"`
+
+Texto de ayuda: *"Podrás usar ambas opciones más adelante con el mismo usuario."*
+
+#### 2.2 Leer query params al cargar
+Si viene de la landing con `?flow=b2c&plan=B2C_PRO`:
+- Pre-seleccionar el combo con ese flow
+- Guardar en localStorage:
+  ```js
+  preferredPlan = "B2C_PRO"
+  postLoginFlow = "b2c"
+  ```
+
+#### 2.3 Post-registro / Post-login
+Consultar `/auth/me` y redirigir según combinación de `flow` + contexto real de usuario.
+
+---
+
+### 📋 MÓDULO 3 — Creación de Evento: Selector de Plan
+**Ruta:** `/dashboard/events/new` (ya existe el wizard)
+
+#### 3.1 Agregar selector de plan al Step 1 del wizard
+
+El combo **Plan** debe:
+- Venir **pre-seleccionado** con `preferredPlan` del localStorage (si existe)
+- Default: `B2C_FREE`
+- Tener botón "Ver planes" → abre modal con cards del catálogo
+
+```
+GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C
+```
+
+#### 3.2 Pasar `codigo_plan` al POST /eventos
+```json
+{
+  "id_tipo_evento": 3,
+  "id_idioma": 1,
+  "anfitriones_texto": "Sol y Rodri",
+  "codigo_plan": "B2C_PRO"
+}
+```
+
+Respuesta incluye `idPlan`, `planCodigo`, `planNombre`, `estado`.
+
+---
+
+### 📋 MÓDULO 4 — Banner de Estado Comercial del Evento
+**Ubicación:** Header/banner dentro del dashboard de cada evento  
+**Ruta:** `dashboard/events/[id]/page.tsx` y `dashboard/events/page.tsx`
+
+#### 4.1 Endpoint
+```
+GET /eventos_comercial/Get?idEvento={id_evento}
+```
+
+#### 4.2 Response y lógica de banner
+| Condición | Banner |
+|-----------|--------|
+| `estado = "P"` o `pago_pendiente = true` | ⚠️ "Pago pendiente — contactá soporte" |
+| `trial_dias_restantes > 0` | ℹ️ "Te quedan X días de prueba" |
+| `trial_vencido = true` | 🔴 "Tu período de prueba terminó" + botón Actualizar Plan |
+| `estado = "A"` | ✅ Sin banner (o "Plan activo") |
+
+#### 4.3 En "Mis eventos" (list page)
+Colorear las cards según estado comercial:
+- 🟡 Trial
+- 🔴 Pago pendiente
+- 🟢 Activo
+
+> Actualizar el componente `EventCard` en `dashboard/events/page.tsx`
+
+---
+
+### 📋 MÓDULO 5 — Features del Evento (Toggles)
+**Ruta:** Nueva subruta `dashboard/events/[id]/features/page.tsx` **o** como paso adicional del wizard
+
+#### 5.1 Endpoint GET
+```
+GET /features_efectivas/GetByEvento?idEvento={id}
+```
+
+#### 5.2 UI propuesta
+Lista de **toggle cards** agrupadas por categoría:
+- `COMUNICACION`: Centro del invitado, Novedades del evento
+- `LOGISTICA`: Hospedajes, Regalos, Transporte
+- `MUSICA`: Sugerencias musicales
+- `SALUD`: Restricciones alimentarias
+
+#### 5.3 Endpoint PUT (bulk save)
+```
+PUT /evento_features/SetActivosBulk?idEvento={id}
+Body: { "items": [{ "id_feature": 5, "activo": true }, ...] }
+```
+
+#### 5.4 Integración con RSVP / Invitación
+La **web pública del evento** debe consultar features y mostrar/ocultar:
+- Si `REGALOS` activo → mostrar sección regalos
+- Si `MUSICA_SUGERENCIAS` activo → mostrar sugerencias musicales
+- etc.
+
+---
+
+### 📋 MÓDULO 6 — Popup de Prospecto B2B (captura de leads)
+**Ubicación:** Landing page, botón "¿Tenés una empresa...?"
+
+#### 6.1 Campos del popup
+- Nombre / empresa
+- Email
+- Teléfono (opcional)
+- Tipo: Salón / Planner / Empresa
+- Mensaje libre
+
+#### 6.2 Comportamiento
+- Al submit → posiblemente `POST /prospectos` (confirmar endpoint con backend)
+- Confirmación visual post-envío
+
+---
+
+## 🔑 MÓDULOS A IMPLEMENTAR — Prioridad Media
+
+---
+
+### 📋 MÓDULO 7 — Panel B2B: "Mi Plan y Facturación" (vista de cuenta)
+**Ruta:** Nueva: `dashboard/cuenta/plan/page.tsx`  
+**Visible para:** `ACCOUNT_ADMIN` / `ACCOUNT_STAFF`
+
+#### 7.1 Endpoint estado
+```
+GET /cuentas_comercial/Get?idCuenta={id}
+```
+
+#### 7.2 Secciones de la pantalla
+- **Estado del plan**: nombre + código
+- **Estado comercial**:
+  - "Al día"
+  - "Vence en X días"
+  - "Vencida (desde dd/mm)"
+- **Próximo vencimiento** (`current_period_end`)
+- **Botón** "Contactar soporte / Enviar comprobante" (por ahora, link a WhatsApp o email)
+
+#### 7.3 Banner
+| Condición | Banner |
+|-----------|--------|
+| `pago_pendiente = true` | 🔴 "Cuenta vencida — contactá soporte" |
+| `dias_para_vencer <= 3` | ⚠️ "Tu suscripción vence pronto" |
+
+#### 7.4 Historial de pagos
+```
+GET /cuentas_comercial/Pagos?idCuenta={id}&take=10
+```
+
+Tabla con columnas: Fecha | Importe | Moneda | Concepto | Estado
+
+---
+
+### 📋 MÓDULO 8 — Admin: Cobranzas B2B (superadmin)
+**Ruta:** Nueva: `dashboard/admin/cobranzas/page.tsx`
+
+#### 8.1 Tabs de la pantalla
+| Tab | Descripción |
+|-----|-------------|
+| **Vencidas** | `response.vencidas` del endpoint |
+| **Por vencer** | `response.por_vencer` con selector 7/30/60/90 días |
+| **Todas** | `vencidas + por_vencer` juntas |
+| **Inconsistencias** | `response.inconsistencias` |
+
+#### 8.2 Endpoint base
+```
+GET /admin/cobranzas_cuentas/pendientes?diasProximo=7
+```
+> ⚠️ Requiere token de superadmin
+
+#### 8.3 Columnas de la grilla
+`id_cuenta` | `nombre_cuenta` | `tipo` | `cuenta_estado` | `plan_codigo` | `suscripcion_estado` | `current_period_end` | `dias_para_vencer` | Acciones
+
+#### 8.4 Acción: Registrar Pago Manual
+Botón "Registrar pago" → **Modal** con:
+- `id_cuenta` (readonly)
+- `id_suscripcion` (readonly)
+- `plan` (readonly)
+- `moneda` (editable)
+- `importe` (editable)
+- `concepto` (editable)
+
+```
+POST /admin/cobranzas_cuentas/registrar
+Body: { "id_cuenta": 2, "id_suscripcion": 5, "moneda": "ARS", "importe": 45000, "concepto": "..." }
+```
+
+Respuesta muestra `next_due` (próximo vencimiento).
+
+#### 8.5 Acción: Corregir Inconsistencia
+```
+POST /admin/cobranzas_cuentas/corregir-inconsistencia?idCuenta=1
+```
+
+Botón al pie de grilla: **"Corregir todas las inconsistencias"**
+```
+POST /admin/cobranzas_cuentas/corregir-inconsistencias
+```
+
+---
+
+## 🔗 Resumen de Nuevas Rutas a Crear
+
+| Ruta | Componente | Prioridad |
+|------|-----------|-----------|
+| `/` | Landing renovada | 🔴 Alta |
+| `/register?flow=b2c&plan=B2C_PRO` | Registro con flow | 🔴 Alta |
+| `/dashboard/events/[id]/features` | Toggles de features | 🔴 Alta |
+| `/dashboard/admin/cobranzas` | Panel cobranzas B2B | 🟡 Media |
+| `/dashboard/cuenta/plan` | Mi plan y facturación | 🟡 Media |
+
+---
+
+## 🔧 Modificaciones en Archivos Existentes
+
+| Archivo | Qué cambiar |
+|---------|-------------|
+| `src/app/page.tsx` | Reemplazar landing placeholder completo |
+| `src/app/(auth)/register/page.tsx` | Agregar campo flow + leer query params |
+| `src/app/dashboard/events/new/page.tsx` | Agregar selector de plan al Step 1 |
+| `src/app/dashboard/events/page.tsx` | Agregar badge comercial en EventCard |
+| `src/app/dashboard/events/[id]/page.tsx` | Agregar banner estado comercial |
+| `src/app/dashboard/layout.tsx` | Agregar link "Cobranzas" en sidebar (solo superadmin) |
+| `src/features/events/event.service.ts` | Agregar servicios para features, estado comercial |
+
+---
+
+## 📁 Nuevos Servicios API a Crear
+
+```typescript
+// features/planes/planes.service.ts
+getPublicCatalog(mercado, moneda, tipo)  // B2C o B2B
+
+// features/events/event.service.ts (agregar)
+getEstadoComercialEvento(idEvento)
+getFeaturesEfectivasByEvento(idEvento)
+setFeaturesBulk(idEvento, items)
+
+// features/cuenta/cuenta.service.ts (NUEVO)
+getEstadoComercialCuenta(idCuenta)
+getPagosCuenta(idCuenta, take)
+
+// features/admin/cobranzas.service.ts (NUEVO)
+getCobranzasPendientes(diasProximo)
+registrarPagoManual(payload)
+corregirInconsistencia(idCuenta)
+corregirTodasInconsistencias()
+```
+
+---
+
+## 🗓️ Sprints Sugeridos
+
+### Sprint 1 — Core B2C (1-2 semanas)
+1. Renovar Landing Page con secciones y planes
+2. Modificar Register para capturar flow + plan desde query params
+3. Agregar selector de plan en el wizard de nuevo evento
+4. Banner de estado comercial en eventos
+
+### Sprint 2 — Features del Evento (1 semana)
+5. Pantalla de toggles de features por evento
+6. Integrar features en la web pública de RSVP/invitación
+
+### Sprint 3 — B2B (1-2 semanas)
+7. Panel "Mi Plan y Facturación" (vista cuenta)
+8. Panel de Cobranzas B2B para superadmin
+9. Popup captura de prospectos B2B en la landing
+
+---
+
+> [!TIP]
+> **Recomendación de orden**: Empezá por el **Sprint 1** ya que desbloquea el flujo principal de negocio. Los banners de estado comercial son los de mayor ROI inmediato porque dan visibilidad al usuario sobre el estado de su evento sin navegación extra.
+
+> [!NOTE]
+> **localStorage keys a usar de forma consistente**:
+> - `preferredPlan` → "B2C_PRO", "B2C_FREE", etc.
+> - `postLoginFlow` → "b2c" | "b2b"
+> Limpiar estas keys después del primer uso post-login.
