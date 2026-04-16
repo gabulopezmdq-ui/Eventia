@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace API.DataSchema.DTO
@@ -20,11 +20,14 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("notas")]
         public string? notas { get; set; }
 
-        [JsonPropertyName("id_unidad")]
-        public long? id_unidad { get; set; }
+        [JsonPropertyName("id_unidad_principal")]
+        public long? id_unidad_principal { get; set; }
 
-        [JsonPropertyName("unidad_nombre")]
-        public string? unidad_nombre { get; set; }
+        [JsonPropertyName("unidad_principal")]
+        public string? unidad_principal { get; set; }
+
+        [JsonPropertyName("unidades")]
+        public List<string> unidades { get; set; } = new List<string>();
 
         [JsonPropertyName("activo")]
         public bool activo { get; set; }
@@ -44,8 +47,8 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("notas")]
         public string? notas { get; set; }
 
-        [JsonPropertyName("id_unidad")]
-        public long? id_unidad { get; set; }
+        [JsonPropertyName("id_unidad_principal")]
+        public long id_unidad_principal { get; set; }
     }
 
     public class ClienteUpdateRequestDTO
@@ -65,8 +68,8 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("notas")]
         public string? notas { get; set; }
 
-        [JsonPropertyName("id_unidad")]
-        public long? id_unidad { get; set; }
+        [JsonPropertyName("id_unidad_principal")]
+        public long id_unidad_principal { get; set; }
 
         [JsonPropertyName("activo")]
         public bool activo { get; set; }

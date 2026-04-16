@@ -19,8 +19,6 @@ namespace API.DataSchema
         public DateTimeOffset? fecha_modif { get; set; }
 
         public bool activo { get; set; }
-        public long? id_unidad { get; set; }
-        public virtual ef_cuenta_unidades? unidad { get; set; }
 
         public string[] UniqueProperties => System.Array.Empty<string>();
 
