@@ -24,24 +24,12 @@ interface PricingSectionProps {
   onOpenB2BModal: () => void;
 }
 
-// Datos de fallback en caso de que falle la API
-const fallbackB2C: Plan[] = [
-  { id: 1, codigo: "B2C_FREE", nombre: "Free", descripcion: "Prueba 7 días $0 (trial)", precio: 0, moneda: "ARS", periodo: null, features: ["Probá la plataforma y configurá tu evento", "Cargá invitados manualmente", "Acceso a módulos básicos para testear"] },
-  { id: 2, codigo: "B2C_BASIC", nombre: "Basic", descripcion: "Evento ordenado", precio: 15000, moneda: "ARS", periodo: "evento", features: ["Plantillas + configuración completa", "Invitaciones y confirmaciones (RSVP)", "Logística del evento"] },
-  { id: 3, codigo: "B2C_PLUS", nombre: "Plus", descripcion: "Interacción + recuerdos", precio: 25000, moneda: "ARS", periodo: "evento", features: ["Todo lo de Basic", "Álbum colaborativo / recuerdos", "Encuestas/votaciones pre-evento"] },
-  { id: 4, codigo: "B2C_PRO", nombre: "Pro", descripcion: "Premium completo", precio: 45000, moneda: "ARS", periodo: "evento", features: ["Todo lo de Plus", "Módulos live (votaciones en vivo)", "Control avanzado (check-in, QR)"] },
-];
 
-const fallbackB2B: Plan[] = [
-  { id: 5, codigo: "B2B_STARTER", nombre: "Starter", descripcion: "Operación base", precio: 30000, moneda: "ARS", periodo: "mes", features: ["Gestión de múltiples eventos", "Plantillas y flujos para equipos", "Soporte y operación básica"] },
-  { id: 6, codigo: "B2B_TEAM", nombre: "Team", descripcion: "Equipo + módulos premium", precio: 60000, moneda: "ARS", periodo: "mes", features: ["Usuarios de staff", "Módulos premium incluidos", "Reportes operativos"] },
-  { id: 7, codigo: "B2B_PREMIUM", nombre: "Premium", descripcion: "Marca blanca + full", precio: 100000, moneda: "ARS", periodo: "mes", features: ["Branding / marca blanca", "Dominio personalizado", "Analítica y reportes avanzados"] },
-];
 
 export default function PricingSection({ onOpenB2BModal }: PricingSectionProps) {
   const [isB2C, setIsB2C] = useState(true);
-  const [b2cPlans, setB2cPlans] = useState<Plan[]>(fallbackB2C);
-  const [b2bPlans, setB2bPlans] = useState<Plan[]>(fallbackB2B);
+  const [b2cPlans, setB2cPlans] = useState<Plan[]>([]);
+  const [b2bPlans, setB2bPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,8 +39,7 @@ export default function PricingSection({ onOpenB2BModal }: PricingSectionProps) 
         const res = await fetch(`/api/planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=${isB2C ? 'B2C' : 'B2B'}`);
         if (res.ok) {
           const data = await res.json();
-          // Solo si data tiene elementos reemplazamos el fallback (para evitar UI vacías si la DB está vacía temporalmente)
-          if (data && data.length > 0) {
+          if (Array.isArray(data)) {
               isB2C ? setB2cPlans(data) : setB2bPlans(data);
           }
         } else {
@@ -101,78 +88,124 @@ export default function PricingSection({ onOpenB2BModal }: PricingSectionProps) 
       </div>
 
       {/* Cards Grid */}
-      <div className="mt-16 flex flex-col items-center justify-center gap-6 sm:flex-row sm:flex-wrap lg:items-stretch lg:justify-center">
-        {activePlans.map((plan, idx) => (
-          <div
-            key={plan.codigo || plan.id || idx}
-            className={`relative flex w-full max-w-sm flex-col rounded-3xl border bg-white p-8 shadow-sm transition-transform hover:-translate-y-2 dark:bg-zinc-900 ${
-              plan.codigo === "B2C_PRO" || plan.codigo === "B2B_TEAM"
-                ? "border-blue-500 shadow-xl shadow-blue-500/10 dark:border-blue-500"
-                : "border-zinc-200 dark:border-zinc-800"
-            }`}
-          >
-            {(plan.codigo === "B2C_PRO" || plan.codigo === "B2B_TEAM") && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-white">
-                Recomendado
-              </div>
-            )}
-            
-            <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{plan.nombre}</h3>
-            <p className="mt-2 flex-1 text-sm text-zinc-500 dark:text-zinc-400">{plan.descripcion}</p>
-            
-            <div className="mt-6 flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold text-zinc-900 dark:text-white">
-                {plan.precio === null || plan.precio === undefined
-                  ? plan.codigo.includes("FREE") ? "$0" : "Consultar"
-                  : `$${plan.precio}`}
-              </span>
-              <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                {plan.periodo && plan.periodo !== "UNICO" ? `/${plan.periodo}` : ""}
-              </span>
-            </div>
-
-            <ul className="mt-8 flex flex-col gap-4 text-left text-sm text-zinc-600 dark:text-zinc-400">
-              {plan.features.map((feature, i) => {
-                const featureName = typeof feature === "string" ? feature : feature.nombre;
-                return (
-                  <li key={i} className="flex items-center gap-3">
-                    <svg className="h-5 w-5 shrink-0 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>{featureName}</span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="mt-8">
-              {isB2C ? (
-                <Link
-                  href={`/register?flow=b2c&plan=${plan.codigo}`}
-                  className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition-colors ${
-                    plan.codigo === "B2C_PRO"
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
-                  }`}
-                >
-                  Elegir {plan.nombre}
-                </Link>
-              ) : (
-                <button
-                  onClick={onOpenB2BModal}
-                  className={`w-full rounded-full py-3 text-center text-sm font-semibold transition-colors ${
-                    plan.codigo === "B2B_TEAM"
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
-                  }`}
-                >
-                  Quiero {plan.nombre}
-                </button>
-              )}
-            </div>
+      <div className="mt-16 flex flex-col flex-wrap gap-6 sm:flex-row sm:items-stretch lg:justify-center">
+        {loading ? (
+          <div className="flex w-full items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
           </div>
-        ))}
+        ) : activePlans.length === 0 ? (
+          <p className="w-full py-12 text-center text-zinc-500 dark:text-zinc-400">No hay planes disponibles por el momento.</p>
+        ) : (
+          activePlans.map((plan, idx) => (
+            <PricingCard 
+              key={plan.codigo || plan.id || idx}
+              plan={plan}
+              isB2C={isB2C}
+              onOpenB2BModal={onOpenB2BModal}
+            />
+          ))
+        )}
       </div>
     </section>
+  );
+}
+
+function PricingCard({ plan, isB2C, onOpenB2BModal }: { plan: Plan; isB2C: boolean; onOpenB2BModal: () => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const INITIAL_FEATURES = 4;
+  const hasMoreFeatures = plan.features.length > INITIAL_FEATURES;
+  const featuresToShow = isExpanded ? plan.features : plan.features.slice(0, INITIAL_FEATURES);
+
+  return (
+    <div
+      className={`relative flex w-full sm:flex-1 sm:min-w-[300px] max-w-sm flex-col rounded-3xl border bg-white p-8 shadow-sm transition-transform hover:-translate-y-2 dark:bg-zinc-900 mx-auto ${
+        plan.codigo === "B2C_PRO" || plan.codigo === "B2B_TEAM"
+          ? "border-blue-500 shadow-xl shadow-blue-500/10 dark:border-blue-500"
+          : "border-zinc-200 dark:border-zinc-800"
+      }`}
+    >
+      {(plan.codigo === "B2C_PRO" || plan.codigo === "B2B_TEAM") && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+          Recomendado
+        </div>
+      )}
+      
+      <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{plan.nombre}</h3>
+      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{plan.descripcion}</p>
+      
+      <div className="mt-6 flex items-baseline gap-1">
+        <span className="text-4xl font-extrabold text-zinc-900 dark:text-white">
+          {plan.precio === null || plan.precio === undefined
+            ? plan.codigo.includes("FREE") ? "$0" : "Consultar"
+            : `$${plan.precio}`}
+        </span>
+        <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          {plan.periodo && plan.periodo !== "UNICO" ? `/${plan.periodo}` : ""}
+        </span>
+      </div>
+
+      <ul className="mt-8 flex flex-col gap-4 text-left text-sm text-zinc-600 dark:text-zinc-400 flex-1">
+        {featuresToShow.map((feature, i) => {
+          const featureName = typeof feature === "string" ? feature : feature.nombre;
+          return (
+            <li key={i} className="flex items-start gap-3">
+              <svg className="h-5 w-5 shrink-0 mt-0.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{featureName}</span>
+            </li>
+          );
+        })}
+        
+        {hasMoreFeatures && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="mt-2 flex w-fit items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+          >
+            {isExpanded ? (
+              <>
+                Ver menos
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </>
+            ) : (
+              <>
+                Ver todos ({plan.features.length - INITIAL_FEATURES} más)
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </>
+            )}
+          </button>
+        )}
+      </ul>
+
+      <div className="mt-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+        {isB2C ? (
+          <Link
+            href={`/register?flow=b2c&plan=${plan.codigo}`}
+            className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition-colors ${
+              plan.codigo === "B2C_PRO"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
+            }`}
+          >
+            Elegir {plan.nombre}
+          </Link>
+        ) : (
+          <button
+            onClick={onOpenB2BModal}
+            className={`w-full rounded-full py-3 text-center text-sm font-semibold transition-colors ${
+              plan.codigo === "B2B_TEAM"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
+            }`}
+          >
+            Quiero {plan.nombre}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
