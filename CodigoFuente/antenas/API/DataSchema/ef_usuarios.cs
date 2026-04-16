@@ -19,12 +19,23 @@ namespace API.DataSchema
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
         public bool activo { get; set; }
-
-        // Nuevos
         public string auth_provider { get; set; } = "local"; // local | google
         public string? google_sub { get; set; }
         public string? avatar_url { get; set; }
 
+        // NUEVOS CAMPOS
+        public string? telefono { get; set; }
+        public short? id_pais { get; set; }
+        public short? id_idioma_preferido { get; set; }
+        public short? id_idioma_default_evento { get; set; }
+        public bool recibir_novedades { get; set; }
+        public DateTimeOffset? ultimo_login { get; set; }
+
         public string[] UniqueProperties => new[] { "email" };
+
+        // Navegaciones
+        public virtual ef_paises? pais { get; set; }
+        public virtual ef_idiomas? idioma_preferido { get; set; }
+        public virtual ef_idiomas? idioma_default_evento { get; set; }
     }
 }
