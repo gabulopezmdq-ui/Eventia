@@ -71,7 +71,11 @@ namespace API.Services
 
                     auth_provider = "google",
                     google_sub = googleSub,
-                    avatar_url = payload.Picture
+                    avatar_url = payload.Picture,
+
+                    fecha_alta = DateTimeOffset.UtcNow,
+                    recibir_novedades = false,
+                    ultimo_login = DateTimeOffset.UtcNow
                 };
 
                 _context.Add(usuario);
@@ -88,6 +92,7 @@ namespace API.Services
                 usuario.avatar_url = payload.Picture;
                 usuario.email_verificado = usuario.email_verificado || payload.EmailVerified;
                 usuario.fecha_modif = DateTimeOffset.UtcNow;
+                usuario.ultimo_login = DateTimeOffset.UtcNow;
 
                 await _context.SaveChangesAsync();
             }
@@ -197,7 +202,10 @@ namespace API.Services
                 apellido = req.apellido,
                 email_verificado = false,
                 activo = true,
-                auth_provider = "local"
+                auth_provider = "local",
+                fecha_alta = DateTimeOffset.UtcNow,
+                recibir_novedades = false,
+                ultimo_login = DateTimeOffset.UtcNow
             };
 
             _context.Add(usuario);
@@ -224,6 +232,11 @@ namespace API.Services
             if (usuario.password_hash == null ||
                 !BCrypt.Net.BCrypt.Verify(req.password, usuario.password_hash))
                 throw new UnauthorizedAccessException("Credenciales inválidas.");
+
+            usuario.ultimo_login = DateTimeOffset.UtcNow;
+            usuario.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
 
             //var jwt = generar_jwt(usuario);
             var jwt = await generar_jwt_async(usuario);
