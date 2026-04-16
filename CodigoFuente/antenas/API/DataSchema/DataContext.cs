@@ -89,6 +89,7 @@ namespace API.DataSchema
         public DbSet<ef_paises> ef_paises { get; set; }
         public DbSet<ef_tipos_identificacion_fiscal> ef_tipos_identificacion_fiscal { get; set; }
         public DbSet<ef_cuenta_unidades> ef_cuenta_unidades { get; set; }
+        public DbSet<ef_cliente_unidades> ef_cliente_unidades { get; set; }
         public DbSet<ef_evento_hospedaje_bloques> ef_evento_hospedaje_bloques { get; set; }
         public DbSet<ef_evento_hospedajes> ef_evento_hospedajes { get; set; }
         public DbSet<ef_hospedaje_tags> ef_hospedaje_tags { get; set; }
@@ -234,6 +235,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_tipos_identificacion_fiscalConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_cuenta_unidadesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cliente_unidadesConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_evento_hospedaje_bloquesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_hospedajesConfiguration());

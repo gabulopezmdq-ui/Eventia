@@ -493,6 +493,21 @@ namespace API.Services
 
                     if (cliente == null)
                         throw new InvalidOperationException("El cliente no existe, no pertenece a la cuenta o está inactivo.");
+
+                    bool relacionExiste = await _context.Set<ef_cliente_unidades>()
+                        .AnyAsync(x => x.id_cliente == req.IdCliente.Value && x.id_unidad == req.IdUnidad.Value);
+
+                    if (!relacionExiste)
+                    {
+                        _context.Set<ef_cliente_unidades>().Add(new ef_cliente_unidades
+                        {
+                            id_cliente = req.IdCliente.Value,
+                            id_unidad = req.IdUnidad.Value,
+                            es_principal = false,
+                            activo = true,
+                            fecha_alta = DateTimeOffset.UtcNow
+                        });
+                    }
                 }
 
                 // En B2B, el plan se toma de la cuenta; no del request
