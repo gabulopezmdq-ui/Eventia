@@ -12,5 +12,10 @@ namespace API.Services
         Task<List<ParametricaDTO>> GetPaisesAsync(short idIdioma);
         Task<List<ParametricaDTO>> GetTiposIdentificacionFiscalAsync(short idIdioma);
         Task<List<ParametricaDTO>> GetTiposIdentificacionFiscalByPaisAsync(short idPais, short idIdioma);
+        Task<List<ParametricaDTO>> GetTiposBeneficioRegistroAsync(short idIdioma);
+        Task<List<ParametricaDTO>> GetPerfilesAsistenciaAsync(short idIdioma);
+        Task<List<ParametricaDTO>> GetInteresesEventoPublicoAsync(short idIdioma);
+        Task<List<ParametricaDTO>> GetPreferenciasMusicalesAsync(short idIdioma);
+
     }
 }
