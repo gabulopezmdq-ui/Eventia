@@ -177,5 +177,54 @@ namespace API.Services
 
             return await query.ToListAsync();
         }
+
+        public async Task<List<ParametricaDTO>> GetTiposBeneficioRegistroAsync(short idIdioma)
+        {
+            return await GetParametricaAsync(
+                _context.ef_param_tipos_beneficio_registro,
+                "TIPO_BENEFICIO_REGISTRO",
+                x => x.id_tipo_beneficio_registro,
+                x => x.codigo,
+                x => x.activo,
+                idIdioma
+            );
+        }
+
+        public async Task<List<ParametricaDTO>> GetPerfilesAsistenciaAsync(short idIdioma)
+        {
+            return await GetParametricaAsync(
+                _context.ef_param_perfiles_asistencia,
+                "PERFIL_ASISTENCIA",
+                x => x.id_perfil_asistencia,
+                x => x.codigo,
+                x => x.activo,
+                idIdioma
+            );
+        }
+
+        public async Task<List<ParametricaDTO>> GetInteresesEventoPublicoAsync(short idIdioma)
+        {
+            return await GetParametricaAsync(
+                _context.ef_param_intereses_evento_publico,
+                "INTERES_EVENTO_PUBLICO",
+                x => x.id_interes_evento_publico,
+                x => x.codigo,
+                x => x.activo,
+                idIdioma
+            );
+        }
+
+        public async Task<List<ParametricaDTO>> GetPreferenciasMusicalesAsync(short idIdioma)
+        {
+            return await GetParametricaAsync(
+                _context.ef_param_preferencias_musicales,
+                "PREFERENCIA_MUSICAL",
+                x => x.id_preferencia_musical,
+                x => x.codigo,
+                x => x.activo,
+                idIdioma
+            );
+        }
+
     }
 }
