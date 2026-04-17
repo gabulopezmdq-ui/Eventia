@@ -3,7 +3,6 @@ using API.Security;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace API.Controllers
@@ -20,39 +19,42 @@ namespace API.Controllers
         }
 
         [Authorize]
-        [HttpGet("by-evento")]
-        public async Task<ActionResult<List<EventoCaptacionLinkDTO>>> GetByEvento([FromQuery] long idEvento)
+        [HttpGet("GetByEvento")]
+        public async Task<ActionResult> GetByEvento([FromQuery] long idEvento)
         {
             long idUsuario = User.GetUserId();
-            var result = await _service.GetByEventoAsync(idUsuario, idEvento);
-            return Ok(result);
+            return Ok(await _service.GetByEventoAsync(idUsuario, idEvento));
         }
 
         [Authorize]
-        [HttpGet("{idAccesoLink:long}")]
-        public async Task<ActionResult<EventoCaptacionLinkDTO>> GetById(long idAccesoLink)
+        [HttpGet("GetById")]
+        public async Task<ActionResult> GetById([FromQuery] long idAccesoLink)
         {
             long idUsuario = User.GetUserId();
-            var result = await _service.GetByIdAsync(idUsuario, idAccesoLink);
-            return Ok(result);
+            return Ok(await _service.GetByIdAsync(idUsuario, idAccesoLink));
         }
 
         [Authorize]
-        [HttpPost]
-        public async Task<ActionResult<EventoCaptacionLinkDTO>> Upsert([FromQuery] long idEvento, [FromBody] EventoCaptacionLinkUpsertRequest req)
+        [HttpPost("Upsert")]
+        public async Task<ActionResult> Upsert([FromQuery] long idEvento, [FromBody] EventoCaptacionLinkUpsertRequest req)
         {
             long idUsuario = User.GetUserId();
-            var result = await _service.UpsertAsync(idUsuario, idEvento, req);
-            return Ok(result);
+            return Ok(await _service.UpsertAsync(idUsuario, idEvento, req));
         }
 
         [Authorize]
-        [HttpPut("{idAccesoLink:long}/activo")]
-        public async Task<IActionResult> SetActivo([FromRoute] long idAccesoLink, [FromQuery] bool activo)
+        [HttpPut("SetActivo")]
+        public async Task<ActionResult> SetActivo([FromQuery] long idAccesoLink, [FromQuery] bool activo)
         {
             long idUsuario = User.GetUserId();
-            var result = await _service.SetActivoAsync(idUsuario, idAccesoLink, activo);
-            return Ok(result);
+            return Ok(await _service.SetActivoAsync(idUsuario, idAccesoLink, activo));
+        }
+
+        [AllowAnonymous]
+        [HttpGet("Landing")]
+        public async Task<ActionResult> Landing([FromQuery] string token)
+        {
+            return Ok(await _service.GetLandingAsync(token));
         }
     }
 }

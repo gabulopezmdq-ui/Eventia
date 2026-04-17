@@ -150,6 +150,9 @@ builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();
 
 builder.Services.AddScoped<ICuentaHospedajePlantillasService, CuentaHospedajePlantillasService>();
 
+builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksService>();
+builder.Services.AddScoped<IAudienciasService, AudienciasService>();
+
 
 // Módulo Álbum
 builder.Services.AddScoped<IStorageService, StorageService>();

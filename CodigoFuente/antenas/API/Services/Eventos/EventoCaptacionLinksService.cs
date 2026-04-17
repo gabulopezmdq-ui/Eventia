@@ -18,7 +18,7 @@ namespace API.Services
             _context = context;
         }
 
-        public async Task<List<EventoCaptacionLinkDTO>> GetByEventoAsync(long idUsuario, long idEvento)
+        public async Task<List<EventoCaptacionLinkDTO_>> GetByEventoAsync(long idUsuario, long idEvento)
         {
             await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
 
@@ -31,13 +31,13 @@ namespace API.Services
                 .ToListAsync();
 
             if (!links.Any())
-                return new List<EventoCaptacionLinkDTO>();
+                return new List<EventoCaptacionLinkDTO_>();
 
             var idsLinks = links.Select(x => x.id_acceso_link).ToList();
 
             var registradosPorLink = await _context.Set<ef_invitados>()
                 .AsNoTracking()
-                .Where(x => x.id_acceso_link.HasValue && idsLinks.Contains(x.id_acceso_link.Value))
+                .Where(x => x.id_acceso_link != null && idsLinks.Contains(x.id_acceso_link.Value))
                 .GroupBy(x => x.id_acceso_link!.Value)
                 .Select(g => new { id_acceso_link = g.Key, cantidad = g.Count() })
                 .ToDictionaryAsync(x => x.id_acceso_link, x => x.cantidad);
@@ -64,7 +64,7 @@ namespace API.Services
             )).ToList();
         }
 
-        public async Task<EventoCaptacionLinkDTO> GetByIdAsync(long idUsuario, long idAccesoLink)
+        public async Task<EventoCaptacionLinkDTO_> GetByIdAsync(long idUsuario, long idAccesoLink)
         {
             var link = await _context.Set<ef_evento_acceso_links>()
                 .Include(x => x.acceso)
@@ -73,6 +73,9 @@ namespace API.Services
 
             if (link == null)
                 throw new Exception("Link inexistente.");
+
+            if (link.id_evento <= 0)
+                throw new Exception("El link no tiene evento asociado.");
 
             await ValidarUsuarioPerteneceEvento(idUsuario, link.id_evento);
 
@@ -88,7 +91,7 @@ namespace API.Services
             return Map(link, registrados, otorgados, canjeados);
         }
 
-        public async Task<EventoCaptacionLinkDTO> UpsertAsync(long idUsuario, long idEvento, EventoCaptacionLinkUpsertRequest req)
+        public async Task<EventoCaptacionLinkDTO_> UpsertAsync(long idUsuario, long idEvento, EventoCaptacionLinkUpsertRequest req)
         {
             await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
 
@@ -105,7 +108,7 @@ namespace API.Services
             if (req.max_personas_total < 1)
                 throw new Exception("max_personas_total debe ser mayor o igual a 1.");
 
-            if (req.max_adultos < 0)
+            if (req.max_adultos.HasValue && req.max_adultos.Value < 0)
                 throw new Exception("max_adultos no puede ser negativo.");
 
             if (req.cupo_beneficio.HasValue && req.cupo_beneficio.Value < 1)
@@ -158,7 +161,7 @@ namespace API.Services
             entity.titulo = req.titulo.Trim();
             entity.leyenda_publica = string.IsNullOrWhiteSpace(req.leyenda_publica) ? null : req.leyenda_publica.Trim();
             entity.max_personas_total = req.max_personas_total;
-            entity.max_adultos = req.max_adultos;
+            entity.max_adultos = req.max_adultos ?? 0;
             entity.fecha_expiracion = req.fecha_expiracion;
             entity.requiere_nombres_acompanantes = req.requiere_nombres_acompanantes;
 
@@ -183,16 +186,7 @@ namespace API.Services
                 .Include(x => x.tipo_beneficio_registro)
                 .SingleAsync(x => x.id_acceso_link == entity.id_acceso_link);
 
-            int registrados = await _context.Set<ef_invitados>()
-                .CountAsync(x => x.id_acceso_link == result.id_acceso_link);
-
-            int otorgados = await _context.Set<ef_evento_beneficios_registro>()
-                .CountAsync(x => x.id_acceso_link == result.id_acceso_link);
-
-            int canjeados = await _context.Set<ef_evento_beneficios_registro>()
-                .CountAsync(x => x.id_acceso_link == result.id_acceso_link && x.estado == "C");
-
-            return Map(result, registrados, otorgados, canjeados);
+            return Map(result, 0, 0, 0);
         }
 
         public async Task<object> SetActivoAsync(long idUsuario, long idAccesoLink, bool activo)
@@ -202,6 +196,9 @@ namespace API.Services
 
             if (link == null)
                 throw new Exception("Link inexistente.");
+
+            if (link.id_evento <= 0)
+                throw new Exception("El link no tiene evento asociado.");
 
             await ValidarUsuarioPerteneceEvento(idUsuario, link.id_evento);
 
@@ -218,6 +215,46 @@ namespace API.Services
             };
         }
 
+        public async Task<EventoCaptacionLandingDTO> GetLandingAsync(string token)
+        {
+            var x = await _context.Set<ef_evento_acceso_links>()
+                .AsNoTracking()
+                .Include(l => l.acceso)
+                .Include(l => l.tipo_beneficio_registro)
+                .SingleOrDefaultAsync(l => l.token == token && l.activo);
+
+            if (x == null)
+                throw new Exception("Link inexistente o inactivo.");
+
+            var evento = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleAsync(e => e.id_evento == x.id_evento);
+
+            return new EventoCaptacionLandingDTO
+            {
+                id_evento = x.id_evento,
+                id_acceso_link = x.id_acceso_link,
+                id_acceso = x.id_acceso,
+                acceso_nombre = x.acceso?.nombre ?? string.Empty,
+                titulo = x.titulo,
+                leyenda_publica = x.leyenda_publica,
+                anfitriones_texto = evento.anfitriones_texto,
+                mensaje_bienvenida = evento.mensaje_bienvenida,
+                max_personas_total = x.max_personas_total,
+                max_adultos = x.max_adultos,
+                requiere_nombres_acompanantes = x.requiere_nombres_acompanantes,
+                cupo_beneficio = x.cupo_beneficio,
+                beneficio_titulo = x.beneficio_titulo,
+                beneficio_descripcion = x.beneficio_descripcion,
+                beneficio_hasta = x.beneficio_hasta,
+                mostrar_disponibles = x.mostrar_disponibles,
+                mensaje_post_registro = x.mensaje_post_registro,
+                origen_default = x.origen_default,
+                fecha_expiracion = x.fecha_expiracion,
+                expirado = x.fecha_expiracion.HasValue && x.fecha_expiracion.Value < DateTimeOffset.UtcNow
+            };
+        }
+
         private async Task ValidarUsuarioPerteneceEvento(long idUsuario, long idEvento)
         {
             bool pertenece = await _context.Set<ef_evento_usuarios>()
@@ -227,18 +264,18 @@ namespace API.Services
                 throw new UnauthorizedAccessException("El usuario no pertenece al evento.");
         }
 
-        private EventoCaptacionLinkDTO Map(
+        private EventoCaptacionLinkDTO_ Map(
             ef_evento_acceso_links x,
             int registrados,
             int beneficiosOtorgados,
             int beneficiosCanjeados)
         {
-            return new EventoCaptacionLinkDTO
+            return new EventoCaptacionLinkDTO_
             {
                 id_acceso_link = x.id_acceso_link,
                 id_evento = x.id_evento,
                 id_acceso = x.id_acceso,
-                acceso_nombre = x.acceso != null ? x.acceso.nombre : string.Empty,
+                acceso_nombre = x.acceso?.nombre ?? string.Empty,
                 titulo = x.titulo,
                 leyenda_publica = x.leyenda_publica,
                 token = x.token,
@@ -246,17 +283,18 @@ namespace API.Services
                 requiere_registro = x.requiere_registro,
                 max_personas_total = x.max_personas_total,
                 max_adultos = x.max_adultos,
+                requiere_nombres_acompanantes = x.requiere_nombres_acompanantes,
                 cupo_beneficio = x.cupo_beneficio,
                 id_tipo_beneficio_registro = x.id_tipo_beneficio_registro,
                 tipo_beneficio_codigo = x.tipo_beneficio_registro != null ? x.tipo_beneficio_registro.codigo : null,
                 beneficio_titulo = x.beneficio_titulo,
                 beneficio_descripcion = x.beneficio_descripcion,
+                beneficio_hasta = x.beneficio_hasta,
                 mostrar_disponibles = x.mostrar_disponibles,
                 mensaje_post_registro = x.mensaje_post_registro,
                 origen_default = x.origen_default,
                 permite_reutilizar_audiencia = x.permite_reutilizar_audiencia,
                 fecha_expiracion = x.fecha_expiracion,
-                beneficio_hasta = x.beneficio_hasta,
                 activo = x.activo,
                 registrados = registrados,
                 beneficios_otorgados = beneficiosOtorgados,
@@ -264,20 +302,13 @@ namespace API.Services
             };
         }
 
-        private static string GenerarTokenSeguro(int bytesLength)
+        private string GenerarTokenSeguro(int length)
         {
-            var bytes = new byte[bytesLength];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(bytes);
-            }
-
-            var token = Convert.ToBase64String(bytes)
-                .Replace("+", "")
-                .Replace("/", "")
-                .Replace("=", "");
-
-            return token.Length > 43 ? token.Substring(0, 43) : token;
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+            using var rng = RandomNumberGenerator.Create();
+            var data = new byte[length];
+            rng.GetBytes(data);
+            return new string(data.Select(x => chars[x % chars.Length]).ToArray());
         }
     }
 }

@@ -113,6 +113,18 @@ namespace API.DataSchema
         public DbSet<ef_evento_album_rankings> ef_evento_album_rankings { get; set; }
         public DbSet<ef_evento_album_ranking_votos> ef_evento_album_ranking_votos { get; set; }
 
+        //audiencia
+        public DbSet<ef_audiencias_personas> ef_audiencias_personas { get; set; }
+        public DbSet<ef_audiencia_persona_eventos> ef_audiencia_persona_eventos { get; set; }
+        public DbSet<ef_audiencia_persona_tags> ef_audiencia_persona_tags { get; set; }
+        public DbSet<ef_evento_checkins> ef_evento_checkins { get; set; }
+        public DbSet<ef_invitados_perfiles> ef_invitados_perfiles { get; set; }
+        public DbSet<ef_invitado_intereses_evento> ef_invitado_intereses_evento { get; set; }
+        public DbSet<ef_invitado_preferencias_musicales> ef_invitado_preferencias_musicales { get; set; }
+        public DbSet<ef_param_intereses_evento_publico> ef_param_intereses_evento_publico { get; set; }
+        public DbSet<ef_param_preferencias_musicales> ef_param_preferencias_musicales { get; set; }
+        public DbSet<ef_param_perfiles_asistencia> ef_param_perfiles_asistencia { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -255,7 +267,17 @@ namespace API.DataSchema
 
             modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_beneficios_registroConfiguration());
-
+            modelBuilder.ApplyConfiguration(new ef_audiencias_personasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_audiencia_persona_eventosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_audiencia_persona_tagsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_checkinsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_invitados_perfilesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_invitado_intereses_eventoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_invitado_preferencias_musicalesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_intereses_evento_publicoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_preferencias_musicalesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_perfiles_asistenciaConfiguration());
 
 
             // Likes: Clave primaria compuesta
