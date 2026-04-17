@@ -63,41 +63,54 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_usuario_creador)
                 .HasColumnName("id_usuario_creador");
 
-            builder.Property(x => x.id_evento);
+            builder.Property(x => x.id_evento)
+               .HasColumnName("id_evento")
+               .IsRequired();
 
             // NUEVO
             builder.Property(x => x.es_captacion_publica)
-                   .IsRequired()
+                   .HasColumnName("es_captacion_publica")
+                    .IsRequired()
                    .HasDefaultValue(false);
 
             builder.Property(x => x.requiere_registro)
-                   .IsRequired()
+                .HasColumnName("requiere_registro")
+                .IsRequired()
                    .HasDefaultValue(true);
 
-            builder.Property(x => x.cupo_beneficio);
+            builder.Property(x => x.cupo_beneficio)
+                .HasColumnName("cupo_beneficio"); 
 
-            builder.Property(x => x.id_tipo_beneficio_registro);
+            builder.Property(x => x.id_tipo_beneficio_registro)
+                    .HasColumnName("id_tipo_beneficio_registro");
 
             builder.Property(x => x.beneficio_titulo)
+                .HasColumnName("beneficio_titulo")
                    .HasMaxLength(120);
 
             builder.Property(x => x.beneficio_descripcion)
-                   .HasMaxLength(250);
+                .HasColumnName("beneficio_descripcion")
+                .HasMaxLength(250);
 
-            builder.Property(x => x.beneficio_hasta);
+            builder.Property(x => x.beneficio_hasta)
+                 .HasColumnName("beneficio_hasta"); 
 
             builder.Property(x => x.mostrar_disponibles)
-                   .IsRequired()
+                .HasColumnName("mostrar_disponibles")
+                .IsRequired()
                    .HasDefaultValue(false);
 
             builder.Property(x => x.mensaje_post_registro)
-                   .HasMaxLength(250);
+                .HasColumnName("mensaje_post_registro")
+                .HasMaxLength(250);
 
             builder.Property(x => x.origen_default)
-                   .HasMaxLength(30);
+                .HasColumnName("origen_default")
+                .HasMaxLength(30);
 
             builder.Property(x => x.permite_reutilizar_audiencia)
-                   .IsRequired()
+                 .HasColumnName("permite_reutilizar_audiencia")
+                .IsRequired()
                    .HasDefaultValue(true);
 
 
@@ -126,6 +139,11 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasOne(x => x.ef_eventos)
                     .WithMany()
                     .HasForeignKey(x => x.id_evento);
+
+            builder.HasOne(x => x.tipo_beneficio_registro)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_tipo_beneficio_registro)
+                   .OnDelete(DeleteBehavior.Restrict);
 
 
             // Check constraints
