@@ -7,7 +7,7 @@ namespace API.DataSchema.ModelConfiguration
     {
         public void Configure(EntityTypeBuilder<API.DataSchema.ef_invitados_perfiles> builder)
         {
-            builder.ToTable("ef_invitados_perfiles", "public");
+            builder.ToTable("ef_invitado_perfiles", "public");
 
             builder.HasKey(x => x.id_invitado);
 
@@ -15,19 +15,15 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.instagram).HasMaxLength(100);
             builder.Property(x => x.zona).HasMaxLength(120);
-            builder.Property(x => x.ciudad).HasMaxLength(120);
+            builder.Property(x => x.ciudad).HasMaxLength(100);
 
-            builder.Property(x => x.acepta_terminos).IsRequired().HasDefaultValue(false);
-            builder.Property(x => x.acepta_comunicaciones).IsRequired().HasDefaultValue(false);
-            builder.Property(x => x.acepta_promociones).IsRequired().HasDefaultValue(false);
-
-            builder.Property(x => x.origen_registro).HasMaxLength(80);
-            builder.Property(x => x.campania_fuente).HasMaxLength(120);
-            builder.Property(x => x.campania_medio).HasMaxLength(120);
+            builder.Property(x => x.origen_registro).HasMaxLength(30);
+            builder.Property(x => x.campania_fuente).HasMaxLength(80);
+            builder.Property(x => x.campania_medio).HasMaxLength(80);
             builder.Property(x => x.campania_nombre).HasMaxLength(120);
             builder.Property(x => x.campania_contenido).HasMaxLength(120);
             builder.Property(x => x.campania_termino).HasMaxLength(120);
-            builder.Property(x => x.pagina_origen).HasMaxLength(300);
+            builder.Property(x => x.pagina_origen).HasMaxLength(200);
             builder.Property(x => x.referer).HasMaxLength(300);
 
             builder.Property(x => x.fecha_alta).IsRequired().HasDefaultValueSql("now()");
