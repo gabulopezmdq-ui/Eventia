@@ -70,6 +70,7 @@ namespace API.Services
                 activo = true,
                 qr_token = GenerarTokenSeguro(32),
                 id_acceso = link.id_acceso,
+                id_acceso_link = link.id_acceso_link,
                 es_titular_grupo = true
             };
 
