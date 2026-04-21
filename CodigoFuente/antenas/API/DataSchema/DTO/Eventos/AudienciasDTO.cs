@@ -513,23 +513,26 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("id_evento")]
         public long id_evento { get; set; }
 
-        [JsonPropertyName("registrados")]
-        public int registrados { get; set; }
+        [JsonPropertyName("resumen")]
+        public AudienciaMetricasResumenDTO resumen { get; set; } = new AudienciaMetricasResumenDTO();
 
-        [JsonPropertyName("asistieron")]
-        public int asistieron { get; set; }
+        [JsonPropertyName("por_origen")]
+        public List<AudienciaMetricasOrigenDTO> por_origen { get; set; } = new List<AudienciaMetricasOrigenDTO>();
 
-        [JsonPropertyName("no_show")]
-        public int no_show { get; set; }
+        [JsonPropertyName("por_campania")]
+        public List<AudienciaMetricasCampaniaDTO> por_campania { get; set; } = new List<AudienciaMetricasCampaniaDTO>();
 
-        [JsonPropertyName("conversion_asistencia")]
-        public decimal conversion_asistencia { get; set; }
+        [JsonPropertyName("por_perfil_asistencia")]
+        public List<AudienciaMetricasPerfilDTO> por_perfil_asistencia { get; set; } = new List<AudienciaMetricasPerfilDTO>();
 
-        [JsonPropertyName("beneficios_otorgados")]
-        public int beneficios_otorgados { get; set; }
+        [JsonPropertyName("top_intereses")]
+        public List<AudienciaMetricasItemDTO> top_intereses { get; set; } = new List<AudienciaMetricasItemDTO>();
 
-        [JsonPropertyName("beneficios_canjeados")]
-        public int beneficios_canjeados { get; set; }
+        [JsonPropertyName("top_preferencias_musicales")]
+        public List<AudienciaMetricasItemDTO> top_preferencias_musicales { get; set; } = new List<AudienciaMetricasItemDTO>();
+
+        [JsonPropertyName("embudo")]
+        public AudienciaMetricasEmbudoDTO embudo { get; set; } = new AudienciaMetricasEmbudoDTO();
     }
 
     public class AudienciaBusquedaRegistradoDTO
@@ -690,4 +693,108 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("mensaje")]
         public string mensaje { get; set; } = null!;
     }
+
+    public class AudienciaMetricasResumenDTO
+    {
+        [JsonPropertyName("registrados")]
+        public int registrados { get; set; }
+
+        [JsonPropertyName("asistieron")]
+        public int asistieron { get; set; }
+
+        [JsonPropertyName("no_show")]
+        public int no_show { get; set; }
+
+        [JsonPropertyName("conversion_asistencia_pct")]
+        public decimal conversion_asistencia_pct { get; set; }
+
+        [JsonPropertyName("beneficios_otorgados")]
+        public int beneficios_otorgados { get; set; }
+
+        [JsonPropertyName("beneficios_canjeados")]
+        public int beneficios_canjeados { get; set; }
+
+        [JsonPropertyName("conversion_beneficio_pct")]
+        public decimal conversion_beneficio_pct { get; set; }
+    }
+
+    public class AudienciaMetricasOrigenDTO
+    {
+        [JsonPropertyName("origen_registro")]
+        public string origen_registro { get; set; } = null!;
+
+        [JsonPropertyName("registrados")]
+        public int registrados { get; set; }
+
+        [JsonPropertyName("asistieron")]
+        public int asistieron { get; set; }
+
+        [JsonPropertyName("beneficios_otorgados")]
+        public int beneficios_otorgados { get; set; }
+
+        [JsonPropertyName("beneficios_canjeados")]
+        public int beneficios_canjeados { get; set; }
+    }
+
+    public class AudienciaMetricasCampaniaDTO
+    {
+        [JsonPropertyName("id_acceso_link")]
+        public long id_acceso_link { get; set; }
+
+        [JsonPropertyName("campania")]
+        public string campania { get; set; } = null!;
+
+        [JsonPropertyName("registrados")]
+        public int registrados { get; set; }
+
+        [JsonPropertyName("asistieron")]
+        public int asistieron { get; set; }
+
+        [JsonPropertyName("beneficios_otorgados")]
+        public int beneficios_otorgados { get; set; }
+
+        [JsonPropertyName("beneficios_canjeados")]
+        public int beneficios_canjeados { get; set; }
+    }
+
+    public class AudienciaMetricasPerfilDTO
+    {
+        [JsonPropertyName("id_perfil_asistencia")]
+        public long? id_perfil_asistencia { get; set; }
+
+        [JsonPropertyName("perfil_texto")]
+        public string perfil_texto { get; set; } = null!;
+
+        [JsonPropertyName("cantidad")]
+        public int cantidad { get; set; }
+    }
+
+    public class AudienciaMetricasItemDTO
+    {
+        [JsonPropertyName("codigo")]
+        public string codigo { get; set; } = null!;
+
+        [JsonPropertyName("texto")]
+        public string texto { get; set; } = null!;
+
+        [JsonPropertyName("cantidad")]
+        public int cantidad { get; set; }
+    }
+
+    public class AudienciaMetricasEmbudoDTO
+    {
+        [JsonPropertyName("landing_visitas")]
+        public int? landing_visitas { get; set; }
+
+        [JsonPropertyName("registrados")]
+        public int registrados { get; set; }
+
+        [JsonPropertyName("asistieron")]
+        public int asistieron { get; set; }
+
+        [JsonPropertyName("beneficios_canjeados")]
+        public int beneficios_canjeados { get; set; }
+    }
+
+
 }
