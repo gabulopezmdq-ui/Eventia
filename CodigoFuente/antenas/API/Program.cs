@@ -29,7 +29,7 @@ using System.Security.Claims;
 using System.Text;
 using QuestPDF.Infrastructure;
 using API.Services.Cuentas;
-
+using API.Services.Staff;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -162,6 +162,9 @@ builder.Services.AddScoped<IFotocabinaService, FotocabinaService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 
 builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksService>();
+
+// Módulo Staff
+builder.Services.AddScoped<StaffService>();
 
 
 
