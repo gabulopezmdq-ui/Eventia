@@ -80,5 +80,13 @@ namespace API.Controllers
             long idUsuario = User.GetUserId();
             return Ok(await _service.ResolverEntradaManualAsync(idUsuario, idEvento, idInvitado));
         }
+
+        [Authorize]
+        [HttpGet("ResolverQrBeneficio")]
+        public async Task<ActionResult> ResolverQrBeneficio([FromQuery] long idEvento, [FromQuery] string qrToken)
+        {
+            long idUsuario = User.GetUserId();
+            return Ok(await _service.ResolverQrBeneficioAsync(idUsuario, idEvento, qrToken));
+        }
     }
 }
