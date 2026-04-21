@@ -337,17 +337,124 @@ namespace API.Services
             int canjeados = await _context.Set<ef_evento_beneficios_registro>()
                 .CountAsync(x => x.id_evento == idEvento && x.estado == "C");
 
+            var porOrigen = await _context.Set<ef_audiencia_persona_eventos>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento)
+                .GroupBy(x => x.origen_registro ?? "SIN_ORIGEN")
+                .Select(g => new AudienciaMetricasOrigenDTO
+                {
+                    origen_registro = g.Key,
+                    registrados = g.Count(x => x.registrado),
+                    asistieron = g.Count(x => x.asistio),
+                    beneficios_otorgados = g.Count(x => x.beneficio_otorgado),
+                    beneficios_canjeados = g.Count(x => x.beneficio_canjeado)
+                })
+                .OrderByDescending(x => x.registrados)
+                .ToListAsync();
+
+            var porCampania = await (
+                from ape in _context.Set<ef_audiencia_persona_eventos>().AsNoTracking()
+                join l in _context.Set<ef_evento_acceso_links>().AsNoTracking()
+                    on ape.id_acceso_link equals l.id_acceso_link
+                where ape.id_evento == idEvento && ape.id_acceso_link.HasValue
+                group new { ape, l } by new { ape.id_acceso_link, l.titulo } into g
+                orderby g.Count() descending
+                select new AudienciaMetricasCampaniaDTO
+                {
+                    id_acceso_link = g.Key.id_acceso_link!.Value,
+                    campania = g.Key.titulo,
+                    registrados = g.Count(x => x.ape.registrado),
+                    asistieron = g.Count(x => x.ape.asistio),
+                    beneficios_otorgados = g.Count(x => x.ape.beneficio_otorgado),
+                    beneficios_canjeados = g.Count(x => x.ape.beneficio_canjeado)
+                }
+            ).ToListAsync();
+
+            var porPerfil = await (
+                from i in _context.Set<ef_invitados>().AsNoTracking()
+                join p in _context.Set<ef_invitados_perfiles>().AsNoTracking()
+                    on i.id_invitado equals p.id_invitado
+                join pp in _context.Set<ef_param_perfiles_asistencia>().AsNoTracking()
+                    on p.id_perfil_asistencia equals pp.id_perfil_asistencia into ppj
+                from pp in ppj.DefaultIfEmpty()
+                where i.id_evento == idEvento && p.id_perfil_asistencia.HasValue
+                group new { p, pp } by new
+                {
+                    p.id_perfil_asistencia,
+                    perfil_texto = pp != null ? pp.codigo : "SIN_PERFIL"
+                } into g
+                orderby g.Count() descending
+                select new AudienciaMetricasPerfilDTO
+                {
+                    id_perfil_asistencia = g.Key.id_perfil_asistencia,
+                    perfil_texto = g.Key.perfil_texto,
+                    cantidad = g.Count()
+                }
+            ).ToListAsync();
+
+            var topIntereses = await (
+                from i in _context.Set<ef_invitados>().AsNoTracking()
+                join x in _context.Set<ef_invitado_intereses_evento>().AsNoTracking()
+                    on i.id_invitado equals x.id_invitado
+                join p in _context.Set<ef_param_intereses_evento_publico>().AsNoTracking()
+                    on x.id_interes_evento_publico equals p.id_interes_evento_publico
+                where i.id_evento == idEvento
+                group p by new { p.codigo } into g
+                orderby g.Count() descending
+                select new AudienciaMetricasItemDTO
+                {
+                    codigo = g.Key.codigo,
+                    texto = g.Key.codigo,
+                    cantidad = g.Count()
+                }
+            ).Take(10).ToListAsync();
+
+            var topPreferencias = await (
+                from i in _context.Set<ef_invitados>().AsNoTracking()
+                join x in _context.Set<ef_invitado_preferencias_musicales>().AsNoTracking()
+                    on i.id_invitado equals x.id_invitado
+                join p in _context.Set<ef_param_preferencias_musicales>().AsNoTracking()
+                    on x.id_preferencia_musical equals p.id_preferencia_musical
+                where i.id_evento == idEvento
+                group p by new { p.codigo } into g
+                orderby g.Count() descending
+                select new AudienciaMetricasItemDTO
+                {
+                    codigo = g.Key.codigo,
+                    texto = g.Key.codigo,
+                    cantidad = g.Count()
+                }
+            ).Take(10).ToListAsync();
+
             return new AudienciaEventoMetricasDTO
             {
                 id_evento = idEvento,
-                registrados = registrados,
-                asistieron = asistieron,
-                no_show = registrados - asistieron,
-                conversion_asistencia = registrados > 0
-                    ? Math.Round((decimal)asistieron * 100m / registrados, 2)
-                    : 0,
-                beneficios_otorgados = otorgados,
-                beneficios_canjeados = canjeados
+                resumen = new AudienciaMetricasResumenDTO
+                {
+                    registrados = registrados,
+                    asistieron = asistieron,
+                    no_show = registrados - asistieron,
+                    conversion_asistencia_pct = registrados > 0
+                        ? Math.Round((decimal)asistieron * 100m / registrados, 2)
+                        : 0,
+                    beneficios_otorgados = otorgados,
+                    beneficios_canjeados = canjeados,
+                    conversion_beneficio_pct = otorgados > 0
+                        ? Math.Round((decimal)canjeados * 100m / otorgados, 2)
+                        : 0
+                },
+                por_origen = porOrigen,
+                por_campania = porCampania,
+                por_perfil_asistencia = porPerfil,
+                top_intereses = topIntereses,
+                top_preferencias_musicales = topPreferencias,
+                embudo = new AudienciaMetricasEmbudoDTO
+                {
+                    landing_visitas = null,
+                    registrados = registrados,
+                    asistieron = asistieron,
+                    beneficios_canjeados = canjeados
+                }
             };
         }
 
