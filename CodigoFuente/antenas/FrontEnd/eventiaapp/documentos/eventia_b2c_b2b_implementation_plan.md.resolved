@@ -1,0 +1,320 @@
+# Plan de Implementación: Arquitectura B2C/B2B — Eventia
+
+> **Última actualización:** 21 Abril 2026  
+> **Documentos fuente:** `NuevoEventia-Eventos B2C y B2B.docx`, `Eventia-Planes-Pagos-Prospectos-B2B.docx`
+
+---
+
+## Estado General de Bloques
+
+| Bloque | Descripción | Estado |
+|---|---|---|
+| **A** | Auth/Me proxy enriquecido | ✅ Completado |
+| **B** | AuthContext global | ✅ Completado |
+| **C** | Sidebar dinámico (layout) | ✅ Completado |
+| **D** | Proxies API faltantes (B2B) | ✅ Completado |
+| **E** | Panel General dashboard | ✅ Completado |
+| **F** | Módulo Cuenta B2B (páginas) | ✅ Completado |
+| **G** | Mi Perfil | ✅ Completado |
+| **H** | Wizard Crear Evento B2B | ✅ Completado (Step 1) |
+| **I** | Step Acceso y Confirmación | ✅ Completado |
+| **J** | Personalización Mi Espacio | ✅ Completado (incluido en C) |
+| **K** | Registro con ?flow= | ✅ Completado |
+
+---
+
+## ✅ BLOQUE A — Proxy `/api/auth/me` Enriquecido
+
+### Archivo modificado
+`src/app/api/auth/me/route.ts`
+
+### Qué se hizo
+- **Antes:** Decodificaba el JWT localmente y devolvía `{email, rol, exp}`.
+- **Ahora:** Llama al backend real (`GET /auth/me`) con el token de la cookie y fusiona la respuesta completa con los campos legacy para mantener backward compatibility.
+
+### Respuesta fusionada que devuelve ahora
+```json
+{
+  "email": "...",         // legacy - código existente lo sigue leyendo
+  "rol": "user",          // legacy - código existente lo sigue leyendo
+  "exp": 1234567890,      // legacy
+  "usuario": { "id_usuario": 8, "email": "..." },
+  "cuenta": { "estado_ui": "SIN_CUENTA" | "CUENTA_ACTIVA", "id_cuenta": null | number, ... },
+  "eventos": { "cantidad_propios": 0, "cantidad_compartidos": 0 },
+  "ui": {
+    "mostrar_menu_cuenta": false,
+    "puede_crear_evento_b2c": true,
+    "mostrar_solicitar_cuenta": true,
+    "mostrar_estado_cuenta_pendiente": false,
+    "mostrar_admin": false
+  },
+  "roles_globales": []
+}
+```
+
+> [!NOTE]
+> **Mecanismo de Fallback y "Modo Dios":**
+> Si el backend devuelve 404/500 porque el endpoint no está desplegado localmente, el proxy devuelve un objeto `ui` hardcodeado usando los datos del JWT para evitar que la app se rompa. 
+> Además, si el `rol` del usuario es `superadmin`, el proxy fuerza **todas** las flags en `true` ("Modo Dios") para que el desarrollador pueda visualizar siempre "Mi Espacio" y "Cuenta" independientemente de las reglas estrictas del backend en esta fase de desarrollo.
+
+---
+
+## ✅ BLOQUE B — AuthContext Global
+
+### Archivo creado
+`src/context/AuthContext.tsx`
+
+### Qué expone
+- **`<AuthProvider>`**: Wrapper que hace una sola llamada a `GET /auth/me` al cargar el dashboard.
+- **`useAuth()`**: Hook que devuelve:
+  - `authMe` — respuesta completa
+  - `ui` — shortcut a `authMe.ui` (los flags de navegación)
+  - `cuenta` — shortcut a `authMe.cuenta` (datos de la cuenta B2B)
+  - `eventos` — shortcut a `authMe.eventos` (contadores)
+  - `usuario` — shortcut a `authMe.usuario`
+  - `isSuperAdmin` — `true` si `rol === 'superadmin'`
+  - `loading` — `true` durante la carga inicial
+  - `refresh()` — fuerza un re-fetch manual (útil post-cambio de plan)
+
+### Cómo usarlo en cualquier componente
+```tsx
+import { useAuth } from '@/src/context/AuthContext';
+
+function MiComponente() {
+  const { ui, cuenta, isSuperAdmin, loading } = useAuth();
+
+  if (ui?.mostrar_menu_cuenta) {
+    // Mostrar cosas de cuenta B2B
+  }
+}
+```
+
+---
+
+## ✅ BLOQUE C — Sidebar Dinámico (Dashboard Layout)
+
+### Archivo modificado
+`src/app/dashboard/layout.tsx`
+
+### Qué se hizo
+- Eliminadas las llamadas individuales a `getCurrentUser()`.
+- Envuelto con `<AuthProvider>` (separado en `DashboardInner` para poder usar el hook dentro del provider).
+- Sidebar ahora construye sus secciones de forma condicional con las flags `ui.*`:
+
+| Sección | Condición | Items |
+|---|---|---|
+| **Mi Espacio** | `ui.puede_crear_evento_b2c = true` | Panel General, Mis Eventos, Mi Perfil |
+| **Cuenta** | `ui.mostrar_menu_cuenta = true` | Dashboard Cuenta, Unidades, Clientes, Eventos de Cuenta, Plan y Facturación |
+| **Banner Solicitar Cuenta** | `ui.mostrar_solicitar_cuenta = true` | CTA con link a email/contacto |
+| **Banner Cuenta Pendiente** | `ui.mostrar_estado_cuenta_pendiente = true` | Aviso de revisión |
+| **Admin** | `ui.mostrar_admin = true` o `isSuperAdmin` | Paramétricas, Solicitudes Plantillas |
+| **Configuración** | Siempre | Ajustes |
+
+- El subtítulo del logo ahora muestra `cuenta.nombre_cuenta` si hay una cuenta activa.
+- La card de plan en el footer muestra `cuenta.plan_codigo` real.
+
+### Archivos actualizados como consecuencia (eliminan getCurrentUser)
+- `src/app/dashboard/events/page.tsx` — usa `useAuth()` para `isSuperAdmin` y mensajes personalizados de estado vacío.
+- `src/app/dashboard/parametricas/page.tsx` — usa `useAuth()` para la guardia de acceso superadmin.
+
+---
+
+## ✅ BLOQUE D — Proxies API Faltantes (B2B)
+
+### Archivos creados
+
+| Proxy (Next.js) | Endpoint Backend | Método |
+|---|---|---|
+| `src/app/api/cuenta-unidades/route.ts` | `GET /cuenta_unidades/MisUnidades?soloActivas=true` | GET |
+| `src/app/api/clientes/route.ts` | `GET /clientes/MisClientes?soloActivos=true` | GET |
+| `src/app/api/cuenta-eventos/route.ts` | `GET /cuenta_eventos/mis-eventos` | GET |
+| `src/app/api/cuentas/plan/route.ts` | `GET /cuentas/MiPlan` | GET |
+| `src/app/api/eventos/[id]/configuracion/route.ts` | `PUT /eventos/{id}/configuración` | PUT |
+| `src/app/api/perfil/route.ts` | `GET /usuarios/mi-perfil` | GET |
+
+### Patrón a seguir (todos siguen el mismo template)
+```ts
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function GET() {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+    if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+
+    const res = await fetch(`${API_URL}/ENDPOINT_AQUI`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) return NextResponse.json({ message: 'Error' }, { status: res.status });
+    return NextResponse.json(await res.json());
+}
+```
+
+---
+
+## ✅ BLOQUE E — Panel General (`/dashboard`)
+
+### Archivo modificado
+`src/app/dashboard/page.tsx`
+
+### Qué se hizo
+Se rediseñó la página de inicio del dashboard para ofrecer una experiencia contextualizada y de alta calidad visual.
+
+#### Funcionalidades implementadas
+| Feature | Detalle |
+|---|---|
+| **Contextualización** | Saludo personalizado y mensajes diferentes para B2C vs B2B (Mención de nombre de cuenta). |
+| **Stats Bar** | Visualización en tiempo real de cantidad de eventos (propios/compartidos) y plan actual. |
+| **Upgrade Banner** | CTA dinámico para solicitar cuenta B2B si el usuario aún no la tiene. |
+| **Quick Access** | Cards agrupadas por "Mi Espacio Personal" y "Gestión Business B2B" (esta última solo visible si aplica). |
+| **Estética Premium** | Uso de gradientes, efectos hover, animaciones de entrada y dark mode support. |
+
+---
+
+## ⏳ BLOQUE F — Módulo Cuenta B2B (Nuevas Páginas)
+
+### Páginas a crear
+
+| Ruta | Componente | Descripción |
+|---|---|---|
+| `/dashboard/cuenta` | `cuenta/page.tsx` | Dashboard con cards: resumen, eventos próximos, accesos rápidos |
+| `/dashboard/cuenta/unidades` | `cuenta/unidades/page.tsx` | Lista de unidades activas de la cuenta |
+| `/dashboard/cuenta/clientes` | `cuenta/clientes/page.tsx` | Lista de clientes activos |
+| `/dashboard/cuenta/eventos` | `cuenta/eventos/page.tsx` | Eventos de la cuenta (B2B) |
+| `/dashboard/cuenta/plan` | `cuenta/plan/page.tsx` | Plan actual, facturación, límites |
+
+---
+
+## ⏳ BLOQUE G — Mi Perfil
+
+`src/app/dashboard/perfil/page.tsx` — página nueva.
+
+### Datos a mostrar (de `GET /usuarios/mi-perfil`)
+- Datos de acceso: email, fecha alta, último acceso.
+- Datos personales: nombre, apellido, teléfono, país, idioma preferido.
+- Preferencias de uso.
+- Resumen de actividad: cantidad de eventos propios/compartidos, último evento.
+
+---
+
+## ✅ BLOQUE H — Wizard Crear Evento: Diferenciación B2B
+
+### Archivo modificado
+`src/app/dashboard/events/new/page.tsx`
+
+### Qué se hizo — Step 1
+
+Extensión del Step 1 del wizard para soportar el flujo B2B cuando se navega con `?context=cuenta`.
+
+#### Cambios en el archivo
+
+| Cambio | Detalle |
+|---|---|
+| `useSearchParams` | Importado de `next/navigation`; `isB2BContext = searchParams.get('context') === 'cuenta'` |
+| Íconos nuevos | `Building2`, `UserCheck` agregados al import de `lucide-react` |
+| Tipos locales | `interface Unidad { id_unidad, nombre_unidad }` e `interface Cliente { id_cliente, nombre_cliente, email?, unidad_principal? }` |
+| Estado B2B | `unidades[]`, `clientes[]`, `loadingB2B`, `b2bInfo { idUnidad, destinatario: 'PROPIO'\|'CLIENTE', idCliente }` |
+| Effect B2B | Fetch paralelo a `/api/cuenta-unidades` y `/api/clientes` al montar — **solo si** `isB2BContext === true` |
+| Validación extendida | `isStep1Valid()` ahora requiere `idUnidad` (siempre) e `idCliente` (si `destinatario === 'CLIENTE'`) cuando hay contexto B2B |
+| UI Step 1 | Sección "Contexto de Cuenta" al final del Step 1, con animación `fade-in` |
+
+#### Campos agregados al Step 1 (solo visibles con `?context=cuenta`)
+
+```
+Campo a) Unidad (select, obligatorio)
+  → GET /api/cuenta-unidades → [{ id_unidad, nombre_unidad }]
+  → Se pre-selecciona la primera opción al cargar
+  → Valida: requerido antes de avanzar al Step 2
+
+Campo b) ¿Para quién es el evento? (radio cards, obligatorio)
+  → "Para mi unidad/negocio" (value: PROPIO) — default
+  → "Para un cliente"        (value: CLIENTE)
+  → No se envía al backend; solo controla visibilidad del campo c
+  → Seleccionar PROPIO limpia idCliente del estado
+
+Campo c) Cliente (select, condicional)
+  → Visible solo si radio = CLIENTE
+  → GET /api/clientes → [{ id_cliente, nombre_cliente }]
+     (fetch ocurre al montar aunque el campo no sea visible)
+  → Valida: requerido si radio = CLIENTE
+```
+
+#### Valores expuestos al submit
+`b2bInfo.idUnidad` (number) e `b2bInfo.idCliente` (number | `''`) disponibles en el estado del wizard para el submit final.
+
+#### Activación
+Navegar al wizard con `?context=cuenta`:
+```
+/dashboard/events/new?context=cuenta
+```
+Sin ese param → flujo B2C idéntico al original, sin ningún cambio visual ni de comportamiento.
+
+---
+
+## ✅ BLOQUE I — Step "Acceso y Confirmación"
+
+### Archivo modificado
+`src/app/dashboard/events/new/page.tsx`
+
+### Qué se hizo
+Se integró un nuevo step en el wizard (penúltimo) para configurar la visibilidad y el acceso al evento antes de finalizar.
+
+#### Detalles técnicos
+| Componente | Detalle |
+|---|---|
+| **Paso en Wizard** | Insertado como Step 4 de 5. El paso final (¡Listo!) ahora es el Step 5. |
+| **Íconos** | `Lock`, `Link`, `ClipboardList` de `lucide-react`. |
+| **Estado local** | `acceso { esPublico: bool, modoAcceso: 'I'|'L', modoAsistencia: 'R'|'C' }`. |
+| **Persistencia** | Se llama a `PUT /api/eventos/${idEvento}/configuracion` al hacer clic en "Guardar y Finalizar". |
+| **UI** | 3 grupos de Radio Cards con diseño premium (violeta) para seleccionar las opciones. |
+
+#### Opciones configuradas
+1. **Tipo de evento**: Privado (solo invitados) vs Público (link abierto).
+2. **Cómo ingresan**: Por invitación nominal (I) vs Por link público (L).
+3. **Control de asistencia**: Confirmación previa (R) vs Control al ingresar (C).
+
+Si el guardado es exitoso, el wizard avanza al último paso ("¡Listo!").
+
+---
+
+## ✅ BLOQUE K — Registro con `?flow=`
+
+### Archivo modificado
+`src/app/(auth)/register/page.tsx`
+
+### Qué se hizo
+Se adaptó el formulario de registro para capturar parámetros de la landing page y personalizar el onboarding.
+
+#### Parámetros soportados
+- `flow`: Si es `cuenta`, el formulario cambia el título a "Cuenta Profesional" y ajusta el copy a B2B.
+- `plan`: Si se especifica (ej. `PRO`), se muestra un badge destacado indicando el plan seleccionado para generar confianza.
+
+---
+
+## Mapa de Dependencias (Estado Actual)
+
+```
+✅ A (Auth/Me real)
+    └──► ✅ B (AuthContext)
+              └──► ✅ C (Sidebar dinámico)
+                        └──► ✅ events/page y parametricas (migradas al context)
+
+✅ D (Proxies B2B)
+    ├──► ✅ F (Páginas módulo Cuenta)
+    ├──► ✅ G (Mi Perfil)
+    ├──► ✅ H (Wizard B2B — Step 1 B2B completado)
+    ├──► ✅ I (Step Acceso y Confirmación)
+    ├──► ✅ E (Panel General mejorado)
+    └──► ✅ K (Registro dinámico)
+```
+
+---
+
+¡La arquitectura base B2C/B2B y el Dashboard están completados! Los próximos pasos podrían incluir:
+
+1. **Pruebas Integrales**: Verificar el flujo completo desde el registro con plan → Dashboard contextualizado → Creación de evento B2B.
+2. **Módulo de Facturación**: Implementar la visualización de facturas reales en `/dashboard/cuenta/plan`.
+3. **Módulo de Notificaciones**: Configurar el centro de mensajes globales.
