@@ -681,5 +681,120 @@ namespace API.Services
                 mostrar_qr_para_canje = beneficioPendiente && !string.IsNullOrWhiteSpace(data.qr_token)
             };
         }
+
+        public async Task<QrBeneficioResolucionDTO> ResolverQrBeneficioAsync(long idUsuario, long idEvento, string qrToken)
+        {
+            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
+
+            if (string.IsNullOrWhiteSpace(qrToken))
+                throw new Exception("qrToken obligatorio.");
+
+            var invitado = await _context.Set<ef_invitados>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento && x.qr_token == qrToken && x.activo);
+
+            if (invitado == null)
+                throw new Exception("QR inexistente o invitado inactivo.");
+
+            var data = await (
+                from i in _context.Set<ef_invitados>().AsNoTracking()
+                join l in _context.Set<ef_evento_acceso_links>().AsNoTracking()
+                    on i.id_acceso_link equals l.id_acceso_link into lj
+                from l in lj.DefaultIfEmpty()
+                where i.id_evento == idEvento && i.id_invitado == invitado.id_invitado
+                select new
+                {
+                    i.id_evento,
+                    i.id_invitado,
+                    i.nombre,
+                    i.apellido,
+                    i.id_acceso_link,
+                    campania = l != null ? l.titulo : null
+                }
+            ).SingleAsync();
+
+            var beneficio = await (
+                from b in _context.Set<ef_evento_beneficios_registro>().AsNoTracking()
+                join t in _context.Set<ef_param_tipos_beneficio_registro>().AsNoTracking()
+                    on b.id_tipo_beneficio_registro equals t.id_tipo_beneficio_registro into tj
+                from t in tj.DefaultIfEmpty()
+                where b.id_evento == idEvento && b.id_invitado == invitado.id_invitado
+                orderby b.fecha_otorgado descending
+                select new
+                {
+                    b.id_beneficio_registro,
+                    b.titulo_snapshot,
+                    b.descripcion_snapshot,
+                    b.estado,
+                    b.fecha_vencimiento,
+                    tipo_beneficio_codigo = t != null ? t.codigo : null
+                }
+            ).FirstOrDefaultAsync();
+
+            if (beneficio == null)
+            {
+                return new QrBeneficioResolucionDTO
+                {
+                    id_evento = data.id_evento,
+                    id_invitado = data.id_invitado,
+                    nombre = data.nombre,
+                    apellido = data.apellido,
+                    id_acceso_link = data.id_acceso_link,
+                    campania = data.campania,
+                    tiene_beneficio = false,
+                    id_beneficio_registro = null,
+                    tipo_beneficio_codigo = null,
+                    beneficio_titulo = null,
+                    beneficio_descripcion = null,
+                    estado_beneficio = "NO_APLICA",
+                    fecha_vencimiento = null,
+                    puede_canjear = false,
+                    mensaje = "La persona no tiene beneficio asociado."
+                };
+            }
+
+            string estadoVisual;
+            bool puedeCanjear;
+
+            if (beneficio.estado == "C")
+            {
+                estadoVisual = "CANJEADO";
+                puedeCanjear = false;
+            }
+            else if (beneficio.fecha_vencimiento.HasValue && beneficio.fecha_vencimiento.Value < DateTimeOffset.UtcNow)
+            {
+                estadoVisual = "VENCIDO";
+                puedeCanjear = false;
+            }
+            else
+            {
+                estadoVisual = "PENDIENTE";
+                puedeCanjear = true;
+            }
+
+            string mensaje =
+                estadoVisual == "PENDIENTE" ? "Beneficio disponible para canje."
+                : estadoVisual == "CANJEADO" ? "Este beneficio ya fue canjeado."
+                : "El beneficio está vencido.";
+
+            return new QrBeneficioResolucionDTO
+            {
+                id_evento = data.id_evento,
+                id_invitado = data.id_invitado,
+                nombre = data.nombre,
+                apellido = data.apellido,
+                id_acceso_link = data.id_acceso_link,
+                campania = data.campania,
+                tiene_beneficio = true,
+                id_beneficio_registro = beneficio.id_beneficio_registro,
+                tipo_beneficio_codigo = beneficio.tipo_beneficio_codigo,
+                beneficio_titulo = beneficio.titulo_snapshot,
+                beneficio_descripcion = beneficio.descripcion_snapshot,
+                estado_beneficio = estadoVisual,
+                fecha_vencimiento = beneficio.fecha_vencimiento,
+                puede_canjear = puedeCanjear,
+                mensaje = mensaje
+            };
+        }
     }
 }

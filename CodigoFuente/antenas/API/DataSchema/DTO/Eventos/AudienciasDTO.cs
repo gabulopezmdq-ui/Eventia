@@ -642,4 +642,52 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("mostrar_qr_para_canje")]
         public bool mostrar_qr_para_canje { get; set; }
     }
+
+    public class QrBeneficioResolucionDTO
+    {
+        [JsonPropertyName("id_evento")]
+        public long id_evento { get; set; }
+
+        [JsonPropertyName("id_invitado")]
+        public long id_invitado { get; set; }
+
+        [JsonPropertyName("nombre")]
+        public string nombre { get; set; } = null!;
+
+        [JsonPropertyName("apellido")]
+        public string apellido { get; set; } = null!;
+
+        [JsonPropertyName("id_acceso_link")]
+        public long? id_acceso_link { get; set; }
+
+        [JsonPropertyName("campania")]
+        public string? campania { get; set; }
+
+        [JsonPropertyName("tiene_beneficio")]
+        public bool tiene_beneficio { get; set; }
+
+        [JsonPropertyName("id_beneficio_registro")]
+        public long? id_beneficio_registro { get; set; }
+
+        [JsonPropertyName("tipo_beneficio_codigo")]
+        public string? tipo_beneficio_codigo { get; set; }
+
+        [JsonPropertyName("beneficio_titulo")]
+        public string? beneficio_titulo { get; set; }
+
+        [JsonPropertyName("beneficio_descripcion")]
+        public string? beneficio_descripcion { get; set; }
+
+        [JsonPropertyName("estado_beneficio")]
+        public string estado_beneficio { get; set; } = null!; // PENDIENTE / CANJEADO / VENCIDO / NO_APLICA
+
+        [JsonPropertyName("fecha_vencimiento")]
+        public DateTimeOffset? fecha_vencimiento { get; set; }
+
+        [JsonPropertyName("puede_canjear")]
+        public bool puede_canjear { get; set; }
+
+        [JsonPropertyName("mensaje")]
+        public string mensaje { get; set; } = null!;
+    }
 }

@@ -14,5 +14,6 @@ namespace API.Services
         Task<QrEntradaResolucionDTO> ResolverQrEntradaAsync(long idUsuario, long idEvento, string qrToken);
         Task<List<AudienciaBusquedaRegistradoDTO>> BuscarRegistradoAsync(long idUsuario, long idEvento, string? query);
         Task<QrEntradaResolucionDTO> ResolverEntradaManualAsync(long idUsuario, long idEvento, long idInvitado);
+        Task<QrBeneficioResolucionDTO> ResolverQrBeneficioAsync(long idUsuario, long idEvento, string qrToken);
     }
 }
