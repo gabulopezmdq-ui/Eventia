@@ -531,4 +531,115 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("beneficios_canjeados")]
         public int beneficios_canjeados { get; set; }
     }
+
+    public class AudienciaBusquedaRegistradoDTO
+    {
+        [JsonPropertyName("id_invitado")]
+        public long id_invitado { get; set; }
+
+        [JsonPropertyName("nombre")]
+        public string nombre { get; set; } = null!;
+
+        [JsonPropertyName("apellido")]
+        public string apellido { get; set; } = null!;
+
+        [JsonPropertyName("email")]
+        public string? email { get; set; }
+
+        [JsonPropertyName("celular")]
+        public string? celular { get; set; }
+
+        [JsonPropertyName("id_acceso")]
+        public long? id_acceso { get; set; }
+
+        [JsonPropertyName("acceso_nombre")]
+        public string? acceso_nombre { get; set; }
+
+        [JsonPropertyName("id_acceso_link")]
+        public long? id_acceso_link { get; set; }
+
+        [JsonPropertyName("origen_registro")]
+        public string? origen_registro { get; set; }
+
+        [JsonPropertyName("asistio")]
+        public bool asistio { get; set; }
+
+        [JsonPropertyName("beneficio_otorgado")]
+        public bool beneficio_otorgado { get; set; }
+
+        [JsonPropertyName("beneficio_canjeado")]
+        public bool beneficio_canjeado { get; set; }
+    }
+
+    public class QrEntradaResolucionDTO
+    {
+        [JsonPropertyName("id_evento")]
+        public long id_evento { get; set; }
+
+        [JsonPropertyName("id_invitado")]
+        public long id_invitado { get; set; }
+
+        [JsonPropertyName("nombre")]
+        public string nombre { get; set; } = null!;
+
+        [JsonPropertyName("apellido")]
+        public string apellido { get; set; } = null!;
+
+        [JsonPropertyName("email")]
+        public string? email { get; set; }
+
+        [JsonPropertyName("celular")]
+        public string? celular { get; set; }
+
+        [JsonPropertyName("id_acceso")]
+        public long? id_acceso { get; set; }
+
+        [JsonPropertyName("acceso_nombre")]
+        public string? acceso_nombre { get; set; }
+
+        [JsonPropertyName("id_acceso_link")]
+        public long? id_acceso_link { get; set; }
+
+        [JsonPropertyName("campania")]
+        public string? campania { get; set; }
+
+        [JsonPropertyName("origen_registro")]
+        public string? origen_registro { get; set; }
+
+        [JsonPropertyName("ya_ingreso")]
+        public bool ya_ingreso { get; set; }
+
+        [JsonPropertyName("ultimo_movimiento_tipo")]
+        public string? ultimo_movimiento_tipo { get; set; }
+
+        [JsonPropertyName("ultimo_movimiento_fecha")]
+        public DateTimeOffset? ultimo_movimiento_fecha { get; set; }
+
+        [JsonPropertyName("accion_sugerida")]
+        public string accion_sugerida { get; set; } = null!; // INGRESO / REINGRESO
+
+        [JsonPropertyName("beneficio_otorgado")]
+        public bool beneficio_otorgado { get; set; }
+
+        [JsonPropertyName("beneficio_canjeado")]
+        public bool beneficio_canjeado { get; set; }
+
+        [JsonPropertyName("beneficio_pendiente")]
+        public bool beneficio_pendiente { get; set; }
+
+        [JsonPropertyName("id_beneficio_registro")]
+        public long? id_beneficio_registro { get; set; }
+
+        [JsonPropertyName("beneficio_titulo")]
+        public string? beneficio_titulo { get; set; }
+
+        [JsonPropertyName("beneficio_descripcion")]
+        public string? beneficio_descripcion { get; set; }
+
+        [JsonPropertyName("qr_token")]
+        public string? qr_token { get; set; }
+
+        [JsonPropertyName("mostrar_qr_para_canje")]
+        public bool mostrar_qr_para_canje { get; set; }
+    }
 }

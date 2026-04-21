@@ -11,5 +11,8 @@ namespace API.Services
         Task<AudienciaEventoMetricasDTO> GetMetricasEventoAsync(long idUsuario, long idEvento);
         Task<List<AudienciaPersonaDTO>> GetAudienciasCuentaAsync(long idUsuario, bool soloActivas = true);
         Task<AudienciaDetalleDTO> GetAudienciaDetalleAsync(long idUsuario, long idAudienciaPersona);
+        Task<QrEntradaResolucionDTO> ResolverQrEntradaAsync(long idUsuario, long idEvento, string qrToken);
+        Task<List<AudienciaBusquedaRegistradoDTO>> BuscarRegistradoAsync(long idUsuario, long idEvento, string? query);
+        Task<QrEntradaResolucionDTO> ResolverEntradaManualAsync(long idUsuario, long idEvento, long idInvitado);
     }
 }
