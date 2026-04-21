@@ -1,4 +1,4 @@
-import { LoginPayload, RegisterPayload } from './types';
+import { LoginPayload, RegisterPayload, AuthMeResponse } from './types';
 
 export async function login(payload: LoginPayload) {
     const res = await fetch('/api/auth/login', {
@@ -43,6 +43,23 @@ export async function loginWithGoogle(idToken: string) {
 
     if (!res.ok) {
         throw new Error('Error al autenticar con Google');
+    }
+
+    return res.json();
+}
+
+/**
+ * Obtiene el perfil completo del usuario autenticado desde el backend.
+ * Incluye flags de UI (ui.*), contexto de cuenta B2B y cantidad de eventos.
+ * Usar junto con AuthContext para gobernar la navegación.
+ */
+export async function getAuthMe(): Promise<AuthMeResponse> {
+    const res = await fetch('/api/auth/me', {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Sesión inválida o expirada');
     }
 
     return res.json();

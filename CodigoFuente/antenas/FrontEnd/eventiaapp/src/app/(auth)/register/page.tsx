@@ -1,14 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { register } from '@/src/features/auth/auth.service';
 import { GoogleSignInButton } from '@/src/features/auth/GoogleSignInButton';
-import { User, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Briefcase, Star, Link } from 'lucide-react';
 
 export default function RegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="bg-neutral-900 p-8 rounded-2xl shadow-xl text-center">
+                <div className="animate-spin h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto" />
+            </div>
+        }>
+            <RegisterForm />
+        </Suspense>
+    );
+}
+
+function RegisterForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Query params context
+    const flow = searchParams.get('flow'); // 'b2c' | 'cuenta'
+    const plan = searchParams.get('plan'); // 'FREE', 'PRO', etc.
+    const isB2B = flow === 'cuenta';
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +61,7 @@ export default function RegisterPage() {
         }
 
         try {
+            // Nota: Aquí se podría pasar el plan/flow al servicio de registro si el backend lo soporta
             await register(form);
             setSuccess(true);
             setTimeout(() => {
@@ -79,13 +98,29 @@ export default function RegisterPage() {
 
     return (
         <div className="bg-neutral-900 p-8 rounded-2xl shadow-xl">
-            {/* Header */}
-            <div className="text-center mb-8">
-                <h1 className="text-2xl font-semibold text-white mb-2">
-                    Crear cuenta
+            {/* Header / Context */}
+            <div className="text-center mb-8 space-y-2">
+                {plan && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-2 animate-bounce">
+                        <Star className="w-3 h-3" /> Plan {plan} Seleccionado
+                    </div>
+                )}
+
+                <h1 className="text-2xl font-semibold text-white">
+                    {isB2B ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <Briefcase className="w-6 h-6 text-indigo-500" />
+                            Cuenta profesional
+                        </span>
+                    ) : (
+                        'Crear cuenta'
+                    )}
                 </h1>
-                <p className="text-neutral-400">
-                    Empezá a organizar tus eventos hoy
+                <p className="text-neutral-400 text-sm">
+                    {isB2B
+                        ? 'Gestioná tus unidades y eventos corporativos'
+                        : 'Empezá a organizar tus eventos hoy mismo'
+                    }
                 </p>
             </div>
 
