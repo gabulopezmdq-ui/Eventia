@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     createEvent,
@@ -63,7 +63,7 @@ const STEPS = [
 interface Unidad { id_unidad: number; nombre_unidad: string; }
 interface Cliente { id_cliente: number; nombre_cliente: string; email?: string; unidad_principal?: string; }
 
-export default function NewEventPage() {
+function NewEventContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const isB2BContext = searchParams.get('context') === 'cuenta';
@@ -1442,5 +1442,17 @@ export default function NewEventPage() {
                 </div>
             )}
         </section>
+    );
+}
+
+export default function NewEventPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex justify-center py-20">
+                <div className="w-10 h-10 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+            </div>
+        }>
+            <NewEventContent />
+        </Suspense>
     );
 }
