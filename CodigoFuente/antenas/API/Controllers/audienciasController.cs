@@ -56,5 +56,29 @@ namespace API.Controllers
             long idUsuario = User.GetUserId();
             return Ok(await _service.GetAudienciaDetalleAsync(idUsuario, idAudienciaPersona));
         }
+
+        [Authorize]
+        [HttpGet("ResolverQrEntrada")]
+        public async Task<ActionResult> ResolverQrEntrada([FromQuery] long idEvento, [FromQuery] string qrToken)
+        {
+            long idUsuario = User.GetUserId();
+            return Ok(await _service.ResolverQrEntradaAsync(idUsuario, idEvento, qrToken));
+        }
+
+        [Authorize]
+        [HttpGet("BuscarRegistrado")]
+        public async Task<ActionResult> BuscarRegistrado([FromQuery] long idEvento, [FromQuery] string? query)
+        {
+            long idUsuario = User.GetUserId();
+            return Ok(await _service.BuscarRegistradoAsync(idUsuario, idEvento, query));
+        }
+
+        [Authorize]
+        [HttpGet("ResolverEntradaManual")]
+        public async Task<ActionResult> ResolverEntradaManual([FromQuery] long idEvento, [FromQuery] long idInvitado)
+        {
+            long idUsuario = User.GetUserId();
+            return Ok(await _service.ResolverEntradaManualAsync(idUsuario, idEvento, idInvitado));
+        }
     }
 }

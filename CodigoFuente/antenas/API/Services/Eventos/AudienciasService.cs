@@ -530,5 +530,156 @@ namespace API.Services
             rng.GetBytes(data);
             return new string(data.Select(x => chars[x % chars.Length]).ToArray());
         }
+
+        public async Task<QrEntradaResolucionDTO> ResolverQrEntradaAsync(long idUsuario, long idEvento, string qrToken)
+        {
+            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
+
+            if (string.IsNullOrWhiteSpace(qrToken))
+                throw new Exception("qrToken obligatorio.");
+
+            var invitado = await _context.Set<ef_invitados>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento && x.qr_token == qrToken && x.activo);
+
+            if (invitado == null)
+                throw new Exception("QR inexistente o invitado inactivo.");
+
+            return await ArmarResolucionEntradaAsync(idEvento, invitado.id_invitado);
+        }
+
+        public async Task<List<AudienciaBusquedaRegistradoDTO>> BuscarRegistradoAsync(long idUsuario, long idEvento, string? query)
+        {
+            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
+
+            query = (query ?? string.Empty).Trim().ToLowerInvariant();
+
+            var q =
+                from i in _context.Set<ef_invitados>().AsNoTracking()
+                join a in _context.Set<ef_evento_accesos>().AsNoTracking()
+                    on i.id_acceso equals a.id_acceso into aj
+                from a in aj.DefaultIfEmpty()
+                join ape in _context.Set<ef_audiencia_persona_eventos>().AsNoTracking()
+                    on i.id_invitado equals ape.id_invitado into apej
+                from ape in apej.DefaultIfEmpty()
+                join l in _context.Set<ef_evento_acceso_links>().AsNoTracking()
+                    on i.id_acceso_link equals l.id_acceso_link into lj
+                from l in lj.DefaultIfEmpty()
+                where i.id_evento == idEvento
+                      && i.activo
+                      && (
+                            string.IsNullOrEmpty(query)
+                            || (i.nombre + " " + i.apellido).ToLower().Contains(query)
+                            || (i.email != null && i.email.ToLower().Contains(query))
+                            || (i.celular != null && i.celular.ToLower().Contains(query))
+                         )
+                orderby i.fecha_alta descending
+                select new AudienciaBusquedaRegistradoDTO
+                {
+                    id_invitado = i.id_invitado,
+                    nombre = i.nombre,
+                    apellido = i.apellido,
+                    email = i.email,
+                    celular = i.celular,
+                    id_acceso = i.id_acceso,
+                    acceso_nombre = a != null ? a.nombre : null,
+                    id_acceso_link = i.id_acceso_link,
+                    origen_registro = l != null ? l.origen_default : null,
+                    asistio = ape != null && ape.asistio,
+                    beneficio_otorgado = ape != null && ape.beneficio_otorgado,
+                    beneficio_canjeado = ape != null && ape.beneficio_canjeado
+                };
+
+            return await q.Take(20).ToListAsync();
+        }
+
+        public async Task<QrEntradaResolucionDTO> ResolverEntradaManualAsync(long idUsuario, long idEvento, long idInvitado)
+        {
+            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
+
+            var existe = await _context.Set<ef_invitados>()
+                .AsNoTracking()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_invitado == idInvitado && x.activo);
+
+            if (!existe)
+                throw new Exception("Invitado inexistente para ese evento.");
+
+            return await ArmarResolucionEntradaAsync(idEvento, idInvitado);
+        }
+
+        private async Task<QrEntradaResolucionDTO> ArmarResolucionEntradaAsync(long idEvento, long idInvitado)
+        {
+            var data = await (
+                from i in _context.Set<ef_invitados>().AsNoTracking()
+                join a in _context.Set<ef_evento_accesos>().AsNoTracking()
+                    on i.id_acceso equals a.id_acceso into aj
+                from a in aj.DefaultIfEmpty()
+                join l in _context.Set<ef_evento_acceso_links>().AsNoTracking()
+                    on i.id_acceso_link equals l.id_acceso_link into lj
+                from l in lj.DefaultIfEmpty()
+                where i.id_evento == idEvento && i.id_invitado == idInvitado
+                select new
+                {
+                    i.id_evento,
+                    i.id_invitado,
+                    i.nombre,
+                    i.apellido,
+                    i.email,
+                    i.celular,
+                    i.id_acceso,
+                    acceso_nombre = a != null ? a.nombre : null,
+                    i.id_acceso_link,
+                    campania = l != null ? l.titulo : null,
+                    origen_registro = l != null ? l.origen_default : null,
+                    i.qr_token
+                }
+            ).SingleAsync();
+
+            var ultimoMovimiento = await _context.Set<ef_evento_checkins>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento && x.id_invitado == idInvitado)
+                .OrderByDescending(x => x.fecha)
+                .FirstOrDefaultAsync();
+
+            bool yaIngreso = ultimoMovimiento != null;
+            string accionSugerida = yaIngreso ? "REINGRESO" : "INGRESO";
+
+            var beneficio = await _context.Set<ef_evento_beneficios_registro>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento && x.id_invitado == idInvitado)
+                .OrderByDescending(x => x.fecha_otorgado)
+                .FirstOrDefaultAsync();
+
+            bool beneficioOtorgado = beneficio != null;
+            bool beneficioCanjeado = beneficio != null && beneficio.estado == "C";
+            bool beneficioPendiente = beneficio != null && beneficio.estado != "C";
+
+            return new QrEntradaResolucionDTO
+            {
+                id_evento = data.id_evento,
+                id_invitado = data.id_invitado,
+                nombre = data.nombre,
+                apellido = data.apellido,
+                email = data.email,
+                celular = data.celular,
+                id_acceso = data.id_acceso,
+                acceso_nombre = data.acceso_nombre,
+                id_acceso_link = data.id_acceso_link,
+                campania = data.campania,
+                origen_registro = data.origen_registro,
+                ya_ingreso = yaIngreso,
+                ultimo_movimiento_tipo = ultimoMovimiento != null ? ultimoMovimiento.tipo : null,
+                ultimo_movimiento_fecha = ultimoMovimiento != null ? (DateTimeOffset?)ultimoMovimiento.fecha : null,
+                accion_sugerida = accionSugerida,
+                beneficio_otorgado = beneficioOtorgado,
+                beneficio_canjeado = beneficioCanjeado,
+                beneficio_pendiente = beneficioPendiente,
+                id_beneficio_registro = beneficio != null ? (long?)beneficio.id_beneficio_registro : null,
+                beneficio_titulo = beneficio != null ? beneficio.titulo_snapshot : null,
+                beneficio_descripcion = beneficio != null ? beneficio.descripcion_snapshot : null,
+                qr_token = data.qr_token,
+                mostrar_qr_para_canje = beneficioPendiente && !string.IsNullOrWhiteSpace(data.qr_token)
+            };
+        }
     }
 }
