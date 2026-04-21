@@ -90,6 +90,10 @@ namespace API.DataSchema
         public DbSet<ef_tipos_identificacion_fiscal> ef_tipos_identificacion_fiscal { get; set; }
         public DbSet<ef_cuenta_unidades> ef_cuenta_unidades { get; set; }
         public DbSet<ef_cliente_unidades> ef_cliente_unidades { get; set; }
+
+        // Módulo Staff
+        public DbSet<ef_staff> ef_staff { get; set; }
+        public DbSet<ef_staff_unidades> ef_staff_unidades { get; set; }
         public DbSet<ef_evento_hospedaje_bloques> ef_evento_hospedaje_bloques { get; set; }
         public DbSet<ef_evento_hospedajes> ef_evento_hospedajes { get; set; }
         public DbSet<ef_hospedaje_tags> ef_hospedaje_tags { get; set; }
@@ -248,6 +252,10 @@ namespace API.DataSchema
 
             modelBuilder.ApplyConfiguration(new ef_cuenta_unidadesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cliente_unidadesConfiguration());
+
+            // Módulo Staff
+            modelBuilder.ApplyConfiguration(new ef_staffConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_staff_unidadesConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_evento_hospedaje_bloquesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_hospedajesConfiguration());
