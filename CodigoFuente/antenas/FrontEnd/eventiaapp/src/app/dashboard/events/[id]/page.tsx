@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -18,7 +18,7 @@ import {
 } from '@/src/features/events/event.service';
 import type { Event, EstructuraEvento } from '@/src/features/events/types';
 
-export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -310,5 +310,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 </aside>
             </div>
         </div>
+    );
+}
+
+export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    return (
+        <Suspense fallback={
+            <div className="flex justify-center py-20">
+                <div className="w-10 h-10 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+            </div>
+        }>
+            <EventDetailContent params={params} />
+        </Suspense>
     );
 }
