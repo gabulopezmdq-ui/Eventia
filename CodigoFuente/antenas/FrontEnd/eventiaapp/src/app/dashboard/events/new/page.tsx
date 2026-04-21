@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     createEvent,
     getTiposEvento,
@@ -39,6 +39,11 @@ import {
     Rocket,
     ListChecks,
     LayoutGrid,
+    Building2,
+    UserCheck,
+    Lock,
+    Link,
+    ClipboardList,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════
@@ -48,11 +53,20 @@ const STEPS = [
     { id: 1, title: 'Información Básica', icon: PartyPopper, color: 'indigo' },
     { id: 2, title: 'Elegir Estructura', icon: Layers, color: 'purple' },
     { id: 3, title: 'Datos Base', icon: MapPin, color: 'emerald' },
-    { id: 4, title: '¡Listo!', icon: CheckCircle2, color: 'amber' },
+    { id: 4, title: 'Acceso y Confirmación', icon: Lock, color: 'violet' },
+    { id: 5, title: '¡Listo!', icon: CheckCircle2, color: 'amber' },
 ];
+
+/* ═══════════════════════════════════════════════════════════
+   B2B — tipos auxiliares
+   ═══════════════════════════════════════════════════════════ */
+interface Unidad { id_unidad: number; nombre_unidad: string; }
+interface Cliente { id_cliente: number; nombre_cliente: string; email?: string; unidad_principal?: string; }
 
 export default function NewEventPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isB2BContext = searchParams.get('context') === 'cuenta';
 
     // ── Estado general ──────────────────────────────────
     const [currentStep, setCurrentStep] = useState(1);
@@ -96,8 +110,33 @@ export default function NewEventPage() {
         longitudBase: '',
     });
 
-    // ── Step 4 — Plantilla aplicada ─────────────────────
+    // ── Step 4 — Acceso y Confirmación ──────────────────
+    const [acceso, setAcceso] = useState<{
+        esPublico: boolean;
+        modoAcceso: 'I' | 'L';
+        modoAsistencia: 'R' | 'C';
+    }>({
+        esPublico: false,
+        modoAcceso: 'I',
+        modoAsistencia: 'R',
+    });
+
+    // ── Step 5 — Plantilla aplicada ─────────────────────
     const [plantillaAplicada, setPlantillaAplicada] = useState(false);
+
+    // ── B2B — datos de contexto Cuenta ───────────────────
+    const [unidades, setUnidades] = useState<Unidad[]>([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [loadingB2B, setLoadingB2B] = useState(false);
+    const [b2bInfo, setB2bInfo] = useState<{
+        idUnidad: number | '';
+        destinatario: 'PROPIO' | 'CLIENTE';
+        idCliente: number | '';
+    }>({
+        idUnidad: '',
+        destinatario: 'PROPIO',
+        idCliente: '',
+    });
 
     /* ═══════════════════════════════════════════════════════════
        EFFECTS
@@ -129,6 +168,37 @@ export default function NewEventPage() {
         loadSelects();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // 5. Cargar unidades y clientes B2B al montar (solo si context=cuenta)
+    useEffect(() => {
+        if (!isB2BContext) return;
+        async function loadB2BData() {
+            setLoadingB2B(true);
+            try {
+                const [resUnidades, resClientes] = await Promise.all([
+                    fetch('/api/cuenta-unidades'),
+                    fetch('/api/clientes'),
+                ]);
+                if (resUnidades.ok) {
+                    const data: Unidad[] = await resUnidades.json();
+                    setUnidades(data);
+                    if (data.length > 0) {
+                        setB2bInfo(prev => ({ ...prev, idUnidad: data[0].id_unidad }));
+                    }
+                }
+                if (resClientes.ok) {
+                    const data: Cliente[] = await resClientes.json();
+                    setClientes(data);
+                }
+            } catch (err) {
+                console.error('Error cargando datos B2B:', err);
+            } finally {
+                setLoadingB2B(false);
+            }
+        }
+        loadB2BData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isB2BContext]);
 
     // 2. Recargar tipos + dress codes cuando cambia el idioma
     useEffect(() => {
@@ -261,10 +331,37 @@ export default function NewEventPage() {
                 longitud_base: datosBase.longitudBase ? parseFloat(datosBase.longitudBase) : undefined,
             };
             await aplicarPlantilla(idEvento, payload);
-            setPlantillaAplicada(true);
-            setCurrentStep(4);
+            setCurrentStep(4); // → Step 4: Acceso y Confirmación
         } catch {
             setError('No se pudo aplicar la plantilla. Por favor, intenta de nuevo.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Step 4 → 5: Guardar configuración de acceso
+    const handleGuardarAcceso = async () => {
+        if (!idEvento) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch(`/api/eventos/${idEvento}/configuracion`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    EsPublico: acceso.esPublico,
+                    ModoAcceso: acceso.modoAcceso,
+                    ModoAsistencia: acceso.modoAsistencia,
+                }),
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body?.message || `Error ${res.status}`);
+            }
+            setPlantillaAplicada(true);
+            setCurrentStep(5);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'No se pudo guardar la configuración. Intenta de nuevo.');
         } finally {
             setLoading(false);
         }
@@ -293,10 +390,17 @@ export default function NewEventPage() {
        VALIDACIONES
        ═══════════════════════════════════════════════════════════ */
 
-    const isStep1Valid = () =>
-        basicInfo.idTipoEvento > 0 &&
-        basicInfo.idIdioma > 0 &&
-        basicInfo.anfitrionesTexto.trim() !== '';
+    const isStep1Valid = () => {
+        const baseValid =
+            basicInfo.idTipoEvento > 0 &&
+            basicInfo.idIdioma > 0 &&
+            basicInfo.anfitrionesTexto.trim() !== '';
+        if (!isB2BContext) return baseValid;
+        // Validaciones adicionales B2B
+        const unidadOk = b2bInfo.idUnidad !== '';
+        const clienteOk = b2bInfo.destinatario === 'PROPIO' || b2bInfo.idCliente !== '';
+        return baseValid && unidadOk && clienteOk;
+    };
 
     const isStep2Valid = () => selectedPlantillaId !== null;
 
@@ -307,7 +411,7 @@ export default function NewEventPage() {
             case 1: return isStep1Valid();
             case 2: return isStep2Valid();
             case 3: return isStep3Valid();
-            default: return true;
+            default: return true; // Step 4 no tiene validaciones (valores default siempre válidos)
         }
     };
 
@@ -316,7 +420,7 @@ export default function NewEventPage() {
        ═══════════════════════════════════════════════════════════ */
 
     const prevStep = () => {
-        if (currentStep > 1 && currentStep < 4) {
+        if (currentStep > 1 && currentStep < 5) {
             // No permitir volver al step 1 si el evento ya fue creado
             if (currentStep === 2 && eventCreated) return;
             setCurrentStep(prev => prev - 1);
@@ -326,7 +430,7 @@ export default function NewEventPage() {
     const goToStep = (step: number) => {
         if (step >= currentStep) return; // Solo ir a steps anteriores
         if (step === 1 && eventCreated) return; // No volver a step 1 si evento creado
-        if (step < 4) setCurrentStep(step);
+        if (step < 5) setCurrentStep(step);
     };
 
     /* ═══════════════════════════════════════════════════════════
@@ -588,6 +692,135 @@ export default function NewEventPage() {
                                         className="w-full p-4 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none placeholder:text-muted resize-none"
                                     />
                                 </div>
+                            </div>
+                        )}
+
+                        {/* ── Campos B2B (solo si context=cuenta) ── */}
+                        {isB2BContext && (
+                            <div className="space-y-5 pt-4 border-t border-indigo-500/20 animate-in fade-in slide-in-from-top-2 duration-500">
+                                {/* Separador con título */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 flex-shrink-0">
+                                        <Building2 className="w-4 h-4 text-indigo-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-foreground">Contexto de Cuenta</p>
+                                        <p className="text-xs text-muted">Asociá este evento a tu cuenta empresarial</p>
+                                    </div>
+                                </div>
+
+                                {loadingB2B ? (
+                                    <div className="flex items-center gap-3 py-4">
+                                        <div className="w-5 h-5 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                                        <span className="text-sm text-muted">Cargando datos de cuenta...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Campo: Unidad */}
+                                        <div>
+                                            <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
+                                                <Building2 className="w-3 h-3" />
+                                                Unidad
+                                                <span className="text-red-400 font-normal normal-case tracking-normal">*requerido</span>
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    value={b2bInfo.idUnidad}
+                                                    onChange={e => setB2bInfo(prev => ({
+                                                        ...prev,
+                                                        idUnidad: e.target.value === '' ? '' : parseInt(e.target.value, 10),
+                                                    }))}
+                                                    className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10"
+                                                >
+                                                    <option value="">Seleccioná una unidad...</option>
+                                                    {unidades.map((u) => (
+                                                        <option key={u.id_unidad} value={u.id_unidad}>
+                                                            {u.nombre_unidad}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Campo: ¿Para quién? */}
+                                        <div>
+                                            <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-3 ml-1">
+                                                <UserCheck className="w-3 h-3" />
+                                                ¿Para quién es el evento?
+                                                <span className="text-red-400 font-normal normal-case tracking-normal">*requerido</span>
+                                            </label>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {([
+                                                    { value: 'PROPIO', label: 'Para mi unidad/negocio', icon: Building2 },
+                                                    { value: 'CLIENTE', label: 'Para un cliente', icon: Users },
+                                                ] as const).map(({ value, label, icon: Icon }) => {
+                                                    const isSelected = b2bInfo.destinatario === value;
+                                                    return (
+                                                        <button
+                                                            key={value}
+                                                            type="button"
+                                                            onClick={() => setB2bInfo(prev => ({
+                                                                ...prev,
+                                                                destinatario: value,
+                                                                idCliente: value === 'PROPIO' ? '' : prev.idCliente,
+                                                            }))}
+                                                            className={`flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
+                                                                    ? 'border-indigo-500 bg-indigo-500/5 shadow-sm shadow-indigo-500/10'
+                                                                    : 'border-card-border bg-background/50 hover:border-indigo-500/30'
+                                                                }`}
+                                                        >
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500/20' : 'bg-card-bg'
+                                                                }`}>
+                                                                <Icon className={`w-4 h-4 ${isSelected ? 'text-indigo-400' : 'text-muted'}`} />
+                                                            </div>
+                                                            <span className={`text-sm font-medium ${isSelected ? 'text-indigo-300' : 'text-muted'
+                                                                }`}>{label}</span>
+                                                            {isSelected && (
+                                                                <div className="ml-auto w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+                                                                    <Check className="w-3 h-3 text-white" />
+                                                                </div>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Campo: Cliente (visible solo si destinatario = CLIENTE) */}
+                                        {b2bInfo.destinatario === 'CLIENTE' && (
+                                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
+                                                    <Users className="w-3 h-3" />
+                                                    Cliente
+                                                    <span className="text-red-400 font-normal normal-case tracking-normal">*requerido</span>
+                                                </label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={b2bInfo.idCliente}
+                                                        onChange={e => setB2bInfo(prev => ({
+                                                            ...prev,
+                                                            idCliente: e.target.value === '' ? '' : parseInt(e.target.value, 10),
+                                                        }))}
+                                                        className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10"
+                                                    >
+                                                        <option value="">Seleccioná un cliente...</option>
+                                                        {clientes.map((c) => (
+                                                            <option key={c.id_cliente} value={c.id_cliente}>
+                                                                {c.nombre_cliente}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                        <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -853,8 +1086,161 @@ export default function NewEventPage() {
                 </div>
             )}
 
-            {/* ═══════════ STEP 4: ¡Listo! ═══════════ */}
-            {currentStep === 4 && plantillaAplicada && (
+            {/* ═══════════ STEP 4: Acceso y Confirmación ═══════════ */}
+            {currentStep === 4 && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="p-6 sm:p-8 rounded-2xl bg-card-bg border border-card-border backdrop-blur-xl transition-all hover:border-muted/50">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
+                                <Lock className="w-5 h-5 text-violet-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-foreground">Acceso y Confirmación</h2>
+                                <p className="text-xs text-muted">Definí cómo van a acceder y confirmar tus invitados</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-7">
+
+                            {/* ─ Tipo de evento ─ */}
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-3 ml-1">
+                                    <Globe className="w-3 h-3" />
+                                    Tipo de evento
+                                </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {([
+                                        { value: false, label: 'Privado', desc: 'Solo tus invitados pueden verlo', icon: Lock },
+                                        { value: true, label: 'Público', desc: 'Cualquiera con el link puede verlo', icon: Globe },
+                                    ] as const).map(({ value, label, desc, icon: Icon }) => {
+                                        const isSelected = acceso.esPublico === value;
+                                        return (
+                                            <button
+                                                key={String(value)}
+                                                type="button"
+                                                onClick={() => setAcceso(prev => ({ ...prev, esPublico: value }))}
+                                                className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
+                                                        ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
+                                                        : 'border-card-border bg-background/50 hover:border-violet-500/30'
+                                                    }`}
+                                            >
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-violet-500/20' : 'bg-card-bg'
+                                                    }`}>
+                                                    <Icon className={`w-4 h-4 ${isSelected ? 'text-violet-400' : 'text-muted'}`} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span className={`text-sm font-semibold block ${isSelected ? 'text-violet-300' : 'text-foreground'
+                                                        }`}>{label}</span>
+                                                    <span className="text-xs text-muted">{desc}</span>
+                                                </div>
+                                                {isSelected && (
+                                                    <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
+                                                        <Check className="w-3 h-3 text-white" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* ─ Cómo ingresan ─ */}
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-3 ml-1">
+                                    <Link className="w-3 h-3" />
+                                    Cómo ingresan
+                                </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {([
+                                        { value: 'I' as const, label: 'Por invitación', desc: 'Se envía invitación nominal a cada uno', icon: Users },
+                                        { value: 'L' as const, label: 'Por link público', desc: 'Cualquiera con el link puede ingresar', icon: Link },
+                                    ]).map(({ value, label, desc, icon: Icon }) => {
+                                        const isSelected = acceso.modoAcceso === value;
+                                        return (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => setAcceso(prev => ({ ...prev, modoAcceso: value }))}
+                                                className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
+                                                        ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
+                                                        : 'border-card-border bg-background/50 hover:border-violet-500/30'
+                                                    }`}
+                                            >
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-violet-500/20' : 'bg-card-bg'
+                                                    }`}>
+                                                    <Icon className={`w-4 h-4 ${isSelected ? 'text-violet-400' : 'text-muted'}`} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span className={`text-sm font-semibold block ${isSelected ? 'text-violet-300' : 'text-foreground'
+                                                        }`}>{label}</span>
+                                                    <span className="text-xs text-muted">{desc}</span>
+                                                </div>
+                                                {isSelected && (
+                                                    <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
+                                                        <Check className="w-3 h-3 text-white" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* ─ Control de asistencia ─ */}
+                            <div>
+                                <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-3 ml-1">
+                                    <ClipboardList className="w-3 h-3" />
+                                    Control de asistencia
+                                </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {([
+                                        { value: 'R' as const, label: 'Confirmación previa', desc: 'Los invitados confirman antes del evento', icon: CheckCircle2 },
+                                        { value: 'C' as const, label: 'Control al ingresar', desc: 'Se verifica la asistencia en el momento', icon: ClipboardList },
+                                    ]).map(({ value, label, desc, icon: Icon }) => {
+                                        const isSelected = acceso.modoAsistencia === value;
+                                        return (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => setAcceso(prev => ({ ...prev, modoAsistencia: value }))}
+                                                className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
+                                                        ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
+                                                        : 'border-card-border bg-background/50 hover:border-violet-500/30'
+                                                    }`}
+                                            >
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-violet-500/20' : 'bg-card-bg'
+                                                    }`}>
+                                                    <Icon className={`w-4 h-4 ${isSelected ? 'text-violet-400' : 'text-muted'}`} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span className={`text-sm font-semibold block ${isSelected ? 'text-violet-300' : 'text-foreground'
+                                                        }`}>{label}</span>
+                                                    <span className="text-xs text-muted">{desc}</span>
+                                                </div>
+                                                {isSelected && (
+                                                    <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
+                                                        <Check className="w-3 h-3 text-white" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Hint info */}
+                            <div className="px-4 py-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-xs text-violet-400/80 flex items-start gap-2">
+                                <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                <p>Estas configuraciones se pueden cambiar luego desde el panel del evento.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════ STEP 5: ¡Listo! ═══════════ */}
+            {currentStep === 5 && plantillaAplicada && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                     <div className="p-6 sm:p-8 rounded-2xl bg-card-bg border border-card-border backdrop-blur-xl text-center">
                         {/* Success animation */}
@@ -942,7 +1328,7 @@ export default function NewEventPage() {
             )}
 
             {/* ═══════════ Navigation Buttons ═══════════ */}
-            {currentStep < 4 && (
+            {currentStep < 5 && (
                 <div className="mt-8">
                     {error && (
                         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs mb-4 animate-shake">
@@ -1025,6 +1411,28 @@ export default function NewEventPage() {
                                         <>
                                             <CheckCircle2 className="w-4 h-4" />
                                             Aplicar Plantilla
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            {currentStep === 4 && (
+                                <button
+                                    type="button"
+                                    onClick={handleGuardarAcceso}
+                                    disabled={loading}
+                                    className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-tr from-violet-600 to-violet-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all group"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Guardando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Rocket className="w-4 h-4" />
+                                            Guardar y Finalizar
+                                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                         </>
                                     )}
                                 </button>

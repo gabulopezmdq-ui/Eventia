@@ -3,42 +3,35 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, ShieldCheck, MapPin, CalendarDays, ArrowRight } from 'lucide-react';
-import { getMyEvents, getAdminEvents, getCurrentUser } from '@/src/features/events/event.service';
+import { getMyEvents, getAdminEvents } from '@/src/features/events/event.service';
 import type { Event } from '@/src/features/events/types';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function DashboardEventsPage() {
+    const { isSuperAdmin, eventos: eventosContext } = useAuth();
     const [events, setEvents] = useState<Event[]>([]);
     const [adminEvents, setAdminEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [adminLoading, setAdminLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [adminError, setAdminError] = useState<string | null>(null);
-    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
     useEffect(() => {
-        // Obtener rol del usuario
-        getCurrentUser()
-            .then((user) => {
-                if (user.rol === 'superadmin') {
-                    setIsSuperAdmin(true);
-                    // Cargar eventos de admin
-                    setAdminLoading(true);
-                    getAdminEvents()
-                        .then(setAdminEvents)
-                        .catch(() => setAdminError('No se pudieron cargar los eventos de administración'))
-                        .finally(() => setAdminLoading(false));
-                }
-            })
-            .catch(() => {
-                // Si falla, el usuario no está logueado o el token es inválido
-            });
+        // Cargar eventos admin si corresponde
+        if (isSuperAdmin) {
+            setAdminLoading(true);
+            getAdminEvents()
+                .then(setAdminEvents)
+                .catch(() => setAdminError('No se pudieron cargar los eventos de administración'))
+                .finally(() => setAdminLoading(false));
+        }
 
         // Cargar mis eventos
         getMyEvents()
             .then(setEvents)
             .catch(() => setError('No se pudieron cargar los eventos'))
             .finally(() => setLoading(false));
-    }, []);
+    }, [isSuperAdmin]);
 
     const EventCard = ({ event, isAdmin = false }: { event: Event; isAdmin?: boolean }) => {
         // Safe date parsing
@@ -152,7 +145,9 @@ export default function DashboardEventsPage() {
             {!loading && !error && events.length === 0 && (
                 <div className="p-8 text-center">
                     <p className="text-neutral-400 mb-4">
-                        Todavía no tenés eventos creados.
+                        {eventosContext?.cantidad_compartidos && eventosContext.cantidad_compartidos > 0
+                            ? `Todavía no tenés eventos propios, pero tenés ${eventosContext.cantidad_compartidos} evento${eventosContext.cantidad_compartidos > 1 ? 's' : ''} compartido${eventosContext.cantidad_compartidos > 1 ? 's' : ''}.`
+                            : 'Todavía no tenés eventos creados. ¡Creá tu primer evento!'}
                     </p>
                 </div>
             )}

@@ -1,86 +1,82 @@
-# Plan de Implementación: Landing Page (Diseño Eventia)
+# Plan de Implementación: Landing Page y Módulo de Eventos (B2C/B2B)
 
-Este documento detalla el plan de acción para implementar el nuevo diseño de la primera pantalla (Landing Page - `src/app/page.tsx`) según las especificaciones del documento de *Planes, Pagos y Prospectos B2B*.
+Este documento detalla el plan de acción para implementar el diseño de la **Landing Page** y el circuito funcional del **Módulo de Eventos (Post-Login y Creación de Eventos)** según los requerimientos actualizados.
 
-## 1. Estructura General de la Página (`page.tsx`)
-La página principal se dividirá en las siguientes secciones principales, siguiendo el flujo del documento:
-1. **Hero Section (Inicio)**
-2. **Cómo funciona Eventia + Demo Visual**
-3. **Módulos Estrella (Cards)**
-4. **Selector y Visualizador de Planes (B2C y B2B)**
-5. **Modal "Quiero Info" (Prospectos B2B)**
-
----
-
-## 2. Desglose por Componentes / Secciones
-
-### Fase 1: Hero Section (Sección Principal)
-- **Título Principal:** "Tu Evento organizado en un solo lugar"
-- **Subtítulo / Menciones:** Plantillas + RSVP + invitados + experiencias (música, álbum, votaciones).
-- **Botones de Acción (CTAs):**
-  - **"Crear mi Evento":** Redirige a `/registrarse?flow=b2c`.
-  - **"Ver planes" / "Quiero Info Planes":** Hace scroll hacia la sección de Planes.
-  - **"¿Tenés una Empresa, Salón u organizás eventos?":** Abre el **Modal de Captura B2B ("Quiero info")**.
-
-### Fase 2: Sección "Cómo funciona Eventia"
-- **Pasos a mostrar:**
-  1. Elegí tipo de evento + plantilla.
-  2. Cargá invitados y confirmaciones (RSVP).
-  3. "Viví el evento: música, álbum, momentos, etc."
-- **Demo Visual:** Espacio para imágenes/mockups (capturas de una invitación, panel del organizador y RSVP).
-
-### Fase 3: Sección "Módulos estrella" (Cards)
-Crear tarjetas informativas destacando las funcionalidades:
-- Invitación + RSVP
-- Segmentos / accesos
-- Música (sugerencias/votos)
-- Álbum colaborativo con QR
-- Votaciones y momentos
-
-### Fase 4: Sección de Planes (B2C y B2B)
-- **Selector/Combo:** Un `Toggle` o `Select` con la opción por defecto: "Para mi evento" (B2C) y la opción "Para Salón/Empresa" (B2B).
-- **Consumo de Endpoints:**
-  - `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C`
-  - `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2B`
-- **Renderizado Dinámico de Cards:**
-  - **Si B2C:** Mostrar Free ($0), Basic, Plus y Pro. Los botones "Elegir" llevan a `/registrarse?flow=b2c&plan=<codigo>`.
-  - **Si B2B:** Mostrar Starter, Team, y Premium. En esta etapa, el documento especifica que no llevan a registrar el plan automáticamente (se maneja manual), sino que probablemente abran el modal de "Quiero info" o deriven a `/registrarse?flow=b2b`.
-
-### Fase 5: Modal "Quiero Info" (Prospectos B2B)
-- **Activación:** Se abre al hacer clic en "¿Tenés una Empresa...?" o en botones B2B.
-- **Campos del Formulario:**
-  - Nombre y apellido (obligatorio)
-  - Nombre del salón / empresa / planner (obligatorio)
-  - Ciudad (obligatorio)
-  - País (default: AR) - Opcional consumir `GET /paises/GetAll?idIdioma=1` si es dinámico.
-  - Email (obligatorio al menos email o whatsapp)
-  - WhatsApp (obligatorio al menos email o whatsapp)
-  - Eventos por mes (opcional)
-- **Acción:**
-  - Hacer un `POST` a `/prospectos_b2b/QuieroInfo` con los datos capturados y la metadata (origen de la landing).
-  - Mostrar mensaje de éxito: "¡Listo! Te contactaremos a la brevedad." y cerrar el modal.
+## 1. Estructura General de la Landing Page (`src/app/page.tsx`)
+La página principal de marketing se dividirá en las siguientes secciones:
+1. **Hero Section:** "Tu Evento organizado en un solo lugar", CTAs para registrarse (B2C) o ver planes/empresas.
+2. **Cómo funciona Eventia + Demo:** Pasos básicos y mockups del panel y RSVP.
+3. **Módulos Estrella (Cards):** Invitación, accesos, música, álbum, votaciones.
+4. **Selector y Visualizador de Planes (B2C y B2B):**
+   - Endpoints: `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C/B2B`.
+   - Redirecciones a `/registrarse?flow=b2c&plan=<codigo>`.
+5. **Modal "Quiero Info" (Prospectos B2B):** Formulario para captar clientes B2B (`POST /prospectos_b2b/QuieroInfo`).
 
 ---
 
-## 3. Tareas de Desarrollo (Paso a Paso)
+## 2. Navegación Post-Login y Contextos (Nuevo Módulo de Eventos)
 
-1. **Creación de Componentes UI:**
-   - Crear componente `HeroSection.tsx`.
-   - Crear componente `HowItWorks.tsx`.
-   - Crear componente `StarModules.tsx`.
-   - Crear componente `PricingSection.tsx` (con el toggle B2C/B2B).
-   - Crear componente `B2BLeadModal.tsx` (el modal "Quiero Info").
+Una vez que el usuario se autentica (`POST /auth/login`), la construcción de la navegación dependerá en su totalidad del endpoint **`GET /auth/me`**. 
+El sistema usará el bloque `ui` de esta respuesta para dictar qué menús están disponibles:
 
-2. **Integración API en PricingSection:**
-   - Implementar el fetch para el cátalogo de planes públicos y setear los estados `b2cPlans` y `b2bPlans`.
+### 2.1 Menú: "Mi espacio" (B2C)
+Habilitado si `ui.puede_crear_evento_b2c = true`.
+- **Mis eventos:** Llama a `GET /eventos/mios`.
+- **Crear evento:** Dirige al flujo de creación de evento B2C (sin cuenta asociada).
+- **Mi perfil:** `GET /usuarios/mi-perfil`.
+- Muestra el estado según los datos del array `eventos` (ej. "Todavía no tenés eventos propios").
 
-3. **Integración API en Modal B2B:**
-   - Crear la función de submit para el endpoint `/prospectos_b2b/QuieroInfo`.
-   - Manejar validaciones de formulario (requerir Email o Whatsapp).
-   - Manejar estados de carga y mensajes de éxito/error.
+### 2.2 Menú: "Cuenta" (B2B)
+Habilitado si `ui.mostrar_menu_cuenta = true`.
+- **Dashboard de Cuenta:** Resumen general, eventos próximos y accesos rápidos.
+- **Unidades:** Lista de unidades de la cuenta (`GET /cuenta_unidades/MisUnidades?soloActivas=true`).
+- **Clientes:** Lista de clientes de la cuenta (`GET /clientes/MisClientes?soloActivos=true`).
+- **Eventos:** Eventos de la cuenta (`GET /cuenta_eventos/mis-eventos`).
+- **Plan y Facturación:** `GET /cuentas/MiPlan`.
 
-4. **Ensamblado en `page.tsx`:**
-   - Importar y ubicar ordenadamente todos los componentes en la página principal para construir la estructura de arriba hacia abajo.
+### 2.3 Avisos Adicionales UI
+- Banner Solicitud de Cuenta (si `ui.mostrar_solicitar_cuenta = true`).
+- Banner Cuenta Pendiente de Aprobación (si `ui.mostrar_estado_cuenta_pendiente = true`).
+- Menú Admin Global (si `ui.mostrar_admin = true`).
 
-## Próximos pasos
-¿Con qué elemento te gustaría que empecemos? Te sugiero armar la estructura principal en el `page.tsx` y el **Hero Section**, o bien podemos comenzar preparando el **Modal B2B de Prospectos**.
+---
+
+## 3. Desglose del Flujo: Crear Evento
+
+### 3.1 Creación de Evento B2C (Mi espacio)
+Flujo guiado para usuarios personales.
+1. **Información Básica:** Idioma, Tipo de Evento, Plan actual, Dress Code, Anfitriones, Mensajes.
+2. **Elegir Estructura:** Plantilla.
+3. **Datos Base:** Edición de Estructura.
+4. **Acceso y Confirmación:** Definir modalidad y modo acceso usando `PUT /eventos/{idEvento}/configuración` con:
+   - `EsPublico` (true/false)
+   - `ModoAcceso` ("I" para invitación, "L" para link)
+   - `ModoAsistencia` ("R" para confirmación previa, "C" para control en puerta)
+
+### 3.2 Creación de Evento B2B (Módulo de Cuenta)
+Para eventos propios de unidad o para clientes.
+1. **Información Básica:** Mismos campos que B2C **más**:
+   - **Unidad:** (Obligatorio) Dropdown que consume de `/cuenta_unidades/MisUnidades`.
+   - **Propósito:** ¿Evento PROPIO o para CLIENTE?
+   - **Cliente:** (Solo si es para cliente). Dropdown consumiendo `/clientes/MisClientes`.
+2. **Resto de steps:** Estructura, Datos Base, Acceso y Confirmación idéntico al B2C, pero asociado al plan B2B correspondiente.
+
+---
+
+## 4. Tareas de Desarrollo (Paso a Paso)
+
+1. **Desarrollo Landing Page (Marketing):** (Ver secciones Hero, Planes, B2B Modal).
+2. ✅ **Refactorización de Autenticación / Layout Central:** (COMPLETADO)
+   - Modificar el estado global o proveedor de autenticación para almacenar la respuesta de `GET /auth/me`.
+   - Ajustar el Layout principal para renderizar condicionalmente los accesos laterales ("Mi espacio", "Cuenta") basados en las variables `ui` devueltas.
+3. ✅ **Creación de Dashboard B2B:** (COMPLETADO)
+   - ✅ Se crearon los proxies API B2B (`cuenta-unidades`, `clientes`, `cuenta-eventos`, `cuentas/plan`, `perfil`).
+   - ✅ Maquetar las cards (Eventos Próximos, Unidades, Clientes) del nuevo dashboard organizador.
+   - ✅ Llamadas correspondientes a las APIs B2B desde el frontend agregados en `cuenta.service.ts`.
+4. **Actualización de Formularios Crear Evento:**
+   - ✅ Se crearon los proxies API necesarios (incluyendo `eventos/[id]/configuracion`).
+   - ⏳ Crear componente de *Dropdown de Unidades y Clientes* para el flujo B2B (condicionado por el contexto de origen de creación).
+   - ⏳ Agregar nuevo step "Acceso y Confirmación" antes de finalizar la creación, impactando en `PUT /eventos/{idEvento}/configuración`.
+
+## Próximos pasos recomendados
+Con esta nueva documentación, lo ideal es organizar el trabajo separando la **Landing Pública (App Router/Páginas Públicas)** del **Layout Protegido (Autenticación y Menús B2C/B2B)**. ¿Te gustaría que arranquemos con la lógica del Auth/Layout dinámico, o preferís liquidar primero la Landing Page y el Modal B2B?
