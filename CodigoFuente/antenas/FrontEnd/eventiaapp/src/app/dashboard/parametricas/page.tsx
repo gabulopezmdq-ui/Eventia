@@ -10,7 +10,8 @@ import {
     ShieldAlert,
 } from "lucide-react";
 
-import { getCurrentUser } from "@/src/features/events/event.service";
+import { useAuth } from "@/src/context/AuthContext";
+
 
 /* =======================
    Tipos
@@ -36,6 +37,7 @@ interface DressCode {
 
 export default function ParametricasPage() {
     const router = useRouter();
+    const { isSuperAdmin, loading: authLoading } = useAuth();
 
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
@@ -91,21 +93,14 @@ export default function ParametricasPage() {
     ======================= */
 
     useEffect(() => {
-        getCurrentUser()
-            .then((user) => {
-                if (user.rol === "superadmin") {
-                    setIsAuthorized(true);
-                } else {
-                    router.push("/dashboard");
-                }
-            })
-            .catch(() => {
-                router.push("/login");
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-    }, [router]);
+        if (authLoading) return;
+        if (isSuperAdmin) {
+            setIsAuthorized(true);
+        } else {
+            router.push("/dashboard");
+        }
+        setIsLoading(false);
+    }, [isSuperAdmin, authLoading, router]);
 
     /* =======================
        States

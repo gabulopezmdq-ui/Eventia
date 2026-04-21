@@ -1,0 +1,82 @@
+# Plan de Implementación: Landing Page y Módulo de Eventos (B2C/B2B)
+
+Este documento detalla el plan de acción para implementar el diseño de la **Landing Page** y el circuito funcional del **Módulo de Eventos (Post-Login y Creación de Eventos)** según los requerimientos actualizados.
+
+## 1. Estructura General de la Landing Page (`src/app/page.tsx`)
+La página principal de marketing se dividirá en las siguientes secciones:
+1. **Hero Section:** "Tu Evento organizado en un solo lugar", CTAs para registrarse (B2C) o ver planes/empresas.
+2. **Cómo funciona Eventia + Demo:** Pasos básicos y mockups del panel y RSVP.
+3. **Módulos Estrella (Cards):** Invitación, accesos, música, álbum, votaciones.
+4. **Selector y Visualizador de Planes (B2C y B2B):**
+   - Endpoints: `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C/B2B`.
+   - Redirecciones a `/registrarse?flow=b2c&plan=<codigo>`.
+5. **Modal "Quiero Info" (Prospectos B2B):** Formulario para captar clientes B2B (`POST /prospectos_b2b/QuieroInfo`).
+
+---
+
+## 2. Navegación Post-Login y Contextos (Nuevo Módulo de Eventos)
+
+Una vez que el usuario se autentica (`POST /auth/login`), la construcción de la navegación dependerá en su totalidad del endpoint **`GET /auth/me`**. 
+El sistema usará el bloque `ui` de esta respuesta para dictar qué menús están disponibles:
+
+### 2.1 Menú: "Mi espacio" (B2C)
+Habilitado si `ui.puede_crear_evento_b2c = true`.
+- **Mis eventos:** Llama a `GET /eventos/mios`.
+- **Crear evento:** Dirige al flujo de creación de evento B2C (sin cuenta asociada).
+- **Mi perfil:** `GET /usuarios/mi-perfil`.
+- Muestra el estado según los datos del array `eventos` (ej. "Todavía no tenés eventos propios").
+
+### 2.2 Menú: "Cuenta" (B2B)
+Habilitado si `ui.mostrar_menu_cuenta = true`.
+- **Dashboard de Cuenta:** Resumen general, eventos próximos y accesos rápidos.
+- **Unidades:** Lista de unidades de la cuenta (`GET /cuenta_unidades/MisUnidades?soloActivas=true`).
+- **Clientes:** Lista de clientes de la cuenta (`GET /clientes/MisClientes?soloActivos=true`).
+- **Eventos:** Eventos de la cuenta (`GET /cuenta_eventos/mis-eventos`).
+- **Plan y Facturación:** `GET /cuentas/MiPlan`.
+
+### 2.3 Avisos Adicionales UI
+- Banner Solicitud de Cuenta (si `ui.mostrar_solicitar_cuenta = true`).
+- Banner Cuenta Pendiente de Aprobación (si `ui.mostrar_estado_cuenta_pendiente = true`).
+- Menú Admin Global (si `ui.mostrar_admin = true`).
+
+---
+
+## 3. Desglose del Flujo: Crear Evento
+
+### 3.1 Creación de Evento B2C (Mi espacio)
+Flujo guiado para usuarios personales.
+1. **Información Básica:** Idioma, Tipo de Evento, Plan actual, Dress Code, Anfitriones, Mensajes.
+2. **Elegir Estructura:** Plantilla.
+3. **Datos Base:** Edición de Estructura.
+4. **Acceso y Confirmación:** Definir modalidad y modo acceso usando `PUT /eventos/{idEvento}/configuración` con:
+   - `EsPublico` (true/false)
+   - `ModoAcceso` ("I" para invitación, "L" para link)
+   - `ModoAsistencia` ("R" para confirmación previa, "C" para control en puerta)
+
+### 3.2 Creación de Evento B2B (Módulo de Cuenta)
+Para eventos propios de unidad o para clientes.
+1. **Información Básica:** Mismos campos que B2C **más**:
+   - **Unidad:** (Obligatorio) Dropdown que consume de `/cuenta_unidades/MisUnidades`.
+   - **Propósito:** ¿Evento PROPIO o para CLIENTE?
+   - **Cliente:** (Solo si es para cliente). Dropdown consumiendo `/clientes/MisClientes`.
+2. **Resto de steps:** Estructura, Datos Base, Acceso y Confirmación idéntico al B2C, pero asociado al plan B2B correspondiente.
+
+---
+
+## 4. Tareas de Desarrollo (Paso a Paso)
+
+1. **Desarrollo Landing Page (Marketing):** (Ver secciones Hero, Planes, B2B Modal).
+2. ✅ **Refactorización de Autenticación / Layout Central:** (COMPLETADO)
+   - Modificar el estado global o proveedor de autenticación para almacenar la respuesta de `GET /auth/me`.
+   - Ajustar el Layout principal para renderizar condicionalmente los accesos laterales ("Mi espacio", "Cuenta") basados en las variables `ui` devueltas.
+3. ✅ **Creación de Dashboard B2B:** (COMPLETADO)
+   - ✅ Se crearon los proxies API B2B (`cuenta-unidades`, `clientes`, `cuenta-eventos`, `cuentas/plan`, `perfil`).
+   - ✅ Maquetar las cards (Eventos Próximos, Unidades, Clientes) del nuevo dashboard organizador.
+   - ✅ Llamadas correspondientes a las APIs B2B desde el frontend agregados en `cuenta.service.ts`.
+4. **Actualización de Formularios Crear Evento:**
+   - ✅ Se crearon los proxies API necesarios (incluyendo `eventos/[id]/configuracion`).
+   - ⏳ Crear componente de *Dropdown de Unidades y Clientes* para el flujo B2B (condicionado por el contexto de origen de creación).
+   - ⏳ Agregar nuevo step "Acceso y Confirmación" antes de finalizar la creación, impactando en `PUT /eventos/{idEvento}/configuración`.
+
+## Próximos pasos recomendados
+Con esta nueva documentación, lo ideal es organizar el trabajo separando la **Landing Pública (App Router/Páginas Públicas)** del **Layout Protegido (Autenticación y Menús B2C/B2B)**. ¿Te gustaría que arranquemos con la lógica del Auth/Layout dinámico, o preferís liquidar primero la Landing Page y el Modal B2B?
