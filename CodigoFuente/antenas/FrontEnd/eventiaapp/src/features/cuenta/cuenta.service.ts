@@ -34,10 +34,10 @@ export async function getMisUnidades(): Promise<Unidad[]> {
     if (!res.ok) throw new Error('Error al cargar unidades');
     const data = await res.json();
     return data.map((item: any) => ({
-        id_unidad: item.idUnidad,
+        id_unidad: item.id_unidad || item.idUnidad,
         nombre: item.nombre,
-        es_principal: item.esPrincipal ?? false,
-        activa: item.activa ?? true,
+        es_principal: item.es_principal ?? item.esPrincipal ?? false,
+        activa: item.activo ?? item.activa ?? true,
         ciudad: item.ciudad,
     }));
 }
@@ -47,13 +47,13 @@ export async function getMisClientes(): Promise<Cliente[]> {
     if (!res.ok) throw new Error('Error al cargar clientes');
     const data = await res.json();
     return data.map((item: any) => ({
-        id_cliente: item.idCliente,
-        nombre_cliente: item.nombreCliente,
+        id_cliente: item.id_cliente || item.idCliente,
+        nombre_cliente: item.nombre_cliente || item.nombreCliente,
         email: item.email,
         telefono: item.telefono,
-        es_activo: item.esActivo ?? true,
-        unidad_principal: item.unidadPrincipal,
-        fecha_alta: item.fechaAlta,
+        es_activo: item.activo !== undefined ? item.activo : (item.esActivo ?? true),
+        unidad_principal: item.unidad_principal || item.unidadPrincipal,
+        fecha_alta: item.fecha_alta || item.fechaAlta,
     }));
 }
 
@@ -62,7 +62,7 @@ export async function getMiPlan(): Promise<CuentaPlan> {
     if (!res.ok) throw new Error('Error al cargar plan de cuenta');
     const data = await res.json();
     return {
-        id_cuenta: data.idCuenta,
+        id_cuenta: data.id_cuenta || data.idCuenta,
         plan_nombre: data.planNombre || data.plan_nombre || 'Desconocido',
         plan_codigo: data.planCodigo || data.plan_codigo || 'N/A',
         precio: data.precio || 0,
@@ -81,12 +81,12 @@ export async function getCuentaEventos(): Promise<any[]> {
     const data = await res.json();
     // Reutilizamos estructura similar a Event normal pero desde la perspectiva B2B
     return data.map((item: any) => ({
-         id_evento: item.idEvento,
-         anfitriones_texto: item.anfitrionesTexto,
-         fecha_hora: item.fechaHora,
+         id_evento: item.id_evento || item.idEvento,
+         anfitriones_texto: item.anfitriones_texto || item.anfitrionesTexto,
+         fecha_hora: item.fecha_hora || item.fechaHora,
          lugar: item.lugar,
          estado: item.estado,
-         cliente_nombre: item.clienteNombre,
-         unidad_nombre: item.unidadNombre,
+         cliente_nombre: item.cliente_nombre || item.clienteNombre,
+         unidad_nombre: item.unidad_nombre || item.unidadNombre,
     }));
 }
