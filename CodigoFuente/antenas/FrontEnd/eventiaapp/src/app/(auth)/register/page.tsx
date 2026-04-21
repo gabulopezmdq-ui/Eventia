@@ -1,12 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { register } from '@/src/features/auth/auth.service';
 import { GoogleSignInButton } from '@/src/features/auth/GoogleSignInButton';
 import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Briefcase, Star, Link } from 'lucide-react';
 
 export default function RegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="bg-neutral-900 p-8 rounded-2xl shadow-xl text-center">
+                <div className="animate-spin h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto" />
+            </div>
+        }>
+            <RegisterForm />
+        </Suspense>
+    );
+}
+
+function RegisterForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
