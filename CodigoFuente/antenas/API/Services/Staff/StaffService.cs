@@ -25,22 +25,42 @@ namespace API.Services.Staff
         }
 
         // ─────────────────────────────────────
-        // GENERACIÓN DE CÓDIGO ÚNICO
+        // GENERACIÓN DE CÓDIGO ÚNICO (8 caracteres: CCRRNNNN)
         // ─────────────────────────────────────
-        private async Task<string> GenerarCodigoUnicoAsync()
+        private async Task<string> GenerarCodigoUnicoAsync(long idCuenta, short idRol)
         {
-            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Sin O, I, 0, 1
-            var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            // 1. Prefijo Cuenta (CC)
+            var cuenta = await _context.ef_cuentas.AsNoTracking().FirstOrDefaultAsync(x => x.id_cuenta == idCuenta);
+            string prefixCuenta = NormalizarParaCodigo(cuenta?.nombre_cuenta, 2);
+
+            // 2. Prefijo Rol (RR) - Tomamos lo que viene después de STAFF_
+            var rol = await _context.ef_roles.AsNoTracking().FirstOrDefaultAsync(x => x.id_rol == idRol);
+            string rolNombre = rol?.codigo ?? "XX";
+            if (rolNombre.Contains("_"))
+            {
+                rolNombre = rolNombre.Split('_').Last();
+            }
+            string prefixRol = NormalizarParaCodigo(rolNombre, 2);
+
+            var rng = new Random();
             string codigo;
             do
             {
-                var bytes = new byte[10];
-                rng.GetBytes(bytes);
-                codigo = new string(bytes.Select(b => chars[b % chars.Length]).ToArray());
+                // 3. Sufijo Numérico (NNNN)
+                string num = rng.Next(0, 10000).ToString("D4");
+                codigo = $"{prefixCuenta}{prefixRol}{num}";
             }
             while (await _context.ef_staff.AnyAsync(x => x.codigo == codigo));
 
             return codigo;
+        }
+
+        private string NormalizarParaCodigo(string text, int length)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return new string('X', length);
+            var clean = new string(text.Where(char.IsLetterOrDigit).ToArray()).ToUpper();
+            if (clean.Length < length) return clean.PadRight(length, 'X');
+            return clean.Substring(0, length);
         }
 
         // ─────────────────────────────────────
@@ -49,7 +69,7 @@ namespace API.Services.Staff
         // ─────────────────────────────────────
         public async Task<StaffCreadoDTO> CrearStaffAsync(CrearStaffRequest req)
         {
-            var codigo = await GenerarCodigoUnicoAsync();
+            var codigo = await GenerarCodigoUnicoAsync(req.id_cuenta, req.id_rol);
 
             var staff = new ef_staff
             {
