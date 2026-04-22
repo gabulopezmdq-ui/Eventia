@@ -197,6 +197,7 @@ CREATE TABLE IF NOT EXISTS ef_eventos (
     id_dress_code                smallint     REFERENCES ef_dress_code(id_dress_code),
     anfitriones_texto            varchar(500) NOT NULL,
     estado                       char(1)      NOT NULL DEFAULT 'B',
+    fecha_evento                 timestamptz,
     fecha_alta                   timestamptz  NOT NULL DEFAULT now(),
     fecha_modif                  timestamptz
 );
