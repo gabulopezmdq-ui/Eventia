@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -41,6 +41,8 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.notas)
                    .HasMaxLength(500);
+
+            builder.Property(x => x.fecha_evento);
 
             builder.Property(x => x.fecha_alta)
                    .IsRequired()

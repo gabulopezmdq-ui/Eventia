@@ -1,4 +1,4 @@
-﻿using API.DataSchema.Interfaz;
+using API.DataSchema.Interfaz;
 using System;
 using System.Collections.Generic;
 
@@ -27,6 +27,7 @@ namespace API.DataSchema
         public string? mensaje_bienvenida { get; set; }
         public string? notas { get; set; }
 
+        public DateTimeOffset? fecha_evento { get; set; }
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
 
