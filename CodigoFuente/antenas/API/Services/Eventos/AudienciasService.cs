@@ -45,7 +45,6 @@ namespace API.Services
             if (link.fecha_expiracion.HasValue && link.fecha_expiracion.Value < DateTimeOffset.UtcNow)
                 throw new Exception("El link está vencido.");
 
-
             var evento = await _context.Set<ef_eventos>()
                 .SingleAsync(x => x.id_evento == link.id_evento);
 
@@ -169,6 +168,13 @@ namespace API.Services
                 }
 
                 idAudiencia = audiencia.id_audiencia_persona;
+
+                await UpsertTagAsync(
+                    audiencia.id_audiencia_persona,
+                    "ORIGEN",
+                    !string.IsNullOrWhiteSpace(req.origen_registro)
+                        ? req.origen_registro
+                        : (link.origen_default ?? "STAFF"));
 
                 bool beneficioDisponible = true;
                 if (link.cupo_beneficio.HasValue)
@@ -903,5 +909,173 @@ namespace API.Services
                 mensaje = mensaje
             };
         }
+
+        public async Task<List<AudienciaTagSugeridoDTO>> GetTagsSugeridosAsync(long idUsuario)
+        {
+            await GetCuentaIdActualAsync(idUsuario);
+
+            return await _context.Set<ef_param_audiencia_tags>()
+                .AsNoTracking()
+                .Where(x => x.activo && x.permite_asignacion_manual)
+                .OrderBy(x => x.orden)
+                .ThenBy(x => x.tag_tipo)
+                .ThenBy(x => x.tag_valor)
+                .Select(x => new AudienciaTagSugeridoDTO
+                {
+                    id_param_audiencia_tag = x.id_param_audiencia_tag,
+                    tag_tipo = x.tag_tipo,
+                    tag_valor = x.tag_valor,
+                    nombre_mostrar = x.nombre_mostrar,
+                    descripcion = x.descripcion,
+                    origen = x.origen,
+                    permite_asignacion_manual = x.permite_asignacion_manual,
+                    orden = x.orden,
+                    activo = x.activo
+                })
+                .ToListAsync();
+        }
+
+        public async Task<AudienciaTagDTO> AgregarTagAsync(long idUsuario, long idAudienciaPersona, AudienciaTagCreateRequest req)
+        {
+            long idCuenta = await GetCuentaIdActualAsync(idUsuario);
+
+            var persona = await _context.Set<ef_audiencias_personas>()
+                .SingleOrDefaultAsync(x => x.id_audiencia_persona == idAudienciaPersona && x.id_cuenta == idCuenta);
+
+            if (persona == null)
+                throw new Exception("Audiencia inexistente.");
+
+            if (req == null)
+                throw new Exception("Datos obligatorios.");
+
+            var tagTipo = (req.tag_tipo ?? string.Empty).Trim().ToUpperInvariant();
+            var tagValor = (req.tag_valor ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(tagTipo))
+                throw new Exception("tag_tipo obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(tagValor))
+                throw new Exception("tag_valor obligatorio.");
+
+            var tagCatalogo = await _context.Set<ef_param_audiencia_tags>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x =>
+                    x.tag_tipo == tagTipo &&
+                    x.tag_valor == tagValor &&
+                    x.activo &&
+                    x.permite_asignacion_manual);
+
+            if (tagCatalogo == null)
+                throw new Exception("El tag no existe o no admite asignación manual.");
+
+            var existente = await _context.Set<ef_audiencia_persona_tags>()
+                .SingleOrDefaultAsync(x =>
+                    x.id_audiencia_persona == idAudienciaPersona &&
+                    x.tag_tipo == tagTipo &&
+                    x.tag_valor == tagValor);
+
+            if (existente != null)
+            {
+                if (!existente.activo)
+                    existente.activo = true;
+
+                await _context.SaveChangesAsync();
+
+                return new AudienciaTagDTO
+                {
+                    id_audiencia_persona_tag = existente.id_audiencia_persona_tag,
+                    tag_tipo = existente.tag_tipo,
+                    tag_valor = existente.tag_valor,
+                    activo = existente.activo,
+                    fecha_alta = existente.fecha_alta
+                };
+            }
+
+            var nuevo = new ef_audiencia_persona_tags
+            {
+                id_audiencia_persona = idAudienciaPersona,
+                tag_tipo = tagTipo,
+                tag_valor = tagValor,
+                activo = true,
+                fecha_alta = DateTimeOffset.UtcNow
+            };
+
+            _context.Set<ef_audiencia_persona_tags>().Add(nuevo);
+            await _context.SaveChangesAsync();
+
+            return new AudienciaTagDTO
+            {
+                id_audiencia_persona_tag = nuevo.id_audiencia_persona_tag,
+                tag_tipo = nuevo.tag_tipo,
+                tag_valor = nuevo.tag_valor,
+                activo = nuevo.activo,
+                fecha_alta = nuevo.fecha_alta
+            };
+        }
+
+        public async Task SetTagActivoAsync(long idUsuario, long idAudienciaPersonaTag, bool activo)
+        {
+            long idCuenta = await GetCuentaIdActualAsync(idUsuario);
+
+            var tag = await (
+                from t in _context.Set<ef_audiencia_persona_tags>()
+                join p in _context.Set<ef_audiencias_personas>()
+                    on t.id_audiencia_persona equals p.id_audiencia_persona
+                where t.id_audiencia_persona_tag == idAudienciaPersonaTag
+                      && p.id_cuenta == idCuenta
+                select t
+            ).SingleOrDefaultAsync();
+
+            if (tag == null)
+                throw new Exception("Tag inexistente.");
+
+            tag.activo = activo;
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task UpsertTagAsync(long idAudienciaPersona, string tagTipo, string tagValor)
+        {
+            if (idAudienciaPersona <= 0)
+                return;
+
+            tagTipo = (tagTipo ?? string.Empty).Trim().ToUpperInvariant();
+            tagValor = (tagValor ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(tagTipo) || string.IsNullOrWhiteSpace(tagValor))
+                return;
+
+            var tagCatalogo = await _context.Set<ef_param_audiencia_tags>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x =>
+                    x.tag_tipo == tagTipo &&
+                    x.tag_valor == tagValor &&
+                    x.activo);
+
+            if (tagCatalogo == null)
+                return;
+
+            var existente = await _context.Set<ef_audiencia_persona_tags>()
+                .SingleOrDefaultAsync(x =>
+                    x.id_audiencia_persona == idAudienciaPersona &&
+                    x.tag_tipo == tagTipo &&
+                    x.tag_valor == tagValor);
+
+            if (existente == null)
+            {
+                _context.Set<ef_audiencia_persona_tags>().Add(new ef_audiencia_persona_tags
+                {
+                    id_audiencia_persona = idAudienciaPersona,
+                    tag_tipo = tagTipo,
+                    tag_valor = tagValor,
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                });
+            }
+            else if (!existente.activo)
+            {
+                existente.activo = true;
+            }
+        }
+
     }
 }

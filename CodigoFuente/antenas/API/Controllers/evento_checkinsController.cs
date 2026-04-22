@@ -76,11 +76,57 @@ namespace API.Controllers
             {
                 ape.asistio = true;
                 ape.fecha_asistencia = DateTimeOffset.UtcNow;
+
+                await UpsertTagAsync(ape.id_audiencia_persona, "ASISTENCIA", "ASISTIO");
             }
 
             await _context.SaveChangesAsync();
 
             return Ok(new { ok = true, id_checkin = req.id_checkin });
+        }
+
+        private async Task UpsertTagAsync(long idAudienciaPersona, string tagTipo, string tagValor)
+        {
+            if (idAudienciaPersona <= 0)
+                return;
+
+            tagTipo = (tagTipo ?? string.Empty).Trim().ToUpperInvariant();
+            tagValor = (tagValor ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(tagTipo) || string.IsNullOrWhiteSpace(tagValor))
+                return;
+
+            var tagCatalogo = await _context.Set<ef_param_audiencia_tags>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x =>
+                    x.tag_tipo == tagTipo &&
+                    x.tag_valor == tagValor &&
+                    x.activo);
+
+            if (tagCatalogo == null)
+                return;
+
+            var existente = await _context.Set<ef_audiencia_persona_tags>()
+                .SingleOrDefaultAsync(x =>
+                    x.id_audiencia_persona == idAudienciaPersona &&
+                    x.tag_tipo == tagTipo &&
+                    x.tag_valor == tagValor);
+
+            if (existente == null)
+            {
+                _context.Set<ef_audiencia_persona_tags>().Add(new ef_audiencia_persona_tags
+                {
+                    id_audiencia_persona = idAudienciaPersona,
+                    tag_tipo = tagTipo,
+                    tag_valor = tagValor,
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                });
+            }
+            else if (!existente.activo)
+            {
+                existente.activo = true;
+            }
         }
     }
 }
