@@ -14,8 +14,10 @@ La lógica se apoya en dos tablas principales:
 - **`ef_staff_unidades`**: Tabla de relación que vincula a un miembro del staff con múltiples unidades operativas de la misma cuenta.
 
 ### 1.2 Generación del Código de Acceso
-El `StaffService` utiliza un algoritmo de generación aleatoria para crear códigos de **10 caracteres alfanuméricos**:
-- **Alfabeto Seguro**: Se utiliza el conjunto `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`. Se excluyen deliberadamente los caracteres `I, O, 0, 1` para evitar confusiones de lectura.
+El `StaffService` genera códigos estructurados de **8 caracteres** con el patrón `CCRRNNNN`:
+- **CC (Cuenta)**: Primeras 2 letras del nombre de la cuenta.
+- **RR (Rol)**: Primeras 2 letras del rol (ej: `DJ` para `STAFF_DJ`, `ME` para `STAFF_MESERO`).
+- **NNNN (Numérico)**: 4 dígitos aleatorios para garantizar unicidad.
 - **Unicidad**: Antes de persistir, el sistema verifica que el código no exista en la tabla `ef_staff`.
 
 ### 1.3 Lógica de Autenticación (JWT)
@@ -38,7 +40,7 @@ El `staffController` expone endpoints protegidos para que el Dueño de la Cuenta
 A continuación se detalla cómo debe implementarse el flujo en la aplicación móvil/web para el personal.
 
 ### Paso 1: Interfaz de Ingreso
-El frontend debe ofrecer una pantalla simple donde el staff ingrese su código de 10 caracteres. Se recomienda forzar el texto a **MAYÚSCULAS** automáticamente.
+El frontend debe ofrecer una pantalla simple donde el staff ingrese su código de **8 caracteres**. Se recomienda forzar el texto a **MAYÚSCULAS** automáticamente.
 
 ### Paso 2: Consumo de API (Login)
 Se debe realizar una petición `POST` al endpoint público (sin token previo).
