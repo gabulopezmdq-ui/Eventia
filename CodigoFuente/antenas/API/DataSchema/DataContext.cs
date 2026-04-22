@@ -129,6 +129,8 @@ namespace API.DataSchema
         public DbSet<ef_param_preferencias_musicales> ef_param_preferencias_musicales { get; set; }
         public DbSet<ef_param_perfiles_asistencia> ef_param_perfiles_asistencia { get; set; }
 
+        public DbSet<ef_param_audiencia_tags> ef_param_audiencia_tags { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -286,7 +288,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_preferencias_musicalesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_perfiles_asistenciaConfiguration());
-
+            modelBuilder.ApplyConfiguration(new ef_param_audiencia_tagsConfiguration());
 
             // Likes: Clave primaria compuesta
             modelBuilder.Entity<ef_evento_album_likes>()

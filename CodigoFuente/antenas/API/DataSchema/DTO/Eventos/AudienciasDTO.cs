@@ -796,5 +796,62 @@ namespace API.DataSchema.DTO
         public int beneficios_canjeados { get; set; }
     }
 
+    public class AudienciaTagSugeridoDTO
+    {
+        [JsonPropertyName("id_param_audiencia_tag")]
+        public long id_param_audiencia_tag { get; set; }
+
+        [JsonPropertyName("tag_tipo")]
+        public string tag_tipo { get; set; } = null!;
+
+        [JsonPropertyName("tag_valor")]
+        public string tag_valor { get; set; } = null!;
+
+        [JsonPropertyName("nombre_mostrar")]
+        public string nombre_mostrar { get; set; } = null!;
+
+        [JsonPropertyName("descripcion")]
+        public string? descripcion { get; set; }
+
+        [JsonPropertyName("origen")]
+        public string origen { get; set; } = null!;
+
+        [JsonPropertyName("permite_asignacion_manual")]
+        public bool permite_asignacion_manual { get; set; }
+
+        [JsonPropertyName("orden")]
+        public int orden { get; set; }
+
+        [JsonPropertyName("activo")]
+        public bool activo { get; set; }
+    }
+
+    public class AudienciaTagDTO
+    {
+        [JsonPropertyName("id_audiencia_persona_tag")]
+        public long id_audiencia_persona_tag { get; set; }
+
+        [JsonPropertyName("tag_tipo")]
+        public string tag_tipo { get; set; } = null!;
+
+        [JsonPropertyName("tag_valor")]
+        public string tag_valor { get; set; } = null!;
+
+        [JsonPropertyName("activo")]
+        public bool activo { get; set; }
+
+        [JsonPropertyName("fecha_alta")]
+        public DateTimeOffset fecha_alta { get; set; }
+    }
+
+    public class AudienciaTagCreateRequest
+    {
+        [JsonPropertyName("tag_tipo")]
+        public string tag_tipo { get; set; } = null!;
+
+        [JsonPropertyName("tag_valor")]
+        public string tag_valor { get; set; } = null!;
+    }
+
 
 }

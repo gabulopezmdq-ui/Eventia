@@ -88,5 +88,36 @@ namespace API.Controllers
             long idUsuario = User.GetUserId();
             return Ok(await _service.ResolverQrBeneficioAsync(idUsuario, idEvento, qrToken));
         }
+
+        [Authorize]
+        [HttpGet("TagsSugeridos")]
+        public async Task<ActionResult> TagsSugeridos()
+        {
+            long idUsuario = User.GetUserId();
+            return Ok(await _service.GetTagsSugeridosAsync(idUsuario));
+        }
+
+        [Authorize]
+        [HttpPost("AgregarTag")]
+        public async Task<ActionResult> AgregarTag([FromQuery] long idAudienciaPersona, [FromBody] AudienciaTagCreateRequest req)
+        {
+            long idUsuario = User.GetUserId();
+            return Ok(await _service.AgregarTagAsync(idUsuario, idAudienciaPersona, req));
+        }
+
+        [Authorize]
+        [HttpPut("SetTagActivo")]
+        public async Task<ActionResult> SetTagActivo([FromQuery] long idAudienciaPersonaTag, [FromQuery] bool activo)
+        {
+            long idUsuario = User.GetUserId();
+            await _service.SetTagActivoAsync(idUsuario, idAudienciaPersonaTag, activo);
+
+            return Ok(new
+            {
+                ok = true,
+                id_audiencia_persona_tag = idAudienciaPersonaTag,
+                activo = activo
+            });
+        }
     }
 }

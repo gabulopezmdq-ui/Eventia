@@ -15,5 +15,8 @@ namespace API.Services
         Task<List<AudienciaBusquedaRegistradoDTO>> BuscarRegistradoAsync(long idUsuario, long idEvento, string? query);
         Task<QrEntradaResolucionDTO> ResolverEntradaManualAsync(long idUsuario, long idEvento, long idInvitado);
         Task<QrBeneficioResolucionDTO> ResolverQrBeneficioAsync(long idUsuario, long idEvento, string qrToken);
+        Task<List<AudienciaTagSugeridoDTO>> GetTagsSugeridosAsync(long idUsuario);
+        Task<AudienciaTagDTO> AgregarTagAsync(long idUsuario, long idAudienciaPersona, AudienciaTagCreateRequest req);
+        Task SetTagActivoAsync(long idUsuario, long idAudienciaPersonaTag, bool activo);
     }
 }
