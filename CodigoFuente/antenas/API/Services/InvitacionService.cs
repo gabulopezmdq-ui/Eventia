@@ -134,10 +134,15 @@ namespace API.Services
                     integranteExistente.edad_anios = (short?)(persona.Edad ?? integranteExistente.edad_anios);
                     integranteExistente.alimentacion_detalle = persona.AlimentacionDetalle ?? integranteExistente.alimentacion_detalle;
 
-                    // Procesar restricciones (chips seleccionados)
-                    if (persona.IdsRestricciones != null)
+                    // Procesar restricciones (detalladas o simples)
+                    if (persona.Restricciones != null)
                     {
-                        await GuardarRestriccionesManualAsync(integranteExistente.id_rsvp_grupo_integrante, persona.IdsRestricciones);
+                        await GuardarRestriccionesDetalladasAsync(integranteExistente.id_rsvp_grupo_integrante, persona.Restricciones);
+                    }
+                    else if (persona.IdsRestricciones != null)
+                    {
+                        await GuardarRestriccionesDetalladasAsync(integranteExistente.id_rsvp_grupo_integrante, 
+                            persona.IdsRestricciones.Select(id => new RestriccionSeleccionadaDTO { IdRestriccion = id }).ToList());
                     }
                 }
                 else
@@ -193,10 +198,15 @@ namespace API.Services
                     _context.ef_rsvp_grupo_integrantes.Add(nuevoIntegrante);
                     await _context.SaveChangesAsync(); // Para tener el id_rsvp_grupo_integrante
 
-                    // Procesar restricciones (chips seleccionados)
-                    if (persona.IdsRestricciones != null)
+                    // Procesar restricciones (detalladas o simples)
+                    if (persona.Restricciones != null)
                     {
-                        await GuardarRestriccionesManualAsync(nuevoIntegrante.id_rsvp_grupo_integrante, persona.IdsRestricciones);
+                        await GuardarRestriccionesDetalladasAsync(nuevoIntegrante.id_rsvp_grupo_integrante, persona.Restricciones);
+                    }
+                    else if (persona.IdsRestricciones != null)
+                    {
+                        await GuardarRestriccionesDetalladasAsync(nuevoIntegrante.id_rsvp_grupo_integrante, 
+                            persona.IdsRestricciones.Select(id => new RestriccionSeleccionadaDTO { IdRestriccion = id }).ToList());
                     }
                     
                     // IMPORTANTE: agregar a la colección para que el cálculo de estados lo tome en cuenta
@@ -220,7 +230,7 @@ namespace API.Services
             await _context.SaveChangesAsync();
         }
 
-        private async Task GuardarRestriccionesManualAsync(long idIntegrante, List<long> idsRestricciones)
+        private async Task GuardarRestriccionesDetalladasAsync(long idIntegrante, List<RestriccionSeleccionadaDTO> restricciones)
         {
             // Borramos existentes y re-insertamos
             var existentes = await _context.ef_rsvp_integrante_restricciones
@@ -230,15 +240,21 @@ namespace API.Services
             if (existentes.Any())
                 _context.ef_rsvp_integrante_restricciones.RemoveRange(existentes);
 
-            foreach (var idR in idsRestricciones)
+            foreach (var r in restricciones)
             {
                 _context.ef_rsvp_integrante_restricciones.Add(new ef_rsvp_integrante_restricciones
                 {
                     id_rsvp_grupo_integrante = idIntegrante,
-                    id_restriccion_alim = idR,
+                    id_restriccion_alim = r.IdRestriccion,
+                    observaciones = r.Observaciones,
                     fecha_alta = DateTime.UtcNow
                 });
             }
+        }
+
+        private async Task GuardarRestriccionesManualAsync(long idIntegrante, List<long> idsRestricciones)
+        {
+            await GuardarRestriccionesDetalladasAsync(idIntegrante, idsRestricciones.Select(id => new RestriccionSeleccionadaDTO { IdRestriccion = id }).ToList());
         }
 
         public async Task CargarInvitadosAsync(CrearGrupoInvitacionRequest req, long idUsuario)

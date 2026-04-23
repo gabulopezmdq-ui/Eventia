@@ -1,4 +1,4 @@
-﻿using API.DataSchema.DTO;
+using API.DataSchema.DTO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,6 +16,7 @@ namespace API.Services
         Task<List<ParametricaDTO>> GetPerfilesAsistenciaAsync(short idIdioma);
         Task<List<ParametricaDTO>> GetInteresesEventoPublicoAsync(short idIdioma);
         Task<List<ParametricaDTO>> GetPreferenciasMusicalesAsync(short idIdioma);
+        Task<List<ParametricaDTO>> GetRestriccionesAlimentariasAsync(short idIdioma);
 
     }
 }

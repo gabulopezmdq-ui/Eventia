@@ -144,6 +144,13 @@ public class RsvpPersonaConfirmacionDTO
         public string? Mensaje { get; set; }
         public string? AlimentacionDetalle { get; set; }
         public List<long>? IdsRestricciones { get; set; }
+        public List<RestriccionSeleccionadaDTO>? Restricciones { get; set; }
+    }
+
+    public class RestriccionSeleccionadaDTO
+    {
+        public long IdRestriccion { get; set; }
+        public string? Observaciones { get; set; }
     }
 
     public class RsvpConfirmacionDTO
