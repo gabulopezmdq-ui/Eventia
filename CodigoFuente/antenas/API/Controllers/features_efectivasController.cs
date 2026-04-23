@@ -27,7 +27,8 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Devuelve features efectivas (plan + addons + overrides + dependencias) y trial restante.
+        /// Devuelve features efectivas (plan + addons + overrides + dependencias + estado del evento) y trial restante.
+        /// Este endpoint es el que debe usar el front para pintar la pantalla "Características".
         /// </summary>
         [HttpGet("GetByEvento")]
         public async Task<ActionResult<EventoFeaturesEfectivasResponseDTO>> GetByEvento([FromQuery] long idEvento)
@@ -42,26 +43,17 @@ namespace API.Controllers
 
             long? idPlan = evento.id_plan;
 
-            // Si querés resolver por cuenta cuando evento.id_plan es null,
-            // descomentá y ajustá a tu modelo (id_cuenta en ef_eventos):
-            /*
-            if (idPlan == null && evento.id_cuenta != null)
-            {
-                var cuenta = await _context.ef_cuentas.AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.id_cuenta == evento.id_cuenta);
-                idPlan = cuenta?.id_plan;
-            }
-            */
-
             ef_planes? plan = null;
             if (idPlan.HasValue)
             {
-                plan = await _context.ef_planes.AsNoTracking()
+                plan = await _context.ef_planes
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(p => p.id_plan == idPlan.Value);
             }
 
             // 2) Trial (última suscripción activa de evento)
-            var trial = await _context.ef_suscripciones.AsNoTracking()
+            var trial = await _context.ef_suscripciones
+                .AsNoTracking()
                 .Where(s => s.scope == "EVENTO" && s.id_evento == idEvento && s.activo == true)
                 .OrderByDescending(s => s.fecha_alta)
                 .FirstOrDefaultAsync();
@@ -109,67 +101,90 @@ namespace API.Controllers
                 }
             ).ToListAsync();
 
-            // 4) Features seed: plan + addons + overrides de evento
-            var seedIds = new HashSet<long>();
+            // 4) Features del plan
+            var planFeatureIds = new HashSet<long>();
+            var planOverridesByFeature = new Dictionary<long, string?>();
 
-            // 4.1 Plan features
-            Dictionary<long, string?> planOverridesByFeature = new Dictionary<long, string?>();
             if (idPlan.HasValue)
             {
-                var planFeatures = await _context.ef_plan_features.AsNoTracking()
+                var planFeatures = await _context.ef_plan_features
+                    .AsNoTracking()
                     .Where(pf => pf.id_plan == idPlan.Value && pf.activo == true)
-                    .Select(pf => new { pf.id_feature, pf.config_json_override })
+                    .Select(pf => new
+                    {
+                        pf.id_feature,
+                        pf.config_json_override
+                    })
                     .ToListAsync();
 
                 foreach (var pf in planFeatures)
                 {
-                    seedIds.Add(pf.id_feature);
+                    planFeatureIds.Add(pf.id_feature);
                     if (!planOverridesByFeature.ContainsKey(pf.id_feature))
                         planOverridesByFeature.Add(pf.id_feature, pf.config_json_override);
                 }
             }
 
-            // 4.2 Addon features (por cada addon activo)
-            Dictionary<long, string?> addonOverridesByFeature = new Dictionary<long, string?>();
+            // 5) Features por addons
+            var addonFeatureIds = new HashSet<long>();
+            var addonOverridesByFeature = new Dictionary<long, string?>();
+
             if (addonsEvento.Count > 0)
             {
                 var addonIds = addonsEvento.Select(a => a.id_addon).Distinct().ToList();
 
-                var addonFeatures = await _context.ef_addon_features.AsNoTracking()
+                var addonFeatures = await _context.ef_addon_features
+                    .AsNoTracking()
                     .Where(af => addonIds.Contains(af.id_addon) && af.activo == true)
-                    .Select(af => new { af.id_addon, af.id_feature, af.config_json_override })
+                    .Select(af => new
+                    {
+                        af.id_addon,
+                        af.id_feature,
+                        af.config_json_override
+                    })
                     .ToListAsync();
 
                 foreach (var af in addonFeatures)
                 {
-                    seedIds.Add(af.id_feature);
-
-                    // Si varios addons tocan la misma feature, guardamos el último (simple).
-                    // Si querés, después armamos "lista de overrides" o merge.
+                    addonFeatureIds.Add(af.id_feature);
                     addonOverridesByFeature[af.id_feature] = af.config_json_override;
                 }
             }
 
-            // 4.3 Overrides por evento (ef_evento_features)
-            Dictionary<long, string?> eventoOverridesByFeature = new Dictionary<long, string?>();
-            var eventoFeatures = await _context.ef_evento_features.AsNoTracking()
-             .Where(ef => ef.id_evento == idEvento && ef.activo == true)
-             .Select(ef => new { ef.id_feature, ef.config_json })
-             .ToListAsync();
+            // 6) Overrides de evento
+            // IMPORTANTE: traer tanto activas como inactivas
+            var eventoOverridesByFeature = new Dictionary<long, string?>();
+            var eventoActivosByFeature = new Dictionary<long, bool>();
+
+            var eventoFeatures = await _context.ef_evento_features
+                .AsNoTracking()
+                .Where(ef => ef.id_evento == idEvento)
+                .Select(ef => new
+                {
+                    ef.id_feature,
+                    ef.activo,
+                    ef.config_json
+                })
+                .ToListAsync();
 
             foreach (var ef in eventoFeatures)
             {
-                seedIds.Add(ef.id_feature);
                 eventoOverridesByFeature[ef.id_feature] = ef.config_json;
+                eventoActivosByFeature[ef.id_feature] = ef.activo;
             }
 
-            // 5) Expandir dependencias (recursivo por BFS)
-            //    Necesitamos la tabla ef_param_feature_dependencias en tu DataContext.
-            //    Si tu entidad se llama distinto, ajustá el DbSet.
+            // 7) Seed base = lo que trae plan + lo que traen addons + lo que ya existe guardado en evento
+            var seedIds = new HashSet<long>();
+            foreach (var id in planFeatureIds) seedIds.Add(id);
+            foreach (var id in addonFeatureIds) seedIds.Add(id);
+            foreach (var id in eventoActivosByFeature.Keys) seedIds.Add(id);
+
+            // 8) Expandir dependencias
             var allIds = await ExpandirDependenciasAsync(seedIds);
 
-            // 6) Traer features finales
-            var featuresFinales = await _context.ef_param_features.AsNoTracking()
+            // 9) Traer catálogo final
+            var featuresFinales = await _context.ef_param_features
+                .AsNoTracking()
                 .Where(f => allIds.Contains(f.id_feature) && f.activo == true)
                 .Select(f => new FeatureEfectivaDTO
                 {
@@ -178,17 +193,28 @@ namespace API.Controllers
                     nombre = f.nombre,
                     categoria = f.categoria,
                     monetizable = f.monetizable,
+
                     config_default = f.config_json,
-                    config_plan_override = null,   // se completa abajo
+                    config_plan_override = null,
                     config_addon_override = null,
-                    config_evento_override = null
+                    config_evento_override = null,
+
+                    incluida_en_plan = false,
+                    incluida_por_addon = false,
+                    activo_evento = null,
+                    activo_resuelto = false,
+                    motivo_inactivo = null
                 })
                 .ToListAsync();
 
-            // Completar overrides (si existieran)
+            // 10) Completar estados / overrides
             foreach (var fe in featuresFinales)
             {
                 string? v;
+
+                fe.incluida_en_plan = planFeatureIds.Contains(fe.id_feature);
+                fe.incluida_por_addon = addonFeatureIds.Contains(fe.id_feature);
+
                 if (planOverridesByFeature.TryGetValue(fe.id_feature, out v))
                     fe.config_plan_override = v;
 
@@ -197,6 +223,41 @@ namespace API.Controllers
 
                 if (eventoOverridesByFeature.TryGetValue(fe.id_feature, out v))
                     fe.config_evento_override = v;
+
+                bool permitidaPorComercial = fe.incluida_en_plan || fe.incluida_por_addon;
+
+                // Si el evento nunca guardó nada para esa feature:
+                // - por default queda activa si está permitida por plan/addon
+                // - si no está permitida, queda inactiva
+                bool? activoEvento = null;
+                if (eventoActivosByFeature.ContainsKey(fe.id_feature))
+                    activoEvento = eventoActivosByFeature[fe.id_feature];
+
+                fe.activo_evento = activoEvento;
+
+                bool activoResuelto;
+                string? motivo = null;
+
+                if (!permitidaPorComercial)
+                {
+                    activoResuelto = false;
+                    motivo = "NO_INCLUIDA";
+                }
+                else if (activoEvento.HasValue)
+                {
+                    activoResuelto = activoEvento.Value;
+                    if (!activoEvento.Value)
+                        motivo = "DESACTIVADA_EN_EVENTO";
+                }
+                else
+                {
+                    // Si está permitida por plan/addon y el evento no la tocó todavía,
+                    // se considera activa por default.
+                    activoResuelto = true;
+                }
+
+                fe.activo_resuelto = activoResuelto;
+                fe.motivo_inactivo = motivo;
             }
 
             // Orden amigable
@@ -228,7 +289,8 @@ namespace API.Controllers
             {
                 var current = queue.Dequeue();
 
-                var deps = await _context.ef_param_feature_dependencias.AsNoTracking()
+                var deps = await _context.ef_param_feature_dependencias
+                    .AsNoTracking()
                     .Where(d => d.id_feature == current)
                     .Select(d => d.id_feature_requiere)
                     .ToListAsync();
