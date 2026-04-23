@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
 using API.Utility;
@@ -871,5 +871,78 @@ namespace API.Services
             return await GetEventoMioAsync(idUsuario, idEvento);
         }
 
+        public async Task<List<MesaRestriccionesDTO>> GetReporteRestriccionesMesasAsync(long idEvento)
+        {
+            var mesas = await _context.ef_evento_mesas
+                .AsNoTracking()
+                .Include(m => m.tramo)
+                .Include(m => m.mesa_invitados)
+                    .ThenInclude(mi => mi.invitado)
+                .Where(m => m.tramo.id_evento == idEvento && m.activo)
+                .ToListAsync();
+
+            var idsInvitados = mesas.SelectMany(m => m.mesa_invitados.Select(mi => mi.id_invitado)).Distinct().ToList();
+
+            // Obtener las restricciones de estos invitados
+            var integrantes = await (
+                from i in _context.ef_rsvp_grupo_integrantes.AsNoTracking()
+                join res in _context.ef_rsvp_integrante_restricciones.AsNoTracking() 
+                    on i.id_rsvp_grupo_integrante equals res.id_rsvp_grupo_integrante
+                join param in _context.ef_param_restricciones_alimentarias.AsNoTracking()
+                    on res.id_restriccion_alim equals param.id_restriccion_alim
+                // Join opcional con traducciones (usando el idioma del evento, o default si no podemos)
+                // Para este reporte simplificado, usaremos el código si no hay traducción directa 
+                // pero lo ideal es pasar el idIdioma.
+                where idsInvitados.Contains(i.id_invitado)
+                select new
+                {
+                    i.id_invitado,
+                    param.codigo,
+                    res.observaciones,
+                    i.alimentacion_detalle
+                }
+            ).ToListAsync();
+
+            var result = new List<MesaRestriccionesDTO>();
+
+            foreach (var m in mesas)
+            {
+                var dtoMesa = new MesaRestriccionesDTO
+                {
+                    IdMesa = m.id_mesa,
+                    NombreMesa = m.nombre,
+                    Tramo = m.tramo.nombre,
+                    Invitados = new List<InvitadoRestriccionReportDTO>()
+                };
+
+                foreach (var mi in m.mesa_invitados)
+                {
+                    var restInvitado = integrantes.Where(x => x.id_invitado == mi.id_invitado).ToList();
+                    
+                    if (restInvitado.Any())
+                    {
+                        dtoMesa.Invitados.Add(new InvitadoRestriccionReportDTO
+                        {
+                            IdInvitado = mi.id_invitado,
+                            Nombre = mi.invitado.nombre,
+                            Apellido = mi.invitado.apellido,
+                            ObservacionesGenerales = restInvitado.First().alimentacion_detalle,
+                            Restricciones = restInvitado.Select(r => new RestriccionReportItemDTO
+                            {
+                                Tipo = r.codigo,
+                                Observaciones = r.observaciones
+                            }).ToList()
+                        });
+                    }
+                }
+
+                if (dtoMesa.Invitados.Any())
+                {
+                    result.Add(dtoMesa);
+                }
+            }
+
+            return result.OrderBy(x => x.Tramo).ThenBy(x => x.NombreMesa).ToList();
+        }
     }
 }

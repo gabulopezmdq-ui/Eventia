@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services;
@@ -120,5 +120,12 @@ namespace API.Controllers
             return Ok(updated);
         }
 
+        [Authorize]
+        [HttpGet("{idEvento:long}/reporte-catering-mesas")]
+        public async Task<ActionResult<List<MesaRestriccionesDTO>>> ReporteRestriccionesMesas(long idEvento)
+        {
+            var result = await _eventos.GetReporteRestriccionesMesasAsync(idEvento);
+            return Ok(result);
+        }
     }
 }

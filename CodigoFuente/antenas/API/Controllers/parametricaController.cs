@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -71,6 +71,16 @@ namespace API.Controllers
                 return NotFound("Evento inexistente.");
 
             return Ok(await _parametricaService.GetPreferenciasMusicalesAsync(idIdioma.Value));
+        }
+        
+        [HttpGet("RestriccionesAlimentarias")]
+        public async Task<ActionResult<List<ParametricaDTO>>> GetRestriccionesAlimentarias([FromQuery] long idEvento)
+        {
+            var idIdioma = await GetIdiomaEvento(idEvento);
+            if (!idIdioma.HasValue)
+                return NotFound("Evento inexistente.");
+
+            return Ok(await _parametricaService.GetRestriccionesAlimentariasAsync(idIdioma.Value));
         }
     }
 }

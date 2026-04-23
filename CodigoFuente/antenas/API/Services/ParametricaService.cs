@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.DataSchema.Interfaz;
 using Microsoft.EntityFrameworkCore;
@@ -226,5 +226,16 @@ namespace API.Services
             );
         }
 
+        public async Task<List<ParametricaDTO>> GetRestriccionesAlimentariasAsync(short idIdioma)
+        {
+            return await GetParametricaAsync(
+                _context.ef_param_restricciones_alimentarias,
+                "RESTRICCION_ALIMENTARIA",
+                x => x.id_restriccion_alim,
+                x => x.codigo,
+                x => x.activo,
+                idIdioma
+            );
+        }
     }
 }
