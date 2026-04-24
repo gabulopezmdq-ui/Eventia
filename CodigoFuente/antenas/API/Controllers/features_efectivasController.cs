@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "SUPERADMIN")]
     [AllowAnonymous]
     [Route("[controller]")]
     public class features_efectivasController : ControllerBase
@@ -26,14 +25,9 @@ namespace API.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Devuelve features efectivas (plan + addons EVENTO + addons CUENTA (si aplica) + overrides + dependencias + estado del evento) y trial restante.
-        /// Este endpoint es el que debe usar el front para pintar la pantalla "Características".
-        /// </summary>
         [HttpGet("GetByEvento")]
         public async Task<ActionResult<EventoFeaturesEfectivasResponseDTO>> GetByEvento([FromQuery] long idEvento)
         {
-            // 1) Evento y plan
             var evento = await _context.ef_eventos
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.id_evento == idEvento);
@@ -41,7 +35,22 @@ namespace API.Controllers
             if (evento == null)
                 return NotFound("Evento no encontrado.");
 
+            long? idCuenta = evento.id_cuenta;
             long? idPlan = evento.id_plan;
+            string scopeComercial = "EVENTO";
+
+            if (idCuenta.HasValue)
+            {
+                var cuenta = await _context.ef_cuentas
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.id_cuenta == idCuenta.Value);
+
+                if (cuenta != null && cuenta.id_plan.HasValue)
+                {
+                    idPlan = cuenta.id_plan;
+                    scopeComercial = "CUENTA";
+                }
+            }
 
             ef_planes? plan = null;
             if (idPlan.HasValue)
@@ -51,14 +60,20 @@ namespace API.Controllers
                     .FirstOrDefaultAsync(p => p.id_plan == idPlan.Value);
             }
 
-            // 2) Trial (última suscripción activa de evento)
             var trial = await _context.ef_suscripciones
                 .AsNoTracking()
-                .Where(s => s.scope == "EVENTO" && s.id_evento == idEvento && s.activo == true)
+                .Where(s =>
+                    s.scope == scopeComercial &&
+                    (
+                        (scopeComercial == "EVENTO" && s.id_evento == idEvento) ||
+                        (scopeComercial == "CUENTA" && s.id_cuenta == idCuenta)
+                    ) &&
+                    s.activo == true)
                 .OrderByDescending(s => s.fecha_alta)
                 .FirstOrDefaultAsync();
 
             var trialDto = new TrialDTO();
+
             if (trial != null && trial.current_period_end.HasValue)
             {
                 var end = trial.current_period_end.Value;
@@ -77,72 +92,14 @@ namespace API.Controllers
                 trialDto.current_period_end = null;
             }
 
-            // 3) Add-ons activos por EVENTO (vigentes)
-            var addonsEventoSolo = await (
-                from sa in _context.ef_scope_addons.AsNoTracking()
-                join ad in _context.ef_addons.AsNoTracking()
-                    on sa.id_addon equals ad.id_addon
-                where sa.scope == "EVENTO"
-                      && sa.id_evento == idEvento
-                      && sa.activo == true
-                      && sa.estado == "ACTIVO"
-                      && (sa.fecha_hasta == null || sa.fecha_hasta > DateTimeOffset.UtcNow)
-                select new AddonActivoDTO
-                {
-                    id_scope_addon = sa.id_scope_addon,
-                    id_addon = ad.id_addon,
-                    codigo = ad.codigo,
-                    nombre = ad.nombre,
-                    estado = sa.estado,
-                    activo = sa.activo,
-                    fecha_desde = sa.fecha_desde,
-                    fecha_hasta = sa.fecha_hasta,
-                    config_override = sa.config_json_override
-                }
-            ).ToListAsync();
+            var addonsEvento = await GetAddonsActivosAsync("EVENTO", idEvento, null);
 
-            // 3b) Add-ons activos por CUENTA (si el evento es B2B)
             var addonsCuenta = new List<AddonActivoDTO>();
-            if (evento.id_cuenta.HasValue)
+            if (idCuenta.HasValue)
             {
-                long idCuenta = evento.id_cuenta.Value;
-
-                addonsCuenta = await (
-                    from sa in _context.ef_scope_addons.AsNoTracking()
-                    join ad in _context.ef_addons.AsNoTracking()
-                        on sa.id_addon equals ad.id_addon
-                    where sa.scope == "CUENTA"
-                          && sa.id_cuenta == idCuenta
-                          && sa.activo == true
-                          && sa.estado == "ACTIVO"
-                          && (sa.fecha_hasta == null || sa.fecha_hasta > DateTimeOffset.UtcNow)
-                    select new AddonActivoDTO
-                    {
-                        id_scope_addon = sa.id_scope_addon,
-                        id_addon = ad.id_addon,
-                        codigo = ad.codigo,
-                        nombre = ad.nombre,
-                        estado = sa.estado,
-                        activo = sa.activo,
-                        fecha_desde = sa.fecha_desde,
-                        fecha_hasta = sa.fecha_hasta,
-                        config_override = sa.config_json_override
-                    }
-                ).ToListAsync();
+                addonsCuenta = await GetAddonsActivosAsync("CUENTA", null, idCuenta.Value);
             }
 
-            // Para respuesta: mantenemos "addons_evento" pero sin duplicar por id_addon
-            var addonsEvento = new List<AddonActivoDTO>();
-            addonsEvento.AddRange(addonsEventoSolo);
-
-            foreach (var ac in addonsCuenta)
-            {
-                // si el mismo addon está contratado también a nivel evento, mostramos el del evento (más específico)
-                if (!addonsEventoSolo.Any(x => x.id_addon == ac.id_addon))
-                    addonsEvento.Add(ac);
-            }
-
-            // 4) Features del plan
             var planFeatureIds = new HashSet<long>();
             var planOverridesByFeature = new Dictionary<long, string?>();
 
@@ -161,51 +118,24 @@ namespace API.Controllers
                 foreach (var pf in planFeatures)
                 {
                     planFeatureIds.Add(pf.id_feature);
-                    if (!planOverridesByFeature.ContainsKey(pf.id_feature))
-                        planOverridesByFeature.Add(pf.id_feature, pf.config_json_override);
+                    planOverridesByFeature[pf.id_feature] = pf.config_json_override;
                 }
             }
 
-            // 5) Features por addons (CUENTA primero, EVENTO después: EVENTO pisa)
-            var addonFeatureIds = new HashSet<long>();
+            var addonEventoFeatureIds = new HashSet<long>();
+            var addonCuentaFeatureIds = new HashSet<long>();
             var addonOverridesByFeature = new Dictionary<long, string?>();
 
-            var addonIdsCuenta = addonsCuenta.Select(a => a.id_addon).Distinct().ToList();
-            var addonIdsEvento = addonsEventoSolo.Select(a => a.id_addon).Distinct().ToList();
-
-            if (addonIdsCuenta.Count > 0)
+            if (addonsEvento.Count > 0)
             {
-                var addonFeaturesCuenta = await _context.ef_addon_features
-                    .AsNoTracking()
-                    .Where(af => addonIdsCuenta.Contains(af.id_addon) && af.activo == true)
-                    .Select(af => new { af.id_addon, af.id_feature, af.config_json_override })
-                    .ToListAsync();
-
-                foreach (var af in addonFeaturesCuenta)
-                {
-                    addonFeatureIds.Add(af.id_feature);
-                    addonOverridesByFeature[af.id_feature] = af.config_json_override;
-                }
+                await CargarAddonFeaturesAsync(addonsEvento, addonEventoFeatureIds, addonOverridesByFeature);
             }
 
-            if (addonIdsEvento.Count > 0)
+            if (addonsCuenta.Count > 0)
             {
-                var addonFeaturesEvento = await _context.ef_addon_features
-                    .AsNoTracking()
-                    .Where(af => addonIdsEvento.Contains(af.id_addon) && af.activo == true)
-                    .Select(af => new { af.id_addon, af.id_feature, af.config_json_override })
-                    .ToListAsync();
-
-                foreach (var af in addonFeaturesEvento)
-                {
-                    addonFeatureIds.Add(af.id_feature);
-                    // EVENTO pisa CUENTA si la misma feature aparece en ambos
-                    addonOverridesByFeature[af.id_feature] = af.config_json_override;
-                }
+                await CargarAddonFeaturesAsync(addonsCuenta, addonCuentaFeatureIds, addonOverridesByFeature);
             }
 
-            // 6) Overrides de evento
-            // IMPORTANTE: traer tanto activas como inactivas
             var eventoOverridesByFeature = new Dictionary<long, string?>();
             var eventoActivosByFeature = new Dictionary<long, bool>();
 
@@ -226,16 +156,15 @@ namespace API.Controllers
                 eventoActivosByFeature[ef.id_feature] = ef.activo;
             }
 
-            // 7) Seed base = plan + addons (evento/cuenta) + lo guardado en evento
             var seedIds = new HashSet<long>();
+
             foreach (var id in planFeatureIds) seedIds.Add(id);
-            foreach (var id in addonFeatureIds) seedIds.Add(id);
+            foreach (var id in addonEventoFeatureIds) seedIds.Add(id);
+            foreach (var id in addonCuentaFeatureIds) seedIds.Add(id);
             foreach (var id in eventoActivosByFeature.Keys) seedIds.Add(id);
 
-            // 8) Expandir dependencias
             var allIds = await ExpandirDependenciasAsync(seedIds);
 
-            // 9) Traer catálogo final
             var featuresFinales = await _context.ef_param_features
                 .AsNoTracking()
                 .Where(f => allIds.Contains(f.id_feature) && f.activo == true)
@@ -254,19 +183,29 @@ namespace API.Controllers
 
                     incluida_en_plan = false,
                     incluida_por_addon = false,
+                    incluida_por_addon_evento = false,
+                    incluida_por_addon_cuenta = false,
+
                     activo_evento = null,
                     activo_resuelto = false,
-                    motivo_inactivo = null
+
+                    disponible = false,
+                    editable = false,
+
+                    origen = null,
+                    motivo_inactivo = null,
+                    mensaje_ui = null
                 })
                 .ToListAsync();
 
-            // 10) Completar estados / overrides
             foreach (var fe in featuresFinales)
             {
                 string? v;
 
                 fe.incluida_en_plan = planFeatureIds.Contains(fe.id_feature);
-                fe.incluida_por_addon = addonFeatureIds.Contains(fe.id_feature);
+                fe.incluida_por_addon_evento = addonEventoFeatureIds.Contains(fe.id_feature);
+                fe.incluida_por_addon_cuenta = addonCuentaFeatureIds.Contains(fe.id_feature);
+                fe.incluida_por_addon = fe.incluida_por_addon_evento || fe.incluida_por_addon_cuenta;
 
                 if (planOverridesByFeature.TryGetValue(fe.id_feature, out v))
                     fe.config_plan_override = v;
@@ -277,7 +216,7 @@ namespace API.Controllers
                 if (eventoOverridesByFeature.TryGetValue(fe.id_feature, out v))
                     fe.config_evento_override = v;
 
-                bool permitidaPorComercial = fe.incluida_en_plan || fe.incluida_por_addon;
+                bool permitidaComercialmente = fe.incluida_en_plan || fe.incluida_por_addon;
 
                 bool? activoEvento = null;
                 if (eventoActivosByFeature.ContainsKey(fe.id_feature))
@@ -285,30 +224,51 @@ namespace API.Controllers
 
                 fe.activo_evento = activoEvento;
 
-                bool activoResuelto;
-                string? motivo = null;
-
-                if (!permitidaPorComercial)
+                if (!permitidaComercialmente)
                 {
-                    activoResuelto = false;
-                    motivo = "NO_INCLUIDA";
+                    fe.disponible = false;
+                    fe.editable = false;
+                    fe.activo_resuelto = false;
+                    fe.origen = "NO_INCLUIDA";
+                    fe.motivo_inactivo = "NO_INCLUIDA";
+                    fe.mensaje_ui = "Disponible contratando un addon o cambiando de plan.";
+                    continue;
                 }
-                else if (activoEvento.HasValue)
+
+                fe.disponible = true;
+                fe.editable = true;
+
+                if (fe.incluida_en_plan && fe.incluida_por_addon)
+                    fe.origen = "PLAN_Y_ADDON";
+                else if (fe.incluida_en_plan)
+                    fe.origen = "PLAN";
+                else if (fe.incluida_por_addon_cuenta)
+                    fe.origen = "ADDON_CUENTA";
+                else if (fe.incluida_por_addon_evento)
+                    fe.origen = "ADDON_EVENTO";
+                else
+                    fe.origen = "NO_INCLUIDA";
+
+                if (activoEvento.HasValue)
                 {
-                    activoResuelto = activoEvento.Value;
+                    fe.activo_resuelto = activoEvento.Value;
+
                     if (!activoEvento.Value)
-                        motivo = "DESACTIVADA_EN_EVENTO";
+                    {
+                        fe.motivo_inactivo = "DESACTIVADA_EN_EVENTO";
+                        fe.mensaje_ui = "Desactivada para este evento.";
+                    }
                 }
                 else
                 {
-                    activoResuelto = true;
+                    // Si viene por plan/addon y nunca fue tocada en ef_evento_features,
+                    // se considera activa por defecto.
+                    fe.activo_resuelto = true;
+                    fe.motivo_inactivo = null;
+                    fe.mensaje_ui = null;
                 }
-
-                fe.activo_resuelto = activoResuelto;
-                fe.motivo_inactivo = motivo;
             }
 
-            // Orden amigable
             featuresFinales = featuresFinales
                 .OrderBy(x => x.categoria)
                 .ThenBy(x => x.codigo)
@@ -317,15 +277,83 @@ namespace API.Controllers
             var resp = new EventoFeaturesEfectivasResponseDTO
             {
                 id_evento = idEvento,
+                scope_comercial = scopeComercial,
+                id_cuenta = idCuenta,
                 id_plan = idPlan,
                 plan_codigo = plan?.codigo,
                 plan_nombre = plan?.nombre,
                 trial = trialDto,
                 addons_evento = addonsEvento,
+                addons_cuenta = addonsCuenta,
                 features = featuresFinales
             };
 
             return Ok(resp);
+        }
+
+        private async Task<List<AddonActivoDTO>> GetAddonsActivosAsync(string scope, long? idEvento, long? idCuenta)
+        {
+            var now = DateTimeOffset.UtcNow;
+
+            var query =
+                from sa in _context.ef_scope_addons.AsNoTracking()
+                join ad in _context.ef_addons.AsNoTracking()
+                    on sa.id_addon equals ad.id_addon
+                where sa.scope == scope
+                      && sa.activo == true
+                      && sa.estado == "ACTIVO"
+                      && (sa.fecha_hasta == null || sa.fecha_hasta > now)
+                select new { sa, ad };
+
+            if (scope == "EVENTO" && idEvento.HasValue)
+            {
+                query = query.Where(x => x.sa.id_evento == idEvento.Value);
+            }
+
+            if (scope == "CUENTA" && idCuenta.HasValue)
+            {
+                query = query.Where(x => x.sa.id_cuenta == idCuenta.Value);
+            }
+
+            return await query
+                .Select(x => new AddonActivoDTO
+                {
+                    id_scope_addon = x.sa.id_scope_addon,
+                    id_addon = x.ad.id_addon,
+                    codigo = x.ad.codigo,
+                    nombre = x.ad.nombre,
+                    estado = x.sa.estado,
+                    activo = x.sa.activo,
+                    fecha_desde = x.sa.fecha_desde,
+                    fecha_hasta = x.sa.fecha_hasta,
+                    config_override = x.sa.config_json_override
+                })
+                .ToListAsync();
+        }
+
+        private async Task CargarAddonFeaturesAsync(
+            List<AddonActivoDTO> addons,
+            HashSet<long> targetFeatureIds,
+            Dictionary<long, string?> addonOverridesByFeature)
+        {
+            var addonIds = addons.Select(a => a.id_addon).Distinct().ToList();
+
+            var addonFeatures = await _context.ef_addon_features
+                .AsNoTracking()
+                .Where(af => addonIds.Contains(af.id_addon) && af.activo == true)
+                .Select(af => new
+                {
+                    af.id_addon,
+                    af.id_feature,
+                    af.config_json_override
+                })
+                .ToListAsync();
+
+            foreach (var af in addonFeatures)
+            {
+                targetFeatureIds.Add(af.id_feature);
+                addonOverridesByFeature[af.id_feature] = af.config_json_override;
+            }
         }
 
         private async Task<HashSet<long>> ExpandirDependenciasAsync(HashSet<long> seed)
