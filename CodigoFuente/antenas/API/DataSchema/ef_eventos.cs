@@ -28,6 +28,11 @@ namespace API.DataSchema
         public string? notas { get; set; }
 
         public DateTimeOffset? fecha_evento { get; set; }
+        
+        public string tipo_operacion { get; set; } = "EVENTO"; // EVENTO | PROGRAMA
+        public DateOnly? fecha_inicio { get; set; }
+        public DateOnly? fecha_fin { get; set; }
+        
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
 

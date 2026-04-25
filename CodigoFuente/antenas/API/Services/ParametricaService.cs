@@ -55,25 +55,43 @@ namespace API.Services
             }).ToList();
         }
 
-        public async Task<List<ParametricaDTO>> GetTiposEventoAsync(short idIdioma)
+        public async Task<List<ParametricaDTO>> GetTiposEventoAsync(short idIdioma, string? tipoOperacion = null)
         {
-            return await (
-                from t in _context.ef_tipos_evento
-                join tr in _context.ef_param_traducciones
-                    on t.id_tipo_evento equals tr.id_item
+            var query =
+                from te in _context.Set<ef_tipos_evento>().AsNoTracking()
+                join tr in _context.Set<ef_param_traducciones>().AsNoTracking()
+                    on te.id_tipo_evento equals tr.id_item
                 where tr.entidad == "TIPO_EVENTO"
-                   && tr.id_idioma == idIdioma
-                   && tr.activo
-                   && t.activo
-                orderby tr.orden ?? 999, tr.texto
-                select new ParametricaDTO
+                      && tr.id_idioma == idIdioma
+                      && te.activo == true
+                      && tr.activo == true
+                select new
                 {
-                    Id = t.id_tipo_evento,
-                    Codigo = t.codigo,
-                    Texto = tr.texto,
-                    Orden = tr.orden
-                }
-            ).ToListAsync();
+                    id_item = te.id_tipo_evento,
+                    codigo = te.codigo,
+                    texto = tr.texto,
+                    orden = tr.orden,
+                    tipo_operacion = te.tipo_operacion
+                };
+
+            if (!string.IsNullOrWhiteSpace(tipoOperacion))
+            {
+                var tipo = tipoOperacion.Trim().ToUpper();
+
+                query = query.Where(x => x.tipo_operacion == tipo);
+            }
+
+            return await query
+                .OrderBy(x => x.orden)
+                .ThenBy(x => x.texto)
+                .Select(x => new ParametricaDTO
+                {
+                    Id = x.id_item,
+                    Codigo = x.codigo,
+                    Texto = x.texto,
+                    Orden = x.orden
+                })
+                .ToListAsync();
         }
 
         public async Task<List<ParametricaDTO>> GetDressCodeAsync(short idIdioma)

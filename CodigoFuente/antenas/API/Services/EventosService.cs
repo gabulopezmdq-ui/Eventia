@@ -128,6 +128,10 @@ namespace API.Services
                     Estado = ev.estado,
                     FechaAlta = ev.fecha_alta,
 
+                    TipoOperacion = ev.tipo_operacion,
+                    FechaInicio = ev.fecha_inicio,
+                    FechaFin = ev.fecha_fin,
+
                     IdDressCode = ev.id_dress_code,
                     DressCodeDescripcion = ev.dress_code_descripcion,
                     DressCodeTexto =
@@ -405,6 +409,22 @@ namespace API.Services
                     throw new InvalidOperationException("El dress code no existe o está inactivo.");
             }
 
+            var tipoOperacion = string.IsNullOrWhiteSpace(req.TipoOperacion)
+                ? "EVENTO"
+    :           req.TipoOperacion.Trim().ToUpperInvariant();
+
+            if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
+                throw new InvalidOperationException("tipo_operacion inválido. Valores permitidos: EVENTO, PROGRAMA.");
+
+            if (tipoOperacion == "PROGRAMA")
+            {
+                if (!req.FechaInicio.HasValue || !req.FechaFin.HasValue)
+                    throw new InvalidOperationException("Para programas se requiere fecha_inicio y fecha_fin.");
+
+                if (req.FechaFin.Value < req.FechaInicio.Value)
+                    throw new InvalidOperationException("fecha_fin no puede ser menor a fecha_inicio.");
+            }
+
             bool esB2B = req.IdCuenta.HasValue;
 
             if (!string.IsNullOrWhiteSpace(req.Modalidad))
@@ -566,8 +586,12 @@ namespace API.Services
                 fecha_alta = now,
                 fecha_modif = null,
 
-                es_publico = false,
-                modo_acceso = "I",
+                tipo_operacion = tipoOperacion,
+                fecha_inicio = tipoOperacion == "PROGRAMA" ? req.FechaInicio : null,
+                fecha_fin = tipoOperacion == "PROGRAMA" ? req.FechaFin : null,
+
+                es_publico = tipoOperacion == "PROGRAMA" ? true : false,
+                modo_acceso = tipoOperacion == "PROGRAMA" ? "L" : "I",
                 modo_asistencia = "R",
 
                 id_plan = idPlanEvento,

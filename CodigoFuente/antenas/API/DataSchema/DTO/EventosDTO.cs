@@ -47,6 +47,15 @@ namespace API.DataSchema.DTO
         
         [JsonPropertyName("codigo_plan")]
         public string? CodigoPlan { get; set; } // "B2C_FREE", "B2C_BASIC", "B2C_PLUS", "B2C_PRO"
+
+        [JsonPropertyName("tipo_operacion")]
+        public string? TipoOperacion { get; set; } // EVENTO | PROGRAMA
+
+        [JsonPropertyName("fecha_inicio")]
+        public DateOnly? FechaInicio { get; set; }
+
+        [JsonPropertyName("fecha_fin")]
+        public DateOnly? FechaFin { get; set; }
     }
 
     public class EventoResponse
@@ -133,5 +142,14 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("cuenta_plan_nombre")]
         public string? CuentaPlanNombre { get; set; }
+
+        [JsonPropertyName("tipo_operacion")]
+        public string TipoOperacion { get; set; } = "EVENTO";
+
+        [JsonPropertyName("fecha_inicio")]
+        public DateOnly? FechaInicio { get; set; }
+
+        [JsonPropertyName("fecha_fin")]
+        public DateOnly? FechaFin { get; set; }
     }
 }
