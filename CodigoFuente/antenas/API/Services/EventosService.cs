@@ -388,11 +388,11 @@ namespace API.Services
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
-            bool existeTipo = await _context.Set<ef_tipos_evento>()
-                .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
+            //bool existeTipo = await _context.Set<ef_tipos_evento>()
+            //    .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
 
-            if (!existeTipo)
-                throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
+            //if (!existeTipo)
+            //    throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
 
             bool existeIdioma = await _context.Set<ef_idiomas>()
                 .AnyAsync(i => i.id_idioma == req.IdIdioma && i.activo == true);
@@ -409,12 +409,26 @@ namespace API.Services
                     throw new InvalidOperationException("El dress code no existe o está inactivo.");
             }
 
-            var tipoOperacion = string.IsNullOrWhiteSpace(req.TipoOperacion)
+            //        var tipoOperacion = string.IsNullOrWhiteSpace(req.TipoOperacion)
+            //            ? "EVENTO"
+            //:           req.TipoOperacion.Trim().ToUpperInvariant();
+
+            //        if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
+            //            throw new InvalidOperationException("tipo_operacion inválido. Valores permitidos: EVENTO, PROGRAMA.");
+
+            var tipoEvento = await _context.Set<ef_tipos_evento>()
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
+
+            if (tipoEvento == null)
+                throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
+
+            var tipoOperacion = string.IsNullOrWhiteSpace(tipoEvento.tipo_operacion)
                 ? "EVENTO"
-    :           req.TipoOperacion.Trim().ToUpperInvariant();
+                : tipoEvento.tipo_operacion.Trim().ToUpperInvariant();
 
             if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
-                throw new InvalidOperationException("tipo_operacion inválido. Valores permitidos: EVENTO, PROGRAMA.");
+                throw new InvalidOperationException("El tipo de evento tiene tipo_operacion inválido.");
 
             if (tipoOperacion == "PROGRAMA")
             {
