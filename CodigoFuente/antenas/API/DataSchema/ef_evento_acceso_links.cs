@@ -16,7 +16,7 @@ namespace API.DataSchema
         public string token { get; set; } = null!;
 
         public int max_personas_total { get; set; }
-        public int max_adultos { get; set; }
+        public int? max_adultos { get; set; }
         public bool activo { get; set; } = true;
         public DateTimeOffset? fecha_expiracion { get; set; }
         public DateTimeOffset fecha_alta { get; set; }

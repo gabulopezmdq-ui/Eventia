@@ -9,6 +9,7 @@ namespace API.DataSchema
         public int id_tipo_evento { get; set; }
         public string codigo { get; set; } = null!;
         public bool activo { get; set; }
+        public string tipo_operacion { get; set; } = "EVENTO"; // EVENTO | PROGRAMA
 
         public string[] UniqueProperties => new[] { "codigo" };
         public long Id => id_tipo_evento;

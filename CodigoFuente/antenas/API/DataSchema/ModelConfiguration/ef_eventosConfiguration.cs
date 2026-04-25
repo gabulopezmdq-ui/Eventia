@@ -44,6 +44,33 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.fecha_evento);
 
+            builder.Property(x => x.tipo_operacion)
+                   .HasMaxLength(20)
+                   .IsRequired()
+                   .HasDefaultValue("EVENTO")
+                   .IsUnicode(false);
+
+            builder.Property(x => x.fecha_inicio);
+
+            builder.Property(x => x.fecha_fin);
+
+            builder.HasIndex(x => x.tipo_operacion)
+                   .HasDatabaseName("ix_ef_eventos_tipo_operacion");
+
+            builder.HasIndex(x => new { x.fecha_inicio, x.fecha_fin })
+                   .HasDatabaseName("ix_ef_eventos_programa_fechas")
+                   .HasFilter("tipo_operacion = 'PROGRAMA'");
+
+            builder.HasCheckConstraint(
+                "ck_ef_eventos_tipo_operacion",
+                "tipo_operacion in ('EVENTO', 'PROGRAMA')"
+            );
+
+            builder.HasCheckConstraint(
+                "ck_ef_eventos_programa_fechas",
+                "tipo_operacion <> 'PROGRAMA' or (fecha_inicio is not null and fecha_fin is not null and fecha_fin >= fecha_inicio)"
+            );
+
             builder.Property(x => x.fecha_alta)
                    .IsRequired()
                    .HasDefaultValueSql("now()");
