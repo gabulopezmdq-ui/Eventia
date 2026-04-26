@@ -131,6 +131,14 @@ namespace API.DataSchema
 
         public DbSet<ef_param_audiencia_tags> ef_param_audiencia_tags { get; set; }
 
+        //programas
+        public DbSet<ef_programa_periodos> ef_programa_periodos { get; set; }
+        public DbSet<ef_programa_servicios> ef_programa_servicios { get; set; }
+        public DbSet<ef_param_programa_tipos_calculo> ef_param_programa_tipos_calculo { get; set; }
+        public DbSet<ef_param_programa_servicios_base> ef_param_programa_servicios_base { get; set; }
+        public DbSet<ef_param_programa_servicio_base_traducciones> ef_param_programa_servicio_base_traducciones { get; set; }
+
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -289,6 +297,15 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_perfiles_asistenciaConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_audiencia_tagsConfiguration());
+
+            //programas
+            modelBuilder.ApplyConfiguration(new ef_programa_periodosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_serviciosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_calculoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_servicios_baseConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_servicio_base_traduccionesConfiguration());
+
+
 
             // Likes: Clave primaria compuesta
             modelBuilder.Entity<ef_evento_album_likes>()

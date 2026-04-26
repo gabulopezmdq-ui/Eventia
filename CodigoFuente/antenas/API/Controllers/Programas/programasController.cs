@@ -410,7 +410,315 @@ namespace API.Controllers.Programas
             });
         }
 
+        [Authorize]
+        [HttpGet("{idEvento:long}/servicios")]
+        public async Task<ActionResult<List<ProgramaServicioDTO>>> GetServicios(long idEvento, [FromQuery] bool soloActivos = true)
+        {
+            long idUsuario = User.GetUserId();
 
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            var q = _context.Set<ef_programa_servicios>()
+                .AsNoTracking()
+                .Include(x => x.servicio_base)
+                .Where(x => x.id_evento == idEvento);
+
+            if (soloActivos)
+                q = q.Where(x => x.activo == true);
+
+            var result = await q
+                .OrderBy(x => x.orden)
+                .ThenBy(x => x.nombre)
+                .Select(x => new ProgramaServicioDTO
+                {
+                    IdProgramaServicio = x.id_programa_servicio,
+                    IdEvento = x.id_evento,
+                    Codigo = x.codigo,
+                    Nombre = x.nombre,
+                    Descripcion = x.descripcion,
+                    TipoCalculo = x.tipo_calculo,
+                    Precio = x.precio,
+                    Moneda = x.moneda,
+                    Obligatorio = x.obligatorio,
+                    PermiteCantidad = x.permite_cantidad,
+                    Cupo = x.cupo,
+                    Orden = x.orden,
+                    RequiereSeleccionDias = x.requiere_seleccion_dias,
+                    IdServicioBase = x.id_servicio_base,
+                    ServicioBaseCodigo = x.servicio_base != null ? x.servicio_base.codigo : null,
+                    ConfigJson = x.config_json,
+                    Activo = x.activo
+                })
+                .ToListAsync();
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("{idEvento:long}/servicios/upsert")]
+        public async Task<ActionResult<ProgramaServicioDTO>> UpsertServicio(long idEvento, [FromBody] ProgramaServicioDTO req)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            if (!req.IdServicioBase.HasValue || req.IdServicioBase.Value <= 0)
+                return BadRequest("Debe seleccionar un servicio base.");
+
+            var servicioBase = await _context.Set<ef_param_programa_servicios_base>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x =>
+                    x.id_servicio_base == req.IdServicioBase.Value &&
+                    x.activo == true);
+
+            if (servicioBase == null)
+                return BadRequest("El servicio base indicado no existe o está inactivo.");
+
+            if (string.IsNullOrWhiteSpace(req.Nombre))
+                return BadRequest("Nombre obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(req.TipoCalculo))
+                return BadRequest("Tipo de cálculo obligatorio.");
+
+            var tipoCalculo = req.TipoCalculo.Trim().ToUpperInvariant();
+
+            if (tipoCalculo != "POR_INSCRIPCION" &&
+                tipoCalculo != "POR_PERIODO" &&
+                tipoCalculo != "POR_DIA" &&
+                tipoCalculo != "POR_CANTIDAD")
+                return BadRequest("Tipo de cálculo inválido.");
+
+            if (req.Precio < 0)
+                return BadRequest("El precio no puede ser negativo.");
+
+            if (req.Cupo.HasValue && req.Cupo.Value < 0)
+                return BadRequest("El cupo no puede ser negativo.");
+
+            var moneda = string.IsNullOrWhiteSpace(req.Moneda)
+                ? "EUR"
+                : req.Moneda.Trim().ToUpperInvariant();
+
+            if (moneda != "EUR" && moneda != "ARS" && moneda != "USD")
+                return BadRequest("Moneda inválida.");
+
+            if (!string.IsNullOrWhiteSpace(req.ConfigJson))
+            {
+                try
+                {
+                    System.Text.Json.JsonDocument.Parse(req.ConfigJson);
+                }
+                catch
+                {
+                    return BadRequest("config_json no tiene un formato JSON válido.");
+                }
+            }
+
+            var now = DateTimeOffset.UtcNow;
+
+            ef_programa_servicios? item;
+
+            if (req.IdProgramaServicio.HasValue && req.IdProgramaServicio.Value > 0)
+            {
+                item = await _context.Set<ef_programa_servicios>()
+                    .SingleOrDefaultAsync(x =>
+                        x.id_programa_servicio == req.IdProgramaServicio.Value &&
+                        x.id_evento == idEvento);
+
+                if (item == null)
+                    return NotFound("Servicio inexistente.");
+
+                bool existeOtroMismoServicioBase = await _context.Set<ef_programa_servicios>()
+                    .AnyAsync(x =>
+                        x.id_evento == idEvento &&
+                        x.id_servicio_base == req.IdServicioBase.Value &&
+                        x.id_programa_servicio != req.IdProgramaServicio.Value);
+
+                if (existeOtroMismoServicioBase)
+                    return BadRequest("Ese servicio base ya fue agregado al programa.");
+            }
+            else
+            {
+                bool existeServicioBase = await _context.Set<ef_programa_servicios>()
+                    .AnyAsync(x =>
+                        x.id_evento == idEvento &&
+                        x.id_servicio_base == req.IdServicioBase.Value);
+
+                if (existeServicioBase)
+                    return BadRequest("Ese servicio base ya fue agregado al programa.");
+
+                item = new ef_programa_servicios
+                {
+                    id_evento = idEvento,
+                    fecha_alta = now
+                };
+
+                _context.Set<ef_programa_servicios>().Add(item);
+            }
+
+            item.id_servicio_base = req.IdServicioBase.Value;
+            item.codigo = servicioBase.codigo;
+            item.nombre = req.Nombre.Trim();
+            item.descripcion = string.IsNullOrWhiteSpace(req.Descripcion) ? null : req.Descripcion.Trim();
+            item.tipo_calculo = tipoCalculo;
+            item.precio = req.Precio;
+            item.moneda = moneda;
+            item.obligatorio = req.Obligatorio;
+            item.permite_cantidad = req.PermiteCantidad;
+            item.requiere_seleccion_dias = req.RequiereSeleccionDias;
+            item.cupo = req.Cupo;
+            item.orden = req.Orden <= 0 ? 1 : req.Orden;
+            item.activo = req.Activo;
+            item.config_json = string.IsNullOrWhiteSpace(req.ConfigJson) ? null : req.ConfigJson.Trim();
+            item.fecha_modif = now;
+
+            await _context.SaveChangesAsync();
+
+            req.IdProgramaServicio = item.id_programa_servicio;
+            req.IdEvento = item.id_evento;
+            req.IdServicioBase = item.id_servicio_base;
+            req.ServicioBaseCodigo = servicioBase.codigo;
+            req.Codigo = item.codigo;
+            req.Nombre = item.nombre;
+            req.Descripcion = item.descripcion;
+            req.TipoCalculo = item.tipo_calculo;
+            req.Precio = item.precio;
+            req.Moneda = item.moneda;
+            req.Obligatorio = item.obligatorio;
+            req.PermiteCantidad = item.permite_cantidad;
+            req.RequiereSeleccionDias = item.requiere_seleccion_dias;
+            req.Cupo = item.cupo;
+            req.Orden = item.orden;
+            req.Activo = item.activo;
+            req.ConfigJson = item.config_json;
+
+            return Ok(req);
+        }
+
+        [Authorize]
+        [HttpPut("servicios/{idProgramaServicio:long}/set-activo")]
+        public async Task<IActionResult> SetActivoServicio(long idProgramaServicio, [FromQuery] bool activo)
+        {
+            long idUsuario = User.GetUserId();
+
+            var item = await _context.Set<ef_programa_servicios>()
+                .Include(x => x.evento)
+                .SingleOrDefaultAsync(x => x.id_programa_servicio == idProgramaServicio);
+
+            if (item == null)
+                return NotFound("Servicio inexistente.");
+
+            if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
+                return BadRequest("El servicio no pertenece a un programa válido.");
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x =>
+                    x.id_evento == item.id_evento &&
+                    x.id_usuario == idUsuario &&
+                    x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            item.activo = activo;
+            item.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                ok = true,
+                id_programa_servicio = idProgramaServicio,
+                activo
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("tipos-calculo")]
+        public async Task<IActionResult> GetTiposCalculo([FromQuery] short idIdioma)
+        {
+            var result = await (
+                from tc in _context.Set<ef_param_programa_tipos_calculo>().AsNoTracking()
+                where tc.activo == true
+                orderby tc.orden
+                select new
+                {
+                    id = tc.id_tipo_calculo,
+                    codigo = tc.codigo,
+                    texto = _context.Set<ef_param_traducciones>()
+                        .Where(tr =>
+                            tr.entidad == "PROGRAMA_TIPO_CALCULO" &&
+                            tr.id_item == tc.id_tipo_calculo &&
+                            tr.id_idioma == idIdioma &&
+                            tr.activo == true)
+                        .Select(tr => tr.texto)
+                        .FirstOrDefault() ?? tc.codigo,
+                    orden = tc.orden
+                }
+            ).ToListAsync();
+
+            return Ok(result);
+        }
+
+
+        [AllowAnonymous]
+        [HttpGet("servicios-base")]
+        public async Task<IActionResult> GetServiciosBase([FromQuery] short idIdioma)
+        {
+            var result = await (
+                from sb in _context.Set<ef_param_programa_servicios_base>().AsNoTracking()
+                where sb.activo == true
+                orderby sb.orden
+                select new ProgramaServicioBaseDTO
+                {
+                    IdServicioBase = sb.id_servicio_base,
+                    Codigo = sb.codigo,
+                    Nombre = _context.Set<ef_param_programa_servicio_base_traducciones>()
+                        .Where(tr =>
+                            tr.id_servicio_base == sb.id_servicio_base &&
+                            tr.id_idioma == idIdioma &&
+                            tr.activo == true)
+                        .Select(tr => tr.nombre)
+                        .FirstOrDefault() ?? sb.codigo,
+                    Descripcion = _context.Set<ef_param_programa_servicio_base_traducciones>()
+                        .Where(tr =>
+                            tr.id_servicio_base == sb.id_servicio_base &&
+                            tr.id_idioma == idIdioma &&
+                            tr.activo == true)
+                        .Select(tr => tr.descripcion)
+                        .FirstOrDefault(),
+                    Orden = sb.orden
+                }
+            ).ToListAsync();
+
+            return Ok(result);
+        }
 
 
 
