@@ -747,6 +747,258 @@ namespace API.Controllers.Programas
             return Ok(result);
         }
 
+        [AllowAnonymous]
+        [HttpGet("autorizaciones-base")]
+        public async Task<ActionResult<List<ProgramaAutorizacionBaseDTO>>> GetAutorizacionesBase([FromQuery] short idIdioma)
+        {
+            var result = await (
+                from ab in _context.Set<ef_param_programa_autorizaciones_base>().AsNoTracking()
+                where ab.activo == true
+                orderby ab.orden
+                select new ProgramaAutorizacionBaseDTO
+                {
+                    IdAutorizacionBase = ab.id_autorizacion_base,
+                    Codigo = ab.codigo,
+                    Titulo = _context.Set<ef_param_programa_autorizacion_base_traducciones>()
+                        .Where(tr =>
+                            tr.id_autorizacion_base == ab.id_autorizacion_base &&
+                            tr.id_idioma == idIdioma &&
+                            tr.activo == true)
+                        .Select(tr => tr.titulo)
+                        .FirstOrDefault() ?? ab.codigo,
+                    Texto = _context.Set<ef_param_programa_autorizacion_base_traducciones>()
+                        .Where(tr =>
+                            tr.id_autorizacion_base == ab.id_autorizacion_base &&
+                            tr.id_idioma == idIdioma &&
+                            tr.activo == true)
+                        .Select(tr => tr.texto)
+                        .FirstOrDefault(),
+                    Orden = ab.orden
+                }
+            ).ToListAsync();
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("{idEvento:long}/autorizaciones-config")]
+        public async Task<ActionResult<List<ProgramaAutorizacionConfigDTO>>> GetAutorizacionesConfig(
+    long idEvento,
+    [FromQuery] short idIdioma,
+    [FromQuery] bool soloActivas = true)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            var q = _context.Set<ef_programa_autorizaciones_config>()
+                .AsNoTracking()
+                .Include(x => x.autorizacion_base)
+                .Where(x => x.id_evento == idEvento);
+
+            if (soloActivas)
+                q = q.Where(x => x.activo == true);
+
+            var result = await q
+                .OrderBy(x => x.orden)
+                .Select(x => new ProgramaAutorizacionConfigDTO
+                {
+                    IdProgramaAutorizacionConfig = x.id_programa_autorizacion_config,
+                    IdEvento = x.id_evento,
+                    IdAutorizacionBase = x.id_autorizacion_base,
+                    Codigo = x.codigo,
+                    TituloOverride = x.titulo_override,
+                    TextoOverride = x.texto_override,
+                    Titulo = !string.IsNullOrWhiteSpace(x.titulo_override)
+                        ? x.titulo_override
+                        : _context.Set<ef_param_programa_autorizacion_base_traducciones>()
+                            .Where(tr =>
+                                tr.id_autorizacion_base == x.id_autorizacion_base &&
+                                tr.id_idioma == idIdioma &&
+                                tr.activo == true)
+                            .Select(tr => tr.titulo)
+                            .FirstOrDefault() ?? x.codigo,
+                    Texto = !string.IsNullOrWhiteSpace(x.texto_override)
+                        ? x.texto_override
+                        : _context.Set<ef_param_programa_autorizacion_base_traducciones>()
+                            .Where(tr =>
+                                tr.id_autorizacion_base == x.id_autorizacion_base &&
+                                tr.id_idioma == idIdioma &&
+                                tr.activo == true)
+                            .Select(tr => tr.texto)
+                            .FirstOrDefault(),
+                    Obligatoria = x.obligatoria,
+                    RequiereAceptacion = x.requiere_aceptacion,
+                    RequiereDatosResponsable = x.requiere_datos_responsable,
+                    Orden = x.orden,
+                    Activo = x.activo
+                })
+                .ToListAsync();
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("{idEvento:long}/autorizaciones-config/upsert")]
+        public async Task<ActionResult<ProgramaAutorizacionConfigDTO>> UpsertAutorizacionConfig(
+    long idEvento,
+    [FromBody] ProgramaAutorizacionConfigDTO req)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            if (req.IdAutorizacionBase <= 0)
+                return BadRequest("Debe seleccionar una autorización base.");
+
+            var autBase = await _context.Set<ef_param_programa_autorizaciones_base>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x =>
+                    x.id_autorizacion_base == req.IdAutorizacionBase &&
+                    x.activo == true);
+
+            if (autBase == null)
+                return BadRequest("La autorización base indicada no existe o está inactiva.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            ef_programa_autorizaciones_config? item;
+
+            if (req.IdProgramaAutorizacionConfig.HasValue && req.IdProgramaAutorizacionConfig.Value > 0)
+            {
+                item = await _context.Set<ef_programa_autorizaciones_config>()
+                    .SingleOrDefaultAsync(x =>
+                        x.id_programa_autorizacion_config == req.IdProgramaAutorizacionConfig.Value &&
+                        x.id_evento == idEvento);
+
+                if (item == null)
+                    return NotFound("Autorización configurada inexistente.");
+
+                bool existeOtra = await _context.Set<ef_programa_autorizaciones_config>()
+                    .AnyAsync(x =>
+                        x.id_evento == idEvento &&
+                        x.id_autorizacion_base == req.IdAutorizacionBase &&
+                        x.id_programa_autorizacion_config != req.IdProgramaAutorizacionConfig.Value);
+
+                if (existeOtra)
+                    return BadRequest("Esa autorización base ya fue agregada al programa.");
+            }
+            else
+            {
+                bool existe = await _context.Set<ef_programa_autorizaciones_config>()
+                    .AnyAsync(x =>
+                        x.id_evento == idEvento &&
+                        x.id_autorizacion_base == req.IdAutorizacionBase);
+
+                if (existe)
+                    return BadRequest("Esa autorización base ya fue agregada al programa.");
+
+                item = new ef_programa_autorizaciones_config
+                {
+                    id_evento = idEvento,
+                    fecha_alta = now
+                };
+
+                _context.Set<ef_programa_autorizaciones_config>().Add(item);
+            }
+
+            item.id_autorizacion_base = req.IdAutorizacionBase;
+            item.codigo = autBase.codigo;
+            item.titulo_override = string.IsNullOrWhiteSpace(req.TituloOverride) ? null : req.TituloOverride.Trim();
+            item.texto_override = string.IsNullOrWhiteSpace(req.TextoOverride) ? null : req.TextoOverride.Trim();
+            item.obligatoria = req.Obligatoria;
+            item.requiere_aceptacion = req.RequiereAceptacion;
+            item.requiere_datos_responsable = req.RequiereDatosResponsable;
+            item.orden = req.Orden <= 0 ? 1 : req.Orden;
+            item.activo = req.Activo;
+            item.fecha_modif = now;
+
+            await _context.SaveChangesAsync();
+
+            req.IdProgramaAutorizacionConfig = item.id_programa_autorizacion_config;
+            req.IdEvento = item.id_evento;
+            req.IdAutorizacionBase = item.id_autorizacion_base;
+            req.Codigo = item.codigo;
+            req.TituloOverride = item.titulo_override;
+            req.TextoOverride = item.texto_override;
+            req.Obligatoria = item.obligatoria;
+            req.RequiereAceptacion = item.requiere_aceptacion;
+            req.RequiereDatosResponsable = item.requiere_datos_responsable;
+            req.Orden = item.orden;
+            req.Activo = item.activo;
+
+            return Ok(req);
+        }
+
+        [Authorize]
+        [HttpPut("autorizaciones-config/{idProgramaAutorizacionConfig:long}/set-activo")]
+        public async Task<IActionResult> SetActivoAutorizacionConfig(
+    long idProgramaAutorizacionConfig,
+    [FromQuery] bool activo)
+        {
+            long idUsuario = User.GetUserId();
+
+            var item = await _context.Set<ef_programa_autorizaciones_config>()
+                .Include(x => x.evento)
+                .SingleOrDefaultAsync(x =>
+                    x.id_programa_autorizacion_config == idProgramaAutorizacionConfig);
+
+            if (item == null)
+                return NotFound("Autorización configurada inexistente.");
+
+            if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
+                return BadRequest("La autorización no pertenece a un programa válido.");
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x =>
+                    x.id_evento == item.id_evento &&
+                    x.id_usuario == idUsuario &&
+                    x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            item.activo = activo;
+            item.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                ok = true,
+                id_programa_autorizacion_config = idProgramaAutorizacionConfig,
+                activo
+            });
+        }
+
+
 
 
     }
