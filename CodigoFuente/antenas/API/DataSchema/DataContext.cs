@@ -138,6 +138,9 @@ namespace API.DataSchema
         public DbSet<ef_param_programa_servicios_base> ef_param_programa_servicios_base { get; set; }
         public DbSet<ef_param_programa_servicio_base_traducciones> ef_param_programa_servicio_base_traducciones { get; set; }
         public DbSet<ef_param_programa_tipos_campo_extra> ef_param_programa_tipos_campo_extra { get; set; }
+        public DbSet<ef_param_programa_autorizaciones_base> ef_param_programa_autorizaciones_base { get; set; }
+        public DbSet<ef_param_programa_autorizacion_base_traducciones> ef_param_programa_autorizacion_base_traducciones { get; set; }
+        public DbSet<ef_programa_autorizaciones_config> ef_programa_autorizaciones_config { get; set; }
 
 
 
@@ -306,6 +309,9 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_programa_servicios_baseConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_servicio_base_traduccionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_campo_extraConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_autorizaciones_baseConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_autorizacion_base_traduccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_autorizaciones_configConfiguration());
 
 
 
