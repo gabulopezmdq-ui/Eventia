@@ -1,0 +1,263 @@
+# 📋 Plan de Implementación Frontend — Unidades y Clientes
+
+> Basado en: `documentos/Eventia-Unidades y Clientes.docx`  
+> Proyecto: `src/` en `eventiaapp`
+
+---
+
+## 🗺️ Resumen del dominio (según la doc)
+
+| Concepto | Descripción |
+|---|---|
+| **Cuenta (B2B)** | El salón/empresa. Tiene clientes, eventos, equipo. Ya existe. |
+| **Unidad** | Sub-unidad operativa dentro de una cuenta (sector, área, marca). Ej: `EventosSA → SalonDeFiesta / Restaurante` |
+| **Cliente** | Persona/empresa en `ef_clientes`, asociada a `id_cuenta`. Vinculada opcionalmente a una `id_unidad_principal` |
+
+---
+
+## ✅ Lo que YA está implementado
+
+### Unidades
+| Item | Archivo | Estado |
+|---|---|---|
+| Proxy GET `/cuenta_unidades/MisUnidades` | `app/api/cuenta-unidades/route.ts` | ✅ OK |
+| Service `getMisUnidades()` | `features/cuenta/cuenta.service.ts` | ✅ OK |
+| Interfaz `Unidad` (id, nombre, activa, es_principal) | `features/cuenta/cuenta.service.ts` | ⚠️ Falta `codigo` y `descripcion` |
+| Vista de listado (cards) | `app/dashboard/cuenta/unidades/page.tsx` | ⚠️ Falta botón "Crear", acción real "Editar", "Activar/Desactivar" |
+| Link en sidebar | `app/dashboard/layout.tsx` | ✅ OK |
+
+### Clientes
+| Item | Archivo | Estado |
+|---|---|---|
+| Proxy GET `/clientes/MisClientes` | `app/api/clientes/route.ts` | ✅ OK |
+| Service `getMisClientes()` | `features/cuenta/cuenta.service.ts` | ✅ OK |
+| Interfaz `Cliente` | `features/cuenta/cuenta.service.ts` | ⚠️ Falta `notas` e `id_unidad_principal` (número) |
+| Vista de listado (tabla) | `app/dashboard/cuenta/clientes/page.tsx` | ⚠️ Falta botón "Crear", acción real "Editar", "Activar/Desactivar" |
+| Link en sidebar | `app/dashboard/layout.tsx` | ✅ OK |
+
+---
+
+## ❌ Lo que FALTA implementar
+
+### 1. 🧱 Tipos e interfaces — `cuenta.service.ts`
+
+**Actualizar `Unidad`** para incluir campos del documento:
+```ts
+export interface Unidad {
+  id_unidad: number;
+  codigo: string;       // ← FALTA (ej: "SALON")
+  nombre: string;
+  descripcion?: string; // ← FALTA
+  es_principal: boolean;
+  activa: boolean;
+  ciudad?: string;
+}
+```
+
+**Actualizar `Cliente`** para incluir campos del documento:
+```ts
+export interface Cliente {
+  id_cliente: number;
+  nombre_cliente: string;
+  email?: string;
+  telefono?: string;
+  notas?: string;              // ← FALTA
+  id_unidad_principal?: number; // ← FALTA (número, no string)
+  unidad_principal?: string;   // nombre de display
+  es_activo: boolean;
+  fecha_alta?: string;
+}
+```
+
+---
+
+### 2. 🔌 API Proxy Routes — nuevas rutas necesarias
+
+#### `app/api/cuenta-unidades/route.ts` — agregar métodos faltantes
+
+```
+POST /cuenta_unidades          → Crear unidad
+PUT  /cuenta_unidades          → Editar unidad
+PUT  /cuenta_unidades/SetActivo?idUnidad=X&activo=false → Activar/Desactivar
+```
+
+**Archivo a modificar:** `src/app/api/cuenta-unidades/route.ts`  
+Actualmente solo tiene `GET`. Hay que agregar `POST` y `PUT`.
+
+#### `app/api/clientes/route.ts` — agregar métodos faltantes
+
+```
+POST /clientes                 → Crear cliente
+PUT  /clientes                 → Editar cliente
+PUT  /clientes/SetActivo?idCliente=X&activo=false → Activar/Desactivar
+```
+
+**Archivo a modificar:** `src/app/api/clientes/route.ts`  
+Actualmente solo tiene `GET`. Hay que agregar `POST` y `PUT`.
+
+#### Nueva ruta para SetActivo de Unidades:
+- Crear: `src/app/api/cuenta-unidades/set-activo/route.ts`  
+  Proxy: `PUT /cuenta_unidades/SetActivo?idUnidad={id}&activo={bool}`
+
+#### Nueva ruta para SetActivo de Clientes:
+- Crear: `src/app/api/clientes/set-activo/route.ts`  
+  Proxy: `PUT /clientes/SetActivo?idCliente={id}&activo={bool}`
+
+---
+
+### 3. 🛠️ Funciones del service — `cuenta.service.ts`
+
+Agregar las siguientes funciones exportadas:
+
+```ts
+// UNIDADES
+createUnidad(data: { codigo: string; nombre: string; descripcion?: string }): Promise<{ ok: boolean; id_unidad: number }>
+updateUnidad(data: Unidad): Promise<{ ok: boolean }>
+setActivoUnidad(idUnidad: number, activo: boolean): Promise<{ ok: boolean }>
+
+// CLIENTES
+createCliente(data: Omit<Cliente, 'id_cliente' | 'es_activo' | 'fecha_alta'>): Promise<{ ok: boolean; id_cliente: number }>
+updateCliente(data: Cliente): Promise<{ ok: boolean }>
+setActivoCliente(idCliente: number, activo: boolean): Promise<{ ok: boolean }>
+```
+
+---
+
+### 4. 🖥️ UI — Página de Unidades (`app/dashboard/cuenta/unidades/page.tsx`)
+
+#### 4.1 Botón "Nueva Unidad"
+Agregar en el header:
+```tsx
+<button onClick={() => setShowModal(true)} className="...">
+  <Plus className="w-4 h-4" /> Nueva Unidad
+</button>
+```
+
+#### 4.2 Mostrar `codigo` y `descripcion` en las cards
+La card actual solo muestra `nombre` y `ciudad`. Agregar:
+```tsx
+<span className="text-xs font-mono text-neutral-400">{unidad.codigo}</span>
+<p className="text-xs text-neutral-500">{unidad.descripcion}</p>
+```
+
+#### 4.3 Botón "Editar" funcional
+Actualmente es un botón sin acción. Debe abrir un modal de edición pre-poblado.
+
+#### 4.4 Botones "Activar / Desactivar"
+Según la doc, se requiere toggle de estado. Agregar dropdown de acciones o dos botones en el footer de la card:
+```tsx
+<button onClick={() => handleToggleActivo(unidad.id_unidad, !unidad.activa)}>
+  {unidad.activa ? 'Desactivar' : 'Activar'}
+</button>
+```
+
+#### 4.5 Modal Crear/Editar Unidad (nuevo componente)
+- **Crear archivo:** `src/features/cuenta/UnidadModal.tsx`
+- Campos: `codigo` (requerido), `nombre` (requerido), `descripcion` (opcional)
+- Botón "Guardar" llama a `createUnidad()` o `updateUnidad()` según modo
+- On success: cerrar modal + refrescar lista
+
+---
+
+### 5. 🖥️ UI — Página de Clientes (`app/dashboard/cuenta/clientes/page.tsx`)
+
+#### 5.1 Botón "Nuevo Cliente"
+Agregar en el header, igual que Unidades.
+
+#### 5.2 Columna "Notas" en la tabla (o tooltip)
+El doc especifica `notas` como campo. Mostrar en la tabla con truncado o en un tooltip al hacer hover sobre el nombre.
+
+#### 5.3 Filtro por Unidad Principal
+El doc muestra que un cliente se asocia a `id_unidad_principal`. Agregar un `<select>` de filtro en el header que filtre la tabla por unidad.
+
+#### 5.4 Botón "Editar" funcional
+Actualmente está sin acción. Debe abrir modal pre-poblado.
+
+#### 5.5 Botones "Activar / Desactivar"
+Agregar al costado del botón "Editar" en la tabla.
+
+#### 5.6 Modal Crear/Editar Cliente (nuevo componente)
+- **Crear archivo:** `src/features/cuenta/ClienteModal.tsx`
+- Campos: `nombre_cliente` (requerido), `email`, `telefono`, `notas`, `id_unidad_principal` (select con unidades)
+- El select de unidades llama a `getMisUnidades()` para poblar las opciones
+- On success: cerrar modal + refrescar lista
+
+---
+
+### 6. ⚙️ Flujo completo por feature
+
+#### Flujo CRUD Unidades:
+```
+UnidadesPage
+  ├── GET /api/cuenta-unidades → lista
+  ├── [+Nueva] → UnidadModal (modo: crear)
+  │     └── POST /api/cuenta-unidades → createUnidad()
+  ├── [Editar] → UnidadModal (modo: editar, datos pre-poblados)
+  │     └── PUT /api/cuenta-unidades → updateUnidad()
+  └── [Activar/Desactivar]
+        └── PUT /api/cuenta-unidades/set-activo → setActivoUnidad()
+```
+
+#### Flujo CRUD Clientes:
+```
+ClientesPage
+  ├── GET /api/clientes → lista
+  ├── GET /api/cuenta-unidades → para poblar select de unidad
+  ├── [+Nuevo] → ClienteModal (modo: crear)
+  │     └── POST /api/clientes → createCliente()
+  ├── [Editar] → ClienteModal (modo: editar, datos pre-poblados)
+  │     └── PUT /api/clientes → updateCliente()
+  └── [Activar/Desactivar]
+        └── PUT /api/clientes/set-activo → setActivoCliente()
+```
+
+---
+
+## 📁 Archivos a crear (resumen)
+
+| Archivo | Tipo | Descripción |
+|---|---|---|
+| `src/features/cuenta/UnidadModal.tsx` | Componente | Modal crear/editar unidad |
+| `src/features/cuenta/ClienteModal.tsx` | Componente | Modal crear/editar cliente |
+| `src/app/api/cuenta-unidades/set-activo/route.ts` | API Route | Proxy activar/desactivar unidad |
+| `src/app/api/clientes/set-activo/route.ts` | API Route | Proxy activar/desactivar cliente |
+
+## 📁 Archivos a modificar (resumen)
+
+| Archivo | Cambio |
+|---|---|
+| `src/features/cuenta/cuenta.service.ts` | Actualizar tipos + agregar funciones CRUD |
+| `src/app/api/cuenta-unidades/route.ts` | Agregar `POST` y `PUT` handlers |
+| `src/app/api/clientes/route.ts` | Agregar `POST` y `PUT` handlers |
+| `src/app/dashboard/cuenta/unidades/page.tsx` | Agregar botón crear, editar funcional, toggle activo, modal |
+| `src/app/dashboard/cuenta/clientes/page.tsx` | Agregar botón crear, editar funcional, toggle activo, modal, filtro unidad |
+
+---
+
+## 🧭 Orden de implementación sugerido
+
+```
+Fase 1 — Base (sin UI)
+  1. Actualizar interfaces en cuenta.service.ts
+  2. Agregar POST/PUT en /api/cuenta-unidades/route.ts
+  3. Agregar POST/PUT en /api/clientes/route.ts
+  4. Crear /api/cuenta-unidades/set-activo/route.ts
+  5. Crear /api/clientes/set-activo/route.ts
+  6. Agregar funciones CRUD en cuenta.service.ts
+
+Fase 2 — Unidades (completo)
+  7. Crear UnidadModal.tsx
+  8. Actualizar unidades/page.tsx (botón, modal, toggle, código/descripción en cards)
+
+Fase 3 — Clientes (completo)
+  9. Crear ClienteModal.tsx (con select de unidades)
+  10. Actualizar clientes/page.tsx (botón, modal, toggle, notas, filtro unidad)
+```
+
+---
+
+> [!NOTE]
+> La sección **"Usuarios de cuenta y roles"** está marcada como pendiente en el doc ("Por ahora nos queda definir"). No está en scope por ahora.
+
+> [!TIP]
+> Los modales de Crear/Editar pueden ser un único componente genérico pasando `mode: 'create' | 'edit'` y los datos iniciales como prop opcional, para reutilizar la lógica de validación.
