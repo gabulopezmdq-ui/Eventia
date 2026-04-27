@@ -30,9 +30,17 @@ export async function GET(
         }
 
         const data = await res.json();
+        // ─── LOG SERVIDOR: ver en la terminal de Next.js (no en el browser) ───
         console.log(`--- RAW RESPUESTA BACKEND (GET /invitacion/${token}) ---`);
+        console.log('Keys del objeto raíz:', Object.keys(data));
+        console.log('idEvento:', data.idEvento, '| id_evento:', data.id_evento, '| idGrupo:', data.idGrupo);
         console.dir(data, { depth: null });
-        return NextResponse.json(data);
+        // ─── Normalizar: si el backend devuelve id_evento en lugar de idEvento ───
+        const normalized = {
+            ...data,
+            idEvento: data.idEvento ?? data.id_evento ?? data.eventoId ?? null,
+        };
+        return NextResponse.json(normalized);
     } catch (error) {
         console.error('Proxy Error GET /invitaciones/[token]:', error);
         return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });

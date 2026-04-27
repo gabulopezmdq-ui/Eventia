@@ -1,275 +1,90 @@
-# Plan de Implementación: RSVP + Restricciones Alimentarias
+# Plan de Implementación: RSVP + Restricciones Alimentarias (Actualizado)
 
-## Estado Actual vs. Documentación
+En base a la información confirmada por el backend, el flujo ideal es **centralizar el envío de toda la información (RSVP + Restricciones + Detalle libre) en una única llamada `POST /confirmar`**, y usar el endpoint de paramétricas dependiente del `idEvento` para el catálogo.
 
----
+## Estado Actual vs. Nuevo Enfoque
 
-## ✅ Lo que YA está implementado
-
-| Área | Qué hay |
-|---|---|
-| **BFF – GET catalogo** | `GET /api/restricciones/catalogo?locale=` → proxea a `/restricciones/catalogo?locale=` ✅ |
-| **BFF – GET mis-restricciones** | `GET /api/restricciones/mis-restricciones?token=` → proxea a `/restricciones/mis-restricciones?token=` ✅ |
-| **BFF – POST mis-restricciones** | `POST /api/restricciones/mis-restricciones?token=` → proxea la carga de restricciones ✅ |
-| **BFF – POST confirmar** | `POST /api/invitaciones/[token]/confirmar` → proxea correctamente ✅ |
-| **Service – tipos base** | `CatalogoRestriccion`, `RestriccionItem`, `GrupoRsvpInfo`, etc. definidos en `rsvp.service.ts` ✅ |
-| **Service – funciones** | `getCatalogoRestricciones()`, `getMisRestricciones()`, `guardarRestricciones()`, `confirmarRsvp()` implementadas ✅ |
-| **UI – Step RESTRICTIONS** | Paso de restricciones con checkboxes por integrante y detalle para alergias ✅ |
-| **UI – flow completo** | RSVP → Restricciones → Éxito funciona como wizard ✅ |
+| Área | Estado Anterior | Nuevo Enfoque | Estado |
+|---|---|---|---|
+| **Catálogo** | Se obtenía de `/api/restricciones/catalogo?locale=` | BFF proxy hacia `/parametrica/RestriccionesAlimentarias?idEvento=` | ✅ Implementado |
+| **Flujo de Envío** | 2 llamadas separadas (`POST /confirmar` y luego `POST /mis-restricciones`) | **1 sola llamada** a `POST /confirmar` con todo el payload anidado | ✅ Implementado |
+| **Payload Confirmar** | Solo enviaba datos básicos por persona | Envía `alimentacionDetalle` y el array `restricciones` por cada persona | ✅ Implementado |
+| **UI de Restricciones** | Step separado después de confirmar el backend | Integrada inline dentro de cada tarjeta de persona | ✅ Implementado |
+| **Validaciones** | Email y Celular sin `required` | Validación dura en el titular antes del submit | ✅ Implementado |
 
 ---
 
-## ❌ Brechas a Resolver
+## Plan de Acción Paso a Paso
 
-### BRECHA 1 — El catalogo NO se consulta por `idEvento` (crítica)
+### ✅ Paso 1 — Actualizar Tipos y Estado del Formulario
+**Archivo:** `src/features/rsvp/rsvp.service.ts` y `src/app/rsvp/[token]/page.tsx`
 
-**Documentación dice:**
-```
-GET /parametrica/RestriccionesAlimentarias?idEvento={idEvento}
-```
+1. **Service:** `PersonaConfirmarPayload` actualizado con los nuevos campos:
+   ```typescript
+   export interface PersonaConfirmarPayload {
+       // ... campos anteriores ...
+       alimentacionDetalle?: string;
+       restricciones?: RestriccionConfirmarItem[]; // { idRestriccion, observaciones }
+       idsRestricciones?: number[];           // fallback forma simple
+   }
+   ```
+2. **Page (Estado):** `PersonaFormState` expandido:
+   ```typescript
+   interface PersonaFormState {
+       // ...
+       alimentacionDetalle: string;
+       restriccionesSeleccionadas: Record<number, RestriccionLocal>;
+   }
+   ```
 
-**Implementación actual:**
-```
-GET /api/restricciones/catalogo?locale=es-AR
-→ proxea a /restricciones/catalogo?locale=es-AR
-```
+### ✅ Paso 2 — Crear Endpoint BFF para el Catálogo Oficial
+**Archivo:** `src/app/api/parametrica/restricciones-alimentarias/route.ts` *(Nuevo)*
 
-**Problema:** El endpoint correcto según la doc es `/parametrica/RestriccionesAlimentarias?idEvento={idEvento}` (es un endpoint paramétrico, no de restricciones). El catálogo **depende del `idEvento`** para ser filtrado en el idioma configurado para ese evento.
+Proxy que llama al endpoint oficial `GET /parametrica/RestriccionesAlimentarias?idEvento={idEvento}`, devolviendo el catálogo en el idioma configurado para ese evento.
 
-**Qué falta:**
-- El `idEvento` viene en `InvitacionPersonalResponse` como `idEvento`. Hay que guardarlo en el estado y pasarlo al llamar al catálogo.
-- Crear (o corregir) la ruta BFF que proxee a `/parametrica/RestriccionesAlimentarias?idEvento=`.
+### ✅ Paso 3 — Cargar el Catálogo al Inicio
+**Archivo:** `src/app/rsvp/[token]/page.tsx`
 
-> [!NOTE]
-> Podría ser que `/restricciones/catalogo` sea un alias interno válido del backend y `/parametrica/RestriccionesAlimentarias` sea la ruta pública oficial. Confirmar con el equipo de backend cuál usar.
+El catálogo se carga en `verificarEstado()` apenas se obtienen los datos de la invitación, usando `inviteData.idEvento`. Si no se dispone del `idEvento`, hace fallback automático al endpoint por locale.
 
----
+### ✅ Paso 4 — Unificar la UI del Formulario
+**Archivo:** `src/app/rsvp/[token]/page.tsx`
 
-### BRECHA 2 — `PersonaConfirmarPayload` no incluye los campos de alimentación (crítica)
+Se implementó la **Opción B (Todo en una página)**: dentro de la tarjeta de cada persona que asiste se muestran directamente:
+- Pills/tags del catálogo seleccionables (restricciones)
+- Detalle ampliado (severidad + aclaración) para alergias y celiaquía
+- Textarea libre `alimentacionDetalle`
 
-**Documentación dice:** cada persona en el payload de `POST /invitacion/{token}/confirmar` acepta:
-```json
-{
-  "alimentacionDetalle": "Alergia severa al maní",
-  "idsRestricciones": [1, 4]
-}
-```
+El step `RESTRICTIONS` separado fue eliminado completamente.
 
-**Implementación actual en `rsvp.service.ts`:**
+### ✅ Paso 5 — Validaciones Críticas del Titular
+**Archivo:** `src/app/rsvp/[token]/page.tsx`
+
 ```typescript
-export interface PersonaConfirmarPayload {
-    idInvitado?: number;
-    nombre: string;
-    apellido: string;
-    email?: string;
-    celular?: string;
-    rolEvento: 'A' | 'N';
-    asiste: boolean;
-    mensaje?: string;
-    // ❌ FALTAN: alimentacionDetalle, idsRestricciones, restricciones
+if (globalAsiste === true) {
+    const titular = personas[0];
+    if (!titular?.email?.trim() || !titular?.celular?.trim()) {
+        alert('El email y el celular del titular son obligatorios para confirmar la asistencia.');
+        return;
+    }
 }
 ```
+Los inputs de email y celular del titular también tienen `required` y borde rojo visual cuando están vacíos.
 
-**Qué falta:**
-- Agregar `alimentacionDetalle?: string` y `idsRestricciones?: number[]` a `PersonaConfirmarPayload`.
-- Decidir si se usa `idsRestricciones` (forma simple) o `restricciones` (forma detallada con observaciones). La doc sugiere **usar forma simple** si no hay observación por checkbox.
-
----
-
-### BRECHA 3 — `PersonaFormState` no tiene campos de alimentación (derivada de brecha 2)
-
-**Qué falta:**
-- Agregar `alimentacionDetalle: string` al interface `PersonaFormState` en `page.tsx`.
-- Inicializar el campo en `''` al pre-cargar personas desde la invitación y al agregar personas nuevas.
-
----
-
-### BRECHA 4 — El flujo RSVP no envía las restricciones en el `confirmar` (crítica)
-
-La documentación permite enviar `idsRestricciones` **dentro del mismo POST de confirmación**, en lugar de hacerlo en un segundo paso separado.
-
-**Situación actual:** El frontend hace dos llamadas separadas:
-1. `POST /confirmar` → sin restricciones
-2. `POST /mis-restricciones` → con restricciones (después de obtener el grupo RSVP)
-
-**Opciones (elegir una):**
-- **Opción A (Recomendada):** Mantener el flujo en 2 pasos (es más claro para el usuario), pero agregar el campo `alimentacionDetalle` libre en el step de RSVP antes de confirmar, y luego las restricciones categorizadas en el step RESTRICTIONS.
-- **Opción B:** Colapsar en 1 paso: incluir `idsRestricciones` directo en el payload del `confirmar`, eliminando el step separado.
-
-> [!IMPORTANT]
-> La doc dice explícitamente que las restricciones se definen **durante el RSVP**, no antes. El flujo actual de 2 steps cumple esto — la brecha es solo que falta el campo `alimentacionDetalle` libre en el step RSVP.
-
----
-
-### BRECHA 5 — `ConfirmarRsvpPayload` no incluye `mensajeGrupo` en el tipo (menor)
-
-El campo `mensajeGrupo` ya se envía en el código (`payloadAEnviar`), pero en `ConfirmarRsvpPayload` está marcado como `mensajeGrupo?: string`. Está correcto. ✅ (no es brecha real)
-
----
-
-### BRECHA 6 — El `email` y `celular` del titular no se validan como obligatorios (UX)
-
-**Documentación dice:**
-> El titular está obligado a completar su `email` y `celular`. Si el backend no los recibe, rechazará la petición.
-
-**Implementación actual:** Los inputs de `email` y `celular` para adultos **no tienen `required`** en el JSX (solo nombre y apellido lo tienen). El error lo manejaría el backend, pero debería validarse en el frontend también.
-
-**Qué falta:**
-- Agregar `required` a los inputs de `email` y `celular` para el invitado titular (índice 0).
-- Agregar validación explícita en `handleRsvpSubmit` antes del submit.
-
----
-
-### BRECHA 7 — No existe ruta BFF para `GET /parametrica/RestriccionesAlimentarias` (si aplica brecha 1)
-
-Si se confirma que el endpoint correcto es el paramétrico con `idEvento`, hay que crear la ruta BFF:
-
-**Archivo a crear:** `src/app/api/parametrica/restricciones-alimentarias/route.ts`
-
-```
-GET /api/parametrica/restricciones-alimentarias?idEvento={id}
-→ proxea a: /parametrica/RestriccionesAlimentarias?idEvento={id}
-```
-
----
-
-## Plan de Implementación por Pasos
-
-### Paso 1 — Actualizar tipos en `rsvp.service.ts`
-
-**Archivo:** `src/features/rsvp/rsvp.service.ts`
-
-```diff
-export interface PersonaConfirmarPayload {
-    idInvitado?: number;
-    nombre: string;
-    apellido: string;
-    email?: string;
-    celular?: string;
-    rolEvento: 'A' | 'N';
-    asiste: boolean;
-    mensaje?: string;
-+   alimentacionDetalle?: string;
-+   idsRestricciones?: number[];
-}
-```
-
----
-
-### Paso 2 — Actualizar `PersonaFormState` en `page.tsx`
-
+### ✅ Paso 6 — Simplificar el Submit (Eliminar llamadas redundantes)
 **Archivo:** `src/app/rsvp/[token]/page.tsx`
 
-```diff
-interface PersonaFormState {
-    idInvitado?: number;
-    nombre: string;
-    apellido: string;
-    email: string;
-    celular: string;
-    rolEvento: 'A' | 'N';
-    asiste: boolean;
-    mensaje: string;
-    isNew: boolean;
-+   alimentacionDetalle: string;
-}
-```
-
-Inicializar en `''` en todos los lugares donde se crean personas (pre-fill y addPersona).
+`handleRsvpSubmit` ahora:
+1. Transforma `restriccionesSeleccionadas` (Record) → array `restricciones[{ idRestriccion, observaciones }]` por persona.
+2. Hace una **única llamada** a `confirmarRsvp` con todo el payload unificado.
+3. Pasa directamente a `SUCCESS` — eliminadas las llamadas a `guardarRestricciones` y `getMisRestricciones`.
 
 ---
 
-### Paso 3 — Agregar campo `alimentacionDetalle` en el formulario RSVP
+## Resumen de Tareas de Código — Estado Final
 
-**Archivo:** `src/app/rsvp/[token]/page.tsx`
-
-Dentro de la tarjeta de cada persona, agregar un textarea para texto libre de alimentación:
-
-```tsx
-<div>
-  <label className="...">🍽 Restricciones / Alergias (texto libre)</label>
-  <textarea
-    placeholder="Ej: Alergia al maní, no tolera gluten..."
-    value={persona.alimentacionDetalle}
-    onChange={e => updatePersona(idx, 'alimentacionDetalle', e.target.value)}
-    className="..."
-    rows={2}
-  />
-</div>
-```
-
----
-
-### Paso 4 — Incluir `alimentacionDetalle` en el payload de `confirmarRsvp`
-
-**Archivo:** `src/app/rsvp/[token]/page.tsx`, función `handleRsvpSubmit`
-
-```diff
-const personasPayload: PersonaConfirmarPayload[] = personas.map(p => ({
-    idInvitado: p.idInvitado || 0,
-    nombre: p.nombre,
-    apellido: p.apellido,
-    email: p.email || undefined,
-    celular: p.celular || undefined,
-    rolEvento: p.rolEvento,
-    asiste: globalAsiste === false ? false : p.asiste,
-    mensaje: p.mensaje || undefined,
-+   alimentacionDetalle: p.alimentacionDetalle || undefined,
-}));
-```
-
----
-
-### Paso 5 — Agregar validación de email/celular del titular
-
-**Archivo:** `src/app/rsvp/[token]/page.tsx`, función `handleRsvpSubmit`
-
-```diff
-if (globalAsiste === null) {
-    alert('Por favor, indicanos si vas a asistir.');
-    return;
-}
-
-+ // Validar campos obligatorios del titular
-+ if (globalAsiste === true) {
-+   const titular = personas[0];
-+   if (!titular?.email || !titular?.celular) {
-+     alert('El email y el celular del titular son obligatorios para confirmar.');
-+     return;
-+   }
-+ }
-```
-
-También agregar `required` en los inputs del titular (índice 0).
-
----
-
-### Paso 6 — (Confirmar con backend) Revisar el endpoint del catálogo
-
-Verificar si el backend acepta ambas rutas o solo una:
-- `/restricciones/catalogo?locale=` (ruta actual)
-- `/parametrica/RestriccionesAlimentarias?idEvento=` (ruta de la doc)
-
-**Si hay que cambiar:**
-1. Crear `src/app/api/parametrica/restricciones-alimentarias/route.ts` (BFF proxy con `idEvento`)
-2. Actualizar `getCatalogoRestricciones()` en el service para aceptar `idEvento`
-3. Pasar `invitacion.idEvento` al llamar `cargarCatalogo()`
-
----
-
-## Resumen de Archivos a Modificar
-
-| Archivo | Tipo de cambio |
-|---|---|
-| `src/features/rsvp/rsvp.service.ts` | Agregar campos a `PersonaConfirmarPayload` |
-| `src/app/rsvp/[token]/page.tsx` | Actualizar `PersonaFormState`, UI del form, validación, payload |
-| `src/app/api/parametrica/restricciones-alimentarias/route.ts` | **Crear** si se confirma cambio de endpoint |
-
----
-
-## Prioridad Sugerida
-
-1. 🔴 **Paso 1+2+4** — Tipos y payload (crítico, el backend rechazará sin estos)
-2. 🔴 **Paso 5** — Validación del titular (crítico, backend lo rechazaría igual)
-3. 🟡 **Paso 3** — UI de `alimentacionDetalle` (mejora UX importante)
-4. 🟢 **Paso 6** — Verificar endpoint correcto del catálogo (confirmar con backend primero)
+| Archivo | Tarea | Estado |
+|---|---|---|
+| `src/features/rsvp/rsvp.service.ts` | Nuevos tipos `RestriccionConfirmarItem`, campos en `PersonaConfirmarPayload`, `idEvento` en `InvitacionPersonalResponse`, función `getCatalogoParametrico` | ✅ Completo |
+| `src/app/api/parametrica/restricciones-alimentarias/route.ts` | Crear endpoint BFF | ✅ Completo |
+| `src/app/rsvp/[token]/page.tsx` | Todos los cambios de UI, estado, validaciones y submit | ✅ Completo |
