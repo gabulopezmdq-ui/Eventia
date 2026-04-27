@@ -1,7 +1,10 @@
 ﻿using  API.DataSchema;
+using API.DataSchema.DTO;
+using API.Security;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -71,6 +74,115 @@ namespace API.Controllers
         {
             await _serviceGenerico.Update(usuario);
             return Ok(usuario);
+        }
+
+        [HttpGet("mi-perfil")]
+        public async Task<ActionResult<MiPerfilDTO>> MiPerfil()
+        {
+            long idUsuario = User.GetUserId();
+
+            var u = await (
+                from usr in _context.Set<ef_usuarios>().AsNoTracking()
+                join p in _context.Set<ef_paises>().AsNoTracking()
+                    on usr.id_pais equals p.id_pais into pj
+                from p in pj.DefaultIfEmpty()
+                join ip in _context.Set<ef_idiomas>().AsNoTracking()
+                    on usr.id_idioma_preferido equals ip.id_idioma into ipj
+                from ip in ipj.DefaultIfEmpty()
+                join ide in _context.Set<ef_idiomas>().AsNoTracking()
+                    on usr.id_idioma_default_evento equals ide.id_idioma into idej
+                from ide in idej.DefaultIfEmpty()
+                where usr.id_usuario == idUsuario
+                select new
+                {
+                    usr.id_usuario,
+                    usr.email,
+                    usr.nombre,
+                    usr.apellido,
+                    usr.telefono,
+                    usr.id_pais,
+                    pais_nombre = p != null ? p.codigo_iso2 : null,
+                    usr.id_idioma_preferido,
+                    idioma_preferido_nombre = ip != null ? ip.nombre_largo : null,
+                    usr.id_idioma_default_evento,
+                    idioma_default_evento_nombre = ide != null ? ide.nombre_largo : null,
+                    usr.recibir_novedades,
+                    usr.fecha_alta,
+                    usr.ultimo_login
+                }
+            ).SingleOrDefaultAsync();
+
+            if (u == null)
+                return NotFound("Usuario inexistente.");
+
+            short? idRolOwner = await _context.Set<ef_roles>()
+                .AsNoTracking()
+                .Where(r => r.codigo == "EVENT_OWNER" && r.activo)
+                .Select(r => (short?)r.id_rol)
+                .SingleOrDefaultAsync();
+
+            short? idRolHost = await _context.Set<ef_roles>()
+                .AsNoTracking()
+                .Where(r => r.codigo == "EVENT_HOST" && r.activo)
+                .Select(r => (short?)r.id_rol)
+                .SingleOrDefaultAsync();
+
+            short? idRolClientAdmin = await _context.Set<ef_roles>()
+                .AsNoTracking()
+                .Where(r => r.codigo == "EVENT_CLIENT_ADMIN" && r.activo)
+                .Select(r => (short?)r.id_rol)
+                .SingleOrDefaultAsync();
+
+            var eventosUsuario = await (
+                from eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
+                join ev in _context.Set<ef_eventos>().AsNoTracking()
+                    on eu.id_evento equals ev.id_evento
+                where eu.id_usuario == idUsuario && eu.activo
+                select new
+                {
+                    eu.id_rol,
+                    ev.anfitriones_texto,
+                    ev.fecha_alta
+                }
+            ).ToListAsync();
+
+            var propios = idRolOwner.HasValue
+                ? eventosUsuario.Count(x => x.id_rol == idRolOwner.Value)
+                : 0;
+
+            var compartidos = (idRolHost.HasValue || idRolClientAdmin.HasValue)
+                ? eventosUsuario.Count(x =>
+                    (idRolHost.HasValue && x.id_rol == idRolHost.Value) ||
+                    (idRolClientAdmin.HasValue && x.id_rol == idRolClientAdmin.Value))
+                : 0;
+
+            var ultimoEvento = eventosUsuario
+                .Where(x => !string.IsNullOrWhiteSpace(x.anfitriones_texto))
+                .OrderByDescending(x => x.fecha_alta)
+                .FirstOrDefault();
+
+            var dto = new MiPerfilDTO
+            {
+                id_usuario = u.id_usuario,
+                email = u.email,
+                nombre = u.nombre,
+                apellido = u.apellido,
+                telefono = u.telefono,
+                id_pais = u.id_pais,
+                pais_nombre = u.pais_nombre,
+                id_idioma_preferido = u.id_idioma_preferido,
+                idioma_preferido_nombre = u.idioma_preferido_nombre,
+                id_idioma_default_evento = u.id_idioma_default_evento,
+                idioma_default_evento_nombre = u.idioma_default_evento_nombre,
+                recibir_novedades = u.recibir_novedades,
+                fecha_alta = u.fecha_alta,
+                ultimo_acceso = u.ultimo_login,
+                cantidad_eventos_propios = propios,
+                cantidad_eventos_compartidos = compartidos,
+                ultimo_evento_creado = ultimoEvento != null ? ultimoEvento.anfitriones_texto : null
+            };
+
+            return Ok(dto);
         }
 
     }

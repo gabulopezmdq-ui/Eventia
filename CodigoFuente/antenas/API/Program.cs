@@ -29,7 +29,7 @@ using System.Security.Claims;
 using System.Text;
 using QuestPDF.Infrastructure;
 using API.Services.Cuentas;
-
+using API.Services.Staff;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -145,6 +145,28 @@ builder.Services.AddScoped<IAdminCuentasService, AdminCuentasService>();
 builder.Services.AddScoped<ICuentaContextService, CuentaContextService>();
 builder.Services.AddScoped<IMesasService, MesasService>();
 
+builder.Services.AddScoped<IEventoHospedajesService, EventoHospedajesService>();
+builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();
+
+builder.Services.AddScoped<ICuentaHospedajePlantillasService, CuentaHospedajePlantillasService>();
+
+builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksService>();
+builder.Services.AddScoped<IAudienciasService, AudienciasService>();
+
+
+// Módulo Álbum
+builder.Services.AddScoped<IStorageService, StorageService>();
+builder.Services.AddScoped<IFeatureGuardService, FeatureGuardService>();
+builder.Services.AddScoped<IAlbumService, AlbumService>();
+builder.Services.AddScoped<IFotocabinaService, FotocabinaService>();
+builder.Services.AddScoped<IRankingService, RankingService>();
+
+builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksService>();
+
+// Módulo Staff
+builder.Services.AddScoped<StaffService>();
+
+
 
 
 // Registro de repositorios
@@ -200,6 +222,7 @@ Console.WriteLine("==== Fin de Endpoints ====");
 
 app.UseMiddleware<GlobalErrorHandlingMiddleware>();
 
+app.UseStaticFiles();
 app.UseCors("CorsPolicy");
 app.UseRouting();
 

@@ -1,4 +1,4 @@
-﻿using API.DataSchema.DTO;
+using API.DataSchema.DTO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,8 +13,9 @@ namespace API.Services
         Task<EventoResponse> AdminGetEventoAsync(long idEvento);
         Task ActivarEventoAdminAsync(long idEvento, long idUsuarioAdmin);
         Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req);
-
-
+        Task<List<EventoResponse>> MisEventosCuentaAsync(long idUsuario, long? idUnidad = null, long? idCliente = null, string? estado = null);
+        Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req);
+        Task<List<MesaRestriccionesDTO>> GetReporteRestriccionesMesasAsync(long idEvento);
 
     }
 }

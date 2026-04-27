@@ -1009,5 +1009,126 @@ CREATE INDEX IF NOT EXISTS ix_bph_prospecto ON public.ef_b2b_prospectos_hist (id
 
 
 -- ============================================================
+-- 14. ÁLBUM, FOTOCABINA Y RANKINGS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_config (
+    id_evento                    bigint PRIMARY KEY REFERENCES public.ef_eventos(id_evento),
+    moderacion_obligatoria       boolean NOT NULL DEFAULT true,
+    permitir_nombre_invitado     boolean NOT NULL DEFAULT true,
+    permitir_mensaje             boolean NOT NULL DEFAULT true,
+    permitir_likes               boolean NOT NULL DEFAULT true,
+    permitir_descarga            boolean NOT NULL DEFAULT false,
+    mostrar_solo_aprobadas       boolean NOT NULL DEFAULT true,
+    live_modo                    varchar(20) NOT NULL DEFAULT 'TODAS', -- TODAS / DESTACADAS / RANKING
+    fotocabina_activa            boolean NOT NULL DEFAULT false,
+    fotocabina_overlay_default_id bigint,
+    fecha_alta                   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_fotos (
+    id_foto          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_evento        bigint NOT NULL REFERENCES public.ef_eventos(id_evento),
+    id_tramo         bigint REFERENCES public.ef_evento_tramos(id_tramo),
+    id_overlay       bigint,
+    id_invitado      bigint REFERENCES public.ef_invitados(id_invitado),
+    device_id        varchar(100),
+    storage_provider varchar(20) NOT NULL, -- LOCAL / S3_COMPATIBLE
+    storage_bucket   varchar(100),
+    storage_key      varchar(500) NOT NULL,
+    url_publica      varchar(1000),
+    thumbnail_url    varchar(1000),
+    nombre_original  varchar(255),
+    mime_type        varchar(100),
+    tamano_bytes     bigint,
+    ancho            integer,
+    alto             integer,
+    nombre_invitado  varchar(100),
+    mensaje          varchar(500),
+    origen           varchar(20) NOT NULL, -- INVITADO / ADMIN / LIVE / FOTOCABINA
+    estado           varchar(20) NOT NULL, -- PENDIENTE / APROBADA / RECHAZADA
+    es_destacada     boolean NOT NULL DEFAULT false,
+    likes_count      integer NOT NULL DEFAULT 0,
+    activo           boolean NOT NULL DEFAULT true,
+    fecha_alta       timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_likes (
+    id_foto    bigint NOT NULL REFERENCES public.ef_evento_album_fotos(id_foto),
+    id_evento  bigint NOT NULL REFERENCES public.ef_eventos(id_evento),
+    device_id  varchar(100) NOT NULL,
+    id_invitado bigint REFERENCES public.ef_invitados(id_invitado),
+    fecha_alta timestamptz DEFAULT now(),
+    PRIMARY KEY (id_foto, device_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_estados_hist (
+    id_hist    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_foto    bigint REFERENCES public.ef_evento_album_fotos(id_foto),
+    estado     varchar(20),
+    id_usuario bigint REFERENCES public.ef_usuarios(id_usuario),
+    fecha_alta timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_overlays (
+    id_overlay    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_evento     bigint REFERENCES public.ef_eventos(id_evento),
+    nombre        varchar(120),
+    descripcion   varchar(240),
+    storage_key   varchar(500),
+    url_publica   varchar(1000),
+    thumbnail_url varchar(1000),
+    orden         smallint,
+    es_default    boolean DEFAULT false,
+    activo        boolean DEFAULT true,
+    fecha_alta    timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_fotocabina_usos (
+    id_uso      bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_evento   bigint REFERENCES public.ef_eventos(id_evento),
+    id_overlay  bigint REFERENCES public.ef_evento_album_overlays(id_overlay),
+    id_foto     bigint REFERENCES public.ef_evento_album_fotos(id_foto),
+    id_invitado bigint REFERENCES public.ef_invitados(id_invitado),
+    device_id   varchar(100),
+    estado      varchar(20),
+    fecha_alta  timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_rankings (
+    id_ranking         bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_evento          bigint REFERENCES public.ef_eventos(id_evento),
+    nombre             varchar(120) NOT NULL,
+    modo               varchar(20), -- AUTOMATICO / CONCURSO
+    alcance            varchar(20), -- EVENTO / TRAMO / FOTOCABINA / DESTACADAS
+    id_tramo           bigint REFERENCES public.ef_evento_tramos(id_tramo),
+    solo_origen        varchar(20),
+    solo_destacadas    boolean DEFAULT false,
+    activo             boolean DEFAULT true,
+    visible_publico    boolean DEFAULT true,
+    mostrar_resultados boolean DEFAULT true,
+    mostrar_votos      boolean DEFAULT true,
+    fecha_inicio       timestamptz,
+    fecha_fin          timestamptz,
+    cerrado            boolean DEFAULT false,
+    cantidad_ganadoras smallint DEFAULT 1,
+    id_foto_ganadora   bigint
+);
+
+CREATE TABLE IF NOT EXISTS public.ef_evento_album_ranking_votos (
+    id_voto    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_ranking bigint REFERENCES public.ef_evento_album_rankings(id_ranking),
+    id_evento  bigint REFERENCES public.ef_eventos(id_evento),
+    id_foto    bigint REFERENCES public.ef_evento_album_fotos(id_foto),
+    device_id  varchar(100) NOT NULL,
+    id_invitado bigint REFERENCES public.ef_invitados(id_invitado),
+    fecha_alta timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS ix_eaf_evento ON public.ef_evento_album_fotos (id_evento);
+CREATE INDEX IF NOT EXISTS ix_ear_evento ON public.ef_evento_album_rankings (id_evento);
+
+
+-- ============================================================
 -- FIN DEL SCRIPT
 -- ============================================================
