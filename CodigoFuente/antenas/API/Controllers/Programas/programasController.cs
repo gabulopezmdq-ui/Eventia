@@ -720,6 +720,33 @@ namespace API.Controllers.Programas
             return Ok(result);
         }
 
+        [AllowAnonymous]
+        [HttpGet("tipos-campo-extra")]
+        public async Task<IActionResult> GetTiposCampoExtra([FromQuery] short idIdioma)
+        {
+            var result = await (
+                from t in _context.Set<ef_param_programa_tipos_campo_extra>().AsNoTracking()
+                where t.activo == true
+                orderby t.orden
+                select new
+                {
+                    id = t.id_tipo_campo_extra,
+                    codigo = t.codigo,
+                    texto = _context.Set<ef_param_traducciones>()
+                        .Where(tr =>
+                            tr.entidad == "PROGRAMA_TIPO_CAMPO_EXTRA" &&
+                            tr.id_item == t.id_tipo_campo_extra &&
+                            tr.id_idioma == idIdioma &&
+                            tr.activo == true)
+                        .Select(tr => tr.texto)
+                        .FirstOrDefault() ?? t.codigo,
+                    orden = t.orden
+                }
+            ).ToListAsync();
+
+            return Ok(result);
+        }
+
 
 
     }
