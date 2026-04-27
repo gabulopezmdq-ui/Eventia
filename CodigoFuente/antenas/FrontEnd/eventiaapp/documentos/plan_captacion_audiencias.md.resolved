@@ -1,0 +1,565 @@
+# Plan de Implementación Frontend: Captación y Audiencias
+
+> **Documento base**: `Eventia-Eventos Captacion Audiencia_v2.md`  
+> **Stack**: Next.js 14 (App Router) · TypeScript · Vanilla CSS  
+> **Proyecto**: `src/` en `eventiaapp`
+
+---
+
+## Resumen Ejecutivo
+
+El módulo convierte Eventia en un **mini CRM de audiencias**. El trabajo frontend se divide en:
+
+1. **Panel B2B (dashboard)** — gestión interna del organizador
+2. **Páginas públicas** — landing + formulario que ve el asistente
+3. **Pantallas operativas** — QR entrada y QR beneficio (staff)
+4. **Módulo Audiencias** — vista y gestión de la audiencia de cuenta
+
+---
+
+## Árbol de Archivos a Crear
+
+```
+src/
+├── features/
+│   └── captacion/                          ← NUEVO feature
+│       ├── types.ts
+│       ├── captacion.service.ts
+│       └── audiencias.service.ts
+│
+├── app/
+│   ├── api/
+│   │   ├── captacion-links/route.ts        ← proxy campañas GET/POST
+│   │   ├── captacion-links-toggle/route.ts ← proxy SET activo
+│   │   ├── captacion-landing/route.ts      ← proxy landing pública
+│   │   ├── audiencias-registrar/route.ts   ← proxy registro público
+│   │   ├── audiencias-evento/route.ts      ← proxy registros evento
+│   │   ├── audiencias-buscar/route.ts      ← proxy búsqueda manual
+│   │   ├── audiencias-qr-entrada/route.ts  ← proxy ResolverQrEntrada
+│   │   ├── audiencias-qr-beneficio/route.ts← proxy ResolverQrBeneficio
+│   │   ├── audiencias-checkin/route.ts     ← proxy POST checkins
+│   │   ├── audiencias-canjear/route.ts     ← proxy POST Canjear
+│   │   ├── audiencias-asistencia/route.ts  ← proxy checkins evento
+│   │   ├── audiencias-metricas/route.ts    ← proxy métricas
+│   │   ├── audiencias-cuenta/route.ts      ← proxy GetAll (CRM)
+│   │   ├── audiencias-detalle/route.ts     ← proxy GetById
+│   │   ├── audiencias-tags/route.ts        ← proxy Tags CRUD
+│   │   └── parametrica/
+│   │       ├── tipos-beneficio/route.ts    ← proxy TiposBeneficioRegistro
+│   │       ├── perfiles-asistencia/route.ts← proxy PerfilesAsistencia
+│   │       └── intereses-musicales/route.ts← proxy InteresesEventoPublico
+│   │                                           + PreferenciasMusicales
+│   │
+│   ├── dashboard/
+│   │   └── events/
+│   │       └── [id]/
+│   │           └── audiencias/             ← NUEVO (panel B2B)
+│   │               └── page.tsx            ← TabContainer principal
+│   │
+│   └── registro/                           ← NUEVO (páginas públicas)
+│       └── [token]/
+│           └── page.tsx                    ← Landing pública + formulario
+│
+└── components/
+    └── captacion/                          ← NUEVO componentes reutilizables
+        ├── CampanasTab.tsx
+        ├── CampanaFormModal.tsx
+        ├── PersonasRegistradasTab.tsx
+        ├── AsistenciaTab.tsx
+        ├── MetricasTab.tsx
+        ├── QrEntradaScreen.tsx
+        ├── QrBeneficioScreen.tsx
+        ├── LandingPublica.tsx
+        ├── FormularioRegistroPublico.tsx
+        └── AudienciaCuenta/
+            ├── AudienciaListPage.tsx
+            └── AudienciaDetallePage.tsx
+```
+
+---
+
+## FASE 1 — Tipos e Interfaces TypeScript
+
+**Archivo**: `src/features/captacion/types.ts`
+
+### Tipos a definir
+
+```typescript
+// Campaña / Captación Link
+interface CaptacionLink { ... }
+
+// Landing pública (respuesta del GET Landing)
+interface LandingData { ... }
+
+// Registro de audiencia (payload POST Registrar)
+interface RegistroAudienciaPayload { ... }
+
+// Respuesta del registro
+interface RegistroAudienciaResponse { ... }
+
+// Persona registrada al evento (grilla)
+interface PersonaRegistrada { ... }
+
+// Resultado QR Entrada
+interface QrEntradaResult { ... }
+
+// Resultado QR Beneficio  
+interface QrBeneficioResult { ... }
+
+// Checkin payload
+interface CheckinPayload { ... }
+
+// Métricas del evento
+interface MetricasEvento { ... }
+
+// Audiencia Persona (CRM)
+interface AudienciaPersona { ... }
+interface AudienciaPersonaDetalle extends AudienciaPersona { ... }
+
+// Tag
+interface AudienciaTag { ... }
+interface TagSugerido { ... }
+
+// Paramétrica genérica
+interface Parametrica { id: number; codigo: string; texto: string; orden: number }
+```
+
+---
+
+## FASE 2 — API Proxies
+
+Siguiendo el patrón existente en `src/app/api/`, crear un proxy por cada grupo de endpoints del backend.
+
+| Proxy Route | Método(s) | Backend Endpoint |
+|---|---|---|
+| `captacion-links/route.ts` | GET, POST | `/evento_captacion_links/GetByEvento`, `/Upsert` |
+| `captacion-links-toggle/route.ts` | PUT | `/evento_captacion_links/SetActivo` |
+| `captacion-landing/route.ts` | GET | `/evento_captacion_links/Landing?token=` |
+| `audiencias-registrar/route.ts` | POST | `/audiencias/Registrar?token=` |
+| `audiencias-evento/route.ts` | GET | `/audiencias/GetRegistrosEvento?idEvento=` |
+| `audiencias-buscar/route.ts` | GET | `/audiencias/BuscarRegistrado?idEvento=&query=` |
+| `audiencias-qr-entrada/route.ts` | GET | `/audiencias/ResolverQrEntrada` |
+| `audiencias-qr-beneficio/route.ts` | GET | `/audiencias/ResolverQrBeneficio` |
+| `audiencias-qr-entrada-manual/route.ts` | GET | `/audiencias/ResolverEntradaManual` |
+| `audiencias-checkin/route.ts` | POST | `/evento_checkins` |
+| `audiencias-canjear/route.ts` | POST | `/evento_beneficios_registro/Canjear` |
+| `audiencias-asistencia/route.ts` | GET | `/evento_checkins/GetByEvento?idEvento=` |
+| `audiencias-metricas/route.ts` | GET | `/audiencias/GetMetricasEvento?idEvento=` |
+| `audiencias-cuenta/route.ts` | GET | `/audiencias/GetAll?soloActivas=true` |
+| `audiencias-detalle/route.ts` | GET | `/audiencias/GetById?idAudienciaPersona=` |
+| `audiencias-tags/route.ts` | GET, POST, PUT | `/audiencias/TagsSugeridos`, `/AgregarTag`, `/SetTagActivo` |
+| `parametrica/tipos-beneficio/route.ts` | GET | `/parametrica/TiposBeneficioRegistro?idEvento=` |
+| `parametrica/perfiles-asistencia/route.ts` | GET | `/parametrica/PerfilesAsistencia?idEvento=` |
+| `parametrica/intereses-musicales/route.ts` | GET | `/parametrica/InteresesEventoPublico`, `/PreferenciasMusicales` |
+
+---
+
+## FASE 3 — Servicios Frontend
+
+**Archivo**: `src/features/captacion/captacion.service.ts`
+
+```typescript
+// Funciones de servicio
+getCampanas(idEvento: number): Promise<CaptacionLink[]>
+saveCampana(idEvento: number, data: Partial<CaptacionLink>): Promise<void>
+toggleCampana(idAccesoLink: number, activo: boolean): Promise<void>
+getLandingPublica(token: string): Promise<LandingData>
+registrarAudiencia(token: string, payload: RegistroAudienciaPayload): Promise<RegistroAudienciaResponse>
+getPersonasRegistradas(idEvento: number): Promise<PersonaRegistrada[]>
+buscarRegistrado(idEvento: number, query: string): Promise<PersonaRegistrada[]>
+resolverQrEntrada(idEvento: number, qrToken: string): Promise<QrEntradaResult>
+resolverEntradaManual(idEvento: number, idInvitado: number): Promise<QrEntradaResult>
+registrarCheckin(payload: CheckinPayload): Promise<{ ok: boolean; id_checkin: number }>
+resolverQrBeneficio(idEvento: number, qrToken: string): Promise<QrBeneficioResult>
+canjearBeneficio(idBeneficioRegistro: number, observaciones?: string): Promise<{ ok: boolean }>
+getAsistencia(idEvento: number): Promise<any[]>
+getMetricas(idEvento: number): Promise<MetricasEvento>
+```
+
+**Archivo**: `src/features/captacion/audiencias.service.ts`
+
+```typescript
+getAudienciaCuenta(): Promise<AudienciaPersona[]>
+getAudienciaDetalle(idAudienciaPersona: number): Promise<AudienciaPersonaDetalle>
+getTagsSugeridos(): Promise<TagSugerido[]>
+agregarTag(idAudienciaPersona: number, tag_tipo: string, tag_valor: string): Promise<void>
+setTagActivo(idAudienciaPersonaTag: number, activo: boolean): Promise<void>
+```
+
+---
+
+## FASE 4 — Panel B2B: Página Audiencias del Evento
+
+**Ruta**: `/dashboard/events/[id]/audiencias`  
+**Condición**: Solo visible si el evento es público (`es_publico === true`)
+
+### 4.1 Botón "Audiencias" en la pantalla de Evento
+
+Agregar en la vista de detalle del evento (ya existente) un botón que navegue a `/dashboard/events/[id]/audiencias`.
+
+> **Regla**: Mostrar solo si `evento.es_publico === true`
+
+### 4.2 Tab Container — `page.tsx`
+
+```
+src/app/dashboard/events/[id]/audiencias/page.tsx
+```
+
+Componente con 4 tabs:
+1. **Captación / Campañas**
+2. **Personas Registradas**
+3. **Asistencia**
+4. **Métricas**
+
+---
+
+### TAB 1: Captación / Campañas (`CampanasTab.tsx`)
+
+**Funcionalidad:**
+- Grilla con las campañas del evento
+- Botón **"+ Alta Campaña"** → abre `CampanaFormModal`
+- Por cada fila:
+  - **Copiar Link**: arma la URL pública `{baseUrl}/registro/{token}` y copia al clipboard
+  - **Toggle Activar/Desactivar**: llama a `PUT SetActivo`
+  - **Editar**: abre el modal con datos precargados
+
+**Columnas de la grilla:**
+
+| Columna | Campo |
+|---|---|
+| Título | `titulo` |
+| Acceso | `acceso_nombre` |
+| Activo | badge verde/rojo |
+| Vence | `fecha_expiracion` formateada |
+| Cupo total | `max_personas_total` |
+| Cupo beneficio | `cupo_beneficio` |
+| Beneficio | `beneficio_titulo` |
+| Registrados | `registrados` |
+| Benef. otorgados | `beneficios_otorgados` |
+| Benef. canjeados | `beneficios_canjeados` |
+| Acciones | copiar link / toggle / editar |
+
+---
+
+### MODAL: Alta/Edición de Campaña (`CampanaFormModal.tsx`)
+
+**Campos del formulario** (todos validados):
+
+| Campo | Tipo UI | Backend | Regla |
+|---|---|---|---|
+| Acceso | combo | `id_acceso` | Obligatorio. Fuente: `GET /evento_accesos/GetByEvento` |
+| Título | input text | `titulo` | Obligatorio |
+| Leyenda pública | textarea | `leyenda_publica` | Opcional |
+| Cupo total | number | `max_personas_total` | Obligatorio, >= 1 |
+| Máximo adultos | number | `max_adultos` | Opcional |
+| Fecha expiración | datetime-local | `fecha_expiracion` | Opcional |
+| Pedir nombres acompañantes | toggle | `requiere_nombres_acompanantes` | Default: false |
+| Es captación pública | toggle | `es_captacion_publica` | Default: true |
+| Requiere registro | toggle | `requiere_registro` | Default: true |
+| Cupo del beneficio | number | `cupo_beneficio` | Opcional |
+| Tipo de beneficio | combo | `id_tipo_beneficio_registro` | Fuente: `GET TiposBeneficioRegistro` |
+| Título del beneficio | input text | `beneficio_titulo` | Obligatorio si hay tipo beneficio |
+| Descripción beneficio | textarea | `beneficio_descripcion` | Opcional |
+| Vencimiento beneficio | datetime-local | `beneficio_hasta` | Opcional |
+| Mostrar disponibles | toggle | `mostrar_disponibles` | — |
+| Mensaje post registro | textarea | `mensaje_post_registro` | Opcional |
+| Origen default | combo editable | `origen_default` | Sugeridos: INSTAGRAM, QR_BARRA, WHATSAPP, VIP, INFLUENCERS, STAFF |
+| Permite reutilizar audiencia | toggle | `permite_reutilizar_audiencia` | — |
+| Activo | toggle | `activo` | — |
+
+**Submit**: `POST /evento_captacion_links/Upsert?idEvento={idEvento}`
+
+---
+
+### TAB 2: Personas Registradas (`PersonasRegistradasTab.tsx`)
+
+**Funcionalidad:**
+- Grilla completa con todas las personas registradas
+- Buscador de texto libre (filtra sobre los datos ya cargados)
+- Dos botones prominentes en la parte superior:
+  - 🚪 **LEER QR ENTRADA** → abre `QrEntradaScreen`
+  - 🎁 **LEER QR BENEFICIO** → abre `QrBeneficioScreen`
+
+**Columnas:**
+
+| Columna | Campo |
+|---|---|
+| Fecha alta | `fecha_alta` |
+| Nombre | `nombre` + `apellido` |
+| Email | `email` |
+| Celular | `celular` |
+| Acceso | `acceso_nombre` |
+| Campaña | (link por `id_acceso_link`) |
+| Origen | `origen_registro` como badge |
+| Perfil | `id_perfil_asistencia` |
+| Intereses | chips |
+| Música | chips |
+| Acepta com. | ✓/✗ |
+| Acepta prom. | ✓/✗ |
+| Beneficio | badge |
+| Canjeado | ✓/✗ |
+| Asistió | ✓/✗ |
+
+---
+
+### PANTALLA QR ENTRADA (`QrEntradaScreen.tsx`)
+
+Pantalla modal o full-screen. Flujo:
+
+**Paso 1 — Escanear QR**
+- Input para pegar/escanear `qr_token` (en mobile puede activar cámara via `<input capture>` o librería QR)
+- → `GET ResolverQrEntrada?idEvento=&qrToken=`
+
+**Paso 2 — Mostrar resultado**
+
+| Dato | Campo |
+|---|---|
+| Nombre y apellido | `nombre` + `apellido` |
+| Acceso | `acceso_nombre` |
+| Campaña | `campania` |
+| Estado | `ya_ingreso` → "No ingresó" / "Ya registró ingreso previo" |
+| Beneficio | Si `beneficio_pendiente=true`: muestra título + "Pendiente" |
+| Observaciones | input opcional |
+| Botón acción | "Registrar ingreso" / "Registrar reingreso" según `accion_sugerida` |
+
+**Escenario 3 — Búsqueda manual** (perdió el QR):
+- Input de búsqueda → `GET BuscarRegistrado?idEvento=&query=`
+- Mini grilla de coincidencias → seleccionar → `GET ResolverEntradaManual`
+- Si `mostrar_qr_para_canje=true`: mostrar QR generado en pantalla
+
+**Submit**: `POST /evento_checkins` con `tipo: "INGRESO" | "REINGRESO"`
+
+**Post-acción**: Mensaje de éxito + botones "Volver a escanear" / "Volver a buscar"
+
+---
+
+### PANTALLA QR BENEFICIO (`QrBeneficioScreen.tsx`)
+
+Flujo similar al QR Entrada:
+
+**Paso 1** — Escanear → `GET ResolverQrBeneficio?idEvento=&qrToken=`
+
+**Paso 2** — Según `estado_beneficio`:
+
+| Estado | Qué mostrar | Botón |
+|---|---|---|
+| `PENDIENTE` | nombre, beneficio, vencimiento, obs. | ✅ **Canjear beneficio** |
+| `CANJEADO` | nombre, beneficio, estado | — |
+| `NO_APLICA` | nombre, sin beneficio | — |
+| `VENCIDO` | nombre, beneficio, estado vencido | — |
+
+**Submit**: `POST /evento_beneficios_registro/Canjear?idBeneficioRegistro=`
+
+---
+
+### TAB 3: Asistencia (`AsistenciaTab.tsx`)
+
+- Grilla de personas que efectivamente concurrieron
+- Fuente: `GET /evento_checkins/GetByEvento?idEvento=`
+- Columnas: nombre, acceso, campaña, hora de ingreso, tipo (INGRESO/REINGRESO)
+
+---
+
+### TAB 4: Métricas (`MetricasTab.tsx`)
+
+Fuente: `GET /audiencias/GetMetricasEvento?idEvento=`
+
+**Bloque 1 — Cards resumen** (6 cards):
+
+| Card | Campo |
+|---|---|
+| Registrados | `resumen.registrados` |
+| Asistieron | `resumen.asistieron` |
+| No show | `resumen.no_show` |
+| Conversión asistencia | `resumen.conversion_asistencia_pct` % |
+| Beneficios otorgados | `resumen.beneficios_otorgados` |
+| Beneficios canjeados | `resumen.beneficios_canjeados` |
+
+**Bloque 2 — Tabla por Campaña** (con conversiones calculadas en el front)
+
+**Bloque 3 — Tabla/Gráfico por Origen** (`por_origen[]`)
+
+**Bloque 4 — Perfil de Asistencia** (tabla o pie chart, `por_perfil_asistencia[]`)
+
+**Bloque 5 — Top Intereses** (`top_intereses[]`)
+
+**Bloque 6 — Top Preferencias Musicales** (`top_preferencias_musicales[]`)
+
+> **Librería recomendada**: `recharts` (ya popular en Next.js) para los gráficos de barras y torta.
+
+---
+
+## FASE 5 — Landing Pública de Registro
+
+**Ruta**: `/registro/[token]` (pública, sin auth)
+
+### `src/app/registro/[token]/page.tsx`
+
+**Al cargar**: `GET /evento_captacion_links/Landing?token={token}`
+
+**Estructura de la pantalla (`LandingPublica.tsx`)**:
+
+```
+┌─────────────────────────────┐
+│  [Imagen/Banner Evento]      │
+│  Nombre del evento           │
+│  Leyenda pública             │
+│  ─────────────────────────  │
+│  🎁 [Beneficio si existe]   │
+│     título + descripción     │
+│     vence: fecha             │
+│  ─────────────────────────  │
+│  [FormularioRegistroPublico] │
+└─────────────────────────────┘
+```
+
+### `FormularioRegistroPublico.tsx`
+
+**Campos:**
+
+| Campo | Tipo | Regla |
+|---|---|---|
+| Nombre | input text | Obligatorio |
+| Apellido | input text | Obligatorio |
+| Email | input email | Obligatorio* |
+| Celular | input text | Obligatorio* |
+| Fecha de nacimiento | date picker | Opcional |
+| Instagram | input text | Opcional |
+| Zona | input text | Opcional |
+| Ciudad | input text | Opcional |
+| ¿Cómo asistirás? | combo | Opcional. Fuente: `GET PerfilesAsistencia` |
+| ¿Qué eventos te interesan? | multi-select chips | Opcional. Fuente: `GET InteresesEventoPublico` |
+| Preferencias musicales | multi-select chips | Opcional. Fuente: `GET PreferenciasMusicales` |
+| ☑ Acepto términos | checkbox | **Obligatorio** |
+| ☐ Quiero novedades | checkbox | Opcional |
+| ☐ Quiero promociones | checkbox | Opcional |
+
+> *Al menos uno entre email o celular debe estar presente (validar en front)
+
+**Campos tracking (ocultos)**: `origen_registro`, `campania_fuente`, `campania_medio`, `pagina_origen`, `referer` — se auto-populan desde el `origen_default` de la landing y `document.referrer`.
+
+**Submit**: `POST /audiencias/Registrar?token={token}`
+
+**Post-registro**: Pantalla de confirmación mostrando `mensaje_post_registro` y, si aplica, el `codigo_canje`. Mostrar QR del `qr_token` para que el asistente lo guarde.
+
+---
+
+## FASE 6 — Módulo CRM: Audiencia de Cuenta
+
+**Ruta**: `/dashboard/audiencia` (nueva entrada en el menú del dashboard)
+
+### 6.1 Listado de Audiencia
+
+**Fuente**: `GET /audiencias/GetAll?soloActivas=true`
+
+**Componente**: `AudienciaListPage.tsx`
+
+**Columnas:**
+
+| Columna | Notas |
+|---|---|
+| Nombre + Apellido | — |
+| Email | — |
+| Celular | — |
+| Ciudad | — |
+| Eventos registrados | numérico |
+| Eventos asistidos | numérico |
+| Última participación | fecha relativa |
+| Tags | Máximo 3 chips, resto como `+N` |
+| Acción | Botón "Ver detalle" |
+
+---
+
+### 6.2 Detalle de Audiencia
+
+**Fuente**: `GET /audiencias/GetById?idAudienciaPersona={id}`
+
+**Componente**: `AudienciaDetallePage.tsx`
+
+**Bloque 1 — Datos personales**: nombre, apellido, email, celular, fecha de nacimiento, instagram, zona, ciudad, acepta comunicaciones, acepta promociones, fecha alta.
+
+**Bloque 2 — Historial de eventos**:  
+Grilla: evento, unidad, fecha registro, asistió, origen, beneficio otorgado, beneficio canjeado.
+
+**Bloque 3 — Tags**:
+
+*Tags actuales*:
+- Chip con `nombre_mostrar`
+- Tipo: `tag_tipo`
+- Origen: `MANUAL` (color fuerte + botón "Quitar") / `AUTO` (color neutro, sin botón)
+- Quitar: `PUT /audiencias/SetTagActivo?activo=false`
+
+*Agregar tag manual*:
+- Combo "Tipo de tag" → filtra los tags sugeridos
+- Combo "Tag" → muestra los tags del tipo seleccionado (`permite_asignacion_manual=true`)
+- Botón "Agregar tag" → `POST /audiencias/AgregarTag?idAudienciaPersona=`
+
+---
+
+## FASE 7 — Integración en el Menú y Rutas
+
+### 7.1 Botón en detalle de Evento
+
+Agregar en `src/app/dashboard/events/[id]/page.tsx`:
+```tsx
+{evento.es_publico && (
+  <Link href={`/dashboard/events/${id}/audiencias`}>
+    <Button>👥 Audiencias</Button>
+  </Link>
+)}
+```
+
+### 7.2 Menú lateral del Dashboard
+
+En `src/app/dashboard/layout.tsx`, agregar ítem de menú:
+- **Audiencia** → `/dashboard/audiencia`
+
+### 7.3 Ruta pública
+
+La ruta `/registro/[token]` debe quedar **fuera del middleware de autenticación** (actualizar `src/middleware.ts` para excluirla).
+
+---
+
+## Orden de Implementación Sugerido
+
+```
+Sprint 1 (base):
+  ✅ Fase 1 — types.ts
+  ✅ Fase 2 — API Proxies
+  ✅ Fase 3 — Services
+
+Sprint 2 (panel B2B):
+  ✅ Fase 4.1 — Tab Container + Tab Campañas + Modal Alta
+  ✅ Fase 4.2 — Tab Personas Registradas
+  ✅ Fase 4.3 — Pantallas QR Entrada y Beneficio
+
+Sprint 3 (pública + métricas):
+  ✅ Fase 5 — Landing pública + formulario registro
+  ✅ Fase 4.4 — Tab Asistencia
+  ✅ Fase 4.5 — Tab Métricas
+
+Sprint 4 (CRM):
+  ✅ Fase 6 — Módulo Audiencia de Cuenta (listado + detalle + tags)
+  ✅ Fase 7 — Integración menú y middleware
+```
+
+---
+
+## Notas Técnicas Importantes
+
+> [!IMPORTANT]
+> La ruta pública `/registro/[token]` **no requiere autenticación**. Asegurarse de excluirla en `middleware.ts`.
+
+> [!NOTE]
+> El campo `email` o `celular` debería ser obligatorio en el formulario público según la nota del documento: *"sino para invitarlos en una próxima campaña masiva no sirven estos registros"*.
+
+> [!TIP]
+> Para el escaneo QR en mobile, considerar la librería `html5-qrcode` o `@zxing/browser`. En desktop, el flujo de pegar manualmente el token es suficiente.
+
+> [!NOTE]
+> Los campos de tracking (`origen_registro`, `campania_fuente`, etc.) se auto-completan en el front: `origen_default` viene del landing, `referer` de `document.referrer`, `pagina_origen` de `window.location.pathname`.
+
+> [!NOTE]
+> Para las métricas, las fórmulas de conversión se calculan en el front:  
+> - Conversión asistencia: `asistieron * 100 / registrados`  
+> - Conversión beneficio: `beneficios_canjeados * 100 / beneficios_otorgados`

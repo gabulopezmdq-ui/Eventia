@@ -126,6 +126,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                                     <SidebarItem href="/dashboard/cuenta" icon={LayoutDashboard} label="Dashboard Cuenta" />
                                     <SidebarItem href="/dashboard/cuenta/unidades" icon={Building2} label="Unidades" />
                                     <SidebarItem href="/dashboard/cuenta/clientes" icon={Users} label="Clientes" />
+                                    <SidebarItem href="/dashboard/audiencia" icon={Sparkles} label="Audiencias (CRM)" />
                                     <SidebarItem href="/dashboard/cuenta/eventos" icon={CalendarRange} label="Eventos de Cuenta" />
                                     <SidebarItem href="/dashboard/cuenta/plan" icon={CreditCard} label="Plan y Facturación" />
                                 </>

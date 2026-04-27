@@ -301,6 +301,26 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </button>
                     </div>
 
+                    {/* Quick Link Card - Audiencias */}
+                    <div className="p-6 rounded-2xl bg-purple-600/10 border border-purple-500/20 space-y-4">
+                        <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center">
+                            <Sparkles className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-foreground text-sm">Captación y Audiencias</h4>
+                            <p className="text-muted text-xs mt-1 leading-relaxed">
+                                Gestioná campañas públicas, inscripciones masivas, control de acceso y entrega de beneficios.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/audiencias`)}
+                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 hover:bg-purple-400 transition-all"
+                        >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Ver Audiencias
+                        </button>
+                    </div>
+
                     {/* Secondary Actions */}
                     <div className="space-y-2">
                         <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-card-border text-muted hover:text-foreground hover:bg-card-bg transition-all text-xs font-bold uppercase tracking-widest">
