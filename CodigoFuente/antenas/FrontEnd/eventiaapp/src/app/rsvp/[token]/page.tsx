@@ -1,20 +1,26 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
 import {
     CheckCircle2, AlertCircle, ChefHat, User, MessageSquare,
-    ArrowRight, HeartPulse, ChevronRight, Apple, Baby, Phone, Mail,
+    ArrowRight, HeartPulse, Baby, Phone, Mail,
     MapPin, Calendar, Users, PlusCircle, Trash2
 } from 'lucide-react';
 import {
-    confirmarRsvp, getInvitacionPersonal, getMisRestricciones,
-    getCatalogoRestricciones, getDatosInvitacion, guardarRestricciones,
+    confirmarRsvp, getInvitacionPersonal,
+    getCatalogoRestricciones, getCatalogoParametrico, getDatosInvitacion,
     InvitacionPersonalResponse, PersonaInvitacion, PersonaConfirmarPayload,
-    GrupoRsvpInfo, CatalogoRestriccion
+    CatalogoRestriccion
 } from '@/src/features/rsvp/rsvp.service';
 
-type Step = 'LOADING' | 'VERIFYING' | 'RSVP' | 'RESTRICTIONS' | 'SUCCESS' | 'ERROR';
+type Step = 'LOADING' | 'VERIFYING' | 'RSVP' | 'SUCCESS' | 'ERROR';
+
+// Restricción seleccionada localmente (por persona)
+interface RestriccionLocal {
+    idRestriccion: number;
+    severidad: 'L' | 'M' | 'G';
+    observaciones: string;
+}
 
 // Local state for each person in the confirmation form
 interface PersonaFormState {
@@ -27,6 +33,8 @@ interface PersonaFormState {
     asiste: boolean;
     mensaje: string;
     isNew: boolean; // true = persona agregada por el invitado
+    alimentacionDetalle: string;   // Texto libre: alergias, aclaraciones no categorizadas
+    restriccionesSeleccionadas: Record<number, RestriccionLocal>; // key = idRestriccion
 }
 
 export default function RsvpPage({
@@ -39,7 +47,6 @@ export default function RsvpPage({
     const { token } = use(params);
     const { idAcceso } = use(searchParams);
     const idAccesoNum = idAcceso ? parseInt(idAcceso, 10) : null;
-    const router = useRouter();
 
     const [step, setStep] = useState<Step>('VERIFYING');
     const [errorMsg, setErrorMsg] = useState('');
@@ -52,10 +59,8 @@ export default function RsvpPage({
     const [mensajeGrupo, setMensajeGrupo] = useState('');
     const [globalAsiste, setGlobalAsiste] = useState<boolean | null>(null);
 
-    // --- Restrictions State ---
-    const [grupoInfo, setGrupoInfo] = useState<GrupoRsvpInfo | null>(null);
+    // --- Restrictions catalogue (loaded at start, keyed by idRestriccion) ---
     const [catalogo, setCatalogo] = useState<CatalogoRestriccion[]>([]);
-    const [restriccionesOpts, setRestriccionesOpts] = useState<Record<number, Record<number, any>>>({});
 
     useEffect(() => {
         verificarEstado();
@@ -76,6 +81,7 @@ export default function RsvpPage({
                     const legacyData = await getDatosInvitacion(token);
                     // Build a minimal invitacion object from legacy data
                     setInvitacion({
+                        idEvento: 0,
                         idGrupo: 0,
                         nombreGrupo: `${legacyData.nombre || ''} ${legacyData.apellido || ''}`.trim(),
                         saludo: '',
@@ -106,33 +112,41 @@ export default function RsvpPage({
                         asiste: true,
                         mensaje: '',
                         isNew: false,
+                        alimentacionDetalle: '',
+                        restriccionesSeleccionadas: {},
                     };
                 }));
             }
 
-            // Then check if they already confirmed (have restrictions group)
-            try {
-                const data = await getMisRestricciones(token);
-                setGrupoInfo(data);
-                await cargarCatalogo();
-                setStep('RESTRICTIONS');
-                return;
-            } catch {
-                // Normal: they haven't confirmed yet
-            }
+            // Load catalogue early so it's ready when user fills the RSVP form
+            await cargarCatalogo(inviteData?.idEvento);
 
             setStep('RSVP');
-        } catch (error) {
+        } catch {
             setStep('RSVP');
         }
     };
 
-    const cargarCatalogo = async () => {
+    const cargarCatalogo = async (idEvento?: number) => {
+        console.log('=== [CATALOGO] cargarCatalogo() llamado con idEvento:', idEvento);
         try {
-            const data = await getCatalogoRestricciones();
-            setCatalogo(data.sort((a, b) => a.orden - b.orden));
+            let data: CatalogoRestriccion[];
+            if (idEvento && idEvento > 0) {
+                // Preferred: event-specific catalogue (respects event language)
+                console.log('[CATALOGO] Usando endpoint paramétrico con idEvento:', idEvento);
+                data = await getCatalogoParametrico(idEvento);
+            } else {
+                // Fallback: generic catalogue by locale
+                console.log('[CATALOGO] Usando fallback por locale (es-AR)');
+                data = await getCatalogoRestricciones();
+            }
+            console.log('[CATALOGO] Respuesta cruda:', data);
+            // Guard: si el backend devuelve { data: [...] } en lugar de [...]
+            const lista = Array.isArray(data) ? data : (data as any)?.data ?? [];
+            console.log('[CATALOGO] Items parseados:', lista.length, lista);
+            setCatalogo(lista.sort((a: CatalogoRestriccion, b: CatalogoRestriccion) => a.orden - b.orden));
         } catch (e) {
-            console.warn("No se pudo cargar el catálogo de restricciones", e);
+            console.error('=== [CATALOGO] ERROR al cargar el catálogo de restricciones:', e);
         }
     };
 
@@ -153,6 +167,8 @@ export default function RsvpPage({
         setPersonas(prev => [...prev, {
             nombre: '', apellido: '', email: '', celular: '',
             rolEvento: 'A', asiste: true, mensaje: '', isNew: true,
+            alimentacionDetalle: '',
+            restriccionesSeleccionadas: {},
         }]);
     };
 
@@ -164,6 +180,8 @@ export default function RsvpPage({
         setPersonas(prev => [...prev, {
             nombre: '', apellido: '', email: '', celular: '',
             rolEvento: 'N', asiste: true, mensaje: '', isNew: true,
+            alimentacionDetalle: '',
+            restriccionesSeleccionadas: {},
         }]);
     };
 
@@ -179,7 +197,38 @@ export default function RsvpPage({
         ? personas.filter(p => p.isNew && p.rolEvento === 'N').length < invitacion.cuposMenoresRestantes
         : false;
 
-    // --- Submit RSVP ---
+    // --- Helpers para manejar restricciones por persona (sobre PersonaFormState) ---
+    const toggleRestriccionPersona = (personaIdx: number, idRestriccion: number) => {
+        setPersonas(prev => {
+            const updated = [...prev];
+            const persona = { ...updated[personaIdx] };
+            const sel = { ...persona.restriccionesSeleccionadas };
+            if (sel[idRestriccion]) {
+                delete sel[idRestriccion];
+            } else {
+                sel[idRestriccion] = { idRestriccion, severidad: 'M', observaciones: '' };
+            }
+            persona.restriccionesSeleccionadas = sel;
+            updated[personaIdx] = persona;
+            return updated;
+        });
+    };
+
+    const updateRestriccionPersona = (personaIdx: number, idRestriccion: number, field: 'severidad' | 'observaciones', value: string) => {
+        setPersonas(prev => {
+            const updated = [...prev];
+            const persona = { ...updated[personaIdx] };
+            const sel = { ...persona.restriccionesSeleccionadas };
+            if (sel[idRestriccion]) {
+                sel[idRestriccion] = { ...sel[idRestriccion], [field]: value };
+            }
+            persona.restriccionesSeleccionadas = sel;
+            updated[personaIdx] = persona;
+            return updated;
+        });
+    };
+
+    // --- Submit RSVP unificado (datos + restricciones en una sola llamada) ---
     const handleRsvpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -188,97 +237,51 @@ export default function RsvpPage({
             return;
         }
 
+        // Validación dura: email y celular del titular son obligatorios
+        if (globalAsiste === true) {
+            const titular = personas[0];
+            if (!titular?.email?.trim() || !titular?.celular?.trim()) {
+                alert('El email y el celular del titular son obligatorios para confirmar la asistencia.');
+                return;
+            }
+        }
+
         setStep('LOADING');
         try {
-            // Build the personas payload
-            const personasPayload: PersonaConfirmarPayload[] = personas.map(p => ({
-                idInvitado: p.idInvitado || 0,
-                nombre: p.nombre,
-                apellido: p.apellido,
-                email: p.email || undefined,
-                celular: p.celular || undefined,
-                rolEvento: p.rolEvento,
-                asiste: globalAsiste === false ? false : p.asiste,
-                mensaje: p.mensaje || undefined,
-            }));
+            const personasPayload: PersonaConfirmarPayload[] = personas.map(p => {
+                const asistel = globalAsiste === false ? false : p.asiste;
+
+                // Construir array de restricciones detalladas
+                const restriccionesArr = Object.values(p.restriccionesSeleccionadas).map(r => ({
+                    idRestriccion: r.idRestriccion,
+                    observaciones: r.observaciones || null,
+                }));
+
+                return {
+                    idInvitado: p.idInvitado || undefined,
+                    nombre: p.nombre,
+                    apellido: p.apellido,
+                    email: p.email || undefined,
+                    celular: p.celular || undefined,
+                    rolEvento: p.rolEvento,
+                    asiste: asistel,
+                    mensaje: p.mensaje || undefined,
+                    alimentacionDetalle: p.alimentacionDetalle || undefined,
+                    restricciones: restriccionesArr.length > 0 ? restriccionesArr : undefined,
+                };
+            });
 
             const payloadAEnviar = {
                 mensajeGrupo: mensajeGrupo || undefined,
                 personas: personasPayload,
             };
 
-            console.log('=== INFO DEL RSVP A ENVIAR ===', payloadAEnviar);
+            console.log('=== RSVP PAYLOAD UNIFICADO ===', JSON.stringify(payloadAEnviar, null, 2));
 
             await confirmarRsvp(token, payloadAEnviar);
-
-            if (!globalAsiste) {
-                setStep('SUCCESS');
-                return;
-            }
-
-            // If confirmed, get restrictions
-            try {
-                const data = await getMisRestricciones(token);
-                setGrupoInfo(data);
-                await cargarCatalogo();
-                setStep('RESTRICTIONS');
-            } catch {
-                // If restrictions endpoint fails, just go to success
-                setStep('SUCCESS');
-            }
-
-        } catch (err: any) {
-            setErrorMsg(err.message || 'Error al confirmar asistencia');
-            setStep('ERROR');
-        }
-    };
-
-    // --- Restrictions ---
-    const toggleRestriccion = (idIntegrante: number, idRestriccion: number) => {
-        setRestriccionesOpts(prev => {
-            const userOts = prev[idIntegrante] ? { ...prev[idIntegrante] } : {};
-            if (userOts[idRestriccion]) {
-                delete userOts[idRestriccion];
-            } else {
-                userOts[idRestriccion] = { idRestriccion, severidad: 'M', observaciones: '' };
-            }
-            return { ...prev, [idIntegrante]: userOts };
-        });
-    };
-
-    const updateRestriccionMeta = (idIntegrante: number, idRestriccion: number, field: string, value: string) => {
-        setRestriccionesOpts(prev => {
-            const userOts = prev[idIntegrante] ? { ...prev[idIntegrante] } : {};
-            if (userOts[idRestriccion]) {
-                userOts[idRestriccion] = { ...userOts[idRestriccion], [field]: value };
-            }
-            return { ...prev, [idIntegrante]: userOts };
-        });
-    };
-
-    const handleRestriccionesSubmit = async () => {
-        if (!grupoInfo) return;
-        setStep('LOADING');
-
-        try {
-            const integrantesPayload = grupoInfo.integrantes.map(integ => {
-                const userOpts = restriccionesOpts[integ.idRsvpGrupoIntegrante] || {};
-                const resArray = Object.values(userOpts).map(opts => ({
-                    idRestriccion: opts.idRestriccion,
-                    severidad: opts.severidad,
-                    observaciones: opts.observaciones || null
-                }));
-
-                return {
-                    idRsvpGrupoIntegrante: integ.idRsvpGrupoIntegrante,
-                    restricciones: resArray
-                };
-            });
-
-            await guardarRestricciones(token, { integrantes: integrantesPayload });
             setStep('SUCCESS');
         } catch (err: any) {
-            setErrorMsg(err.message || 'Error al guardar las restricciones');
+            setErrorMsg(err.message || 'Error al confirmar asistencia');
             setStep('ERROR');
         }
     };
@@ -366,38 +369,38 @@ export default function RsvpPage({
                     const agendaMostrar = agendaFiltrada.length > 0 ? agendaFiltrada : invitacion.agenda;
 
                     return (
-                    <div className="mb-10 space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                        <h2 className="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-indigo-400" /> Tu Acceso al Evento
-                        </h2>
-                        {agendaMostrar.map((acceso, aIdx) => (
-                            <div key={aIdx} className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
-                                <div className="px-5 py-3 border-b border-white/5 bg-white/[0.03]">
-                                    <h3 className="font-bold text-sm text-white">{acceso.nombreAcceso}</h3>
-                                </div>
-                                <div className="divide-y divide-white/5">
-                                    {acceso.tramos.map((tramo, tIdx) => (
-                                        <div key={tIdx} className="px-5 py-4 flex items-start gap-4">
-                                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xs font-bold shrink-0 mt-0.5">
-                                                {tramo.orden}
+                        <div className="mb-10 space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                            <h2 className="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-indigo-400" /> Tu Acceso al Evento
+                            </h2>
+                            {agendaMostrar.map((acceso, aIdx) => (
+                                <div key={aIdx} className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+                                    <div className="px-5 py-3 border-b border-white/5 bg-white/[0.03]">
+                                        <h3 className="font-bold text-sm text-white">{acceso.nombreAcceso}</h3>
+                                    </div>
+                                    <div className="divide-y divide-white/5">
+                                        {acceso.tramos.map((tramo, tIdx) => (
+                                            <div key={tIdx} className="px-5 py-4 flex items-start gap-4">
+                                                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xs font-bold shrink-0 mt-0.5">
+                                                    {tramo.orden}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-semibold text-sm text-white">{tramo.nombre}</p>
+                                                    {tramo.descripcion && (
+                                                        <p className="text-xs text-muted mt-0.5">{tramo.descripcion}</p>
+                                                    )}
+                                                    {tramo.lugar && (
+                                                        <p className="text-xs text-muted/60 mt-1 flex items-center gap-1">
+                                                            <MapPin className="w-3 h-3" /> {tramo.lugar}{tramo.direccion ? ` — ${tramo.direccion}` : ''}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-semibold text-sm text-white">{tramo.nombre}</p>
-                                                {tramo.descripcion && (
-                                                    <p className="text-xs text-muted mt-0.5">{tramo.descripcion}</p>
-                                                )}
-                                                {tramo.lugar && (
-                                                    <p className="text-xs text-muted/60 mt-1 flex items-center gap-1">
-                                                        <MapPin className="w-3 h-3" /> {tramo.lugar}{tramo.direccion ? ` — ${tramo.direccion}` : ''}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
                     );
                 })()}
 
@@ -478,22 +481,121 @@ export default function RsvpPage({
                                                 </div>
                                             </div>
 
-                                            {/* Email & Celular only for adults */}
+                                            {/* Email & Celular — adultos; required solo para el titular */}
                                             {persona.rolEvento === 'A' && (
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div>
                                                         <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                            <Mail className="w-3 h-3 inline mr-1" /> Email
+                                                            <Mail className="w-3 h-3 inline mr-1" />
+                                                            Email{idx === 0 && <span className="text-red-400 ml-0.5">*</span>}
                                                         </label>
-                                                        <input type="email" value={persona.email} onChange={e => updatePersona(idx, 'email', e.target.value)}
-                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                                        <input
+                                                            type="email"
+                                                            required={idx === 0 && globalAsiste === true}
+                                                            value={persona.email}
+                                                            onChange={e => updatePersona(idx, 'email', e.target.value)}
+                                                            className={`w-full p-3 rounded-xl bg-white/5 border transition-all text-white text-sm outline-none
+                                                                focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500
+                                                                ${idx === 0 && globalAsiste === true && !persona.email.trim() ? 'border-red-500/50' : 'border-white/10'}`}
+                                                        />
                                                     </div>
                                                     <div>
                                                         <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                            <Phone className="w-3 h-3 inline mr-1" /> Celular
+                                                            <Phone className="w-3 h-3 inline mr-1" />
+                                                            Celular{idx === 0 && <span className="text-red-400 ml-0.5">*</span>}
                                                         </label>
-                                                        <input type="tel" value={persona.celular} onChange={e => updatePersona(idx, 'celular', e.target.value)}
-                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                                        <input
+                                                            type="tel"
+                                                            required={idx === 0 && globalAsiste === true}
+                                                            value={persona.celular}
+                                                            onChange={e => updatePersona(idx, 'celular', e.target.value)}
+                                                            className={`w-full p-3 rounded-xl bg-white/5 border transition-all text-white text-sm outline-none
+                                                                focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500
+                                                                ${idx === 0 && globalAsiste === true && !persona.celular.trim() ? 'border-red-500/50' : 'border-white/10'}`}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* ── Sección Alimentación (solo si asiste) ── */}
+                                            {(globalAsiste === true && (idx === 0 || persona.asiste)) && (
+                                                <div className="space-y-3 pt-2 border-t border-white/5">
+                                                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
+                                                        <ChefHat className="w-3.5 h-3.5 text-indigo-400" /> Preferencias alimentarias
+                                                    </p>
+
+                                                    {/* Checkboxes del catálogo */}
+                                                    {catalogo.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {catalogo.map(cat => {
+                                                                const isSelected = !!persona.restriccionesSeleccionadas[cat.idRestriccion];
+                                                                return (
+                                                                    <button
+                                                                        key={cat.idRestriccion}
+                                                                        type="button"
+                                                                        onClick={() => toggleRestriccionPersona(idx, cat.idRestriccion)}
+                                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all
+                                                                            ${isSelected
+                                                                                ? 'bg-indigo-500/15 border-indigo-500/60 text-indigo-300'
+                                                                                : 'bg-white/5 border-white/10 text-muted hover:border-white/30 hover:text-white'}`}
+                                                                    >
+                                                                        {cat.nombre}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Detalle extra para restricciones de tipo ALERGIA */}
+                                                    {Object.values(persona.restriccionesSeleccionadas).map(r => {
+                                                        const cat = catalogo.find(c => c.idRestriccion === r.idRestriccion);
+                                                        if (cat?.categoria === 'ALERGIA' || cat?.codigo === 'CELIACO') {
+                                                            return (
+                                                                <div key={r.idRestriccion} className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/20 space-y-3 animate-in fade-in">
+                                                                    <p className="flex items-center gap-1.5 text-xs font-bold text-orange-400">
+                                                                        <HeartPulse className="w-3.5 h-3.5" /> {cat.nombre}
+                                                                    </p>
+                                                                    <div className="grid grid-cols-2 gap-3">
+                                                                        <div>
+                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Severidad</label>
+                                                                            <select
+                                                                                value={r.severidad}
+                                                                                onChange={e => updateRestriccionPersona(idx, r.idRestriccion, 'severidad', e.target.value as any)}
+                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
+                                                                            >
+                                                                                <option value="L">Leve</option>
+                                                                                <option value="M">Media</option>
+                                                                                <option value="G">Grave (contaminación cruzada)</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Aclaración</label>
+                                                                            <input
+                                                                                placeholder="Ej. Sin nueces"
+                                                                                value={r.observaciones}
+                                                                                onChange={e => updateRestriccionPersona(idx, r.idRestriccion, 'observaciones', e.target.value)}
+                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })}
+
+                                                    {/* Texto libre adicional */}
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
+                                                            Otras aclaraciones (opcional)
+                                                        </label>
+                                                        <textarea
+                                                            rows={2}
+                                                            placeholder="Ej: No tolero el picante, prefiero vegetariano..."
+                                                            value={persona.alimentacionDetalle}
+                                                            onChange={e => updatePersona(idx, 'alimentacionDetalle', e.target.value)}
+                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none resize-none"
+                                                        />
                                                     </div>
                                                 </div>
                                             )}
@@ -537,96 +639,6 @@ export default function RsvpPage({
                             </div>
                         )}
                     </form>
-                )}
-
-                {/* --- PASO 2: Restricciones de Dieta --- */}
-                {step === 'RESTRICTIONS' && grupoInfo && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                        <div className="text-center mb-8">
-                            <ChefHat className="w-12 h-12 text-indigo-400 mx-auto mb-4" />
-                            <h2 className="text-2xl font-bold mb-2">Restricciones Alimentarias</h2>
-                            <p className="text-muted text-sm">Contanos si alguien de tu grupo necesita un menú especial para organizar el catering.</p>
-                        </div>
-
-                        <div className="space-y-6">
-                            {grupoInfo.integrantes.map((integrante, idx) => (
-                                <div key={integrante.idRsvpGrupoIntegrante} className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-5">
-                                    <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm">
-                                            {idx + 1}
-                                        </div>
-                                        <h3 className="font-bold text-lg">
-                                            {idx === 0 ? "A tu nombre (Titular)" : `Acompañante ${idx}`}
-                                        </h3>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                        {catalogo.map(cat => {
-                                            const isSelected = !!restriccionesOpts[integrante.idRsvpGrupoIntegrante]?.[cat.idRestriccion];
-                                            return (
-                                                <button
-                                                    key={cat.idRestriccion}
-                                                    onClick={() => toggleRestriccion(integrante.idRsvpGrupoIntegrante, cat.idRestriccion)}
-                                                    className={`p-4 rounded-xl border text-sm font-semibold transition-all flex flex-col items-center gap-2 text-center
-                                                        ${isSelected
-                                                            ? 'bg-indigo-500/10 border-indigo-500 text-indigo-300 shadow-[0_0_15px_-3px_rgba(99,102,241,0.3)]'
-                                                            : 'bg-black/50 border-white/5 text-muted hover:border-white/20 hover:text-white'}`}
-                                                >
-                                                    <Apple className={`w-6 h-6 ${isSelected ? 'text-indigo-400' : 'text-muted'}`} />
-                                                    {cat.nombre}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* Detail for severe restrictions */}
-                                    {Object.values(restriccionesOpts[integrante.idRsvpGrupoIntegrante] || {}).map((opt: any) => {
-                                        const cat = catalogo.find(c => c.idRestriccion === opt.idRestriccion);
-                                        if (cat?.categoria === 'ALERGIA' || cat?.codigo === 'CELIACO') {
-                                            return (
-                                                <div key={opt.idRestriccion} className="mt-4 p-4 rounded-xl bg-orange-500/5 border border-orange-500/20 space-y-4 animate-in fade-in">
-                                                    <h4 className="flex items-center gap-2 text-sm font-bold text-orange-400">
-                                                        <HeartPulse className="w-4 h-4" /> Detalle para: {cat.nombre}
-                                                    </h4>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-2">Severidad</label>
-                                                            <select
-                                                                value={opt.severidad}
-                                                                onChange={(e) => updateRestriccionMeta(integrante.idRsvpGrupoIntegrante, opt.idRestriccion, 'severidad', e.target.value)}
-                                                                className="w-full p-3 rounded-xl bg-black border border-white/10 text-white outline-none focus:border-orange-500 text-sm"
-                                                            >
-                                                                <option value="L">Leve</option>
-                                                                <option value="M">Media</option>
-                                                                <option value="G">Grave (Alta contaminación cruzada)</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-2">Observaciones</label>
-                                                            <input
-                                                                placeholder="Ej. Nada de nueces"
-                                                                value={opt.observaciones}
-                                                                onChange={(e) => updateRestriccionMeta(integrante.idRsvpGrupoIntegrante, opt.idRestriccion, 'observaciones', e.target.value)}
-                                                                className="w-full p-3 rounded-xl bg-black border border-white/10 text-white outline-none focus:border-orange-500 text-sm"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
-                                    })}
-                                </div>
-                            ))}
-                        </div>
-
-                        <button onClick={handleRestriccionesSubmit} className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black text-lg hover:bg-white/90 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]">
-                            Guardar Preferencias y Terminar <CheckCircle2 className="w-5 h-5" />
-                        </button>
-                        <button onClick={() => setStep('SUCCESS')} className="w-full py-3 text-sm font-bold text-muted hover:text-white transition-colors">
-                            Saltar este paso de momento
-                        </button>
-                    </div>
                 )}
             </div>
         </div>
