@@ -496,6 +496,8 @@ namespace API.Services
 
             return new InvitacionTitularDTO
             {
+                IdEvento = evento.id_evento,
+                IdIdioma = evento.id_idioma,
                 IdGrupo = grupo.id_rsvp_grupo,
                 NombreGrupo = grupo.nombre_grupo,
                 Saludo = evento.saludo,

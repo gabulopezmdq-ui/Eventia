@@ -161,6 +161,8 @@ public class RsvpPersonaConfirmacionDTO
 
     public class InvitacionTitularDTO
     {
+        public long IdEvento { get; set; }
+        public short IdIdioma { get; set; }
         public long IdGrupo { get; set; }
         public string NombreGrupo { get; set; }
         public string Saludo { get; set; }
