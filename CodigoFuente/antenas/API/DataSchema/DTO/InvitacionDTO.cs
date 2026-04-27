@@ -81,7 +81,7 @@ namespace API.DataSchema.DTO
         public string Email { get; set; }
         public string Celular { get; set; }
         public string? Token { get; set; }
-        public string? Tramos { get; set; }
+        public List<TramoAgendaDTO>? Tramos { get; set; }
         public string RsvpEstado { get; set; } // "P", "Y", "N"
         public long? IdRsvpGrupo { get; set; }
         public long? IdAcceso { get; set; }
@@ -144,6 +144,13 @@ public class RsvpPersonaConfirmacionDTO
         public string? Mensaje { get; set; }
         public string? AlimentacionDetalle { get; set; }
         public List<long>? IdsRestricciones { get; set; }
+        public List<RestriccionSeleccionadaDTO>? Restricciones { get; set; }
+    }
+
+    public class RestriccionSeleccionadaDTO
+    {
+        public long IdRestriccion { get; set; }
+        public string? Observaciones { get; set; }
     }
 
     public class RsvpConfirmacionDTO
@@ -167,16 +174,17 @@ public class RsvpPersonaConfirmacionDTO
 
     public class AccesoAgendaDTO
     {
+        public long IdAcceso { get; set; }
         public string NombreAcceso { get; set; }      // Ej: "Iglesia"
         public List<TramoAgendaDTO> Tramos { get; set; }
     }
     public class TramoAgendaDTO
     {
+        public long IdTramo { get; set; }
         public string Nombre { get; set; }             // Ej: "Ceremonia religiosa"
         public string Descripcion { get; set; }        // Ej: "llegar 15 minutos antes"
         public string Lugar { get; set; }               // Ej: "Estancia Santa Clara"
         public string Direccion { get; set; }           // Ej: "Ruta 2 Km 395"
-        public int Orden { get; set; }
     }
     public class PersonaExistenteDTO
     {

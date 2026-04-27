@@ -10,7 +10,7 @@ namespace API.DataSchema
         public long id_evento { get; set; }
 
         public string nombre { get; set; }
-        public string mensaje_rsvp { get; set; }
+        public string? mensaje_rsvp { get; set; }
 
         public bool es_publico { get; set; }
         public int? cupo { get; set; }

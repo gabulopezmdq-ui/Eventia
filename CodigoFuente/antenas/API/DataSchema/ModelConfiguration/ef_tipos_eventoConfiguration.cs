@@ -21,6 +21,20 @@ namespace API.DataSchema.ModelConfiguration
                    .HasDefaultValue(true)
                    .IsRequired();
 
+            builder.Property(x => x.tipo_operacion)
+                   .HasMaxLength(20)
+                   .IsRequired()
+                   .HasDefaultValue("EVENTO")
+                   .IsUnicode(false);
+
+            builder.HasIndex(x => x.tipo_operacion)
+                   .HasDatabaseName("ix_ef_tipos_evento_tipo_operacion");
+
+            builder.HasCheckConstraint(
+                "ck_ef_tipos_evento_tipo_operacion",
+                "tipo_operacion in ('EVENTO', 'PROGRAMA')"
+            );
+
             builder.HasIndex(x => x.codigo)
                    .IsUnique()
                    .HasDatabaseName("ux_ef_tipos_evento_codigo");

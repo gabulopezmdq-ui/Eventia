@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services;
@@ -49,6 +49,7 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpGet("GetEvento")]
         public async Task<ActionResult<EventoResponse>> GetEvento(long idEvento)
         {
@@ -110,5 +111,21 @@ namespace API.Controllers
             return Ok(new { ok = true, id_evento = idEvento, id_acceso_default = idAcceso });
         }
 
+        [Authorize]
+        [HttpPut("{idEvento:long}/configuracion")]
+        public async Task<ActionResult<EventoResponse>> UpdateConfiguracion(long idEvento, [FromBody] EventoUpdateConfiguracionRequest req)
+        {
+            long idUsuario = User.GetUserId();
+            var updated = await _eventos.UpdateConfiguracionAsync(idUsuario, idEvento, req);
+            return Ok(updated);
+        }
+
+        [Authorize]
+        [HttpGet("{idEvento:long}/reporte-catering-mesas")]
+        public async Task<ActionResult<List<MesaRestriccionesDTO>>> ReporteRestriccionesMesas(long idEvento)
+        {
+            var result = await _eventos.GetReporteRestriccionesMesasAsync(idEvento);
+            return Ok(result);
+        }
     }
 }

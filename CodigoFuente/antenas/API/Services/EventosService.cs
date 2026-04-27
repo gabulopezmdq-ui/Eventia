@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
 using API.Utility;
@@ -76,10 +76,31 @@ namespace API.Services
                     into trDcJ
                 from trDc in trDcJ.DefaultIfEmpty()
 
-                    // PLAN (LEFT)
+                    // PLAN DEL EVENTO
                 join pl in _context.Set<ef_planes>()
                     on ev.id_plan equals pl.id_plan into plJ
                 from pl in plJ.DefaultIfEmpty()
+
+                    // CUENTA
+                join cta in _context.Set<ef_cuentas>()
+                    on ev.id_cuenta equals cta.id_cuenta into ctaJ
+                from cta in ctaJ.DefaultIfEmpty()
+
+                    // UNIDAD
+                join un in _context.Set<ef_cuenta_unidades>()
+                    on ev.id_unidad equals un.id_unidad into unJ
+                from un in unJ.DefaultIfEmpty()
+
+                    // CLIENTE
+                join cli in _context.Set<ef_clientes>()
+                    on ev.id_cliente equals cli.id_cliente into cliJ
+                from cli in cliJ.DefaultIfEmpty()
+
+                    // PLAN DE CUENTA
+                join plCta in _context.Set<ef_planes>()
+                    on cta.id_plan equals plCta.id_plan into plCtaJ
+                from plCta in plCtaJ.DefaultIfEmpty()
+
 
                 select new EventoResponse
                 {
@@ -89,9 +110,27 @@ namespace API.Services
                     TipoEventoDescripcion = (tr != null && !string.IsNullOrWhiteSpace(tr.texto)) ? tr.texto : te.codigo,
 
                     IdIdioma = ev.id_idioma,
+
+
+                    IdCuenta = ev.id_cuenta,
+                    IdUnidad = ev.id_unidad,
+                    UnidadNombre = un != null ? un.nombre : null,
+                    IdCliente = ev.id_cliente,
+                    ClienteNombre = cli != null ? cli.nombre_cliente : null,
+
+                    Modalidad =
+                    ev.id_cuenta == null
+                    ? null
+                    : (ev.id_cliente == null ? "PROPIO" : "CLIENTE"),
+
+
                     AnfitrionesTexto = ev.anfitriones_texto,
                     Estado = ev.estado,
                     FechaAlta = ev.fecha_alta,
+
+                    TipoOperacion = ev.tipo_operacion,
+                    FechaInicio = ev.fecha_inicio,
+                    FechaFin = ev.fecha_fin,
 
                     IdDressCode = ev.id_dress_code,
                     DressCodeDescripcion = ev.dress_code_descripcion,
@@ -102,11 +141,16 @@ namespace API.Services
 
                     Saludo = ev.saludo,
                     MensajeBienvenida = ev.mensaje_bienvenida,
+                    Notas = ev.notas,
 
                     //plan
                     IdPlan = ev.id_plan,
                     PlanCodigo = pl != null ? pl.codigo : null,
-                    PlanNombre = pl != null ? pl.nombre : null
+                    PlanNombre = pl != null ? pl.nombre : null,
+
+
+                    CuentaPlanCodigo = plCta != null ? plCta.codigo : null,
+                    CuentaPlanNombre = plCta != null ? plCta.nombre : null
                 };
 
             return q;
@@ -115,10 +159,225 @@ namespace API.Services
         // =========================
         // CREAR EVENTO
         // =========================
+        //este ese el original que anda pero lo comento por las dudas que el nuevo no funcione o deje de andar algo que ya andaba
+        //public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
+        //{
+        //    if (req.IdTipoEvento <= 0)
+        //        throw new InvalidOperationException("Tipo de evento obligatorio.");
+
+        //    if (req.IdIdioma <= 0)
+        //        throw new InvalidOperationException("Idioma obligatorio.");
+
+        //    if (string.IsNullOrWhiteSpace(req.AnfitrionesTexto))
+        //        throw new InvalidOperationException("Anfitriones obligatorio.");
+
+        //    if (req.AnfitrionesTexto.Length > 500)
+        //        throw new InvalidOperationException("Anfitriones supera 500 caracteres.");
+
+        //    if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
+        //        throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+
+        //    bool existeTipo = await _context.Set<ef_tipos_evento>()
+        //        .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
+
+        //    if (!existeTipo)
+        //        throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
+
+        //    short idIdioma = req.IdIdioma ?? Idiomas.DefaultIdiomaId;
+
+        //    bool existeIdioma = await _context.Set<ef_idiomas>()
+        //        .AnyAsync(i => i.id_idioma == idIdioma && i.activo == true);
+
+        //    if (!existeIdioma)
+        //        throw new InvalidOperationException("El idioma no existe o está inactivo.");
+
+        //    if (req.IdDressCode.HasValue)
+        //    {
+        //        bool existeDress = await _context.Set<ef_dress_code>()
+        //            .AnyAsync(d => d.id_dress_code == req.IdDressCode.Value && d.activo == true);
+
+        //        if (!existeDress)
+        //            throw new InvalidOperationException("El dress code no existe o está inactivo.");
+        //    }
+
+        //    // ✅ Resolver plan elegido (null => FREE)
+        //    var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan) ? "B2C_FREE" : req.CodigoPlan.Trim();
+
+        //    var plan = await _context.Set<ef_planes>()
+        //        .Where(p => p.codigo == codigoPlan && p.activo == true && p.tipo == "B2C")
+        //        .Select(p => new { p.id_plan, p.codigo })
+        //        .SingleOrDefaultAsync();
+
+        //    if (plan == null)
+        //        throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
+
+        //    //Regla actual (un borrador por usuario) 
+        //    bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
+        //        .AnyAsync(eu =>
+        //            eu.id_usuario == idUsuario &&
+        //            eu.activo == true &&
+        //            _context.Set<ef_eventos>().Any(ev => ev.id_evento == eu.id_evento && ev.estado == EventoEstado.Borrador));
+
+        //    if (yaTieneBorrador)
+        //        throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
+
+
+        //    short idRolOwner = await _context.Set<ef_roles>()
+        //        .Where(r => r.codigo == RolesCodigo.EventOwner && r.activo == true)
+        //        .Select(r => r.id_rol)
+        //        .SingleAsync();
+
+        //    await using var tx = await _context.Database.BeginTransactionAsync();
+
+        //    var now = DateTimeOffset.UtcNow;
+
+        //    var evento = new ef_eventos
+        //    {
+        //        id_tipo_evento = req.IdTipoEvento,
+        //        id_idioma = idIdioma,
+        //        id_cliente = null,
+        //        anfitriones_texto = req.AnfitrionesTexto.Trim(),
+
+        //        id_dress_code = req.IdDressCode,
+        //        dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim(),
+
+        //        saludo = string.IsNullOrWhiteSpace(req.Saludo) ? null : req.Saludo.Trim(),
+        //        mensaje_bienvenida = string.IsNullOrWhiteSpace(req.MensajeBienvenida) ? null : req.MensajeBienvenida.Trim(),
+        //        notas = string.IsNullOrWhiteSpace(req.Notas) ? null : req.Notas.Trim(),
+
+        //        fecha_alta = now,
+        //        fecha_modif = null,
+
+        //        es_publico = false,
+        //        modo_acceso = "I",
+        //        modo_asistencia = "R",
+
+        //        // asignar plan
+        //        id_plan = plan.id_plan,
+
+        //        // estado inicial según plan
+        //        estado = (plan.codigo == "B2C_FREE") ? EventoEstado.Borrador : EventoEstado.PendientePago
+
+        //    };
+
+        //    _context.Set<ef_eventos>().Add(evento);
+        //    await _context.SaveChangesAsync();
+
+
+        //    // =====================================================
+        //    // CREAR ACCESO DEFAULT DEL EVENTO
+        //    // =====================================================
+        //    var acceso = new ef_evento_accesos
+        //    {
+        //        id_evento = evento.id_evento,
+        //        nombre = "General",
+        //        orden = 1,
+        //        activo = true,
+        //        fecha_alta = now
+        //    };
+
+        //    _context.Set<ef_evento_accesos>().Add(acceso);
+        //    await _context.SaveChangesAsync();
+
+
+        //    // =====================================================
+        //    // CREAR LINK DEFAULT DEL ACCESO
+        //    // =====================================================
+        //    var link = new ef_evento_acceso_links
+        //    {
+        //        id_acceso = acceso.id_acceso,
+        //        titulo = "Principal",
+        //        token = TokenUtility.Generate(64),
+        //        max_personas_total = 200,
+        //        max_adultos = 200,
+        //        activo = true,
+        //        fecha_alta = now
+        //    };
+
+        //    _context.Set<ef_evento_acceso_links>().Add(link);
+        //    await _context.SaveChangesAsync();
+
+
+        //    // guardar acceso default en el evento
+        //    evento.id_acceso_default = acceso.id_acceso;
+        //    await _context.SaveChangesAsync();
+
+
+        //    // =====================================================
+        //    // RELACIÓN USUARIO DUEÑO
+        //    // =====================================================
+        //    _context.Set<ef_evento_usuarios>().Add(new ef_evento_usuarios
+        //    {
+        //        id_evento = evento.id_evento,
+        //        id_usuario = idUsuario,
+        //        id_rol = idRolOwner,
+        //        fecha_alta = now,
+        //        activo = true
+        //    });
+
+
+        //    // =====================================================
+        //    // HISTORIAL DE ESTADO
+        //    // =====================================================
+        //    _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
+        //    {
+        //        id_evento = evento.id_evento,
+        //        id_usuario = idUsuario,
+        //        fecha = now,
+        //        estado = evento.estado,
+        //        observaciones = (plan.codigo == "B2C_FREE")
+        //            ? "Creación evento (FREE) - trial 7 días"
+        //            : $"Creación evento (plan {plan.codigo}) - pendiente de pago"
+        //    });
+
+        //    // ✅ Trial / Pago pendiente (sin campos nuevos)
+        //    if (plan.codigo == "B2C_FREE")
+        //    {
+        //        _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+        //        {
+        //            scope = "EVENTO",
+        //            id_evento = evento.id_evento,
+        //            id_plan = plan.id_plan,
+        //            estado = "ACTIVA",
+        //            auto_renueva = false,
+        //            periodo = "UNICO",
+        //            current_period_start = now,
+        //            current_period_end = now.AddDays(7),
+        //            activo = true,
+        //            fecha_alta = now
+        //        });
+        //    }
+        //    else
+        //    {
+        //        _context.Set<ef_pagos>().Add(new ef_pagos
+        //        {
+        //            id_evento = evento.id_evento,
+        //            tipo = "UNICO",
+        //            estado = "PENDIENTE",
+        //            moneda = "ARS",
+        //            importe = 0,
+        //            impuestos = 0,
+        //            total = 0,
+        //            concepto = $"Plan {plan.codigo} pendiente - evento {evento.id_evento}",
+        //            activo = true,
+        //            fecha_alta = now
+        //        });
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //    await tx.CommitAsync();
+
+        //    return await GetEventoMioAsync(idUsuario, evento.id_evento);
+        //}
+
+        //este es el nuevo con todos los campos y necesarios para cuentas, unidades, clientes, modalidades, eventos publicos o no, etc
         public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
         {
             if (req.IdTipoEvento <= 0)
                 throw new InvalidOperationException("Tipo de evento obligatorio.");
+
+            if (req.IdIdioma <= 0)
+                throw new InvalidOperationException("Idioma obligatorio.");
 
             if (string.IsNullOrWhiteSpace(req.AnfitrionesTexto))
                 throw new InvalidOperationException("Anfitriones obligatorio.");
@@ -129,16 +388,14 @@ namespace API.Services
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
-            bool existeTipo = await _context.Set<ef_tipos_evento>()
-                .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
+            //bool existeTipo = await _context.Set<ef_tipos_evento>()
+            //    .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
 
-            if (!existeTipo)
-                throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
-
-            short idIdioma = req.IdIdioma ?? Idiomas.DefaultIdiomaId;
+            //if (!existeTipo)
+            //    throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
 
             bool existeIdioma = await _context.Set<ef_idiomas>()
-                .AnyAsync(i => i.id_idioma == idIdioma && i.activo == true);
+                .AnyAsync(i => i.id_idioma == req.IdIdioma && i.activo == true);
 
             if (!existeIdioma)
                 throw new InvalidOperationException("El idioma no existe o está inactivo.");
@@ -152,27 +409,144 @@ namespace API.Services
                     throw new InvalidOperationException("El dress code no existe o está inactivo.");
             }
 
-            // ✅ Resolver plan elegido (null => FREE)
-            var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan) ? "B2C_FREE" : req.CodigoPlan.Trim();
+            //        var tipoOperacion = string.IsNullOrWhiteSpace(req.TipoOperacion)
+            //            ? "EVENTO"
+            //:           req.TipoOperacion.Trim().ToUpperInvariant();
 
-            var plan = await _context.Set<ef_planes>()
-                .Where(p => p.codigo == codigoPlan && p.activo == true && p.tipo == "B2C")
-                .Select(p => new { p.id_plan, p.codigo })
-                .SingleOrDefaultAsync();
+            //        if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
+            //            throw new InvalidOperationException("tipo_operacion inválido. Valores permitidos: EVENTO, PROGRAMA.");
 
-            if (plan == null)
-                throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
+            var tipoEvento = await _context.Set<ef_tipos_evento>()
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
 
-            //Regla actual (un borrador por usuario) 
-            bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
-                .AnyAsync(eu =>
-                    eu.id_usuario == idUsuario &&
-                    eu.activo == true &&
-                    _context.Set<ef_eventos>().Any(ev => ev.id_evento == eu.id_evento && ev.estado == EventoEstado.Borrador));
+            if (tipoEvento == null)
+                throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
 
-            if (yaTieneBorrador)
-                throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
+            var tipoOperacion = string.IsNullOrWhiteSpace(tipoEvento.tipo_operacion)
+                ? "EVENTO"
+                : tipoEvento.tipo_operacion.Trim().ToUpperInvariant();
 
+            if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
+                throw new InvalidOperationException("El tipo de evento tiene tipo_operacion inválido.");
+
+            if (tipoOperacion == "PROGRAMA")
+            {
+                if (!req.FechaInicio.HasValue || !req.FechaFin.HasValue)
+                    throw new InvalidOperationException("Para programas se requiere fecha_inicio y fecha_fin.");
+
+                if (req.FechaFin.Value < req.FechaInicio.Value)
+                    throw new InvalidOperationException("fecha_fin no puede ser menor a fecha_inicio.");
+            }
+
+            bool esB2B = req.IdCuenta.HasValue;
+
+            if (!string.IsNullOrWhiteSpace(req.Modalidad))
+            {
+                var modalidad = req.Modalidad.Trim().ToUpperInvariant();
+                if (modalidad != "PROPIO" && modalidad != "CLIENTE")
+                    throw new InvalidOperationException("Modalidad inválida. Valores permitidos: PROPIO, CLIENTE.");
+            }
+
+            ef_cuentas? cuenta = null;
+            ef_cuenta_unidades? unidad = null;
+            ef_clientes? cliente = null;
+
+            ef_planes? planB2C = null;
+
+            // =====================================================
+            // VALIDACIONES B2C / B2B
+            // =====================================================
+            if (!esB2B)
+            {
+                // B2C
+                if (req.IdUnidad.HasValue)
+                    throw new InvalidOperationException("No corresponde informar unidad en un evento B2C.");
+
+                if (req.IdCliente.HasValue)
+                    throw new InvalidOperationException("No corresponde informar cliente en un evento B2C.");
+
+                bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
+                    .AnyAsync(eu =>
+                        eu.id_usuario == idUsuario &&
+                        eu.activo == true &&
+                        _context.Set<ef_eventos>().Any(ev => ev.id_evento == eu.id_evento && ev.estado == EventoEstado.Borrador));
+
+                if (yaTieneBorrador)
+                    throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
+
+                var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan) ? "B2C_FREE" : req.CodigoPlan.Trim();
+
+                planB2C = await _context.Set<ef_planes>()
+                    .SingleOrDefaultAsync(p => p.codigo == codigoPlan && p.activo == true && p.tipo == "B2C");
+
+                if (planB2C == null)
+                    throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
+            }
+            else
+            {
+                // B2B
+                if (!req.IdUnidad.HasValue)
+                    throw new InvalidOperationException("En B2B la unidad es obligatoria.");
+
+                var modalidad = (req.Modalidad ?? string.Empty).Trim().ToUpperInvariant();
+
+                if (modalidad == "PROPIO" && req.IdCliente.HasValue)
+                    throw new InvalidOperationException("Un evento B2B en modalidad PROPIO no debe informar cliente.");
+
+                if (modalidad == "CLIENTE" && !req.IdCliente.HasValue)
+                    throw new InvalidOperationException("Un evento B2B en modalidad CLIENTE debe informar cliente.");
+
+                // validar cuenta del usuario
+                var cuentaUsuario = await _context.Set<ef_cuenta_usuarios>()
+                    .AsNoTracking()
+                    .AnyAsync(cu => cu.id_cuenta == req.IdCuenta.Value && cu.id_usuario == idUsuario && cu.activo == true);
+
+                if (!cuentaUsuario)
+                    throw new UnauthorizedAccessException("No tienes acceso a la cuenta indicada.");
+
+                cuenta = await _context.Set<ef_cuentas>()
+                    .SingleOrDefaultAsync(c => c.id_cuenta == req.IdCuenta.Value && c.estado == "A");
+
+                if (cuenta == null)
+                    throw new InvalidOperationException("La cuenta no existe o no está activa.");
+
+                unidad = await _context.Set<ef_cuenta_unidades>()
+                    .SingleOrDefaultAsync(u => u.id_unidad == req.IdUnidad.Value && u.id_cuenta == req.IdCuenta.Value && u.activo == true);
+
+                if (unidad == null)
+                    throw new InvalidOperationException("La unidad no existe, no pertenece a la cuenta o está inactiva.");
+
+                if (req.IdCliente.HasValue)
+                {
+                    cliente = await _context.Set<ef_clientes>()
+                        .SingleOrDefaultAsync(c =>
+                            c.id_cliente == req.IdCliente.Value &&
+                            c.id_cuenta == req.IdCuenta.Value &&
+                            c.activo == true);
+
+                    if (cliente == null)
+                        throw new InvalidOperationException("El cliente no existe, no pertenece a la cuenta o está inactivo.");
+
+                    bool relacionExiste = await _context.Set<ef_cliente_unidades>()
+                        .AnyAsync(x => x.id_cliente == req.IdCliente.Value && x.id_unidad == req.IdUnidad.Value);
+
+                    if (!relacionExiste)
+                    {
+                        _context.Set<ef_cliente_unidades>().Add(new ef_cliente_unidades
+                        {
+                            id_cliente = req.IdCliente.Value,
+                            id_unidad = req.IdUnidad.Value,
+                            es_principal = false,
+                            activo = true,
+                            fecha_alta = DateTimeOffset.UtcNow
+                        });
+                    }
+                }
+
+                // En B2B, el plan se toma de la cuenta; no del request
+                req.CodigoPlan = null;
+            }
 
             short idRolOwner = await _context.Set<ef_roles>()
                 .Where(r => r.codigo == RolesCodigo.EventOwner && r.activo == true)
@@ -183,13 +557,39 @@ namespace API.Services
 
             var now = DateTimeOffset.UtcNow;
 
+            string estadoInicial;
+            long? idPlanEvento = null;
+            string observacionHistorial;
+
+            if (!esB2B)
+            {
+                idPlanEvento = planB2C!.id_plan;
+                estadoInicial = (planB2C.codigo == "B2C_FREE")
+                    ? EventoEstado.Borrador
+                    : EventoEstado.PendientePago;
+
+                observacionHistorial = (planB2C.codigo == "B2C_FREE")
+                    ? "Creación evento (FREE) - trial 7 días"
+                    : $"Creación evento (plan {planB2C.codigo}) - pendiente de pago";
+            }
+            else
+            {
+                // B2B: el plan vive en la cuenta, no en el evento
+                idPlanEvento = cuenta!.id_plan;
+                estadoInicial = EventoEstado.Borrador;
+                observacionHistorial = "Creación evento B2B";
+            }
+
             var evento = new ef_eventos
             {
                 id_tipo_evento = req.IdTipoEvento,
-                id_idioma = idIdioma,
-                id_cliente = null,
-                anfitriones_texto = req.AnfitrionesTexto.Trim(),
+                id_idioma = req.IdIdioma,
 
+                id_cuenta = esB2B ? req.IdCuenta : null,
+                id_unidad = esB2B ? req.IdUnidad : null,
+                id_cliente = esB2B ? req.IdCliente : null,
+
+                anfitriones_texto = req.AnfitrionesTexto.Trim(),
                 id_dress_code = req.IdDressCode,
                 dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim(),
 
@@ -200,64 +600,22 @@ namespace API.Services
                 fecha_alta = now,
                 fecha_modif = null,
 
-                es_publico = false,
-                modo_acceso = "I",
+                tipo_operacion = tipoOperacion,
+                fecha_inicio = tipoOperacion == "PROGRAMA" ? req.FechaInicio : null,
+                fecha_fin = tipoOperacion == "PROGRAMA" ? req.FechaFin : null,
+
+                es_publico = tipoOperacion == "PROGRAMA" ? true : false,
+                modo_acceso = tipoOperacion == "PROGRAMA" ? "L" : "I",
                 modo_asistencia = "R",
 
-                // asignar plan
-                id_plan = plan.id_plan,
-
-                // estado inicial según plan
-                estado = (plan.codigo == "B2C_FREE") ? EventoEstado.Borrador : EventoEstado.PendientePago
-
+                id_plan = idPlanEvento,
+                estado = estadoInicial
             };
 
             _context.Set<ef_eventos>().Add(evento);
             await _context.SaveChangesAsync();
 
-
-            // =====================================================
-            // CREAR ACCESO DEFAULT DEL EVENTO
-            // =====================================================
-            var acceso = new ef_evento_accesos
-            {
-                id_evento = evento.id_evento,
-                nombre = "General",
-                orden = 1,
-                activo = true,
-                fecha_alta = now
-            };
-
-            _context.Set<ef_evento_accesos>().Add(acceso);
-            await _context.SaveChangesAsync();
-
-
-            // =====================================================
-            // CREAR LINK DEFAULT DEL ACCESO
-            // =====================================================
-            var link = new ef_evento_acceso_links
-            {
-                id_acceso = acceso.id_acceso,
-                titulo = "Principal",
-                token = TokenUtility.Generate(64),
-                max_personas_total = 200,
-                max_adultos = 200,
-                activo = true,
-                fecha_alta = now
-            };
-
-            _context.Set<ef_evento_acceso_links>().Add(link);
-            await _context.SaveChangesAsync();
-
-
-            // guardar acceso default en el evento
-            evento.id_acceso_default = acceso.id_acceso;
-            await _context.SaveChangesAsync();
-
-
-            // =====================================================
-            // RELACIÓN USUARIO DUEÑO
-            // =====================================================
+            // OWNER
             _context.Set<ef_evento_usuarios>().Add(new ef_evento_usuarios
             {
                 id_evento = evento.id_evento,
@@ -267,53 +625,51 @@ namespace API.Services
                 activo = true
             });
 
-
-            // =====================================================
-            // HISTORIAL DE ESTADO
-            // =====================================================
+            // HISTORIAL
             _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
             {
                 id_evento = evento.id_evento,
                 id_usuario = idUsuario,
                 fecha = now,
                 estado = evento.estado,
-                observaciones = (plan.codigo == "B2C_FREE")
-                    ? "Creación evento (FREE) - trial 7 días"
-                    : $"Creación evento (plan {plan.codigo}) - pendiente de pago"
+                observaciones = observacionHistorial
             });
 
-            // ✅ Trial / Pago pendiente (sin campos nuevos)
-            if (plan.codigo == "B2C_FREE")
+            // SOLO B2C: alta comercial inicial
+            if (!esB2B)
             {
-                _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+                if (planB2C!.codigo == "B2C_FREE")
                 {
-                    scope = "EVENTO",
-                    id_evento = evento.id_evento,
-                    id_plan = plan.id_plan,
-                    estado = "ACTIVA",
-                    auto_renueva = false,
-                    periodo = "UNICO",
-                    current_period_start = now,
-                    current_period_end = now.AddDays(7),
-                    activo = true,
-                    fecha_alta = now
-                });
-            }
-            else
-            {
-                _context.Set<ef_pagos>().Add(new ef_pagos
+                    _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+                    {
+                        scope = "EVENTO",
+                        id_evento = evento.id_evento,
+                        id_plan = planB2C.id_plan,
+                        estado = "ACTIVA",
+                        auto_renueva = false,
+                        periodo = "UNICO",
+                        current_period_start = now,
+                        current_period_end = now.AddDays(7),
+                        activo = true,
+                        fecha_alta = now
+                    });
+                }
+                else
                 {
-                    id_evento = evento.id_evento,
-                    tipo = "UNICO",
-                    estado = "PENDIENTE",
-                    moneda = "ARS",
-                    importe = 0,
-                    impuestos = 0,
-                    total = 0,
-                    concepto = $"Plan {plan.codigo} pendiente - evento {evento.id_evento}",
-                    activo = true,
-                    fecha_alta = now
-                });
+                    _context.Set<ef_pagos>().Add(new ef_pagos
+                    {
+                        id_evento = evento.id_evento,
+                        tipo = "UNICO",
+                        estado = "PENDIENTE",
+                        moneda = "ARS",
+                        importe = 0,
+                        impuestos = 0,
+                        total = 0,
+                        concepto = $"Plan {planB2C.codigo} pendiente - evento {evento.id_evento}",
+                        activo = true,
+                        fecha_alta = now
+                    });
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -327,14 +683,43 @@ namespace API.Services
         // =========================
         public async Task<List<EventoResponse>> MisEventosAsync(long idUsuario)
         {
-            // seguridad por pertenencia + proyección enriquecida
             var q =
                 from eu in _context.Set<ef_evento_usuarios>()
                 join evDto in QueryEventosConTipo() on eu.id_evento equals evDto.IdEvento
-                where eu.id_usuario == idUsuario && eu.activo == true
+                where eu.id_usuario == idUsuario
+                      && eu.activo == true
+                      && evDto.IdCuenta == null
                 select evDto;
 
-            return await q.AsNoTracking().ToListAsync();
+            return await q
+                .AsNoTracking()
+                .OrderByDescending(x => x.FechaAlta)
+                .ToListAsync();
+        }
+
+        public async Task<List<EventoResponse>> MisEventosCuentaAsync(long idUsuario, long? idUnidad = null, long? idCliente = null, string? estado = null)
+        {
+            var q =
+                from eu in _context.Set<ef_evento_usuarios>()
+                join evDto in QueryEventosConTipo() on eu.id_evento equals evDto.IdEvento
+                where eu.id_usuario == idUsuario
+                      && eu.activo == true
+                      && evDto.IdCuenta != null
+                select evDto;
+
+            if (idUnidad.HasValue)
+                q = q.Where(x => x.IdUnidad == idUnidad.Value);
+
+            if (idCliente.HasValue)
+                q = q.Where(x => x.IdCliente == idCliente.Value);
+
+            if (!string.IsNullOrWhiteSpace(estado))
+                q = q.Where(x => x.Estado == estado);
+
+            return await q
+                .AsNoTracking()
+                .OrderByDescending(x => x.FechaAlta)
+                .ToListAsync();
         }
 
         // =========================
@@ -482,6 +867,120 @@ namespace API.Services
 
             // devolver enriquecido
             return await GetEventoMioAsync(idUsuario, idEvento);
+        }
+
+        public async Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req)
+        {
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);
+
+            if (!pertenece)
+                throw new UnauthorizedAccessException("No tienes acceso a este evento.");
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            if (string.IsNullOrWhiteSpace(req.ModoAcceso))
+                throw new InvalidOperationException("modo_acceso es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(req.ModoAsistencia))
+                throw new InvalidOperationException("modo_asistencia es obligatorio.");
+
+            var modoAcceso = req.ModoAcceso.Trim().ToUpperInvariant();
+            var modoAsistencia = req.ModoAsistencia.Trim().ToUpperInvariant();
+
+            // Ajustá estos valores a tus reglas reales
+            if (modoAcceso != "I" && modoAcceso != "L")
+                throw new InvalidOperationException("modo_acceso inválido. Valores permitidos: I, L.");
+
+            if (modoAsistencia != "R" && modoAsistencia != "C")
+                throw new InvalidOperationException("modo_asistencia inválido. Valores permitidos: R, C.");
+
+            ev.es_publico = req.EsPublico;
+            ev.modo_acceso = modoAcceso;
+            ev.modo_asistencia = modoAsistencia;
+            ev.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return await GetEventoMioAsync(idUsuario, idEvento);
+        }
+
+        public async Task<List<MesaRestriccionesDTO>> GetReporteRestriccionesMesasAsync(long idEvento)
+        {
+            var mesas = await _context.ef_evento_mesas
+                .AsNoTracking()
+                .Include(m => m.tramo)
+                .Include(m => m.mesa_invitados)
+                    .ThenInclude(mi => mi.invitado)
+                .Where(m => m.tramo.id_evento == idEvento && m.activo)
+                .ToListAsync();
+
+            var idsInvitados = mesas.SelectMany(m => m.mesa_invitados.Select(mi => mi.id_invitado)).Distinct().ToList();
+
+            // Obtener las restricciones de estos invitados
+            var integrantes = await (
+                from i in _context.ef_rsvp_grupo_integrantes.AsNoTracking()
+                join res in _context.ef_rsvp_integrante_restricciones.AsNoTracking() 
+                    on i.id_rsvp_grupo_integrante equals res.id_rsvp_grupo_integrante
+                join param in _context.ef_param_restricciones_alimentarias.AsNoTracking()
+                    on res.id_restriccion_alim equals param.id_restriccion_alim
+                // Join opcional con traducciones (usando el idioma del evento, o default si no podemos)
+                // Para este reporte simplificado, usaremos el código si no hay traducción directa 
+                // pero lo ideal es pasar el idIdioma.
+                where idsInvitados.Contains(i.id_invitado)
+                select new
+                {
+                    i.id_invitado,
+                    param.codigo,
+                    res.observaciones,
+                    i.alimentacion_detalle
+                }
+            ).ToListAsync();
+
+            var result = new List<MesaRestriccionesDTO>();
+
+            foreach (var m in mesas)
+            {
+                var dtoMesa = new MesaRestriccionesDTO
+                {
+                    IdMesa = m.id_mesa,
+                    NombreMesa = m.nombre,
+                    Tramo = m.tramo.nombre,
+                    Invitados = new List<InvitadoRestriccionReportDTO>()
+                };
+
+                foreach (var mi in m.mesa_invitados)
+                {
+                    var restInvitado = integrantes.Where(x => x.id_invitado == mi.id_invitado).ToList();
+                    
+                    if (restInvitado.Any())
+                    {
+                        dtoMesa.Invitados.Add(new InvitadoRestriccionReportDTO
+                        {
+                            IdInvitado = mi.id_invitado,
+                            Nombre = mi.invitado.nombre,
+                            Apellido = mi.invitado.apellido,
+                            ObservacionesGenerales = restInvitado.First().alimentacion_detalle,
+                            Restricciones = restInvitado.Select(r => new RestriccionReportItemDTO
+                            {
+                                Tipo = r.codigo,
+                                Observaciones = r.observaciones
+                            }).ToList()
+                        });
+                    }
+                }
+
+                if (dtoMesa.Invitados.Any())
+                {
+                    result.Add(dtoMesa);
+                }
+            }
+
+            return result.OrderBy(x => x.Tramo).ThenBy(x => x.NombreMesa).ToList();
         }
     }
 }

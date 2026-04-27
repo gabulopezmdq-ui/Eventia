@@ -1,5 +1,6 @@
 using API.DataSchema.Configurations;
 using API.DataSchema.ModelConfiguration;
+using API.DataSchema.QueryModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -88,6 +89,57 @@ namespace API.DataSchema
         public DbSet<ef_paises> ef_paises { get; set; }
         public DbSet<ef_tipos_identificacion_fiscal> ef_tipos_identificacion_fiscal { get; set; }
         public DbSet<ef_cuenta_unidades> ef_cuenta_unidades { get; set; }
+        public DbSet<ef_cliente_unidades> ef_cliente_unidades { get; set; }
+
+        // Módulo Staff
+        public DbSet<ef_staff> ef_staff { get; set; }
+        public DbSet<ef_staff_unidades> ef_staff_unidades { get; set; }
+        public DbSet<ef_evento_hospedaje_bloques> ef_evento_hospedaje_bloques { get; set; }
+        public DbSet<ef_evento_hospedajes> ef_evento_hospedajes { get; set; }
+        public DbSet<ef_hospedaje_tags> ef_hospedaje_tags { get; set; }
+
+        public DbSet<vw_param_faltante_row> vw_param_faltante_row { get; set; }
+        public DbSet<vw_param_faltantes_resumen_row> vw_param_faltantes_resumen_row { get; set; }
+
+        public DbSet<ef_cuenta_hospedaje_plantillas> ef_cuenta_hospedaje_plantillas { get; set; }
+        public DbSet<ef_cuenta_hospedaje_plantilla_items> ef_cuenta_hospedaje_plantilla_items { get; set; }
+        public DbSet<ef_cuenta_hospedaje_plantilla_item_bloques> ef_cuenta_hospedaje_plantilla_item_bloques { get; set; }
+        public DbSet<ef_param_tipos_beneficio_registro> ef_param_tipos_beneficio_registro { get; set; }
+        public DbSet<ef_evento_beneficios_registro> ef_evento_beneficios_registro { get; set; }
+
+        // Módulo Álbum
+        public DbSet<ef_evento_album_config> ef_evento_album_config { get; set; }
+        public DbSet<ef_evento_album_fotos> ef_evento_album_fotos { get; set; }
+        public DbSet<ef_evento_album_likes> ef_evento_album_likes { get; set; }
+        public DbSet<ef_evento_album_estados_hist> ef_evento_album_estados_hist { get; set; }
+        public DbSet<ef_evento_album_overlays> ef_evento_album_overlays { get; set; }
+        public DbSet<ef_evento_album_fotocabina_usos> ef_evento_album_fotocabina_usos { get; set; }
+        public DbSet<ef_evento_album_rankings> ef_evento_album_rankings { get; set; }
+        public DbSet<ef_evento_album_ranking_votos> ef_evento_album_ranking_votos { get; set; }
+
+        //audiencia
+        public DbSet<ef_audiencias_personas> ef_audiencias_personas { get; set; }
+        public DbSet<ef_audiencia_persona_eventos> ef_audiencia_persona_eventos { get; set; }
+        public DbSet<ef_audiencia_persona_tags> ef_audiencia_persona_tags { get; set; }
+        public DbSet<ef_evento_checkins> ef_evento_checkins { get; set; }
+        public DbSet<ef_invitados_perfiles> ef_invitados_perfiles { get; set; }
+        public DbSet<ef_invitado_intereses_evento> ef_invitado_intereses_evento { get; set; }
+        public DbSet<ef_invitado_preferencias_musicales> ef_invitado_preferencias_musicales { get; set; }
+        public DbSet<ef_param_intereses_evento_publico> ef_param_intereses_evento_publico { get; set; }
+        public DbSet<ef_param_preferencias_musicales> ef_param_preferencias_musicales { get; set; }
+        public DbSet<ef_param_perfiles_asistencia> ef_param_perfiles_asistencia { get; set; }
+
+        public DbSet<ef_param_audiencia_tags> ef_param_audiencia_tags { get; set; }
+
+        //programas
+        public DbSet<ef_programa_periodos> ef_programa_periodos { get; set; }
+        public DbSet<ef_programa_servicios> ef_programa_servicios { get; set; }
+        public DbSet<ef_param_programa_tipos_calculo> ef_param_programa_tipos_calculo { get; set; }
+        public DbSet<ef_param_programa_servicios_base> ef_param_programa_servicios_base { get; set; }
+        public DbSet<ef_param_programa_servicio_base_traducciones> ef_param_programa_servicio_base_traducciones { get; set; }
+        public DbSet<ef_param_programa_tipos_campo_extra> ef_param_programa_tipos_campo_extra { get; set; }
+
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -210,51 +262,61 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_tipos_identificacion_fiscalConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_cuenta_unidadesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cliente_unidadesConfiguration());
 
-            /*modelBuilder.ApplyConfiguration(new MEC_CarRevistaConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_ConceptosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposEstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_EstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposCategoriasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_PersonasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POFConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposLiquidacionesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_CabeceraLiquidacionConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposFuncionesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPMecanizadaConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresEstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresFuncionConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresConceptosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresCarRevistaConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresTipoEstablecimientoConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresMecanizadasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POF_AntiguedadesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MecanizadasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_UsuariosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RolesConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RolesXUsuariosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_UsuariosEstablecimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_CabeceraLiquidacionEstadosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_BajasCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_BajasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MotivosBajasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POFDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MotivosBajasDocConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TiposMovimientosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosBajasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_POF_BarrasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasCodigosConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPInasistenciasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPErroresInasistenciasDetalleConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_InasistenciasRechazoConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_MovimientosSuperCabeceraConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_TMPEFIConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RetencionesXMecanizadasConfiguration());
-            modelBuilder.ApplyConfiguration(new MEC_RetencionesConfiguration());*/
+            // Módulo Staff
+            modelBuilder.ApplyConfiguration(new ef_staffConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_staff_unidadesConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_evento_hospedaje_bloquesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_hospedajesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_hospedaje_tagsConfiguration());
+
+            modelBuilder.Entity<vw_param_faltante_row>().HasNoKey();
+            modelBuilder.Entity<vw_param_faltantes_resumen_row>().HasNoKey();
+
+            modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantillasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_itemsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuenta_hospedaje_plantilla_item_bloquesConfiguration());
+
+            modelBuilder.Entity<ef_evento_album_config>(entity =>
+            {
+                entity.HasKey(e => e.id_evento);
+            });
+
+            modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_beneficios_registroConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_audiencias_personasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_audiencia_persona_eventosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_audiencia_persona_tagsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_checkinsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_invitados_perfilesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_invitado_intereses_eventoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_invitado_preferencias_musicalesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_intereses_evento_publicoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_preferencias_musicalesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_perfiles_asistenciaConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_audiencia_tagsConfiguration());
+
+            //programas
+            modelBuilder.ApplyConfiguration(new ef_programa_periodosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_serviciosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_calculoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_servicios_baseConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_servicio_base_traduccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_campo_extraConfiguration());
+
+
+
+            // Likes: Clave primaria compuesta
+            modelBuilder.Entity<ef_evento_album_likes>()
+                .HasKey(l => new { l.id_foto, l.device_id });
+
+            // Votos de Ranking: Clave primaria autoincremental + Constrain de unicidad para evitar votos duplicados por dispositivo
+            modelBuilder.Entity<ef_evento_album_ranking_votos>()
+                .HasIndex(v => new { v.id_ranking, v.device_id })
+                .IsUnique();
 
             base.OnModelCreating(modelBuilder);
         }

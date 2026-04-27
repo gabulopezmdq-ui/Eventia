@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -182,8 +182,9 @@ namespace API.Services
 
             _context.Set<ef_evento_acceso_tramos>().AddRange(relsToAdd);
 
-            // Default en evento
+            // Default y Fecha en evento
             ev.id_acceso_default = idAccesoDefault;
+            ev.fecha_evento = fechaBase;
             ev.fecha_modif = DateTimeOffset.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -463,8 +464,16 @@ namespace API.Services
 
             _context.Set<ef_evento_acceso_tramos>().AddRange(relEntities);
 
-            // 5) Default
+            // 5) Default y Fecha
             ev.id_acceso_default = idAccesoDefault;
+            
+            // Sincronizar fecha del evento con el tramo orden 1
+            var primerTramo = req.tramos.OrderBy(x => x.orden).FirstOrDefault();
+            if (primerTramo != null)
+            {
+                ev.fecha_evento = primerTramo.fecha_hora_inicio;
+            }
+
             ev.fecha_modif = now;
 
             // 6) Snapshot payload (SE QUEDA EN D)

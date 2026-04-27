@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -20,6 +20,8 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_idioma)
                    .IsRequired();
 
+            builder.Property(x => x.id_cuenta);
+            builder.Property(x => x.id_unidad);
             builder.Property(x => x.id_cliente);
 
             builder.Property(x => x.anfitriones_texto)
@@ -39,6 +41,35 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.notas)
                    .HasMaxLength(500);
+
+            builder.Property(x => x.fecha_evento);
+
+            builder.Property(x => x.tipo_operacion)
+                   .HasMaxLength(20)
+                   .IsRequired()
+                   .HasDefaultValue("EVENTO")
+                   .IsUnicode(false);
+
+            builder.Property(x => x.fecha_inicio);
+
+            builder.Property(x => x.fecha_fin);
+
+            builder.HasIndex(x => x.tipo_operacion)
+                   .HasDatabaseName("ix_ef_eventos_tipo_operacion");
+
+            builder.HasIndex(x => new { x.fecha_inicio, x.fecha_fin })
+                   .HasDatabaseName("ix_ef_eventos_programa_fechas")
+                   .HasFilter("tipo_operacion = 'PROGRAMA'");
+
+            builder.HasCheckConstraint(
+                "ck_ef_eventos_tipo_operacion",
+                "tipo_operacion in ('EVENTO', 'PROGRAMA')"
+            );
+
+            builder.HasCheckConstraint(
+                "ck_ef_eventos_programa_fechas",
+                "tipo_operacion <> 'PROGRAMA' or (fecha_inicio is not null and fecha_fin is not null and fecha_fin >= fecha_inicio)"
+            );
 
             builder.Property(x => x.fecha_alta)
                    .IsRequired()
@@ -74,6 +105,27 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.es_publico)
                    .IsRequired();
 
+            builder.Property(x => x.id_acceso_default);
+            builder.Property(x => x.id_plan);
+
+            // Índices (como en tu DDL)
+            builder.HasIndex(x => x.id_plan)
+                   .HasDatabaseName("ix_ef_eventos_id_plan");
+
+            builder.HasIndex(x => x.id_cuenta)
+                   .HasDatabaseName("ix_ef_eventos_id_cuenta");
+
+            builder.HasIndex(x => x.id_cliente)
+                   .HasDatabaseName("ix_ef_eventos_id_cliente");
+
+            builder.HasIndex(x => x.id_unidad)
+                   .HasDatabaseName("ix_ef_eventos_id_unidad");
+
+            // Check constraint B2B ids (según tu tabla)
+            builder.HasCheckConstraint(
+                "ck_ef_eventos_b2b_ids",
+                "((id_cuenta is null and id_cliente is null and id_unidad is null) or (id_cuenta is not null))"
+            );
 
             // Relaciones (FKs)
             builder.HasOne(x => x.tipo_evento)
@@ -99,6 +151,26 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasOne(x => x.usuario_rsvp_link_creator)
                    .WithMany()
                    .HasForeignKey(x => x.id_usuario_rsvp_link_creator)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.plan)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_plan)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.acceso_default)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_acceso_default)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.cuenta)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_cuenta)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.unidad)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_unidad)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

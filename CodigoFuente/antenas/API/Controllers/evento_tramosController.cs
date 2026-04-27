@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -71,6 +71,16 @@ namespace API.Controllers
             ent.orden = req.orden;
             ent.activo = req.activo;
             ent.fecha_modif = System.DateTimeOffset.UtcNow;
+
+            // ✅ Sincronizar fecha del evento si se modifica el tramo 1
+            if (ent.orden == 1)
+            {
+                var ev = await _context.Set<ef_eventos>().FindAsync(ent.id_evento);
+                if (ev != null)
+                {
+                    ev.fecha_evento = ent.fecha_hora_inicio;
+                }
+            }
 
             await _context.SaveChangesAsync();
             return Ok(ent);

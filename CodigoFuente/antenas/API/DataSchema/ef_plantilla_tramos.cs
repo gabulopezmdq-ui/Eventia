@@ -11,7 +11,7 @@ namespace API.DataSchema
         public short? id_tramo_tipo { get; set; }
 
         public string nombre_default { get; set; }
-        public string leyenda_default { get; set; }
+        public string? leyenda_default { get; set; }
 
         public short orden { get; set; }
         public bool activo { get; set; }

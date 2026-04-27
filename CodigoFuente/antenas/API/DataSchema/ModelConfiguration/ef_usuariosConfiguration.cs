@@ -43,7 +43,6 @@ namespace API.DataSchema.Configurations
                    .IsRequired()
                    .HasDefaultValue(true);
 
-            // Nuevos
             builder.Property(x => x.auth_provider)
                    .HasMaxLength(20)
                    .IsRequired()
@@ -54,6 +53,22 @@ namespace API.DataSchema.Configurations
 
             builder.Property(x => x.avatar_url)
                    .HasMaxLength(500);
+
+            // NUEVOS CAMPOS
+            builder.Property(x => x.telefono)
+                   .HasMaxLength(50);
+
+            builder.Property(x => x.id_pais);
+
+            builder.Property(x => x.id_idioma_preferido);
+
+            builder.Property(x => x.id_idioma_default_evento);
+
+            builder.Property(x => x.recibir_novedades)
+                   .IsRequired()
+                   .HasDefaultValue(false);
+
+            builder.Property(x => x.ultimo_login);
 
             builder.HasIndex(x => x.email)
                    .IsUnique()
@@ -67,6 +82,30 @@ namespace API.DataSchema.Configurations
             builder.HasIndex(x => x.id_usuario)
                    .HasDatabaseName("ix_ef_usuarios_activo_true")
                    .HasFilter("activo = true");
+
+            builder.HasIndex(x => x.id_pais)
+                  .HasDatabaseName("ix_ef_usuarios_id_pais");
+
+            builder.HasIndex(x => x.id_idioma_preferido)
+                   .HasDatabaseName("ix_ef_usuarios_id_idioma_preferido");
+
+            builder.HasIndex(x => x.id_idioma_default_evento)
+                   .HasDatabaseName("ix_ef_usuarios_id_idioma_default_evento");
+
+            builder.HasOne(x => x.pais)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_pais)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.idioma_preferido)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_idioma_preferido)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.idioma_default_evento)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_idioma_default_evento)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
