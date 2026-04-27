@@ -137,6 +137,7 @@ namespace API.DataSchema
         public DbSet<ef_param_programa_tipos_calculo> ef_param_programa_tipos_calculo { get; set; }
         public DbSet<ef_param_programa_servicios_base> ef_param_programa_servicios_base { get; set; }
         public DbSet<ef_param_programa_servicio_base_traducciones> ef_param_programa_servicio_base_traducciones { get; set; }
+        public DbSet<ef_param_programa_tipos_campo_extra> ef_param_programa_tipos_campo_extra { get; set; }
 
 
 
@@ -304,6 +305,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_calculoConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_servicios_baseConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_servicio_base_traduccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_campo_extraConfiguration());
 
 
 
