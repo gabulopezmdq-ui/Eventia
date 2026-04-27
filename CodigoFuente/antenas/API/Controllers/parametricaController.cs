@@ -74,13 +74,12 @@ namespace API.Controllers
         }
         
         [HttpGet("RestriccionesAlimentarias")]
-        public async Task<ActionResult<List<ParametricaDTO>>> GetRestriccionesAlimentarias([FromQuery] long idEvento)
+        public async Task<ActionResult<List<ParametricaDTO>>> GetRestriccionesAlimentarias()
         {
-            var idIdioma = await GetIdiomaEvento(idEvento);
-            if (!idIdioma.HasValue)
-                return NotFound("Evento inexistente.");
+            // Idioma por defecto (1 = Español)
+            short idIdioma = 1;
 
-            return Ok(await _parametricaService.GetRestriccionesAlimentariasAsync(idIdioma.Value));
+            return Ok(await _parametricaService.GetRestriccionesAlimentariasAsync(idIdioma));
         }
     }
 }
