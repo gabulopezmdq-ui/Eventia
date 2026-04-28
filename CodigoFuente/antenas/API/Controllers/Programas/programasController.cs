@@ -2135,9 +2135,9 @@ namespace API.Controllers.Programas
 
             long idEvento;
 
-            if (link.id_evento.HasValue)
+            if (link.id_evento != 0)
             {
-                idEvento = link.id_evento.Value;
+                idEvento = link.id_evento;
             }
             else
             {
