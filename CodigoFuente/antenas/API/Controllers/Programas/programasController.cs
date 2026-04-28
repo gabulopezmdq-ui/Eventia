@@ -1649,6 +1649,156 @@ namespace API.Controllers.Programas
             });
         }
 
+        [Authorize]
+        [HttpGet("{idEvento:long}/salud/config")]
+        public async Task<ActionResult<ProgramaSaludConfigDTO>> GetSaludConfig(long idEvento)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            var item = await _context.Set<ef_programa_salud_config>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (item == null)
+            {
+                return Ok(new ProgramaSaludConfigDTO
+                {
+                    IdEvento = idEvento,
+                    PedirProblemaMedico = true,
+                    ProblemaMedicoObligatorio = false,
+                    PedirAlergiasNoAlimentarias = true,
+                    AlergiasNoAlimentariasObligatorio = false,
+                    PedirNecesidadEspecial = true,
+                    NecesidadEspecialObligatorio = false,
+                    PedirCoberturaMedica = false,
+                    CoberturaMedicaObligatorio = false,
+                    PedirContactoEmergencia = true,
+                    ContactoEmergenciaObligatorio = true,
+                    PedirAutorizaEmergenciaMedica = true,
+                    AutorizaEmergenciaMedicaObligatorio = true,
+                    PedirObservacionesFamilia = true,
+                    ObservacionesFamiliaObligatorio = false,
+                    PedirMedicaciones = true,
+                    MedicacionesObligatorio = false,
+                    Activo = true
+                });
+            }
+
+            return Ok(new ProgramaSaludConfigDTO
+            {
+                IdSaludConfig = item.id_salud_config,
+                IdEvento = item.id_evento,
+                PedirProblemaMedico = item.pedir_problema_medico,
+                ProblemaMedicoObligatorio = item.problema_medico_obligatorio,
+                PedirAlergiasNoAlimentarias = item.pedir_alergias_no_alimentarias,
+                AlergiasNoAlimentariasObligatorio = item.alergias_no_alimentarias_obligatorio,
+                PedirNecesidadEspecial = item.pedir_necesidad_especial,
+                NecesidadEspecialObligatorio = item.necesidad_especial_obligatorio,
+                PedirCoberturaMedica = item.pedir_cobertura_medica,
+                CoberturaMedicaObligatorio = item.cobertura_medica_obligatorio,
+                PedirContactoEmergencia = item.pedir_contacto_emergencia,
+                ContactoEmergenciaObligatorio = item.contacto_emergencia_obligatorio,
+                PedirAutorizaEmergenciaMedica = item.pedir_autoriza_emergencia_medica,
+                AutorizaEmergenciaMedicaObligatorio = item.autoriza_emergencia_medica_obligatorio,
+                PedirObservacionesFamilia = item.pedir_observaciones_familia,
+                ObservacionesFamiliaObligatorio = item.observaciones_familia_obligatorio,
+                PedirMedicaciones = item.pedir_medicaciones,
+                MedicacionesObligatorio = item.medicaciones_obligatorio,
+                Activo = item.activo
+            });
+        }
+
+        [Authorize]
+        [HttpPost("{idEvento:long}/salud/config/upsert")]
+        public async Task<ActionResult<ProgramaSaludConfigDTO>> UpsertSaludConfig(
+    long idEvento,
+    [FromBody] ProgramaSaludConfigDTO req)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            var item = await _context.Set<ef_programa_salud_config>()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (item == null)
+            {
+                item = new ef_programa_salud_config
+                {
+                    id_evento = idEvento,
+                    fecha_alta = now
+                };
+
+                _context.Set<ef_programa_salud_config>().Add(item);
+            }
+
+            item.pedir_problema_medico = req.PedirProblemaMedico;
+            item.problema_medico_obligatorio = req.ProblemaMedicoObligatorio;
+
+            item.pedir_alergias_no_alimentarias = req.PedirAlergiasNoAlimentarias;
+            item.alergias_no_alimentarias_obligatorio = req.AlergiasNoAlimentariasObligatorio;
+
+            item.pedir_necesidad_especial = req.PedirNecesidadEspecial;
+            item.necesidad_especial_obligatorio = req.NecesidadEspecialObligatorio;
+
+            item.pedir_cobertura_medica = req.PedirCoberturaMedica;
+            item.cobertura_medica_obligatorio = req.CoberturaMedicaObligatorio;
+
+            item.pedir_contacto_emergencia = req.PedirContactoEmergencia;
+            item.contacto_emergencia_obligatorio = req.ContactoEmergenciaObligatorio;
+
+            item.pedir_autoriza_emergencia_medica = req.PedirAutorizaEmergenciaMedica;
+            item.autoriza_emergencia_medica_obligatorio = req.AutorizaEmergenciaMedicaObligatorio;
+
+            item.pedir_observaciones_familia = req.PedirObservacionesFamilia;
+            item.observaciones_familia_obligatorio = req.ObservacionesFamiliaObligatorio;
+
+            item.pedir_medicaciones = req.PedirMedicaciones;
+            item.medicaciones_obligatorio = req.MedicacionesObligatorio;
+
+            item.activo = req.Activo;
+            item.fecha_modif = now;
+
+            await _context.SaveChangesAsync();
+
+            req.IdSaludConfig = item.id_salud_config;
+            req.IdEvento = item.id_evento;
+
+            return Ok(req);
+        }
+
+
 
 
 
