@@ -1,6 +1,7 @@
 using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using API.Security;
+using API.Services.Eventos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using API.Services.Eventos;
+
 
 namespace API.Controllers.Programas
 {
@@ -20,11 +21,6 @@ namespace API.Controllers.Programas
         private readonly DataContext _context;
         private readonly IProgramasService _programasService;
 
-        public programasController(DataContext context, IProgramasService programasService)
-        {
-            _context = context;
-            _programasService = programasService;
-        }
 
         [Authorize]
         [HttpPost("{idEvento:long}/generar-link-publico")]
