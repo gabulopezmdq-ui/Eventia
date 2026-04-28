@@ -968,9 +968,7 @@ namespace API.Controllers.Programas
 
         [Authorize]
         [HttpPut("autorizaciones-config/{idProgramaAutorizacionConfig:long}/set-activo")]
-        public async Task<IActionResult> SetActivoAutorizacionConfig(
-    long idProgramaAutorizacionConfig,
-    [FromQuery] bool activo)
+        public async Task<IActionResult> SetActivoAutorizacionConfig(long idProgramaAutorizacionConfig, [FromQuery] bool activo)
         {
             long idUsuario = User.GetUserId();
 
@@ -1807,6 +1805,92 @@ namespace API.Controllers.Programas
             return Ok(req);
         }
 
+        [Authorize]
+        [HttpGet("autorizaciones-config/{idProgramaAutorizacionConfig:long}/traducciones")]
+        public async Task<ActionResult<List<ProgramaAutorizacionConfigTraduccionDTO>>> GetAutorizacionConfigTraducciones(long idProgramaAutorizacionConfig)
+        {
+            var config = await _context.Set<ef_programa_autorizaciones_config>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_programa_autorizacion_config == idProgramaAutorizacionConfig);
+
+            if (config == null)
+                return NotFound("Autorización configurada inexistente.");
+
+            var idiomas = await _context.Set<ef_idiomas>()
+                .AsNoTracking()
+                .Where(x => x.activo == true)
+                .OrderBy(x => x.id_idioma)
+                .ToListAsync();
+
+            var traducciones = await _context.Set<ef_programa_autorizacion_config_traducciones>()
+                .AsNoTracking()
+                .Where(x => x.id_programa_autorizacion_config == idProgramaAutorizacionConfig)
+                .ToListAsync();
+
+            var result = idiomas.Select(i =>
+            {
+                var tr = traducciones.FirstOrDefault(x => x.id_idioma == i.id_idioma);
+
+                return new ProgramaAutorizacionConfigTraduccionDTO
+                {
+                    IdIdioma = i.id_idioma,
+                    Locale = i.locale,
+                    NombreLargo = i.nombre_largo,
+                    Titulo = tr?.titulo,
+                    Texto = tr?.texto,
+                    Activo = tr?.activo ?? true
+                };
+            }).ToList();
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("autorizaciones-config/{idProgramaAutorizacionConfig:long}/traducciones")]
+        public async Task<IActionResult> UpsertAutorizacionConfigTraducciones(
+    long idProgramaAutorizacionConfig,
+    [FromBody] ProgramaAutorizacionConfigTraduccionesRequest req)
+        {
+            var config = await _context.Set<ef_programa_autorizaciones_config>()
+                .SingleOrDefaultAsync(x => x.id_programa_autorizacion_config == idProgramaAutorizacionConfig);
+
+            if (config == null)
+                return NotFound("Autorización configurada inexistente.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            foreach (var item in req.Items)
+            {
+                if (string.IsNullOrWhiteSpace(item.Titulo))
+                    continue;
+
+                var tr = await _context.Set<ef_programa_autorizacion_config_traducciones>()
+                    .SingleOrDefaultAsync(x =>
+                        x.id_programa_autorizacion_config == idProgramaAutorizacionConfig &&
+                        x.id_idioma == item.IdIdioma);
+
+                if (tr == null)
+                {
+                    tr = new ef_programa_autorizacion_config_traducciones
+                    {
+                        id_programa_autorizacion_config = idProgramaAutorizacionConfig,
+                        id_idioma = item.IdIdioma,
+                        fecha_alta = now
+                    };
+
+                    _context.Set<ef_programa_autorizacion_config_traducciones>().Add(tr);
+                }
+
+                tr.titulo = item.Titulo.Trim();
+                tr.texto = string.IsNullOrWhiteSpace(item.Texto) ? null : item.Texto.Trim();
+                tr.activo = item.Activo;
+                tr.fecha_modif = now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { ok = true });
+        }
 
 
 

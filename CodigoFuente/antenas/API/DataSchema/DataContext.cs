@@ -146,6 +146,7 @@ namespace API.DataSchema
         public DbSet<ef_programa_salud_acciones> ef_programa_salud_acciones { get; set; }
         public DbSet<ef_programa_salud_fichas> ef_programa_salud_fichas { get; set; }
         public DbSet<ef_programa_salud_config> ef_programa_salud_config { get; set; }
+        public DbSet<ef_programa_autorizacion_config_traducciones> ef_programa_autorizacion_config_traducciones { get; set; }
 
 
 
@@ -322,6 +323,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_programa_salud_accionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_salud_fichasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_salud_configConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_autorizacion_config_traduccionesConfiguration());
 
 
 
