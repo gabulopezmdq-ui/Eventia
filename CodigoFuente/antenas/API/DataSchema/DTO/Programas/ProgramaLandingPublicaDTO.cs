@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace API.DataSchema.DTO.Programas
@@ -40,5 +41,11 @@ namespace API.DataSchema.DTO.Programas
 
         [JsonPropertyName("expirado")]
         public bool Expirado { get; set; }
+        public short IdIdiomaActual { get; set; }
+        public List<ProgramaLandingIdiomaDTO> Idiomas { get; set; } = new();
+        public List<ProgramaPeriodoDTO> Periodos { get; set; } = new();
+        public List<ProgramaServicioDTO> Servicios { get; set; } = new();
+        public ProgramaSaludConfigDTO? SaludConfig { get; set; }
+        public List<ProgramaAutorizacionConfigDTO> Autorizaciones { get; set; } = new();
     }
 }

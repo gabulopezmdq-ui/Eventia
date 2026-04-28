@@ -138,7 +138,7 @@ namespace API.Controllers.Programas
 
         [AllowAnonymous]
         [HttpGet("inscripcion/{token}")]
-        public async Task<ActionResult<ProgramaLandingPublicaDTO>> LandingPublica(string token)
+        public async Task<ActionResult<ProgramaLandingPublicaDTO>> LandingPublica(string token, [FromQuery] short? idIdioma)
         {
             if (string.IsNullOrWhiteSpace(token))
                 return BadRequest("Token obligatorio.");
@@ -168,6 +168,159 @@ namespace API.Controllers.Programas
                 data.link.fecha_expiracion.HasValue &&
                 data.link.fecha_expiracion.Value < DateTimeOffset.UtcNow;
 
+            short idiomaActual = idIdioma ?? data.ev.id_idioma;
+
+            var idiomas = await _context.Set<ef_idiomas>()
+                .AsNoTracking()
+                .Where(x => x.activo == true)
+                .OrderBy(x => x.id_idioma)
+                .Select(x => new ProgramaLandingIdiomaDTO
+                {
+                    IdIdioma = x.id_idioma,
+                    Locale = x.locale,
+                    NombreLargo = x.nombre_largo,
+                    BanderaIso2 = x.bandera_iso2
+                })
+                .ToListAsync();
+
+            var periodos = await _context.Set<ef_programa_periodos>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == data.ev.id_evento && x.activo == true)
+                .OrderBy(x => x.orden)
+                .Select(x => new ProgramaPeriodoDTO
+                {
+                    IdProgramaPeriodo = x.id_programa_periodo,
+                    IdEvento = x.id_evento,
+                    Codigo = x.codigo,
+                    Nombre = x.nombre,
+                    FechaDesde = x.fecha_desde,
+                    FechaHasta = x.fecha_hasta,
+                    PrecioBase = x.precio_base,
+                    Moneda = x.moneda,
+                    Cupo = x.cupo,
+                    Orden = x.orden,
+                    Activo = x.activo
+                })
+                .ToListAsync();
+
+            var servicios = await _context.Set<ef_programa_servicios>()
+                .AsNoTracking()
+                .Include(x => x.servicio_base)
+                .Where(x => x.id_evento == data.ev.id_evento && x.activo == true)
+                .OrderBy(x => x.orden)
+                .Select(x => new ProgramaServicioDTO
+                {
+                    IdProgramaServicio = x.id_programa_servicio,
+                    IdEvento = x.id_evento,
+                    IdServicioBase = x.id_servicio_base,
+                    ServicioBaseCodigo = x.servicio_base != null ? x.servicio_base.codigo : null,
+                    Codigo = x.codigo,
+                    Nombre = x.nombre,
+                    Descripcion = x.descripcion,
+                    TipoCalculo = x.tipo_calculo,
+                    Precio = x.precio,
+                    Moneda = x.moneda,
+                    Obligatorio = x.obligatorio,
+                    PermiteCantidad = x.permite_cantidad,
+                    RequiereSeleccionDias = x.requiere_seleccion_dias,
+                    Cupo = x.cupo,
+                    Orden = x.orden,
+                    Activo = x.activo,
+                    ConfigJson = x.config_json
+                })
+                .ToListAsync();
+
+            var salud = await _context.Set<ef_programa_salud_config>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == data.ev.id_evento && x.activo == true);
+
+            var saludConfig = salud == null
+                ? new ProgramaSaludConfigDTO
+                {
+                    IdEvento = data.ev.id_evento,
+                    PedirProblemaMedico = true,
+                    PedirAlergiasNoAlimentarias = true,
+                    PedirNecesidadEspecial = true,
+                    PedirCoberturaMedica = false,
+                    PedirContactoEmergencia = true,
+                    ContactoEmergenciaObligatorio = true,
+                    PedirAutorizaEmergenciaMedica = true,
+                    AutorizaEmergenciaMedicaObligatorio = true,
+                    PedirObservacionesFamilia = true,
+                    PedirMedicaciones = true,
+                    Activo = true
+                }
+                : new ProgramaSaludConfigDTO
+                {
+                    IdSaludConfig = salud.id_salud_config,
+                    IdEvento = salud.id_evento,
+                    PedirProblemaMedico = salud.pedir_problema_medico,
+                    ProblemaMedicoObligatorio = salud.problema_medico_obligatorio,
+                    PedirAlergiasNoAlimentarias = salud.pedir_alergias_no_alimentarias,
+                    AlergiasNoAlimentariasObligatorio = salud.alergias_no_alimentarias_obligatorio,
+                    PedirNecesidadEspecial = salud.pedir_necesidad_especial,
+                    NecesidadEspecialObligatorio = salud.necesidad_especial_obligatorio,
+                    PedirCoberturaMedica = salud.pedir_cobertura_medica,
+                    CoberturaMedicaObligatorio = salud.cobertura_medica_obligatorio,
+                    PedirContactoEmergencia = salud.pedir_contacto_emergencia,
+                    ContactoEmergenciaObligatorio = salud.contacto_emergencia_obligatorio,
+                    PedirAutorizaEmergenciaMedica = salud.pedir_autoriza_emergencia_medica,
+                    AutorizaEmergenciaMedicaObligatorio = salud.autoriza_emergencia_medica_obligatorio,
+                    PedirObservacionesFamilia = salud.pedir_observaciones_familia,
+                    ObservacionesFamiliaObligatorio = salud.observaciones_familia_obligatorio,
+                    PedirMedicaciones = salud.pedir_medicaciones,
+                    MedicacionesObligatorio = salud.medicaciones_obligatorio,
+                    Activo = salud.activo
+                };
+
+            var autorizaciones = await _context.Set<ef_programa_autorizaciones_config>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == data.ev.id_evento && x.activo == true)
+                .OrderBy(x => x.orden)
+                .Select(x => new ProgramaAutorizacionConfigDTO
+                {
+                    IdProgramaAutorizacionConfig = x.id_programa_autorizacion_config,
+                    IdEvento = x.id_evento,
+                    IdAutorizacionBase = x.id_autorizacion_base,
+                    Codigo = x.codigo,
+                    Obligatoria = x.obligatoria,
+                    RequiereAceptacion = x.requiere_aceptacion,
+                    RequiereDatosResponsable = x.requiere_datos_responsable,
+                    Orden = x.orden,
+                    Activo = x.activo,
+                    Titulo =
+                        _context.Set<ef_programa_autorizacion_config_traducciones>()
+                            .Where(tr => tr.id_programa_autorizacion_config == x.id_programa_autorizacion_config
+                                      && tr.id_idioma == idiomaActual
+                                      && tr.activo == true)
+                            .Select(tr => tr.titulo)
+                            .FirstOrDefault()
+                        ?? _context.Set<ef_param_programa_autorizacion_base_traducciones>()
+                            .Where(tr => x.id_autorizacion_base != null
+                                      && tr.id_autorizacion_base == x.id_autorizacion_base.Value
+                                      && tr.id_idioma == idiomaActual
+                                      && tr.activo == true)
+                            .Select(tr => tr.titulo)
+                            .FirstOrDefault()
+                        ?? x.codigo,
+                    Texto =
+                        _context.Set<ef_programa_autorizacion_config_traducciones>()
+                            .Where(tr => tr.id_programa_autorizacion_config == x.id_programa_autorizacion_config
+                                      && tr.id_idioma == idiomaActual
+                                      && tr.activo == true)
+                            .Select(tr => tr.texto)
+                            .FirstOrDefault()
+                        ?? _context.Set<ef_param_programa_autorizacion_base_traducciones>()
+                            .Where(tr => x.id_autorizacion_base != null
+                                      && tr.id_autorizacion_base == x.id_autorizacion_base.Value
+                                      && tr.id_idioma == idiomaActual
+                                      && tr.activo == true)
+                            .Select(tr => tr.texto)
+                            .FirstOrDefault()
+                })
+                .ToListAsync();
+
+
             return Ok(new ProgramaLandingPublicaDTO
             {
                 IdEvento = data.ev.id_evento,
@@ -181,7 +334,14 @@ namespace API.Controllers.Programas
                 FechaInicio = data.ev.fecha_inicio,
                 FechaFin = data.ev.fecha_fin,
                 IdIdioma = data.ev.id_idioma,
-                Expirado = expirado
+                IdIdiomaActual = idiomaActual,
+                Expirado = expirado,
+
+                Idiomas = idiomas,
+                Periodos = periodos,
+                Servicios = servicios,
+                SaludConfig = saludConfig,
+                Autorizaciones = autorizaciones
             });
         }
 
@@ -1958,6 +2118,182 @@ namespace API.Controllers.Programas
             catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
             catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
             catch (Exception ex) { return BadRequest(ex.Message); }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("inscripcion/{token}/cotizar")]
+        public async Task<ActionResult<ProgramaInscripcionCotizarResponse>> CotizarInscripcionPrograma(
+    string token,
+    [FromBody] ProgramaInscripcionCotizarRequest req)
+        {
+            var link = await _context.Set<ef_evento_acceso_links>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.token == token && x.activo == true);
+
+            if (link == null)
+                return NotFound("Link inexistente o inactivo.");
+
+            long idEvento;
+
+            if (link.id_evento.HasValue)
+            {
+                idEvento = link.id_evento.Value;
+            }
+            else
+            {
+                var acceso = await _context.Set<ef_evento_accesos>()
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.id_acceso == link.id_acceso);
+
+                if (acceso == null)
+                    return BadRequest("El link no tiene un evento asociado.");
+
+                idEvento = acceso.id_evento;
+            }
+
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El link no corresponde a un programa.");
+
+            if (req.Periodos == null || req.Periodos.Count == 0)
+                return BadRequest("Debe seleccionar al menos un período.");
+
+            var idsPeriodos = req.Periodos
+                .Select(x => x.IdProgramaPeriodo)
+                .Distinct()
+                .ToList();
+
+            var periodos = await _context.Set<ef_programa_periodos>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    x.activo == true &&
+                    idsPeriodos.Contains(x.id_programa_periodo))
+                .OrderBy(x => x.orden)
+                .ToListAsync();
+
+            if (periodos.Count != idsPeriodos.Count)
+                return BadRequest("Uno o más períodos seleccionados no existen o no están activos.");
+
+            string moneda = periodos.First().moneda;
+
+            decimal baseTotal = periodos.Sum(x => x.precio_base);
+
+            var serviciosResponse = new List<ProgramaInscripcionCotizarServicioResponse>();
+            decimal serviciosTotal = 0;
+
+            if (req.Servicios != null && req.Servicios.Count > 0)
+            {
+                var idsServicios = req.Servicios
+                    .Select(x => x.IdProgramaServicio)
+                    .Distinct()
+                    .ToList();
+
+                var serviciosDb = await _context.Set<ef_programa_servicios>()
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.id_evento == idEvento &&
+                        x.activo == true &&
+                        idsServicios.Contains(x.id_programa_servicio))
+                    .ToListAsync();
+
+                if (serviciosDb.Count != idsServicios.Count)
+                    return BadRequest("Uno o más servicios seleccionados no existen o no están activos.");
+
+                foreach (var sReq in req.Servicios)
+                {
+                    var servicio = serviciosDb.Single(x => x.id_programa_servicio == sReq.IdProgramaServicio);
+
+                    if (servicio.moneda != moneda)
+                        return BadRequest("Todos los períodos y servicios deben tener la misma moneda.");
+
+                    int cantidadCalculada;
+
+                    if (servicio.tipo_calculo == "POR_DIA")
+                    {
+                        if (sReq.IdProgramaPeriodo == null)
+                            return BadRequest($"El servicio {servicio.nombre} requiere indicar período.");
+
+                        var periodo = periodos.SingleOrDefault(x => x.id_programa_periodo == sReq.IdProgramaPeriodo.Value);
+
+                        if (periodo == null)
+                            return BadRequest($"El servicio {servicio.nombre} está asociado a un período no seleccionado.");
+
+                        if (sReq.Fechas == null || sReq.Fechas.Count == 0)
+                            cantidadCalculada = 0;
+                        else
+                        {
+                            foreach (var fecha in sReq.Fechas)
+                            {
+                                if (fecha < periodo.fecha_desde || fecha > periodo.fecha_hasta)
+                                    return BadRequest($"La fecha {fecha} no pertenece al período {periodo.nombre}.");
+                            }
+
+                            cantidadCalculada = sReq.Fechas.Distinct().Count();
+                        }
+                    }
+                    else if (servicio.tipo_calculo == "POR_CANTIDAD")
+                    {
+                        cantidadCalculada = sReq.Cantidad ?? 0;
+
+                        if (cantidadCalculada < 0)
+                            return BadRequest($"La cantidad del servicio {servicio.nombre} no puede ser negativa.");
+                    }
+                    else if (servicio.tipo_calculo == "POR_PERIODO")
+                    {
+                        if (sReq.IdProgramaPeriodo.HasValue)
+                            cantidadCalculada = 1;
+                        else
+                            cantidadCalculada = periodos.Count;
+                    }
+                    else if (servicio.tipo_calculo == "POR_INSCRIPCION")
+                    {
+                        cantidadCalculada = sReq.Cantidad ?? 1;
+                    }
+                    else
+                    {
+                        return BadRequest($"Tipo de cálculo no soportado: {servicio.tipo_calculo}");
+                    }
+
+                    decimal subtotal = servicio.precio * cantidadCalculada;
+
+                    serviciosTotal += subtotal;
+
+                    serviciosResponse.Add(new ProgramaInscripcionCotizarServicioResponse
+                    {
+                        IdProgramaServicio = servicio.id_programa_servicio,
+                        Nombre = servicio.nombre,
+                        TipoCalculo = servicio.tipo_calculo,
+                        PrecioUnitario = servicio.precio,
+                        CantidadCalculada = cantidadCalculada,
+                        Subtotal = subtotal
+                    });
+                }
+            }
+
+            var result = new ProgramaInscripcionCotizarResponse
+            {
+                IdEvento = idEvento,
+                Moneda = moneda,
+                Base = baseTotal,
+                ServiciosTotal = serviciosTotal,
+                Total = baseTotal + serviciosTotal,
+                Periodos = periodos.Select(x => new ProgramaInscripcionCotizarPeriodoResponse
+                {
+                    IdProgramaPeriodo = x.id_programa_periodo,
+                    Nombre = x.nombre,
+                    PrecioBase = x.precio_base
+                }).ToList(),
+                Servicios = serviciosResponse
+            };
+
+            return Ok(result);
         }
     }
 }
