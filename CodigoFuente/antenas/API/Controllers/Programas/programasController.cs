@@ -854,9 +854,7 @@ namespace API.Controllers.Programas
 
         [Authorize]
         [HttpPost("{idEvento:long}/autorizaciones-config/upsert")]
-        public async Task<ActionResult<ProgramaAutorizacionConfigDTO>> UpsertAutorizacionConfig(
-    long idEvento,
-    [FromBody] ProgramaAutorizacionConfigDTO req)
+        public async Task<ActionResult<ProgramaAutorizacionConfigDTO>> UpsertAutorizacionConfig(long idEvento, [FromBody] ProgramaAutorizacionConfigDTO req)
         {
             long idUsuario = User.GetUserId();
 
@@ -875,17 +873,24 @@ namespace API.Controllers.Programas
             if (ev.tipo_operacion != "PROGRAMA")
                 return BadRequest("El evento indicado no es de tipo PROGRAMA.");
 
-            if (req.IdAutorizacionBase <= 0)
-                return BadRequest("Debe seleccionar una autorización base.");
+            ef_param_programa_autorizaciones_base? autBase = null;
 
-            var autBase = await _context.Set<ef_param_programa_autorizaciones_base>()
-                .AsNoTracking()
-                .SingleOrDefaultAsync(x =>
-                    x.id_autorizacion_base == req.IdAutorizacionBase &&
-                    x.activo == true);
+            if (req.IdAutorizacionBase.HasValue && req.IdAutorizacionBase.Value > 0)
+            {
+                autBase = await _context.Set<ef_param_programa_autorizaciones_base>()
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(x =>
+                        x.id_autorizacion_base == req.IdAutorizacionBase.Value &&
+                        x.activo == true);
 
-            if (autBase == null)
-                return BadRequest("La autorización base indicada no existe o está inactiva.");
+                if (autBase == null)
+                    return BadRequest("La autorización base indicada no existe o está inactiva.");
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(req.Codigo))
+                    return BadRequest("Debe indicar un código para la autorización personalizada.");
+            }
 
             var now = DateTimeOffset.UtcNow;
 
@@ -930,7 +935,11 @@ namespace API.Controllers.Programas
             }
 
             item.id_autorizacion_base = req.IdAutorizacionBase;
-            item.codigo = autBase.codigo;
+
+            item.codigo = autBase != null
+                ? autBase.codigo
+                : req.Codigo.Trim().ToUpperInvariant();
+
             item.titulo_override = string.IsNullOrWhiteSpace(req.TituloOverride) ? null : req.TituloOverride.Trim();
             item.texto_override = string.IsNullOrWhiteSpace(req.TextoOverride) ? null : req.TextoOverride.Trim();
             item.obligatoria = req.Obligatoria;
