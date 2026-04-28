@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using API.Services.Eventos;
 
 namespace API.Controllers.Programas
 {
@@ -1891,7 +1892,10 @@ namespace API.Controllers.Programas
 
             await _context.SaveChangesAsync();
 
-                [Authorize]
+            return Ok(new { ok = true });
+        }
+
+        [Authorize]
         [HttpGet("{idEvento:long}/staff")]
         public async Task<ActionResult<IEnumerable<object>>> GetStaff(long idEvento)
         {
