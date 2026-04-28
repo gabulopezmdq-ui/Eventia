@@ -61,7 +61,7 @@ namespace API.Services.Eventos
                     Nombre = i.nombre,
                     Apellido = i.apellido,
                     Email = i.email,
-                    IdRol = i.id_rol_staff ?? 0,
+                    IdRol = i.id_rol_staff ?? (short)0,
                     CodigoRol = r.codigo,
                     Activo = true,
                     FechaAlta = i.fecha_alta,
@@ -228,7 +228,7 @@ namespace API.Services.Eventos
                 {
                     id_evento = invite.id_evento,
                     id_usuario = idUsuarioActual,
-                    id_rol = invite.id_rol_staff ?? 0,
+                    id_rol = invite.id_rol_staff ?? (short)0,
                     activo = true,
                     fecha_alta = DateTimeOffset.UtcNow
                 };
