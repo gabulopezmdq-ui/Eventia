@@ -18,7 +18,7 @@ namespace API.DataSchema.ModelConfiguration
                    .IsRequired();
 
             builder.Property(x => x.id_autorizacion_base)
-                   .IsRequired();
+                   .IsRequired(false);
 
             builder.Property(x => x.codigo)
                    .HasMaxLength(60)
