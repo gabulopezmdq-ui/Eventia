@@ -21,6 +21,12 @@ namespace API.Controllers.Programas
         private readonly DataContext _context;
         private readonly IProgramasService _programasService;
 
+        public programasController(DataContext context, IProgramasService programasService)
+        {
+            _context = context;
+            _programasService = programasService;
+        }
+
 
         [Authorize]
         [HttpPost("{idEvento:long}/generar-link-publico")]
