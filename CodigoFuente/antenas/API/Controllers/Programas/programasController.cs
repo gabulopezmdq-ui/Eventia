@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -17,10 +17,12 @@ namespace API.Controllers.Programas
     public class programasController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly IProgramasService _programasService;
 
-        public programasController(DataContext context)
+        public programasController(DataContext context, IProgramasService programasService)
         {
             _context = context;
+            _programasService = programasService;
         }
 
         [Authorize]
@@ -1889,13 +1891,73 @@ namespace API.Controllers.Programas
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { ok = true });
+                [Authorize]
+        [HttpGet("{idEvento:long}/staff")]
+        public async Task<ActionResult<IEnumerable<object>>> GetStaff(long idEvento)
+        {
+            try
+            {
+                var result = await _programasService.GetStaffAsync(idEvento, User.GetUserId());
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
+        [Authorize]
+        [HttpPost("{idEvento:long}/staff")]
+        public async Task<ActionResult<object>> AddStaff(long idEvento, [FromBody] AddProgramaStaffRequest req)
+        {
+            try
+            {
+                var result = await _programasService.AddStaffAsync(idEvento, req, User.GetUserId());
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+            catch (Exception ex) { return BadRequest(ex.Message); }
+        }
 
+        [Authorize]
+        [HttpPut("{idEvento:long}/staff/{idEventoUsuario:long}")]
+        public async Task<IActionResult> UpdateStaff(long idEvento, long idEventoUsuario, [FromBody] UpdateProgramaStaffRequest req)
+        {
+            try
+            {
+                await _programasService.UpdateStaffAsync(idEvento, idEventoUsuario, req, User.GetUserId());
+                return Ok(new { ok = true });
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+            catch (Exception ex) { return BadRequest(ex.Message); }
+        }
 
+        [Authorize]
+        [HttpDelete("{idEvento:long}/staff/{idEventoUsuario:long}")]
+        public async Task<IActionResult> DeleteStaff(long idEvento, long idEventoUsuario)
+        {
+            try
+            {
+                await _programasService.DeleteStaffAsync(idEvento, idEventoUsuario, User.GetUserId());
+                return Ok(new { ok = true });
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+            catch (Exception ex) { return BadRequest(ex.Message); }
+        }
 
-
-
+        [Authorize]
+        [HttpPost("staff/aceptar-invitacion")]
+        public async Task<IActionResult> AceptarInvitacion([FromQuery] string token)
+        {
+            try
+            {
+                var result = await _programasService.AceptarInvitacionStaffAsync(token, User.GetUserId());
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+            catch (Exception ex) { return BadRequest(ex.Message); }
+        }
     }
 }
