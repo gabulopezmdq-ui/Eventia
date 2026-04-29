@@ -54,6 +54,7 @@ export interface PersonaInvitacion {
 }
 
 export interface InvitacionPersonalResponse {
+    idEvento: number;
     idGrupo: number;
     nombreGrupo: string;
     saludo: string;
@@ -67,6 +68,11 @@ export interface InvitacionPersonalResponse {
 
 // ── Tipos para Confirmar RSVP (POST /invitacion/{token}/confirmar) ──
 
+export interface RestriccionConfirmarItem {
+    idRestriccion: number;
+    observaciones?: string | null;
+}
+
 export interface PersonaConfirmarPayload {
     idInvitado?: number;       // Si existe → persona conocida. Si no → se crea.
     nombre: string;
@@ -76,6 +82,9 @@ export interface PersonaConfirmarPayload {
     rolEvento: 'A' | 'N';
     asiste: boolean;
     mensaje?: string;
+    alimentacionDetalle?: string;          // Texto libre opcional (alergias, aclaraciones)
+    restricciones?: RestriccionConfirmarItem[]; // Forma detallada con observaciones por restricción
+    idsRestricciones?: number[];           // Forma simple: solo array de IDs (fallback)
 }
 
 export interface ConfirmarRsvpPayload {
@@ -167,8 +176,24 @@ export async function getMisRestricciones(token: string): Promise<GrupoRsvpInfo>
 }
 
 /**
- * PASO 5: Obtener catálogo de restricciones dietarias disponibles.
+ * PASO 5 (PREFERIDO): Obtener catálogo de restricciones por idEvento.
+ * GET /api/parametrica/restricciones-alimentarias?idEvento={id}
+ * → Este endpoint respeta el idioma configurado para el evento.
+ */
+export async function getCatalogoParametrico(idEvento: number): Promise<CatalogoRestriccion[]> {
+    const res = await fetch(`/api/parametrica/restricciones-alimentarias?idEvento=${idEvento}`);
+
+    if (!res.ok) {
+        throw new Error('Error al obtener el catálogo de restricciones del evento');
+    }
+
+    return res.json();
+}
+
+/**
+ * Fallback: Obtener catálogo de restricciones dietarias por locale.
  * GET /api/restricciones/catalogo?locale=es-AR
+ * Usar solo si no se tiene idEvento disponible.
  */
 export async function getCatalogoRestricciones(locale: string = 'es-AR'): Promise<CatalogoRestriccion[]> {
     const res = await fetch(`/api/restricciones/catalogo?locale=${locale}`);

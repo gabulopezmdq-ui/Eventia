@@ -11,7 +11,9 @@ import {
     getPlantillaDetalle,
     aplicarPlantilla,
     iniciarSolicitudDraft,
+    getPlanesCatalogB2C,
 } from '@/src/features/events/event.service';
+import type { PlanPublico } from '@/src/features/events/event.service';
 import type {
     TipoEvento,
     Idioma,
@@ -44,6 +46,7 @@ import {
     Lock,
     Link,
     ClipboardList,
+    Star,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════
@@ -124,6 +127,12 @@ function NewEventContent() {
     // ── Step 5 — Plantilla aplicada ─────────────────────
     const [plantillaAplicada, setPlantillaAplicada] = useState(false);
 
+    // ── Planes B2C ──────────────────────────────────────
+    const [planes, setPlanes] = useState<PlanPublico[]>([]);
+    const [codigoPlan, setCodigoPlan] = useState<string>('B2C_FREE');
+    const [showPlanModal, setShowPlanModal] = useState(false);
+    const [loadingPlanes, setLoadingPlanes] = useState(false);
+
     // ── B2B — datos de contexto Cuenta ───────────────────
     const [unidades, setUnidades] = useState<Unidad[]>([]);
     const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -163,6 +172,23 @@ function NewEventContent() {
                 setError('No se pudieron cargar los datos necesarios.');
             } finally {
                 setLoadingSelects(false);
+            }
+
+            // Cargar planes B2C y recuperar plan pre-seleccionado desde landing
+            if (!isB2BContext) {
+                setLoadingPlanes(true);
+                const planesData = await getPlanesCatalogB2C();
+                setPlanes(planesData);
+                setLoadingPlanes(false);
+
+                // Flujo A: el usuario vino de la landing y eligió un plan
+                const planGuardado = localStorage.getItem('eventia_plan_seleccionado');
+                if (planGuardado) {
+                    setCodigoPlan(planGuardado);
+                    localStorage.removeItem('eventia_plan_seleccionado');
+                } else {
+                    setCodigoPlan('B2C_FREE');
+                }
             }
         }
         loadSelects();
@@ -300,6 +326,13 @@ function NewEventContent() {
                 saludo: basicInfo.saludo || undefined,
                 mensajeBienvenida: basicInfo.mensajeBienvenida || undefined,
                 notas: basicInfo.notas || undefined,
+                // B2C: plan seleccionado por el usuario
+                ...(!isB2BContext && { codigoPlan }),
+                // B2B: si hay contexto de cuenta, incluir unidad y cliente
+                ...(isB2BContext && b2bInfo.idUnidad !== '' && {
+                    idUnidad: b2bInfo.idUnidad as number,
+                    idCliente: b2bInfo.idCliente !== '' ? b2bInfo.idCliente as number : undefined,
+                }),
             });
             // El backend responde con camelCase (idEvento)
             const eventId = (result as unknown as { idEvento: number }).idEvento ?? result.id_evento;
@@ -692,6 +725,57 @@ function NewEventContent() {
                                         className="w-full p-4 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none placeholder:text-muted resize-none"
                                     />
                                 </div>
+
+                                {/* ─── Selector de Plan (solo B2C) ─── */}
+                                {!isB2BContext && (
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-400">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
+                                            <Star className="w-3 h-3" />
+                                            Plan
+                                        </label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative flex-1">
+                                                <select
+                                                    value={codigoPlan}
+                                                    onChange={e => setCodigoPlan(e.target.value)}
+                                                    disabled={loadingPlanes}
+                                                    className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10 disabled:opacity-60"
+                                                >
+                                                    {loadingPlanes ? (
+                                                        <option>Cargando planes...</option>
+                                                    ) : planes.length === 0 ? (
+                                                        <option value="B2C_FREE">Free</option>
+                                                    ) : (
+                                                        planes.map(p => (
+                                                            <option key={p.codigo} value={p.codigo}>
+                                                                {p.nombre}{p.precio !== null ? ` — $${p.precio}` : ''}
+                                                            </option>
+                                                        ))
+                                                    )}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPlanModal(true)}
+                                                className="flex items-center gap-2 px-4 py-3.5 rounded-xl border border-indigo-500/30 bg-indigo-500/5 text-indigo-400 hover:bg-indigo-500/10 text-sm font-semibold transition-all whitespace-nowrap"
+                                            >
+                                                <LayoutGrid className="w-4 h-4" />
+                                                Ver planes
+                                            </button>
+                                        </div>
+                                        {codigoPlan && codigoPlan !== 'B2C_FREE' && (
+                                            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold animate-in fade-in">
+                                                <Star className="w-3 h-3" />
+                                                Plan {planes.find(p => p.codigo === codigoPlan)?.nombre ?? codigoPlan} seleccionado
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -1437,6 +1521,105 @@ function NewEventContent() {
                                     )}
                                 </button>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ═══════════ MODAL: Ver Planes B2C ═══════════ */}
+            {showPlanModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={e => { if (e.target === e.currentTarget) setShowPlanModal(false); }}
+                >
+                    <div className="w-full max-w-4xl bg-card-bg border border-card-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-card-border">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                                    <Star className="w-4 h-4 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-foreground">Elegí tu plan</h3>
+                                    <p className="text-xs text-muted">Podés cambiarlo en cualquier momento</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowPlanModal(false)}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-card-border transition-colors text-lg"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Grid de planes */}
+                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
+                            {loadingPlanes ? (
+                                <div className="col-span-3 flex items-center justify-center py-12">
+                                    <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                                </div>
+                            ) : planes.length === 0 ? (
+                                <p className="col-span-3 text-center text-muted py-8">No hay planes disponibles.</p>
+                            ) : (
+                                planes.map(plan => {
+                                    const isSelected = codigoPlan === plan.codigo;
+                                    const features = plan.features.slice(0, 4);
+                                    return (
+                                        <button
+                                            key={plan.codigo}
+                                            type="button"
+                                            onClick={() => { setCodigoPlan(plan.codigo); setShowPlanModal(false); }}
+                                            className={`text-left p-5 rounded-xl border-2 transition-all duration-200 ${
+                                                isSelected
+                                                    ? 'border-indigo-500 bg-indigo-500/5 shadow-lg shadow-indigo-500/10'
+                                                    : 'border-card-border bg-background/50 hover:border-indigo-500/40 hover:bg-indigo-500/5'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <h4 className="font-bold text-foreground">{plan.nombre}</h4>
+                                                {isSelected && (
+                                                    <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0 ml-2">
+                                                        <Check className="w-3 h-3 text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <p className="text-2xl font-extrabold text-foreground mb-0.5">
+                                                {plan.precio === null
+                                                    ? (plan.codigo.includes('FREE') ? '$0' : 'Consultar')
+                                                    : `$${plan.precio}`}
+                                                <span className="text-sm font-normal text-muted ml-1">
+                                                    {plan.periodo && plan.periodo !== 'UNICO' ? `/${plan.periodo}` : ''}
+                                                </span>
+                                            </p>
+                                            <p className="text-xs text-muted mb-3">{plan.descripcion}</p>
+                                            <ul className="space-y-1.5">
+                                                {features.map((f, i) => (
+                                                    <li key={i} className="flex items-center gap-2 text-xs text-muted">
+                                                        <Check className="w-3 h-3 text-indigo-400 flex-shrink-0" />
+                                                        {typeof f === 'string' ? f : f.nombre}
+                                                    </li>
+                                                ))}
+                                                {plan.features.length > 4 && (
+                                                    <li className="text-xs text-indigo-400 font-semibold">
+                                                        +{plan.features.length - 4} beneficios más...
+                                                    </li>
+                                                )}
+                                            </ul>
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Footer del modal */}
+                        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-card-border bg-background/30">
+                            <button
+                                type="button"
+                                onClick={() => setShowPlanModal(false)}
+                                className="px-5 py-2.5 rounded-xl border border-card-border text-muted hover:text-foreground hover:border-muted/50 text-sm font-medium transition-all"
+                            >
+                                Cerrar
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,90 @@
+# Plan de Implementación: RSVP + Restricciones Alimentarias (Actualizado)
+
+En base a la información confirmada por el backend, el flujo ideal es **centralizar el envío de toda la información (RSVP + Restricciones + Detalle libre) en una única llamada `POST /confirmar`**, y usar el endpoint de paramétricas dependiente del `idEvento` para el catálogo.
+
+## Estado Actual vs. Nuevo Enfoque
+
+| Área | Estado Anterior | Nuevo Enfoque | Estado |
+|---|---|---|---|
+| **Catálogo** | Se obtenía de `/api/restricciones/catalogo?locale=` | BFF proxy hacia `/parametrica/RestriccionesAlimentarias?idEvento=` | ✅ Implementado |
+| **Flujo de Envío** | 2 llamadas separadas (`POST /confirmar` y luego `POST /mis-restricciones`) | **1 sola llamada** a `POST /confirmar` con todo el payload anidado | ✅ Implementado |
+| **Payload Confirmar** | Solo enviaba datos básicos por persona | Envía `alimentacionDetalle` y el array `restricciones` por cada persona | ✅ Implementado |
+| **UI de Restricciones** | Step separado después de confirmar el backend | Integrada inline dentro de cada tarjeta de persona | ✅ Implementado |
+| **Validaciones** | Email y Celular sin `required` | Validación dura en el titular antes del submit | ✅ Implementado |
+
+---
+
+## Plan de Acción Paso a Paso
+
+### ✅ Paso 1 — Actualizar Tipos y Estado del Formulario
+**Archivo:** `src/features/rsvp/rsvp.service.ts` y `src/app/rsvp/[token]/page.tsx`
+
+1. **Service:** `PersonaConfirmarPayload` actualizado con los nuevos campos:
+   ```typescript
+   export interface PersonaConfirmarPayload {
+       // ... campos anteriores ...
+       alimentacionDetalle?: string;
+       restricciones?: RestriccionConfirmarItem[]; // { idRestriccion, observaciones }
+       idsRestricciones?: number[];           // fallback forma simple
+   }
+   ```
+2. **Page (Estado):** `PersonaFormState` expandido:
+   ```typescript
+   interface PersonaFormState {
+       // ...
+       alimentacionDetalle: string;
+       restriccionesSeleccionadas: Record<number, RestriccionLocal>;
+   }
+   ```
+
+### ✅ Paso 2 — Crear Endpoint BFF para el Catálogo Oficial
+**Archivo:** `src/app/api/parametrica/restricciones-alimentarias/route.ts` *(Nuevo)*
+
+Proxy que llama al endpoint oficial `GET /parametrica/RestriccionesAlimentarias?idEvento={idEvento}`, devolviendo el catálogo en el idioma configurado para ese evento.
+
+### ✅ Paso 3 — Cargar el Catálogo al Inicio
+**Archivo:** `src/app/rsvp/[token]/page.tsx`
+
+El catálogo se carga en `verificarEstado()` apenas se obtienen los datos de la invitación, usando `inviteData.idEvento`. Si no se dispone del `idEvento`, hace fallback automático al endpoint por locale.
+
+### ✅ Paso 4 — Unificar la UI del Formulario
+**Archivo:** `src/app/rsvp/[token]/page.tsx`
+
+Se implementó la **Opción B (Todo en una página)**: dentro de la tarjeta de cada persona que asiste se muestran directamente:
+- Pills/tags del catálogo seleccionables (restricciones)
+- Detalle ampliado (severidad + aclaración) para alergias y celiaquía
+- Textarea libre `alimentacionDetalle`
+
+El step `RESTRICTIONS` separado fue eliminado completamente.
+
+### ✅ Paso 5 — Validaciones Críticas del Titular
+**Archivo:** `src/app/rsvp/[token]/page.tsx`
+
+```typescript
+if (globalAsiste === true) {
+    const titular = personas[0];
+    if (!titular?.email?.trim() || !titular?.celular?.trim()) {
+        alert('El email y el celular del titular son obligatorios para confirmar la asistencia.');
+        return;
+    }
+}
+```
+Los inputs de email y celular del titular también tienen `required` y borde rojo visual cuando están vacíos.
+
+### ✅ Paso 6 — Simplificar el Submit (Eliminar llamadas redundantes)
+**Archivo:** `src/app/rsvp/[token]/page.tsx`
+
+`handleRsvpSubmit` ahora:
+1. Transforma `restriccionesSeleccionadas` (Record) → array `restricciones[{ idRestriccion, observaciones }]` por persona.
+2. Hace una **única llamada** a `confirmarRsvp` con todo el payload unificado.
+3. Pasa directamente a `SUCCESS` — eliminadas las llamadas a `guardarRestricciones` y `getMisRestricciones`.
+
+---
+
+## Resumen de Tareas de Código — Estado Final
+
+| Archivo | Tarea | Estado |
+|---|---|---|
+| `src/features/rsvp/rsvp.service.ts` | Nuevos tipos `RestriccionConfirmarItem`, campos en `PersonaConfirmarPayload`, `idEvento` en `InvitacionPersonalResponse`, función `getCatalogoParametrico` | ✅ Completo |
+| `src/app/api/parametrica/restricciones-alimentarias/route.ts` | Crear endpoint BFF | ✅ Completo |
+| `src/app/rsvp/[token]/page.tsx` | Todos los cambios de UI, estado, validaciones y submit | ✅ Completo |
