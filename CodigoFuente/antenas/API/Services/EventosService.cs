@@ -902,6 +902,7 @@ namespace API.Services
             ev.es_publico = req.EsPublico;
             ev.modo_acceso = modoAcceso;
             ev.modo_asistencia = modoAsistencia;
+            ev.info_publica = req.InfoPublica;
             ev.fecha_modif = DateTimeOffset.UtcNow;
 
             await _context.SaveChangesAsync();
