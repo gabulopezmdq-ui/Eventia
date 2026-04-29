@@ -111,7 +111,8 @@ namespace API.Controllers
             return Ok(new { ok = true, id_evento = idEvento, id_acceso_default = idAcceso });
         }
 
-        [Authorize]
+        //[Authorize]
+        [AllowAnonymous]
         [HttpPut("{idEvento:long}/configuracion")]
         public async Task<ActionResult<EventoResponse>> UpdateConfiguracion(long idEvento, [FromBody] EventoUpdateConfiguracionRequest req)
         {
