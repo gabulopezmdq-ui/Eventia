@@ -337,6 +337,7 @@ namespace API.Controllers.Programas
                 AnfitrionesTexto = data.ev.anfitriones_texto,
                 Saludo = data.ev.saludo,
                 MensajeBienvenida = data.ev.mensaje_bienvenida,
+                InfoPublica = data.ev.info_publica,
                 FechaInicio = data.ev.fecha_inicio,
                 FechaFin = data.ev.fecha_fin,
                 IdIdioma = data.ev.id_idioma,
