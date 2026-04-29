@@ -19,7 +19,7 @@ export async function PUT(
         const { id } = await params;
         const body = await req.json();
 
-        const res = await fetch(`${API_URL}/eventos/${id}/configuración`, {
+        const res = await fetch(`${API_URL}/eventos/${id}/configuracion`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
