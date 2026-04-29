@@ -108,6 +108,9 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.id_acceso_default);
             builder.Property(x => x.id_plan);
 
+            builder.Property(x => x.info_publica)
+                   .HasMaxLength(2000);
+
             // Índices (como en tu DDL)
             builder.HasIndex(x => x.id_plan)
                    .HasDatabaseName("ix_ef_eventos_id_plan");
