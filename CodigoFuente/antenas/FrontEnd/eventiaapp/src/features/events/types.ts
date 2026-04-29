@@ -45,6 +45,8 @@ export interface CreateEventPayload {
     // B2B: asociación a cuenta empresarial
     idUnidad?: number;
     idCliente?: number;
+    // B2C: plan seleccionado por el usuario
+    codigoPlan?: string;
 }
 
 // Tipos de evento (ParametricaDTO del backend)
