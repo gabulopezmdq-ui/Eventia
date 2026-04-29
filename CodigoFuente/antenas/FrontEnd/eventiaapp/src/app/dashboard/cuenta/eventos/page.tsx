@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getCuentaEventos } from '@/src/features/cuenta/cuenta.service';
-import { CalendarHeart, Loader2, MapPin, LayoutList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { CalendarHeart, Loader2, MapPin, LayoutList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EventosCuentaPage() {
@@ -74,8 +74,18 @@ export default function EventosCuentaPage() {
                     </p>
                 </div>
 
-                {/* View Toggles */}
-                <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900/50 p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800">
+                {/* Actions */}
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/dashboard/events/new?context=cuenta"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-sm font-semibold rounded-xl shadow-md shadow-purple-500/20 transition-all duration-200"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Nuevo Evento
+                    </Link>
+
+                    {/* View Toggles */}
+                    <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900/50 p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800">
                     <button
                         onClick={() => setViewMode('list')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${viewMode === 'list'
@@ -96,6 +106,7 @@ export default function EventosCuentaPage() {
                         <CalendarIcon className="w-4 h-4" />
                         Calendario
                     </button>
+                    </div>
                 </div>
             </div>
 
@@ -114,7 +125,14 @@ export default function EventosCuentaPage() {
                         <CalendarHeart className="w-12 h-12 text-neutral-300 dark:text-neutral-600" />
                     </div>
                     <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Aún no hay eventos</h3>
-                    <p className="text-neutral-500 dark:text-neutral-400 font-medium max-w-sm">No parece haber eventos programados ni borradores en tu cuenta.</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 font-medium max-w-sm mb-6">No parece haber eventos programados ni borradores en tu cuenta.</p>
+                    <Link
+                        href="/dashboard/events/new?context=cuenta"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-sm font-semibold rounded-xl shadow-md shadow-purple-500/20 transition-all duration-200"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Crear primer evento
+                    </Link>
                 </div>
             ) : (
                 <div className="animate-in fade-in duration-300">

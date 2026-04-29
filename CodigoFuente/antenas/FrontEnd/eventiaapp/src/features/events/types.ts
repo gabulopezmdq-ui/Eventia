@@ -42,6 +42,9 @@ export interface CreateEventPayload {
     direccion?: string;
     latitud?: number;
     longitud?: number;
+    // B2B: asociación a cuenta empresarial
+    idUnidad?: number;
+    idCliente?: number;
 }
 
 // Tipos de evento (ParametricaDTO del backend)
