@@ -61,8 +61,14 @@ function RegisterForm() {
         }
 
         try {
-            // Nota: Aquí se podría pasar el plan/flow al servicio de registro si el backend lo soporta
             await register(form);
+
+            // Flujo A: si el usuario vino de la landing con un plan elegido,
+            // lo guardamos para que el wizard de Nuevo Evento lo pre-seleccione
+            if (plan) {
+                localStorage.setItem('eventia_plan_seleccionado', plan);
+            }
+
             setSuccess(true);
             setTimeout(() => {
                 router.replace('/login');

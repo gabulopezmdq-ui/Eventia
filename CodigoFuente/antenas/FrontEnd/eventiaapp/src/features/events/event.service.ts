@@ -8,6 +8,33 @@ import {
 
 const API_URL = '/api'; // Apuntamos a nuestro Proxy de Next.js
 
+// ═══════════ Plan Público B2C ═══════════
+
+export interface PlanPublico {
+    id?: number;
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    precio: number | null;
+    moneda?: string;
+    periodo: string | null;
+    features: Array<{ codigo?: string; nombre: string; descripcion?: string } | string>;
+}
+
+export async function getPlanesCatalogB2C(): Promise<PlanPublico[]> {
+    try {
+        const res = await fetch(
+            `/api/planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C`,
+            { method: 'GET' }
+        );
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+    } catch {
+        return [];
+    }
+}
+
 export async function getMyEvents(): Promise<Event[]> {
     const res = await fetch(`${API_URL}/events/mine`, {
         method: 'GET',
