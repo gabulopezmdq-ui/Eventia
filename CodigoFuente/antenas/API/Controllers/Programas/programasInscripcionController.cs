@@ -103,16 +103,16 @@ namespace API.Controllers.Programas
         }
 
         private ef_invitados CrearInvitadoPrograma(
-    long idEvento,
-    long idAcceso,
-    long? idAccesoLink,
-    long? idRsvpGrupo,
-    long? idAudienciaPersona,
-    string nombre,
-    string apellido,
-    string? email,
-    string? celular,
-    bool esTitularGrupo)
+            long idEvento,
+            long idAcceso,
+            long? idAccesoLink,
+            long? idRsvpGrupo,
+            long? idAudienciaPersona,
+            string nombre,
+            string apellido,
+            string? email,
+            string? celular,
+            bool esTitularGrupo)
         {
             return new ef_invitados
             {
@@ -140,13 +140,13 @@ namespace API.Controllers.Programas
         }
 
         private async Task UpsertAudienciaPersonaEventoAsync(
-    long idAudienciaPersona,
-    long idEvento,
-    long? idUnidad,
-    long idInvitado,
-    long? idAcceso,
-    long? idAccesoLink,
-    string origenRegistro)
+            long idAudienciaPersona,
+            long idEvento,
+            long? idUnidad,
+            long idInvitado,
+            long? idAcceso,
+            long? idAccesoLink,
+            string origenRegistro)
         {
             var existe = await _context.Set<ef_audiencia_persona_eventos>()
                 .FirstOrDefaultAsync(x =>
@@ -219,9 +219,9 @@ namespace API.Controllers.Programas
         }
 
         private async Task GuardarSaludParticipanteAsync(
- long idInscripcion,
- long idIntegrante,
- ProgramaInscripcionSaludRequest salud)
+             long idInscripcion,
+             long idIntegrante,
+             ProgramaInscripcionSaludRequest salud)
         {
             var ficha = new ef_programa_inscripcion_salud_fichas
             {
@@ -286,6 +286,64 @@ namespace API.Controllers.Programas
                       });
                 }
             }
+        }
+
+        private async Task GuardarAceptacionLegalAsync(
+    long idInscripcion,
+    long? idIntegrante,
+    long idProgramaAutorizacionConfig,
+    bool aceptada,
+    string? nombreFirmante,
+    short idIdioma)
+        {
+            var config = await _context.Set<ef_programa_autorizaciones_config>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x =>
+                    x.id_programa_autorizacion_config == idProgramaAutorizacionConfig &&
+                    x.activo == true);
+
+            if (config == null)
+                throw new Exception("La autorización configurada no existe o está inactiva.");
+
+            string? texto = await _context.Set<ef_programa_autorizacion_config_traducciones>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_programa_autorizacion_config == idProgramaAutorizacionConfig &&
+                    x.id_idioma == idIdioma &&
+                    x.activo == true)
+                .Select(x => x.texto)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(texto) && config.id_autorizacion_base.HasValue)
+            {
+                texto = await _context.Set<ef_param_programa_autorizacion_base_traducciones>()
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.id_autorizacion_base == config.id_autorizacion_base.Value &&
+                        x.id_idioma == idIdioma &&
+                        x.activo == true)
+                    .Select(x => x.texto)
+                    .FirstOrDefaultAsync();
+            }
+
+            texto ??= config.codigo;
+
+            var item = new ef_programa_inscripcion_autorizaciones
+            {
+                id_inscripcion = idInscripcion,
+                id_rsvp_grupo_integrante = idIntegrante,
+                id_programa_autorizacion_config = idProgramaAutorizacionConfig,
+                codigo = config.codigo,
+                texto_aceptado = texto,
+                aceptada = aceptada,
+                fecha_aceptacion = DateTimeOffset.UtcNow,
+                nombre_firmante = string.IsNullOrWhiteSpace(nombreFirmante) ? null : nombreFirmante.Trim(),
+                ip_aceptacion = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                activo = true,
+                fecha_alta = DateTimeOffset.UtcNow
+            };
+
+            _context.Set<ef_programa_inscripcion_autorizaciones>().Add(item);
         }
 
         [AllowAnonymous]
@@ -728,6 +786,47 @@ namespace API.Controllers.Programas
                         );
                     }
 
+                    if (p.AutorizadosRetiro != null && p.AutorizadosRetiro.Any())
+                    {
+                        foreach (var a in p.AutorizadosRetiro)
+                        {
+                            if (string.IsNullOrWhiteSpace(a.NombreAutorizado))
+                                continue;
+
+                            var autorizado = new ef_autorizaciones
+                            {
+                                id_evento = idEvento,
+                                id_invitado_objetivo = invitadoParticipante.id_invitado,
+                                tipo = "R",
+                                nombre_autorizado = a.NombreAutorizado.Trim(),
+                                telefono_autorizado = string.IsNullOrWhiteSpace(a.TelefonoAutorizado) ? null : a.TelefonoAutorizado.Trim(),
+                                relacion = string.IsNullOrWhiteSpace(a.Relacion) ? null : a.Relacion.Trim(),
+                                observaciones = string.IsNullOrWhiteSpace(a.Observaciones) ? null : a.Observaciones.Trim(),
+                                activo = true,
+                                fecha_alta = now
+                            };
+
+                            _context.Set<ef_autorizaciones>().Add(autorizado);
+                        }
+                    }
+
+                    if (p.Autorizaciones != null && p.Autorizaciones.Any())
+                    {
+                        foreach (var autReq in p.Autorizaciones)
+                        {
+                            await GuardarAceptacionLegalAsync(
+                                idInscripcion: inscripcion.id_inscripcion,
+                                idIntegrante: integranteParticipante.id_rsvp_grupo_integrante,
+                                idProgramaAutorizacionConfig: autReq.IdProgramaAutorizacionConfig,
+                                aceptada: autReq.Aceptada,
+                                nombreFirmante: req.Firma?.Nombre ?? req.Responsable.Nombre + " " + req.Responsable.Apellido,
+                                idIdioma: req.IdIdioma ?? data.ev.id_idioma
+                            );
+                        }
+                    }
+
+
+
                     // 5. Registrar audiencia participante en evento
                     await UpsertAudienciaPersonaEventoAsync(
                         idAudienciaPersona: audienciaParticipante.id_audiencia_persona,
@@ -740,6 +839,21 @@ namespace API.Controllers.Programas
                     );
 
                     ordenIntegrante++;
+                }
+
+                if (req.AutorizacionesGrupo != null && req.AutorizacionesGrupo.Any())
+                {
+                    foreach (var autReq in req.AutorizacionesGrupo)
+                    {
+                        await GuardarAceptacionLegalAsync(
+                            idInscripcion: inscripcion.id_inscripcion,
+                            idIntegrante: null,
+                            idProgramaAutorizacionConfig: autReq.IdProgramaAutorizacionConfig,
+                            aceptada: autReq.Aceptada,
+                            nombreFirmante: req.Firma?.Nombre ?? req.Responsable.Nombre + " " + req.Responsable.Apellido,
+                            idIdioma: req.IdIdioma ?? data.ev.id_idioma
+                        );
+                    }
                 }
 
                 inscripcion.total_general = inscripcion.total_base + inscripcion.total_servicios;
