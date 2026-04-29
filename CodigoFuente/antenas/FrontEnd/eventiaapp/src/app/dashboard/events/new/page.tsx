@@ -118,10 +118,12 @@ function NewEventContent() {
         esPublico: boolean;
         modoAcceso: 'I' | 'L';
         modoAsistencia: 'R' | 'C';
+        infoPublica: string;
     }>({
         esPublico: false,
         modoAcceso: 'I',
         modoAsistencia: 'R',
+        infoPublica: '',
     });
 
     // ── Step 5 — Plantilla aplicada ─────────────────────
@@ -382,9 +384,10 @@ function NewEventContent() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    EsPublico: acceso.esPublico,
-                    ModoAcceso: acceso.modoAcceso,
-                    ModoAsistencia: acceso.modoAsistencia,
+                    es_publico: acceso.esPublico,
+                    modo_acceso: acceso.modoAcceso,
+                    modo_asistencia: acceso.modoAsistencia,
+                    info_publica: acceso.infoPublica,
                 }),
             });
             if (!res.ok) {
@@ -852,8 +855,8 @@ function NewEventContent() {
                                                                 idCliente: value === 'PROPIO' ? '' : prev.idCliente,
                                                             }))}
                                                             className={`flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                                                                    ? 'border-indigo-500 bg-indigo-500/5 shadow-sm shadow-indigo-500/10'
-                                                                    : 'border-card-border bg-background/50 hover:border-indigo-500/30'
+                                                                ? 'border-indigo-500 bg-indigo-500/5 shadow-sm shadow-indigo-500/10'
+                                                                : 'border-card-border bg-background/50 hover:border-indigo-500/30'
                                                                 }`}
                                                         >
                                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500/20' : 'bg-card-bg'
@@ -1204,8 +1207,8 @@ function NewEventContent() {
                                                 type="button"
                                                 onClick={() => setAcceso(prev => ({ ...prev, esPublico: value }))}
                                                 className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                                                        ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
-                                                        : 'border-card-border bg-background/50 hover:border-violet-500/30'
+                                                    ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
+                                                    : 'border-card-border bg-background/50 hover:border-violet-500/30'
                                                     }`}
                                             >
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-violet-500/20' : 'bg-card-bg'
@@ -1246,8 +1249,8 @@ function NewEventContent() {
                                                 type="button"
                                                 onClick={() => setAcceso(prev => ({ ...prev, modoAcceso: value }))}
                                                 className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                                                        ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
-                                                        : 'border-card-border bg-background/50 hover:border-violet-500/30'
+                                                    ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
+                                                    : 'border-card-border bg-background/50 hover:border-violet-500/30'
                                                     }`}
                                             >
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-violet-500/20' : 'bg-card-bg'
@@ -1288,8 +1291,8 @@ function NewEventContent() {
                                                 type="button"
                                                 onClick={() => setAcceso(prev => ({ ...prev, modoAsistencia: value }))}
                                                 className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                                                        ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
-                                                        : 'border-card-border bg-background/50 hover:border-violet-500/30'
+                                                    ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
+                                                    : 'border-card-border bg-background/50 hover:border-violet-500/30'
                                                     }`}
                                             >
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? 'bg-violet-500/20' : 'bg-card-bg'
@@ -1310,6 +1313,26 @@ function NewEventContent() {
                                         );
                                     })}
                                 </div>
+                            </div>
+
+                            {/* ─ Información Pública (Landing) ─ */}
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-3 ml-1">
+                                    <AlignLeft className="w-3 h-3" />
+                                    Información Pública para la Landing
+                                    <span className="text-muted/50 font-normal lowercase tracking-normal">(opcional)</span>
+                                </label>
+                                <textarea
+                                    name="infoPublica"
+                                    placeholder="Texto de información que aparecerá en la landing..."
+                                    value={acceso.infoPublica}
+                                    onChange={(e) => setAcceso(prev => ({ ...prev, infoPublica: e.target.value }))}
+                                    rows={3}
+                                    className="w-full p-4 rounded-xl bg-background border border-card-border focus:border-violet-500/50 focus:ring-4 focus:ring-violet-500/10 transition-all text-foreground outline-none placeholder:text-muted resize-none"
+                                />
+                                <p className="text-[11px] text-muted mt-2 ml-1">
+                                    Esta información será visible para las personas que accedan a la página pública de tu evento.
+                                </p>
                             </div>
 
                             {/* Hint info */}
@@ -1569,11 +1592,10 @@ function NewEventContent() {
                                             key={plan.codigo}
                                             type="button"
                                             onClick={() => { setCodigoPlan(plan.codigo); setShowPlanModal(false); }}
-                                            className={`text-left p-5 rounded-xl border-2 transition-all duration-200 ${
-                                                isSelected
-                                                    ? 'border-indigo-500 bg-indigo-500/5 shadow-lg shadow-indigo-500/10'
-                                                    : 'border-card-border bg-background/50 hover:border-indigo-500/40 hover:bg-indigo-500/5'
-                                            }`}
+                                            className={`text-left p-5 rounded-xl border-2 transition-all duration-200 ${isSelected
+                                                ? 'border-indigo-500 bg-indigo-500/5 shadow-lg shadow-indigo-500/10'
+                                                : 'border-card-border bg-background/50 hover:border-indigo-500/40 hover:bg-indigo-500/5'
+                                                }`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
                                                 <h4 className="font-bold text-foreground">{plan.nombre}</h4>
