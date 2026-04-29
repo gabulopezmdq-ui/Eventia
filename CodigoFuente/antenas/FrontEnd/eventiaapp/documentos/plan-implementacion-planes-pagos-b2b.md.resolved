@@ -1,0 +1,478 @@
+# Plan de Implementación Frontend — Planes, Pagos y Prospectos B2B
+
+> Basado en: `Eventia-Planes-Pagos-Prospectos-B2B.md`  
+> Stack: Next.js App Router · TypeScript · `src/features/` por módulo
+
+---
+
+## Resumen Ejecutivo
+
+El documento define **3 grandes circuitos** que el frontend debe soportar:
+
+| # | Circuito | Alcance |
+|---|----------|---------|
+| 1 | **B2C** — Registro → elegir plan → crear evento → banner estado comercial | Usuario final |
+| 2 | **B2B** — Solicitar cuenta → estado pendiente/activa/suspendida | Salones/empresas |
+| 3 | **Superadmin** — Pagos, prospectos, cuentas, cobranzas | Panel admin |
+
+---
+
+## Flujo General
+
+```mermaid
+flowchart TD
+    Landing["🌐 Landing (page.tsx)"]
+    Landing --> BtnB2C["Crear mi Evento\n→ /registrarse?flow=b2c"]
+    Landing --> BtnB2B["Soy Salón/Empresa\n→ Modal QuieroInfo\n+ /registrarse?flow=b2b"]
+    Landing --> VerPlanesB2C["Ver Planes B2C\n→ Scroll sección planes"]
+    Landing --> VerPlanesB2B["Ver Planes B2B\n→ Scroll sección planes"]
+
+    BtnB2C --> RegLogin["Pantalla Registro / Login\n(agrega campo ¿Cómo querés empezar?)"]
+    BtnB2B --> RegLogin
+
+    RegLogin --> AuthMe["GET /auth/me\n→ evalúa contexto real"]
+
+    AuthMe -->|flow=b2c| NuevoEvento["Nuevo Evento\n/dashboard/events/nuevo\n(combo Plan preseleccionado)"]
+    AuthMe -->|flow=b2b, SIN_CUENTA| SolCuenta["Solicitar Cuenta\n/dashboard/cuenta/solicitar"]
+    AuthMe -->|flow=b2b, CUENTA_PENDIENTE| CuentaPend["Banner Cuenta Pendiente\n/dashboard/cuenta"]
+    AuthMe -->|flow=b2b, CUENTA_ACTIVA| DashCuenta["Dashboard Cuenta\n/dashboard/cuenta"]
+
+    NuevoEvento --> PostEvento["POST /eventos\n(codigo_plan)"]
+    PostEvento --> BannerEvento["Banner Estado Comercial\nGET /eventos_comercial/Get"]
+
+    SolCuenta --> PostSolicitud["POST /cuentas/SolicitarCuenta"]
+    PostSolicitud --> CuentaPend
+
+    subgraph SUPERADMIN["🔐 Panel Superadmin"]
+        AdminPagosB2C["Pagos Eventos B2C\n/dashboard/admin/pagos-eventos"]
+        AdminCuentasB2B["Cuentas B2B\n/dashboard/admin/cuentas-b2b"]
+        AdminProspectos["Prospectos B2B\n/dashboard/admin/prospectos-b2b"]
+        AdminCobranzas["Cobranzas Cuentas\n/dashboard/admin/cobranzas-cuentas"]
+        AdminOportunidades["Oportunidades Free/Trial\n/dashboard/admin/oportunidades"]
+    end
+```
+
+---
+
+## Área 1 — Registro: Campo "¿Cómo querés empezar?"
+
+**Estado:** Modificar existente  
+**Archivos afectados:**
+- `src/app/(auth)/` — pantalla de registro/login  
+- `src/features/auth/` — servicio y tipos
+
+### Qué hacer
+
+1. **Agregar combo** en el formulario de registro:
+   - Label: `¿Cómo querés empezar en Eventia?`
+   - Opciones: `Quiero crear mi evento (B2C)` | `Tengo un salón, planner o empresa (B2B)`
+   - Texto ayuda: *"Podrás usar ambas opciones más adelante con el mismo usuario."*
+   - Obligatorio si viene sin `flow` en la URL
+
+2. **Leer query param** `?flow=b2c|b2b` y `?plan=B2C_PRO` al montar el componente y preseleccionar el combo
+
+3. **Guardar en sessionStorage/localStorage** tras login/registro:
+   ```ts
+   sessionStorage.setItem('postLoginFlow', 'b2c' | 'b2b')
+   sessionStorage.setItem('preferredPlan', 'B2C_PRO')  // si vino de landing
+   ```
+
+4. **Post-login:** llamar `GET /auth/me` y combinar con el flow guardado para decidir redirección:
+
+   | `flow` | `cuenta.estado_ui` | Redirige a |
+   |--------|--------------------|------------|
+   | `b2c` | cualquiera | `/dashboard/events/nuevo` |
+   | `b2b` | `SIN_CUENTA` | `/dashboard/cuenta/solicitar` |
+   | `b2b` | `CUENTA_PENDIENTE` | `/dashboard/cuenta` |
+   | `b2b` | `CUENTA_ACTIVA` | `/dashboard/cuenta` |
+
+### Endpoints
+```
+POST /auth/register
+POST /auth/login
+GET  /auth/me
+```
+
+---
+
+## Área 2 — Landing: Sección de Planes y Modal Prospectos B2B
+
+**Estado:** Modificar existente (`src/app/page.tsx`)
+
+### 2A — Sección Planes B2C
+
+1. Agregar **toggle** "Para mi Evento / Para mi Empresa" encima de la sección de planes
+2. Consumir:
+   - `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C`
+   - `GET /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2B`
+3. Renderizar **cards dinámicas** desde la respuesta del endpoint
+4. Cada card B2C tiene botón "Elegir" → `/registrarse?flow=b2c&plan=B2C_PRO`
+5. Cards B2B → **no llevan a ningún lado** (planes manuales), solo mostrar info
+
+### 2B — Modal "Quiero Info" (Prospectos B2B)
+
+**Nuevo componente:** `src/components/landing/ModalQuieroInfo.tsx`
+
+Campos del formulario:
+- `nombre_apellido` *(obligatorio)*
+- `empresa_nombre` *(obligatorio)*
+- `ciudad` *(obligatorio)*
+- `pais` *(default: AR)*
+- `email` *(opcional)*
+- `whatsapp` *(opcional)*
+- `eventos_por_mes` *(opcional, number)*
+
+> [!IMPORTANT]
+> Validar que al menos uno de `email` o `whatsapp` esté completo para poder enviar.
+
+Comportamiento post-envío:
+- Mostrar mensaje: *"¡Listo! Te contactaremos a la brevedad."*
+- Cerrar modal automáticamente a los 3 seg
+
+El modal debe **capturar UTMs** de la URL al momento de apertura:
+```ts
+campania_fuente: searchParams.get('utm_source') ?? null,
+campania_medio: searchParams.get('utm_medium') ?? null,
+campania_nombre: searchParams.get('utm_campaign') ?? null,
+pagina_origen: window.location.pathname,
+referer: document.referrer
+```
+
+### Endpoints
+```
+GET  /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C
+GET  /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2B
+POST /prospectos_b2b/QuieroInfo
+```
+
+### Nuevo archivo de proxy sugerido
+```
+src/app/api/prospectos-b2b/quiero-info/route.ts
+src/app/api/planes/public-catalog/route.ts
+```
+
+---
+
+## Área 3 — Crear Evento: Combo Plan + Banner Estado
+
+**Estado:** Modificar existente  
+**Archivos afectados:** `src/app/dashboard/events/nuevo/` (o donde esté el form de nuevo evento)
+
+### Qué hacer
+
+1. **Combo Plan** en el formulario de nuevo evento:
+   - Opciones: FREE / BASIC / PLUS / PRO
+   - Se preselecciona con `preferredPlan` del sessionStorage
+   - Botón secundario "Ver Planes" → abre modal con `GET /planesPublic/PublicCatalog`
+
+2. **POST /eventos** → incluir `codigoPlan` en el body
+
+3. **Luego del POST**, llamar `GET /eventos_comercial/Get?idEvento={id}` y mostrar **banner de estado**:
+
+   | Condición | Banner |
+   |-----------|--------|
+   | `estado === 'P'` o `pago_pendiente === true` | 🟡 "Tu evento está pendiente de pago. Te avisaremos cuando se confirme." |
+   | `trial_dias_restantes > 0` | 🔵 "Tenés X días de prueba gratuita." |
+   | `trial_vencido === true` | 🔴 "Tu período de prueba terminó. Actualizá el plan." |
+   | `estado === 'A'` | ✅ "Plan activo" (badge discreto o sin banner) |
+
+4. **Dashboard "Mis Eventos"** → pintar badge en cada card:
+   - `Trial` (azul), `Pago Pendiente` (amarillo), `Activo` (verde)
+
+### Componente a crear
+```
+src/components/eventos/BannerEstadoComercial.tsx
+src/components/eventos/BadgeEstadoEvento.tsx
+```
+
+### Endpoints
+```
+POST /eventos
+GET  /eventos_comercial/Get?idEvento={id}
+GET  /planesPublic/PublicCatalog?mercado=AR&moneda=ARS&tipo=B2C
+```
+
+---
+
+## Área 4 — Features del Evento (Toggles de Módulos)
+
+**Estado:** Nuevo  
+**Ruta sugerida:** Paso adicional en la configuración del evento, o sección "Módulos" dentro del evento
+
+### Qué hacer
+
+1. Mostrar la lista de features del plan del evento con toggles ON/OFF
+2. Agrupar por `categoria`: `COMUNICACION`, `LOGISTICA`, `MUSICA`, `SALUD`
+3. Guardar selección con `PUT /evento_features/SetActivosBulk?idEvento={id}`
+4. Las features activas controlan qué secciones se muestran en:
+   - La **web de invitación** (RSVP público)
+   - El **panel de configuración** del evento
+
+### Componentes a crear
+```
+src/features/events/components/FeaturesEvento.tsx
+src/features/events/components/FeatureToggleCard.tsx
+```
+
+### Endpoints
+```
+GET /features_efectivas/GetByEvento?idEvento={id}
+PUT /evento_features/SetActivosBulk?idEvento={id}
+GET /evento_features/GetByEvento?idEvento={id}
+```
+
+---
+
+## Área 5 — Flujo B2B: Solicitar Cuenta
+
+**Estado:** Parcialmente existente (ver `src/app/dashboard/cuenta/`)  
+**Rutas:**
+- `src/app/dashboard/cuenta/solicitar/page.tsx` — **CREAR**
+- `src/app/dashboard/cuenta/page.tsx` — **MODIFICAR** (manejar estados `PENDIENTE` / `ACTIVA` / `SUSPENDIDA`)
+
+### 5.1 — Pantalla Solicitar Cuenta (`estado_ui === 'SIN_CUENTA'`)
+
+Formulario con:
+- `nombre_cuenta` *(obligatorio)*
+- `tipo` combo: `SALON | PLANNER | EMPRESA`
+- `instagram`, `web`, `telefono`, `ciudad`
+- `id_pais` combo — `GET /paises/GetAll?idIdioma=1`
+- `id_tipo_identificacion_fiscal` combo — `GET /tipos_identificacion_fiscal/GetByPais?idPais={id}&idIdioma=1`
+- `identificacion_fiscal`, `descripcion`
+
+Post-envío → redirigir a `/dashboard/cuenta` con banner "Cuenta pendiente"
+
+### 5.2 — Estados de Cuenta en Dashboard
+
+Según `/auth/me → cuenta.estado_ui`:
+
+| `estado_ui` | Qué mostrar |
+|-------------|-------------|
+| `SIN_CUENTA` | Botón "Solicitar Cuenta B2B" |
+| `CUENTA_PENDIENTE` | Banner + datos de cuenta, sin menú clientes/equipo/eventos |
+| `CUENTA_ACTIVA` | Menú completo: Mi Cuenta, Clientes, Equipo, Eventos |
+| `CUENTA_SUSPENDIDA` | Aviso de suspensión, bloquear operaciones B2B |
+
+### 5.3 — Mi Plan y Facturación (`CUENTA_ACTIVA`)
+
+**Ruta:** `src/app/dashboard/cuenta/plan/` (ya existe el directorio)
+
+Secciones:
+- Plan actual + estado (Al día / Vence en X días / Vencida)
+- Próximo vencimiento
+- Historial de pagos (últimos 10)
+- Banner si `pago_pendiente=true` o `dias_para_vencer <= 3`
+
+### Endpoints
+```
+GET  /auth/me
+GET  /paises/GetAll?idIdioma=1
+GET  /tipos_identificacion_fiscal/GetByPais?idPais={id}&idIdioma=1
+POST /cuentas/SolicitarCuenta
+GET  /cuentas/MiCuenta
+GET  /cuentas_comercial/Get?idCuenta={id}
+GET  /cuentas_comercial/Pagos?idCuenta={id}&take=10
+```
+
+---
+
+## Área 6 — Panel Superadmin: Prospectos B2B
+
+**Estado:** Nuevo  
+**Ruta:** `src/app/dashboard/admin/prospectos-b2b/page.tsx`
+
+### Vista: Grilla de Prospectos Pendientes
+
+Columnas: Fecha alta · Estado · Empresa · Nombre · Ciudad/País · WhatsApp/Email · Eventos/mes · Próximo contacto · Asignado a
+
+Acciones por fila:
+- **Ver Detalle** → modal readonly con todos los datos
+- **Registrar Cambios** → modal editable (estado dropdown, asignado a, próximo contacto, nota interna)
+- **Agregar Nota** → modal simple con textarea
+- **Historial** → panel/modal con timeline de cambios
+
+### Endpoints
+```
+GET  /admin/prospectos_b2b/Pendientes
+PUT  /admin/prospectos_b2b/Update?idProspecto={id}
+POST /admin/prospectos_b2b/AgregarNota?idProspecto={id}
+GET  /admin/prospectos_b2b/Historial?idProspecto={id}
+```
+
+---
+
+## Área 7 — Panel Superadmin: Cuentas B2B
+
+**Estado:** Nuevo  
+**Ruta:** `src/app/dashboard/admin/cuentas-b2b/page.tsx`
+
+### Vista: Grilla de Cuentas
+
+Columnas: ID · Nombre · Tipo · Estado · Email Owner · Fecha Alta
+
+Acciones condicionales:
+
+| Acción | Visible cuando |
+|--------|---------------|
+| Aprobar | `estado_ui === CUENTA_PENDIENTE` |
+| Suspender | `estado_ui === CUENTA_ACTIVA` |
+| Reactivar | `estado_ui === CUENTA_SUSPENDIDA` |
+| Cambiar Plan | siempre |
+
+### Modales
+- **Aprobar** → combo plan obligatorio (B2B_STARTER / B2B_TEAM / B2B_PREMIUM) + observación
+- **Suspender** → confirmación + observación opcional
+- **Reactivar** → confirmación + observación opcional
+- **Cambiar Plan** → muestra plan actual + combo nuevo plan + motivo
+
+### Endpoints
+```
+GET /admin/cuentas/GetPendientes
+PUT /admin/cuentas/Aprobar
+PUT /admin/cuentas/Suspender
+PUT /admin/cuentas/Reactivar
+PUT /admin/cuentas/CambiarPlan
+```
+
+---
+
+## Área 8 — Panel Superadmin: Pagos Eventos B2C
+
+**Estado:** Nuevo  
+**Ruta:** `src/app/dashboard/admin/pagos-eventos/page.tsx`
+
+### Vista con 2 Tabs
+
+**Tab Pendientes:**
+- Fecha · Evento ID · Tipo Evento · Anfitriones · Plan · Importe/Moneda · Concepto · Estado
+- Acción: "Registrar Pago" → modal con id_evento (readonly), plan, moneda, importe, concepto
+
+**Tab Inconsistencias:**
+- Mismas columnas
+- Concepto muestra `INCONSISTENCIA: Evento en P sin pago pendiente`
+- Acción por fila: "Corregir" → `POST /admin/pagos/corregir-inconsistencia?idEvento={id}`
+- Botón al pie: "Corregir todas" → `POST /admin/pagos/corregir-inconsistencias`
+
+### Endpoints
+```
+GET  /admin/pagos/pendientes
+POST /admin/pagos/registrar
+POST /admin/pagos/corregir-inconsistencia?idEvento={id}
+POST /admin/pagos/corregir-inconsistencias
+```
+
+---
+
+## Área 9 — Panel Superadmin: Oportunidades Free/Trial
+
+**Estado:** Nuevo  
+**Ruta:** `src/app/dashboard/admin/oportunidades/page.tsx`
+
+### Vista con 3 Tabs
+
+Endpoint base: `GET /admin/oportunidades/free-trials?soloNoConvertidos=true`
+
+Filtros frontend sobre la respuesta:
+```ts
+vencido    = item.vencido === true
+porVencer  = !vencido && item.dias_restantes != null && item.dias_restantes <= 2
+activo     = !vencido && item.dias_restantes != null && item.dias_restantes > 2
+```
+
+Columnas: ID Evento · Tipo · Anfitriones · Fecha alta · Plan · Trial Fin · Días restantes · Email Owner
+
+---
+
+## Área 10 — Panel Superadmin: Cobranzas Cuentas B2B
+
+**Estado:** Nuevo  
+**Ruta:** `src/app/dashboard/admin/cobranzas-cuentas/page.tsx`
+
+### Vista con 4 Tabs
+
+| Tab | Endpoint / Filtro |
+|-----|-------------------|
+| Vencidas | `GET /admin/cobranzas_cuentas/pendientes?diasProximo=7` → solo `response.vencidas` |
+| Por vencer (selector 7/30/60/90 días) | mismo endpoint con el `diasProximo` elegido → solo `response.por_vencer` |
+| Todas | `?diasProximo=0` → vencidas + por_vencer |
+| Inconsistencias | mismo endpoint → solo `response.inconsistencias` |
+
+Columnas: ID Cuenta · Nombre · Tipo · Estado Cuenta · Plan · Estado Suscripción · Vencimiento · Días para vencer
+
+**Modal Registrar Pago Cuenta:**
+- id_cuenta (readonly), id_suscripcion (readonly), plan (readonly), moneda, importe, concepto
+- Post: mostrar `next_due` ("Próximo vencimiento: {fecha}")
+
+**Inconsistencias:**
+- Botón por fila: `POST /admin/cobranzas_cuentas/corregir-inconsistencia?idCuenta={id}`
+- Botón al pie: `POST /admin/cobranzas_cuentas/corregir-inconsistencias`
+
+### Endpoints
+```
+GET  /admin/cobranzas_cuentas/pendientes?diasProximo={n}
+POST /admin/cobranzas_cuentas/registrar
+POST /admin/cobranzas_cuentas/corregir-inconsistencia?idCuenta={id}
+POST /admin/cobranzas_cuentas/corregir-inconsistencias
+```
+
+---
+
+## Resumen de Rutas a Crear / Modificar
+
+```
+MODIFICAR
+├── src/app/page.tsx                                        → Landing: toggle B2C/B2B, modal QuieroInfo
+├── src/app/(auth)/...                                      → Registro: campo flow + leer ?plan=
+├── src/app/dashboard/layout.tsx                            → Leer auth/me, menú según cuenta.estado_ui
+├── src/app/dashboard/events/nuevo/page.tsx                 → Combo Plan, preselección, banner post-creación
+├── src/app/dashboard/cuenta/page.tsx                       → Manejar todos los estados de cuenta
+└── src/app/dashboard/cuenta/plan/page.tsx                  → Mi Plan y Facturación
+
+CREAR
+├── src/app/dashboard/cuenta/solicitar/page.tsx             → Solicitar Cuenta B2B
+├── src/app/dashboard/admin/prospectos-b2b/page.tsx         → Gestión prospectos
+├── src/app/dashboard/admin/cuentas-b2b/page.tsx            → Gestión cuentas B2B
+├── src/app/dashboard/admin/pagos-eventos/page.tsx          → Pagos B2C + inconsistencias
+├── src/app/dashboard/admin/oportunidades/page.tsx          → Free trials seguimiento
+├── src/app/dashboard/admin/cobranzas-cuentas/page.tsx      → Cobranzas B2B
+│
+├── src/components/landing/ModalQuieroInfo.tsx              → Modal prospecto B2B
+├── src/components/eventos/BannerEstadoComercial.tsx        → Banner estado del evento
+├── src/components/eventos/BadgeEstadoEvento.tsx            → Badge en lista de eventos
+├── src/components/eventos/ModalVerPlanes.tsx               → Modal planes desde form evento
+│
+├── src/features/events/components/FeaturesEvento.tsx       → Toggles de módulos
+├── src/features/events/components/FeatureToggleCard.tsx    → Card individual de feature
+│
+└── src/app/api/ (proxies)
+    ├── planes/public-catalog/route.ts
+    ├── prospectos-b2b/quiero-info/route.ts
+    ├── eventos-comercial/[idEvento]/route.ts
+    ├── features-efectivas/[idEvento]/route.ts
+    ├── evento-features/set-activos-bulk/route.ts
+    ├── cuentas/solicitar/route.ts
+    ├── cuentas-comercial/[idCuenta]/route.ts
+    └── admin/
+        ├── prospectos-b2b/route.ts
+        ├── cuentas-b2b/route.ts
+        ├── pagos-eventos/route.ts
+        ├── oportunidades/route.ts
+        └── cobranzas-cuentas/route.ts
+```
+
+---
+
+## Prioridad de Implementación Sugerida
+
+| Sprint | Área | Impacto |
+|--------|------|---------|
+| 🔴 P1 | Área 1 — Registro con flow | Desbloquea todo el circuito |
+| 🔴 P1 | Área 3 — Nuevo evento con plan + banner | Core B2C |
+| 🟡 P2 | Área 2 — Landing planes + Modal QuieroInfo | Captación leads |
+| 🟡 P2 | Área 5 — Solicitar Cuenta B2B + estados | Core B2B |
+| 🟡 P2 | Área 8 — Pagos Eventos B2C (Superadmin) | Operación comercial |
+| 🟠 P3 | Área 6 — Prospectos B2B (Superadmin) | CRM leads |
+| 🟠 P3 | Área 7 — Cuentas B2B (Superadmin) | Aprobación cuentas |
+| 🟠 P3 | Área 10 — Cobranzas Cuentas B2B | Facturación recurrente |
+| 🔵 P4 | Área 4 — Features toggles | Personalización evento |
+| 🔵 P4 | Área 9 — Oportunidades Free/Trial | Tablero comercial |
