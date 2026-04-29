@@ -300,6 +300,11 @@ function NewEventContent() {
                 saludo: basicInfo.saludo || undefined,
                 mensajeBienvenida: basicInfo.mensajeBienvenida || undefined,
                 notas: basicInfo.notas || undefined,
+                // B2B: si hay contexto de cuenta, incluir unidad y cliente
+                ...(isB2BContext && b2bInfo.idUnidad !== '' && {
+                    idUnidad: b2bInfo.idUnidad as number,
+                    idCliente: b2bInfo.idCliente !== '' ? b2bInfo.idCliente as number : undefined,
+                }),
             });
             // El backend responde con camelCase (idEvento)
             const eventId = (result as unknown as { idEvento: number }).idEvento ?? result.id_evento;
