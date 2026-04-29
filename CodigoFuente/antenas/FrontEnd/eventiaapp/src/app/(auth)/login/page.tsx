@@ -23,6 +23,40 @@ export default function LoginPage() {
             if (data.access_token) {
                 localStorage.setItem('access_token', data.access_token);
             }
+
+            // ── Redirección inteligente según flow del registro ──
+            const flow = sessionStorage.getItem('eventia_flow');
+            sessionStorage.removeItem('eventia_flow'); // consumir una sola vez
+
+            if (flow === 'cuenta') {
+                // B2B: consultar estado de cuenta para decidir destino
+                try {
+                    const meRes = await fetch('/api/auth/me');
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        const estadoUI = me.cuenta?.estado_ui;
+                        if (estadoUI === 'CUENTA_ACTIVA') {
+                            window.location.href = '/dashboard/cuenta';
+                            return;
+                        } else if (estadoUI === 'CUENTA_PENDIENTE') {
+                            window.location.href = '/dashboard/cuenta';
+                            return;
+                        } else {
+                            // SIN_CUENTA → solicitar
+                            window.location.href = '/dashboard/cuenta/solicitar';
+                            return;
+                        }
+                    }
+                } catch {
+                    // Si falla /me, redirigir al dashboard normal
+                }
+            } else if (flow === 'b2c') {
+                // B2C: ir directo a crear evento
+                window.location.href = '/dashboard/events/new';
+                return;
+            }
+
+            // Default: dashboard general
             window.location.href = '/dashboard';
         } catch (err) {
             setError('Email o contraseña incorrectos');

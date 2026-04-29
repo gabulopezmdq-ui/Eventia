@@ -14,6 +14,7 @@ import {
     getPlanesCatalogB2C,
 } from '@/src/features/events/event.service';
 import type { PlanPublico } from '@/src/features/events/event.service';
+import BannerEstadoComercial from '@/src/components/eventos/BannerEstadoComercial';
 import type {
     TipoEvento,
     Idioma,
@@ -1410,6 +1411,9 @@ function NewEventContent() {
                                 </div>
                             )}
                         </div>
+
+                        {/* ═══ Banner Estado Comercial ═══ */}
+                        <BannerEstadoComercial idEvento={idEvento} className="mt-6" />
 
                         {/* Action buttons */}
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
