@@ -94,7 +94,7 @@ export default function DashboardPage() {
                         </p>
                     </div>
                     <a
-                        href="mailto:info@eventia.com"
+                        href="/dashboard/cuenta/solicitar"
                         className="relative z-10 whitespace-nowrap px-8 py-4 bg-white text-indigo-700 font-bold rounded-2xl hover:bg-neutral-50 hover:scale-105 active:scale-95 transition-all shadow-xl group-hover:shadow-white/20"
                     >
                         Solicitar Acceso PRO

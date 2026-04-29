@@ -17,6 +17,11 @@ import {
     CalendarRange,
     ChevronDown,
     Bell,
+    FileSearch,
+    UserCog,
+    BadgeDollarSign,
+    HeartHandshake,
+    Briefcase,
 } from "lucide-react";
 import { SidebarItem } from "@/src/components/layout/SidebarItem";
 import { DashboardHeader } from "@/src/components/layout/DashboardHeader";
@@ -147,7 +152,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                                 Accedé a funciones profesionales con una cuenta B2B.
                             </p>
                             <a
-                                href="mailto:info@eventia.com"
+                                href="/dashboard/cuenta/solicitar"
                                 className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                             >
                                 Solicitar cuenta →
@@ -186,6 +191,11 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                             </div>
                             <SidebarItem href="/dashboard/parametricas" icon={Database} label="Altas Paramétricas" />
                             <SidebarItem href="/dashboard/admin/solicitudes-plantillas" icon={FileCheck2} label="Solicitudes Plantillas" />
+                            <SidebarItem href="/dashboard/admin/prospectos-b2b" icon={FileSearch} label="Prospectos B2B" />
+                            <SidebarItem href="/dashboard/admin/cuentas-b2b" icon={UserCog} label="Cuentas B2B" />
+                            <SidebarItem href="/dashboard/admin/pagos-eventos" icon={BadgeDollarSign} label="Pagos Eventos (B2C)" />
+                            <SidebarItem href="/dashboard/admin/oportunidades" icon={HeartHandshake} label="Oportunidades Free/Trial" />
+                            <SidebarItem href="/dashboard/admin/cobranzas-cuentas" icon={Briefcase} label="Cobranzas Cuentas (B2B)" />
                         </>
                     )}
 
