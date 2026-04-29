@@ -4,6 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Deriva la categoría a partir del código de restricción.
+ * El frontend usa `categoria === 'ALERGIA'` para mostrar campos extra de severidad.
  */
 function derivarCategoria(codigo: string): string {
     if (codigo.startsWith('ALERGIA_') || codigo === 'GLUTEN_CELIACO' || codigo === 'INTOL_LACTOSA') {
@@ -17,6 +18,8 @@ function derivarCategoria(codigo: string): string {
 
 /**
  * Formatea el código como nombre legible.
+ * Ej: "ALERGIA_FRUTOS_SECOS" → "Alergia a Frutos Secos"
+ * Se usa como fallback cuando el backend no envía un `nombre` / `texto` humanizado.
  */
 function codigoANombre(codigo: string): string {
     return codigo
@@ -25,22 +28,38 @@ function codigoANombre(codigo: string): string {
         .join(' ');
 }
 
+/**
+ * GET /api/parametrica/restricciones-alimentarias?idEvento={idEvento}
+ * Proxea hacia: GET /parametrica/RestriccionesAlimentarias?idEvento={idEvento}
+ *
+ * Normaliza la respuesta del backend al tipo CatalogoRestriccion del frontend:
+ *   id          → idRestriccion
+ *   texto/nombre → nombre (formateado si es el código crudo)
+ *   categoria   → derivada del codigo si no viene
+ */
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const locale = searchParams.get('locale') || 'es-AR';
+        const idEvento = searchParams.get('idEvento');
 
-        // Guest endpoint, no need for access_token cookie
-        const res = await fetch(`${API_URL}/restricciones/catalogo?locale=${locale}`, {
-            method: 'GET'
-        });
+        if (!idEvento) {
+            return NextResponse.json(
+                { message: 'El parámetro idEvento es requerido' },
+                { status: 400 }
+            );
+        }
+
+        const res = await fetch(
+            `${API_URL}/parametrica/RestriccionesAlimentarias?idEvento=${idEvento}`,
+            { method: 'GET' }
+        );
 
         if (!res.ok) {
             const errorText = await res.text();
             let errorData;
             try {
                 errorData = JSON.parse(errorText);
-            } catch (e) {
+            } catch {
                 errorData = errorText;
             }
             return NextResponse.json(
@@ -54,6 +73,8 @@ export async function GET(req: Request) {
         // Normalizar cada item al tipo CatalogoRestriccion esperado por el frontend
         const normalized = raw.map((item: any) => {
             const codigo: string = item.codigo ?? '';
+            // El backend devuelve el código crudo como texto (ej: "ALERGIA_APIO")
+            // Si el texto es idéntico al código, formatearlo como nombre legible
             const textoRaw: string = item.nombre ?? item.texto ?? codigo;
             const nombre = textoRaw === codigo ? codigoANombre(codigo) : textoRaw;
 
@@ -70,7 +91,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json(normalized);
     } catch (error) {
-        console.error('Proxy Error /restricciones/catalogo:', error);
+        console.error('Proxy Error GET /parametrica/restricciones-alimentarias:', error);
         return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
     }
 }
