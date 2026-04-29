@@ -148,6 +148,13 @@ namespace API.DataSchema
         public DbSet<ef_programa_salud_fichas> ef_programa_salud_fichas { get; set; }
         public DbSet<ef_programa_salud_config> ef_programa_salud_config { get; set; }
         public DbSet<ef_programa_autorizacion_config_traducciones> ef_programa_autorizacion_config_traducciones { get; set; }
+        public DbSet<ef_programa_inscripciones> ef_programa_inscripciones { get; set; }
+        public DbSet<ef_programa_inscripcion_periodos> ef_programa_inscripcion_periodos { get; set; }
+        public DbSet<ef_programa_inscripcion_servicios> ef_programa_inscripcion_servicios { get; set; }
+        public DbSet<ef_programa_inscripcion_servicio_dias> ef_programa_inscripcion_servicio_dias { get; set; }
+        public DbSet<ef_programa_inscripcion_salud_fichas> ef_programa_inscripcion_salud_fichas { get; set; }
+        public DbSet<ef_programa_inscripcion_salud_contactos> ef_programa_inscripcion_salud_contactos { get; set; }
+        public DbSet<ef_programa_inscripcion_salud_medicaciones> ef_programa_inscripcion_salud_medicaciones { get; set; }
 
 
 
@@ -325,6 +332,13 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_programa_salud_fichasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_salud_configConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_autorizacion_config_traduccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_periodosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_serviciosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_servicio_diasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_fichasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_contactosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_medicacionesConfiguration());
 
 
 

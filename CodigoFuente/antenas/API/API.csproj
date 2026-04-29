@@ -49,7 +49,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\Programas\" />
     <Folder Include="DataSchema\Extensions\" />
     <Folder Include="Migrations\" />
     <Folder Include="Test\" />
