@@ -48,6 +48,8 @@ namespace API.DataSchema
         public long? id_acceso_default { get; set; }            // FK ef_evento_accesos
         public long? id_plan { get; set; }                      // FK ef_planes
 
+        public string? info_publica { get; set; }
+
         public string[] UniqueProperties => Array.Empty<string>();
 
         // Navegaciones
