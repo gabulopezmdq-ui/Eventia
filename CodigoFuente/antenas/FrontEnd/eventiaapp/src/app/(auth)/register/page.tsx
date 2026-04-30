@@ -4,7 +4,8 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { register } from '@/src/features/auth/auth.service';
 import { GoogleSignInButton } from '@/src/features/auth/GoogleSignInButton';
-import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Briefcase, Star, Link, PartyPopper, Building2, HelpCircle } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Briefcase, Star, PartyPopper, Building2, HelpCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function RegisterPage() {
     return (
