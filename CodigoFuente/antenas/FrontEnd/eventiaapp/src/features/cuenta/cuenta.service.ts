@@ -167,14 +167,19 @@ export async function getCuentaEventos(): Promise<any[]> {
     const res = await fetch('/api/cuenta-eventos');
     if (!res.ok) throw new Error('Error al cargar eventos de la cuenta');
     const data = await res.json();
-    // Reutilizamos estructura similar a Event normal pero desde la perspectiva B2B
+    // Reutilizamos estructura similar a Event normal pero desde la perspectiva B2B, preservando todas las propiedades del backend
     return data.map((item: any) => ({
-         id_evento: item.id_evento || item.idEvento,
-         anfitriones_texto: item.anfitriones_texto || item.anfitrionesTexto,
-         fecha_hora: item.fecha_hora || item.fechaHora,
-         lugar: item.lugar,
-         estado: item.estado,
-         cliente_nombre: item.cliente_nombre || item.clienteNombre,
-         unidad_nombre: item.unidad_nombre || item.unidadNombre,
+        ...item,
+        id_evento: item.id_evento || item.idEvento,
+        idEvento: item.idEvento || item.id_evento,
+        anfitriones_texto: item.anfitriones_texto || item.anfitrionesTexto,
+        anfitrionesTexto: item.anfitrionesTexto || item.anfitriones_texto,
+        fecha_hora: item.fecha_hora || item.fechaHora,
+        lugar: item.lugar,
+        estado: item.estado,
+        cliente_nombre: item.cliente_nombre || item.clienteNombre,
+        clienteNombre: item.clienteNombre || item.cliente_nombre,
+        unidad_nombre: item.unidad_nombre || item.unidadNombre,
+        unidadNombre: item.unidadNombre || item.unidad_nombre,
     }));
 }

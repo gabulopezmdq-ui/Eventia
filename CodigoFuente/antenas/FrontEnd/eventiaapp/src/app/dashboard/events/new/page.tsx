@@ -64,7 +64,7 @@ const STEPS = [
 /* ═══════════════════════════════════════════════════════════
    B2B — tipos auxiliares
    ═══════════════════════════════════════════════════════════ */
-interface Unidad { id_unidad: number; nombre_unidad: string; }
+interface Unidad { id_unidad: number; nombre: string; }
 interface Cliente { id_cliente: number; nombre_cliente: string; email?: string; unidad_principal?: string; }
 
 function NewEventContent() {
@@ -823,7 +823,7 @@ function NewEventContent() {
                                                     <option value="">Seleccioná una unidad...</option>
                                                     {unidades.map((u) => (
                                                         <option key={u.id_unidad} value={u.id_unidad}>
-                                                            {u.nombre_unidad}
+                                                            {u.nombre}
                                                         </option>
                                                     ))}
                                                 </select>
