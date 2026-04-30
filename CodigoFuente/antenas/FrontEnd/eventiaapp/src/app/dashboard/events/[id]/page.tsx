@@ -17,6 +17,7 @@ import {
     getEstructuraEvento
 } from '@/src/features/events/event.service';
 import type { Event, EstructuraEvento } from '@/src/features/events/types';
+import FeaturesEventoManager from './components/FeaturesEventoManager';
 
 function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -246,6 +247,9 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             </p>
                         </section>
                     </div>
+                    
+                    {/* Features / Modulos Toggles */}
+                    <FeaturesEventoManager idEvento={idEventoLong} />
                 </div>
 
                 {/* ── Sidebar ── */}

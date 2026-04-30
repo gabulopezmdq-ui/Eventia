@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getMiPlan, CuentaPlan } from '@/src/features/cuenta/cuenta.service';
 import { useAuth } from '@/src/context/AuthContext';
-import { CreditCard, Loader2, Calendar, CheckCircle2, Package, Sparkles, Users } from 'lucide-react';
+import { CreditCard, Loader2, Calendar, CheckCircle2, Package, Sparkles, Users, AlertTriangle, History, Receipt } from 'lucide-react';
 
 export default function PlanCuentaPage() {
     const { cuenta } = useAuth();
@@ -11,12 +11,26 @@ export default function PlanCuentaPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [comercialData, setComercialData] = useState<any>(null);
+    const [pagos, setPagos] = useState<any[]>([]);
+
     useEffect(() => {
-        getMiPlan()
-            .then(setPlan)
-            .catch(() => setError('No se pudo cargar la información del plan de facturación'))
+        if (!cuenta?.id_cuenta) return;
+
+        setLoading(true);
+        Promise.all([
+            getMiPlan(),
+            fetch(`/api/cuentas-comercial?idCuenta=${cuenta.id_cuenta}`).then(r => r.ok ? r.json() : null),
+            fetch(`/api/cuentas-comercial/pagos?idCuenta=${cuenta.id_cuenta}&take=10`).then(r => r.ok ? r.json() : [])
+        ])
+            .then(([planRes, comRes, pagosRes]) => {
+                setPlan(planRes);
+                setComercialData(comRes?.data || comRes);
+                setPagos(pagosRes?.pagos || pagosRes?.data || Array.isArray(pagosRes) ? pagosRes : []);
+            })
+            .catch(() => setError('No se pudo cargar la información de facturación'))
             .finally(() => setLoading(false));
-    }, []);
+    }, [cuenta]);
 
     return (
         <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -41,6 +55,31 @@ export default function PlanCuentaPage() {
                     {error}
                 </div>
             ) : plan ? (
+                <div className="space-y-8">
+                    {/* Banner de Vencimiento */}
+                    {comercialData && comercialData.pago_pendiente && (
+                        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-4 rounded-2xl flex items-start gap-4">
+                            <AlertTriangle className="w-6 h-6 text-red-500 shrink-0" />
+                            <div>
+                                <h3 className="text-red-800 dark:text-red-300 font-bold">Cuenta vencida / Pago pendiente</h3>
+                                <p className="text-red-600 dark:text-red-400 text-sm mt-1">
+                                    Tu suscripción registra un pago pendiente o rechazado. Por favor, regularizá tu situación o contactá a soporte técnico.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    {comercialData && !comercialData.pago_pendiente && comercialData.dias_para_vencer <= 3 && !comercialData.vencida && (
+                        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-4 rounded-2xl flex items-start gap-4">
+                            <Calendar className="w-6 h-6 text-amber-500 shrink-0" />
+                            <div>
+                                <h3 className="text-amber-800 dark:text-amber-300 font-bold">Vencimiento próximo</h3>
+                                <p className="text-amber-600 dark:text-amber-400 text-sm mt-1">
+                                    Tu suscripción vence en {comercialData.dias_para_vencer} días ({new Date(comercialData.fecha_proximo_pago).toLocaleDateString()}).
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
 
                     {/* Tarjeta Plan Actual */}
@@ -130,6 +169,63 @@ export default function PlanCuentaPage() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Historial de Pagos */}
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-sm mt-8">
+                    <div className="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
+                        <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-400">
+                            <History className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-bold text-lg text-neutral-900 dark:text-white">Historial de Pagos</h3>
+                    </div>
+                    
+                    {pagos.length === 0 ? (
+                        <div className="p-8 text-center text-neutral-500 flex flex-col items-center">
+                            <Receipt className="w-12 h-12 mb-3 text-neutral-300 dark:text-neutral-700" />
+                            <p>No se registran pagos en esta cuenta.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-neutral-500 dark:text-neutral-400 uppercase bg-neutral-50 dark:bg-neutral-800/30">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold">Fecha</th>
+                                        <th className="px-6 py-4 font-semibold">Concepto</th>
+                                        <th className="px-6 py-4 font-semibold text-right">Importe</th>
+                                        <th className="px-6 py-4 font-semibold">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+                                    {pagos.map((pago: any) => (
+                                        <tr key={pago.id_pago || pago.idPago || Math.random()} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-300">
+                                                {new Date(pago.fecha_pago || pago.fechaPago).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 font-medium text-neutral-900 dark:text-white">
+                                                {pago.concepto || 'Suscripción B2B'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <span className="font-bold text-neutral-900 dark:text-white">
+                                                    ${(pago.monto || pago.importe || 0).toLocaleString()}
+                                                </span>
+                                                <span className="text-xs text-neutral-500 ml-1">
+                                                    {pago.moneda || 'ARS'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex px-2 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400 text-xs font-bold rounded">
+                                                    APROBADO
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
                 </div>
             ) : null}
         </div>
