@@ -45,6 +45,9 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 // Intentar cargar la estructura para mostrar estadísticas
                 try {
                     const structData = await getEstructuraEvento(idEventoLong);
+                    console.log('STRUCT DATA', structData);
+                    console.log('TRAMOS', structData?.tramos);
+                    console.log('ACCESOS', structData?.accesos);
                     setEstructura(structData);
                 } catch (e) {
                     console.warn('No se pudo cargar la estructura para el resumen', e);
@@ -247,7 +250,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             </p>
                         </section>
                     </div>
-                    
+
                     {/* Features / Modulos Toggles */}
                     <FeaturesEventoManager idEvento={idEventoLong} />
                 </div>
