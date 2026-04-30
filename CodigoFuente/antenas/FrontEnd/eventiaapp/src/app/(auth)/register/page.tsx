@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { register } from '@/src/features/auth/auth.service';
 import { GoogleSignInButton } from '@/src/features/auth/GoogleSignInButton';
-import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Briefcase, Star, Link } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Briefcase, Star, Link, PartyPopper, Building2, HelpCircle } from 'lucide-react';
 
 export default function RegisterPage() {
     return (
@@ -26,6 +26,9 @@ function RegisterForm() {
     const flow = searchParams.get('flow'); // 'b2c' | 'cuenta'
     const plan = searchParams.get('plan'); // 'FREE', 'PRO', etc.
     const isB2B = flow === 'cuenta';
+
+    // Si no viene ?flow= en la URL, el usuario debe elegir manualmente
+    const [selectedFlow, setSelectedFlow] = useState<string>(flow || '');
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -68,6 +71,10 @@ function RegisterForm() {
             if (plan) {
                 localStorage.setItem('eventia_plan_seleccionado', plan);
             }
+
+            // Guardar el flow elegido para que el login haga la redirección inteligente
+            const finalFlow = flow || selectedFlow || 'b2c';
+            sessionStorage.setItem('eventia_flow', finalFlow);
 
             setSuccess(true);
             setTimeout(() => {
@@ -145,6 +152,49 @@ function RegisterForm() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+
+                {/* ═══ Combo "¿Cómo querés empezar?" (solo si no viene ?flow=) ═══ */}
+                {!flow && (
+                    <div className="mb-2">
+                        <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2.5">
+                            <HelpCircle className="w-3 h-3" />
+                            ¿Cómo querés empezar en Eventia?
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {([
+                                { value: 'b2c', label: 'Quiero crear mi evento', icon: PartyPopper, color: 'indigo' },
+                                { value: 'cuenta', label: 'Tengo un salón o empresa', icon: Building2, color: 'emerald' },
+                            ] as const).map(({ value, label, icon: Icon, color }) => {
+                                const isSelected = selectedFlow === value;
+                                return (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        onClick={() => setSelectedFlow(value)}
+                                        className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all duration-200 ${
+                                            isSelected
+                                                ? `border-${color}-500 bg-${color}-500/10`
+                                                : 'border-neutral-700 bg-neutral-800 hover:border-neutral-600'
+                                        }`}
+                                    >
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                            isSelected ? `bg-${color}-500/20` : 'bg-neutral-700'
+                                        }`}>
+                                            <Icon className={`w-4 h-4 ${isSelected ? `text-${color}-400` : 'text-neutral-400'}`} />
+                                        </div>
+                                        <span className={`text-sm font-medium ${
+                                            isSelected ? `text-${color}-300` : 'text-neutral-300'
+                                        }`}>{label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-[11px] text-neutral-500 mt-2 ml-0.5">
+                            Podrás usar ambas opciones más adelante con el mismo usuario.
+                        </p>
+                    </div>
+                )}
+
                 {/* Nombre y Apellido en una fila */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="relative">
