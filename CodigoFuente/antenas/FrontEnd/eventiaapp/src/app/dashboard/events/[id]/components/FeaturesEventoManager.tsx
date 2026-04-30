@@ -17,7 +17,7 @@ interface FeaturesEventoProps {
 export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps) {
     const [efectivas, setEfectivas] = useState<FeatureEfectiva[]>([]);
     const [activas, setActivas] = useState<string[]>([]);
-    
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -30,16 +30,20 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
             const resEfectivas = await fetch(`/api/features-efectivas?idEvento=${idEvento}`);
             if (!resEfectivas.ok) throw new Error('Error al cargar catálogo de módulos');
             const dataEfectivas = await resEfectivas.json();
-            
+
             // 2. Obtener los switches que tiene prendidos
             const resActivas = await fetch(`/api/evento-features?idEvento=${idEvento}`);
             if (!resActivas.ok) throw new Error('Error al cargar módulos encendidos');
             const dataActivas = await resActivas.json();
 
-            setEfectivas(dataEfectivas.data || dataEfectivas);
-            
+            const efectivasData = dataEfectivas.data || dataEfectivas;
+            setEfectivas(Array.isArray(efectivasData) ? efectivasData : []);
+
             // Mapeamos para obtener solo un array de strings (codigos de feature activas)
-            const activasArray = (dataActivas.data || dataActivas).map((a: any) => a.codigo_feature ?? a.codigoFeature);
+            const activasData = dataActivas.data || dataActivas;
+            const activasArray = Array.isArray(activasData)
+                ? activasData.map((a: any) => a.codigo_feature ?? a.codigoFeature)
+                : [];
             setActivas(activasArray);
         } catch (err: any) {
             setError(err.message);
@@ -116,18 +120,17 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
             </div>
 
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {efectivas.map((feat) => {
+                {(Array.isArray(efectivas) ? efectivas : []).map((feat) => {
                     const isActiva = activas.includes(feat.codigo_feature);
                     const isPremium = !feat.incluida_en_plan;
 
                     return (
-                        <div 
+                        <div
                             key={feat.codigo_feature}
-                            className={`p-4 rounded-2xl border transition-all ${
-                                isActiva 
-                                    ? 'border-purple-200 bg-purple-50/50 dark:border-purple-500/30 dark:bg-purple-500/5' 
+                            className={`p-4 rounded-2xl border transition-all ${isActiva
+                                    ? 'border-purple-200 bg-purple-50/50 dark:border-purple-500/30 dark:bg-purple-500/5'
                                     : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'
-                            } ${isPremium ? 'opacity-70 grayscale-[0.5]' : ''}`}
+                                } ${isPremium ? 'opacity-70 grayscale-[0.5]' : ''}`}
                         >
                             <div className="flex justify-between items-start">
                                 <div className="flex gap-3">
