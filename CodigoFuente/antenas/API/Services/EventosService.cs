@@ -371,13 +371,327 @@ namespace API.Services
         //}
 
         //este es el nuevo con todos los campos y necesarios para cuentas, unidades, clientes, modalidades, eventos publicos o no, etc
+        //lo comento tambien porque no contemplaba idCuenta para eventos B2B
+        //public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
+        //{
+        //    if (req.IdTipoEvento <= 0)
+        //        throw new InvalidOperationException("Tipo de evento obligatorio.");
+
+        //    if (req.IdIdioma <= 0)
+        //        throw new InvalidOperationException("Idioma obligatorio.");
+
+        //    if (string.IsNullOrWhiteSpace(req.AnfitrionesTexto))
+        //        throw new InvalidOperationException("Anfitriones obligatorio.");
+
+        //    if (req.AnfitrionesTexto.Length > 500)
+        //        throw new InvalidOperationException("Anfitriones supera 500 caracteres.");
+
+        //    if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
+        //        throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+
+        //    //bool existeTipo = await _context.Set<ef_tipos_evento>()
+        //    //    .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
+
+        //    //if (!existeTipo)
+        //    //    throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
+
+        //    bool existeIdioma = await _context.Set<ef_idiomas>()
+        //        .AnyAsync(i => i.id_idioma == req.IdIdioma && i.activo == true);
+
+        //    if (!existeIdioma)
+        //        throw new InvalidOperationException("El idioma no existe o está inactivo.");
+
+        //    if (req.IdDressCode.HasValue)
+        //    {
+        //        bool existeDress = await _context.Set<ef_dress_code>()
+        //            .AnyAsync(d => d.id_dress_code == req.IdDressCode.Value && d.activo == true);
+
+        //        if (!existeDress)
+        //            throw new InvalidOperationException("El dress code no existe o está inactivo.");
+        //    }
+
+        //    //        var tipoOperacion = string.IsNullOrWhiteSpace(req.TipoOperacion)
+        //    //            ? "EVENTO"
+        //    //:           req.TipoOperacion.Trim().ToUpperInvariant();
+
+        //    //        if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
+        //    //            throw new InvalidOperationException("tipo_operacion inválido. Valores permitidos: EVENTO, PROGRAMA.");
+
+        //    var tipoEvento = await _context.Set<ef_tipos_evento>()
+        //            .AsNoTracking()
+        //            .SingleOrDefaultAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
+
+        //    if (tipoEvento == null)
+        //        throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
+
+        //    var tipoOperacion = string.IsNullOrWhiteSpace(tipoEvento.tipo_operacion)
+        //        ? "EVENTO"
+        //        : tipoEvento.tipo_operacion.Trim().ToUpperInvariant();
+
+        //    if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
+        //        throw new InvalidOperationException("El tipo de evento tiene tipo_operacion inválido.");
+
+        //    if (tipoOperacion == "PROGRAMA")
+        //    {
+        //        if (!req.FechaInicio.HasValue || !req.FechaFin.HasValue)
+        //            throw new InvalidOperationException("Para programas se requiere fecha_inicio y fecha_fin.");
+
+        //        if (req.FechaFin.Value < req.FechaInicio.Value)
+        //            throw new InvalidOperationException("fecha_fin no puede ser menor a fecha_inicio.");
+        //    }
+
+        //    bool esB2B = req.IdCuenta.HasValue;
+
+        //    if (!string.IsNullOrWhiteSpace(req.Modalidad))
+        //    {
+        //        var modalidad = req.Modalidad.Trim().ToUpperInvariant();
+        //        if (modalidad != "PROPIO" && modalidad != "CLIENTE")
+        //            throw new InvalidOperationException("Modalidad inválida. Valores permitidos: PROPIO, CLIENTE.");
+        //    }
+
+        //    ef_cuentas? cuenta = null;
+        //    ef_cuenta_unidades? unidad = null;
+        //    ef_clientes? cliente = null;
+
+        //    ef_planes? planB2C = null;
+
+        //    // =====================================================
+        //    // VALIDACIONES B2C / B2B
+        //    // =====================================================
+        //    if (!esB2B)
+        //    {
+        //        // B2C
+        //        if (req.IdUnidad.HasValue)
+        //            throw new InvalidOperationException("No corresponde informar unidad en un evento B2C.");
+
+        //        if (req.IdCliente.HasValue)
+        //            throw new InvalidOperationException("No corresponde informar cliente en un evento B2C.");
+
+        //        bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
+        //            .AnyAsync(eu =>
+        //                eu.id_usuario == idUsuario &&
+        //                eu.activo == true &&
+        //                _context.Set<ef_eventos>().Any(ev => ev.id_evento == eu.id_evento && ev.estado == EventoEstado.Borrador));
+
+        //        if (yaTieneBorrador)
+        //            throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
+
+        //        var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan) ? "B2C_FREE" : req.CodigoPlan.Trim();
+
+        //        planB2C = await _context.Set<ef_planes>()
+        //            .SingleOrDefaultAsync(p => p.codigo == codigoPlan && p.activo == true && p.tipo == "B2C");
+
+        //        if (planB2C == null)
+        //            throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
+        //    }
+        //    else
+        //    {
+        //        // B2B
+        //        if (!req.IdUnidad.HasValue)
+        //            throw new InvalidOperationException("En B2B la unidad es obligatoria.");
+
+        //        var modalidad = (req.Modalidad ?? string.Empty).Trim().ToUpperInvariant();
+
+        //        if (modalidad == "PROPIO" && req.IdCliente.HasValue)
+        //            throw new InvalidOperationException("Un evento B2B en modalidad PROPIO no debe informar cliente.");
+
+        //        if (modalidad == "CLIENTE" && !req.IdCliente.HasValue)
+        //            throw new InvalidOperationException("Un evento B2B en modalidad CLIENTE debe informar cliente.");
+
+        //        // validar cuenta del usuario
+        //        var cuentaUsuario = await _context.Set<ef_cuenta_usuarios>()
+        //            .AsNoTracking()
+        //            .AnyAsync(cu => cu.id_cuenta == req.IdCuenta.Value && cu.id_usuario == idUsuario && cu.activo == true);
+
+        //        if (!cuentaUsuario)
+        //            throw new UnauthorizedAccessException("No tienes acceso a la cuenta indicada.");
+
+        //        cuenta = await _context.Set<ef_cuentas>()
+        //            .SingleOrDefaultAsync(c => c.id_cuenta == req.IdCuenta.Value && c.estado == "A");
+
+        //        if (cuenta == null)
+        //            throw new InvalidOperationException("La cuenta no existe o no está activa.");
+
+        //        unidad = await _context.Set<ef_cuenta_unidades>()
+        //            .SingleOrDefaultAsync(u => u.id_unidad == req.IdUnidad.Value && u.id_cuenta == req.IdCuenta.Value && u.activo == true);
+
+        //        if (unidad == null)
+        //            throw new InvalidOperationException("La unidad no existe, no pertenece a la cuenta o está inactiva.");
+
+        //        if (req.IdCliente.HasValue)
+        //        {
+        //            cliente = await _context.Set<ef_clientes>()
+        //                .SingleOrDefaultAsync(c =>
+        //                    c.id_cliente == req.IdCliente.Value &&
+        //                    c.id_cuenta == req.IdCuenta.Value &&
+        //                    c.activo == true);
+
+        //            if (cliente == null)
+        //                throw new InvalidOperationException("El cliente no existe, no pertenece a la cuenta o está inactivo.");
+
+        //            bool relacionExiste = await _context.Set<ef_cliente_unidades>()
+        //                .AnyAsync(x => x.id_cliente == req.IdCliente.Value && x.id_unidad == req.IdUnidad.Value);
+
+        //            if (!relacionExiste)
+        //            {
+        //                _context.Set<ef_cliente_unidades>().Add(new ef_cliente_unidades
+        //                {
+        //                    id_cliente = req.IdCliente.Value,
+        //                    id_unidad = req.IdUnidad.Value,
+        //                    es_principal = false,
+        //                    activo = true,
+        //                    fecha_alta = DateTimeOffset.UtcNow
+        //                });
+        //            }
+        //        }
+
+        //        // En B2B, el plan se toma de la cuenta; no del request
+        //        req.CodigoPlan = null;
+        //    }
+
+        //    short idRolOwner = await _context.Set<ef_roles>()
+        //        .Where(r => r.codigo == RolesCodigo.EventOwner && r.activo == true)
+        //        .Select(r => r.id_rol)
+        //        .SingleAsync();
+
+        //    await using var tx = await _context.Database.BeginTransactionAsync();
+
+        //    var now = DateTimeOffset.UtcNow;
+
+        //    string estadoInicial;
+        //    long? idPlanEvento = null;
+        //    string observacionHistorial;
+
+        //    if (!esB2B)
+        //    {
+        //        idPlanEvento = planB2C!.id_plan;
+        //        estadoInicial = (planB2C.codigo == "B2C_FREE")
+        //            ? EventoEstado.Borrador
+        //            : EventoEstado.PendientePago;
+
+        //        observacionHistorial = (planB2C.codigo == "B2C_FREE")
+        //            ? "Creación evento (FREE) - trial 7 días"
+        //            : $"Creación evento (plan {planB2C.codigo}) - pendiente de pago";
+        //    }
+        //    else
+        //    {
+        //        // B2B: el plan vive en la cuenta, no en el evento
+        //        idPlanEvento = cuenta!.id_plan;
+        //        estadoInicial = EventoEstado.Borrador;
+        //        observacionHistorial = "Creación evento B2B";
+        //    }
+
+        //    var evento = new ef_eventos
+        //    {
+        //        id_tipo_evento = req.IdTipoEvento,
+        //        id_idioma = req.IdIdioma,
+
+        //        id_cuenta = esB2B ? req.IdCuenta : null,
+        //        id_unidad = esB2B ? req.IdUnidad : null,
+        //        id_cliente = esB2B ? req.IdCliente : null,
+
+        //        anfitriones_texto = req.AnfitrionesTexto.Trim(),
+        //        id_dress_code = req.IdDressCode,
+        //        dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim(),
+
+        //        saludo = string.IsNullOrWhiteSpace(req.Saludo) ? null : req.Saludo.Trim(),
+        //        mensaje_bienvenida = string.IsNullOrWhiteSpace(req.MensajeBienvenida) ? null : req.MensajeBienvenida.Trim(),
+        //        notas = string.IsNullOrWhiteSpace(req.Notas) ? null : req.Notas.Trim(),
+
+        //        fecha_alta = now,
+        //        fecha_modif = null,
+
+        //        tipo_operacion = tipoOperacion,
+        //        fecha_inicio = tipoOperacion == "PROGRAMA" ? req.FechaInicio : null,
+        //        fecha_fin = tipoOperacion == "PROGRAMA" ? req.FechaFin : null,
+
+        //        es_publico = tipoOperacion == "PROGRAMA" ? true : false,
+        //        modo_acceso = tipoOperacion == "PROGRAMA" ? "L" : "I",
+        //        modo_asistencia = "R",
+
+        //        id_plan = idPlanEvento,
+        //        estado = estadoInicial
+        //    };
+
+        //    _context.Set<ef_eventos>().Add(evento);
+        //    await _context.SaveChangesAsync();
+
+        //    // OWNER
+        //    _context.Set<ef_evento_usuarios>().Add(new ef_evento_usuarios
+        //    {
+        //        id_evento = evento.id_evento,
+        //        id_usuario = idUsuario,
+        //        id_rol = idRolOwner,
+        //        fecha_alta = now,
+        //        activo = true
+        //    });
+
+        //    // HISTORIAL
+        //    _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
+        //    {
+        //        id_evento = evento.id_evento,
+        //        id_usuario = idUsuario,
+        //        fecha = now,
+        //        estado = evento.estado,
+        //        observaciones = observacionHistorial
+        //    });
+
+        //    // SOLO B2C: alta comercial inicial
+        //    if (!esB2B)
+        //    {
+        //        if (planB2C!.codigo == "B2C_FREE")
+        //        {
+        //            _context.Set<ef_suscripciones>().Add(new ef_suscripciones
+        //            {
+        //                scope = "EVENTO",
+        //                id_evento = evento.id_evento,
+        //                id_plan = planB2C.id_plan,
+        //                estado = "ACTIVA",
+        //                auto_renueva = false,
+        //                periodo = "UNICO",
+        //                current_period_start = now,
+        //                current_period_end = now.AddDays(7),
+        //                activo = true,
+        //                fecha_alta = now
+        //            });
+        //        }
+        //        else
+        //        {
+        //            _context.Set<ef_pagos>().Add(new ef_pagos
+        //            {
+        //                id_evento = evento.id_evento,
+        //                tipo = "UNICO",
+        //                estado = "PENDIENTE",
+        //                moneda = "ARS",
+        //                importe = 0,
+        //                impuestos = 0,
+        //                total = 0,
+        //                concepto = $"Plan {planB2C.codigo} pendiente - evento {evento.id_evento}",
+        //                activo = true,
+        //                fecha_alta = now
+        //            });
+        //        }
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //    await tx.CommitAsync();
+
+        //    return await GetEventoMioAsync(idUsuario, evento.id_evento);
+        //}
+
+
         public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
         {
+            if (req == null)
+                throw new InvalidOperationException("Request inválido.");
+
             if (req.IdTipoEvento <= 0)
                 throw new InvalidOperationException("Tipo de evento obligatorio.");
 
             if (req.IdIdioma <= 0)
                 throw new InvalidOperationException("Idioma obligatorio.");
+
+            short idIdioma = req.IdIdioma;
 
             if (string.IsNullOrWhiteSpace(req.AnfitrionesTexto))
                 throw new InvalidOperationException("Anfitriones obligatorio.");
@@ -388,14 +702,9 @@ namespace API.Services
             if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
                 throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
-            //bool existeTipo = await _context.Set<ef_tipos_evento>()
-            //    .AnyAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
-
-            //if (!existeTipo)
-            //    throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
-
             bool existeIdioma = await _context.Set<ef_idiomas>()
-                .AnyAsync(i => i.id_idioma == req.IdIdioma && i.activo == true);
+                .AnyAsync(i => i.id_idioma == idIdioma && i.activo == true);
+
 
             if (!existeIdioma)
                 throw new InvalidOperationException("El idioma no existe o está inactivo.");
@@ -409,16 +718,9 @@ namespace API.Services
                     throw new InvalidOperationException("El dress code no existe o está inactivo.");
             }
 
-            //        var tipoOperacion = string.IsNullOrWhiteSpace(req.TipoOperacion)
-            //            ? "EVENTO"
-            //:           req.TipoOperacion.Trim().ToUpperInvariant();
-
-            //        if (tipoOperacion != "EVENTO" && tipoOperacion != "PROGRAMA")
-            //            throw new InvalidOperationException("tipo_operacion inválido. Valores permitidos: EVENTO, PROGRAMA.");
-
             var tipoEvento = await _context.Set<ef_tipos_evento>()
-                    .AsNoTracking()
-                    .SingleOrDefaultAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
+                .AsNoTracking()
+                .SingleOrDefaultAsync(t => t.id_tipo_evento == req.IdTipoEvento && t.activo == true);
 
             if (tipoEvento == null)
                 throw new InvalidOperationException("El tipo de evento no existe o está inactivo.");
@@ -439,24 +741,22 @@ namespace API.Services
                     throw new InvalidOperationException("fecha_fin no puede ser menor a fecha_inicio.");
             }
 
-            bool esB2B = req.IdCuenta.HasValue;
+            var modalidad = string.IsNullOrWhiteSpace(req.Modalidad)
+                ? null
+                : req.Modalidad.Trim().ToUpperInvariant();
 
-            if (!string.IsNullOrWhiteSpace(req.Modalidad))
-            {
-                var modalidad = req.Modalidad.Trim().ToUpperInvariant();
-                if (modalidad != "PROPIO" && modalidad != "CLIENTE")
-                    throw new InvalidOperationException("Modalidad inválida. Valores permitidos: PROPIO, CLIENTE.");
-            }
+            if (modalidad != null && modalidad != "PROPIO" && modalidad != "CLIENTE")
+                throw new InvalidOperationException("Modalidad inválida. Valores permitidos: PROPIO, CLIENTE.");
 
-            ef_cuentas? cuenta = null;
-            ef_cuenta_unidades? unidad = null;
-            ef_clientes? cliente = null;
+            bool esB2B = modalidad == "PROPIO" || modalidad == "CLIENTE";
 
-            ef_planes? planB2C = null;
+            ef_cuentas cuenta = null;
+            ef_planes planB2C = null;
 
             // =====================================================
             // VALIDACIONES B2C / B2B
             // =====================================================
+
             if (!esB2B)
             {
                 // B2C
@@ -470,15 +770,23 @@ namespace API.Services
                     .AnyAsync(eu =>
                         eu.id_usuario == idUsuario &&
                         eu.activo == true &&
-                        _context.Set<ef_eventos>().Any(ev => ev.id_evento == eu.id_evento && ev.estado == EventoEstado.Borrador));
+                        _context.Set<ef_eventos>().Any(ev =>
+                            ev.id_evento == eu.id_evento &&
+                            ev.estado == EventoEstado.Borrador &&
+                            ev.id_cuenta == null));
 
                 if (yaTieneBorrador)
                     throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
 
-                var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan) ? "B2C_FREE" : req.CodigoPlan.Trim();
+                var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan)
+                    ? "B2C_FREE"
+                    : req.CodigoPlan.Trim();
 
                 planB2C = await _context.Set<ef_planes>()
-                    .SingleOrDefaultAsync(p => p.codigo == codigoPlan && p.activo == true && p.tipo == "B2C");
+                    .SingleOrDefaultAsync(p =>
+                        p.codigo == codigoPlan &&
+                        p.activo == true &&
+                        p.tipo == "B2C");
 
                 if (planB2C == null)
                     throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
@@ -489,47 +797,67 @@ namespace API.Services
                 if (!req.IdUnidad.HasValue)
                     throw new InvalidOperationException("En B2B la unidad es obligatoria.");
 
-                var modalidad = (req.Modalidad ?? string.Empty).Trim().ToUpperInvariant();
-
                 if (modalidad == "PROPIO" && req.IdCliente.HasValue)
                     throw new InvalidOperationException("Un evento B2B en modalidad PROPIO no debe informar cliente.");
 
                 if (modalidad == "CLIENTE" && !req.IdCliente.HasValue)
                     throw new InvalidOperationException("Un evento B2B en modalidad CLIENTE debe informar cliente.");
 
-                // validar cuenta del usuario
-                var cuentaUsuario = await _context.Set<ef_cuenta_usuarios>()
-                    .AsNoTracking()
-                    .AnyAsync(cu => cu.id_cuenta == req.IdCuenta.Value && cu.id_usuario == idUsuario && cu.activo == true);
+                var cuentasUsuarioQuery =
+                    from cu in _context.Set<ef_cuenta_usuarios>()
+                    join c in _context.Set<ef_cuentas>() on cu.id_cuenta equals c.id_cuenta
+                    where cu.id_usuario == idUsuario
+                          && cu.activo == true
+                          && c.estado == "A"
+                    select c;
 
-                if (!cuentaUsuario)
-                    throw new UnauthorizedAccessException("No tienes acceso a la cuenta indicada.");
+                // Si todavía el front manda IdCuenta, la usamos SOLO para validar.
+                // Si no la manda, tomamos la cuenta activa del usuario.
+                if (req.IdCuenta.HasValue)
+                {
+                    cuenta = await cuentasUsuarioQuery
+                        .SingleOrDefaultAsync(c => c.id_cuenta == req.IdCuenta.Value);
 
-                cuenta = await _context.Set<ef_cuentas>()
-                    .SingleOrDefaultAsync(c => c.id_cuenta == req.IdCuenta.Value && c.estado == "A");
+                    if (cuenta == null)
+                        throw new UnauthorizedAccessException("No tienes acceso a la cuenta indicada o la cuenta no está activa.");
+                }
+                else
+                {
+                    var cuentas = await cuentasUsuarioQuery.ToListAsync();
 
-                if (cuenta == null)
-                    throw new InvalidOperationException("La cuenta no existe o no está activa.");
+                    if (cuentas.Count == 0)
+                        throw new InvalidOperationException("El usuario no tiene una cuenta activa.");
 
-                unidad = await _context.Set<ef_cuenta_unidades>()
-                    .SingleOrDefaultAsync(u => u.id_unidad == req.IdUnidad.Value && u.id_cuenta == req.IdCuenta.Value && u.activo == true);
+                    if (cuentas.Count > 1)
+                        throw new InvalidOperationException("El usuario tiene más de una cuenta activa. Debe seleccionarse el contexto de cuenta.");
 
-                if (unidad == null)
+                    cuenta = cuentas[0];
+                }
+
+                bool unidadOk = await _context.Set<ef_cuenta_unidades>()
+                    .AnyAsync(u =>
+                        u.id_unidad == req.IdUnidad.Value &&
+                        u.id_cuenta == cuenta.id_cuenta &&
+                        u.activo == true);
+
+                if (!unidadOk)
                     throw new InvalidOperationException("La unidad no existe, no pertenece a la cuenta o está inactiva.");
 
                 if (req.IdCliente.HasValue)
                 {
-                    cliente = await _context.Set<ef_clientes>()
-                        .SingleOrDefaultAsync(c =>
+                    bool clienteOk = await _context.Set<ef_clientes>()
+                        .AnyAsync(c =>
                             c.id_cliente == req.IdCliente.Value &&
-                            c.id_cuenta == req.IdCuenta.Value &&
+                            c.id_cuenta == cuenta.id_cuenta &&
                             c.activo == true);
 
-                    if (cliente == null)
+                    if (!clienteOk)
                         throw new InvalidOperationException("El cliente no existe, no pertenece a la cuenta o está inactivo.");
 
                     bool relacionExiste = await _context.Set<ef_cliente_unidades>()
-                        .AnyAsync(x => x.id_cliente == req.IdCliente.Value && x.id_unidad == req.IdUnidad.Value);
+                        .AnyAsync(x =>
+                            x.id_cliente == req.IdCliente.Value &&
+                            x.id_unidad == req.IdUnidad.Value);
 
                     if (!relacionExiste)
                     {
@@ -543,9 +871,6 @@ namespace API.Services
                         });
                     }
                 }
-
-                // En B2B, el plan se toma de la cuenta; no del request
-                req.CodigoPlan = null;
             }
 
             short idRolOwner = await _context.Set<ef_roles>()
@@ -558,40 +883,45 @@ namespace API.Services
             var now = DateTimeOffset.UtcNow;
 
             string estadoInicial;
-            long? idPlanEvento = null;
+            long? idPlanEvento;
             string observacionHistorial;
 
             if (!esB2B)
             {
-                idPlanEvento = planB2C!.id_plan;
-                estadoInicial = (planB2C.codigo == "B2C_FREE")
+                idPlanEvento = planB2C.id_plan;
+
+                estadoInicial = planB2C.codigo == "B2C_FREE"
                     ? EventoEstado.Borrador
                     : EventoEstado.PendientePago;
 
-                observacionHistorial = (planB2C.codigo == "B2C_FREE")
+                observacionHistorial = planB2C.codigo == "B2C_FREE"
                     ? "Creación evento (FREE) - trial 7 días"
                     : $"Creación evento (plan {planB2C.codigo}) - pendiente de pago";
             }
             else
             {
-                // B2B: el plan vive en la cuenta, no en el evento
-                idPlanEvento = cuenta!.id_plan;
+                idPlanEvento = cuenta.id_plan;
                 estadoInicial = EventoEstado.Borrador;
-                observacionHistorial = "Creación evento B2B";
+                observacionHistorial = modalidad == "CLIENTE"
+                    ? "Creación evento B2B para cliente"
+                    : "Creación evento B2B propio de cuenta";
             }
 
             var evento = new ef_eventos
             {
                 id_tipo_evento = req.IdTipoEvento,
-                id_idioma = req.IdIdioma,
+                id_idioma = idIdioma,
 
-                id_cuenta = esB2B ? req.IdCuenta : null,
+                id_cuenta = esB2B ? cuenta.id_cuenta : null,
                 id_unidad = esB2B ? req.IdUnidad : null,
                 id_cliente = esB2B ? req.IdCliente : null,
 
                 anfitriones_texto = req.AnfitrionesTexto.Trim(),
+
                 id_dress_code = req.IdDressCode,
-                dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim(),
+                dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion)
+                    ? null
+                    : req.DressCodeDescripcion.Trim(),
 
                 saludo = string.IsNullOrWhiteSpace(req.Saludo) ? null : req.Saludo.Trim(),
                 mensaje_bienvenida = string.IsNullOrWhiteSpace(req.MensajeBienvenida) ? null : req.MensajeBienvenida.Trim(),
@@ -615,7 +945,45 @@ namespace API.Services
             _context.Set<ef_eventos>().Add(evento);
             await _context.SaveChangesAsync();
 
-            // OWNER
+            // =====================================================
+            // CREAR ACCESO DEFAULT DEL EVENTO
+            // =====================================================
+            var acceso = new ef_evento_accesos
+            {
+                id_evento = evento.id_evento,
+                nombre = "General",
+                orden = 1,
+                activo = true,
+                fecha_alta = now
+            };
+
+            _context.Set<ef_evento_accesos>().Add(acceso);
+            await _context.SaveChangesAsync();
+
+            // =====================================================
+            // CREAR LINK DEFAULT DEL ACCESO
+            // =====================================================
+            var link = new ef_evento_acceso_links
+            {
+                id_evento = evento.id_evento,
+                id_acceso = acceso.id_acceso,
+                titulo = "Principal",
+                token = TokenUtility.Generate(64),
+                max_personas_total = 200,
+                max_adultos = 200,
+                activo = true,
+                fecha_alta = now
+            };
+
+            _context.Set<ef_evento_acceso_links>().Add(link);
+            await _context.SaveChangesAsync();
+
+            evento.id_acceso_default = acceso.id_acceso;
+            await _context.SaveChangesAsync();
+
+            // =====================================================
+            // RELACIÓN USUARIO DUEÑO
+            // =====================================================
             _context.Set<ef_evento_usuarios>().Add(new ef_evento_usuarios
             {
                 id_evento = evento.id_evento,
@@ -625,7 +993,9 @@ namespace API.Services
                 activo = true
             });
 
+            // =====================================================
             // HISTORIAL
+            // =====================================================
             _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
             {
                 id_evento = evento.id_evento,
@@ -635,10 +1005,12 @@ namespace API.Services
                 observaciones = observacionHistorial
             });
 
+            // =====================================================
             // SOLO B2C: alta comercial inicial
+            // =====================================================
             if (!esB2B)
             {
-                if (planB2C!.codigo == "B2C_FREE")
+                if (planB2C.codigo == "B2C_FREE")
                 {
                     _context.Set<ef_suscripciones>().Add(new ef_suscripciones
                     {
@@ -677,6 +1049,7 @@ namespace API.Services
 
             return await GetEventoMioAsync(idUsuario, evento.id_evento);
         }
+
 
         // =========================
         // MIS EVENTOS
