@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getCuentaEventos } from '@/src/features/cuenta/cuenta.service';
-import { CalendarHeart, Loader2, MapPin, LayoutList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Plus } from 'lucide-react';
+import { CalendarHeart, Loader2, MapPin, LayoutList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Plus, Pencil, Eye, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EventosCuentaPage() {
@@ -13,6 +13,7 @@ export default function EventosCuentaPage() {
     // UI states
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
 
     useEffect(() => {
         getCuentaEventos()
@@ -46,12 +47,14 @@ export default function EventosCuentaPage() {
     };
 
     const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate) === -1 ? 6 : getFirstDayOfMonth(currentDate); // Handle cases seamlessly
+    const firstDay = getFirstDayOfMonth(currentDate) === -1 ? 6 : getFirstDayOfMonth(currentDate);
 
     const getEventsForDay = (day: number) => {
         return eventos.filter(ev => {
-            if (!ev.fecha_hora) return false;
-            const evDate = new Date(ev.fecha_hora);
+            // Usar fechaAlta o fechaInicio como fecha principal
+            const fechaEvento = ev.fechaAlta || ev.fechaInicio;
+            if (!fechaEvento) return false;
+            const evDate = new Date(fechaEvento);
             return evDate.getDate() === day &&
                 evDate.getMonth() === currentDate.getMonth() &&
                 evDate.getFullYear() === currentDate.getFullYear();
@@ -86,26 +89,26 @@ export default function EventosCuentaPage() {
 
                     {/* View Toggles */}
                     <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900/50 p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800">
-                    <button
-                        onClick={() => setViewMode('list')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${viewMode === 'list'
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${viewMode === 'list'
                                 ? 'bg-white text-purple-700 shadow-sm dark:bg-neutral-800 dark:text-purple-400'
                                 : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
-                            }`}
-                    >
-                        <LayoutList className="w-4 h-4" />
-                        Lista
-                    </button>
-                    <button
-                        onClick={() => setViewMode('calendar')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${viewMode === 'calendar'
+                                }`}
+                        >
+                            <LayoutList className="w-4 h-4" />
+                            Lista
+                        </button>
+                        <button
+                            onClick={() => setViewMode('calendar')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${viewMode === 'calendar'
                                 ? 'bg-white text-purple-700 shadow-sm dark:bg-neutral-800 dark:text-purple-400'
                                 : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
-                            }`}
-                    >
-                        <CalendarIcon className="w-4 h-4" />
-                        Calendario
-                    </button>
+                                }`}
+                        >
+                            <CalendarIcon className="w-4 h-4" />
+                            Calendario
+                        </button>
                     </div>
                 </div>
             </div>
@@ -144,30 +147,32 @@ export default function EventosCuentaPage() {
                                         <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Información del Evento</th>
                                         <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Contexto / Entorno</th>
                                         <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Estado / Fecha</th>
+                                        <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-right">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                                    {eventos.map((ev) => (
-                                        <tr key={ev.id_evento} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 transition-all duration-200 group">
+                                    {eventos.map((ev, index) => (
+                                        <tr key={ev.idEvento || ev.id_evento || index} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 transition-all duration-200 group">
                                             <td className="px-6 py-5">
                                                 <p className="font-bold text-neutral-900 dark:text-white text-base group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
-                                                    {ev.anfitriones_texto || 'Sin título'}
+                                                    {ev.anfitrionesTexto || 'Sin título'}
                                                 </p>
                                                 <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-neutral-500">
-                                                    <MapPin className="w-3.5 h-3.5 text-neutral-400" /> {ev.lugar || 'Lugar por definir'}
+                                                    <MapPin className="w-3.5 h-3.5 text-neutral-400" />
+                                                    {ev.lugar || 'Lugar por definir'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 space-y-2.5">
                                                 <div className="flex items-center gap-2">
                                                     <span className="inline-flex px-2.5 py-1 rounded-lg bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 font-bold text-[10px] tracking-wide border border-neutral-200 dark:border-neutral-700">
-                                                        {ev.unidad_nombre || 'Principal'}
+                                                        {ev.unidadNombre || 'Principal'}
                                                     </span>
                                                 </div>
                                                 <div className="text-sm">
-                                                    {ev.cliente_nombre ? (
+                                                    {ev.clienteNombre ? (
                                                         <span className="font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-sky-500 opacity-80"></div>
-                                                            {ev.cliente_nombre}
+                                                            {ev.clienteNombre}
                                                         </span>
                                                     ) : (
                                                         <span className="text-neutral-400 italic text-xs font-medium">Evento propio / corporativo</span>
@@ -177,15 +182,25 @@ export default function EventosCuentaPage() {
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${ev.estado === 'A' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
-                                                            ev.estado === 'B' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
-                                                                'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+                                                        ev.estado === 'B' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+                                                            'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
                                                         }`}>
                                                         {ev.estado === 'A' ? 'Activo' : ev.estado === 'B' ? 'Borrador' : ev.estado}
                                                     </span>
                                                 </div>
                                                 <div className="text-xs font-semibold text-neutral-500 flex items-center gap-1.5">
                                                     <Clock className="w-3.5 h-3.5 opacity-70" />
-                                                    {ev.fecha_hora ? formatearFecha(ev.fecha_hora) : 'Sin fecha'}
+                                                    {(ev.fechaAlta || ev.fechaInicio) ? formatearFecha(ev.fechaAlta || ev.fechaInicio) : 'Sin fecha'}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <button onClick={() => setSelectedEvent(ev)} title="Ver más" className="p-2 text-neutral-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded-lg transition-colors">
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button title="Editar evento" className="p-2 text-neutral-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors">
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -245,16 +260,17 @@ export default function EventosCuentaPage() {
                                             </span>
 
                                             <div className="flex-1 space-y-1.5 overflow-y-auto pr-1 pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                                {eventosDelDia.map(ev => (
+                                                {eventosDelDia.map((ev, idx) => (
                                                     <div
-                                                        key={ev.id_evento}
-                                                        title={ev.anfitriones_texto}
+                                                        key={ev.idEvento || ev.id_evento || idx}
+                                                        title={ev.anfitrionesTexto}
+                                                        onClick={() => setSelectedEvent(ev)}
                                                         className={`px-2 py-1.5 rounded-md text-[10px] font-bold truncate transition-all cursor-pointer hover:shadow-sm ${ev.estado === 'A'
-                                                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30'
-                                                                : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'
+                                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30'
+                                                            : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'
                                                             }`}
                                                     >
-                                                        {ev.anfitriones_texto || 'Sin título'}
+                                                        {ev.anfitrionesTexto || 'Sin título'}
                                                     </div>
                                                 ))}
                                             </div>
@@ -264,6 +280,88 @@ export default function EventosCuentaPage() {
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Modal de Detalles del Evento */}
+            {selectedEvent && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-neutral-800">
+                            <h3 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                                <CalendarHeart className="w-5 h-5 text-purple-600" />
+                                Detalles del Evento
+                            </h3>
+                            <button
+                                onClick={() => setSelectedEvent(null)}
+                                className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="col-span-2 sm:col-span-1">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Título / Anfitriones</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200 font-semibold">{selectedEvent.anfitrionesTexto || '-'}</span>
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Tipo de Evento</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200 font-medium">{selectedEvent.tipoEventoDescripcion || '-'}</span>
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Modalidad</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200 font-medium capitalize">{selectedEvent.modalidad?.toLowerCase() || '-'}</span>
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Unidad</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200 font-medium">{selectedEvent.unidadNombre || '-'}</span>
+                                </div>
+                                {selectedEvent.clienteNombre && (
+                                    <div className="col-span-2 sm:col-span-1">
+                                        <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Cliente</span>
+                                        <span className="text-neutral-900 dark:text-neutral-200 font-medium">{selectedEvent.clienteNombre}</span>
+                                    </div>
+                                )}
+                                <div className="col-span-2 sm:col-span-1">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Plan Asociado</span>
+                                    <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                                        {selectedEvent.planNombre || '-'}
+                                    </span>
+                                </div>
+                                <div className="col-span-2">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Saludo</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200">{selectedEvent.saludo || '-'}</span>
+                                </div>
+                                <div className="col-span-2">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Mensaje de Bienvenida</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200">{selectedEvent.mensajeBienvenida || '-'}</span>
+                                </div>
+                                {selectedEvent.notas && (
+                                    <div className="col-span-2 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg border border-neutral-100 dark:border-neutral-800">
+                                        <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Notas</span>
+                                        <span className="text-neutral-900 dark:text-neutral-200 text-xs">{selectedEvent.notas}</span>
+                                    </div>
+                                )}
+                                <div className="col-span-2">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Código de Tipo de Evento</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200 font-mono text-xs">{selectedEvent.tipoEventoCodigo || '-'}</span>
+                                </div>
+                                <div className="col-span-2">
+                                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Fecha de Alta</span>
+                                    <span className="text-neutral-900 dark:text-neutral-200">{formatearFecha(selectedEvent.fechaAlta) || '-'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-4 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex justify-end">
+                            <button
+                                onClick={() => setSelectedEvent(null)}
+                                className="px-5 py-2.5 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold text-sm rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
