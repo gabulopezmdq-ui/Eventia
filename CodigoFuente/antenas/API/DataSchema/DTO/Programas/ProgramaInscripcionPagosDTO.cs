@@ -50,6 +50,7 @@ namespace API.DataSchema.DTO.Programas
         public decimal Precio { get; set; }
         public decimal Subtotal { get; set; }
         public string Moneda { get; set; } = "";
+        public int CantidadCalculada { get; set; }
     }
 
     public class ProgramaInscripcionAjusteDTO

@@ -334,7 +334,7 @@ namespace API.Controllers.Programas
 
         private async Task<List<ProgramaInscripcionDetalleServicioDTO>> GetDetalleServiciosAsync(long idInscripcion)
         {
-            return await (
+            var servicios = await (
                 from s in _context.Set<ef_programa_inscripcion_servicios>().AsNoTracking()
                 join gi in _context.Set<ef_rsvp_grupo_integrantes>().AsNoTracking()
                     on s.id_rsvp_grupo_integrante equals gi.id_rsvp_grupo_integrante
@@ -342,17 +342,58 @@ namespace API.Controllers.Programas
                     on gi.id_invitado equals inv.id_invitado
                 where s.id_inscripcion == idInscripcion && s.activo == true
                 orderby inv.apellido, inv.nombre, s.nombre
-                select new ProgramaInscripcionDetalleServicioDTO
+                select new
                 {
+                    s.id_inscripcion_servicio,
                     Participante = inv.nombre + " " + inv.apellido,
+                    s.codigo,
+                    s.nombre,
+                    s.tipo_calculo,
+                    s.precio,
+                    s.subtotal,
+                    s.moneda,
+                    s.cantidad
+                }
+            ).ToListAsync();
+
+            var idsServicios = servicios
+                .Select(x => x.id_inscripcion_servicio)
+                .ToList();
+
+            var diasPorServicio = await _context.Set<ef_programa_inscripcion_servicio_dias>()
+                .AsNoTracking()
+                .Where(x => idsServicios.Contains(x.id_inscripcion_servicio) && x.activo == true)
+                .GroupBy(x => x.id_inscripcion_servicio)
+                .Select(g => new
+                {
+                    IdInscripcionServicio = g.Key,
+                    CantidadDias = g.Count()
+                })
+                .ToListAsync();
+
+            return servicios.Select(s =>
+            {
+                var dias = diasPorServicio
+                    .FirstOrDefault(x => x.IdInscripcionServicio == s.id_inscripcion_servicio)
+                    ?.CantidadDias ?? 0;
+
+                var cantidadCalculada =
+                    s.tipo_calculo == "POR_DIA"
+                        ? dias
+                        : (s.cantidad ?? 1);
+
+                return new ProgramaInscripcionDetalleServicioDTO
+                {
+                    Participante = s.Participante,
                     Codigo = s.codigo,
                     Nombre = s.nombre,
                     TipoCalculo = s.tipo_calculo,
                     Precio = s.precio,
+                    CantidadCalculada = cantidadCalculada,
                     Subtotal = s.subtotal,
                     Moneda = s.moneda
-                }
-            ).ToListAsync();
+                };
+            }).ToList();
         }
 
         private async Task<List<ProgramaInscripcionAjusteDTO>> GetAjustesAsync(long idInscripcion, short idIdioma)
