@@ -289,12 +289,12 @@ namespace API.Controllers.Programas
         }
 
         private async Task GuardarAceptacionLegalAsync(
-    long idInscripcion,
-    long? idIntegrante,
-    long idProgramaAutorizacionConfig,
-    bool aceptada,
-    string? nombreFirmante,
-    short idIdioma)
+            long idInscripcion,
+            long? idIntegrante,
+            long idProgramaAutorizacionConfig,
+            bool aceptada,
+            string? nombreFirmante,
+            short idIdioma)
         {
             var config = await _context.Set<ef_programa_autorizaciones_config>()
                 .AsNoTracking()
@@ -496,6 +496,16 @@ namespace API.Controllers.Programas
                 // 6. Inscripción cabecera familiar
                 var tokenConsulta = GenerarToken(32);
 
+                var monedaPrograma = await _context.Set<ef_cuentas>()
+                    .AsNoTracking()
+                    .Where(x => x.id_cuenta == idCuenta)
+                    .Select(x => x.moneda_default)
+                    .FirstOrDefaultAsync();
+
+                monedaPrograma = string.IsNullOrWhiteSpace(monedaPrograma)
+                    ? "ARS"
+                    : monedaPrograma.Trim().ToUpper();
+
                 var inscripcion = new ef_programa_inscripciones
                 {
                     id_evento = idEvento,
@@ -524,7 +534,7 @@ namespace API.Controllers.Programas
 
                     id_idioma = req.IdIdioma ?? data.ev.id_idioma,
 
-                    moneda = "EUR",
+                    moneda = monedaPrograma,
                     total_base = 0,
                     total_servicios = 0,
                     total_general = 0,
