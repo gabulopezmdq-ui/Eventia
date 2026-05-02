@@ -155,6 +155,9 @@ namespace API.DataSchema
         public DbSet<ef_programa_inscripcion_salud_fichas> ef_programa_inscripcion_salud_fichas { get; set; }
         public DbSet<ef_programa_inscripcion_salud_contactos> ef_programa_inscripcion_salud_contactos { get; set; }
         public DbSet<ef_programa_inscripcion_salud_medicaciones> ef_programa_inscripcion_salud_medicaciones { get; set; }
+        public DbSet<ef_programa_inscripcion_ajustes> ef_programa_inscripcion_ajustes { get; set; }
+        public DbSet<ef_programa_inscripcion_pagos> ef_programa_inscripcion_pagos { get; set; }
+        public DbSet<ef_param_programa_tipos_ajuste> ef_param_programa_tipos_ajuste { get; set; }
 
 
 
@@ -339,6 +342,9 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_fichasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_contactosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_medicacionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_ajustesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_pagosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_ajusteConfiguration());
 
 
 
