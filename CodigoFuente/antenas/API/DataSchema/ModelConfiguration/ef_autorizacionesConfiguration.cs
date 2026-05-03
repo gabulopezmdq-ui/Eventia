@@ -25,6 +25,12 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.activo).IsRequired();
             builder.Property(x => x.fecha_alta).IsRequired();
+            
+            builder.Property(x => x.qr_token)
+                    .HasMaxLength(64);
+
+            builder.HasIndex(x => x.qr_token)
+                   .HasDatabaseName("ix_ef_autorizaciones_qr_token");
 
             builder.HasOne(x => x.evento)
                 .WithMany() // si no tenés navigation en ef_eventos

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace API.Controllers.Programas
 {
@@ -407,6 +408,10 @@ namespace API.Controllers.Programas
 
                 var now = DateTimeOffset.UtcNow;
 
+                var qrTokensPorAutorizado = new Dictionary<string, string>();
+                var autorizacionesRetiroCreadas = new List<ef_autorizaciones>();
+                var nombresInvitadosParticipantes = new Dictionary<long, string>();
+
                 // 1. Audiencia responsable
                 var audienciaResponsable = await UpsertAudienciaPersonaAsync(
                     idCuenta: idCuenta,
@@ -592,6 +597,9 @@ namespace API.Controllers.Programas
 
                     _context.Set<ef_invitados>().Add(invitadoParticipante);
                     await _context.SaveChangesAsync();
+
+                    nombresInvitadosParticipantes[invitadoParticipante.id_invitado] =
+                        (invitadoParticipante.nombre + " " + invitadoParticipante.apellido).Trim();
 
                     // 3. Calcular edad aproximada para ef_rsvp_grupo_integrantes
                     short? edadAnios = null;
@@ -803,20 +811,33 @@ namespace API.Controllers.Programas
                             if (string.IsNullOrWhiteSpace(a.NombreAutorizado))
                                 continue;
 
+                            var nombreAut = a.NombreAutorizado.Trim();
+
+                            var telAut = string.IsNullOrWhiteSpace(a.TelefonoAutorizado)
+                                ? ""
+                                : a.TelefonoAutorizado.Trim();
+
+                            var claveAutorizado = (nombreAut + "|" + telAut).ToUpperInvariant();
+
+                            if (!qrTokensPorAutorizado.ContainsKey(claveAutorizado))
+                                qrTokensPorAutorizado[claveAutorizado] = GenerarToken(32);
+
                             var autorizado = new ef_autorizaciones
                             {
                                 id_evento = idEvento,
                                 id_invitado_objetivo = invitadoParticipante.id_invitado,
                                 tipo = "R",
-                                nombre_autorizado = a.NombreAutorizado.Trim(),
+                                nombre_autorizado = nombreAut,
                                 telefono_autorizado = string.IsNullOrWhiteSpace(a.TelefonoAutorizado) ? null : a.TelefonoAutorizado.Trim(),
                                 relacion = string.IsNullOrWhiteSpace(a.Relacion) ? null : a.Relacion.Trim(),
                                 observaciones = string.IsNullOrWhiteSpace(a.Observaciones) ? null : a.Observaciones.Trim(),
+                                qr_token = qrTokensPorAutorizado[claveAutorizado],
                                 activo = true,
                                 fecha_alta = now
                             };
 
                             _context.Set<ef_autorizaciones>().Add(autorizado);
+                            autorizacionesRetiroCreadas.Add(autorizado);
                         }
                     }
 
@@ -876,6 +897,31 @@ namespace API.Controllers.Programas
 
                 await _context.SaveChangesAsync();
 
+                var qrsRetiroDto = autorizacionesRetiroCreadas
+                .Where(x => !string.IsNullOrWhiteSpace(x.qr_token))
+                .GroupBy(x => new
+                {
+                    x.nombre_autorizado,
+                    x.telefono_autorizado,
+                    x.relacion,
+                    x.qr_token
+                })
+                .Select(g => new ProgramaInscripcionQrRetiroDTO
+                {
+                    NombreAutorizado = g.Key.nombre_autorizado,
+                    TelefonoAutorizado = g.Key.telefono_autorizado,
+                    Relacion = g.Key.relacion,
+                    QrToken = g.Key.qr_token!,
+                    Participantes = g.Select(x => new ProgramaInscripcionQrParticipanteDTO
+                    {
+                        IdInvitado = x.id_invitado_objetivo,
+                        NombreCompleto = nombresInvitadosParticipantes.ContainsKey(x.id_invitado_objetivo)
+                            ? nombresInvitadosParticipantes[x.id_invitado_objetivo]
+                            : ""
+                    }).ToList()
+                })
+                .ToList();
+
                 await tx.CommitAsync();
 
                 return Ok(new ProgramaInscripcionConfirmarResponse
@@ -884,8 +930,9 @@ namespace API.Controllers.Programas
                     IdInscripcion = inscripcion.id_inscripcion,
                     IdRsvpGrupo = grupo.id_rsvp_grupo,
                     TokenConsulta = tokenConsulta,
-                    TotalGeneral = 0,
-                    Mensaje = "Inscripción familiar creada correctamente."
+                    TotalGeneral = inscripcion.total_general,
+                    Mensaje = "Inscripción familiar creada correctamente.",
+                    QrsRetiro = qrsRetiroDto
                 });
             }
             catch
