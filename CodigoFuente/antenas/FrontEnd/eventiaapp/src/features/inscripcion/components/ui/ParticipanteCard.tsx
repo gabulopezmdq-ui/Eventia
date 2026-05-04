@@ -7,6 +7,7 @@ import { TabSalud } from './TabSalud';
 import { TabAlimentacion } from './TabAlimentacion';
 import { TabRetiro } from './TabRetiro';
 import { Trash2, Calendar, LayoutGrid, Activity, UtensilsCrossed, ShieldCheck } from 'lucide-react';
+import { getParticipanteBadges } from '../../hooks/useInscripcionValida';
 
 interface Props {
     participante: Participante;
@@ -21,6 +22,8 @@ export function ParticipanteCard({ participante }: Props) {
             quitarParticipante(participante._clientId);
         }
     };
+
+    const badges = getParticipanteBadges(participante);
 
     const tabs = [
         { id: 'semanas', label: 'Semanas', icon: Calendar },
@@ -64,6 +67,12 @@ export function ParticipanteCard({ participante }: Props) {
                         >
                             <Icon className="w-4 h-4" />
                             {tab.label}
+                            {badges[tab.id] === 'warn' && (
+                                <span className="w-2 h-2 rounded-full bg-red-500 ml-1" title="Información requerida" />
+                            )}
+                            {badges[tab.id] === 'ok' && (
+                                <span className="w-2 h-2 rounded-full bg-green-500 ml-1" title="Completo" />
+                            )}
                         </button>
                     );
                 })}

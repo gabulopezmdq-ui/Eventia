@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { InscripcionState, ValidationResult } from '../types/inscripcion.types';
+import type { InscripcionState, Participante, ValidationResult } from '../types/inscripcion.types';
 
 /**
  * Valida el estado completo de la inscripción.
@@ -9,7 +9,7 @@ import type { InscripcionState, ValidationResult } from '../types/inscripcion.ty
  *  - Responsable: nombre, apellido, email, telefono y relacion obligatorios
  *  - Al menos 1 participante
  *  - Cada participante: al menos 1 semana seleccionada
- *  - Firma: nombre_completo no vacío
+ *  - Cada participante: grupo sanguíneo requerido
  */
 export function useInscripcionValida(state: InscripcionState): ValidationResult {
     return useMemo(() => {
@@ -32,6 +32,9 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
                 if (p.periodos.length === 0) {
                     errores.push(`${label}: seleccioná al menos una semana`);
                 }
+                if (!p.salud?.grupo_sanguineo?.trim()) {
+                    errores.push(`${label}: ingresá el grupo sanguíneo (tab Salud)`);
+                }
             });
         }
 
@@ -41,7 +44,6 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
 
 /**
  * Indica si un participante específico tiene al menos 1 semana seleccionada.
- * Útil para el badge de estado dentro de ParticipanteCard.
  */
 export function useParticipanteValido(
     clientId: string,
@@ -53,3 +55,31 @@ export function useParticipanteValido(
         return p.periodos.length > 0;
     }, [clientId, state.participantes]);
 }
+
+/** Estado visual de un tab: ok = completo, warn = pendiente requerido, empty = opcional vacío */
+export type TabBadgeStatus = 'ok' | 'warn' | 'empty';
+
+export interface ParticipanteBadges {
+    semanas: TabBadgeStatus;
+    servicios: TabBadgeStatus;
+    alimentacion: TabBadgeStatus;
+    salud: TabBadgeStatus;
+    retiro: TabBadgeStatus;
+}
+
+/**
+ * Calcula el estado visual de cada tab para un participante dado.
+ * - 'ok'    → campo requerido completo, o sección opcional con datos cargados
+ * - 'warn'  → campo requerido faltante (bloquea confirmación)
+ * - 'empty' → sección opcional sin datos (no bloquea)
+ */
+export function getParticipanteBadges(p: Participante): ParticipanteBadges {
+    return {
+        semanas:      p.periodos.length > 0 ? 'ok' : 'warn',
+        servicios:    p.servicios.length > 0 ? 'ok' : 'empty',
+        alimentacion: p.restricciones.length > 0 ? 'ok' : 'empty',
+        salud:        p.salud?.grupo_sanguineo?.trim() ? 'ok' : 'warn',
+        retiro:       p.autorizados_retiro.length > 0 ? 'ok' : 'empty',
+    };
+}
+

@@ -16,19 +16,35 @@ export function FaseC_PanelFamiliar() {
         documento: '',
         observaciones: ''
     });
+    const [erroresNuevo, setErroresNuevo] = useState<{ nombre?: string; apellido?: string; fecha_nacimiento?: string }>({});
 
     const handleAgregarClick = () => setMostrarFormNuevo(true);
 
     const handleCancelarNuevo = () => {
         setMostrarFormNuevo(false);
         setNuevoParticipante({ nombre: '', apellido: '', fecha_nacimiento: '', documento: '', observaciones: '' });
+        setErroresNuevo({});
     };
 
     const handleSubmitNuevo = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validación explícita para garantizar que SIEMPRE se valide,
+        // independientemente del comportamiento del navegador con `required` HTML5.
+        const errores: { nombre?: string; apellido?: string; fecha_nacimiento?: string } = {};
+        if (!nuevoParticipante.nombre.trim()) errores.nombre = 'El nombre es requerido';
+        if (!nuevoParticipante.apellido.trim()) errores.apellido = 'El apellido es requerido';
+        if (!nuevoParticipante.fecha_nacimiento) errores.fecha_nacimiento = 'La fecha de nacimiento es requerida';
+
+        if (Object.keys(errores).length > 0) {
+            setErroresNuevo(errores);
+            return;
+        }
+
+        setErroresNuevo({});
         agregarParticipante({
-            nombre: nuevoParticipante.nombre,
-            apellido: nuevoParticipante.apellido,
+            nombre: nuevoParticipante.nombre.trim(),
+            apellido: nuevoParticipante.apellido.trim(),
             fecha_nacimiento: nuevoParticipante.fecha_nacimiento,
             documento: nuevoParticipante.documento || null,
             observaciones: nuevoParticipante.observaciones,
@@ -93,18 +109,20 @@ export function FaseC_PanelFamiliar() {
                                 <input 
                                     required type="text" 
                                     value={nuevoParticipante.nombre} 
-                                    onChange={e => setNuevoParticipante({...nuevoParticipante, nombre: e.target.value})} 
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none" 
+                                    onChange={e => { setNuevoParticipante({...nuevoParticipante, nombre: e.target.value}); setErroresNuevo(prev => ({ ...prev, nombre: undefined })); }} 
+                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.nombre ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`} 
                                 />
+                                {erroresNuevo.nombre && <p className="text-xs text-red-500 mt-1">{erroresNuevo.nombre}</p>}
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Apellido *</label>
                                 <input 
                                     required type="text" 
                                     value={nuevoParticipante.apellido} 
-                                    onChange={e => setNuevoParticipante({...nuevoParticipante, apellido: e.target.value})} 
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none" 
+                                    onChange={e => { setNuevoParticipante({...nuevoParticipante, apellido: e.target.value}); setErroresNuevo(prev => ({ ...prev, apellido: undefined })); }} 
+                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.apellido ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`} 
                                 />
+                                {erroresNuevo.apellido && <p className="text-xs text-red-500 mt-1">{erroresNuevo.apellido}</p>}
                             </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -113,9 +131,10 @@ export function FaseC_PanelFamiliar() {
                                 <input 
                                     required type="date" 
                                     value={nuevoParticipante.fecha_nacimiento} 
-                                    onChange={e => setNuevoParticipante({...nuevoParticipante, fecha_nacimiento: e.target.value})} 
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none" 
+                                    onChange={e => { setNuevoParticipante({...nuevoParticipante, fecha_nacimiento: e.target.value}); setErroresNuevo(prev => ({ ...prev, fecha_nacimiento: undefined })); }} 
+                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.fecha_nacimiento ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`} 
                                 />
+                                {erroresNuevo.fecha_nacimiento && <p className="text-xs text-red-500 mt-1">{erroresNuevo.fecha_nacimiento}</p>}
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Documento</label>
