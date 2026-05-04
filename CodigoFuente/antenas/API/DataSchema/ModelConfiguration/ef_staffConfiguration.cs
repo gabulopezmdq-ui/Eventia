@@ -46,7 +46,15 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasOne(x => x.ef_cuentas)
                    .WithMany()
                    .HasForeignKey(x => x.id_cuenta)
+                   .IsRequired(false)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            // FK: ef_eventos
+            builder.HasOne(x => x.ef_eventos)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_evento)
+                   .IsRequired(false)
+                   .OnDelete(DeleteBehavior.Cascade);
 
             // FK: ef_roles
             builder.HasOne(x => x.ef_roles)

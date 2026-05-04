@@ -21,13 +21,15 @@ namespace API.Controllers
         private readonly ICRUDService<ef_eventos> _serviceGenerico;
         private readonly ILogger<eventosController> _logger;
         private readonly IEventosService _eventos;
+        private readonly StaffService _staffService;
 
-        public eventosController(DataContext context, ILogger<eventosController> logger, ICRUDService<ef_eventos> serviceGenerico, IEventosService eventos)
+        public eventosController(DataContext context, ILogger<eventosController> logger, ICRUDService<ef_eventos> serviceGenerico, IEventosService eventos, StaffService staffService)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
             _eventos = eventos;
+            _staffService = staffService;
         }
 
      
@@ -127,6 +129,117 @@ namespace API.Controllers
         {
             var result = await _eventos.GetReporteRestriccionesMesasAsync(idEvento);
             return Ok(result);
+        }
+
+        // ─────────────────────────────────────────────
+        // STAFF / COLABORADORES
+        // ─────────────────────────────────────────────
+
+        [Authorize]
+        [HttpGet("{idEvento:long}/staff")]
+        public async Task<ActionResult<IEnumerable<EventoStaffDTO>>> GetStaff(long idEvento)
+        {
+            try
+            {
+                var result = await _eventos.GetStaffAsync(idEvento, User.GetUserId());
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+        }
+
+        [Authorize]
+        [HttpGet("{idEvento:long}/staff/codigos")]
+        public async Task<ActionResult<IEnumerable<object>>> GetStaffCodigos(long idEvento)
+        {
+            try
+            {
+                var result = await _eventos.GetStaffCodigosAsync(idEvento, User.GetUserId());
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+        }
+
+        [Authorize]
+        [HttpPost("{idEvento:long}/staff")]
+        public async Task<ActionResult<object>> AddStaff(long idEvento, [FromBody] AddEventoStaffRequest req)
+        {
+            try
+            {
+                var result = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId());
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+            catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+        }
+
+        [Authorize]
+        [HttpPost("{idEvento:long}/staff/crear")]
+        public async Task<ActionResult<object>> CrearStaffEvento(long idEvento, [FromBody] AddEventoStaffRequest req)
+        {
+            try
+            {
+                // 1. Delegar creación a StaffService (Responsable de ef_staff y códigos)
+                var staffCreado = await _staffService.CrearStaffEventoAsync(
+                    idEvento, 
+                    req.Nombre ?? "", 
+                    req.Apellido ?? "", 
+                    req.Email ?? "", 
+                    req.IdRol
+                );
+
+                // 2. Delegar asignación a EventosService (Responsable de ef_evento_usuarios)
+                req.IdStaff = staffCreado.id_staff;
+                var asignacion = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId());
+
+                return Ok(asignacion);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+        }
+
+        [Authorize]
+        [HttpPut("{idEvento:long}/staff/{idEventoUsuario:long}")]
+        public async Task<IActionResult> UpdateStaff(long idEvento, long idEventoUsuario, [FromBody] UpdateEventoStaffRequest req)
+        {
+            try
+            {
+                await _eventos.UpdateStaffAsync(idEvento, idEventoUsuario, req, User.GetUserId());
+                return Ok(new { ok = true });
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+            catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+        }
+
+        [Authorize]
+        [HttpDelete("{idEvento:long}/staff/{idEventoUsuario:long}")]
+        public async Task<IActionResult> DeleteStaff(long idEvento, long idEventoUsuario)
+        {
+            try
+            {
+                await _eventos.DeleteStaffAsync(idEvento, idEventoUsuario, User.GetUserId());
+                return Ok(new { ok = true });
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+            catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+        }
+
+        [Authorize]
+        [HttpPost("staff/aceptar-invitacion")]
+        public async Task<IActionResult> AceptarInvitacionStaff([FromQuery] string token)
+        {
+            try
+            {
+                var result = await _eventos.AceptarInvitacionStaffAsync(token, User.GetUserId());
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(); }
+            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+            catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
         }
     }
 }
