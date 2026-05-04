@@ -14,14 +14,17 @@ export function TabSalud({ participante }: { participante: Participante }) {
         <div className="space-y-6 animate-in fade-in">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Grupo Sanguíneo</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Grupo Sanguíneo *</label>
                     <input 
                         type="text" 
                         placeholder="Ej. A+, O-"
                         value={participante.salud?.grupo_sanguineo || ''} 
                         onChange={e => handleChangeSalud('grupo_sanguineo', e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                        className={`w-full px-4 py-2.5 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${!participante.salud?.grupo_sanguineo?.trim() ? 'border-red-500/50 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`}
                     />
+                    {!participante.salud?.grupo_sanguineo?.trim() && (
+                        <p className="text-xs text-red-500 mt-1">Requerido para avanzar</p>
+                    )}
                 </div>
                 
                 <div className="space-y-1.5">
