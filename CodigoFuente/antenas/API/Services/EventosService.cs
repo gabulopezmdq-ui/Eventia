@@ -1436,7 +1436,7 @@ namespace API.Services
                 {
                     Nombre = s.nombre,
                     Apellido = s.apellido,
-                    Rol = r.nombre ?? r.codigo,
+                    Rol = r.descripcion ?? r.codigo,
                     CodigoAcceso = s.codigo
                 }
             ).ToListAsync();
@@ -1701,4 +1701,4 @@ namespace API.Services
             return new { ok = true, id_evento = invite.id_evento };
         }
     }
-}
+}

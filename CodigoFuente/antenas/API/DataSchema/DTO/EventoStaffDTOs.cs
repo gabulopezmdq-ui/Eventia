@@ -25,8 +25,8 @@ namespace API.DataSchema.DTO
         public string? Email { get; set; }
         public long? IdStaff { get; set; }
         public short IdRol { get; set; }
-        public string? Nombre { get; set; } 
-        public string? Apellido { get; set; } 
+        public string? Nombre { get; set; }
+        public string? Apellido { get; set; }
     }
 
     public class UpdateEventoStaffRequest
