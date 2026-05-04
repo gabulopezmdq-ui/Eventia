@@ -91,6 +91,9 @@ export interface ProgramaInscripcionData {
   periodos: ProgramaPeriodo[];
   servicios: ProgramaServicio[];
   idiomas: { id: number; nombre: string }[];
+  restricciones_alimentarias_config: { id: number; nombre: string }[];
+  autorizaciones_configuradas: { id: number; descripcion: string; obligatoria: boolean }[];
+  configuracion_salud: Record<string, unknown> | null;
 }
 
 // ── POST payload ──────────────────────────────────────────────
@@ -122,9 +125,20 @@ export interface Participante {
   observaciones: string;
   periodos: { id_programa_periodo: number }[];
   servicios: ServicioSeleccionado[];
-  restricciones: { tipo: string; severidad: string; observaciones: string }[];
-  salud: { grupo_sanguineo?: string; alergias?: string; medicacion?: string; observaciones?: string };
-  autorizados_retiro: { nombre: string; apellido: string; documento: string; relacion: string; telefono: string }[];
+  restricciones_alimentarias: { id_restriccion_alimentaria: number; severidad: string; observacion: string }[];
+  salud: {
+    tiene_problema_medico: boolean;
+    problema_medico_detalle?: string;
+    tiene_alergias_no_alimentarias: boolean;
+    alergias_no_alimentarias_detalle?: string;
+    necesidad_especial?: string;
+    cobertura_medica?: string;
+    observaciones_familia?: string;
+    autoriza_emergencia_medica: boolean;
+    contactos_emergencia: { nombre: string; telefono: string; relacion: string; orden: number }[];
+    medicaciones: { nombre: string; dosis: string; frecuencia: string; indicaciones: string; requiere_autorizacion: boolean }[];
+  };
+  autorizados_retiro: { nombre_autorizado: string; telefono_autorizado: string; relacion: string; observaciones: string }[];
 }
 
 export interface InscripcionPayload {
@@ -138,6 +152,17 @@ export interface InscripcionPayload {
 // ── Estado del Context ────────────────────────────────────────
 export type FaseActual = 'landing' | 'panel' | 'resumen' | 'success';
 
+export interface ConfirmacionResponse {
+  mensaje: string;
+  qrs_retiro: {
+    nombre_autorizado: string;
+    telefono_autorizado: string;
+    relacion: string;
+    qr_token: string;
+    participantes: { id_invitado: number; nombre_completo: string }[];
+  }[];
+}
+
 export interface InscripcionState {
   programaData: ProgramaInscripcionData | null;
   idIdioma: number;
@@ -148,7 +173,7 @@ export interface InscripcionState {
   firma: Partial<InscripcionPayload['firma']>;
   isLoading: boolean;
   error: string | null;
-  tokenConfirmacion: string | null;
+  resultadoConfirmacion: ConfirmacionResponse | null;
 }
 ```
 
@@ -170,7 +195,7 @@ type Action =
   | { type: 'UPDATE_PARTICIPANTE'; payload: { clientId: string; data: Partial<Participante> } }
   | { type: 'REMOVE_PARTICIPANTE'; payload: string }
   | { type: 'SET_FIRMA'; payload: Partial<InscripcionPayload['firma']> }
-  | { type: 'SET_CONFIRMADO'; payload: string }
+  | { type: 'SET_CONFIRMADO'; payload: ConfirmacionResponse }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESTORE_DRAFT'; payload: InscripcionState };
@@ -254,7 +279,7 @@ export async function confirmarInscripcion(payload: InscripcionPayload) {
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error('Error al confirmar la inscripción');
-  return res.json() as Promise<{ token_confirmacion: string; mensaje: string }>;
+  return res.json() as Promise<ConfirmacionResponse>;
 }
 ```
 
@@ -285,6 +310,8 @@ Acceso al context + helpers de alto nivel:
 //   - responsable: nombre, apellido, email, telefono, relacion completos
 //   - al menos 1 participante
 //   - cada participante: al menos 1 semana seleccionada
+//   - cada participante (salud): autoriza_emergencia_medica === true y al menos 1 contacto_emergencia
+//   - cada participante (retiro): al menos 1 autorizado_retiro
 //   - firma: nombre_completo no vacío
 ```
 
@@ -365,13 +392,15 @@ Acceso al context + helpers de alto nivel:
 ```
 
 ### `TabSalud.tsx`
-- **Ficha médica** (todo opcional): grupo sanguíneo, alergias, medicación, observaciones
+- **Ficha médica:** `tiene_problema_medico`, `tiene_alergias_no_alimentarias` (booleanos que despliegan textareas de detalle si son true).
+- **Emergencia:** Requiere check obligatorio de `autoriza_emergencia_medica`.
+- **Contactos y Medicaciones:** Formularios dinámicos con botón "Agregar" para listas `contactos_emergencia` y `medicaciones`.
 
 ### `TabAlimentacion.tsx`
-- **Restricciones alimentarias:** combo para elegir tipo (Sin gluten, Sin lactosa, Vegetariano, Vegano, Frutos secos), selector Severidad + campo Observaciones. Creación dinámica de múltiples restricciones.
+- **Restricciones alimentarias:** combo para elegir tipo usando datos del GET (`restricciones_alimentarias_config`), selector Severidad + campo Observaciones (obligatorio si se elige "Otra"). Creación dinámica de múltiples restricciones con `id_restriccion_alimentaria`.
 
 ### `TabRetiro.tsx`
-- **Autorizados de retiro:** listado dinámico para agregar personas (Nombre, Apellido, Documento, Relación, Teléfono) autorizadas a retirar al participante.
+- **Autorizados de retiro:** listado dinámico para agregar personas (`nombre_autorizado`, `telefono_autorizado`, `relacion`, `observaciones`) autorizadas a retirar al participante.
 
 ### `BarraTotal.tsx`
 - `position: fixed; bottom: 0; width: 100%`
@@ -387,14 +416,16 @@ Acceso al context + helpers de alto nivel:
 - Botón **"Confirmar inscripción"**:
   - `SET_LOADING(true)`
   - `confirmarInscripcion(buildPayload())`
-  - On success: `SET_CONFIRMADO(token)` + `SET_FASE('success')` + limpiar localStorage
+  - On success: `SET_CONFIRMADO(resultado)` + `SET_FASE('success')` + limpiar localStorage
   - On error: `SET_ERROR(mensaje)` + toast con opción reintentar
 
 ### `SuccessScreen.tsx`
-- Código de referencia en caja destacada + botón copiar
-- "Enviamos confirmación a {email}"
-- Info de pago (`info_publica`)
-- Limpia `localStorage` al montar
+- Muestra mensaje de "Inscripción confirmada" con responsables y participantes.
+- Renderiza listado de **QR de Retiro** (usando `resultadoConfirmacion.qrs_retiro`).
+- Por cada autorizado, muestra a qué participantes puede retirar.
+- Botones "Ver QR" (genera QR desde `qr_token`) y "Descargar imagen".
+- Info de pago (`info_publica`).
+- Limpia `localStorage` al montar.
 
 ---
 
@@ -402,11 +433,11 @@ Acceso al context + helpers de alto nivel:
 
 | # | Tarea | Estimación |
 |---|-------|-----------|
-| 1 | ✅ `inscripcion.types.ts` | 1h |
+| 1 | 🔄 **MODIFICAR** `inscripcion.types.ts` | +30min |
 | 2 | ✅ Proxies `api/inscripcion/[token]` + `inscripcion-confirmar` | 30min |
-| 3 | ✅ `inscripcion.service.ts` | 30min |
-| 4 | ✅ `InscripcionContext.tsx` + reducer + localStorage | 2h |
-| 5 | ✅ `useInscripcion.ts` + `buildPayload()` | 1h |
+| 3 | 🔄 **MODIFICAR** `inscripcion.service.ts` | +15min |
+| 4 | 🔄 **MODIFICAR** `InscripcionContext.tsx` + reducer + localStorage | +30min |
+| 5 | 🔄 **MODIFICAR** `useInscripcion.ts` + `buildPayload()` | +30min |
 | 6 | ✅ `layout.tsx` + `page.tsx` orquestador | 1h |
 | 7 | ✅ `FaseA_Landing.tsx` + selector idioma | 1.5h |
 | 8 | ✅ `FaseB_ResponsableDrawer.tsx` (bottom sheet) | 2h |
@@ -415,12 +446,12 @@ Acceso al context + helpers de alto nivel:
 | 11| ✅ `TabSemanas.tsx` + copiado de hermano | 1h |
 | 12| ✅ `DaySelector.tsx` + helper `generarDiasHabiles` | 1.5h |
 | 13| ✅ `TabServicios.tsx` | 2h |
-| 14| ✅ `TabSalud.tsx` + `TabAlimentacion.tsx` + `TabRetiro.tsx` | 1.5h |
+| 14| 🔄 **MODIFICAR** `TabSalud.tsx`, `TabAlimentacion.tsx`, `TabRetiro.tsx` | +2h |
 | 15| ✅ `useTotalEstimado.ts` + `BarraTotal.tsx` | 1.5h |
 | 16| ✅ Funciones de copiado de hermano (hooks) | 45min |
-| 17| ✅ `useInscripcionValida.ts` | 1h |
+| 17| 🔄 **MODIFICAR** `useInscripcionValida.ts` | +30min |
 | 18| ✅ `FaseD_ResumenFirma.tsx` + POST | 2h |
-| 19| ✅ `SuccessScreen.tsx` | 45min |
+| 19| 🔄 **MODIFICAR** `SuccessScreen.tsx` (QRs de retiro) | +1.5h |
 | 20| ✅ CSS completo (Tailwind v4) + responsive mobile | 3h |
 
 **Total estimado: ~28 horas**
