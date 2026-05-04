@@ -165,7 +165,7 @@ builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksService>();
 
 // Módulo Staff
-builder.Services.AddScoped<StaffService>();
+builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IProgramasService, ProgramasService>();
 
 

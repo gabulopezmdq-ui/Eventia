@@ -2,6 +2,7 @@ using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services;
+using API.Services.Staff;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +22,9 @@ namespace API.Controllers
         private readonly ICRUDService<ef_eventos> _serviceGenerico;
         private readonly ILogger<eventosController> _logger;
         private readonly IEventosService _eventos;
-        private readonly StaffService _staffService;
+        private readonly IStaffService _staffService;
 
-        public eventosController(DataContext context, ILogger<eventosController> logger, ICRUDService<ef_eventos> serviceGenerico, IEventosService eventos, StaffService staffService)
+        public eventosController(DataContext context, ILogger<eventosController> logger, ICRUDService<ef_eventos> serviceGenerico, IEventosService eventos, IStaffService staffService)
         {
             _context = context;
             _logger = logger;

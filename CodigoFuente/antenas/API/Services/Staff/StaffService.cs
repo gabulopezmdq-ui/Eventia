@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace API.Services.Staff
 {
-    public class StaffService
+    public class StaffService : IStaffService
     {
         private readonly DataContext _context;
         private readonly IConfiguration _config;
