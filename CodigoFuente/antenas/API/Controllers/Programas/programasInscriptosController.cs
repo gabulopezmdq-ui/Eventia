@@ -1,11 +1,12 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO.Programas;
+using API.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 
 namespace API.Controllers.Programas
@@ -432,6 +433,178 @@ namespace API.Controllers.Programas
                 Moneda = insc.moneda,
                 Participantes = participantesDto
             });
+        }
+
+        [Authorize]
+        [HttpGet("{idEvento:long}/inscriptos/resumen")]
+        public async Task<ActionResult<ProgramaInscriptosResumenDTO>> GetInscriptosResumen(long idEvento)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var evento = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (evento == null)
+                return NotFound("Programa inexistente.");
+
+            if (evento.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            var inscripciones = await _context.Set<ef_programa_inscripciones>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento && x.activo == true)
+                .ToListAsync();
+
+            var idsInscripciones = inscripciones
+                .Select(x => x.id_inscripcion)
+                .ToList();
+
+            var idsGrupos = inscripciones
+                .Select(x => x.id_rsvp_grupo)
+                .Distinct()
+                .ToList();
+
+            var totalParticipantes = await _context.Set<ef_rsvp_grupo_integrantes>()
+                .AsNoTracking()
+                .CountAsync(x =>
+                    idsGrupos.Contains(x.id_rsvp_grupo) &&
+                    x.requiere_asistencia == true);
+
+            var pagos = await _context.Set<ef_programa_inscripcion_pagos>()
+                .AsNoTracking()
+                .Where(x =>
+                    idsInscripciones.Contains(x.id_inscripcion) &&
+                    x.anulado == false)
+                .ToListAsync();
+
+            var ajustes = await _context.Set<ef_programa_inscripcion_ajustes>()
+                .AsNoTracking()
+                .Where(x =>
+                    idsInscripciones.Contains(x.id_inscripcion) &&
+                    x.activo == true)
+                .ToListAsync();
+
+            var fichas = await _context.Set<ef_programa_salud_fichas>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    idsInscripciones.Contains(x.id_inscripcion) &&
+                    x.activo == true)
+                .ToListAsync();
+
+            var medicaciones = await _context.Set<ef_programa_salud_medicaciones>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    idsInscripciones.Contains(x.id_inscripcion) &&
+                    x.activo == true)
+                .ToListAsync();
+
+            int pendientes = 0;
+            int parciales = 0;
+            int pagados = 0;
+            int sinCargo = 0;
+            int conAlertas = 0;
+            decimal totalDeuda = 0;
+
+            foreach (var insc in inscripciones)
+            {
+                var ajustesInsc = ajustes
+                    .Where(x => x.id_inscripcion == insc.id_inscripcion)
+                    .ToList();
+
+                var pagosInsc = pagos
+                    .Where(x => x.id_inscripcion == insc.id_inscripcion)
+                    .ToList();
+
+                decimal descuentos = ajustesInsc
+                    .Where(x => x.tipo == "DESCUENTO" || x.tipo == "BONIFICACION")
+                    .Sum(x => x.importe);
+
+                decimal recargos = ajustesInsc
+                    .Where(x => x.tipo == "RECARGO")
+                    .Sum(x => x.importe);
+
+                decimal totalAPagar = insc.total_general - descuentos + recargos;
+
+                if (totalAPagar < 0)
+                    totalAPagar = 0;
+
+                decimal totalPagado = pagosInsc.Sum(x => x.importe);
+
+                decimal saldo = totalAPagar - totalPagado;
+
+                if (saldo < 0)
+                    saldo = 0;
+
+                totalDeuda += saldo;
+
+                string estadoPago = ResolverEstadoPagoInscriptos(totalAPagar, totalPagado);
+
+                if (estadoPago == "SIN_CARGO")
+                    sinCargo++;
+                else if (estadoPago == "PENDIENTE")
+                    pendientes++;
+                else if (estadoPago == "PARCIAL")
+                    parciales++;
+                else if (estadoPago == "PAGADO")
+                    pagados++;
+
+                bool tieneFichaAlerta = fichas.Any(x =>
+                    x.id_inscripcion == insc.id_inscripcion &&
+                    (
+                        (x.tiene_problema_medico) ||
+                        (x.tiene_alergias_no_alimentarias) ||
+                        (x.tiene_necesidad_especial)
+                    ));
+
+                bool tieneMedicacion = medicaciones.Any(x =>
+                    x.id_inscripcion == insc.id_inscripcion);
+
+                if (tieneFichaAlerta || tieneMedicacion)
+                    conAlertas++;
+            }
+
+            string moneda = inscripciones
+                .Select(x => x.moneda)
+                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? "";
+
+            return Ok(new ProgramaInscriptosResumenDTO
+            {
+                IdEvento = idEvento,
+                Programa = evento.saludo ?? evento.anfitriones_texto ?? ("Programa " + idEvento),
+                Modulo = "Inscriptos",
+                TotalFamilias = inscripciones.Count,
+                TotalParticipantes = totalParticipantes,
+                TotalDeuda = totalDeuda,
+                Moneda = moneda,
+                Pendientes = pendientes,
+                Parciales = parciales,
+                Pagados = pagados,
+                SinCargo = sinCargo,
+                ConAlertas = conAlertas
+            });
+        }
+
+        private static string ResolverEstadoPagoInscriptos(decimal totalAPagar, decimal totalPagado)
+        {
+            if (totalAPagar <= 0)
+                return "SIN_CARGO";
+
+            if (totalPagado <= 0)
+                return "PENDIENTE";
+
+            if (totalPagado < totalAPagar)
+                return "PARCIAL";
+
+            return "PAGADO";
         }
     }
 }
