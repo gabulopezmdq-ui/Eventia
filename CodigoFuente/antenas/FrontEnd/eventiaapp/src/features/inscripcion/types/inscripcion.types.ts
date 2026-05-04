@@ -44,6 +44,17 @@ export interface ProgramaServicio {
     configJson: Record<string, unknown> | null;
 }
 
+export interface RestriccionAlimentariaConfig {
+    id: number;
+    nombre: string;
+}
+
+export interface AutorizacionConfig {
+    id: number;
+    descripcion: string;
+    obligatoria: boolean;
+}
+
 export interface ProgramaInscripcionData {
     token: string;
     idEvento: number;
@@ -55,6 +66,9 @@ export interface ProgramaInscripcionData {
     periodos: ProgramaPeriodo[];
     servicios: ProgramaServicio[];
     idiomas: Idioma[];
+    restricciones_alimentarias_config: RestriccionAlimentariaConfig[];
+    autorizaciones_configuradas: AutorizacionConfig[];
+    configuracion_salud: Record<string, unknown> | null;
 }
 
 // ── Payload que va en el POST /programas/inscripcion/confirmar ───
@@ -80,25 +94,50 @@ export interface ServicioSeleccionado {
     campos_extra: Record<string, string> | null;
 }
 
+/** Restricción alimentaria con ID del catálogo del GET */
 export interface RestriccionAlimentaria {
-    tipo: string;               // 'sin_gluten' | 'sin_lactosa' | 'vegetariano' | etc.
+    id_restriccion_alimentaria: number;
     severidad: 'Leve' | 'Moderada' | 'Severa';
-    observaciones: string;
+    observacion: string;
 }
 
-export interface FichaSalud {
-    grupo_sanguineo: string;
-    alergias: string;
-    medicacion: string;
-    observaciones: string;
-}
-
-export interface AutorizadoRetiro {
+/** Contacto de emergencia médica */
+export interface ContactoEmergencia {
     nombre: string;
-    apellido: string;
-    documento: string;
-    relacion: string;
     telefono: string;
+    relacion: string;
+    orden: number;
+}
+
+/** Medicación que toma el participante */
+export interface Medicacion {
+    nombre: string;
+    dosis: string;
+    frecuencia: string;
+    indicaciones: string;
+    requiere_autorizacion: boolean;
+}
+
+/** Ficha médica completa — coincide con el modelo V2 del backend */
+export interface FichaSalud {
+    tiene_problema_medico: boolean;
+    problema_medico_detalle?: string;
+    tiene_alergias_no_alimentarias: boolean;
+    alergias_no_alimentarias_detalle?: string;
+    necesidad_especial?: string;
+    cobertura_medica?: string;
+    observaciones_familia?: string;
+    autoriza_emergencia_medica: boolean;
+    contactos_emergencia: ContactoEmergencia[];
+    medicaciones: Medicacion[];
+}
+
+/** Persona autorizada a retirar al participante */
+export interface AutorizadoRetiro {
+    nombre_autorizado: string;
+    telefono_autorizado: string;
+    relacion: string;
+    observaciones: string;
 }
 
 export interface AutorizacionFirma {
@@ -126,8 +165,8 @@ export interface Participante {
     observaciones: string;
     periodos: { id_programa_periodo: number }[];
     servicios: ServicioSeleccionado[];
-    restricciones: RestriccionAlimentaria[];
-    salud: Partial<FichaSalud>;
+    restricciones_alimentarias: RestriccionAlimentaria[];
+    salud: FichaSalud;
     autorizados_retiro: AutorizadoRetiro[];
 }
 
@@ -138,6 +177,21 @@ export interface InscripcionPayload {
     responsable: Responsable;
     participantes: Omit<Participante, '_clientId'>[];
     firma: FirmaResponsable;
+}
+
+// ── Respuesta del POST de confirmación ────────────────────────────
+
+export interface QrRetiro {
+    nombre_autorizado: string;
+    telefono_autorizado: string;
+    relacion: string;
+    qr_token: string;
+    participantes: { id_invitado: number; nombre_completo: string }[];
+}
+
+export interface ConfirmacionResponse {
+    mensaje: string;
+    qrs_retiro: QrRetiro[];
 }
 
 // ── Estado global del Context ─────────────────────────────────────
@@ -157,8 +211,8 @@ export interface InscripcionState {
     firma: Partial<FirmaResponsable>;
     isLoading: boolean;
     error: string | null;
-    /** Token de confirmación devuelto por el backend tras el POST exitoso */
-    tokenConfirmacion: string | null;
+    /** Resultado de confirmación devuelto por el backend tras el POST exitoso */
+    resultadoConfirmacion: ConfirmacionResponse | null;
 }
 
 // ── Resultado de cálculo de totales ──────────────────────────────
@@ -175,4 +229,21 @@ export interface TotalEstimado {
 export interface ValidationResult {
     valida: boolean;
     errores: string[];
+}
+
+// ── Valores por defecto para una FichaSalud vacía ─────────────────
+
+export function createFichaSaludVacia(): FichaSalud {
+    return {
+        tiene_problema_medico: false,
+        problema_medico_detalle: '',
+        tiene_alergias_no_alimentarias: false,
+        alergias_no_alimentarias_detalle: '',
+        necesidad_especial: '',
+        cobertura_medica: '',
+        observaciones_familia: '',
+        autoriza_emergencia_medica: false,
+        contactos_emergencia: [],
+        medicaciones: [],
+    };
 }

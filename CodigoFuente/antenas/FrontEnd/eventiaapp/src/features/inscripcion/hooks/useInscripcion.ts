@@ -6,7 +6,9 @@ import type {
     FirmaResponsable,
     InscripcionPayload,
     FaseActual,
+    ConfirmacionResponse,
 } from '../types/inscripcion.types';
+import { createFichaSaludVacia } from '../types/inscripcion.types';
 
 /**
  * Hook principal de acceso al contexto de inscripción.
@@ -43,6 +45,7 @@ export function useInscripcion() {
     /**
      * Agrega un nuevo participante generando un _clientId único.
      * El _clientId se usa solo en el frontend para identificar tarjetas.
+     * La ficha de salud se inicializa con valores por defecto.
      */
     const agregarParticipante = useCallback((
         data: Omit<Participante, '_clientId'>
@@ -50,6 +53,8 @@ export function useInscripcion() {
         const nuevoParticipante: Participante = {
             _clientId: crypto.randomUUID(),
             ...data,
+            // Garantiza la estructura completa de salud si no viene
+            salud: data.salud ?? createFichaSaludVacia(),
         };
         dispatch({ type: 'ADD_PARTICIPANTE', payload: nuevoParticipante });
         return nuevoParticipante._clientId;
@@ -120,8 +125,8 @@ export function useInscripcion() {
         dispatch({ type: 'SET_ERROR', payload: msg });
     }, [dispatch]);
 
-    const setConfirmado = useCallback((token: string) => {
-        dispatch({ type: 'SET_CONFIRMADO', payload: token });
+    const setConfirmado = useCallback((resultado: ConfirmacionResponse) => {
+        dispatch({ type: 'SET_CONFIRMADO', payload: resultado });
     }, [dispatch]);
 
     // ── Build payload ─────────────────────────────────────────────
