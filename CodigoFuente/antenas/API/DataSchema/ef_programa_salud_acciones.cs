@@ -8,6 +8,7 @@ namespace API.DataSchema
         public long id_accion_salud { get; set; }
 
         public long id_evento { get; set; }
+        public long id_participante { get; set; }
         public long id_inscripcion { get; set; }
 
         public DateTimeOffset fecha_hora { get; set; }
@@ -30,5 +31,6 @@ namespace API.DataSchema
 
         public virtual ef_eventos? evento { get; set; }
         public virtual ef_usuarios? usuario { get; set; }
+        public virtual ef_invitados? participante { get; set; }
     }
 }

@@ -14,8 +14,10 @@ namespace API.DataSchema.DTO.Programas
         [JsonProperty("id_evento")]
         public long IdEvento { get; set; }
 
-        [JsonPropertyName("id_inscripcion")]
-        [JsonProperty("id_inscripcion")]
+        [JsonPropertyName("id_participante")]
+        [JsonProperty("id_participante")]
+        public long IdParticipante { get; set; }
+
         public long IdInscripcion { get; set; }
 
         [JsonPropertyName("fecha_hora")]

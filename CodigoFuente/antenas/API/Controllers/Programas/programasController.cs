@@ -1384,8 +1384,8 @@ namespace API.Controllers.Programas
         [Authorize]
         [HttpGet("{idEvento:long}/salud/acciones")]
         public async Task<ActionResult<List<ProgramaSaludAccionDTO>>> GetSaludAcciones(
-    long idEvento,
-    [FromQuery] bool soloActivas = true)
+            long idEvento,
+            [FromQuery] bool soloActivas = true)
         {
             long idUsuario = User.GetUserId();
 
@@ -1418,7 +1418,8 @@ namespace API.Controllers.Programas
                 {
                     IdAccionSalud = x.id_accion_salud,
                     IdEvento = x.id_evento,
-                    IdInscripcion = x.id_inscripcion,
+                    //IdInscripcion = x.id_inscripcion,
+                    IdParticipante = x.id_participante,
                     FechaHora = x.fecha_hora,
                     TipoAccion = x.tipo_accion,
                     Descripcion = x.descripcion,
@@ -2130,8 +2131,8 @@ namespace API.Controllers.Programas
         [AllowAnonymous]
         [HttpPost("inscripcion/{token}/cotizar")]
         public async Task<ActionResult<ProgramaInscripcionCotizarResponse>> CotizarInscripcionPrograma(
-    string token,
-    [FromBody] ProgramaInscripcionCotizarRequest req)
+        string token,
+        [FromBody] ProgramaInscripcionCotizarRequest req)
         {
             var link = await _context.Set<ef_evento_acceso_links>()
                 .AsNoTracking()
@@ -2302,5 +2303,443 @@ namespace API.Controllers.Programas
 
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpGet("{idEvento:long}/salud/panel")]
+        public async Task<ActionResult<List<ProgramaSaludPanelItemDTO>>> GetSaludPanel(
+            long idEvento,
+            [FromQuery] string? q = null,
+            [FromQuery] bool soloAlertas = false)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            var baseData = await (
+                from insc in _context.Set<ef_programa_inscripciones>().AsNoTracking()
+                join gi in _context.Set<ef_rsvp_grupo_integrantes>().AsNoTracking()
+                    on insc.id_rsvp_grupo equals gi.id_rsvp_grupo
+                join inv in _context.Set<ef_invitados>().AsNoTracking()
+                    on gi.id_invitado equals inv.id_invitado
+                where insc.id_evento == idEvento
+                      && insc.activo == true
+                      && gi.requiere_asistencia == true
+                      && inv.activo == true
+                select new
+                {
+                    insc.id_inscripcion,
+                    insc.responsable_nombre,
+                    insc.responsable_apellido,
+                    insc.responsable_email,
+                    insc.responsable_telefono,
+                    gi.id_rsvp_grupo_integrante,
+                    inv.id_invitado,
+                    inv.nombre,
+                    inv.apellido
+                }
+            ).ToListAsync();
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                string query = q.Trim().ToLower();
+
+                baseData = baseData
+                    .Where(x =>
+                        ((x.nombre ?? "") + " " + (x.apellido ?? "")).ToLower().Contains(query) ||
+                        ((x.responsable_nombre ?? "") + " " + (x.responsable_apellido ?? "")).ToLower().Contains(query) ||
+                        (x.responsable_email ?? "").ToLower().Contains(query) ||
+                        (x.responsable_telefono ?? "").ToLower().Contains(query))
+                    .ToList();
+            }
+
+            var idsInscripcion = baseData.Select(x => x.id_inscripcion).Distinct().ToList();
+            var idsIntegrantes = baseData.Select(x => x.id_rsvp_grupo_integrante).Distinct().ToList();
+            var idsInvitados = baseData.Select(x => x.id_invitado).Distinct().ToList();
+
+            var fichas = await _context.Set<ef_programa_salud_fichas>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento && idsInscripcion.Contains(x.id_inscripcion) && x.activo == true)
+                .ToListAsync();
+
+            var medicaciones = await _context.Set<ef_programa_salud_medicaciones>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento && idsInscripcion.Contains(x.id_inscripcion) && x.activo == true)
+                .ToListAsync();
+
+            var acciones = await _context.Set<ef_programa_salud_acciones>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    idsInvitados.Contains(x.id_participante) &&
+                    x.activo == true)
+                .ToListAsync();
+
+            var restricciones = await (
+                from r in _context.Set<ef_rsvp_integrante_restricciones>().AsNoTracking()
+                join pr in _context.Set<ef_param_restricciones_alimentarias>().AsNoTracking()
+                    on r.id_restriccion_alim equals pr.id_restriccion_alim
+                where idsIntegrantes.Contains(r.id_rsvp_grupo_integrante)
+                      && pr.activo == true
+                select new
+                {
+                    r.id_rsvp_grupo_integrante,
+                    pr.codigo
+                }
+            ).ToListAsync();
+
+            var result = baseData.Select(x =>
+            {
+                var ficha = fichas.FirstOrDefault(f => f.id_inscripcion == x.id_inscripcion);
+
+                var meds = medicaciones
+                    .Where(m => m.id_inscripcion == x.id_inscripcion)
+                    .Select(m => m.nombre_medicamento)
+                    .Distinct()
+                    .ToList();
+
+                var accs = acciones
+                    .Where(a => a.id_participante == x.id_invitado)
+                    .ToList();
+
+                var restr = restricciones
+                    .Where(r => r.id_rsvp_grupo_integrante == x.id_rsvp_grupo_integrante)
+                    .Select(r => r.codigo)
+                    .Distinct()
+                    .ToList();
+
+                bool tieneProblema = ficha?.tiene_problema_medico ?? false;
+                bool tieneAlergias = ficha?.tiene_alergias_no_alimentarias ?? false;
+                bool tieneNecesidad = ficha?.tiene_necesidad_especial ?? false;
+                bool tieneRestricciones = restr.Any();
+                bool tieneMedicacion = meds.Any();
+                bool requiereSeguimiento = accs.Any(a => a.requiere_seguimiento);
+
+                string nivel = "NINGUNA";
+
+                if (requiereSeguimiento || tieneProblema || tieneAlergias || tieneMedicacion)
+                    nivel = "ALTA";
+                else if (tieneNecesidad || tieneRestricciones)
+                    nivel = "MEDIA";
+
+                return new ProgramaSaludPanelItemDTO
+                {
+                    IdInscripcion = x.id_inscripcion,
+                    IdInvitado = x.id_invitado,
+                    IdRsvpGrupoIntegrante = x.id_rsvp_grupo_integrante,
+                    Participante = ((x.nombre ?? "") + " " + (x.apellido ?? "")).Trim(),
+                    Responsable = ((x.responsable_nombre ?? "") + " " + (x.responsable_apellido ?? "")).Trim(),
+                    TelefonoResponsable = x.responsable_telefono,
+                    EmailResponsable = x.responsable_email,
+
+                    TieneProblemaMedico = tieneProblema,
+                    ProblemaMedicoDetalle = ficha?.detalle_problema_medico,
+
+                    TieneAlergiasNoAlimentarias = tieneAlergias,
+                    AlergiasNoAlimentariasDetalle = ficha?.detalle_alergias_no_alimentarias,
+
+                    TieneNecesidadEspecial = tieneNecesidad,
+                    NecesidadEspecialDetalle = ficha?.detalle_necesidad_especial,
+
+                    TieneRestriccionesAlimentarias = tieneRestricciones,
+                    RestriccionesAlimentarias = restr,
+
+                    TieneMedicacion = tieneMedicacion,
+                    Medicaciones = meds,
+
+                    ContactoEmergencia = ficha?.contacto_emergencia_nombre,
+                    TelefonoEmergencia = ficha?.contacto_emergencia_telefono,
+                    AutorizaEmergenciaMedica = ficha?.autoriza_emergencia_medica ?? false,
+                    ObservacionesFamilia = ficha?.observaciones_familia,
+
+                    AccionesSaludCount = accs.Count,
+                    RequiereSeguimiento = requiereSeguimiento,
+                    AlertaVisual = nivel != "NINGUNA",
+                    NivelAlerta = nivel
+                };
+            }).ToList();
+
+            if (soloAlertas)
+                result = result.Where(x => x.AlertaVisual).ToList();
+
+            result = result
+                .OrderByDescending(x => x.NivelAlerta == "ALTA")
+                .ThenByDescending(x => x.NivelAlerta == "MEDIA")
+                .ThenBy(x => x.Participante)
+                .ToList();
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("{idEvento:long}/salud/participantes/{idInvitado:long}/detalle")]
+        public async Task<ActionResult<ProgramaSaludDetalleParticipanteDTO>> GetSaludDetalleParticipante(
+            long idEvento,
+            long idInvitado)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            var baseData = await (
+                from insc in _context.Set<ef_programa_inscripciones>().AsNoTracking()
+                join gi in _context.Set<ef_rsvp_grupo_integrantes>().AsNoTracking()
+                    on insc.id_rsvp_grupo equals gi.id_rsvp_grupo
+                join inv in _context.Set<ef_invitados>().AsNoTracking()
+                    on gi.id_invitado equals inv.id_invitado
+                where insc.id_evento == idEvento
+                      && insc.activo == true
+                      && inv.id_invitado == idInvitado
+                      && inv.activo == true
+                select new
+                {
+                    insc.id_inscripcion,
+                    insc.responsable_nombre,
+                    insc.responsable_apellido,
+                    insc.responsable_email,
+                    insc.responsable_telefono,
+                    gi.id_rsvp_grupo_integrante,
+                    inv.id_invitado,
+                    inv.nombre,
+                    inv.apellido
+                }
+            ).SingleOrDefaultAsync();
+
+            if (baseData == null)
+                return NotFound("Participante inexistente para este programa.");
+
+            var ficha = await _context.Set<ef_programa_salud_fichas>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x =>
+                    x.id_evento == idEvento &&
+                    x.id_inscripcion == baseData.id_inscripcion &&
+                    x.activo == true);
+
+            var fichaDto = ficha == null
+                ? null
+                : new ProgramaSaludFichaDTO
+                {
+                    IdFichaSalud = ficha.id_ficha_salud,
+                    IdEvento = ficha.id_evento,
+                    IdInscripcion = ficha.id_inscripcion,
+                    TieneProblemaMedico = ficha.tiene_problema_medico,
+                    DetalleProblemaMedico = ficha.detalle_problema_medico,
+                    TieneAlergiasNoAlimentarias = ficha.tiene_alergias_no_alimentarias,
+                    DetalleAlergiasNoAlimentarias = ficha.detalle_alergias_no_alimentarias,
+                    TieneNecesidadEspecial = ficha.tiene_necesidad_especial,
+                    DetalleNecesidadEspecial = ficha.detalle_necesidad_especial,
+                    TieneCoberturaMedica = ficha.tiene_cobertura_medica,
+                    CoberturaMedicaNombre = ficha.cobertura_medica_nombre,
+                    CoberturaMedicaNumero = ficha.cobertura_medica_numero,
+                    ContactoEmergenciaNombre = ficha.contacto_emergencia_nombre,
+                    ContactoEmergenciaTelefono = ficha.contacto_emergencia_telefono,
+                    ContactoEmergenciaRelacion = ficha.contacto_emergencia_relacion,
+                    AutorizaEmergenciaMedica = ficha.autoriza_emergencia_medica,
+                    ObservacionesFamilia = ficha.observaciones_familia,
+                    ObservacionesInternas = ficha.observaciones_internas,
+                    Activo = ficha.activo,
+                    FechaAlta = ficha.fecha_alta
+                };
+
+            var medicaciones = await _context.Set<ef_programa_salud_medicaciones>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    x.id_inscripcion == baseData.id_inscripcion &&
+                    x.activo == true)
+                .OrderBy(x => x.nombre_medicamento)
+                .Select(x => new ProgramaSaludMedicacionDTO
+                {
+                    IdMedicacion = x.id_medicacion,
+                    IdEvento = x.id_evento,
+                    IdInscripcion = x.id_inscripcion,
+                    NombreMedicamento = x.nombre_medicamento,
+                    Dosis = x.dosis,
+                    Frecuencia = x.frecuencia,
+                    Horario = x.horario,
+                    Instrucciones = x.instrucciones,
+                    AdministracionAutorizada = x.administracion_autorizada,
+                    DebeLlevarParticipante = x.debe_llevar_participante,
+                    RequiereRefrigeracion = x.requiere_refrigeracion,
+                    Activo = x.activo,
+                    FechaAlta = x.fecha_alta
+                })
+                .ToListAsync();
+
+            var acciones = await _context.Set<ef_programa_salud_acciones>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    x.id_participante == idInvitado &&
+                    x.activo == true)
+                .OrderByDescending(x => x.fecha_hora)
+                .Select(x => new ProgramaSaludAccionDTO
+                {
+                    IdAccionSalud = x.id_accion_salud,
+                    IdEvento = x.id_evento,
+                    IdParticipante = x.id_participante,
+                    FechaHora = x.fecha_hora,
+                    TipoAccion = x.tipo_accion,
+                    Descripcion = x.descripcion,
+                    RequirioContactoFamilia = x.requirio_contacto_familia,
+                    ContactoRealizado = x.contacto_realizado,
+                    RequiereSeguimiento = x.requiere_seguimiento,
+                    UsuarioRegistro = x.usuario_registro,
+                    Activo = x.activo
+                })
+                .ToListAsync();
+
+            var restricciones = await (
+                from r in _context.Set<ef_rsvp_integrante_restricciones>().AsNoTracking()
+                join pr in _context.Set<ef_param_restricciones_alimentarias>().AsNoTracking()
+                    on r.id_restriccion_alim equals pr.id_restriccion_alim
+                where r.id_rsvp_grupo_integrante == baseData.id_rsvp_grupo_integrante
+                      && pr.activo == true
+                select pr.codigo
+            ).ToListAsync();
+
+            return Ok(new ProgramaSaludDetalleParticipanteDTO
+            {
+                IdEvento = idEvento,
+                IdInscripcion = baseData.id_inscripcion,
+                IdInvitado = baseData.id_invitado,
+                IdRsvpGrupoIntegrante = baseData.id_rsvp_grupo_integrante,
+                Participante = ((baseData.nombre ?? "") + " " + (baseData.apellido ?? "")).Trim(),
+                Responsable = ((baseData.responsable_nombre ?? "") + " " + (baseData.responsable_apellido ?? "")).Trim(),
+                TelefonoResponsable = baseData.responsable_telefono,
+                EmailResponsable = baseData.responsable_email,
+                Ficha = fichaDto,
+                Medicaciones = medicaciones,
+                Acciones = acciones,
+                RestriccionesAlimentarias = restricciones
+            });
+        }
+
+        [Authorize]
+        [HttpPost("{idEvento:long}/salud/acciones/registrar")]
+        public async Task<ActionResult<ProgramaSaludAccionDTO>> RegistrarSaludAccion(
+            long idEvento,
+            [FromBody] ProgramaSaludRegistrarAccionRequest req)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null)
+                return NotFound("Programa inexistente.");
+
+            if (ev.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            if (req.IdInscripcion <= 0)
+                return BadRequest("Debe indicar la inscripción.");
+
+            if (req.IdParticipante <= 0)
+                return BadRequest("Debe indicar el participante.");
+
+            if (string.IsNullOrWhiteSpace(req.TipoAccion))
+                return BadRequest("Debe indicar el tipo de acción.");
+
+            if (string.IsNullOrWhiteSpace(req.Descripcion))
+                return BadRequest("Debe indicar una descripción.");
+
+            var inscripcionValida = await (
+                from insc in _context.Set<ef_programa_inscripciones>().AsNoTracking()
+                join gi in _context.Set<ef_rsvp_grupo_integrantes>().AsNoTracking()
+                    on insc.id_rsvp_grupo equals gi.id_rsvp_grupo
+                where insc.id_evento == idEvento
+                      && insc.id_inscripcion == req.IdInscripcion
+                      && insc.activo == true
+                      && gi.id_invitado == req.IdParticipante
+                select insc.id_inscripcion
+            ).AnyAsync();
+
+            if (!inscripcionValida)
+                return BadRequest("El participante no pertenece a la inscripción indicada.");
+
+            var tipoAccion = req.TipoAccion.Trim().ToUpperInvariant();
+
+            bool tipoValido = await _context.Set<ef_param_programa_salud_tipos_accion>()
+                .AnyAsync(x => x.codigo == tipoAccion && x.activo == true);
+
+            if (!tipoValido)
+                return BadRequest("El tipo de acción indicado no existe o está inactivo.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            var item = new ef_programa_salud_acciones
+            {
+                id_evento = idEvento,
+                //id_inscripcion = req.IdInscripcion,
+                id_participante = req.IdParticipante,
+                fecha_hora = req.FechaHora ?? now,
+                tipo_accion = tipoAccion,
+                descripcion = req.Descripcion.Trim(),
+                requirio_contacto_familia = req.RequirioContactoFamilia,
+                contacto_realizado = req.ContactoRealizado,
+                requiere_seguimiento = req.RequiereSeguimiento,
+                usuario_registro = idUsuario,
+                activo = true,
+                fecha_alta = now,
+                fecha_modif = now
+            };
+
+            _context.Set<ef_programa_salud_acciones>().Add(item);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new ProgramaSaludAccionDTO
+            {
+                IdAccionSalud = item.id_accion_salud,
+                IdEvento = item.id_evento,
+                IdInscripcion = item.id_inscripcion,
+                FechaHora = item.fecha_hora,
+                TipoAccion = item.tipo_accion,
+                Descripcion = item.descripcion,
+                RequirioContactoFamilia = item.requirio_contacto_familia,
+                ContactoRealizado = item.contacto_realizado,
+                RequiereSeguimiento = item.requiere_seguimiento,
+                UsuarioRegistro = item.usuario_registro,
+                Activo = item.activo
+            });
+        }
+
+
+
     }
 }
