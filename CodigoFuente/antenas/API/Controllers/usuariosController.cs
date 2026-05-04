@@ -1,4 +1,4 @@
-﻿using  API.DataSchema;
+using  API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using  API.Services;
@@ -183,6 +183,59 @@ namespace API.Controllers
             };
 
             return Ok(dto);
+        }
+
+        [Authorize]
+        [HttpPut("mi-perfil")]
+        public async Task<ActionResult<MiPerfilDTO>> UpdateMiPerfil([FromBody] UsuarioPerfilUpdateDTO req)
+        {
+            long idUsuario = User.GetUserId();
+
+            var usuario = await _context.Set<ef_usuarios>()
+                .FirstOrDefaultAsync(u => u.id_usuario == idUsuario);
+
+            if (usuario == null)
+                return NotFound("Usuario inexistente.");
+
+            // Validar que el email (o campos obligatorios) sigan siendo válidos si se cambiaran, 
+            // pero en este DTO solo permitimos campos de perfil.
+
+            usuario.nombre = req.nombre;
+            usuario.apellido = req.apellido;
+            usuario.telefono = req.telefono;
+            
+            if (req.recibir_novedades.HasValue)
+                usuario.recibir_novedades = req.recibir_novedades.Value;
+
+            if (!string.IsNullOrWhiteSpace(req.pais_codigo))
+            {
+                var p = await _context.Set<ef_paises>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.codigo_iso2 == req.pais_codigo);
+                if (p != null)
+                    usuario.id_pais = p.id_pais;
+            }
+
+            if (!string.IsNullOrWhiteSpace(req.idioma_codigo))
+            {
+                var idio = await _context.Set<ef_idiomas>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.codigo_idioma == req.idioma_codigo || x.locale == req.idioma_codigo);
+                if (idio != null)
+                    usuario.id_idioma_preferido = idio.id_idioma;
+            }
+
+            if (!string.IsNullOrWhiteSpace(req.avatar_url))
+            {
+                usuario.avatar_url = req.avatar_url;
+            }
+
+            usuario.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Retornamos el perfil actualizado (llamando al mismo DTO de respuesta que el GET)
+            return await MiPerfil();
         }
 
     }

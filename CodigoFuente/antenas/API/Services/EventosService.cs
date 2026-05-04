@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.DataSchema.DTO.Programas;
 
 namespace API.Services
 {
@@ -1356,5 +1357,348 @@ namespace API.Services
 
             return result.OrderBy(x => x.Tramo).ThenBy(x => x.NombreMesa).ToList();
         }
+
+        public async Task<IEnumerable<EventoStaffDTO>> GetStaffAsync(long idEvento, long idUsuarioLogger)
+        {
+            // Validar que el usuario logueado pertenece al evento
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuarioLogger && x.activo == true);
+
+            if (!pertenece)
+                throw new UnauthorizedAccessException("El usuario no tiene permisos para ver el staff de este evento.");
+
+            // 1) Staff activo (Usuarios del sistema y Personal de Cuenta)
+            var activeStaff = await (
+                from eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
+                join u in _context.Set<ef_usuarios>().AsNoTracking() on eu.id_usuario equals u.id_usuario into users
+                from u in users.DefaultIfEmpty()
+                join s in _context.Set<ef_staff>().AsNoTracking() on eu.id_staff equals s.id_staff into staffs
+                from s in staffs.DefaultIfEmpty()
+                join r in _context.Set<ef_roles>().AsNoTracking() on eu.id_rol equals r.id_rol
+                where eu.id_evento == idEvento
+                select new EventoStaffDTO
+                {
+                    IdEventoUsuario = eu.id_evento_usuario,
+                    IdEvento = eu.id_evento,
+                    IdUsuario = eu.id_usuario,
+                    IdStaff = eu.id_staff,
+                    Nombre = eu.id_staff.HasValue ? s.nombre : u.nombre,
+                    Apellido = eu.id_staff.HasValue ? s.apellido : u.apellido,
+                    Email = eu.id_staff.HasValue ? (s.email ?? "") : (u.email ?? ""),
+                    IdRol = eu.id_rol,
+                    CodigoRol = r.codigo,
+                    Activo = eu.activo,
+                    FechaAlta = eu.fecha_alta,
+                    EsInvitacion = false,
+                    CodigoAcceso = eu.id_staff.HasValue ? s.codigo : null
+                }
+            ).ToListAsync();
+
+            // 2) Invitaciones pendientes (tabla ef_invitados)
+            var pendingInvites = await (
+                from i in _context.Set<ef_invitados>().AsNoTracking()
+                join r in _context.Set<ef_roles>().AsNoTracking() on i.id_rol_staff equals r.id_rol
+                where i.id_evento == idEvento && i.es_staff == true && i.activo == true && i.rsvp_estado == "P"
+                select new EventoStaffDTO
+                {
+                    IdEventoUsuario = 0,
+                    IdEvento = i.id_evento,
+                    IdUsuario = null,
+                    Nombre = i.nombre,
+                    Apellido = i.apellido,
+                    Email = i.email,
+                    IdRol = i.id_rol_staff ?? (short)0,
+                    CodigoRol = r.codigo,
+                    Activo = true,
+                    FechaAlta = i.fecha_alta,
+                    EsInvitacion = true
+                }
+            ).ToListAsync();
+
+            return activeStaff.Concat(pendingInvites).ToList();
+        }
+
+        public async Task<IEnumerable<object>> GetStaffCodigosAsync(long idEvento, long idUsuarioLogger)
+        {
+            // Validar que el usuario logueado pertenece al evento
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuarioLogger && x.activo == true);
+
+            if (!pertenece)
+                throw new UnauthorizedAccessException("El usuario no tiene permisos para ver los códigos de staff de este evento.");
+
+            var codes = await (
+                from eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
+                join s in _context.Set<ef_staff>().AsNoTracking() on eu.id_staff equals s.id_staff
+                join r in _context.Set<ef_roles>().AsNoTracking() on eu.id_rol equals r.id_rol
+                where eu.id_evento == idEvento && eu.activo == true
+                select new
+                {
+                    Nombre = s.nombre,
+                    Apellido = s.apellido,
+                    Rol = r.nombre ?? r.codigo,
+                    CodigoAcceso = s.codigo
+                }
+            ).ToListAsync();
+
+            return codes;
+        }
+
+        public async Task<object> AddStaffAsync(long idEvento, AddEventoStaffRequest req, long idUsuarioLogger)
+        {
+            // 1) Validar evento
+            var ev = await _context.Set<ef_eventos>().AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (ev == null) throw new KeyNotFoundException("Evento inexistente.");
+
+            // 2) Validar permisos (el usuario debe ser staff activo)
+            bool esStaff = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuarioLogger && x.activo == true);
+
+            if (!esStaff) throw new UnauthorizedAccessException("No tiene permisos para agregar staff.");
+
+            // CASO A: Asignar Personal de Cuenta (id_staff)
+            if (req.IdStaff.HasValue)
+            {
+                var staffPool = await _context.Set<ef_staff>().AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.id_staff == req.IdStaff && (x.id_cuenta == ev.id_cuenta || x.id_evento == idEvento));
+
+                if (staffPool == null) throw new KeyNotFoundException("El staff indicado no pertenece a la cuenta o al evento.");
+
+                var existingStaff = await _context.Set<ef_evento_usuarios>()
+                    .FirstOrDefaultAsync(x => x.id_evento == idEvento && x.id_staff == req.IdStaff);
+
+                if (existingStaff != null)
+                {
+                    if (existingStaff.activo) throw new ArgumentException("Este miembro del staff ya está asignado al evento.");
+                    existingStaff.activo = true;
+                    existingStaff.id_rol = req.IdRol;
+                }
+                else
+                {
+                    existingStaff = new ef_evento_usuarios
+                    {
+                        id_evento = idEvento,
+                        id_staff = req.IdStaff,
+                        id_rol = req.IdRol,
+                        activo = true,
+                        fecha_alta = DateTimeOffset.UtcNow
+                    };
+                    _context.Set<ef_evento_usuarios>().Add(existingStaff);
+                }
+
+                await _context.SaveChangesAsync();
+                var rolStaff = await _context.Set<ef_roles>().AsNoTracking().FirstAsync(x => x.id_rol == req.IdRol);
+
+                return new EventoStaffDTO
+                {
+                    IdEventoUsuario = existingStaff.id_evento_usuario,
+                    IdEvento = idEvento,
+                    IdStaff = staffPool.id_staff,
+                    Nombre = staffPool.nombre,
+                    Apellido = staffPool.apellido,
+                    Email = staffPool.email ?? "",
+                    IdRol = existingStaff.id_rol,
+                    CodigoRol = rolStaff.codigo,
+                    Activo = existingStaff.activo,
+                    FechaAlta = existingStaff.fecha_alta,
+                    EsInvitacion = false,
+                    CodigoAcceso = staffPool.codigo
+                };
+            }
+
+            // CASO B: Invitar por Email (B2B o B2C invitando externos a registrarse)
+            if (string.IsNullOrWhiteSpace(req.Email)) throw new ArgumentException("Debe proporcionar un Email o un IdStaff.");
+
+            var userToAdd = await _context.Set<ef_usuarios>()
+                .SingleOrDefaultAsync(x => x.email == req.Email.Trim().ToLower());
+
+            if (userToAdd == null)
+            {
+                var invitacionExistente = await _context.Set<ef_invitados>()
+                    .FirstOrDefaultAsync(x => x.id_evento == idEvento && x.email == req.Email.Trim().ToLower() && x.es_staff == true);
+
+                if (invitacionExistente != null)
+                    throw new ArgumentException("Ya existe una invitacion pendiente para este email en este evento.");
+
+                var invitacion = new ef_invitados
+                {
+                    id_evento = idEvento,
+                    nombre = string.IsNullOrWhiteSpace(req.Nombre) ? "Staff" : req.Nombre.Trim(),
+                    apellido = string.IsNullOrWhiteSpace(req.Apellido) ? "Invitado" : req.Apellido.Trim(),
+                    email = req.Email.Trim().ToLower(),
+                    es_staff = true,
+                    id_rol_staff = req.IdRol,
+                    rsvp_token = Guid.NewGuid().ToString().Replace("-", ""),
+                    rsvp_estado = "P",
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                };
+
+                _context.Set<ef_invitados>().Add(invitacion);
+                await _context.SaveChangesAsync();
+
+                return new
+                {
+                    Message = "Invitación de staff creada exitosamente.",
+                    Email = invitacion.email,
+                    Token = invitacion.rsvp_token,
+                    EsInvitacion = true
+                };
+            }
+
+            var existing = await _context.Set<ef_evento_usuarios>()
+                .FirstOrDefaultAsync(x => x.id_evento == idEvento && x.id_usuario == userToAdd.id_usuario);
+
+            if (existing != null)
+            {
+                if (existing.activo) throw new ArgumentException("El usuario ya es parte del staff de este evento.");
+                existing.id_rol = req.IdRol;
+                existing.activo = true;
+                existing.fecha_modif = DateTimeOffset.UtcNow;
+            }
+            else
+            {
+                existing = new ef_evento_usuarios
+                {
+                    id_evento = idEvento,
+                    id_usuario = userToAdd.id_usuario,
+                    id_rol = req.IdRol,
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                };
+                _context.Set<ef_evento_usuarios>().Add(existing);
+            }
+
+            await _context.SaveChangesAsync();
+            var rol = await _context.Set<ef_roles>().AsNoTracking().FirstAsync(x => x.id_rol == req.IdRol);
+
+            return new EventoStaffDTO
+            {
+                IdEventoUsuario = existing.id_evento_usuario,
+                IdEvento = idEvento,
+                IdUsuario = userToAdd.id_usuario,
+                Nombre = userToAdd.nombre,
+                Apellido = userToAdd.apellido,
+                Email = userToAdd.email,
+                IdRol = existing.id_rol,
+                CodigoRol = rol.codigo,
+                Activo = existing.activo,
+                FechaAlta = existing.fecha_alta,
+                EsInvitacion = false
+            };
+        }
+
+        public async Task<bool> UpdateStaffAsync(long idEvento, long idEventoUsuario, UpdateEventoStaffRequest req, long idUsuarioLogger)
+        {
+            var staffRel = await _context.Set<ef_evento_usuarios>()
+                .SingleOrDefaultAsync(x => x.id_evento_usuario == idEventoUsuario && x.id_evento == idEvento);
+
+            if (staffRel == null) throw new KeyNotFoundException("Registro de staff inexistente.");
+
+            bool esAdmin = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuarioLogger && x.activo == true);
+
+            if (!esAdmin) throw new UnauthorizedAccessException("No tiene permisos para modificar staff.");
+
+            staffRel.id_rol = req.IdRol;
+            staffRel.activo = req.Activo;
+            staffRel.fecha_modif = DateTimeOffset.UtcNow;
+
+            // Si es personal de cuenta o evento (ef_staff), verificamos si es exclusivo del evento (B2C) para actualizar datos.
+            if (staffRel.id_staff.HasValue)
+            {
+                var staffEntity = await _context.Set<ef_staff>().SingleOrDefaultAsync(x => x.id_staff == staffRel.id_staff);
+                if (staffEntity != null && staffEntity.id_cuenta == null && staffEntity.id_evento == idEvento)
+                {
+                    // Es B2C, permitimos editar su nombre y email también.
+                    if (!string.IsNullOrWhiteSpace(req.Nombre)) staffEntity.nombre = req.Nombre.Trim();
+                    if (!string.IsNullOrWhiteSpace(req.Apellido)) staffEntity.apellido = req.Apellido.Trim();
+                    if (!string.IsNullOrWhiteSpace(req.Email)) staffEntity.email = req.Email.Trim();
+                    staffEntity.id_rol = req.IdRol; // Mantenemos el rol base sincronizado
+                    staffEntity.activo = req.Activo; // Si se inactiva del evento, se inactiva el código
+                    staffEntity.fecha_modif = DateTimeOffset.UtcNow;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteStaffAsync(long idEvento, long idEventoUsuario, long idUsuarioLogger)
+        {
+            var staffRel = await _context.Set<ef_evento_usuarios>()
+                .SingleOrDefaultAsync(x => x.id_evento_usuario == idEventoUsuario && x.id_evento == idEvento);
+
+            if (staffRel == null) throw new KeyNotFoundException("Registro de staff inexistente.");
+
+            bool esAdmin = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuarioLogger && x.activo == true);
+
+            if (!esAdmin) throw new UnauthorizedAccessException("No tiene permisos para eliminar staff.");
+
+            staffRel.activo = false;
+            staffRel.fecha_modif = DateTimeOffset.UtcNow;
+            
+            if (staffRel.id_staff.HasValue)
+            {
+                var staffEntity = await _context.Set<ef_staff>().SingleOrDefaultAsync(x => x.id_staff == staffRel.id_staff);
+                if (staffEntity != null && staffEntity.id_cuenta == null && staffEntity.id_evento == idEvento)
+                {
+                    // Es exclusivo de B2C, matamos el código
+                    staffEntity.activo = false;
+                    staffEntity.fecha_modif = DateTimeOffset.UtcNow;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<object> AceptarInvitacionStaffAsync(string token, long idUsuarioActual)
+        {
+            var invite = await _context.Set<ef_invitados>()
+                .FirstOrDefaultAsync(x => x.rsvp_token == token && x.es_staff == true && x.rsvp_estado == "P" && x.activo == true);
+
+            if (invite == null) throw new KeyNotFoundException("Invitacin invlida o ya procesada.");
+
+            var user = await _context.Set<ef_usuarios>().AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_usuario == idUsuarioActual);
+
+            if (user == null) throw new UnauthorizedAccessException("Usuario no encontrado.");
+
+            // 1) Vincular al evento
+            var rel = await _context.Set<ef_evento_usuarios>()
+                .FirstOrDefaultAsync(x => x.id_evento == invite.id_evento && x.id_usuario == idUsuarioActual);
+
+            if (rel == null)
+            {
+                rel = new ef_evento_usuarios
+                {
+                    id_evento = invite.id_evento,
+                    id_usuario = idUsuarioActual,
+                    id_rol = invite.id_rol_staff ?? (short)0,
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                };
+                _context.Set<ef_evento_usuarios>().Add(rel);
+            }
+            else
+            {
+                rel.activo = true;
+                rel.id_rol = invite.id_rol_staff ?? rel.id_rol;
+                rel.fecha_modif = DateTimeOffset.UtcNow;
+            }
+
+            // 2) Marcar invitacin como aceptada
+            invite.rsvp_estado = "Y";
+            invite.fecha_rsvp = DateTimeOffset.UtcNow;
+            invite.activo = false; // La "sacamos" de la tabla de invitados para staff
+
+            await _context.SaveChangesAsync();
+
+            return new { ok = true, id_evento = invite.id_evento };
+        }
     }
-}
+}
