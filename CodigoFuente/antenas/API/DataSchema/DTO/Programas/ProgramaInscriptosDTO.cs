@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace API.DataSchema.DTO.Programas
 {
@@ -119,5 +121,56 @@ namespace API.DataSchema.DTO.Programas
         public string? Relacion { get; set; }
         public string? Observaciones { get; set; }
         public string? QrToken { get; set; }
+    }
+
+    public class ProgramaInscriptosResumenDTO
+    {
+        [JsonPropertyName("id_evento")]
+        [JsonProperty("id_evento")]
+        public long IdEvento { get; set; }
+
+        [JsonPropertyName("programa")]
+        [JsonProperty("programa")]
+        public string Programa { get; set; } = "";
+
+        [JsonPropertyName("modulo")]
+        [JsonProperty("modulo")]
+        public string Modulo { get; set; } = "Inscriptos";
+
+        [JsonPropertyName("total_familias")]
+        [JsonProperty("total_familias")]
+        public int TotalFamilias { get; set; }
+
+        [JsonPropertyName("total_participantes")]
+        [JsonProperty("total_participantes")]
+        public int TotalParticipantes { get; set; }
+
+        [JsonPropertyName("total_deuda")]
+        [JsonProperty("total_deuda")]
+        public decimal TotalDeuda { get; set; }
+
+        [JsonPropertyName("moneda")]
+        [JsonProperty("moneda")]
+        public string Moneda { get; set; } = "";
+
+        [JsonPropertyName("pendientes")]
+        [JsonProperty("pendientes")]
+        public int Pendientes { get; set; }
+
+        [JsonPropertyName("parciales")]
+        [JsonProperty("parciales")]
+        public int Parciales { get; set; }
+
+        [JsonPropertyName("pagados")]
+        [JsonProperty("pagados")]
+        public int Pagados { get; set; }
+
+        [JsonPropertyName("sin_cargo")]
+        [JsonProperty("sin_cargo")]
+        public int SinCargo { get; set; }
+
+        [JsonPropertyName("con_alertas")]
+        [JsonProperty("con_alertas")]
+        public int ConAlertas { get; set; }
     }
 }
