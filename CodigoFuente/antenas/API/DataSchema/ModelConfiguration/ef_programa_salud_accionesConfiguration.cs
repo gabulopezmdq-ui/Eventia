@@ -15,6 +15,10 @@ namespace API.DataSchema.ModelConfiguration
                    .ValueGeneratedOnAdd();
 
             builder.Property(x => x.id_evento).IsRequired();
+
+            builder.Property(x => x.id_participante)
+                    .IsRequired();
+
             builder.Property(x => x.id_inscripcion).IsRequired();
 
             builder.Property(x => x.fecha_hora)
@@ -75,6 +79,12 @@ namespace API.DataSchema.ModelConfiguration
                    .WithMany()
                    .HasForeignKey(x => x.usuario_registro)
                    .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(x => x.participante)
+                    .WithMany()
+                    .HasForeignKey(x => x.id_participante)
+                    .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }
