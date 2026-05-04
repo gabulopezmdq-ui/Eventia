@@ -7,7 +7,7 @@ import {
     ChevronLeft, Calendar, MapPin, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
-    Link as LinkIcon
+    Link as LinkIcon, DollarSign
 } from 'lucide-react';
 
 import {
@@ -223,6 +223,63 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </div>
                     </div>
 
+                    {/* ── Accesos Rápidos (Módulos de Gestión) ── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {/* Quick Link Card - Gestión de Invitados */}
+                        <div className="p-5 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-4">
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Gestión de Invitados</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Administrá la lista de invitados, controlá RSVPs y generá invitaciones 1-a-1.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/invitados`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 transition-all"
+                            >
+                                <Users className="w-3.5 h-3.5" />
+                                Ver Invitados
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Audiencias */}
+                        <div className="p-5 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center mb-4">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Captación y Audiencias</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Gestioná campañas públicas, inscripciones masivas y control de beneficios.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/audiencias`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 hover:bg-purple-400 transition-all"
+                            >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Ver Audiencias
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Gestión Inscripciones / Pagos */}
+                        <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
+                                <DollarSign className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Inscripciones y Pagos</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Controlá saldos, registrá pagos parciales y aplicá ajustes manuales.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/pagos`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                            >
+                                <DollarSign className="w-3.5 h-3.5" />
+                                Ver Pagos
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Basic Info & Messages */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <section className="p-6 rounded-2xl bg-card-bg border border-card-border space-y-6">
@@ -286,46 +343,6 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 <span className="font-mono text-[10px] text-foreground underline decoration-indigo-500/30">EVT-{event.id_evento}</span>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Quick Link Card */}
-                    <div className="p-6 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 space-y-4">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
-                            <Users className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-foreground text-sm">Gestión de Invitados</h4>
-                            <p className="text-muted text-xs mt-1 leading-relaxed">
-                                Administrá la lista de invitados, supervisá sus estados y generá invitaciones personalizadas (1-a-1).
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/invitados`)}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 transition-all"
-                        >
-                            <Users className="w-3.5 h-3.5" />
-                            Ver Invitados
-                        </button>
-                    </div>
-
-                    {/* Quick Link Card - Audiencias */}
-                    <div className="p-6 rounded-2xl bg-purple-600/10 border border-purple-500/20 space-y-4">
-                        <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center">
-                            <Sparkles className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-foreground text-sm">Captación y Audiencias</h4>
-                            <p className="text-muted text-xs mt-1 leading-relaxed">
-                                Gestioná campañas públicas, inscripciones masivas, control de acceso y entrega de beneficios.
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/audiencias`)}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 hover:bg-purple-400 transition-all"
-                        >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Ver Audiencias
-                        </button>
                     </div>
 
                     {/* Secondary Actions */}
