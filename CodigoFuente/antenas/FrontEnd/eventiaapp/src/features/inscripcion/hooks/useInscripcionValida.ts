@@ -5,11 +5,13 @@ import type { InscripcionState, Participante, ValidationResult } from '../types/
  * Valida el estado completo de la inscripción.
  * El botón "Confirmar inscripción" solo se activa cuando valida === true.
  *
- * Reglas:
+ * Reglas (V2):
  *  - Responsable: nombre, apellido, email, telefono y relacion obligatorios
  *  - Al menos 1 participante
  *  - Cada participante: al menos 1 semana seleccionada
- *  - Cada participante: grupo sanguíneo requerido
+ *  - Cada participante (salud): autoriza_emergencia_medica === true y al menos 1 contacto_emergencia
+ *  - Cada participante (retiro): al menos 1 autorizado_retiro
+ *  - Firma: nombre_completo no vacío
  */
 export function useInscripcionValida(state: InscripcionState): ValidationResult {
     return useMemo(() => {
@@ -29,13 +31,32 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
         } else {
             state.participantes.forEach((p, i) => {
                 const label = p.nombre ? `${p.nombre} ${p.apellido}` : `Participante ${i + 1}`;
+
+                // Semanas
                 if (p.periodos.length === 0) {
                     errores.push(`${label}: seleccioná al menos una semana`);
                 }
-                if (!p.salud?.grupo_sanguineo?.trim()) {
-                    errores.push(`${label}: ingresá el grupo sanguíneo (tab Salud)`);
+
+                // Salud — autorización emergencia médica
+                if (!p.salud?.autoriza_emergencia_medica) {
+                    errores.push(`${label}: debe autorizar la atención de emergencias médicas (tab Salud)`);
+                }
+
+                // Salud — al menos 1 contacto de emergencia
+                if (!p.salud?.contactos_emergencia || p.salud.contactos_emergencia.length === 0) {
+                    errores.push(`${label}: agregá al menos un contacto de emergencia (tab Salud)`);
+                }
+
+                // Retiro — al menos 1 autorizado
+                if (p.autorizados_retiro.length === 0) {
+                    errores.push(`${label}: agregá al menos un autorizado de retiro (tab Retiro)`);
                 }
             });
+        }
+
+        // ── Firma ────────────────────────────────────────────────
+        if (!state.firma?.nombre_completo?.trim()) {
+            errores.push('Falta la firma del responsable');
         }
 
         return { valida: errores.length === 0, errores };
@@ -74,12 +95,15 @@ export interface ParticipanteBadges {
  * - 'empty' → sección opcional sin datos (no bloquea)
  */
 export function getParticipanteBadges(p: Participante): ParticipanteBadges {
+    const saludCompleta =
+        p.salud?.autoriza_emergencia_medica === true &&
+        (p.salud?.contactos_emergencia?.length ?? 0) > 0;
+
     return {
         semanas:      p.periodos.length > 0 ? 'ok' : 'warn',
         servicios:    p.servicios.length > 0 ? 'ok' : 'empty',
-        alimentacion: p.restricciones.length > 0 ? 'ok' : 'empty',
-        salud:        p.salud?.grupo_sanguineo?.trim() ? 'ok' : 'warn',
-        retiro:       p.autorizados_retiro.length > 0 ? 'ok' : 'empty',
+        alimentacion: p.restricciones_alimentarias.length > 0 ? 'ok' : 'empty',
+        salud:        saludCompleta ? 'ok' : 'warn',
+        retiro:       p.autorizados_retiro.length > 0 ? 'ok' : 'warn',
     };
 }
-

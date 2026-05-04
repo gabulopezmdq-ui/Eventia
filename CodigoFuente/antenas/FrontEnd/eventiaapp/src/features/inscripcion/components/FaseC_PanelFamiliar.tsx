@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useInscripcion } from '../hooks/useInscripcion';
 import { ParticipanteCard } from './ui/ParticipanteCard';
 import { BarraTotal } from './ui/BarraTotal';
+import { createFichaSaludVacia } from '../types/inscripcion.types';
 import { CheckCircle2, Edit2, Users, Plus, X } from 'lucide-react';
 
 export function FaseC_PanelFamiliar() {
@@ -50,9 +51,9 @@ export function FaseC_PanelFamiliar() {
             observaciones: nuevoParticipante.observaciones,
             periodos: [],
             servicios: [],
-            restricciones: [],
-            salud: {},
-            autorizados_retiro: []
+            restricciones_alimentarias: [],
+            salud: createFichaSaludVacia(),
+            autorizados_retiro: [],
         });
         handleCancelarNuevo();
     };
@@ -88,7 +89,11 @@ export function FaseC_PanelFamiliar() {
 
             <div className="space-y-6">
                 {participantes.map(p => (
-                    <ParticipanteCard key={p._clientId} participante={p} />
+                    <ParticipanteCard
+                        key={p._clientId}
+                        participante={p}
+                        restriccionesConfig={state.programaData?.restricciones_alimentarias_config ?? []}
+                    />
                 ))}
             </div>
 

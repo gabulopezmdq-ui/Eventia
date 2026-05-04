@@ -6,24 +6,38 @@ interface Props {
     participante: Participante;
 }
 
+const FIELD_CLASS = 'w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none';
+const LABEL_CLASS = 'text-xs font-medium text-gray-700 dark:text-gray-300';
+
 export function TabRetiro({ participante }: Props) {
     const { actualizarParticipante } = useInscripcion();
 
-    const handleChangeAutorizado = (index: number, campo: keyof AutorizadoRetiro, valor: string) => {
-        const nuevos = [...participante.autorizados_retiro];
+    const autorizados = participante.autorizados_retiro;
+
+    const handleChange = (
+        index: number,
+        campo: keyof AutorizadoRetiro,
+        valor: string
+    ) => {
+        const nuevos = [...autorizados];
         nuevos[index] = { ...nuevos[index], [campo]: valor };
         actualizarParticipante(participante._clientId, { autorizados_retiro: nuevos });
     };
 
-    const handleEliminarAutorizado = (index: number) => {
-        const nuevos = participante.autorizados_retiro.filter((_, i) => i !== index);
+    const handleEliminar = (index: number) => {
+        const nuevos = autorizados.filter((_, i) => i !== index);
         actualizarParticipante(participante._clientId, { autorizados_retiro: nuevos });
     };
 
-    const handleAgregarAutorizado = () => {
-        const nuevo: AutorizadoRetiro = { nombre: '', apellido: '', documento: '', relacion: '', telefono: '' };
-        actualizarParticipante(participante._clientId, { 
-            autorizados_retiro: [...participante.autorizados_retiro, nuevo] 
+    const handleAgregar = () => {
+        const nuevo: AutorizadoRetiro = {
+            nombre_autorizado: '',
+            telefono_autorizado: '',
+            relacion: '',
+            observaciones: '',
+        };
+        actualizarParticipante(participante._clientId, {
+            autorizados_retiro: [...autorizados, nuevo],
         });
     };
 
@@ -32,16 +46,21 @@ export function TabRetiro({ participante }: Props) {
             <div>
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-accent" />
-                    Autorizados de Retiro
+                    Autorizados de Retiro *
                 </h4>
-                <p className="text-sm text-gray-500">¿Quiénes están autorizados a retirar al niño/a al finalizar la jornada?</p>
+                <p className="text-sm text-gray-500">
+                    ¿Quiénes están autorizados a retirar al niño/a al finalizar la jornada?
+                    <br />
+                    <span className="text-red-500 font-medium">Requerido al menos 1.</span>
+                </p>
             </div>
 
-            {participante.autorizados_retiro.length === 0 ? (
-                <div className="p-6 text-center border-2 border-dashed border-gray-200 dark:border-card-border rounded-xl">
+            {autorizados.length === 0 ? (
+                <div className="p-6 text-center border-2 border-dashed border-red-200 dark:border-red-800 rounded-xl">
                     <p className="text-gray-500 text-sm mb-4">No hay personas autorizadas cargadas.</p>
-                    <button 
-                        onClick={handleAgregarAutorizado}
+                    <button
+                        type="button"
+                        onClick={handleAgregar}
                         className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80"
                     >
                         <Plus className="w-4 h-4" /> Agregar autorizado
@@ -49,66 +68,67 @@ export function TabRetiro({ participante }: Props) {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {participante.autorizados_retiro.map((aut, index) => (
-                        <div key={index} className="p-4 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-card-border relative">
-                            <button 
-                                onClick={() => handleEliminarAutorizado(index)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                    {autorizados.map((aut, index) => (
+                        <div
+                            key={index}
+                            className="p-4 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-card-border relative"
+                        >
+                            <button
+                                type="button"
+                                onClick={() => handleEliminar(index)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
-                            
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pr-8">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
-                                    <input 
+                                    <label className={LABEL_CLASS}>Nombre completo *</label>
+                                    <input
                                         type="text"
-                                        value={aut.nombre}
-                                        onChange={e => handleChangeAutorizado(index, 'nombre', e.target.value)}
-                                        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
+                                        value={aut.nombre_autorizado}
+                                        onChange={e => handleChange(index, 'nombre_autorizado', e.target.value)}
+                                        className={FIELD_CLASS}
+                                        placeholder="Nombre y apellido"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Apellido *</label>
-                                    <input 
-                                        type="text"
-                                        value={aut.apellido}
-                                        onChange={e => handleChangeAutorizado(index, 'apellido', e.target.value)}
-                                        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
+                                    <label className={LABEL_CLASS}>Teléfono *</label>
+                                    <input
+                                        type="tel"
+                                        value={aut.telefono_autorizado}
+                                        onChange={e => handleChange(index, 'telefono_autorizado', e.target.value)}
+                                        className={FIELD_CLASS}
+                                        placeholder="+54 9 11..."
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Documento / Pasaporte *</label>
-                                    <input 
-                                        type="text"
-                                        value={aut.documento}
-                                        onChange={e => handleChangeAutorizado(index, 'documento', e.target.value)}
-                                        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Relación (Tío, Abuela, etc.)</label>
-                                    <input 
+                                    <label className={LABEL_CLASS}>Relación (Tío, Abuela, etc.)</label>
+                                    <input
                                         type="text"
                                         value={aut.relacion}
-                                        onChange={e => handleChangeAutorizado(index, 'relacion', e.target.value)}
-                                        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
+                                        onChange={e => handleChange(index, 'relacion', e.target.value)}
+                                        className={FIELD_CLASS}
+                                        placeholder="Parentesco o vínculo"
                                     />
                                 </div>
-                                <div className="space-y-1.5 sm:col-span-2">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Teléfono (opcional)</label>
-                                    <input 
-                                        type="tel"
-                                        value={aut.telefono}
-                                        onChange={e => handleChangeAutorizado(index, 'telefono', e.target.value)}
-                                        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
+                                <div className="space-y-1.5">
+                                    <label className={LABEL_CLASS}>Observaciones</label>
+                                    <input
+                                        type="text"
+                                        value={aut.observaciones}
+                                        onChange={e => handleChange(index, 'observaciones', e.target.value)}
+                                        className={FIELD_CLASS}
+                                        placeholder="Contraseña de retiro, etc."
                                     />
                                 </div>
                             </div>
                         </div>
                     ))}
-                    <button 
-                        onClick={handleAgregarAutorizado}
+
+                    <button
+                        type="button"
+                        onClick={handleAgregar}
                         className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80"
                     >
                         <Plus className="w-4 h-4" /> Agregar otro autorizado

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Participante } from '../../types/inscripcion.types';
+import type { Participante, RestriccionAlimentariaConfig } from '../../types/inscripcion.types';
 import { useInscripcion } from '../../hooks/useInscripcion';
 import { TabSemanas } from './TabSemanas';
 import { TabServicios } from './TabServicios';
@@ -11,9 +11,10 @@ import { getParticipanteBadges } from '../../hooks/useInscripcionValida';
 
 interface Props {
     participante: Participante;
+    restriccionesConfig: RestriccionAlimentariaConfig[];
 }
 
-export function ParticipanteCard({ participante }: Props) {
+export function ParticipanteCard({ participante, restriccionesConfig }: Props) {
     const { quitarParticipante } = useInscripcion();
     const [tabActiva, setTabActiva] = useState<'semanas' | 'servicios' | 'alimentacion' | 'salud' | 'retiro'>('semanas');
 
@@ -81,7 +82,12 @@ export function ParticipanteCard({ participante }: Props) {
             <div className="p-6">
                 {tabActiva === 'semanas' && <TabSemanas participante={participante} />}
                 {tabActiva === 'servicios' && <TabServicios participante={participante} />}
-                {tabActiva === 'alimentacion' && <TabAlimentacion participante={participante} />}
+                {tabActiva === 'alimentacion' && (
+                    <TabAlimentacion
+                        participante={participante}
+                        restriccionesConfig={restriccionesConfig}
+                    />
+                )}
                 {tabActiva === 'salud' && <TabSalud participante={participante} />}
                 {tabActiva === 'retiro' && <TabRetiro participante={participante} />}
             </div>

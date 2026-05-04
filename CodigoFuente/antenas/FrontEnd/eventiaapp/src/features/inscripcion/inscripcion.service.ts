@@ -1,6 +1,7 @@
 import type {
     ProgramaInscripcionData,
     InscripcionPayload,
+    ConfirmacionResponse,
 } from './types/inscripcion.types';
 
 const API = '/api/inscripcion';
@@ -33,11 +34,11 @@ export async function getProgramaInscripcion(
  * Envía el payload completo al backend para confirmar la inscripción.
  * Se llama UNA SOLA VEZ al final del flujo (Fase D).
  *
- * @returns token_confirmacion y mensaje de confirmación
+ * @returns ConfirmacionResponse con mensaje y QRs de retiro por autorizado
  */
 export async function confirmarInscripcion(
     payload: InscripcionPayload
-): Promise<{ token_confirmacion: string; mensaje: string }> {
+): Promise<ConfirmacionResponse> {
     const res = await fetch('/api/inscripcion-confirmar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

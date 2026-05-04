@@ -7,9 +7,14 @@ import { ArrowLeft, CheckCircle2, DollarSign, FileText, Loader2, Mail, Phone, Us
 export function FaseD_ResumenFirma() {
     const { state, irAFase, guardarFirma, buildPayload, setLoading, setError, setConfirmado } = useInscripcion();
     const { subtotal, descuento, total, moneda } = useTotalEstimado(state.participantes, state.programaData);
+    const autorizacionesConfig = state.programaData?.autorizaciones_configuradas ?? [];
 
     const [nombreFirma, setNombreFirma] = useState(state.firma.nombre_completo || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    // Estado local de checkboxes de autorizaciones
+    const [autorizaciones, setAutorizaciones] = useState<Record<number, boolean>>(
+        () => Object.fromEntries(autorizacionesConfig.map(a => [a.id, false]))
+    );
 
     const handleConfirmar = async () => {
         if (!nombreFirma.trim()) {
@@ -17,28 +22,33 @@ export function FaseD_ResumenFirma() {
             return;
         }
 
-        const fechaActual = new Date().toISOString().split('T')[0];
+        // Verificar autorizaciones obligatorias
+        const faltaObligatoria = autorizacionesConfig.some(
+            a => a.obligatoria && !autorizaciones[a.id]
+        );
+        if (faltaObligatoria) {
+            alert('Debés aceptar todas las autorizaciones obligatorias para continuar.');
+            return;
+        }
 
-        guardarFirma({
+        const fechaActual = new Date().toISOString().split('T')[0];
+        const firmaDefinitiva = {
             nombre_completo: nombreFirma,
             fecha: fechaActual,
-            autorizaciones: []
-        });
+            autorizaciones: autorizacionesConfig.map(a => ({
+                id_autorizacion: a.id,
+                acepta: autorizaciones[a.id] ?? false,
+            })),
+        };
+
+        guardarFirma(firmaDefinitiva);
 
         try {
             setIsSubmitting(true);
             setLoading(true);
-
-            const firmaDefinitiva = {
-                nombre_completo: nombreFirma,
-                fecha: fechaActual,
-                autorizaciones: []
-            };
-
-            const payload = buildPayload(firmaDefinitiva); 
-
+            const payload = buildPayload(firmaDefinitiva);
             const response = await confirmarInscripcion(payload);
-            setConfirmado(response.token_confirmacion);
+            setConfirmado(response);
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Error desconocido al confirmar';
             setError(msg);
@@ -126,6 +136,33 @@ export function FaseD_ResumenFirma() {
                         </div>
                     </div>
                 </div>
+
+                {/* Autorizaciones del programa */}
+                {autorizacionesConfig.length > 0 && (
+                    <div className="bg-white dark:bg-card-bg p-6 rounded-xl border border-gray-200 dark:border-card-border shadow-sm">
+                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
+                            Autorizaciones
+                        </h3>
+                        <div className="space-y-3">
+                            {autorizacionesConfig.map(a => (
+                                <label key={a.id} className="flex items-start gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={autorizaciones[a.id] ?? false}
+                                        onChange={e => setAutorizaciones(prev => ({ ...prev, [a.id]: e.target.checked }))}
+                                        className="w-4 h-4 mt-0.5 accent-accent"
+                                    />
+                                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                                        {a.descripcion}
+                                        {a.obligatoria && (
+                                            <span className="text-red-500 ml-1 font-medium">*</span>
+                                        )}
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Firma */}
                 <div className="bg-white dark:bg-card-bg p-8 rounded-xl border border-gray-200 dark:border-card-border shadow-lg">

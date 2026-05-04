@@ -15,6 +15,7 @@ import type {
     Participante,
     FirmaResponsable,
     ProgramaInscripcionData,
+    ConfirmacionResponse,
 } from '../types/inscripcion.types';
 
 // ─────────────────────────────────────────────────────────────
@@ -73,7 +74,7 @@ const initialState: InscripcionState = {
     firma: {},
     isLoading: false,
     error: null,
-    tokenConfirmacion: null,
+    resultadoConfirmacion: null,
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -90,7 +91,7 @@ type Action =
     | { type: 'UPDATE_PARTICIPANTE'; payload: { clientId: string; data: Partial<Participante> } }
     | { type: 'REMOVE_PARTICIPANTE'; payload: string }
     | { type: 'SET_FIRMA'; payload: Partial<FirmaResponsable> }
-    | { type: 'SET_CONFIRMADO'; payload: string }
+    | { type: 'SET_CONFIRMADO'; payload: ConfirmacionResponse }
     | { type: 'SET_LOADING'; payload: boolean }
     | { type: 'SET_ERROR'; payload: string | null }
     | { type: 'RESTORE_DRAFT'; payload: InscripcionState };
@@ -152,7 +153,7 @@ function inscripcionReducer(state: InscripcionState, action: Action): Inscripcio
         case 'SET_CONFIRMADO':
             return {
                 ...state,
-                tokenConfirmacion: action.payload,
+                resultadoConfirmacion: action.payload,
                 fase: 'success',
                 isLoading: false,
                 error: null,
