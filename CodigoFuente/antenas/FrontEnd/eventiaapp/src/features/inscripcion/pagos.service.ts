@@ -144,8 +144,8 @@ export async function anularPago(
         `/api/programas/inscripciones/pagos/${idPago}/anular`,
         {
             method: 'PUT',
-            headers: { 'Content-Type': 'text/plain' },
-            body: motivo,   // String plano, NO JSON.stringify
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(motivo),
         }
     );
     if (!res.ok) throw new Error('Error al anular el pago');

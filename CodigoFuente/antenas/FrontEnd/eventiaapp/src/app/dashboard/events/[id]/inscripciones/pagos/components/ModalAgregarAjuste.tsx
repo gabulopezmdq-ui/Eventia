@@ -32,7 +32,7 @@ export default function ModalAgregarAjuste({ idInscripcion, onClose, onSuccess }
             const data = await getTiposAjuste();
             setTiposAjuste(data);
             if (data.length > 0) {
-                setIdTipoAjuste(data[0].idTipoAjuste);
+                setIdTipoAjuste(data[0].id);
             }
         } catch (err) {
             setError('Error al cargar los motivos de ajuste');
@@ -126,13 +126,13 @@ export default function ModalAgregarAjuste({ idInscripcion, onClose, onSuccess }
                         ) : (
                             <select
                                 required
-                                value={idTipoAjuste}
-                                onChange={(e) => setIdTipoAjuste(Number(e.target.value))}
+                                value={idTipoAjuste === '' ? '' : String(idTipoAjuste)}
+                                onChange={(e) => setIdTipoAjuste(e.target.value ? Number(e.target.value) : '')}
                                 className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-sm outline-none text-foreground appearance-none"
                             >
                                 <option value="" disabled>Seleccione un motivo...</option>
-                                {tiposAjuste.map((t) => (
-                                    <option key={t.idTipoAjuste} value={t.idTipoAjuste}>{t.texto}</option>
+                                {tiposAjuste.map((t, index) => (
+                                    <option key={`${t.id}-${index}`} value={t.id}>{t.texto}</option>
                                 ))}
                             </select>
                         )}
