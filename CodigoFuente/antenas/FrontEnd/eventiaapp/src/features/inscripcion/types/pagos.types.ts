@@ -143,7 +143,7 @@ export interface DetalleParticipante {
  * Endpoint: GET /programas/tipos-ajuste?idIdioma=X
  */
 export interface TipoAjusteParam {
-    idTipoAjuste: number;
+    id: number;
     codigo: string;
     texto: string;  // Traducido según idIdioma
 }
