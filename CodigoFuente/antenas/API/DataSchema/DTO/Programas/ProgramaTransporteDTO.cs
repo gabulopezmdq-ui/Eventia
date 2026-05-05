@@ -6,6 +6,7 @@ namespace API.DataSchema.DTO.Programas
     public class ProgramaTransporteDiaDTO
     {
         public long IdEvento { get; set; }
+        public string Programa { get; set; } = "";
         public DateOnly Fecha { get; set; }
 
         public ProgramaTransporteResumenDTO Resumen { get; set; } = new();
@@ -31,6 +32,7 @@ namespace API.DataSchema.DTO.Programas
         public string? TelefonoResponsable { get; set; }
 
         public string Servicio { get; set; } = "";
+        public string ServicioCodigo { get; set; } = "";
 
         public string? Direccion { get; set; }
 
@@ -39,5 +41,6 @@ namespace API.DataSchema.DTO.Programas
         public bool TieneAlertaSalud { get; set; }
 
         public string? ObservacionesSalud { get; set; }
+        
     }
 }
