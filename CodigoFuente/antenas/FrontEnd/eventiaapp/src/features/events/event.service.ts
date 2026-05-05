@@ -226,8 +226,12 @@ export async function activateEvent(id: string): Promise<void> {
     }
 }
 
-export async function getTiposEvento(idIdioma: number = 2): Promise<TipoEvento[]> {
-    const res = await fetch(`${API_URL}/tipos-evento?idIdioma=${idIdioma}`, {
+export async function getTiposEvento(idIdioma: number = 2, tipoOperacion?: 'EVENTO' | 'PROGRAMA'): Promise<TipoEvento[]> {
+    let url = `${API_URL}/tipos-evento?idIdioma=${idIdioma}`;
+    if (tipoOperacion) {
+        url += `&tipoOperacion=${tipoOperacion}`;
+    }
+    const res = await fetch(url, {
         method: 'GET',
     });
 

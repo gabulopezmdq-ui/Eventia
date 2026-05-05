@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function ParticipanteCard({ participante, restriccionesConfig }: Props) {
-    const { quitarParticipante } = useInscripcion();
+    const { state, quitarParticipante } = useInscripcion();
     const [tabActiva, setTabActiva] = useState<'semanas' | 'servicios' | 'alimentacion' | 'salud' | 'retiro'>('semanas');
 
     const handleEliminar = () => {
@@ -24,7 +24,7 @@ export function ParticipanteCard({ participante, restriccionesConfig }: Props) {
         }
     };
 
-    const badges = getParticipanteBadges(participante);
+    const badges = getParticipanteBadges(participante, state.programaData);
 
     const tabs = [
         { id: 'semanas', label: 'Semanas', icon: Calendar },
