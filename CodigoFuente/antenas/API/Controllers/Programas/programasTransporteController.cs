@@ -24,9 +24,22 @@ namespace API.Controllers.Programas
         [HttpGet("{idEvento:long}/transporte/dia")]
         public async Task<ActionResult<ProgramaTransporteDiaDTO>> GetTransporteDia(
             long idEvento,
-            [FromQuery] DateOnly fecha)
+            [FromQuery] DateOnly fecha,
+            [FromQuery] string? servicioCodigo = null)
         {
-            var servicioCodigo = "TRANSPORTE";
+            var evento = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (evento == null)
+                return NotFound("Programa inexistente.");
+
+            if (evento.tipo_operacion != "PROGRAMA")
+                return BadRequest("El evento indicado no es de tipo PROGRAMA.");
+
+            servicioCodigo = string.IsNullOrWhiteSpace(servicioCodigo)
+                ? "TODOS"
+                : servicioCodigo.Trim().ToUpper();
 
             var baseItems = await (
                 from sd in _context.Set<ef_programa_inscripcion_servicio_dias>().AsNoTracking()
@@ -43,7 +56,14 @@ namespace API.Controllers.Programas
                       && sd.activo == true
                       && s.activo == true
                       && sd.fecha == fecha
-                      && s.codigo == servicioCodigo
+                      && (
+                            servicioCodigo == "TODOS"
+                            || s.codigo == servicioCodigo
+                        )
+                        && (
+                            s.codigo == "TRANSPORTE"
+                            || s.codigo == "ACOGIDA"
+                        )
                 orderby inv.apellido, inv.nombre
                 select new
                 {
@@ -53,6 +73,7 @@ namespace API.Controllers.Programas
                     responsable = insc.responsable_nombre + " " + insc.responsable_apellido,
                     telefono_responsable = insc.responsable_telefono,
                     servicio = s.nombre,
+                    servicio_codigo = s.codigo,
                     //direccion = s.campos_extra, // futuro: dirección
                     //observaciones_servicio = s.observaciones // a futuro tambien
                     direccion = (string?)null,
@@ -97,6 +118,7 @@ namespace API.Controllers.Programas
                     Responsable = b.responsable,
                     TelefonoResponsable = b.telefono_responsable,
                     Servicio = b.servicio,
+                    ServicioCodigo = b.servicio_codigo,
                     //Direccion = b.direccion,
                     //ObservacionesServicio = b.observaciones_servicio,
                     TieneAlertaSalud = tieneAlertaSalud,
@@ -110,6 +132,7 @@ namespace API.Controllers.Programas
             var dto = new ProgramaTransporteDiaDTO
             {
                 IdEvento = idEvento,
+                Programa = evento.saludo ?? evento.anfitriones_texto ?? ("Programa " + idEvento),
                 Fecha = fecha,
                 Items = items,
                 Resumen = new ProgramaTransporteResumenDTO
