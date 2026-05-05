@@ -26,6 +26,7 @@ namespace API.Controllers.Programas
             _context = context;
         }
 
+        [AllowAnonymous]
         [HttpGet("{idEvento:long}/inscriptos")]
         public async Task<ActionResult<List<ProgramaInscriptosListItemDTO>>> GetInscriptos(
             long idEvento,
@@ -33,9 +34,6 @@ namespace API.Controllers.Programas
             [FromQuery] string? estadoPago = null,
             [FromQuery] bool? soloAlertas = null)
         {
-            if (!await ValidarAccesoEvento(idEvento))
-                return Forbid();
-
             var inscripcionesQuery = _context.Set<ef_programa_inscripciones>()
                 .AsNoTracking()
                 .Where(x => x.id_evento == idEvento && x.activo == true);
