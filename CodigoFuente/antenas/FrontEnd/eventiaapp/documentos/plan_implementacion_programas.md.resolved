@@ -1,0 +1,358 @@
+# Plan de Implementación: Configuración de Programas (Colonias/Casales)
+
+En base al análisis del código actual, **las funcionalidades de configuración de Programas (Colonias, Casales, etc.) descritas en el documento no se encuentran implementadas en el frontend**.
+
+A continuación se detalla el plan de implementación siguiendo la arquitectura, tipados y diseño que ya venimos utilizando en el proyecto (Next.js con App Router, API Proxies y Tailwind/Lucide).
+
+---
+
+## 1. Tipados y Servicios Frontend (`src/features/programas`)
+
+### A. Tipados (`src/features/programas/types.ts`)
+```typescript
+import { Event } from '../events/types';
+
+export interface Programa extends Event {
+    tipo_operacion: 'PROGRAMA';
+    fecha_inicio: string;
+    fecha_fin: string;
+    mensaje_bienvenida?: string;
+}
+
+export interface CrearProgramaPayload {
+    id_tipo_evento: number;
+    id_idioma: number;
+    id_cuenta: number;
+    id_unidad: number;
+    id_cliente: number | null;
+    modalidad: string;
+    anfitriones_texto: string;
+    saludo: string;
+    mensaje_bienvenida: string;
+    notas: string;
+    fecha_inicio: string;
+    fecha_fin: string;
+    codigo_plan: string;
+}
+
+export interface ProgramaPeriodo {
+    id_programa_periodo?: number;
+    id_evento: number;
+    codigo: string;
+    nombre: string;
+    fecha_desde: string;
+    fecha_hasta: string;
+    precio_base: number;
+    moneda: string;
+    cupo: number | null;
+    orden: number;
+    activo: boolean;
+}
+
+export interface CampoExtra {
+    codigo: string;
+    label: string;
+    tipo: 'TEXT' | 'NUMBER' | 'SELECT' | 'DATE' | 'BOOLEAN';
+    obligatorio: boolean;
+    opciones?: string[];
+}
+
+export interface ProgramaServicioConfig {
+    campos_extra?: CampoExtra[];
+}
+
+export interface ProgramaServicio {
+    id_programa_servicio?: number;
+    id_evento: number;
+    id_servicio_base: number | null;
+    servicio_base_codigo?: string;
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    tipo_calculo: string;
+    precio: number;
+    moneda: string;
+    obligatorio: boolean;
+    permite_cantidad: boolean;
+    requiere_seleccion_dias: boolean;
+    cupo: number | null;
+    orden: number;
+    activo: boolean;
+    config_json?: string | null;
+}
+
+export interface AutorizacionConfig {
+    id_programa_autorizacion_config?: number;
+    id_evento: number;
+    id_autorizacion_base: number | null;
+    codigo: string;
+    titulo?: string;
+    texto?: string;
+    obligatoria: boolean;
+    requiere_aceptacion: boolean;
+    requiere_datos_responsable: boolean;
+    orden: number;
+    activo: boolean;
+}
+
+export interface TraduccionAutorizacion {
+    id_idioma: number;
+    titulo: string;
+    texto: string;
+    activo: boolean;
+}
+
+export interface SaludConfig {
+    id_salud_config?: number;
+    id_evento: number;
+    pedir_problema_medico: boolean;
+    problema_medico_obligatorio: boolean;
+    pedir_alergias_no_alimentarias: boolean;
+    alergias_no_alimentarias_obligatorio: boolean;
+    pedir_necesidad_especial: boolean;
+    necesidad_especial_obligatorio: boolean;
+    pedir_cobertura_medica: boolean;
+    cobertura_medica_obligatorio: boolean;
+    pedir_contacto_emergencia: boolean;
+    contacto_emergencia_obligatorio: boolean;
+    pedir_autoriza_emergencia_medica: boolean;
+    autoriza_emergencia_medica_obligatorio: boolean;
+    pedir_observaciones_familia: boolean;
+    observaciones_familia_obligatorio: boolean;
+    pedir_medicaciones: boolean;
+    medicaciones_obligatorio: boolean;
+    activo: boolean;
+}
+
+export interface StaffPrograma {
+    id_evento: number;
+    id_usuario?: number;
+    email?: string;
+    id_rol: string;
+    activo: boolean;
+}
+```
+
+### B. Servicio (`src/features/programas/programas.service.ts`)
+```typescript
+import { 
+    Programa, CrearProgramaPayload, ProgramaPeriodo, ProgramaServicio,
+    AutorizacionConfig, TraduccionAutorizacion, SaludConfig, StaffPrograma 
+} from './types';
+
+const API_URL = '/api/programas';
+
+// Generales
+export const getMisProgramas = async (): Promise<Programa[]> => {
+    const res = await fetch(`${API_URL}/mis-programas`);
+    if (!res.ok) throw new Error('Error al obtener programas');
+    return res.json();
+};
+
+export const createPrograma = async (payload: CrearProgramaPayload): Promise<Programa> => {
+    // Apunta al endpoint proxy de eventos que le agrega tipoOperacion="PROGRAMA"
+    const res = await fetch(`/api/eventos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error creando programa');
+    return res.json();
+};
+
+export const generarLinkPublico = async (idEvento: number) => {
+    const res = await fetch(`${API_URL}/${idEvento}/generar-link-publico`, { method: 'POST' });
+    if (!res.ok) throw new Error('Error generando link');
+    return res.json();
+};
+
+// Períodos
+export const getPeriodos = async (idEvento: number, soloActivos = false): Promise<ProgramaPeriodo[]> => {
+    const res = await fetch(`${API_URL}/${idEvento}/periodos?soloActivos=${soloActivos}`);
+    if (!res.ok) throw new Error('Error obteniendo períodos');
+    return res.json();
+};
+
+export const upsertPeriodo = async (idEvento: number, payload: ProgramaPeriodo): Promise<ProgramaPeriodo> => {
+    const res = await fetch(`${API_URL}/${idEvento}/periodos/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Error guardando período');
+    return res.json();
+};
+
+// Servicios
+export const getServicios = async (idEvento: number, soloActivos = false): Promise<ProgramaServicio[]> => {
+    const res = await fetch(`${API_URL}/${idEvento}/servicios?soloActivos=${soloActivos}`);
+    if (!res.ok) throw new Error('Error obteniendo servicios');
+    return res.json();
+};
+
+export const upsertServicio = async (idEvento: number, payload: ProgramaServicio): Promise<ProgramaServicio> => {
+    const res = await fetch(`${API_URL}/${idEvento}/servicios/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Error guardando servicio');
+    return res.json();
+};
+
+// Autorizaciones
+export const getAutorizacionesConfig = async (idEvento: number, idIdioma = 3, soloActivas = false): Promise<AutorizacionConfig[]> => {
+    const res = await fetch(`${API_URL}/${idEvento}/autorizaciones-config?idIdioma=${idIdioma}&soloActivas=${soloActivas}`);
+    if (!res.ok) throw new Error('Error obteniendo autorizaciones');
+    return res.json();
+};
+
+export const upsertAutorizacionConfig = async (idEvento: number, payload: AutorizacionConfig): Promise<AutorizacionConfig> => {
+    const res = await fetch(`${API_URL}/${idEvento}/autorizaciones-config/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Error guardando autorización');
+    return res.json();
+};
+
+export const updateTraducciones = async (idConfig: number, traducciones: TraduccionAutorizacion[]) => {
+    const res = await fetch(`${API_URL}/autorizaciones-config/${idConfig}/traducciones`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: traducciones })
+    });
+    if (!res.ok) throw new Error('Error guardando traducciones');
+    return res.json();
+};
+
+// Salud
+export const upsertSaludConfig = async (idEvento: number, payload: SaludConfig): Promise<SaludConfig> => {
+    const res = await fetch(`${API_URL}/${idEvento}/salud/config/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Error guardando configuración médica');
+    return res.json();
+};
+
+// Staff
+export const getStaffPrograma = async (idEvento: number): Promise<StaffPrograma[]> => {
+    const res = await fetch(`${API_URL}/${idEvento}/staff`);
+    if (!res.ok) throw new Error('Error obteniendo staff');
+    return res.json();
+};
+```
+
+---
+
+## 2. API Proxies (Next.js)
+
+Se crearán las siguientes rutas bajo `src/app/api/programas` (puente hacia el backend):
+
+**General y Links**:
+- `/mis-programas/route.ts` (GET)
+- `/[idEvento]/generar-link-publico/route.ts` (POST)
+- `/inscripcion/[token]/route.ts` (GET)
+
+**Períodos y Servicios**:
+- `/[idEvento]/periodos/route.ts` (GET)
+- `/[idEvento]/periodos/upsert/route.ts` (POST)
+- `/periodos/[idProgramaPeriodo]/set-activo/route.ts` (PUT)
+- `/[idEvento]/servicios/route.ts` (GET)
+- `/[idEvento]/servicios/upsert/route.ts` (POST)
+- `/servicios/[idProgramaServicio]/set-activo/route.ts` (PUT)
+- `/servicios-base/route.ts`, `/tipos-calculo/route.ts`, `/tipos-campo-extra/route.ts` (GETs)
+
+**Autorizaciones**:
+- `/[idEvento]/autorizaciones-config/route.ts` (GET)
+- `/[idEvento]/autorizaciones-config/upsert/route.ts` (POST)
+- `/autorizaciones-base/route.ts` (GET)
+- `/autorizaciones-config/[idConfig]/traducciones/route.ts` (GET / PUT)
+- `/autorizaciones-config/[idConfig]/set-activo/route.ts` (PUT)
+
+**Salud y Staff**:
+- `/[idEvento]/salud/config/upsert/route.ts` (POST)
+- `/[idEvento]/staff/route.ts` (GET)
+- `/[idEvento]/staff/add/route.ts` (POST)
+
+---
+
+## 3. Interfaz de Usuario (UI) - Área Administrativa
+
+Dado que el documento indica la ruta `Cuenta / Programas`, agregaremos esta sección dentro del dashboard de Cuenta.
+
+### A. Flujo de Creación y Listado
+- **Ruta Listado:** `src/app/dashboard/cuenta/programas/page.tsx`
+- **Ruta Creación:** `src/app/dashboard/cuenta/programas/nuevo/page.tsx` (Formulario base con plan "B2B_STARTER" embebido).
+
+### B. Detalle y Configuración Avanzada del Programa
+**Ruta:** `src/app/dashboard/cuenta/programas/[id]/page.tsx`
+
+La vista de detalle contendrá distintas pestañas (Tabs) o Botones de acción hacia las siguientes secciones de configuración:
+
+1. **Períodos / Semanas**
+   - Grilla editable de los períodos (`PeriodosManager.tsx`).
+   - Modal `UpsertPeriodoDrawer.tsx` para alta y edición.
+
+2. **Servicios Incluidos**
+   - Grilla de servicios base y personalizados.
+   - En el `UpsertServicioDrawer.tsx`, se agregará la **Sección Datos Adicionales del Servicio**.
+   - Sub-formulario dinámico para agregar `campos_extra` (Ej. Talle) y manejar `opciones` si el tipo es `SELECT`.
+
+3. **Autorizaciones**
+   - Grilla de autorizaciones (`AutorizacionesManager.tsx`).
+   - Modal `UpsertAutorizacionDrawer.tsx` permitiendo seleccionar una Base o crear una Personalizada.
+   - Vista/Modal dedicado para las **Traducciones** (`TraduccionesAutorizacionDrawer.tsx`) con formulario dinámico por cada idioma activo.
+
+4. **Configuración de Salud**
+   - Vista tipo Formulario (`SaludConfigForm.tsx`) con todos los Toggles (ej. `pedir_problema_medico`, `pedir_contacto_emergencia`).
+   - Al lado o abajo, incluir la sección **Vista previa de inscripción** que simule en tiempo real el formulario que verá el padre.
+
+5. **Staff / Equipo**
+   - Grilla para ver el equipo asignado (`StaffManager.tsx`).
+   - Modal para agregar a un usuario por email con los roles operativos (`PROGRAM_ADMIN`, `PROGRAM_MONITOR`, etc.). Validará si el email existe en el sistema.
+
+---
+
+## 4. Landing Pública B2C
+**Ruta:** `src/app/programas/inscripcion/[token]/page.tsx`
+- Vista pública (fuera del layout del dashboard) que captura el token de la URL.
+- Valida el token y muestra la landing de bienvenida al Programa (Título, Fechas, Mensaje de Bienvenida).
+
+---
+
+## 5. Progreso de Ejecución
+
+### FASE 1: Infraestructura y Gestión Básica [COMPLETADA] ✅
+- [x] Definir interfaces base en `src/features/programas/types.ts` y configurar `programas.service.ts`.
+- [x] Habilitar los API Proxies base (`/periodos` y `/servicios`).
+- [x] Construir la estructura general de pestañas en `[id]/page.tsx`.
+- [x] Desarrollar `PeriodosManager.tsx` y `UpsertPeriodoDrawer.tsx`.
+- [x] Desarrollar `ServiciosManager.tsx` y `UpsertServicioDrawer.tsx` (con soporte para `configJson` de campos extra).
+
+### FASE 2: Configuración Legal y Médica [COMPLETADA] ✅
+- [x] Habilitar los API Proxies de Autorizaciones y Salud (`/autorizaciones-config` y `/salud/config`).
+- [x] Desarrollar `AutorizacionesManager.tsx` y `UpsertAutorizacionDrawer.tsx` para documentos legales.
+- [x] Desarrollar `SaludConfigManager.tsx` para gestionar la Ficha Médica con toggles.
+- [x] Integrar estos módulos a la vista de configuración del programa.
+
+### FASE 3: Equipo (Staff) y Vista Previa [COMPLETADA] ✅
+- [x] Habilitar los API Proxies de Staff (`/staff`).
+- [x] Desarrollar `StaffManager.tsx` para listar miembros del equipo y sus roles operativos.
+- [x] Desarrollar `UpsertStaffDrawer.tsx` para invitar/asignar roles al staff.
+- [x] Añadir el botón de "Copiar Link del Padre" con el endpoint de `generarLinkPublico` para probar el formulario público.
+
+### FASE 4: Landing y Flujo B2C de Inscripción [COMPLETADA] ✅
+- [x] Construir la ruta pública B2C `src/app/programas/inscripcion/[token]/page.tsx` (implementada como `/inscripcion/[token]`).
+- [x] Desarrollar el Wizard de inscripción para que los padres llenen:
+      - Selección de Semanas y Servicios.
+      - Aceptación de Autorizaciones/Reglamentos.
+      - Llenado de Ficha Médica (según los parámetros dinámicos).
+- [x] Desarrollar la pantalla de "Review and Sign" final y persistir la inscripción en backend.
+
+### FASE 5: Listado de Programas y Creación [COMPLETADA] ✅
+- [x] Validar y estructurar el listado general en `src/app/dashboard/cuenta/programas/page.tsx`.
+- [x] Crear el formulario para el alta de un nuevo Programa `src/app/dashboard/cuenta/programas/nuevo/page.tsx` usando el proxy de eventos actual.

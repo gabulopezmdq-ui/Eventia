@@ -1,24 +1,23 @@
 import { useMemo } from 'react';
-import type { InscripcionState, Participante, ValidationResult } from '../types/inscripcion.types';
+import type { InscripcionState, Participante, ValidationResult, ProgramaInscripcionData } from '../types/inscripcion.types';
 
 /**
  * Valida el estado completo de la inscripción.
  * El botón "Confirmar inscripción" solo se activa cuando valida === true.
- *
- * Reglas (V2):
- *  - Responsable: nombre, apellido, email, telefono y relacion obligatorios
- *  - Al menos 1 participante
- *  - Cada participante: al menos 1 semana seleccionada
- *  - Cada participante (salud): autoriza_emergencia_medica === true y al menos 1 contacto_emergencia
- *  - Cada participante (retiro): al menos 1 autorizado_retiro
- *  - Firma: nombre_completo no vacío
  */
 export function useInscripcionValida(state: InscripcionState): ValidationResult {
     return useMemo(() => {
         const errores: string[] = [];
 
         // ── Responsable ──────────────────────────────────────────
-        const { responsable } = state;
+        const { responsable, programaData } = state;
+        const configSalud = (programaData?.configuracion_salud || {
+            pedir_contacto_emergencia: true,
+            contacto_emergencia_obligatorio: true,
+            pedir_autoriza_emergencia_medica: true,
+            autoriza_emergencia_medica_obligatorio: true,
+        }) as Record<string, boolean>;
+
         if (!responsable.nombre?.trim()) errores.push('Falta el nombre del responsable');
         if (!responsable.apellido?.trim()) errores.push('Falta el apellido del responsable');
         if (!responsable.email?.trim()) errores.push('Falta el email del responsable');
@@ -38,12 +37,12 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
                 }
 
                 // Salud — autorización emergencia médica
-                if (!p.salud?.autoriza_emergencia_medica) {
+                if (configSalud.pedir_autoriza_emergencia_medica && configSalud.autoriza_emergencia_medica_obligatorio && !p.salud?.autoriza_emergencia_medica) {
                     errores.push(`${label}: debe autorizar la atención de emergencias médicas (tab Salud)`);
                 }
 
                 // Salud — al menos 1 contacto de emergencia
-                if (!p.salud?.contactos_emergencia || p.salud.contactos_emergencia.length === 0) {
+                if (configSalud.pedir_contacto_emergencia && configSalud.contacto_emergencia_obligatorio && (!p.salud?.contactos_emergencia || p.salud.contactos_emergencia.length === 0)) {
                     errores.push(`${label}: agregá al menos un contacto de emergencia (tab Salud)`);
                 }
 
@@ -90,14 +89,20 @@ export interface ParticipanteBadges {
 
 /**
  * Calcula el estado visual de cada tab para un participante dado.
- * - 'ok'    → campo requerido completo, o sección opcional con datos cargados
- * - 'warn'  → campo requerido faltante (bloquea confirmación)
- * - 'empty' → sección opcional sin datos (no bloquea)
+ * Considera la configuración de salud del programa.
  */
-export function getParticipanteBadges(p: Participante): ParticipanteBadges {
-    const saludCompleta =
-        p.salud?.autoriza_emergencia_medica === true &&
-        (p.salud?.contactos_emergencia?.length ?? 0) > 0;
+export function getParticipanteBadges(p: Participante, programaData?: ProgramaInscripcionData | null): ParticipanteBadges {
+    const configSalud = (programaData?.configuracion_salud || {
+        pedir_contacto_emergencia: true,
+        contacto_emergencia_obligatorio: true,
+        pedir_autoriza_emergencia_medica: true,
+        autoriza_emergencia_medica_obligatorio: true,
+    }) as Record<string, boolean>;
+
+    const faltaAutorizacion = configSalud.pedir_autoriza_emergencia_medica && configSalud.autoriza_emergencia_medica_obligatorio && p.salud?.autoriza_emergencia_medica !== true;
+    const faltaContacto = configSalud.pedir_contacto_emergencia && configSalud.contacto_emergencia_obligatorio && (p.salud?.contactos_emergencia?.length ?? 0) === 0;
+
+    const saludCompleta = !faltaAutorizacion && !faltaContacto;
 
     return {
         semanas:      p.periodos.length > 0 ? 'ok' : 'warn',

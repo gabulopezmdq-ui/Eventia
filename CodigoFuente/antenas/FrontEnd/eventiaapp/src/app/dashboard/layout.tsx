@@ -22,6 +22,7 @@ import {
     BadgeDollarSign,
     HeartHandshake,
     Briefcase,
+    CalendarDays
 } from "lucide-react";
 import { SidebarItem } from "@/src/components/layout/SidebarItem";
 import { DashboardHeader } from "@/src/components/layout/DashboardHeader";
@@ -133,6 +134,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                                     <SidebarItem href="/dashboard/cuenta/clientes" icon={Users} label="Clientes" />
                                     <SidebarItem href="/dashboard/audiencia" icon={Sparkles} label="Audiencias (CRM)" />
                                     <SidebarItem href="/dashboard/cuenta/eventos" icon={CalendarRange} label="Eventos de Cuenta" />
+                                    <SidebarItem href="/dashboard/cuenta/programas" icon={CalendarDays} label="Programas y Casales" />
                                     <SidebarItem href="/dashboard/cuenta/plan" icon={CreditCard} label="Plan y Facturación" />
                                 </>
                             )}
