@@ -31,6 +31,9 @@ namespace API.Controllers.Programas
             [FromQuery] string? estadoPago = null,
             [FromQuery] bool? soloAlertas = null)
         {
+            if (!await ValidarAccesoEvento(idEvento))
+                return Forbid();
+
             var inscripcionesQuery = _context.Set<ef_programa_inscripciones>()
                 .AsNoTracking()
                 .Where(x => x.id_evento == idEvento && x.activo == true);
@@ -406,16 +409,10 @@ namespace API.Controllers.Programas
             });
         }
 
-        [Authorize]
         [HttpGet("{idEvento:long}/inscriptos/resumen")]
         public async Task<ActionResult<ProgramaInscriptosResumenDTO>> GetInscriptosResumen(long idEvento)
         {
-            long idUsuario = User.GetUserId();
-
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
-                .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
-
-            if (!pertenece)
+            if (!await ValidarAccesoEvento(idEvento))
                 return Forbid();
 
             var evento = await _context.Set<ef_eventos>()
@@ -559,6 +556,57 @@ namespace API.Controllers.Programas
                 ConAlertas = conAlertas
             });
 
+        }
+
+        private async Task<bool> ValidarAccesoEvento(long idEvento)
+        {
+            // 1. Identificar si es Staff o Usuario normal desde los claims
+            bool isStaff = User.FindFirstValue("is_staff") == "true";
+            string sub = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub") ?? "";
+
+            if (isStaff)
+            {
+                // Caso Staff: Validar id_evento del token
+                string idEventoTokenStr = User.FindFirstValue("id_evento");
+                if (long.TryParse(idEventoTokenStr, out long idEventoToken) && idEventoToken == idEvento)
+                    return true;
+
+                // Caso Staff de cuenta (corporativo): Validar que el evento pertenezca a su cuenta
+                string idCuentaTokenStr = User.FindFirstValue("id_cuenta");
+                if (long.TryParse(idCuentaTokenStr, out long idCuentaToken))
+                {
+                    return await _context.Set<ef_eventos>()
+                        .AnyAsync(e => e.id_evento == idEvento && e.id_cuenta == idCuentaToken);
+                }
+
+                return false;
+            }
+            else
+            {
+                // Caso Usuario normal: Validar vía ef_evento_usuarios o ef_cuenta_usuarios
+                if (!long.TryParse(sub, out long idUsuario))
+                    return false;
+
+                // Membresía directa al evento
+                bool esMiembroEvento = await _context.Set<ef_evento_usuarios>()
+                    .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
+
+                if (esMiembroEvento) return true;
+
+                // Pertenencia a la cuenta propietaria
+                var idCuentaEvento = await _context.Set<ef_eventos>()
+                    .Where(x => x.id_evento == idEvento)
+                    .Select(x => x.id_cuenta)
+                    .FirstOrDefaultAsync();
+
+                if (idCuentaEvento.HasValue)
+                {
+                    return await _context.Set<ef_cuenta_usuarios>()
+                        .AnyAsync(x => x.id_cuenta == idCuentaEvento.Value && x.id_usuario == idUsuario && x.activo == true);
+                }
+
+                return false;
+            }
         }
 
         private static string ResolverEstadoPagoInscriptos(decimal totalAPagar, decimal totalPagado)
