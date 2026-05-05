@@ -60,6 +60,12 @@ export async function getMyEvents(): Promise<Event[]> {
         fecha_alta: item.fechaAlta,
         tipo_evento: item.tipoEvento,
         tipo_evento_codigo: item.tipoEventoCodigo,
+        saludo: item.saludo,
+        mensajeBienvenida: item.mensajeBienvenida,
+        notas: item.notas,
+        id_cliente: item.idCliente,
+        id_dress_code: item.idDressCode,
+        dress_code_descripcion: item.dressCodeDescripcion,
     })) as Event[];
 }
 
@@ -87,6 +93,12 @@ export async function getEventById(id: string): Promise<Event> {
         fecha_alta: item.fechaAlta,
         tipo_evento: item.tipoEvento,
         tipo_evento_codigo: item.tipoEventoCodigo,
+        saludo: item.saludo,
+        mensajeBienvenida: item.mensajeBienvenida,
+        notas: item.notas,
+        id_cliente: item.idCliente,
+        id_dress_code: item.idDressCode,
+        dress_code_descripcion: item.dressCodeDescripcion,
     } as Event;
 }
 
@@ -144,6 +156,12 @@ export async function getAdminEvents(): Promise<Event[]> {
         fecha_alta: item.fechaAlta,
         tipo_evento: item.tipoEvento,
         tipo_evento_codigo: item.tipoEventoCodigo,
+        saludo: item.saludo,
+        mensajeBienvenida: item.mensajeBienvenida,
+        notas: item.notas,
+        id_cliente: item.idCliente,
+        id_dress_code: item.idDressCode,
+        dress_code_descripcion: item.dressCodeDescripcion,
     })) as Event[];
 }
 
@@ -189,6 +207,12 @@ export async function getAdminEventById(id: string): Promise<Event> {
         estado: item.estado,
         fecha_alta: item.fechaAlta,
         tipo_evento_codigo: item.tipoEventoCodigo,
+        saludo: item.saludo,
+        mensajeBienvenida: item.mensajeBienvenida,
+        notas: item.notas,
+        id_cliente: item.idCliente,
+        id_dress_code: item.idDressCode,
+        dress_code_descripcion: item.dressCodeDescripcion,
     } as Event;
 }
 

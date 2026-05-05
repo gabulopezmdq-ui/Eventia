@@ -13,7 +13,7 @@ export interface Event {
     id_dress_code: number | null;
     dress_code_descripcion: string | null;
     saludo: string;
-    mensaje_bienvenida: string;
+    mensajeBienvenida: string;
     notas: string;
     fecha_alta: string;
     fecha_modif: string | null;
