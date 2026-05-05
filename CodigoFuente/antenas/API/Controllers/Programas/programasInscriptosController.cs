@@ -4,6 +4,7 @@ using API.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,8 +39,8 @@ namespace API.Controllers.Programas
             {
                 var query = q.Trim().ToUpper();
                 inscripcionesQuery = inscripcionesQuery.Where(x =>
-                    x.responsable_nombre.ToUpper().Contains(query) ||
-                    x.responsable_apellido.ToUpper().Contains(query) ||
+                    (x.responsable_nombre ?? "").ToUpper().Contains(query) ||
+                    (x.responsable_apellido ?? "").ToUpper().Contains(query) ||
                     (x.responsable_email != null && x.responsable_email.ToUpper().Contains(query)) ||
                     (x.responsable_telefono != null && x.responsable_telefono.ToUpper().Contains(query))
                 );
@@ -71,13 +72,16 @@ namespace API.Controllers.Programas
                            select (inv.nombre ?? "") + " " + (inv.apellido ?? ""))
                           .ToList()
                         : new List<string>(),
-                    TieneRestricciones = _context.Set<ef_rsvp_integrante_restricciones>()
+                    TieneRestricciones = insc.id_rsvp_grupo != null && _context.Set<ef_rsvp_integrante_restricciones>()
                         .Any(r => _context.Set<ef_rsvp_grupo_integrantes>()
                             .Any(gi => gi.id_rsvp_grupo == insc.id_rsvp_grupo && gi.id_rsvp_grupo_integrante == r.id_rsvp_grupo_integrante)),
-                    TieneAlertasSalud = _context.Set<ef_programa_inscripcion_salud_fichas>()
+                    TieneAlertasSalud = (insc.id_rsvp_grupo != null && _context.Set<ef_programa_inscripcion_salud_fichas>()
                         .Any(f => _context.Set<ef_rsvp_grupo_integrantes>()
                             .Any(gi => gi.id_rsvp_grupo == insc.id_rsvp_grupo && gi.id_rsvp_grupo_integrante == f.id_rsvp_grupo_integrante) &&
-                            (f.tiene_problema_medico == true || f.tiene_alergias_no_alimentarias == true || !string.IsNullOrWhiteSpace(f.necesidad_especial)))
+                            (f.tiene_problema_medico == true || f.tiene_alergias_no_alimentarias == true || !string.IsNullOrWhiteSpace(f.necesidad_especial))))
+                        || _context.Set<ef_programa_inscripcion_salud_medicaciones>()
+                        .Any(m => _context.Set<ef_programa_inscripcion_salud_fichas>()
+                            .Any(f => f.id_salud_ficha == m.id_salud_ficha && f.id_inscripcion == insc.id_inscripcion && f.activo == true))
                 })
                 .ToListAsync();
 
@@ -470,12 +474,13 @@ namespace API.Controllers.Programas
                     x.activo == true)
                 .ToListAsync();
 
-            var medicaciones = await _context.Set<ef_programa_inscripcion_salud_medicaciones>()
-                .AsNoTracking()
-                .Where(x =>
-                    idsInscripciones.Contains(x.id_inscripcion) &&
-                    x.activo == true)
-                .ToListAsync();
+            var medicaciones = await (
+                from m in _context.Set<ef_programa_inscripcion_salud_medicaciones>().AsNoTracking()
+                join f in _context.Set<ef_programa_inscripcion_salud_fichas>().AsNoTracking()
+                    on m.id_salud_ficha equals f.id_salud_ficha
+                where idsInscripciones.Contains(f.id_inscripcion) && f.activo == true
+                select new { f.id_inscripcion, m.id_medicacion }
+            ).ToListAsync();
 
             int pendientes = 0;
             int parciales = 0;
