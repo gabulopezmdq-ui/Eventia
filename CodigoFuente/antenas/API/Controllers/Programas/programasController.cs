@@ -1591,37 +1591,62 @@ namespace API.Controllers.Programas
             if (ev.tipo_operacion != "PROGRAMA")
                 return BadRequest("El evento indicado no es de tipo PROGRAMA.");
 
-            var q = _context.Set<ef_programa_salud_fichas>()
-                .AsNoTracking()
-                .Where(x => x.id_evento == idEvento);
+            var q =
+                from f in _context.Set<ef_programa_inscripcion_salud_fichas>().AsNoTracking()
+                join insc in _context.Set<ef_programa_inscripciones>().AsNoTracking()
+                    on f.id_inscripcion equals insc.id_inscripcion
+                join gi in _context.Set<ef_rsvp_grupo_integrantes>().AsNoTracking()
+                    on f.id_rsvp_grupo_integrante equals gi.id_rsvp_grupo_integrante
+                join inv in _context.Set<ef_invitados>().AsNoTracking()
+                    on gi.id_invitado equals inv.id_invitado
+                where insc.id_evento == idEvento
+                      && insc.activo == true
+                select new
+                {
+                    f,
+                    insc,
+                    participante = ((inv.nombre ?? "") + " " + (inv.apellido ?? "")).Trim()
+                };
 
             if (soloActivas)
-                q = q.Where(x => x.activo == true);
+                q = q.Where(x => x.f.activo == true);
 
             var result = await q
-                .OrderBy(x => x.id_inscripcion)
+                .OrderBy(x => x.participante)
                 .Select(x => new ProgramaSaludFichaDTO
                 {
-                    IdFichaSalud = x.id_ficha_salud,
-                    IdEvento = x.id_evento,
-                    IdInscripcion = x.id_inscripcion,
-                    TieneProblemaMedico = x.tiene_problema_medico,
-                    DetalleProblemaMedico = x.detalle_problema_medico,
-                    TieneAlergiasNoAlimentarias = x.tiene_alergias_no_alimentarias,
-                    DetalleAlergiasNoAlimentarias = x.detalle_alergias_no_alimentarias,
-                    TieneNecesidadEspecial = x.tiene_necesidad_especial,
-                    DetalleNecesidadEspecial = x.detalle_necesidad_especial,
-                    TieneCoberturaMedica = x.tiene_cobertura_medica,
-                    CoberturaMedicaNombre = x.cobertura_medica_nombre,
-                    CoberturaMedicaNumero = x.cobertura_medica_numero,
-                    ContactoEmergenciaNombre = x.contacto_emergencia_nombre,
-                    ContactoEmergenciaTelefono = x.contacto_emergencia_telefono,
-                    ContactoEmergenciaRelacion = x.contacto_emergencia_relacion,
-                    AutorizaEmergenciaMedica = x.autoriza_emergencia_medica,
-                    ObservacionesFamilia = x.observaciones_familia,
-                    ObservacionesInternas = x.observaciones_internas,
-                    Activo = x.activo,
-                    FechaAlta = x.fecha_alta
+                    IdFichaSalud = x.f.id_salud_ficha,
+                    IdEvento = idEvento,
+                    IdInscripcion = x.f.id_inscripcion,
+                    IdRsvpGrupoIntegrante = x.f.id_rsvp_grupo_integrante,
+                    Participante = x.participante,
+                    Responsable = ((x.insc.responsable_nombre ?? "") + " " + (x.insc.responsable_apellido ?? "")).Trim(),
+                    TelefonoResponsable = x.insc.responsable_telefono,
+
+                    TieneProblemaMedico = x.f.tiene_problema_medico ?? false,
+                    DetalleProblemaMedico = x.f.problema_medico_detalle,
+
+                    TieneAlergiasNoAlimentarias = x.f.tiene_alergias_no_alimentarias ?? false,
+                    DetalleAlergiasNoAlimentarias = x.f.alergias_no_alimentarias_detalle,
+
+                    TieneNecesidadEspecial = !string.IsNullOrWhiteSpace(x.f.necesidad_especial),
+                    DetalleNecesidadEspecial = x.f.necesidad_especial,
+
+                    TieneCoberturaMedica = !string.IsNullOrWhiteSpace(x.f.cobertura_medica),
+                    CoberturaMedicaNombre = x.f.cobertura_medica,
+                    CoberturaMedicaNumero = null,
+
+                    ContactoEmergenciaNombre = null,
+                    ContactoEmergenciaTelefono = null,
+                    ContactoEmergenciaRelacion = null,
+
+                    AutorizaEmergenciaMedica = x.f.autoriza_emergencia_medica ?? false,
+
+                    ObservacionesFamilia = x.f.observaciones_familia,
+                    ObservacionesInternas = null,
+
+                    Activo = x.f.activo,
+                    FechaAlta = x.f.fecha_alta
                 })
                 .ToListAsync();
 
