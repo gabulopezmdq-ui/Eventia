@@ -85,5 +85,21 @@ namespace API.DataSchema.DTO.Programas
         [JsonPropertyName("fecha_alta")]
         [JsonProperty("fecha_alta")]
         public DateTimeOffset? FechaAlta { get; set; }
+
+        [JsonPropertyName("id_rsvp_grupo_integrante")]
+        [JsonProperty("id_rsvp_grupo_integrante")]
+        public long? IdRsvpGrupoIntegrante { get; set; }
+
+        [JsonPropertyName("participante")]
+        [JsonProperty("participante")]
+        public string? Participante { get; set; }
+
+        [JsonPropertyName("responsable")]
+        [JsonProperty("responsable")]
+        public string? Responsable { get; set; }
+
+        [JsonPropertyName("telefono_responsable")]
+        [JsonProperty("telefono_responsable")]
+        public string? TelefonoResponsable { get; set; }
     }
 }
