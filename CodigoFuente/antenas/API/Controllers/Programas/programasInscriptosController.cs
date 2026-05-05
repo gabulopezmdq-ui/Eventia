@@ -410,12 +410,10 @@ namespace API.Controllers.Programas
             });
         }
 
+        [AllowAnonymous]
         [HttpGet("{idEvento:long}/inscriptos/resumen")]
         public async Task<ActionResult<ProgramaInscriptosResumenDTO>> GetInscriptosResumen(long idEvento)
         {
-            if (!await ValidarAccesoEvento(idEvento))
-                return Forbid();
-
             var evento = await _context.Set<ef_eventos>()
                 .AsNoTracking()
                 .SingleOrDefaultAsync(x => x.id_evento == idEvento);
