@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DataSchema\ef_programa_salud_fichas.cs" />
+    <Compile Remove="DataSchema\ef_programa_salud_medicaciones.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\ef_programa_salud_fichasConfiguration.cs" />
+    <Compile Remove="DataSchema\ModelConfiguration\ef_programa_salud_medicacionesConfiguration.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
     <PackageReference Include="libphonenumber-csharp" Version="9.0.24" />
