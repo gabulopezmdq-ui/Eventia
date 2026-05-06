@@ -2454,15 +2454,46 @@ namespace API.Controllers.Programas
             var idsIntegrantes = baseData.Select(x => x.id_rsvp_grupo_integrante).Distinct().ToList();
             var idsInvitados = baseData.Select(x => x.id_invitado).Distinct().ToList();
 
-            var fichas = await _context.Set<ef_programa_salud_fichas>()
+            var fichas = await _context.Set<ef_programa_inscripcion_salud_fichas>()
                 .AsNoTracking()
-                .Where(x => x.id_evento == idEvento && idsInscripcion.Contains(x.id_inscripcion) && x.activo == true)
+                .Where(x =>
+                    idsInscripcion.Contains(x.id_inscripcion) &&
+                    idsIntegrantes.Contains(x.id_rsvp_grupo_integrante) &&
+                    x.activo == true)
                 .ToListAsync();
 
-            var medicaciones = await _context.Set<ef_programa_salud_medicaciones>()
-                .AsNoTracking()
-                .Where(x => x.id_evento == idEvento && idsInscripcion.Contains(x.id_inscripcion) && x.activo == true)
-                .ToListAsync();
+            var medicaciones = await (
+                from m in _context.Set<ef_programa_inscripcion_salud_medicaciones>().AsNoTracking()
+                join f in _context.Set<ef_programa_inscripcion_salud_fichas>().AsNoTracking()
+                    on m.id_salud_ficha equals f.id_salud_ficha
+                where idsInscripcion.Contains(f.id_inscripcion)
+                      && idsIntegrantes.Contains(f.id_rsvp_grupo_integrante)
+                      && f.activo == true
+                select new
+                {
+                    f.id_inscripcion,
+                    f.id_rsvp_grupo_integrante,
+                    m.id_medicacion,
+                    m.nombre_medicacion
+                }
+            ).ToListAsync();
+
+            var contactosEmergencia = await (
+                from c in _context.Set<ef_programa_inscripcion_salud_contactos>().AsNoTracking()
+                join f in _context.Set<ef_programa_inscripcion_salud_fichas>().AsNoTracking()
+                    on c.id_salud_ficha equals f.id_salud_ficha
+                where idsInscripcion.Contains(f.id_inscripcion)
+                      && idsIntegrantes.Contains(f.id_rsvp_grupo_integrante)
+                select new
+                {
+                    f.id_inscripcion,
+                    f.id_rsvp_grupo_integrante,
+                    c.nombre,
+                    c.telefono,
+                    c.relacion,
+                    c.orden
+                }
+            ).ToListAsync();
 
             var acciones = await _context.Set<ef_programa_salud_acciones>()
                 .AsNoTracking()
@@ -2487,11 +2518,15 @@ namespace API.Controllers.Programas
 
             var result = baseData.Select(x =>
             {
-                var ficha = fichas.FirstOrDefault(f => f.id_inscripcion == x.id_inscripcion);
+                var ficha = fichas.FirstOrDefault(f =>
+                    f.id_inscripcion == x.id_inscripcion &&
+                    f.id_rsvp_grupo_integrante == x.id_rsvp_grupo_integrante);
 
                 var meds = medicaciones
-                    .Where(m => m.id_inscripcion == x.id_inscripcion)
-                    .Select(m => m.nombre_medicamento)
+                    .Where(m =>
+                        m.id_inscripcion == x.id_inscripcion &&
+                        m.id_rsvp_grupo_integrante == x.id_rsvp_grupo_integrante)
+                    .Select(m => m.nombre_medicacion)
                     .Distinct()
                     .ToList();
 
@@ -2507,7 +2542,7 @@ namespace API.Controllers.Programas
 
                 bool tieneProblema = ficha?.tiene_problema_medico ?? false;
                 bool tieneAlergias = ficha?.tiene_alergias_no_alimentarias ?? false;
-                bool tieneNecesidad = ficha?.tiene_necesidad_especial ?? false;
+                bool tieneNecesidad = !string.IsNullOrWhiteSpace(ficha?.necesidad_especial); ;
                 bool tieneRestricciones = restr.Any();
                 bool tieneMedicacion = meds.Any();
                 bool requiereSeguimiento = accs.Any(a => a.requiere_seguimiento);
@@ -2518,6 +2553,13 @@ namespace API.Controllers.Programas
                     nivel = "ALTA";
                 else if (tieneNecesidad || tieneRestricciones)
                     nivel = "MEDIA";
+
+                var contactoPrincipal = contactosEmergencia
+                    .Where(c =>
+                        c.id_inscripcion == x.id_inscripcion &&
+                        c.id_rsvp_grupo_integrante == x.id_rsvp_grupo_integrante)
+                    .OrderBy(c => c.orden)
+                    .FirstOrDefault();
 
                 return new ProgramaSaludPanelItemDTO
                 {
@@ -2530,13 +2572,13 @@ namespace API.Controllers.Programas
                     EmailResponsable = x.responsable_email,
 
                     TieneProblemaMedico = tieneProblema,
-                    ProblemaMedicoDetalle = ficha?.detalle_problema_medico,
+                    ProblemaMedicoDetalle = ficha?.problema_medico_detalle,
 
                     TieneAlergiasNoAlimentarias = tieneAlergias,
-                    AlergiasNoAlimentariasDetalle = ficha?.detalle_alergias_no_alimentarias,
+                    AlergiasNoAlimentariasDetalle = ficha?.alergias_no_alimentarias_detalle,
 
                     TieneNecesidadEspecial = tieneNecesidad,
-                    NecesidadEspecialDetalle = ficha?.detalle_necesidad_especial,
+                    NecesidadEspecialDetalle = ficha?.necesidad_especial,
 
                     TieneRestriccionesAlimentarias = tieneRestricciones,
                     RestriccionesAlimentarias = restr,
@@ -2544,8 +2586,9 @@ namespace API.Controllers.Programas
                     TieneMedicacion = tieneMedicacion,
                     Medicaciones = meds,
 
-                    ContactoEmergencia = ficha?.contacto_emergencia_nombre,
-                    TelefonoEmergencia = ficha?.contacto_emergencia_telefono,
+                    ContactoEmergencia = contactoPrincipal?.nombre,
+                    TelefonoEmergencia = contactoPrincipal?.telefono,
+
                     AutorizaEmergenciaMedica = ficha?.autoriza_emergencia_medica ?? false,
                     ObservacionesFamilia = ficha?.observaciones_familia,
 
@@ -2571,8 +2614,8 @@ namespace API.Controllers.Programas
         [Authorize]
         [HttpGet("{idEvento:long}/salud/participantes/{idInvitado:long}/detalle")]
         public async Task<ActionResult<ProgramaSaludDetalleParticipanteDTO>> GetSaludDetalleParticipante(
-            long idEvento,
-            long idInvitado)
+    long idEvento,
+    long idInvitado)
         {
             long idUsuario = User.GetUserId();
 
@@ -2619,63 +2662,110 @@ namespace API.Controllers.Programas
             if (baseData == null)
                 return NotFound("Participante inexistente para este programa.");
 
-            var ficha = await _context.Set<ef_programa_salud_fichas>()
+            var ficha = await _context.Set<ef_programa_inscripcion_salud_fichas>()
                 .AsNoTracking()
                 .SingleOrDefaultAsync(x =>
-                    x.id_evento == idEvento &&
                     x.id_inscripcion == baseData.id_inscripcion &&
+                    x.id_rsvp_grupo_integrante == baseData.id_rsvp_grupo_integrante &&
                     x.activo == true);
 
-            var fichaDto = ficha == null
-                ? null
-                : new ProgramaSaludFichaDTO
+            ProgramaSaludFichaDTO? fichaDto = null;
+
+            if (ficha != null)
+            {
+                fichaDto = new ProgramaSaludFichaDTO
                 {
-                    IdFichaSalud = ficha.id_ficha_salud,
-                    IdEvento = ficha.id_evento,
+                    IdFichaSalud = ficha.id_salud_ficha,
+                    IdEvento = idEvento,
                     IdInscripcion = ficha.id_inscripcion,
-                    TieneProblemaMedico = ficha.tiene_problema_medico,
-                    DetalleProblemaMedico = ficha.detalle_problema_medico,
-                    TieneAlergiasNoAlimentarias = ficha.tiene_alergias_no_alimentarias,
-                    DetalleAlergiasNoAlimentarias = ficha.detalle_alergias_no_alimentarias,
-                    TieneNecesidadEspecial = ficha.tiene_necesidad_especial,
-                    DetalleNecesidadEspecial = ficha.detalle_necesidad_especial,
-                    TieneCoberturaMedica = ficha.tiene_cobertura_medica,
-                    CoberturaMedicaNombre = ficha.cobertura_medica_nombre,
-                    CoberturaMedicaNumero = ficha.cobertura_medica_numero,
-                    ContactoEmergenciaNombre = ficha.contacto_emergencia_nombre,
-                    ContactoEmergenciaTelefono = ficha.contacto_emergencia_telefono,
-                    ContactoEmergenciaRelacion = ficha.contacto_emergencia_relacion,
-                    AutorizaEmergenciaMedica = ficha.autoriza_emergencia_medica,
+                    IdInvitado = baseData.id_invitado,
+                    IdRsvpGrupoIntegrante = ficha.id_rsvp_grupo_integrante,
+
+                    Participante = ((baseData.nombre ?? "") + " " + (baseData.apellido ?? "")).Trim(),
+                    Responsable = ((baseData.responsable_nombre ?? "") + " " + (baseData.responsable_apellido ?? "")).Trim(),
+                    TelefonoResponsable = baseData.responsable_telefono,
+
+                    TieneProblemaMedico = ficha.tiene_problema_medico ?? false,
+                    DetalleProblemaMedico = ficha.problema_medico_detalle,
+
+                    TieneAlergiasNoAlimentarias = ficha.tiene_alergias_no_alimentarias ?? false,
+                    DetalleAlergiasNoAlimentarias = ficha.alergias_no_alimentarias_detalle,
+
+                    TieneNecesidadEspecial = !string.IsNullOrWhiteSpace(ficha.necesidad_especial),
+                    DetalleNecesidadEspecial = ficha.necesidad_especial,
+
+                    TieneCoberturaMedica = !string.IsNullOrWhiteSpace(ficha.cobertura_medica),
+                    CoberturaMedicaNombre = ficha.cobertura_medica,
+                    CoberturaMedicaNumero = null,
+
+                    ContactoEmergenciaNombre = null,
+                    ContactoEmergenciaTelefono = null,
+                    ContactoEmergenciaRelacion = null,
+
+                    AutorizaEmergenciaMedica = ficha.autoriza_emergencia_medica ?? false,
                     ObservacionesFamilia = ficha.observaciones_familia,
-                    ObservacionesInternas = ficha.observaciones_internas,
+                    ObservacionesInternas = null,
+
                     Activo = ficha.activo,
                     FechaAlta = ficha.fecha_alta
                 };
 
-            var medicaciones = await _context.Set<ef_programa_salud_medicaciones>()
-                .AsNoTracking()
-                .Where(x =>
-                    x.id_evento == idEvento &&
-                    x.id_inscripcion == baseData.id_inscripcion &&
-                    x.activo == true)
-                .OrderBy(x => x.nombre_medicamento)
-                .Select(x => new ProgramaSaludMedicacionDTO
-                {
-                    IdMedicacion = x.id_medicacion,
-                    IdEvento = x.id_evento,
-                    IdInscripcion = x.id_inscripcion,
-                    NombreMedicamento = x.nombre_medicamento,
-                    Dosis = x.dosis,
-                    Frecuencia = x.frecuencia,
-                    Horario = x.horario,
-                    Instrucciones = x.instrucciones,
-                    AdministracionAutorizada = x.administracion_autorizada,
-                    DebeLlevarParticipante = x.debe_llevar_participante,
-                    RequiereRefrigeracion = x.requiere_refrigeracion,
-                    Activo = x.activo,
-                    FechaAlta = x.fecha_alta
-                })
-                .ToListAsync();
+                var contactos = await _context.Set<ef_programa_inscripcion_salud_contactos>()
+                    .AsNoTracking()
+                    .Where(x => x.id_salud_ficha == ficha.id_salud_ficha)
+                    .OrderBy(x => x.orden)
+                    .Select(x => new ProgramaSaludContactoEmergenciaDTO
+                    {
+                        Nombre = x.nombre,
+                        Telefono = x.telefono,
+                        Relacion = x.relacion,
+                        Orden = x.orden
+                    })
+                    .ToListAsync();
+
+                var medicacionesFicha = await _context.Set<ef_programa_inscripcion_salud_medicaciones>()
+                    .AsNoTracking()
+                    .Where(x => x.id_salud_ficha == ficha.id_salud_ficha)
+                    .OrderBy(x => x.nombre_medicacion)
+                    .Select(x => new ProgramaSaludMedicacionFichaDTO
+                    {
+                        IdMedicacion = x.id_medicacion,
+                        NombreMedicacion = x.nombre_medicacion,
+                        Dosis = x.dosis,
+                        Frecuencia = x.frecuencia,
+                        Horario = x.horario,
+                        Indicaciones = x.indicaciones,
+                        RequiereAutorizacion = x.requiere_autorizacion
+                    })
+                    .ToListAsync();
+
+                fichaDto.ContactosEmergencia = contactos;
+                fichaDto.Medicaciones = medicacionesFicha;
+            }
+
+            var medicaciones = ficha == null
+                ? new List<ProgramaSaludMedicacionDTO>()
+                : await _context.Set<ef_programa_inscripcion_salud_medicaciones>()
+                    .AsNoTracking()
+                    .Where(x => x.id_salud_ficha == ficha.id_salud_ficha)
+                    .OrderBy(x => x.nombre_medicacion)
+                    .Select(x => new ProgramaSaludMedicacionDTO
+                    {
+                        IdMedicacion = x.id_medicacion,
+                        IdEvento = idEvento,
+                        IdInscripcion = baseData.id_inscripcion,
+                        NombreMedicamento = x.nombre_medicacion,
+                        Dosis = x.dosis,
+                        Frecuencia = x.frecuencia,
+                        Horario = x.horario,
+                        Instrucciones = x.indicaciones,
+                        AdministracionAutorizada = x.requiere_autorizacion,
+                        DebeLlevarParticipante = false,
+                        RequiereRefrigeracion = false,
+                        Activo = true,
+                        FechaAlta = x.fecha_alta
+                    })
+                    .ToListAsync();
 
             var acciones = await _context.Set<ef_programa_salud_acciones>()
                 .AsNoTracking()
