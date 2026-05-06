@@ -18,6 +18,14 @@ namespace API.DataSchema.DTO.Programas
         [JsonProperty("id_inscripcion")]
         public long IdInscripcion { get; set; }
 
+        [JsonPropertyName("id_participante")]
+        [JsonProperty("id_participante")]
+        public long? IdParticipante { get; set; }
+
+        [JsonPropertyName("participante")]
+        [JsonProperty("participante")]
+        public string? Participante { get; set; }
+
         [JsonPropertyName("nombre_medicamento")]
         [JsonProperty("nombre_medicamento")]
         public string NombreMedicamento { get; set; } = null!;

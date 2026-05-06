@@ -1223,36 +1223,53 @@ namespace API.Controllers.Programas
             if (ev.tipo_operacion != "PROGRAMA")
                 return BadRequest("El evento indicado no es de tipo PROGRAMA.");
 
-            var q = _context.Set<ef_programa_salud_medicaciones>()
-                .AsNoTracking()
-                .Where(x => x.id_evento == idEvento);
-
-            if (soloActivas)
-                q = q.Where(x => x.activo == true);
+            var q =
+                from m in _context.Set<ef_programa_inscripcion_salud_medicaciones>().AsNoTracking()
+                join f in _context.Set<ef_programa_inscripcion_salud_fichas>().AsNoTracking()
+                    on m.id_salud_ficha equals f.id_salud_ficha
+                join insc in _context.Set<ef_programa_inscripciones>().AsNoTracking()
+                    on f.id_inscripcion equals insc.id_inscripcion
+                join gi in _context.Set<ef_rsvp_grupo_integrantes>().AsNoTracking()
+                    on f.id_rsvp_grupo_integrante equals gi.id_rsvp_grupo_integrante
+                join inv in _context.Set<ef_invitados>().AsNoTracking()
+                    on gi.id_invitado equals inv.id_invitado
+                where insc.id_evento == idEvento
+                      && insc.activo == true
+                      && f.activo == true
+                select new
+                {
+                    m,
+                    f,
+                    inv.id_invitado,
+                    participante = ((inv.nombre ?? "") + " " + (inv.apellido ?? "")).Trim()
+                };
 
             var result = await q
-                .OrderBy(x => x.id_inscripcion)
-                .ThenBy(x => x.nombre_medicamento)
+                .OrderBy(x => x.participante)
+                .ThenBy(x => x.m.nombre_medicacion)
                 .Select(x => new ProgramaSaludMedicacionDTO
                 {
-                    IdMedicacion = x.id_medicacion,
-                    IdEvento = x.id_evento,
-                    IdInscripcion = x.id_inscripcion,
-                    NombreMedicamento = x.nombre_medicamento,
-                    Dosis = x.dosis,
-                    Frecuencia = x.frecuencia,
-                    Horario = x.horario,
-                    Instrucciones = x.instrucciones,
-                    AdministracionAutorizada = x.administracion_autorizada,
-                    DebeLlevarParticipante = x.debe_llevar_participante,
-                    RequiereRefrigeracion = x.requiere_refrigeracion,
-                    Activo = x.activo,
-                    FechaAlta = x.fecha_alta
+                    IdMedicacion = x.m.id_medicacion,
+                    IdEvento = idEvento,
+                    IdInscripcion = x.f.id_inscripcion,
+                    IdParticipante = x.id_invitado,
+                    Participante = x.participante,
+                    NombreMedicamento = x.m.nombre_medicacion,
+                    Dosis = x.m.dosis,
+                    Frecuencia = x.m.frecuencia,
+                    Horario = x.m.horario,
+                    Instrucciones = x.m.indicaciones,
+                    AdministracionAutorizada = x.m.requiere_autorizacion,
+                    DebeLlevarParticipante = false,
+                    RequiereRefrigeracion = false,
+                    Activo = true,
+                    FechaAlta = x.m.fecha_alta
                 })
                 .ToListAsync();
 
             return Ok(result);
         }
+
 
         [Authorize]
         [HttpPost("{idEvento:long}/salud/medicaciones/upsert")]
@@ -1280,62 +1297,70 @@ namespace API.Controllers.Programas
             if (req.IdInscripcion <= 0)
                 return BadRequest("Debe indicar la inscripción.");
 
+            if (!req.IdParticipante.HasValue || req.IdParticipante.Value <= 0)
+                return BadRequest("Debe indicar el participante.");
+
             if (string.IsNullOrWhiteSpace(req.NombreMedicamento))
                 return BadRequest("Debe indicar el nombre del medicamento.");
 
-            var now = DateTimeOffset.UtcNow;
+            var ficha = await (
+                from f in _context.Set<ef_programa_inscripcion_salud_fichas>()
+                join insc in _context.Set<ef_programa_inscripciones>()
+                    on f.id_inscripcion equals insc.id_inscripcion
+                join gi in _context.Set<ef_rsvp_grupo_integrantes>()
+                    on f.id_rsvp_grupo_integrante equals gi.id_rsvp_grupo_integrante
+                where insc.id_evento == idEvento
+                      && f.id_inscripcion == req.IdInscripcion
+                      && gi.id_invitado == req.IdParticipante.Value
+                      && f.activo == true
+                select f
+            ).SingleOrDefaultAsync();
 
-            ef_programa_salud_medicaciones? item;
+            if (ficha == null)
+                return BadRequest("No existe ficha de salud para ese participante.");
+
+            ef_programa_inscripcion_salud_medicaciones? item;
 
             if (req.IdMedicacion.HasValue && req.IdMedicacion.Value > 0)
             {
-                item = await _context.Set<ef_programa_salud_medicaciones>()
+                item = await _context.Set<ef_programa_inscripcion_salud_medicaciones>()
                     .SingleOrDefaultAsync(x =>
                         x.id_medicacion == req.IdMedicacion.Value &&
-                        x.id_evento == idEvento);
+                        x.id_salud_ficha == ficha.id_salud_ficha);
 
                 if (item == null)
                     return NotFound("Medicación inexistente.");
             }
             else
             {
-                item = new ef_programa_salud_medicaciones
+                item = new ef_programa_inscripcion_salud_medicaciones
                 {
-                    id_evento = idEvento,
-                    id_inscripcion = req.IdInscripcion,
-                    fecha_alta = now
+                    id_salud_ficha = ficha.id_salud_ficha,
+                    fecha_alta = DateTimeOffset.UtcNow
                 };
 
-                _context.Set<ef_programa_salud_medicaciones>().Add(item);
+                _context.Set<ef_programa_inscripcion_salud_medicaciones>().Add(item);
             }
 
-            item.id_inscripcion = req.IdInscripcion;
-            item.nombre_medicamento = req.NombreMedicamento.Trim();
+            item.nombre_medicacion = req.NombreMedicamento.Trim();
             item.dosis = string.IsNullOrWhiteSpace(req.Dosis) ? null : req.Dosis.Trim();
             item.frecuencia = string.IsNullOrWhiteSpace(req.Frecuencia) ? null : req.Frecuencia.Trim();
             item.horario = string.IsNullOrWhiteSpace(req.Horario) ? null : req.Horario.Trim();
-            item.instrucciones = string.IsNullOrWhiteSpace(req.Instrucciones) ? null : req.Instrucciones.Trim();
-
-            item.administracion_autorizada = req.AdministracionAutorizada;
-            item.debe_llevar_participante = req.DebeLlevarParticipante;
-            item.requiere_refrigeracion = req.RequiereRefrigeracion;
-            item.activo = req.Activo;
-            item.fecha_modif = now;
+            item.indicaciones = string.IsNullOrWhiteSpace(req.Instrucciones) ? null : req.Instrucciones.Trim();
+            item.requiere_autorizacion = req.AdministracionAutorizada;
 
             await _context.SaveChangesAsync();
 
             req.IdMedicacion = item.id_medicacion;
-            req.IdEvento = item.id_evento;
-            req.IdInscripcion = item.id_inscripcion;
-            req.NombreMedicamento = item.nombre_medicamento;
+            req.IdEvento = idEvento;
+            req.IdInscripcion = ficha.id_inscripcion;
+            req.NombreMedicamento = item.nombre_medicacion;
             req.Dosis = item.dosis;
             req.Frecuencia = item.frecuencia;
             req.Horario = item.horario;
-            req.Instrucciones = item.instrucciones;
-            req.AdministracionAutorizada = item.administracion_autorizada;
-            req.DebeLlevarParticipante = item.debe_llevar_participante;
-            req.RequiereRefrigeracion = item.requiere_refrigeracion;
-            req.Activo = item.activo;
+            req.Instrucciones = item.indicaciones;
+            req.AdministracionAutorizada = item.requiere_autorizacion;
+            req.Activo = true;
             req.FechaAlta = item.fecha_alta;
 
             return Ok(req);
@@ -1347,38 +1372,7 @@ namespace API.Controllers.Programas
     long idMedicacion,
     [FromQuery] bool activo)
         {
-            long idUsuario = User.GetUserId();
-
-            var item = await _context.Set<ef_programa_salud_medicaciones>()
-                .Include(x => x.evento)
-                .SingleOrDefaultAsync(x => x.id_medicacion == idMedicacion);
-
-            if (item == null)
-                return NotFound("Medicación inexistente.");
-
-            if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
-                return BadRequest("La medicación no pertenece a un programa válido.");
-
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
-                .AnyAsync(x =>
-                    x.id_evento == item.id_evento &&
-                    x.id_usuario == idUsuario &&
-                    x.activo == true);
-
-            if (!pertenece)
-                return Forbid();
-
-            item.activo = activo;
-            item.fecha_modif = DateTimeOffset.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                ok = true,
-                id_medicacion = idMedicacion,
-                activo
-            });
+            return BadRequest("La medicación de inscripción no maneja activo. Para eliminar/desactivar, hay que implementar baja lógica o borrado controlado.");
         }
 
         [Authorize]
@@ -1726,36 +1720,90 @@ namespace API.Controllers.Programas
             if (!pertenece)
                 return Forbid();
 
-            var item = await _context.Set<ef_programa_salud_fichas>()
-                .AsNoTracking()
-                .SingleOrDefaultAsync(x => x.id_evento == idEvento && x.id_inscripcion == idInscripcion);
+            var item = await (
+                from f in _context.Set<ef_programa_inscripcion_salud_fichas>().AsNoTracking()
+                join insc in _context.Set<ef_programa_inscripciones>().AsNoTracking()
+                    on f.id_inscripcion equals insc.id_inscripcion
+                join gi in _context.Set<ef_rsvp_grupo_integrantes>().AsNoTracking()
+                    on f.id_rsvp_grupo_integrante equals gi.id_rsvp_grupo_integrante
+                join inv in _context.Set<ef_invitados>().AsNoTracking()
+                    on gi.id_invitado equals inv.id_invitado
+                where insc.id_evento == idEvento
+                      && f.id_inscripcion == idInscripcion
+                      && f.activo == true
+                orderby inv.nombre, inv.apellido
+                select new
+                {
+                    f,
+                    inv.id_invitado,
+                    participante = ((inv.nombre ?? "") + " " + (inv.apellido ?? "")).Trim(),
+                    responsable = ((insc.responsable_nombre ?? "") + " " + (insc.responsable_apellido ?? "")).Trim(),
+                    insc.responsable_telefono
+                }
+            ).FirstOrDefaultAsync();
 
             if (item == null)
                 return NotFound("Ficha médica inexistente.");
 
-            return Ok(new ProgramaSaludFichaDTO
+            var dto = new ProgramaSaludFichaDTO
             {
-                IdFichaSalud = item.id_ficha_salud,
-                IdEvento = item.id_evento,
-                IdInscripcion = item.id_inscripcion,
-                TieneProblemaMedico = item.tiene_problema_medico,
-                DetalleProblemaMedico = item.detalle_problema_medico,
-                TieneAlergiasNoAlimentarias = item.tiene_alergias_no_alimentarias,
-                DetalleAlergiasNoAlimentarias = item.detalle_alergias_no_alimentarias,
-                TieneNecesidadEspecial = item.tiene_necesidad_especial,
-                DetalleNecesidadEspecial = item.detalle_necesidad_especial,
-                TieneCoberturaMedica = item.tiene_cobertura_medica,
-                CoberturaMedicaNombre = item.cobertura_medica_nombre,
-                CoberturaMedicaNumero = item.cobertura_medica_numero,
-                ContactoEmergenciaNombre = item.contacto_emergencia_nombre,
-                ContactoEmergenciaTelefono = item.contacto_emergencia_telefono,
-                ContactoEmergenciaRelacion = item.contacto_emergencia_relacion,
-                AutorizaEmergenciaMedica = item.autoriza_emergencia_medica,
-                ObservacionesFamilia = item.observaciones_familia,
-                ObservacionesInternas = item.observaciones_internas,
-                Activo = item.activo,
-                FechaAlta = item.fecha_alta
-            });
+                IdFichaSalud = item.f.id_salud_ficha,
+                IdEvento = idEvento,
+                IdInscripcion = item.f.id_inscripcion,
+                IdInvitado = item.id_invitado,
+                IdRsvpGrupoIntegrante = item.f.id_rsvp_grupo_integrante,
+                Participante = item.participante,
+                Responsable = item.responsable,
+                TelefonoResponsable = item.responsable_telefono,
+
+                TieneProblemaMedico = item.f.tiene_problema_medico ?? false,
+                DetalleProblemaMedico = item.f.problema_medico_detalle,
+
+                TieneAlergiasNoAlimentarias = item.f.tiene_alergias_no_alimentarias ?? false,
+                DetalleAlergiasNoAlimentarias = item.f.alergias_no_alimentarias_detalle,
+
+                TieneNecesidadEspecial = !string.IsNullOrWhiteSpace(item.f.necesidad_especial),
+                DetalleNecesidadEspecial = item.f.necesidad_especial,
+
+                TieneCoberturaMedica = !string.IsNullOrWhiteSpace(item.f.cobertura_medica),
+                CoberturaMedicaNombre = item.f.cobertura_medica,
+
+                AutorizaEmergenciaMedica = item.f.autoriza_emergencia_medica ?? false,
+                ObservacionesFamilia = item.f.observaciones_familia,
+                Activo = item.f.activo,
+                FechaAlta = item.f.fecha_alta
+            };
+
+            dto.ContactosEmergencia = await _context.Set<ef_programa_inscripcion_salud_contactos>()
+                .AsNoTracking()
+                .Where(x => x.id_salud_ficha == item.f.id_salud_ficha)
+                .OrderBy(x => x.orden)
+                .Select(x => new ProgramaSaludContactoEmergenciaDTO
+                {
+                    Nombre = x.nombre,
+                    Telefono = x.telefono,
+                    Relacion = x.relacion,
+                    Orden = x.orden
+                })
+                .ToListAsync();
+
+            dto.Medicaciones = await _context.Set<ef_programa_inscripcion_salud_medicaciones>()
+                .AsNoTracking()
+                .Where(x => x.id_salud_ficha == item.f.id_salud_ficha)
+                .OrderBy(x => x.nombre_medicacion)
+                .Select(x => new ProgramaSaludMedicacionFichaDTO
+                {
+                    IdMedicacion = x.id_medicacion,
+                    NombreMedicacion = x.nombre_medicacion,
+                    Dosis = x.dosis,
+                    Frecuencia = x.frecuencia,
+                    Horario = x.horario,
+                    Indicaciones = x.indicaciones,
+                    RequiereAutorizacion = x.requiere_autorizacion
+                })
+                .ToListAsync();
+
+            return Ok(dto);
         }
 
         [Authorize]
@@ -1784,6 +1832,9 @@ namespace API.Controllers.Programas
             if (req.IdInscripcion <= 0)
                 return BadRequest("Debe indicar la inscripción.");
 
+            if (!req.IdRsvpGrupoIntegrante.HasValue || req.IdRsvpGrupoIntegrante.Value <= 0)
+                return BadRequest("Debe indicar el integrante.");
+
             if (req.TieneProblemaMedico && string.IsNullOrWhiteSpace(req.DetalleProblemaMedico))
                 return BadRequest("Debe detallar el problema médico.");
 
@@ -1793,75 +1844,71 @@ namespace API.Controllers.Programas
             if (req.TieneNecesidadEspecial && string.IsNullOrWhiteSpace(req.DetalleNecesidadEspecial))
                 return BadRequest("Debe detallar la necesidad especial.");
 
-            if (req.TieneCoberturaMedica && string.IsNullOrWhiteSpace(req.CoberturaMedicaNombre))
-                return BadRequest("Debe indicar el nombre de la cobertura médica.");
+            var inscripcionValida = await _context.Set<ef_programa_inscripciones>()
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.id_evento == idEvento &&
+                    x.id_inscripcion == req.IdInscripcion &&
+                    x.activo == true);
+
+            if (!inscripcionValida)
+                return BadRequest("La inscripción no pertenece al programa.");
 
             var now = DateTimeOffset.UtcNow;
 
-            ef_programa_salud_fichas? item;
+            ef_programa_inscripcion_salud_fichas? item;
 
             if (req.IdFichaSalud.HasValue && req.IdFichaSalud.Value > 0)
             {
-                item = await _context.Set<ef_programa_salud_fichas>()
+                item = await _context.Set<ef_programa_inscripcion_salud_fichas>()
                     .SingleOrDefaultAsync(x =>
-                        x.id_ficha_salud == req.IdFichaSalud.Value &&
-                        x.id_evento == idEvento);
+                        x.id_salud_ficha == req.IdFichaSalud.Value &&
+                        x.id_inscripcion == req.IdInscripcion);
 
                 if (item == null)
                     return NotFound("Ficha médica inexistente.");
             }
             else
             {
-                item = await _context.Set<ef_programa_salud_fichas>()
+                item = await _context.Set<ef_programa_inscripcion_salud_fichas>()
                     .SingleOrDefaultAsync(x =>
-                        x.id_evento == idEvento &&
-                        x.id_inscripcion == req.IdInscripcion);
+                        x.id_inscripcion == req.IdInscripcion &&
+                        x.id_rsvp_grupo_integrante == req.IdRsvpGrupoIntegrante.Value);
 
                 if (item == null)
                 {
-                    item = new ef_programa_salud_fichas
+                    item = new ef_programa_inscripcion_salud_fichas
                     {
-                        id_evento = idEvento,
                         id_inscripcion = req.IdInscripcion,
+                        id_rsvp_grupo_integrante = req.IdRsvpGrupoIntegrante.Value,
                         fecha_alta = now
                     };
 
-                    _context.Set<ef_programa_salud_fichas>().Add(item);
+                    _context.Set<ef_programa_inscripcion_salud_fichas>().Add(item);
                 }
             }
 
-            item.id_inscripcion = req.IdInscripcion;
-
             item.tiene_problema_medico = req.TieneProblemaMedico;
-            item.detalle_problema_medico = string.IsNullOrWhiteSpace(req.DetalleProblemaMedico) ? null : req.DetalleProblemaMedico.Trim();
+            item.problema_medico_detalle = string.IsNullOrWhiteSpace(req.DetalleProblemaMedico) ? null : req.DetalleProblemaMedico.Trim();
 
             item.tiene_alergias_no_alimentarias = req.TieneAlergiasNoAlimentarias;
-            item.detalle_alergias_no_alimentarias = string.IsNullOrWhiteSpace(req.DetalleAlergiasNoAlimentarias) ? null : req.DetalleAlergiasNoAlimentarias.Trim();
+            item.alergias_no_alimentarias_detalle = string.IsNullOrWhiteSpace(req.DetalleAlergiasNoAlimentarias) ? null : req.DetalleAlergiasNoAlimentarias.Trim();
 
-            item.tiene_necesidad_especial = req.TieneNecesidadEspecial;
-            item.detalle_necesidad_especial = string.IsNullOrWhiteSpace(req.DetalleNecesidadEspecial) ? null : req.DetalleNecesidadEspecial.Trim();
-
-            item.tiene_cobertura_medica = req.TieneCoberturaMedica;
-            item.cobertura_medica_nombre = string.IsNullOrWhiteSpace(req.CoberturaMedicaNombre) ? null : req.CoberturaMedicaNombre.Trim();
-            item.cobertura_medica_numero = string.IsNullOrWhiteSpace(req.CoberturaMedicaNumero) ? null : req.CoberturaMedicaNumero.Trim();
-
-            item.contacto_emergencia_nombre = string.IsNullOrWhiteSpace(req.ContactoEmergenciaNombre) ? null : req.ContactoEmergenciaNombre.Trim();
-            item.contacto_emergencia_telefono = string.IsNullOrWhiteSpace(req.ContactoEmergenciaTelefono) ? null : req.ContactoEmergenciaTelefono.Trim();
-            item.contacto_emergencia_relacion = string.IsNullOrWhiteSpace(req.ContactoEmergenciaRelacion) ? null : req.ContactoEmergenciaRelacion.Trim();
+            item.necesidad_especial = string.IsNullOrWhiteSpace(req.DetalleNecesidadEspecial) ? null : req.DetalleNecesidadEspecial.Trim();
+            item.cobertura_medica = string.IsNullOrWhiteSpace(req.CoberturaMedicaNombre) ? null : req.CoberturaMedicaNombre.Trim();
 
             item.autoriza_emergencia_medica = req.AutorizaEmergenciaMedica;
-
             item.observaciones_familia = string.IsNullOrWhiteSpace(req.ObservacionesFamilia) ? null : req.ObservacionesFamilia.Trim();
-            item.observaciones_internas = string.IsNullOrWhiteSpace(req.ObservacionesInternas) ? null : req.ObservacionesInternas.Trim();
 
             item.activo = req.Activo;
             item.fecha_modif = now;
 
             await _context.SaveChangesAsync();
 
-            req.IdFichaSalud = item.id_ficha_salud;
-            req.IdEvento = item.id_evento;
+            req.IdFichaSalud = item.id_salud_ficha;
+            req.IdEvento = idEvento;
             req.IdInscripcion = item.id_inscripcion;
+            req.IdRsvpGrupoIntegrante = item.id_rsvp_grupo_integrante;
             req.FechaAlta = item.fecha_alta;
 
             return Ok(req);
@@ -1875,15 +1922,20 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            var item = await _context.Set<ef_programa_salud_fichas>()
-                .Include(x => x.evento)
-                .SingleOrDefaultAsync(x => x.id_ficha_salud == idFichaSalud);
+            var item = await (
+                from f in _context.Set<ef_programa_inscripcion_salud_fichas>()
+                join insc in _context.Set<ef_programa_inscripciones>()
+                    on f.id_inscripcion equals insc.id_inscripcion
+                where f.id_salud_ficha == idFichaSalud
+                select new
+                {
+                    ficha = f,
+                    insc.id_evento
+                }
+            ).SingleOrDefaultAsync();
 
             if (item == null)
                 return NotFound("Ficha médica inexistente.");
-
-            if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
-                return BadRequest("La ficha médica no pertenece a un programa válido.");
 
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x =>
@@ -1894,8 +1946,8 @@ namespace API.Controllers.Programas
             if (!pertenece)
                 return Forbid();
 
-            item.activo = activo;
-            item.fecha_modif = DateTimeOffset.UtcNow;
+            item.ficha.activo = activo;
+            item.ficha.fecha_modif = DateTimeOffset.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -2879,7 +2931,7 @@ namespace API.Controllers.Programas
             var item = new ef_programa_salud_acciones
             {
                 id_evento = idEvento,
-                //id_inscripcion = req.IdInscripcion,
+                id_inscripcion = req.IdInscripcion,
                 id_participante = req.IdParticipante,
                 fecha_hora = req.FechaHora ?? now,
                 tipo_accion = tipoAccion,
@@ -2902,6 +2954,7 @@ namespace API.Controllers.Programas
                 IdAccionSalud = item.id_accion_salud,
                 IdEvento = item.id_evento,
                 IdInscripcion = item.id_inscripcion,
+                IdParticipante = item.id_participante,
                 FechaHora = item.fecha_hora,
                 TipoAccion = item.tipo_accion,
                 Descripcion = item.descripcion,
