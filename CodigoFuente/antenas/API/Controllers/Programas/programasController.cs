@@ -1570,8 +1570,8 @@ namespace API.Controllers.Programas
         [Authorize]
         [HttpGet("{idEvento:long}/salud/fichas")]
         public async Task<ActionResult<List<ProgramaSaludFichaDTO>>> GetSaludFichas(
-    long idEvento,
-    [FromQuery] bool soloActivas = true)
+            long idEvento,
+            [FromQuery] bool soloActivas = true)
         {
             long idUsuario = User.GetUserId();
 
@@ -1605,6 +1605,7 @@ namespace API.Controllers.Programas
                 {
                     f,
                     insc,
+                    inv.id_invitado,
                     participante = ((inv.nombre ?? "") + " " + (inv.apellido ?? "")).Trim()
                 };
 
@@ -1618,6 +1619,7 @@ namespace API.Controllers.Programas
                     IdFichaSalud = x.f.id_salud_ficha,
                     IdEvento = idEvento,
                     IdInscripcion = x.f.id_inscripcion,
+                    IdInvitado = x.id_invitado,
                     IdRsvpGrupoIntegrante = x.f.id_rsvp_grupo_integrante,
                     Participante = x.participante,
                     Responsable = ((x.insc.responsable_nombre ?? "") + " " + (x.insc.responsable_apellido ?? "")).Trim(),
@@ -1650,6 +1652,63 @@ namespace API.Controllers.Programas
                 })
                 .ToListAsync();
 
+
+            var idsFichas = result
+                .Where(x => x.IdFichaSalud.HasValue)
+                .Select(x => x.IdFichaSalud!.Value)
+                .ToList();
+
+            var contactos = await _context.Set<ef_programa_inscripcion_salud_contactos>()
+                .AsNoTracking()
+                .Where(x => idsFichas.Contains(x.id_salud_ficha))
+                .OrderBy(x => x.orden)
+                .Select(x => new
+                {
+                    x.id_salud_ficha,
+                    dto = new ProgramaSaludContactoEmergenciaDTO
+                    {
+                        Nombre = x.nombre,
+                        Telefono = x.telefono,
+                        Relacion = x.relacion,
+                        Orden = x.orden
+                    }
+                })
+                .ToListAsync();
+
+            var medicaciones = await _context.Set<ef_programa_inscripcion_salud_medicaciones>()
+                .AsNoTracking()
+                .Where(x => idsFichas.Contains(x.id_salud_ficha))
+                .Select(x => new
+                {
+                    x.id_salud_ficha,
+                    dto = new ProgramaSaludMedicacionFichaDTO
+                    {
+                        IdMedicacion = x.id_medicacion,
+                        NombreMedicacion = x.nombre_medicacion,
+                        Dosis = x.dosis,
+                        Frecuencia = x.frecuencia,
+                        Horario = x.horario,
+                        Indicaciones = x.indicaciones,
+                        RequiereAutorizacion = x.requiere_autorizacion
+                    }
+                })
+                .ToListAsync();
+
+            foreach (var ficha in result)
+            {
+                if (!ficha.IdFichaSalud.HasValue)
+                    continue;
+
+                ficha.ContactosEmergencia = contactos
+                    .Where(x => x.id_salud_ficha == ficha.IdFichaSalud.Value)
+                    .Select(x => x.dto)
+                    .ToList();
+
+                ficha.Medicaciones = medicaciones
+                    .Where(x => x.id_salud_ficha == ficha.IdFichaSalud.Value)
+                    .Select(x => x.dto)
+                    .ToList();
+            }
             return Ok(result);
         }
 

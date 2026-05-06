@@ -1,11 +1,16 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace API.DataSchema.DTO.Programas
 {
     public class ProgramaSaludFichaDTO
     {
+        [JsonPropertyName("id_invitado")]
+        [JsonProperty("id_invitado")]
+        public long? IdInvitado { get; set; }
+
         [JsonPropertyName("id_ficha_salud")]
         [JsonProperty("id_ficha_salud")]
         public long? IdFichaSalud { get; set; }
@@ -101,5 +106,63 @@ namespace API.DataSchema.DTO.Programas
         [JsonPropertyName("telefono_responsable")]
         [JsonProperty("telefono_responsable")]
         public string? TelefonoResponsable { get; set; }
+
+        [JsonPropertyName("contactos_emergencia")]
+        [JsonProperty("contactos_emergencia")]
+        public List<ProgramaSaludContactoEmergenciaDTO> ContactosEmergencia { get; set; } = new();
+
+        [JsonPropertyName("medicaciones")]
+        [JsonProperty("medicaciones")]
+        public List<ProgramaSaludMedicacionFichaDTO> Medicaciones { get; set; } = new();
+    }
+
+    public class ProgramaSaludContactoEmergenciaDTO
+    {
+        [JsonPropertyName("nombre")]
+        [JsonProperty("nombre")]
+        public string Nombre { get; set; } = "";
+
+        [JsonPropertyName("telefono")]
+        [JsonProperty("telefono")]
+        public string Telefono { get; set; } = "";
+
+        [JsonPropertyName("relacion")]
+        [JsonProperty("relacion")]
+        public string? Relacion { get; set; }
+
+        [JsonPropertyName("orden")]
+        [JsonProperty("orden")]
+        public int Orden { get; set; }
+    }
+
+    public class ProgramaSaludMedicacionFichaDTO
+    {
+        [JsonPropertyName("id_medicacion")]
+        [JsonProperty("id_medicacion")]
+        public long IdMedicacion { get; set; }
+
+        [JsonPropertyName("nombre_medicacion")]
+        [JsonProperty("nombre_medicacion")]
+        public string NombreMedicacion { get; set; } = "";
+
+        [JsonPropertyName("dosis")]
+        [JsonProperty("dosis")]
+        public string? Dosis { get; set; }
+
+        [JsonPropertyName("frecuencia")]
+        [JsonProperty("frecuencia")]
+        public string? Frecuencia { get; set; }
+
+        [JsonPropertyName("horario")]
+        [JsonProperty("horario")]
+        public string? Horario { get; set; }
+
+        [JsonPropertyName("indicaciones")]
+        [JsonProperty("indicaciones")]
+        public string? Indicaciones { get; set; }
+
+        [JsonPropertyName("requiere_autorizacion")]
+        [JsonProperty("requiere_autorizacion")]
+        public bool RequiereAutorizacion { get; set; }
     }
 }
