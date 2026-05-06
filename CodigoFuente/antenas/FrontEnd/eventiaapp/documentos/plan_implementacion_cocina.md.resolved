@@ -1,0 +1,168 @@
+# Plan de Implementación Frontend: Módulo de Cocina y Restricciones Alimentarias
+
+Este documento detalla el plan de implementación para el nuevo módulo de **Cocina** dentro de la gestión de inscripciones de programas/eventos, basado en el documento de especificaciones `5-Eventia-ColoniasVacaciones-RestriccionesAlimentarias-Comedor.md`.
+
+## 1. Arquitectura y Estructura del Proyecto
+
+El nuevo módulo se integrará respetando la estructura existente de Eventia, añadiendo las siguientes piezas clave:
+
+### 1.1. Enrutamiento (Routing)
+Se debe agregar una nueva ruta dentro del router de React para acceder a esta pantalla desde el contexto de un evento específico.
+- **Ruta propuesta:** `/programas/:idEvento/inscripciones/cocina` (o similar, dependiendo de la convención actual).
+- **Navegación:** Agregar el acceso a "Cocina" en el menú lateral o de pestañas dentro de "Gestión de inscripciones" del programa.
+
+### 1.2. Servicios API (`services/`)
+Creación o extensión de un servicio (ej. `CocinaService.ts` o dentro de `EventosService.ts`) para manejar los nuevos endpoints:
+
+1. **Obtener Resumen y Grilla del Día:**
+   - **Endpoint:** `GET /programas/{idEvento}/cocina/dia`
+   - **Params:** `fecha` (YYYY-MM-DD), `idIdioma` (Opcional).
+   - **Propósito:** Alimenta el Header, las Cards, los Chips de resumen y la grilla principal.
+
+2. **Obtener Detalle del Participante:**
+   - **Endpoint:** `GET /programas/{idEvento}/cocina/participantes/{idInvitado}/detalle`
+   - **Params:** `fecha`, `idIdioma`.
+   - **Propósito:** Alimenta el modal/panel lateral de "Ver Detalle" por cada inscripto.
+
+---
+
+## 2. Desglose de Componentes UI
+
+Se adoptará un enfoque modular. La pantalla principal se dividirá en subcomponentes para mantener un código limpio y reutilizable, siguiendo el sistema de diseño UX/UI del proyecto.
+
+### 2.1. `CocinaDashboard` (Contenedor Principal)
+- **Responsabilidad:** Gestionar el estado global de la vista (fecha seleccionada, datos obtenidos del endpoint del día, estado de carga, errores).
+- **Estado (State):**
+  - `fechaSeleccionada` (Date, por defecto hoy).
+  - `datosCocina` (Data del endpoint).
+  - `isLoading`, `error`.
+- **Efectos:** Llamar al endpoint `GET /programas/{idEvento}/cocina/dia` cada vez que cambia `fechaSeleccionada`.
+
+### 2.2. `CocinaHeader` y Filtros
+- **Contenido:** Título con el nombre del programa (ej. "Panel de Organización Comida Programa: Casal d’estiu Aquamar 2026").
+- **Controles:**
+  - `DatePicker` para seleccionar la fecha.
+  - Botón "Descargar PDF Cocina" (Acción a definir: invocar a un endpoint de exportación o generar un PDF en el cliente).
+
+### 2.3. `CocinaSummaryCards` (Tarjetas de Resumen)
+Componente que renderiza 4 tarjetas visuales coloreadas para impacto rápido:
+- **Total:** Muestra `resumen.totalComedor` (Color: Verde / Success).
+- **Sin Restricciones:** Muestra `resumen.sinRestricciones` (Color: Verde / Success).
+- **Con Restricciones:** Muestra `resumen.conRestricciones` (Color: Amarillo / Warning).
+- **Alertas:** Muestra `resumen.alertasAltas` (Color: Rojo / Danger).
+
+### 2.4. `CocinaRestrictionChips` (Resumen de Restricciones)
+- **Responsabilidad:** Mostrar los "chips" informativos que agrupan la cantidad de menús especiales requeridos.
+- **Lógica:** Recibe el array `totalesPorRestriccion`.
+- **Ordenamiento:**
+  1. `alertaVisual === true` primero.
+  2. Cantidad descendente (`cantidad DESC`).
+  3. Orden alfabético por texto.
+  4. **UI:** Renderiza chips estilo "Alergia al maní (2)". Los chips con alerta visual pueden tener un estilo destacado (ej. borde rojo o icono).
+
+### 2.5. `CocinaGrid` (Tabla Principal)
+- **Responsabilidad:** Listar a los participantes que comen en el día seleccionado.
+- **Columnas:**
+  1. **Nivel de Alerta (⚠):** Renderiza un icono (rojo para "ALTA", amarillo para "MEDIA", transparente/oculto para "NORMAL") basado en `nivelAlerta`.
+  2. **Participante:** Nombre (`participante`).
+  3. **Responsable:** Nombre (`responsable`).
+  4. **Teléfono:** (`telefonoResponsable`).
+  5. **Restricciones:** Renderizado como una lista de chips o texto. (Iterando `restricciones.texto`).
+  6. **Observaciones:** Texto concatenado o listado de `restricciones.observaciones`.
+  7. **Acciones:** Botón "Ver Detalle" que abre el modal de detalle del participante.
+
+### 2.6. `CocinaParticipantDetailModal` (Modal/Panel de Detalle)
+- **Responsabilidad:** Al hacer clic en "Ver Detalle", hace fetch al endpoint de detalle (`GET .../detalle`) o usa la prop si se inyecta directamente.
+- **Contenido UI:**
+  - **Encabezado:** Nombre del participante, Responsable, Tel, Email.
+  - **Contexto:** Fecha y Servicio (ej. Menjador).
+  - **Alertas:** Nivel de alerta general.
+  - **Restricciones Alimentarias:** Lista detallada (Severidad y Observaciones).
+  - **Salud Extra:** Problemas médicos, necesidades especiales, observaciones de la familia.
+
+---
+
+## 3. Interfaces de Datos (TypeScript)
+
+Para mantener el tipado estricto, se definirán las siguientes interfaces basadas en los payloads esperados:
+
+```typescript
+// Resumen del día
+export interface CocinaDiaResponse {
+    idEvento: number;
+    fecha: string;
+    servicioCodigo: string;
+    resumen: {
+        totalComedor: number;
+        sinRestricciones: number;
+        conRestricciones: number;
+        alertasAltas: number;
+    };
+    totalesPorRestriccion: RestriccionResumen[];
+    participantes: ParticipanteCocina[]; // Retornado en la propiedad o fetchado separadamente
+}
+
+export interface RestriccionResumen {
+    codigo: string;
+    texto: string;
+    cantidad: number;
+    alertaVisual: boolean;
+}
+
+export interface ParticipanteCocina {
+    idInvitado: number;
+    idRsvpGrupoIntegrante: number;
+    participante: string;
+    responsable: string;
+    telefonoResponsable: string;
+    servicio: string;
+    restricciones: RestriccionDetalle[];
+    alertaVisual: boolean;
+    nivelAlerta: 'ALTA' | 'MEDIA' | 'NORMAL';
+    observacionesSalud: string | null;
+}
+
+export interface RestriccionDetalle {
+    idRestriccionAlim: number;
+    codigo: string;
+    texto: string;
+    categoria: string;
+    requiereAlertaVisual: boolean;
+    requiereConfirmacionOrganizador: boolean;
+    esAlergeno: boolean;
+    observaciones: string;
+    severidad: string | null;
+}
+
+// Detalle individual
+export interface ParticipanteDetalleResponse {
+    nombre: string;
+    responsable: string;
+    telefono: string;
+    email: string;
+    fecha: string;
+    servicio: string;
+    nivelAlerta: 'ALTA' | 'MEDIA' | 'NORMAL';
+    restricciones: Array<{ texto: string; severidad: string; observaciones: string }>;
+    salud: Array<{ problemaMedico: string; necesidadEspecial: string; observacionesFamilia: string }>;
+}
+```
+
+---
+
+## 4. Flujo de Trabajo y Tareas
+
+- [x] **1. Setup de Interfaces y Servicios:** 
+   - [x] Crear las interfaces TS y los métodos en el `CocinaService.ts` conectando con el backend vía endpoints Next.js.
+- [x] **2. Creación del Enrutamiento:** 
+   - [x] Añadir la nueva página en el menú rápido dentro del dashboard de detalle del evento.
+- [x] **3. Desarrollo UI - Fase 1 (Maquetado Base):** 
+   - [x] Implementar el layout principal (`CocinaDashboard`), Header con DatePicker y las 4 `CocinaSummaryCards`.
+- [x] **4. Desarrollo UI - Fase 2 (Datos Complejos):** 
+   - [x] Implementar la lógica de ordenamiento de los `CocinaRestrictionChips` y la tabla `CocinaGrid`.
+- [x] **5. Desarrollo UI - Fase 3 (Detalle y Exportación):** 
+   - [x] Implementar el drawer de detalle (`DetalleCocinaDrawer`) consumiendo su respectivo endpoint y renderizando condicionalmente.
+   - [x] Preparar la estructura visual para la posterior funcionalidad de exportación a PDF (Botón implementado con placeholder).
+- [x] **6. Integración y Pruebas:** 
+   - [x] Validar que al cambiar la fecha, toda la vista realiza nuevamente la petición HTTP y actualiza los componentes.
+   - [x] Validar el mapeo de colores según nivel de alerta y resolver desajustes de tipos entre frontend y JSON del backend.

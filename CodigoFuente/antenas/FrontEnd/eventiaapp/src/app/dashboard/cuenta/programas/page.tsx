@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getMisProgramas } from '@/src/features/programas/programas.service';
-import { CalendarDays, Loader2, MapPin, Plus, Clock } from 'lucide-react';
+import { CalendarDays, Loader2, MapPin, Plus, Clock, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Programa } from '@/src/features/programas/types';
 
@@ -90,7 +90,7 @@ export default function ProgramasCuentaPage() {
                             </thead>
                             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
                                 {programas.map((prog, index) => (
-                                    <tr key={prog.id_evento || index} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 transition-all duration-200 group">
+                                    <tr key={(prog as any).id_evento || (prog as any).idEvento || index} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 transition-all duration-200 group">
                                         <td className="px-6 py-5">
                                             <p className="font-bold text-neutral-900 dark:text-white text-base group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
                                                 {prog.saludo || prog.anfitriones_texto || 'Sin título'}
@@ -111,9 +111,14 @@ export default function ProgramasCuentaPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <Link href={`/dashboard/cuenta/programas/${prog.id_evento || prog.id_evento}`} title="Configurar" className="px-3 py-1.5 text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-600 dark:text-emerald-400 dark:bg-emerald-900/20 dark:hover:bg-emerald-600 dark:hover:text-white rounded-lg transition-colors font-semibold text-xs">
-                                                    Configurar
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Link
+                                                    href={`/dashboard/events/${(prog as any).id_evento ?? (prog as any).idEvento ?? (prog as any).id}`}
+                                                    title="Ver panel del evento"
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-purple-600 hover:text-white bg-purple-50 hover:bg-purple-600 dark:text-purple-400 dark:bg-purple-900/20 dark:hover:bg-purple-600 dark:hover:text-white rounded-lg transition-colors font-semibold text-xs"
+                                                >
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    Ver Panel
                                                 </Link>
                                             </div>
                                         </td>
