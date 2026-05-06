@@ -7,7 +7,7 @@ import {
     ChevronLeft, Calendar, MapPin, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
-    Link as LinkIcon, DollarSign, CalendarRange
+    Link as LinkIcon, DollarSign, CalendarRange, ChefHat
 } from 'lucide-react';
 
 import {
@@ -224,7 +224,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     </div>
 
                     {/* ── Accesos Rápidos (Módulos de Gestión) ── */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {/* Quick Link Card - Gestión de Invitados */}
                         <div className="p-5 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
                             <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-4">
@@ -294,6 +294,24 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             >
                                 <CalendarRange className="w-3.5 h-3.5" />
                                 Ver Panel CRM
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Cocina */}
+                        <div className="p-5 rounded-2xl bg-teal-600/10 border border-teal-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center mb-4">
+                                <ChefHat className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Comedor y Cocina</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Organización del menú diario, restricciones alimentarias y alertas de salud.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/cocina`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-teal-500 text-white font-bold text-xs shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all"
+                            >
+                                <ChefHat className="w-3.5 h-3.5" />
+                                Ver Cocina
                             </button>
                         </div>
                     </div>
