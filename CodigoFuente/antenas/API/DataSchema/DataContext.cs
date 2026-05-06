@@ -143,9 +143,9 @@ namespace API.DataSchema
         public DbSet<ef_param_programa_autorizacion_base_traducciones> ef_param_programa_autorizacion_base_traducciones { get; set; }
         public DbSet<ef_programa_autorizaciones_config> ef_programa_autorizaciones_config { get; set; }
         public DbSet<ef_param_programa_salud_tipos_accion> ef_param_programa_salud_tipos_accion { get; set; }
-        public DbSet<ef_programa_salud_medicaciones> ef_programa_salud_medicaciones { get; set; }
+        //public DbSet<ef_programa_salud_medicaciones> ef_programa_salud_medicaciones { get; set; }
         public DbSet<ef_programa_salud_acciones> ef_programa_salud_acciones { get; set; }
-        public DbSet<ef_programa_salud_fichas> ef_programa_salud_fichas { get; set; }
+        //public DbSet<ef_programa_salud_fichas> ef_programa_salud_fichas { get; set; }
         public DbSet<ef_programa_salud_config> ef_programa_salud_config { get; set; }
         public DbSet<ef_programa_autorizacion_config_traducciones> ef_programa_autorizacion_config_traducciones { get; set; }
         public DbSet<ef_programa_inscripciones> ef_programa_inscripciones { get; set; }
@@ -330,9 +330,9 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_programa_autorizacion_base_traduccionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_autorizaciones_configConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_salud_tipos_accionConfiguration());
-            modelBuilder.ApplyConfiguration(new ef_programa_salud_medicacionesConfiguration());
+            //modelBuilder.ApplyConfiguration(new ef_programa_salud_medicacionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_salud_accionesConfiguration());
-            modelBuilder.ApplyConfiguration(new ef_programa_salud_fichasConfiguration());
+            //modelBuilder.ApplyConfiguration(new ef_programa_salud_fichasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_salud_configConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_autorizacion_config_traduccionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcionesConfiguration());

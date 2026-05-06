@@ -2792,7 +2792,7 @@ namespace API.Controllers.Programas
                     .ToListAsync();
 
                 fichaDto.ContactosEmergencia = contactos;
-                fichaDto.Medicaciones = medicacionesFicha;
+                
             }
 
             var medicaciones = ficha == null
