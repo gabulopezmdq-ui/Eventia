@@ -13,7 +13,8 @@ namespace API.Controllers.Programas
 {
     [ApiController]
     [Route("programas/retiros")]
-    [Authorize]
+    //[Authorize]
+    [AllowAnonymous]
     public class programasRetirosController : ControllerBase
     {
         private readonly DataContext _context;

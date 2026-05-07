@@ -16,6 +16,7 @@ namespace API.Controllers.Programas
 {
     [ApiController]
     [Route("[controller]")]
+    [AllowAnonymous]
     public class programasController : ControllerBase
     {
         private readonly DataContext _context;

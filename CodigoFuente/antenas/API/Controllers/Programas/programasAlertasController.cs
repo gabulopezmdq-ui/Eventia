@@ -13,7 +13,8 @@ namespace API.Controllers.Programas
 {
     [ApiController]
     [Route("programas")]
-    [Authorize]
+    //[Authorize]
+    [AllowAnonymous]
     public class programasAlertasController : ControllerBase
     {
         private readonly DataContext _context;
