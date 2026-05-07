@@ -7,7 +7,7 @@ import {
     ChevronLeft, Calendar, MapPin, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
-    Link as LinkIcon, DollarSign, CalendarRange, ChefHat
+    Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck
 } from 'lucide-react';
 
 import {
@@ -312,6 +312,60 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             >
                                 <ChefHat className="w-3.5 h-3.5" />
                                 Ver Cocina
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Retiros QR */}
+                        <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
+                                <LogOut className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Retiros QR</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Control de retiros de participantes autorizados mediante escaneo de código QR.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/retiros`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                            >
+                                <LogOut className="w-3.5 h-3.5" />
+                                Ver Retiros
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Transporte */}
+                        <div className="p-5 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4">
+                                <Bus className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Transporte</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Listado operativo diario de participantes con servicio de transporte.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/transporte`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:bg-blue-400 transition-all"
+                            >
+                                <Bus className="w-3.5 h-3.5" />
+                                Ver Transporte
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Autorizaciones */}
+                        <div className="p-5 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center mb-4">
+                                <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Autorizaciones Legales</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Control de firmas y aceptaciones de autorizaciones de todos los participantes.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/autorizaciones`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-violet-500 text-white font-bold text-xs shadow-lg shadow-violet-500/20 hover:bg-violet-400 transition-all"
+                            >
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                Ver Autorizaciones
                             </button>
                         </div>
                     </div>

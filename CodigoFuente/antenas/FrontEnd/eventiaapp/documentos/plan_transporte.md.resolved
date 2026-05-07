@@ -1,0 +1,557 @@
+# Plan de Implementación: Módulo Transporte
+### Eventia – Colonias Vacaciones / Casales
+
+---
+
+> [!IMPORTANT]
+> Este plan sigue **exactamente** los mismos patrones de Cocina y Retiros. Cada archivo nuevo tiene un equivalente directo ya existente en el proyecto.
+
+---
+
+## Contexto del módulo
+
+El módulo **Transporte** es un **listado operativo diario** (sin gestión de rutas/vehículos/horarios).  
+El operador selecciona una **fecha** y un **tipo de servicio** (`TODOS | ACOGIDA | TRANSPORTE`) y ve quién usa transporte ese día, con alertas de salud destacadas.
+
+### Endpoint principal
+```
+GET /programas/{idEvento}/transporte/dia?fecha=YYYY-MM-DD&servicioCodigo=TODOS|ACOGIDA|TRANSPORTE
+```
+
+---
+
+## Archivos a crear / modificar
+
+```
+MODIFICAR
+└── src/features/programas/
+    ├── types.ts                                   ← Agregar interfaces Transporte
+    └── programas.service.ts                       ← Agregar getTransporteDia()
+
+CREAR
+└── src/app/api/programas/[idEvento]/
+    └── transporte/
+        └── dia/
+            └── route.ts                           ← Proxy Next.js (GET)
+
+└── src/app/dashboard/events/[id]/inscripciones/
+    └── transporte/
+        ├── page.tsx                               ← Página principal dashboard
+        └── components/
+            ├── TransporteSummaryCards.tsx          ← Cards resumen (total, conObservaciones, conAlertasSalud)
+            └── TransporteGrid.tsx                  ← Grilla principal de participantes
+```
+
+---
+
+## Paso 1 — Tipos TypeScript
+
+**Archivo:** `src/features/programas/types.ts`  
+**Acción:** Agregar al final del archivo.
+
+```typescript
+// ── Transporte ────────────────────────────────────────────────
+
+/** Valores válidos para el filtro de servicio de transporte */
+export type TransporteServicioCodigo = 'TODOS' | 'ACOGIDA' | 'TRANSPORTE';
+
+/** Un ítem de la grilla diaria de transporte */
+export interface TransporteDiaItem {
+    idInvitado: number;
+    idRsvpGrupoIntegrante: number;
+    participante: string;
+    responsable: string;
+    telefonoResponsable: string;
+    servicio: string;
+    servicioCodigo: TransporteServicioCodigo;
+    direccion: string | null;
+    observacionesServicio: string | null;
+    tieneAlertaSalud: boolean;
+    observacionesSalud: string | null;
+}
+
+/** Resumen de contadores del día */
+export interface TransporteDiaResumen {
+    total: number;
+    conObservaciones: number;
+    conAlertasSalud: number;
+}
+
+/** Respuesta completa del endpoint GET /programas/{idEvento}/transporte/dia */
+export interface TransporteDiaResponse {
+    idEvento: number;
+    programa: string;
+    fecha: string;
+    resumen: TransporteDiaResumen;
+    items: TransporteDiaItem[];
+}
+```
+
+---
+
+## Paso 2 — Service
+
+**Archivo:** `src/features/programas/programas.service.ts`  
+**Acción:** Agregar imports y función al final del archivo.
+
+### 2a. Agregar imports al import existente:
+```typescript
+// Agregar a la línea de imports del mismo archivo:
+import { 
+    // ... existentes ...
+    TransporteDiaResponse,
+    TransporteServicioCodigo
+} from './types';
+```
+
+### 2b. Agregar función al final:
+```typescript
+// ── Transporte ────────────────────────────────────────────────
+
+/**
+ * Obtiene la lista operativa de transporte de un día para el programa.
+ * @param idEvento   ID del evento/programa
+ * @param fecha      Fecha en formato YYYY-MM-DD
+ * @param servicioCodigo  Filtro: 'TODOS' | 'ACOGIDA' | 'TRANSPORTE'
+ */
+export const getTransporteDia = async (
+    idEvento: number,
+    fecha: string,
+    servicioCodigo: TransporteServicioCodigo = 'TODOS'
+): Promise<TransporteDiaResponse> => {
+    const res = await fetch(
+        `${API_URL}/${idEvento}/transporte/dia?fecha=${fecha}&servicioCodigo=${servicioCodigo}`
+    );
+    if (!res.ok) throw new Error('Error al obtener el listado de transporte del día');
+    return res.json();
+};
+```
+
+---
+
+## Paso 3 — Proxy API Next.js
+
+**Archivo NUEVO:** `src/app/api/programas/[idEvento]/transporte/dia/route.ts`  
+**Patrón de referencia:** `src/app/api/programas/[idEvento]/cocina/dia/route.ts` (idéntico, sólo cambia la URL del backend)
+
+```typescript
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ idEvento: string }> }
+) {
+    try {
+        const { idEvento } = await params;
+
+        const cookieStore = await cookies();
+        const token = cookieStore.get('access_token')?.value;
+
+        if (!token) {
+            return NextResponse.json(
+                { message: 'No autorizado' },
+                { status: 401 }
+            );
+        }
+
+        const { searchParams } = new URL(request.url);
+
+        const url = new URL(
+            `${API_URL}/programas/${idEvento}/transporte/dia`
+        );
+
+        // Copiamos filtros: fecha, servicioCodigo
+        searchParams.forEach((value, key) => {
+            url.searchParams.append(key, value);
+        });
+
+        console.log('FINAL URL (Transporte):', url.toString());
+
+        const res = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+        });
+
+        const text = await res.text();
+
+        return new NextResponse(text, {
+            status: res.status,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    } catch (error) {
+        console.error('ERROR API ROUTE TRANSPORTE DIA:', error);
+        return NextResponse.json(
+            { message: 'Error interno del proxy' },
+            { status: 500 }
+        );
+    }
+}
+```
+
+---
+
+## Paso 4 — Componentes UI
+
+### 4a. TransporteSummaryCards.tsx
+
+**Archivo NUEVO:** `src/app/dashboard/events/[id]/inscripciones/transporte/components/TransporteSummaryCards.tsx`  
+**Patrón de referencia:** `CocinaSummaryCards.tsx`
+
+```tsx
+'use client';
+
+import { Bus, MessageSquare, HeartPulse } from 'lucide-react';
+import type { TransporteDiaResumen } from '@/src/features/programas/types';
+
+interface Props {
+    resumen: TransporteDiaResumen;
+}
+
+const cards = [
+    {
+        key: 'total' as const,
+        label: 'Total Transporte',
+        icon: Bus,
+        color: 'text-blue-500',
+        bg: 'bg-blue-500/10',
+        border: 'border-blue-500/20',
+    },
+    {
+        key: 'conObservaciones' as const,
+        label: 'Con Observaciones',
+        icon: MessageSquare,
+        color: 'text-amber-500',
+        bg: 'bg-amber-500/10',
+        border: 'border-amber-500/20',
+    },
+    {
+        key: 'conAlertasSalud' as const,
+        label: 'Alertas Salud',
+        icon: HeartPulse,
+        color: 'text-red-500',
+        bg: 'bg-red-500/10',
+        border: 'border-red-500/20',
+    },
+];
+
+export default function TransporteSummaryCards({ resumen }: Props) {
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {cards.map(({ key, label, icon: Icon, color, bg, border }) => (
+                <div
+                    key={key}
+                    className={`rounded-2xl border ${border} ${bg} p-5 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500`}
+                >
+                    <div className={`p-3 rounded-xl ${bg} border ${border}`}>
+                        <Icon className={`w-6 h-6 ${color}`} />
+                    </div>
+                    <div>
+                        <p className="text-2xl font-black text-foreground">{resumen[key]}</p>
+                        <p className="text-xs font-semibold text-muted uppercase tracking-widest mt-0.5">{label}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+```
+
+---
+
+### 4b. TransporteGrid.tsx
+
+**Archivo NUEVO:** `src/app/dashboard/events/[id]/inscripciones/transporte/components/TransporteGrid.tsx`  
+**Patrón de referencia:** `CocinaGrid.tsx` / `RetirosGrid.tsx`
+
+```tsx
+'use client';
+
+import { HeartPulse, AlertTriangle, Phone } from 'lucide-react';
+import type { TransporteDiaItem } from '@/src/features/programas/types';
+
+interface Props {
+    participantes: TransporteDiaItem[];
+}
+
+export default function TransporteGrid({ participantes }: Props) {
+    if (participantes.length === 0) {
+        return (
+            <div className="p-12 rounded-2xl bg-card-bg border border-card-border text-center">
+                <Bus className="w-10 h-10 text-muted mx-auto mb-3 opacity-40" />
+                <p className="text-muted text-sm">No hay participantes con servicio de transporte para este día.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="rounded-2xl border border-card-border overflow-hidden bg-card-bg">
+            {/* Cabecera */}
+            <div className="grid grid-cols-[2fr_2fr_1.5fr_1.2fr_2fr] gap-4 px-6 py-3 border-b border-card-border bg-card-bg/80">
+                {['Participante', 'Responsable', 'Teléfono', 'Servicio', 'Alertas / Obs. Salud'].map((h) => (
+                    <span key={h} className="text-[11px] font-black text-muted uppercase tracking-widest">{h}</span>
+                ))}
+            </div>
+
+            {/* Filas */}
+            <div className="divide-y divide-card-border">
+                {participantes.map((item) => (
+                    <div
+                        key={item.idInvitado}
+                        className={`grid grid-cols-[2fr_2fr_1.5fr_1.2fr_2fr] gap-4 px-6 py-4 items-center transition-colors hover:bg-card-hover
+                            ${item.tieneAlertaSalud ? 'bg-red-500/5 hover:bg-red-500/10' : ''}`}
+                    >
+                        {/* Participante */}
+                        <div className="flex items-center gap-2">
+                            {item.tieneAlertaSalud && (
+                                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" title="Alerta de salud" />
+                            )}
+                            <span className="font-semibold text-sm text-foreground">{item.participante}</span>
+                        </div>
+
+                        {/* Responsable */}
+                        <span className="text-sm text-foreground/80">{item.responsable}</span>
+
+                        {/* Teléfono */}
+                        <a
+                            href={`tel:${item.telefonoResponsable}`}
+                            className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                            <Phone className="w-3.5 h-3.5" />
+                            {item.telefonoResponsable}
+                        </a>
+
+                        {/* Servicio */}
+                        <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold w-fit">
+                            {item.servicio}
+                        </span>
+
+                        {/* Observaciones Salud */}
+                        <div>
+                            {item.tieneAlertaSalud && item.observacionesSalud ? (
+                                <div className="flex items-start gap-1.5">
+                                    <HeartPulse className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" />
+                                    <span className="text-xs text-red-300 leading-relaxed">{item.observacionesSalud}</span>
+                                </div>
+                            ) : (
+                                <span className="text-xs text-muted">—</span>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+```
+
+> [!NOTE]
+> El ícono `Bus` hay que importarlo desde `lucide-react` (ya existe en la librería). Agregarlo al import de `TransporteGrid`.
+
+---
+
+## Paso 5 — Página principal del dashboard
+
+**Archivo NUEVO:** `src/app/dashboard/events/[id]/inscripciones/transporte/page.tsx`  
+**Patrón de referencia:** `cocina/page.tsx` (misma estructura: breadcrumbs → header con filtros → cards → grilla)
+
+```tsx
+'use client';
+
+import { useState, useEffect, useCallback, use } from 'react';
+import Link from 'next/link';
+import { Bus, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { getTransporteDia } from '@/src/features/programas/programas.service';
+import type { TransporteDiaResponse, TransporteServicioCodigo } from '@/src/features/programas/types';
+import TransporteSummaryCards from './components/TransporteSummaryCards';
+import TransporteGrid from './components/TransporteGrid';
+
+const OPCIONES_SERVICIO: { label: string; value: TransporteServicioCodigo }[] = [
+    { label: 'Todos', value: 'TODOS' },
+    { label: 'Acogida', value: 'ACOGIDA' },
+    { label: 'Transporte', value: 'TRANSPORTE' },
+];
+
+export default function TransporteDashboardPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    const idEvento = Number(id);
+
+    // ── State ──
+    const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(
+        () => new Date().toISOString().split('T')[0]
+    );
+    const [servicioCodigo, setServicioCodigo] = useState<TransporteServicioCodigo>('TODOS');
+    const [datosTransporte, setDatosTransporte] = useState<TransporteDiaResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // ── Fetch ──
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getTransporteDia(idEvento, fechaSeleccionada, servicioCodigo);
+            setDatosTransporte(data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al cargar los datos de transporte');
+        } finally {
+            setLoading(false);
+        }
+    }, [idEvento, fechaSeleccionada, servicioCodigo]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    return (
+        <div className="max-w-7xl mx-auto pb-20 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+            {/* ── Breadcrumbs ── */}
+            <nav className="flex items-center gap-2 text-xs font-semibold text-muted uppercase tracking-widest">
+                <Link href="/dashboard/events" className="hover:text-foreground transition-colors">Eventos</Link>
+                <span>/</span>
+                <Link href={`/dashboard/events/${id}`} className="hover:text-foreground transition-colors">Detalle #{id}</Link>
+                <span>/</span>
+                <span className="text-blue-500">Transporte</span>
+            </nav>
+
+            {/* ── Header ── */}
+            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                        <Bus className="w-8 h-8 text-blue-500" />
+                        Logística de Transporte
+                    </h1>
+                    <p className="text-muted text-sm mt-1">
+                        {datosTransporte?.programa
+                            ? <>Programa: <span className="font-semibold text-foreground/80">{datosTransporte.programa}</span></>
+                            : 'Listado operativo diario de participantes con servicio de transporte.'}
+                    </p>
+                </div>
+
+                {/* Filtros */}
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Date picker */}
+                    <input
+                        type="date"
+                        value={fechaSeleccionada}
+                        onChange={(e) => setFechaSeleccionada(e.target.value)}
+                        className="px-4 py-3 rounded-xl bg-card-bg border border-card-border focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-semibold outline-none text-foreground"
+                    />
+
+                    {/* Selector de servicio */}
+                    <select
+                        value={servicioCodigo}
+                        onChange={(e) => setServicioCodigo(e.target.value as TransporteServicioCodigo)}
+                        className="px-4 py-3 rounded-xl bg-card-bg border border-card-border focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-semibold outline-none text-foreground"
+                    >
+                        {OPCIONES_SERVICIO.map((op) => (
+                            <option key={op.value} value={op.value}>{op.label}</option>
+                        ))}
+                    </select>
+
+                    {/* Refresh */}
+                    <button
+                        onClick={fetchData}
+                        disabled={loading}
+                        className="p-3 rounded-xl bg-card-bg border border-card-border text-muted hover:text-foreground transition-all disabled:opacity-50"
+                        title="Refrescar lista"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
+
+                    {/* Export PDF (placeholder) */}
+                    <button
+                        className="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-sm transition-all flex items-center gap-2"
+                        onClick={() => alert('Próximamente: Exportación PDF Logística')}
+                    >
+                        Descargar PDF Logística
+                    </button>
+                </div>
+            </header>
+
+            {/* ── Summary Cards ── */}
+            {datosTransporte && <TransporteSummaryCards resumen={datosTransporte.resumen} />}
+
+            {/* ── Lista / Empty / Error ── */}
+            {loading && !datosTransporte ? (
+                <div className="p-12 rounded-2xl bg-card-bg border border-card-border flex flex-col items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
+                    <p className="text-muted text-sm">Cargando listado de transporte...</p>
+                </div>
+            ) : error ? (
+                <div className="p-8 rounded-2xl bg-card-bg border border-red-500/20 text-center flex flex-col items-center">
+                    <AlertCircle className="w-8 h-8 text-red-400 mb-4" />
+                    <p className="text-red-400 text-sm mb-4">{error}</p>
+                    <button onClick={fetchData} className="text-sm text-blue-500 hover:underline">Reintentar</button>
+                </div>
+            ) : datosTransporte && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+                    <TransporteGrid participantes={datosTransporte.items || []} />
+                </div>
+            )}
+        </div>
+    );
+}
+```
+
+---
+
+## Paso 6 — Navegación en la página de detalle del evento
+
+**Archivo:** `src/app/dashboard/events/[id]/page.tsx`  
+**Acción:** Agregar la tarjeta/link de **Transporte** en la sección "Gestión de Inscripciones" junto a los links de Cocina y Retiros.
+
+### Buscar el patrón existente (Cocina/Retiros):
+```tsx
+// Ejemplo de cómo están los links actuales:
+<Link href={`/dashboard/events/${id}/inscripciones/cocina`}>
+    ...Organización Comedor...
+</Link>
+<Link href={`/dashboard/events/${id}/inscripciones/retiros`}>
+    ...Retiros QR...
+</Link>
+```
+
+### Agregar link de Transporte con el mismo patrón:
+```tsx
+<Link href={`/dashboard/events/${id}/inscripciones/transporte`}>
+    {/* Usar ícono Bus de lucide-react, color blue-500 */}
+    {/* Label: "Transporte" | Sub: "Listado operativo diario" */}
+</Link>
+```
+
+> [!NOTE]
+> Revisar el archivo `events/[id]/page.tsx` (18,068 bytes) para identificar exactamente dónde están las cards de Cocina/Retiros y replicar el mismo componente card con los datos de Transporte.
+
+---
+
+## Resumen de archivos
+
+| # | Acción | Archivo |
+|---|--------|---------|
+| 1 | ✏️ Modificar | `src/features/programas/types.ts` |
+| 2 | ✏️ Modificar | `src/features/programas/programas.service.ts` |
+| 3 | 🆕 Crear | `src/app/api/programas/[idEvento]/transporte/dia/route.ts` |
+| 4 | 🆕 Crear | `src/app/dashboard/events/[id]/inscripciones/transporte/components/TransporteSummaryCards.tsx` |
+| 5 | 🆕 Crear | `src/app/dashboard/events/[id]/inscripciones/transporte/components/TransporteGrid.tsx` |
+| 6 | 🆕 Crear | `src/app/dashboard/events/[id]/inscripciones/transporte/page.tsx` |
+| 7 | ✏️ Modificar | `src/app/dashboard/events/[id]/page.tsx` (agregar link de navegación) |
+
+---
+
+## Notas de implementación
+
+- **Color del módulo:** `blue-500` (cocina usa `emerald-500`, retiros usa `emerald-500` también — transporte se diferencia con azul)
+- **Sin drawer de detalle:** El módulo es sólo lectura. No tiene acción sobre cada fila (a diferencia de Cocina que abre un drawer de detalle).
+- **Export PDF:** Implementado como `alert('Próximamente...')`, igual que Cocina. Si el backend lo implementa después, se puede conectar fácilmente.
+- **tieneAlertaSalud:** Las filas con `true` reciben un fondo rojo sutil `bg-red-500/5` y un ícono `AlertTriangle` para destacarlas visualmente.
+- **Filtro servicioCodigo:** Al cambiar fecha **o** servicio se dispara el `useCallback`/`useEffect` que recarga los datos automáticamente.
