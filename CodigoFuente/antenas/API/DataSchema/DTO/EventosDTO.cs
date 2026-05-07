@@ -1,59 +1,76 @@
 using System;
+using Newtonsoft.Json;
 using System.Text.Json.Serialization;
 
 namespace API.DataSchema.DTO
 {
     public class EventoCreateRequest
     {
+        [JsonProperty("id_tipo_evento")]
         [JsonPropertyName("id_tipo_evento")]
         public int IdTipoEvento { get; set; }
 
+        [JsonProperty("id_idioma")]
         [JsonPropertyName("id_idioma")]
         public short IdIdioma { get; set; } // opcional
 
         // B2B
+        [JsonProperty("id_cuenta")]
         [JsonPropertyName("id_cuenta")]
         public long? IdCuenta { get; set; }
 
+        [JsonProperty("id_unidad")]
         [JsonPropertyName("id_unidad")]
         public long? IdUnidad { get; set; }
 
+        [JsonProperty("id_cliente")]
         [JsonPropertyName("id_cliente")]
         public long? IdCliente { get; set; }
 
         // Solo para UI / validación funcional
         // Valores sugeridos: "PROPIO" | "CLIENTE"
+        [JsonProperty("modalidad")]
         [JsonPropertyName("modalidad")]
         public string? Modalidad { get; set; }
 
 
+        [JsonProperty("anfitriones_texto")]
         [JsonPropertyName("anfitriones_texto")]
         public string AnfitrionesTexto { get; set; } = null!;
 
+        [JsonProperty("id_dress_code")]
         [JsonPropertyName("id_dress_code")]
         public short? IdDressCode { get; set; }
 
+        [JsonProperty("dress_code_descripcion")]
         [JsonPropertyName("dress_code_descripcion")]
         public string? DressCodeDescripcion { get; set; }
 
+        [JsonProperty("saludo")]
         [JsonPropertyName("saludo")]
         public string? Saludo { get; set; }
 
+        [JsonProperty("mensaje_bienvenida")]
         [JsonPropertyName("mensaje_bienvenida")]
         public string? MensajeBienvenida { get; set; }
 
+        [JsonProperty("notas")]
         [JsonPropertyName("notas")]
         public string? Notas { get; set; }
         
+        [JsonProperty("codigo_plan")]
         [JsonPropertyName("codigo_plan")]
         public string? CodigoPlan { get; set; } // "B2C_FREE", "B2C_BASIC", "B2C_PLUS", "B2C_PRO"
 
+        [JsonProperty("tipo_operacion")]
         [JsonPropertyName("tipo_operacion")]
         public string? TipoOperacion { get; set; } // EVENTO | PROGRAMA
 
+        [JsonProperty("fecha_inicio")]
         [JsonPropertyName("fecha_inicio")]
         public DateOnly? FechaInicio { get; set; }
 
+        [JsonProperty("fecha_fin")]
         [JsonPropertyName("fecha_fin")]
         public DateOnly? FechaFin { get; set; }
     }

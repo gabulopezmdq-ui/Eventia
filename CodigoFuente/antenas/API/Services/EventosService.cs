@@ -686,6 +686,20 @@ namespace API.Services
             if (req == null)
                 throw new InvalidOperationException("Request inválido.");
 
+            // ✅ NUEVO: Inferencia de Cuenta si llega en 0 o nulo (solución para fallos de binding en Front)
+            if ((req.IdCuenta == null || req.IdCuenta == 0) && !isSuperAdmin)
+            {
+                var cuentaAsociada = await _context.Set<ef_cuenta_usuarios>()
+                    .Where(cu => cu.id_usuario == idUsuario && cu.activo == true)
+                    .Select(cu => (long?)cu.id_cuenta)
+                    .FirstOrDefaultAsync();
+
+                if (cuentaAsociada != null)
+                {
+                    req.IdCuenta = cuentaAsociada;
+                }
+            }
+
             if (req.IdTipoEvento <= 0)
                 throw new InvalidOperationException("Tipo de evento obligatorio.");
 
