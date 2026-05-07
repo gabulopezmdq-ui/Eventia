@@ -1,0 +1,476 @@
+# Plan de Implementación – Módulo Autorizaciones (Gestión de Inscripciones)
+
+## Contexto
+
+Módulo: **Autorizaciones legales por inscripción**
+Endpoint: `GET /programas/inscripciones/{idInscripcion}/autorizaciones?idIdioma=1`
+Ruta dashboard: `/dashboard/events/[id]/inscripciones/autorizaciones`
+Patrón de referencia: **Retiros** y **Transporte** (misma arquitectura, mismo estilo)
+
+---
+
+## Decisión de UX (según documentación)
+
+Se implementa la **Opción 2** (pantalla dedicada de Autorizaciones):
+
+1. Grilla de inscriptos del programa (`GET /programas/{idEvento}/inscriptos`) — ya existe el proxy `/api/programas/[idEvento]/inscriptos`.
+2. Al hacer clic en un inscripto → se carga el detalle de sus autorizaciones via `GET /programas/inscripciones/{idInscripcion}/autorizaciones?idIdioma=1`.
+3. Se muestran en un **panel lateral (drawer/modal)** con dos secciones:
+   - **Autorizaciones del Grupo familiar** (campo `autorizaciones_grupo`).
+   - **Autorizaciones por Participante** (campo `autorizaciones_participantes`, agrupado por nombre).
+4. Reglas visuales: `aceptada = true` → chip verde ✔ | `aceptada = false` → chip rojo ✖.
+
+---
+
+## Archivos a crear / modificar
+
+```
+src/
+├── features/programas/
+│   ├── types.ts                        [MODIFICAR – agregar tipos]
+│   └── programas.service.ts            [MODIFICAR – agregar función getAutorizacionesInscripcion]
+│
+├── app/
+│   ├── api/programas/inscripciones/[idInscripcion]/
+│   │   └── autorizaciones/
+│   │       └── route.ts                [CREAR – proxy GET]
+│   │
+│   └── dashboard/events/[id]/inscripciones/
+│       └── autorizaciones/
+│           ├── page.tsx                [CREAR – página principal]
+│           └── components/
+│               ├── InscriptosGrid.tsx          [CREAR – tabla de inscriptos]
+│               ├── AutorizacionesDrawer.tsx    [CREAR – panel lateral con detalle]
+│               └── AutorizacionChip.tsx        [CREAR – chip verde/rojo reutilizable]
+```
+
+---
+
+## Paso 1 — Tipos TypeScript (`types.ts`)
+
+Agregar al final del archivo:
+
+```typescript
+// ── Autorizaciones de Inscripción ─────────────────────────────
+
+/** Un ítem de autorización (tanto grupo como participante) */
+export interface AutorizacionInscripcionItem {
+    id_inscripcion_autorizacion: number;
+    id_inscripcion: number;
+    id_rsvp_grupo_integrante: number | null;
+    participante: string | null;
+    id_programa_autorizacion_config: number;
+    codigo: string;
+    titulo: string;
+    texto_aceptado: string;
+    aceptada: boolean;
+    fecha_aceptacion: string;
+    nombre_firmante: string;
+}
+
+/** Respuesta completa del endpoint GET /programas/inscripciones/{id}/autorizaciones */
+export interface AutorizacionesInscripcionResponse {
+    id_inscripcion: number;
+    responsable: string;
+    email: string;
+    telefono: string;
+    autorizaciones_grupo: AutorizacionInscripcionItem[];
+    autorizaciones_participantes: AutorizacionInscripcionItem[];
+}
+```
+
+---
+
+## Paso 2 — Servicio (`programas.service.ts`)
+
+Agregar después de `getTransporteDia`:
+
+```typescript
+// ── Autorizaciones de Inscripción ────────────────────────────
+
+/**
+ * Obtiene las autorizaciones firmadas de una inscripción concreta.
+ * @param idInscripcion   ID de la inscripción
+ * @param idIdioma        Idioma para los textos (default: 1)
+ */
+export const getAutorizacionesInscripcion = async (
+    idInscripcion: number,
+    idIdioma = 1
+): Promise<AutorizacionesInscripcionResponse> => {
+    const res = await fetch(
+        `/api/programas/inscripciones/${idInscripcion}/autorizaciones?idIdioma=${idIdioma}`
+    );
+    if (!res.ok) throw new Error('Error al obtener las autorizaciones de la inscripción');
+    return res.json();
+};
+```
+
+> **Importar** el tipo nuevo en la línea de imports de `programas.service.ts`.
+
+---
+
+## Paso 3 — Proxy API Next.js
+
+### `src/app/api/programas/inscripciones/[idInscripcion]/autorizaciones/route.ts`
+
+```typescript
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ idInscripcion: string }> }
+) {
+    try {
+        const { idInscripcion } = await params;
+
+        const cookieStore = await cookies();
+        const token = cookieStore.get('access_token')?.value;
+
+        if (!token) {
+            return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+
+        const url = new URL(
+            `${API_URL}/programas/inscripciones/${idInscripcion}/autorizaciones`
+        );
+        searchParams.forEach((value, key) => url.searchParams.append(key, value));
+
+        console.log('FINAL URL [AUTORIZACIONES INSCRIPCION]:', url.toString());
+
+        const res = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+        });
+
+        const text = await res.text();
+
+        return new NextResponse(text, {
+            status: res.status,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } catch (error) {
+        console.error('ERROR API ROUTE AUTORIZACIONES INSCRIPCION:', error);
+        return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
+    }
+}
+```
+
+> ⚠️ **Nota sobre la ruta del proxy**: el endpoint del backend usa la jerarquía `/programas/inscripciones/{idInscripcion}/autorizaciones`, que NO está bajo `[idEvento]`. Verificar que en `src/app/api/programas/inscripciones/[idInscripcion]/` NO haya ya una carpeta `autorizaciones` creada (actualmente solo existe `/inscripciones/[idInscripcion]/ajustes|detalle-operativo|estado-pago|pagos`).
+
+---
+
+## Paso 4 — Componentes UI
+
+### 4.1 `AutorizacionChip.tsx` (atómico, reutilizable)
+
+Chip visual según `aceptada`:
+- `true` → fondo verde, icono `✔ Check`, texto "Aceptada"
+- `false` → fondo rojo/gris, icono `✖ X`, texto "No aceptada"
+
+```tsx
+'use client';
+
+import { CheckCircle2, XCircle } from 'lucide-react';
+
+interface Props {
+    aceptada: boolean;
+    titulo: string;
+    firmante?: string;
+    fecha?: string;
+}
+
+export default function AutorizacionChip({ aceptada, titulo, firmante, fecha }: Props) {
+    return (
+        <div className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${
+            aceptada
+                ? 'bg-emerald-500/10 border-emerald-500/20'
+                : 'bg-red-500/10 border-red-500/20'
+        }`}>
+            {aceptada
+                ? <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                : <XCircle className="w-5 h-5 text-red-400 mt-0.5 shrink-0" />
+            }
+            <div className="flex flex-col gap-0.5 min-w-0">
+                <span className={`text-sm font-semibold ${aceptada ? 'text-emerald-300' : 'text-red-400'}`}>
+                    {titulo}
+                </span>
+                {firmante && (
+                    <span className="text-xs text-muted">
+                        Firmó: {firmante}
+                        {fecha && ` · ${new Date(fecha).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}`}
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+```
+
+---
+
+### 4.2 `AutorizacionesDrawer.tsx`
+
+Panel deslizante (idéntico en animación y estilos al `RegistrarRetiroDrawer`) que recibe la respuesta completa y la renderiza en dos secciones:
+
+**Sección 1 – Grupo Familiar:**
+- Responsable, email, teléfono.
+- Lista de `autorizaciones_grupo` con `<AutorizacionChip />`.
+
+**Sección 2 – Participantes:**
+- Agrupado por `participante` (usando `reduce` para agrupar).
+- Por cada participante → nombre como subtítulo + sus autorizaciones con `<AutorizacionChip />`.
+
+```tsx
+'use client';
+
+import { X, ShieldCheck, Users } from 'lucide-react';
+import type { AutorizacionesInscripcionResponse } from '@/src/features/programas/types';
+import AutorizacionChip from './AutorizacionChip';
+
+interface Props {
+    isOpen: boolean;
+    onClose: () => void;
+    data: AutorizacionesInscripcionResponse | null;
+    loading?: boolean;
+}
+
+export default function AutorizacionesDrawer({ isOpen, onClose, data, loading }: Props) {
+    // Agrupar autorizaciones_participantes por nombre de participante
+    const participantesAgrupados = data?.autorizaciones_participantes.reduce((acc, item) => {
+        const key = item.participante ?? 'Sin nombre';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+    }, {} as Record<string, typeof data.autorizaciones_participantes>);
+
+    return (
+        <>
+            {/* Overlay */}
+            <div
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={onClose}
+            />
+            {/* Panel */}
+            <div className={`fixed top-0 right-0 h-full w-full max-w-lg bg-card-bg border-l border-card-border z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-card-border">
+                    <div className="flex items-center gap-3">
+                        <ShieldCheck className="w-6 h-6 text-violet-400" />
+                        <div>
+                            <h2 className="text-lg font-bold text-foreground">Autorizaciones Legales</h2>
+                            {data && <p className="text-xs text-muted">Inscripción #{data.id_inscripcion}</p>}
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-muted hover:text-foreground transition-all">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                    {loading && (
+                        <div className="flex items-center justify-center py-12">
+                            {/* spinner */}
+                        </div>
+                    )}
+
+                    {data && !loading && (
+                        <>
+                            {/* Datos del responsable */}
+                            <div className="p-4 rounded-xl bg-white/5 border border-card-border space-y-1">
+                                <p className="text-sm font-bold text-foreground">{data.responsable}</p>
+                                <p className="text-xs text-muted">{data.email}</p>
+                                <p className="text-xs text-muted">{data.telefono}</p>
+                            </div>
+
+                            {/* Autorizaciones Grupo Familiar */}
+                            {data.autorizaciones_grupo.length > 0 && (
+                                <section className="space-y-3">
+                                    <h3 className="text-xs font-bold text-muted uppercase tracking-widest flex items-center gap-2">
+                                        <ShieldCheck className="w-4 h-4" /> Grupo Familiar
+                                    </h3>
+                                    {data.autorizaciones_grupo.map((a) => (
+                                        <AutorizacionChip
+                                            key={a.id_inscripcion_autorizacion}
+                                            aceptada={a.aceptada}
+                                            titulo={a.titulo}
+                                            firmante={a.nombre_firmante}
+                                            fecha={a.fecha_aceptacion}
+                                        />
+                                    ))}
+                                </section>
+                            )}
+
+                            {/* Autorizaciones por Participante */}
+                            {participantesAgrupados && Object.keys(participantesAgrupados).length > 0 && (
+                                <section className="space-y-6">
+                                    <h3 className="text-xs font-bold text-muted uppercase tracking-widest flex items-center gap-2">
+                                        <Users className="w-4 h-4" /> Participantes
+                                    </h3>
+                                    {Object.entries(participantesAgrupados).map(([nombre, items]) => (
+                                        <div key={nombre} className="space-y-2">
+                                            <p className="text-sm font-semibold text-foreground/80">{nombre}</p>
+                                            {items.map((a) => (
+                                                <AutorizacionChip
+                                                    key={a.id_inscripcion_autorizacion}
+                                                    aceptada={a.aceptada}
+                                                    titulo={a.titulo}
+                                                    firmante={a.nombre_firmante}
+                                                    fecha={a.fecha_aceptacion}
+                                                />
+                                            ))}
+                                        </div>
+                                    ))}
+                                </section>
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}
+```
+
+---
+
+### 4.3 `InscriptosGrid.tsx`
+
+Tabla de inscriptos del programa (usa los datos ya existentes de `GET /programas/{idEvento}/inscriptos`).
+
+Columnas: Responsable | Email | Teléfono | Estado | Autorizaciones (botón Ver).
+
+```tsx
+'use client';
+import { ShieldCheck } from 'lucide-react';
+
+// Tipo mínimo para el grid (usa el tipo Inscripto que ya exista en el proyecto)
+interface InscriptoRow {
+    id_inscripcion: number;
+    responsable: string;
+    email: string;
+    telefono: string;
+    estado?: string;
+}
+
+interface Props {
+    inscriptos: InscriptoRow[];
+    onVerAutorizaciones: (idInscripcion: number) => void;
+}
+
+export default function InscriptosGrid({ inscriptos, onVerAutorizaciones }: Props) {
+    if (!inscriptos.length) return (
+        <div className="p-12 rounded-2xl bg-card-bg border border-card-border text-center text-muted">
+            No hay inscriptos registrados.
+        </div>
+    );
+
+    return (
+        <div className="rounded-2xl border border-card-border overflow-hidden">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="bg-white/5 text-muted text-xs font-semibold uppercase tracking-widest">
+                        <th className="px-4 py-3 text-left">#</th>
+                        <th className="px-4 py-3 text-left">Responsable</th>
+                        <th className="px-4 py-3 text-left">Email</th>
+                        <th className="px-4 py-3 text-left">Teléfono</th>
+                        <th className="px-4 py-3 text-center">Autorizaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {inscriptos.map((i, idx) => (
+                        <tr key={i.id_inscripcion}
+                            className={`border-t border-card-border transition-colors hover:bg-white/5 ${idx % 2 === 0 ? '' : 'bg-white/[0.02]'}`}>
+                            <td className="px-4 py-3 text-muted font-mono">{i.id_inscripcion}</td>
+                            <td className="px-4 py-3 font-semibold text-foreground">{i.responsable}</td>
+                            <td className="px-4 py-3 text-muted">{i.email}</td>
+                            <td className="px-4 py-3 text-muted">{i.telefono}</td>
+                            <td className="px-4 py-3 text-center">
+                                <button
+                                    onClick={() => onVerAutorizaciones(i.id_inscripcion)}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 font-semibold text-xs border border-violet-500/20 transition-all"
+                                >
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    Ver Autorizaciones
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+```
+
+---
+
+### 4.4 `page.tsx` — Página principal
+
+```
+src/app/dashboard/events/[id]/inscripciones/autorizaciones/page.tsx
+```
+
+**Flujo:**
+1. Monta → fetch `GET /programas/{idEvento}/inscriptos` (mismo proxy existente `/api/programas/[idEvento]/inscriptos`).
+2. Renderiza `<InscriptosGrid />` con los inscriptos.
+3. Al hacer clic "Ver Autorizaciones" → llama `getAutorizacionesInscripcion(idInscripcion)` → abre `<AutorizacionesDrawer />` con el resultado.
+
+**Estructura del componente** (idéntica a `retiros/page.tsx` y `transporte/page.tsx`):
+- Breadcrumbs: Eventos / Detalle #{id} / **Autorizaciones**
+- Header con icono `ShieldCheck` violeta + título "Autorizaciones Legales"
+- Estado: loading spinner / error con retry / grid de inscriptos
+- Drawer lateral con detalle de autorizaciones
+
+**Color del módulo:** `violet` (distinto al verde de Retiros y azul de Transporte).
+
+---
+
+## Paso 5 — Agregar navegación al sidebar/menú
+
+En `src/app/dashboard/layout.tsx` (o donde esté la navegación del evento), agregar el link a Autorizaciones junto a Retiros y Transporte:
+
+```tsx
+{
+    href: `/dashboard/events/${id}/inscripciones/autorizaciones`,
+    label: 'Autorizaciones',
+    icon: <ShieldCheck className="w-4 h-4" />,
+}
+```
+
+---
+
+## Resumen de archivos
+
+| Archivo | Acción |
+|---|---|
+| `src/features/programas/types.ts` | ✏️ Agregar `AutorizacionInscripcionItem` y `AutorizacionesInscripcionResponse` |
+| `src/features/programas/programas.service.ts` | ✏️ Agregar `getAutorizacionesInscripcion()` |
+| `src/app/api/programas/inscripciones/[idInscripcion]/autorizaciones/route.ts` | 🆕 Proxy GET |
+| `src/app/dashboard/events/[id]/inscripciones/autorizaciones/page.tsx` | 🆕 Página principal |
+| `src/app/dashboard/events/[id]/inscripciones/autorizaciones/components/InscriptosGrid.tsx` | 🆕 Grid de inscriptos |
+| `src/app/dashboard/events/[id]/inscripciones/autorizaciones/components/AutorizacionesDrawer.tsx` | 🆕 Drawer/panel lateral |
+| `src/app/dashboard/events/[id]/inscripciones/autorizaciones/components/AutorizacionChip.tsx` | 🆕 Chip verde/rojo |
+| `src/app/dashboard/layout.tsx` | ✏️ Agregar link de navegación |
+
+---
+
+## Notas importantes
+
+> [!WARNING]
+> El endpoint `/programas/inscripciones/{idInscripcion}/autorizaciones` NO usa `idEvento`, depende de `idInscripcion`. El proxy va en `src/app/api/programas/inscripciones/[idInscripcion]/` (fuera del segmento `[idEvento]`).
+
+> [!NOTE]
+> La grilla de inscriptos reutiliza el proxy ya existente `GET /api/programas/[idEvento]/inscriptos`. Verificar qué tipo devuelve ese proxy (probablemente `InscriptoPrograma` o similar) y usarlo en `InscriptosGrid.tsx`.
+
+> [!TIP]
+> La agrupación de `autorizaciones_participantes` por participante se hace con un `reduce` en el componente `AutorizacionesDrawer` al momento de renderizar, sin estado adicional.

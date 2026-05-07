@@ -22,6 +22,7 @@ import type {
     PlantillaEvento,
     PlantillaDetalle,
     AplicarPlantillaPayload,
+    CreateEventPayload,
 } from '@/src/features/events/types';
 import {
     Calendar,
@@ -321,7 +322,7 @@ function NewEventContent() {
         setLoading(true);
         setError(null);
         try {
-            const result = await createEvent({
+            const payload: CreateEventPayload = {
                 idTipoEvento: basicInfo.idTipoEvento,
                 idIdioma: basicInfo.idIdioma,
                 idDressCode: basicInfo.idDressCode > 0 ? basicInfo.idDressCode : undefined,
@@ -329,14 +330,27 @@ function NewEventContent() {
                 saludo: basicInfo.saludo || undefined,
                 mensajeBienvenida: basicInfo.mensajeBienvenida || undefined,
                 notas: basicInfo.notas || undefined,
-                // B2C: plan seleccionado por el usuario
-                ...(!isB2BContext && { codigoPlan }),
-                // B2B: si hay contexto de cuenta, incluir unidad y cliente
-                ...(isB2BContext && b2bInfo.idUnidad !== '' && {
-                    idUnidad: b2bInfo.idUnidad as number,
-                    idCliente: b2bInfo.idCliente !== '' ? b2bInfo.idCliente as number : undefined,
-                }),
-            });
+
+                ...(isB2BContext
+                    ? {
+                        // Lógica para eventos de Cuenta (B2B)
+                        modalidad: b2bInfo.destinatario, // 'PROPIO' | 'CLIENTE'
+                        idUnidad: b2bInfo.idUnidad !== '' ? (b2bInfo.idUnidad as number) : null,
+                        idCliente: b2bInfo.destinatario === 'CLIENTE' && b2bInfo.idCliente !== ''
+                            ? (b2bInfo.idCliente as number)
+                            : null,
+                        codigoPlan: null,
+                    }
+                    : {
+                        // Lógica para eventos Mi Espacio (B2C)
+                        modalidad: null,
+                        idUnidad: null,
+                        idCliente: null,
+                        codigoPlan: codigoPlan || null,
+                    }
+                ),
+            };
+            const result = await createEvent(payload);
             // El backend responde con camelCase (idEvento)
             const eventId = (result as unknown as { idEvento: number }).idEvento ?? result.id_evento;
             setIdEvento(eventId);

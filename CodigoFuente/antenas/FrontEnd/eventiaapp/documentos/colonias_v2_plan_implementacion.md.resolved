@@ -1,0 +1,476 @@
+# Plan de Implementación — Colonias Inscripción V2 (Panel Familiar)
+
+**Stack:** Next.js App Router · TypeScript · CSS Vanilla  
+**Patrón base:** proxy routes + Context + service (igual al resto del proyecto)
+
+---
+
+## 1. Estructura de Archivos
+
+```
+src/
+├── app/
+│   ├── inscripcion/
+│   │   └── [token]/
+│   │       ├── layout.tsx              ← Layout propio sin dashboard
+│   │       └── page.tsx                ← Orquestador de fases
+│   └── api/
+│       └── inscripcion/
+│           ├── [token]/
+│           │   └── route.ts            ← Proxy GET público
+│           └── inscripcion-confirmar/
+│               └── route.ts            ← Proxy POST final
+│
+└── features/
+    └── inscripcion/
+        ├── types/
+        │   └── inscripcion.types.ts
+        ├── context/
+        │   └── InscripcionContext.tsx
+        ├── hooks/
+        │   ├── useInscripcion.ts
+        │   ├── useTotalEstimado.ts
+        │   └── useInscripcionValida.ts
+        ├── components/
+        │   ├── FaseA_Landing.tsx
+        │   ├── FaseB_ResponsableDrawer.tsx
+        │   ├── FaseC_PanelFamiliar.tsx
+        │   ├── FaseD_ResumenFirma.tsx
+        │   ├── SuccessScreen.tsx
+        │   ├── BarraTotal.tsx
+        │   └── ui/
+        │       ├── ParticipanteCard.tsx
+        │       ├── TabSemanas.tsx
+        │       ├── TabServicios.tsx
+        │       ├── TabSalud.tsx
+        │       ├── TabAlimentacion.tsx
+        │       ├── TabRetiro.tsx
+        │       ├── DaySelector.tsx
+        │       ├── CopyFromSibling.tsx
+        │       └── AutorizadosList.tsx
+        └── inscripcion.service.ts
+```
+
+---
+
+## 2. Tipos TypeScript
+
+```typescript
+// ── GET response ─────────────────────────────────────────────
+export interface ProgramaPeriodo {
+  id_programa_periodo: number;
+  nombre: string;
+  fecha_desde: string;
+  fecha_hasta: string;
+  precio_base: number;
+  moneda: string;
+  cupo: number;
+  activo: boolean;
+}
+
+export interface ProgramaServicio {
+  idProgramaServicio: number;
+  nombre: string;
+  descripcion: string;
+  tipoCalculo: 'POR_DIA' | 'UNICO' | 'POR_CANTIDAD';
+  precio: number;
+  moneda: string;
+  obligatorio: boolean;
+  requiereSeleccionDias: boolean;
+  configJson: Record<string, unknown> | null;
+}
+
+export interface ProgramaInscripcionData {
+  token: string;
+  idEvento: number;
+  mensaje_bienvenida: string;
+  saludo: string;
+  fechaInicio: string;
+  fechaFin: string;
+  info_publica: string;
+  periodos: ProgramaPeriodo[];
+  servicios: ProgramaServicio[];
+  idiomas: { id: number; nombre: string }[];
+  restricciones_alimentarias_config: { id: number; nombre: string }[];
+  autorizaciones_configuradas: { id: number; descripcion: string; obligatoria: boolean }[];
+  configuracion_salud: Record<string, unknown> | null;
+}
+
+// ── POST payload ──────────────────────────────────────────────
+export interface Responsable {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  documento: string;
+  relacion: 'Madre' | 'Padre' | 'Tutor/a' | 'Familiar' | 'Otro';
+  acepta_comunicaciones: boolean;
+  acepta_promociones: boolean;
+}
+
+export interface ServicioSeleccionado {
+  id_programa_servicio: number;
+  id_programa_periodo: number | null;
+  fechas: string[];
+  cantidad: number | null;
+  campos_extra: Record<string, string> | null;
+}
+
+export interface Participante {
+  _clientId: string;           // UUID local — se omite en el POST
+  nombre: string;
+  apellido: string;
+  fecha_nacimiento: string;
+  documento: string | null;
+  observaciones: string;
+  periodos: { id_programa_periodo: number }[];
+  servicios: ServicioSeleccionado[];
+  restricciones_alimentarias: { id_restriccion_alimentaria: number; severidad: string; observacion: string }[];
+  salud: {
+    tiene_problema_medico: boolean;
+    problema_medico_detalle?: string;
+    tiene_alergias_no_alimentarias: boolean;
+    alergias_no_alimentarias_detalle?: string;
+    necesidad_especial?: string;
+    cobertura_medica?: string;
+    observaciones_familia?: string;
+    autoriza_emergencia_medica: boolean;
+    contactos_emergencia: { nombre: string; telefono: string; relacion: string; orden: number }[];
+    medicaciones: { nombre: string; dosis: string; frecuencia: string; indicaciones: string; requiere_autorizacion: boolean }[];
+  };
+  autorizados_retiro: { nombre_autorizado: string; telefono_autorizado: string; relacion: string; observaciones: string }[];
+}
+
+export interface InscripcionPayload {
+  token: string;
+  idIdioma: number;
+  responsable: Responsable;
+  participantes: Omit<Participante, '_clientId'>[];
+  firma: { nombre_completo: string; fecha: string; autorizaciones: { id_autorizacion: number; acepta: boolean }[] };
+}
+
+// ── Estado del Context ────────────────────────────────────────
+export type FaseActual = 'landing' | 'panel' | 'resumen' | 'success';
+
+export interface ConfirmacionResponse {
+  mensaje: string;
+  qrs_retiro: {
+    nombre_autorizado: string;
+    telefono_autorizado: string;
+    relacion: string;
+    qr_token: string;
+    participantes: { id_invitado: number; nombre_completo: string }[];
+  }[];
+}
+
+export interface InscripcionState {
+  programaData: ProgramaInscripcionData | null;
+  idIdioma: number;
+  fase: FaseActual;
+  drawerResponsableAbierto: boolean;
+  responsable: Partial<Responsable>;
+  participantes: Participante[];
+  firma: Partial<InscripcionPayload['firma']>;
+  isLoading: boolean;
+  error: string | null;
+  resultadoConfirmacion: ConfirmacionResponse | null;
+}
+```
+
+---
+
+## 3. Context + Reducer (`InscripcionContext.tsx`)
+
+Mismo patrón que `AuthContext.tsx`. **La diferencia clave: persiste en `localStorage`.**
+
+```typescript
+// Acciones
+type Action =
+  | { type: 'SET_PROGRAMA_DATA'; payload: ProgramaInscripcionData }
+  | { type: 'SET_IDIOMA'; payload: number }
+  | { type: 'SET_FASE'; payload: FaseActual }
+  | { type: 'TOGGLE_DRAWER'; payload: boolean }
+  | { type: 'SET_RESPONSABLE'; payload: Partial<Responsable> }
+  | { type: 'ADD_PARTICIPANTE'; payload: Participante }
+  | { type: 'UPDATE_PARTICIPANTE'; payload: { clientId: string; data: Partial<Participante> } }
+  | { type: 'REMOVE_PARTICIPANTE'; payload: string }
+  | { type: 'SET_FIRMA'; payload: Partial<InscripcionPayload['firma']> }
+  | { type: 'SET_CONFIRMADO'; payload: ConfirmacionResponse }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'RESTORE_DRAFT'; payload: InscripcionState };
+
+// Persistencia en el Provider:
+const DRAFT_KEY = (token: string) => `eventia_draft_${token}`;
+const TTL = 24 * 60 * 60 * 1000; // 24 horas
+
+// Al montar: leer localStorage y restaurar si tiene < 24h
+// Al mutar state: guardar en localStorage (salvo isLoading)
+// Al confirmar con éxito: limpiar localStorage
+```
+
+---
+
+## 4. Proxies API
+
+### `GET /api/inscripcion/[token]/route.ts` — Sin autenticación
+
+```typescript
+import { NextResponse } from 'next/server';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function GET(req: Request, { params }: { params: { token: string } }) {
+  const { searchParams } = new URL(req.url);
+  const idIdioma = searchParams.get('idIdioma') ?? '3';
+  try {
+    const res = await fetch(
+      `${API_URL}/programas/inscripcion/${params.token}?idIdioma=${idIdioma}`
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return NextResponse.json({ message: 'Programa no encontrado', details: err }, { status: res.status });
+    }
+    return NextResponse.json(await res.json());
+  } catch {
+    return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
+  }
+}
+```
+
+### `POST /api/inscripcion-confirmar/route.ts`
+
+```typescript
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const res = await fetch(`${API_URL}/programas/inscripcion/confirmar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return NextResponse.json({ message: 'Error al confirmar', details: err }, { status: res.status });
+    }
+    return NextResponse.json(await res.json());
+  } catch {
+    return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
+  }
+}
+```
+
+---
+
+## 5. Service (`inscripcion.service.ts`)
+
+```typescript
+const API = '/api/inscripcion';
+
+export async function getProgramaInscripcion(token: string, idIdioma = 3) {
+  const res = await fetch(`${API}/${token}?idIdioma=${idIdioma}`);
+  if (!res.ok) throw new Error('Programa no encontrado o token inválido');
+  return res.json() as Promise<ProgramaInscripcionData>;
+}
+
+export async function confirmarInscripcion(payload: InscripcionPayload) {
+  const res = await fetch('/api/inscripcion-confirmar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Error al confirmar la inscripción');
+  return res.json() as Promise<ConfirmacionResponse>;
+}
+```
+
+---
+
+## 6. Hooks
+
+### `useInscripcion.ts`
+Acceso al context + helpers de alto nivel:
+- `agregarParticipante(data)` — genera `_clientId` con `crypto.randomUUID()`
+- `actualizarParticipante(clientId, data)` — merge parcial
+- `quitarParticipante(clientId)`
+- `copiarSemanasDeHermano(sourceId, targetId)`
+- `buildPayload()` → `InscripcionPayload` listo para POST (omite `_clientId`)
+
+### `useTotalEstimado.ts`
+```typescript
+// Calcula: subtotal semanas + subtotal servicios + descuento hermanos
+// useMemo → se recalcula solo cuando cambian participantes o programaData
+// Devuelve: { subtotal, descuento, total, moneda }
+// Descuento hermanos: si participantes.length >= 2, aplica 10% (configurable)
+```
+
+### `useInscripcionValida.ts`
+```typescript
+// Devuelve: { valida: boolean, errores: string[] }
+// Valida:
+//   - responsable: nombre, apellido, email, telefono, relacion completos
+//   - al menos 1 participante
+//   - cada participante: al menos 1 semana seleccionada
+//   - cada participante (salud): autoriza_emergencia_medica === true y al menos 1 contacto_emergencia
+//   - cada participante (retiro): al menos 1 autorizado_retiro
+//   - firma: nombre_completo no vacío
+```
+
+---
+
+## 7. Componentes — Detalle
+
+### `layout.tsx` — Sin dashboard
+```tsx
+// No usa AuthProvider ni nada del dashboard
+// Solo wrappea con <InscripcionProvider token={params.token}>
+// CSS: fullscreen, fondo blanco/neutro, sin sidebar
+```
+
+### `page.tsx` — Orquestador
+```tsx
+'use client';
+// useEffect al montar: getProgramaInscripcion(token) → dispatch SET_PROGRAMA_DATA
+// Renderiza según state.fase:
+//   'landing'  → <FaseA_Landing />
+//   'panel'    → <FaseC_PanelFamiliar /> + <FaseB_ResponsableDrawer /> condicional
+//   'resumen'  → <FaseD_ResumenFirma />
+//   'success'  → <SuccessScreen />
+// Muestra spinner si isLoading, error screen si error
+```
+
+### `FaseA_Landing.tsx`
+- Muestra: saludo, fechas, lista de períodos con precio, lista de servicios, info_publica
+- Selector de idioma → re-fetch → `SET_PROGRAMA_DATA` (sin tocar otros datos)
+- Botón **"Comenzar inscripción"** → `SET_FASE('panel')` + `TOGGLE_DRAWER(true)`
+
+### `FaseB_ResponsableDrawer.tsx`
+- **Mobile:** bottom sheet (`position: fixed; bottom: 0`, slide-up animation CSS)
+- **Desktop:** side panel derecho con overlay semitransparente
+- Formulario controlado con validación inline (required, email format)
+- Al guardar: `SET_RESPONSABLE(data)` + `TOGGLE_DRAWER(false)` → fase panel activa
+- Editable después: click en header del responsable reabre el drawer
+
+### `FaseC_PanelFamiliar.tsx`
+```
+┌─────────────────────────────────────┐
+│ ✅ Laura García  [editar]            │  ← header responsable
+├─────────────────────────────────────┤
+│ <ParticipanteCard> Tomás García     │
+│ <ParticipanteCard> Lucía García     │
+│ [+ Agregar hijo/a]                  │  ← mini-form inline al hacer click
+├─────────────────────────────────────┤
+│ <BarraTotal>                        │  ← fija al fondo
+└─────────────────────────────────────┘
+```
+- Mini-form inline para agregar hijo: nombre, apellido, fecha_nacimiento, documento (opt), observaciones
+- Al confirmar: `agregarParticipante(data)` con `crypto.randomUUID()` como `_clientId`
+
+### `ParticipanteCard.tsx`
+- Header: nombre + edad calculada + botones [✏️ editar] [🗑 eliminar]
+- 5 tabs con `useState` local: **Semanas | Servicios | Alimentación | Salud | Retiro**
+- Badge por tab: ✅ si completo, ⚠️ si pendiente obligatorio
+- `<CopyFromSibling>` visible si `participantes.length >= 2`
+
+### `TabSemanas.tsx`
+- Checkboxes por `ProgramaPeriodo`: nombre, fechas, precio
+- Al cambiar: `actualizarParticipante(clientId, { periodos: [...] })`
+- Muestra subtotal parcial de semanas del participante
+
+### `TabServicios.tsx`
+- Se renderiza por cada semana **ya seleccionada** del participante
+- `requiereSeleccionDias = true` → `<DaySelector fechaDesde fechaHasta>`
+- `requiereSeleccionDias = false` → checkbox + campos de `configJson` (ej: talle)
+- `obligatorio: true` → pre-marcado y `disabled`
+
+### `DaySelector.tsx`
+```tsx
+// Props: fechaDesde: string, fechaHasta: string,
+//        seleccionadas: string[], onChange: (fechas: string[]) => void
+// Genera botones [L][M][X][J][V] iterando el rango de fechas
+// Helper: generarDiasHabiles(desde, hasta): { fecha: string; etiqueta: string }[]
+// Al toggle: devuelve nuevo array de fechas ISO seleccionadas
+```
+
+### `TabSalud.tsx`
+- **Ficha médica:** `tiene_problema_medico`, `tiene_alergias_no_alimentarias` (booleanos que despliegan textareas de detalle si son true).
+- **Emergencia:** Requiere check obligatorio de `autoriza_emergencia_medica`.
+- **Contactos y Medicaciones:** Formularios dinámicos con botón "Agregar" para listas `contactos_emergencia` y `medicaciones`.
+
+### `TabAlimentacion.tsx`
+- **Restricciones alimentarias:** combo para elegir tipo usando datos del GET (`restricciones_alimentarias_config`), selector Severidad + campo Observaciones (obligatorio si se elige "Otra"). Creación dinámica de múltiples restricciones con `id_restriccion_alimentaria`.
+
+### `TabRetiro.tsx`
+- **Autorizados de retiro:** listado dinámico para agregar personas (`nombre_autorizado`, `telefono_autorizado`, `relacion`, `observaciones`) autorizadas a retirar al participante.
+
+### `BarraTotal.tsx`
+- `position: fixed; bottom: 0; width: 100%`
+- Muestra: total formateado, cantidad de participantes, ⚠️ si hay pendientes
+- Botón **"Ver resumen"** → `SET_FASE('resumen')`
+- Botón **"Confirmar"** → deshabilitado hasta `useInscripcionValida().valida`
+
+### `FaseD_ResumenFirma.tsx`
+- Tabla/lista resumen: responsable + cada hijo (semanas, servicios, restricciones)
+- Desglose económico: subtotal, descuento hermanos, **total**
+- Campo firma: nombre completo (texto) + fecha (auto hoy)
+- Checkboxes autorizaciones del programa
+- Botón **"Confirmar inscripción"**:
+  - `SET_LOADING(true)`
+  - `confirmarInscripcion(buildPayload())`
+  - On success: `SET_CONFIRMADO(resultado)` + `SET_FASE('success')` + limpiar localStorage
+  - On error: `SET_ERROR(mensaje)` + toast con opción reintentar
+
+### `SuccessScreen.tsx`
+- Muestra mensaje de "Inscripción confirmada" con responsables y participantes.
+- Renderiza listado de **QR de Retiro** (usando `resultadoConfirmacion.qrs_retiro`).
+- Por cada autorizado, muestra a qué participantes puede retirar.
+- Botones "Ver QR" (genera QR desde `qr_token`) y "Descargar imagen".
+- Info de pago (`info_publica`).
+- Limpia `localStorage` al montar.
+
+---
+
+## 8. Orden de Implementación
+
+| # | Tarea | Estimación |
+|---|-------|-----------|
+| 1 | ✅ `inscripcion.types.ts` | +30min |
+| 2 | ✅ Proxies `api/inscripcion/[token]` + `inscripcion-confirmar` | 30min |
+| 3 | ✅ `inscripcion.service.ts` | +15min |
+| 4 | ✅ `InscripcionContext.tsx` + reducer + localStorage | +30min |
+| 5 | ✅ `useInscripcion.ts` + `buildPayload()` | +30min |
+| 6 | ✅ `layout.tsx` + `page.tsx` orquestador | 1h |
+| 7 | ✅ `FaseA_Landing.tsx` + selector idioma | 1.5h |
+| 8 | ✅ `FaseB_ResponsableDrawer.tsx` (bottom sheet) | 2h |
+| 9 | ✅ `FaseC_PanelFamiliar.tsx` + add participante inline | 1.5h |
+| 10| ✅ `ParticipanteCard.tsx` + shell de 5 tabs | 1.5h |
+| 11| ✅ `TabSemanas.tsx` + copiado de hermano | 1h |
+| 12| ✅ `DaySelector.tsx` + helper `generarDiasHabiles` | 1.5h |
+| 13| ✅ `TabServicios.tsx` | 2h |
+| 14| ✅ `TabSalud.tsx`, `TabAlimentacion.tsx`, `TabRetiro.tsx` | +2h |
+| 15| ✅ `useTotalEstimado.ts` + `BarraTotal.tsx` | 1.5h |
+| 16| ✅ Funciones de copiado de hermano (hooks) | 45min |
+| 17| ✅ `useInscripcionValida.ts` | +30min |
+| 18| ✅ `FaseD_ResumenFirma.tsx` + POST | 2h |
+| 19| ✅ `SuccessScreen.tsx` (QRs de retiro) | +1.5h |
+| 20| ✅ CSS completo (Tailwind v4) + responsive mobile | 3h |
+
+**Total estimado: ~28 horas**
+
+---
+
+## 9. Decisiones Clave
+
+> [!IMPORTANT]
+> **Un único POST al final.** Todo lo anterior es solo estado local en `InscripcionContext`. El backend no recibe nada hasta que el usuario confirma en el paso final.
+
+> [!IMPORTANT]
+> **`_clientId`** se genera con `crypto.randomUUID()`. La función `buildPayload()` lo excluye del POST con `Omit<Participante, '_clientId'>`.
+
+> [!NOTE]
+> **El layout `/inscripcion/[token]/layout.tsx` es independiente del dashboard.** No hereda `AuthProvider`, no tiene sidebar ni navbar autenticada. Solo tiene `InscripcionProvider`.
+
+> [!TIP]
+> **`DaySelector`** recibe `fechaDesde` y `fechaHasta` del período y calcula automáticamente qué fechas corresponden a cada botón [L][M][X][J][V]. No hay que hardcodear fechas.
+
+> [!WARNING]
+> **Cambio de idioma en `FaseA_Landing`** hace re-fetch completo. Pero si el usuario ya está en el panel familiar, cambiar idioma NO debe borrar los datos cargados — la `FaseA` ya no es visible en ese punto, así que no hay riesgo de pérdida de datos.

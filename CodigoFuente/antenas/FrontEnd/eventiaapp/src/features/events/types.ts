@@ -13,7 +13,7 @@ export interface Event {
     id_dress_code: number | null;
     dress_code_descripcion: string | null;
     saludo: string;
-    mensaje_bienvenida: string;
+    mensajeBienvenida: string;
     notas: string;
     fecha_alta: string;
     fecha_modif: string | null;
@@ -42,11 +42,14 @@ export interface CreateEventPayload {
     direccion?: string;
     latitud?: number;
     longitud?: number;
+
+    // 👇 Nuevos campos añadidos / actualizados 👇
+    modalidad?: 'PROPIO' | 'CLIENTE' | null;
     // B2B: asociación a cuenta empresarial
-    idUnidad?: number;
-    idCliente?: number;
+    idUnidad?: number | null;
+    idCliente?: number | null;
     // B2C: plan seleccionado por el usuario
-    codigoPlan?: string;
+    codigoPlan?: string | null;
 }
 
 // Tipos de evento (ParametricaDTO del backend)

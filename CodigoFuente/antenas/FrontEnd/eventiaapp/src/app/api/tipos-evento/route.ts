@@ -14,8 +14,14 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const idIdioma = searchParams.get('idIdioma') || '2';
+        const tipoOperacion = searchParams.get('tipoOperacion');
 
-        const res = await fetch(`${API_URL}/tipos_evento/GetAll?idIdioma=${idIdioma}`, {
+        let backendUrl = `${API_URL}/tipos_evento/GetAll?idIdioma=${idIdioma}`;
+        if (tipoOperacion) {
+            backendUrl += `&tipoOperacion=${tipoOperacion}`;
+        }
+
+        const res = await fetch(backendUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
