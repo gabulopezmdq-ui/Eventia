@@ -74,20 +74,66 @@ namespace API.Services
                 .Where(r => accesosTplIds.Contains(r.id_plantilla_acceso))
                 .ToListAsync();
 
-            // Borrar existente
+            // Borrar existente (Limpieza Profunda)
             if (borrarExistente)
             {
-                var accesosExistentesIds = await _context.Set<ef_evento_accesos>()
+                // 1. Desvincular Invitados de la estructura antigua (para no borrarlos)
+                var invitadosParaLimpiar = await _context.Set<ef_invitados>()
+                    .Where(i => i.id_evento == idEvento && (i.id_acceso != null || i.id_acceso_link != null))
+                    .ToListAsync();
+                foreach (var inv in invitadosParaLimpiar)
+                {
+                    inv.id_acceso = null;
+                    inv.id_acceso_link = null;
+                }
+
+                // 2. Limpiar RSVP (Integrantes -> Grupos -> Links)
+                var rsvpIntegrantes = await _context.Set<ef_rsvp_grupo_integrantes>()
+                    .Where(ri => _context.Set<ef_rsvp_grupos>().Any(rg => rg.id_rsvp_grupo == ri.id_rsvp_grupo && rg.id_evento == idEvento))
+                    .ToListAsync();
+                _context.RemoveRange(rsvpIntegrantes);
+
+                var rsvpGrupos = await _context.Set<ef_rsvp_grupos>()
+                    .Where(rg => rg.id_evento == idEvento)
+                    .ToListAsync();
+                _context.RemoveRange(rsvpGrupos);
+
+                var links = await _context.Set<ef_evento_acceso_links>()
+                    .Where(l => l.id_evento == idEvento)
+                    .ToListAsync();
+                _context.RemoveRange(links);
+
+                // 3. Limpiar Salón (Invitados en Mesa -> Mesas)
+                var tramosIds = await _context.Set<ef_evento_tramos>()
+                    .Where(t => t.id_evento == idEvento)
+                    .Select(t => t.id_tramo)
+                    .ToListAsync();
+
+                if (tramosIds.Count > 0)
+                {
+                    var mesaInvitados = await _context.Set<ef_evento_mesa_invitados>()
+                        .Where(mi => _context.Set<ef_evento_mesas>().Any(m => m.id_mesa == mi.id_mesa && tramosIds.Contains(m.id_tramo)))
+                        .ToListAsync();
+                    _context.RemoveRange(mesaInvitados);
+
+                    var mesas = await _context.Set<ef_evento_mesas>()
+                        .Where(m => tramosIds.Contains(m.id_tramo))
+                        .ToListAsync();
+                    _context.RemoveRange(mesas);
+                }
+
+                // 4. Limpiar Estructura (Relaciones -> Accesos -> Tramos)
+                var accesosIds = await _context.Set<ef_evento_accesos>()
                     .Where(a => a.id_evento == idEvento)
                     .Select(a => a.id_acceso)
                     .ToListAsync();
-
-                if (accesosExistentesIds.Count > 0)
+                
+                if (accesosIds.Count > 0)
                 {
-                    _context.RemoveRange(
-                        _context.Set<ef_evento_acceso_tramos>()
-                            .Where(r => accesosExistentesIds.Contains(r.id_acceso))
-                    );
+                    var rels = await _context.Set<ef_evento_acceso_tramos>()
+                        .Where(r => accesosIds.Contains(r.id_acceso))
+                        .ToListAsync();
+                    _context.RemoveRange(rels);
                 }
 
                 _context.RemoveRange(_context.Set<ef_evento_accesos>().Where(a => a.id_evento == idEvento));

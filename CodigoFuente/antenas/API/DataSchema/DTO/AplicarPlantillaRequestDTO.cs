@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace API.DataSchema.DTO
 {
@@ -11,8 +11,8 @@ namespace API.DataSchema.DTO
         public DateTimeOffset fecha_base { get; set; }
 
         // (opcionales): defaults para los tramos
-        public string lugar_base { get; set; }
-        public string direccion_base { get; set; }
+        public string? lugar_base { get; set; }
+        public string? direccion_base { get; set; }
         public decimal? latitud_base { get; set; }
         public decimal? longitud_base { get; set; }
     }
