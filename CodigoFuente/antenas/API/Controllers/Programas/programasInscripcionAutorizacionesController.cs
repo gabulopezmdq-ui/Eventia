@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -27,8 +27,6 @@ namespace API.Controllers.Programas
             long idInscripcion,
             [FromQuery] short idIdioma = 1)
         {
-            long idUsuario = User.GetUserId();
-
             var inscripcion = await _context.Set<ef_programa_inscripciones>()
                 .AsNoTracking()
                 .SingleOrDefaultAsync(x => x.id_inscripcion == idInscripcion && x.activo == true);
@@ -36,13 +34,72 @@ namespace API.Controllers.Programas
             if (inscripcion == null)
                 return NotFound("Inscripción inexistente.");
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
-                .AnyAsync(x =>
-                    x.id_evento == inscripcion.id_evento &&
-                    x.id_usuario == idUsuario &&
-                    x.activo == true);
+            // VALIDACIÓN DE ACCESO
+            bool tieneAcceso = false;
 
-            if (!pertenece)
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                // 1. Intentar obtener ID de usuario (dueño/admin)
+                string? sub = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+                bool isStaff = User.FindFirstValue("is_staff") == "true";
+
+                if (isStaff)
+                {
+                    // Caso Staff: Validar por Evento o Cuenta en claims
+                    string? idEventoStaffStr = User.FindFirstValue("id_evento");
+                    string? idCuentaStaffStr = User.FindFirstValue("id_cuenta");
+
+                    if (long.TryParse(idEventoStaffStr, out long idEvStaff) && idEvStaff == inscripcion.id_evento)
+                        tieneAcceso = true;
+                    else if (long.TryParse(idCuentaStaffStr, out long idCuStaff))
+                    {
+                        var idCuentaEvento = await _context.Set<ef_eventos>()
+                            .Where(x => x.id_evento == inscripcion.id_evento)
+                            .Select(x => x.id_cuenta)
+                            .FirstOrDefaultAsync();
+
+                        if (idCuStaff == idCuentaEvento) tieneAcceso = true;
+                    }
+                }
+                else if (long.TryParse(sub, out long idUsuario))
+                {
+                    // Caso Dueño/Admin: Validar ef_evento_usuarios
+                    bool esMiembroEvento = await _context.Set<ef_evento_usuarios>()
+                        .AnyAsync(x =>
+                            x.id_evento == inscripcion.id_evento &&
+                            x.id_usuario == idUsuario &&
+                            x.activo == true);
+
+                    if (esMiembroEvento)
+                    {
+                        tieneAcceso = true;
+                    }
+                    else
+                    {
+                        // Validar ef_cuenta_usuarios (Dueño de cuenta)
+                        var idCuentaEvento = await _context.Set<ef_eventos>()
+                            .Where(x => x.id_evento == inscripcion.id_evento)
+                            .Select(x => x.id_cuenta)
+                            .FirstOrDefaultAsync();
+
+                        if (idCuentaEvento.HasValue)
+                        {
+                            tieneAcceso = await _context.Set<ef_cuenta_usuarios>()
+                                .AnyAsync(x =>
+                                    x.id_cuenta == idCuentaEvento.Value &&
+                                    x.id_usuario == idUsuario &&
+                                    x.activo == true);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Si es anónimo total, por ahora denegamos (a menos que quieras usar un token_consulta)
+                tieneAcceso = false; 
+            }
+
+            if (!tieneAcceso)
                 return Forbid();
 
             var autorizaciones = await (
