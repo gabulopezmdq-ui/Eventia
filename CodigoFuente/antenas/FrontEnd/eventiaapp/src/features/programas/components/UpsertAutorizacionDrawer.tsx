@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { AutorizacionConfig } from '@/src/features/programas/types';
-import { upsertAutorizacionConfig } from '@/src/features/programas/programas.service';
+import { AutorizacionConfig, AutorizacionBase } from '@/src/features/programas/types';
+import { upsertAutorizacionConfig, getAutorizacionesBase } from '@/src/features/programas/programas.service';
 import { Loader2, X, CheckSquare } from 'lucide-react';
 
 interface Props {
@@ -13,6 +13,8 @@ interface Props {
 export default function UpsertAutorizacionDrawer({ idEvento, autorizacionToEdit, onClose, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [autorizacionesBase, setAutorizacionesBase] = useState<AutorizacionBase[]>([]);
+    const [tipoAutorizacion, setTipoAutorizacion] = useState<'BASE' | 'CUSTOM'>('BASE');
 
     const [formData, setFormData] = useState<AutorizacionConfig>({
         id_programa_autorizacion_config: 0,
@@ -29,15 +31,52 @@ export default function UpsertAutorizacionDrawer({ idEvento, autorizacionToEdit,
     });
 
     useEffect(() => {
+        const fetchBases = async () => {
+            try {
+                const bases = await getAutorizacionesBase();
+                setAutorizacionesBase(bases);
+            } catch (err) {
+                console.error("Error obteniendo autorizaciones base", err);
+            }
+        };
+        fetchBases();
+    }, []);
+
+    useEffect(() => {
         if (autorizacionToEdit) {
             setFormData(autorizacionToEdit);
+            setTipoAutorizacion(autorizacionToEdit.id_autorizacion_base ? 'BASE' : 'CUSTOM');
         }
     }, [autorizacionToEdit]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         
-        if (type === 'checkbox') {
+        if (name === 'tipo_autorizacion') {
+            setTipoAutorizacion(value as 'BASE' | 'CUSTOM');
+            setFormData(prev => ({
+                ...prev,
+                id_autorizacion_base: null,
+                codigo: '',
+                titulo: '',
+                texto: ''
+            }));
+        } else if (name === 'id_autorizacion_base') {
+            const baseId = value === '' ? null : Number(value);
+            setFormData(prev => {
+                const newData = { ...prev, id_autorizacion_base: baseId };
+                if (baseId) {
+                    const selectedBase = autorizacionesBase.find(b => b.id_autorizacion_base === baseId);
+                    if (selectedBase) {
+                        newData.codigo = selectedBase.codigo;
+                        // titulo y texto se manejarán en la pantalla de traducciones
+                        newData.titulo = ''; 
+                        newData.texto = '';
+                    }
+                }
+                return newData;
+            });
+        } else if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked;
             setFormData(prev => ({ ...prev, [name]: checked }));
         } else if (name === 'orden') {
@@ -84,6 +123,41 @@ export default function UpsertAutorizacionDrawer({ idEvento, autorizacionToEdit,
                     )}
 
                     <form id="auth-form" onSubmit={handleSubmit} className="space-y-5">
+                        <div className="mb-4">
+                            <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">Tipo de Autorización</label>
+                            <select
+                                name="tipo_autorizacion"
+                                value={tipoAutorizacion}
+                                onChange={handleChange}
+                                disabled={!!autorizacionToEdit}
+                                className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-medium disabled:opacity-50"
+                            >
+                                <option value="BASE">Usar autorización base de Eventia</option>
+                                <option value="CUSTOM">Crear autorización personalizada</option>
+                            </select>
+                        </div>
+
+                        {tipoAutorizacion === 'BASE' && (
+                            <div className="mb-4">
+                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">Autorización Base</label>
+                                <select
+                                    name="id_autorizacion_base"
+                                    value={formData.id_autorizacion_base || ''}
+                                    onChange={handleChange}
+                                    required={tipoAutorizacion === 'BASE'}
+                                    disabled={!!autorizacionToEdit}
+                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-medium disabled:opacity-50"
+                                >
+                                    <option value="">-- Seleccionar documento base --</option>
+                                    {autorizacionesBase.map(ab => (
+                                        <option key={ab.id_autorizacion_base} value={ab.id_autorizacion_base}>
+                                            {ab.nombre} ({ab.codigo})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2 sm:col-span-1">
                                 <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">Código Interno</label>
@@ -93,7 +167,8 @@ export default function UpsertAutorizacionDrawer({ idEvento, autorizacionToEdit,
                                     onChange={handleChange}
                                     placeholder="Ej: REGLAMENTO, IMAGEN"
                                     required
-                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm uppercase"
+                                    disabled={tipoAutorizacion === 'BASE'}
+                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm uppercase disabled:opacity-50"
                                 />
                             </div>
                             <div className="col-span-2 sm:col-span-1">
@@ -110,33 +185,37 @@ export default function UpsertAutorizacionDrawer({ idEvento, autorizacionToEdit,
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">Título del Documento</label>
-                            <input
-                                name="titulo"
-                                value={formData.titulo || ''}
-                                onChange={handleChange}
-                                placeholder="Ej: Reglamento Interno 2026, Autorización de Uso de Imagen"
-                                required
-                                className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-semibold"
-                            />
-                        </div>
+                        {tipoAutorizacion === 'CUSTOM' && (
+                            <>
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">Título del Documento</label>
+                                    <input
+                                        name="titulo"
+                                        value={formData.titulo || ''}
+                                        onChange={handleChange}
+                                        placeholder="Ej: Reglamento Interno 2026, Autorización de Uso de Imagen"
+                                        required={tipoAutorizacion === 'CUSTOM'}
+                                        className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-semibold"
+                                    />
+                                </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5 flex justify-between">
-                                Contenido Legal (Markdown / Texto)
-                                <span className="text-[10px] font-normal text-neutral-400 normal-case">En un futuro aquí habrá un editor wysiwyg</span>
-                            </label>
-                            <textarea
-                                name="texto"
-                                value={formData.texto || ''}
-                                onChange={handleChange}
-                                placeholder="Escribe o pega aquí el contenido del documento, términos o reglamento..."
-                                rows={8}
-                                required
-                                className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-mono text-xs resize-y"
-                            />
-                        </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5 flex justify-between">
+                                        Contenido Legal (Markdown / Texto)
+                                        <span className="text-[10px] font-normal text-neutral-400 normal-case">En un futuro aquí habrá un editor wysiwyg</span>
+                                    </label>
+                                    <textarea
+                                        name="texto"
+                                        value={formData.texto || ''}
+                                        onChange={handleChange}
+                                        placeholder="Escribe o pega aquí el contenido del documento, términos o reglamento..."
+                                        rows={8}
+                                        required={tipoAutorizacion === 'CUSTOM'}
+                                        className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-mono text-xs resize-y"
+                                    />
+                                </div>
+                            </>
+                        )}
 
                         <div className="space-y-3 pt-2">
                             <label className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700 cursor-pointer">
