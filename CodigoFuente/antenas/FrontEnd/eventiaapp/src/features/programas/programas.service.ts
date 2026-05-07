@@ -1,6 +1,11 @@
 import { 
     Programa, CrearProgramaPayload, ProgramaPeriodo, ProgramaServicio,
-    AutorizacionConfig, TraduccionAutorizacion, SaludConfig, StaffPrograma 
+    AutorizacionConfig, TraduccionAutorizacion, SaludConfig, StaffPrograma,
+    ValidarQRPayload, ValidarQRResponse,
+    RegistrarRetiroPayload, RegistrarRetiroResponse,
+    RetirosDiaResponse,
+    TransporteDiaResponse, TransporteServicioCodigo,
+    AutorizacionesInscripcionResponse
 } from './types';
 
 const API_URL = '/api/programas';
@@ -121,5 +126,91 @@ export const upsertStaffPrograma = async (idEvento: number, payload: StaffProgra
         body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Error asignando staff. Puede que el email no esté registrado.');
+    return res.json();
+};
+
+// ── Retiros QR ──────────────────────────────────────────────────
+
+/**
+ * Valida si el QR de una persona está autorizado a retirar participantes.
+ * idEvento se usa sólo para construir la ruta del proxy Next.js.
+ */
+export const validarQR = async (
+    idEvento: number,
+    payload: ValidarQRPayload
+): Promise<ValidarQRResponse> => {
+    const res = await fetch(`${API_URL}/${idEvento}/retiros/validar-qr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error al validar el QR');
+    return res.json();
+};
+
+/**
+ * Registra la salida de uno o más niños con el QR validado.
+ * idEvento se usa sólo para construir la ruta del proxy Next.js.
+ */
+export const registrarRetiro = async (
+    idEvento: number,
+    payload: RegistrarRetiroPayload
+): Promise<RegistrarRetiroResponse> => {
+    const res = await fetch(`${API_URL}/${idEvento}/retiros/registrar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error al registrar el retiro');
+    return res.json();
+};
+
+/** Obtiene el resumen y la grilla de retiros de un día para el programa. */
+export const getRetirosDia = async (
+    idEvento: number,
+    fecha: string
+): Promise<RetirosDiaResponse> => {
+    const res = await fetch(`${API_URL}/${idEvento}/retiros/dia?fecha=${fecha}`);
+    if (!res.ok) throw new Error('Error al obtener los retiros del día');
+    return res.json();
+};
+
+// ── Transporte ────────────────────────────────────────────────
+
+/**
+ * Obtiene la lista operativa de transporte de un día para el programa.
+ * @param idEvento   ID del evento/programa
+ * @param fecha      Fecha en formato YYYY-MM-DD
+ * @param servicioCodigo  Filtro: 'TODOS' | 'ACOGIDA' | 'TRANSPORTE'
+ */
+export const getTransporteDia = async (
+    idEvento: number,
+    fecha: string,
+    servicioCodigo: TransporteServicioCodigo = 'TODOS'
+): Promise<TransporteDiaResponse> => {
+    const res = await fetch(
+        `${API_URL}/${idEvento}/transporte/dia?fecha=${fecha}&servicioCodigo=${servicioCodigo}`
+    );
+    if (!res.ok) throw new Error('Error al obtener el listado de transporte del día');
+    return res.json();
+};
+
+// ── Autorizaciones de Inscripción ────────────────────────────
+
+/**
+ * Obtiene las autorizaciones firmadas de una inscripción concreta.
+ * @param idInscripcion   ID de la inscripción
+ * @param idEvento        ID del evento/programa (para validación de permisos en el backend)
+ * @param idIdioma        Idioma para los textos (default: 1)
+ */
+export const getAutorizacionesInscripcion = async (
+    idInscripcion: number,
+    idEvento: number,
+    idIdioma = 1
+): Promise<AutorizacionesInscripcionResponse> => {
+    const res = await fetch(
+        `/api/programas/inscripciones/${idInscripcion}/autorizaciones?idIdioma=${idIdioma}&idEvento=${idEvento}`
+    );
+    if (!res.ok) throw new Error('Error al obtener las autorizaciones de la inscripción');
     return res.json();
 };

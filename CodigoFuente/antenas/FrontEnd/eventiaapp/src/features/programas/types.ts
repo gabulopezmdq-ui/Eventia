@@ -119,3 +119,141 @@ export interface StaffPrograma {
     id_rol: string;
     activo: boolean;
 }
+
+// ── Retiros QR ──────────────────────────────────────────────────
+
+/** Payload para validar un QR de retiro */
+export interface ValidarQRPayload {
+    qrToken: string;
+    fechaOperativa: string; // YYYY-MM-DD
+}
+
+/** Un participante dentro de la respuesta de validar-qr */
+export interface ParticipanteAutorizado {
+    idInvitado: number;
+    idAutorizacion: number;
+    nombreCompleto: string;
+    yaRetiradoHoy: boolean;
+    fechaRetiro: string | null;
+}
+
+/** Respuesta del endpoint POST /programas/retiros/validar-qr */
+export interface ValidarQRResponse {
+    valido: boolean;
+    mensaje: string;
+    idEvento: number;
+    nombreAutorizado: string;
+    telefonoAutorizado: string | null;
+    relacion: string | null;
+    qrToken: string;
+    participantesAutorizados: ParticipanteAutorizado[];
+}
+
+/** Payload para registrar el retiro */
+export interface RegistrarRetiroPayload {
+    qrToken: string;
+    fechaOperativa: string; // YYYY-MM-DD
+    idsInvitadosNinos: number[];
+    observaciones?: string;
+}
+
+/** Un retiro dentro de la respuesta de registrar */
+export interface RetiroRegistrado {
+    idRetiro: number;
+    idInvitado: number;
+    participante: string;
+    nombreRetirador: string;
+    fechaRetiro: string;
+}
+
+/** Respuesta del endpoint POST /programas/retiros/registrar */
+export interface RegistrarRetiroResponse {
+    ok: boolean;
+    mensaje: string;
+    fechaOperativa: string;
+    retiros: RetiroRegistrado[];
+}
+
+/** Un ítem de la grilla del día (GET /programas/{idEvento}/retiros/dia) */
+export interface RetiroDiaItem {
+    idRetiro: number;
+    idInvitado: number;
+    participante: string;
+    nombreRetirador: string;
+    telefonoRetirador: string;
+    /** A = QR Autorizado | M = Manual | O = Otro */
+    metodoValidacion: 'A' | 'M' | 'O';
+    observaciones: string;
+    fechaRetiro: string;
+}
+
+/** Respuesta del endpoint GET /programas/{idEvento}/retiros/dia?fecha=YYYY-MM-DD */
+export interface RetirosDiaResponse {
+    idEvento: number;
+    fecha: string;
+    totalRetiros: number;
+    items: RetiroDiaItem[];
+}
+
+// ── Transporte ────────────────────────────────────────────────
+
+/** Valores válidos para el filtro de servicio de transporte */
+export type TransporteServicioCodigo = 'TODOS' | 'ACOGIDA' | 'TRANSPORTE';
+
+/** Un ítem de la grilla diaria de transporte */
+export interface TransporteDiaItem {
+    idInvitado: number;
+    idRsvpGrupoIntegrante: number;
+    participante: string;
+    responsable: string;
+    telefonoResponsable: string;
+    servicio: string;
+    servicioCodigo: TransporteServicioCodigo;
+    direccion: string | null;
+    observacionesServicio: string | null;
+    tieneAlertaSalud: boolean;
+    observacionesSalud: string | null;
+}
+
+/** Resumen de contadores del día */
+export interface TransporteDiaResumen {
+    total: number;
+    conObservaciones: number;
+    conAlertasSalud: number;
+}
+
+/** Respuesta completa del endpoint GET /programas/{idEvento}/transporte/dia */
+export interface TransporteDiaResponse {
+    idEvento: number;
+    programa: string;
+    fecha: string;
+    resumen: TransporteDiaResumen;
+    items: TransporteDiaItem[];
+}
+
+// ── Autorizaciones de Inscripción ─────────────────────────────
+
+/** Un ítem de autorización (tanto grupo como participante) */
+export interface AutorizacionInscripcionItem {
+    id_inscripcion_autorizacion: number;
+    id_inscripcion: number;
+    id_rsvp_grupo_integrante: number | null;
+    participante: string | null;
+    id_programa_autorizacion_config: number;
+    codigo: string;
+    titulo: string;
+    texto_aceptado: string;
+    aceptada: boolean;
+    fecha_aceptacion: string;
+    nombre_firmante: string;
+}
+
+/** Respuesta completa del endpoint GET /programas/inscripciones/{id}/autorizaciones */
+export interface AutorizacionesInscripcionResponse {
+    id_inscripcion: number;
+    responsable: string;
+    email: string;
+    telefono: string;
+    autorizaciones_grupo: AutorizacionInscripcionItem[];
+    autorizaciones_participantes: AutorizacionInscripcionItem[];
+}
