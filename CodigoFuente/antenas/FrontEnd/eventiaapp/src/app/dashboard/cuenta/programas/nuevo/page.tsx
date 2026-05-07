@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/src/context/AuthContext';
 import { createPrograma } from '@/src/features/programas/programas.service';
 import { getTiposEvento, getIdiomasActivos } from '@/src/features/events/event.service';
 import {
@@ -16,6 +17,7 @@ interface Cliente { id_cliente: number; nombre_cliente: string; }
 
 export default function NuevoProgramaPage() {
     const router = useRouter();
+    const { cuenta } = useAuth();
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -107,7 +109,7 @@ export default function NuevoProgramaPage() {
             const payload = {
                 IdTipoEvento: formData.idTipoEvento,
                 IdIdioma: formData.idIdioma,
-                IdCuenta: 0, // Lo resuelve el backend con el token
+                IdCuenta: cuenta?.id_cuenta || 0, // Se obtiene del contexto del token
                 IdUnidad: Number(b2bInfo.idUnidad),
                 IdCliente: b2bInfo.destinatario === 'CLIENTE' ? Number(b2bInfo.idCliente) : null,
                 Modalidad: b2bInfo.destinatario,
