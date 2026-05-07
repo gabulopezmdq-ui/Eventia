@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getCuentaEventos } from '@/src/features/cuenta/cuenta.service';
-import { CalendarHeart, Loader2, MapPin, LayoutList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Plus, Pencil, Eye, X } from 'lucide-react';
+import { CalendarHeart, Loader2, MapPin, LayoutList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Plus, Pencil, Eye, X, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EventosCuentaPage() {
@@ -154,9 +154,12 @@ export default function EventosCuentaPage() {
                                     {eventos.map((ev, index) => (
                                         <tr key={ev.idEvento || ev.id_evento || index} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 transition-all duration-200 group">
                                             <td className="px-6 py-5">
-                                                <p className="font-bold text-neutral-900 dark:text-white text-base group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
+                                                <Link
+                                                    href={`/dashboard/events/${ev.idEvento || ev.id_evento}`}
+                                                    className="font-bold text-neutral-900 dark:text-white text-base group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1 hover:underline"
+                                                >
                                                     {ev.anfitrionesTexto || 'Sin título'}
-                                                </p>
+                                                </Link>
                                                 <div className="flex items-center gap-1.5 mt-2 text-xs font-medium text-neutral-500">
                                                     <MapPin className="w-3.5 h-3.5 text-neutral-400" />
                                                     {ev.lugar || 'Lugar por definir'}
@@ -353,7 +356,14 @@ export default function EventosCuentaPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="p-4 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex justify-end">
+                        <div className="p-4 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex justify-between items-center gap-3">
+                            <Link
+                                href={`/dashboard/events/${selectedEvent.idEvento || selectedEvent.id_evento}`}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-purple-500/20 transition-all active:scale-95"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                Abrir Panel
+                            </Link>
                             <button
                                 onClick={() => setSelectedEvent(null)}
                                 className="px-5 py-2.5 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold text-sm rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"

@@ -1,0 +1,419 @@
+# Plan de Implementación v2: Panel de Inscriptos (Colonias/Casales)
+
+> **Fuente:** `4-Eventia-ColoniasVacaciones-Panel_Inscriptos.md`  
+> **Módulo:** Gestión de Inscripciones → Inscriptos  
+> **Rol:** CRM Operativo del Programa
+
+---
+
+## 1. Estructura de Navegación y Rutas
+
+El panel de inscriptos vive dentro del bloque **"Gestión de inscripciones"**, separado del bloque **"Configuración"** (semanas, servicios, salud, autorizaciones).
+
+### Menú lateral (estructura esperada)
+```
+Programas
+└── [Nombre del Programa] (card/item)
+    ├── Configuración
+    │   ├── Semanas
+    │   ├── Servicios
+    │   ├── Salud
+    │   └── Autorizaciones
+    └── Gestión de inscripciones          ← bloque nuevo
+        ├── Inscriptos                    ← ESTE MÓDULO
+        ├── Pagos
+        ├── Cocina
+        ├── Transporte
+        ├── Salud
+        └── Retiros
+```
+
+### Ruta del módulo
+```
+/dashboard/eventos/[idEvento]/inscriptos
+/dashboard/eventos/[idEvento]/inscriptos/[idInscripcion]   ← (opcional, si el detalle tiene ruta propia)
+```
+
+> Si el detalle se abre como **Drawer/Modal** (recomendado), la segunda ruta no es necesaria.
+
+---
+
+## 2. Tipado y Modelos de Datos (TypeScript)
+
+Crear en `src/types/inscriptos.types.ts` (o la carpeta de tipos del proyecto):
+
+```typescript
+// ─── Resumen del panel ────────────────────────────────────────────
+export interface ResumenInscriptos {
+  id_evento: number;
+  programa: string;
+  modulo: string;
+  total_familias: number;
+  total_participantes: number;
+  total_deuda: number;
+  moneda: string;
+  pendientes: number;
+  parciales: number;
+  pagados: number;
+  sin_cargo: number;
+  con_alertas: number;
+}
+
+// ─── Fila de la grilla principal ─────────────────────────────────
+export type EstadoPago = 'PENDIENTE' | 'PARCIAL' | 'PAGADO' | 'SIN_CARGO';
+export type EstadoInscripcion = 'CONFIRMADA' | 'PENDIENTE' | 'CANCELADA';
+
+export interface InscriptoFila {
+  idInscripcion: number;
+  idRsvpGrupo: number;
+  responsable: string;
+  email: string;
+  telefono: string;
+  participantes: string[];           // array de nombres (para mostrar en grilla)
+  cantidadParticipantes: number;
+  cantidadPeriodos: number;
+  cantidadServicios: number;
+  tieneRestriccionesAlimentarias: boolean;
+  tieneAlertasSalud: boolean;
+  totalOriginal: number;
+  totalPagado: number;
+  saldo: number;
+  moneda: string;
+  estadoPago: EstadoPago;
+  estadoInscripcion: EstadoInscripcion;
+}
+
+// ─── Detalle operativo completo ───────────────────────────────────
+export interface PeriodoParticipante {
+  idProgramaPeriodo: number;
+  nombre: string;
+  fechaDesde: string;
+  fechaHasta: string;
+  precioBase: number;
+  moneda: string;
+}
+
+export interface ServicioParticipante {
+  idProgramaServicio: number;
+  codigo: string;
+  nombre: string;
+  tipoCalculo: 'POR_DIA' | 'FIJO' | string;
+  precio: number;
+  subtotal: number;
+  moneda: string;
+  cantidadCalculada: number;
+}
+
+export interface RestriccionAlimentaria {
+  idRestriccionAlim: number;
+  codigo: string;
+  texto: string;
+  categoria: 'INTOLERANCIA' | 'ALERGIA' | 'ELECCION' | string;
+  requiereAlertaVisual: boolean;
+  esAlergeno: boolean;
+  observaciones: string | null;
+  severidad: string | null;
+}
+
+export interface SaludParticipante {
+  // Modelar según la API; puede ser null
+  descripcion?: string;
+  observaciones?: string;
+}
+
+export interface AutorizadoRetiro {
+  nombre: string;
+  // otros campos si la API los devuelve
+}
+
+export interface ParticipanteDetalle {
+  idInvitado: number;
+  idRsvpGrupoIntegrante: number;
+  nombreCompleto: string;
+  fechaNacimiento: string | null;
+  observaciones: string | null;
+  periodos: PeriodoParticipante[];
+  servicios: ServicioParticipante[];
+  restriccionesAlimentarias: RestriccionAlimentaria[];
+  salud: SaludParticipante | null;
+  autorizadosRetiro: AutorizadoRetiro[];
+}
+
+export interface DetalleInscripcionOperativo {
+  idInscripcion: number;
+  idRsvpGrupo: number;
+  responsable: string;
+  email: string;
+  telefono: string;
+  estadoInscripcion: EstadoInscripcion;
+  estadoPago: EstadoPago;
+  totalOriginal: number;
+  totalPagado: number;
+  saldo: number;
+  moneda: string;
+  participantes: ParticipanteDetalle[];
+}
+
+// ─── Filtros de búsqueda ──────────────────────────────────────────
+export interface FiltrosInscriptos {
+  q?: string;
+  estadoPago?: EstadoPago | 'TODOS';
+  soloAlertas?: boolean;
+}
+```
+
+---
+
+## 3. Servicios API
+
+Crear `src/services/inscriptosService.ts`:
+
+```typescript
+// GET /programas/{idEvento}/inscriptos/resumen
+getResumenInscriptos(idEvento: number): Promise<ResumenInscriptos>
+
+// GET /programas/{idEvento}/inscriptos?q=&estadoPago=&soloAlertas=
+getInscriptosList(idEvento: number, filtros: FiltrosInscriptos): Promise<InscriptoFila[]>
+
+// GET /programas/inscripciones/{idInscripcion}/detalle-operativo?idIdioma=1
+getDetalleInscripcion(idInscripcion: number, idIdioma: number = 1): Promise<DetalleInscripcionOperativo>
+```
+
+**Notas de implementación:**
+- Los tres endpoints se llaman **en paralelo** en la carga inicial solo cuando corresponde: `getResumenInscriptos` + `getInscriptosList` juntos al montar la página.
+- `getDetalleInscripcion` se llama **on-demand** (al hacer click en "Ver detalle").
+- Pasar `soloAlertas=true` solo cuando el toggle está activo (no enviar el param si es `false`).
+- `estadoPago` no se envía si el valor es `'TODOS'`.
+
+---
+
+## 4. Componentes UI
+
+### Árbol de componentes
+```
+PanelInscriptosPage
+├── InscriptosHeader
+│   └── ResumenCards
+│       ├── Card: Total Familias
+│       ├── Card: Total Participantes
+│       ├── Card: Deuda Total
+│       ├── Card: Desglose Estado de Pago (Pendientes / Parciales / Pagados)
+│       └── Card: Alertas
+├── InscriptosFiltros
+│   ├── InputSearch (con debounce)
+│   ├── SelectEstadoPago
+│   └── ToggleSoloAlertas
+├── InscriptosTable
+│   └── InscriptoRow (por cada registro)
+│       └── AlertaIconos (columna de íconos de alerta)
+└── DetalleInscripcionDrawer (o Modal)
+    ├── DrawerHeader (info responsable + estado financiero)
+    └── ParticipanteCard[] (uno por niño)
+        ├── SeccionPeriodos
+        ├── SeccionServicios
+        ├── SeccionRestricciones
+        ├── SeccionSalud
+        └── SeccionRetiro
+```
+
+---
+
+### 4.1. `PanelInscriptosPage` — Contenedor Principal
+
+**Responsabilidades:**
+- Leer `idEvento` desde los parámetros de la URL.
+- Mantener estado:
+  - `resumen: ResumenInscriptos | null`
+  - `inscriptos: InscriptoFila[]`
+  - `filtros: FiltrosInscriptos`
+  - `isLoadingResumen: boolean`
+  - `isLoadingLista: boolean`
+  - `inscripcionSeleccionada: number | null` (id para el drawer)
+  - `isDrawerOpen: boolean`
+- Llamar a `getResumenInscriptos` y `getInscriptosList` en el montaje inicial.
+- Re-llamar a `getInscriptosList` cada vez que cambien los filtros.
+- Al hacer click en "Ver detalle" de una fila: setear `inscripcionSeleccionada` y abrir el drawer.
+
+---
+
+### 4.2. `InscriptosHeader` + `ResumenCards`
+
+**`InscriptosHeader`:**
+- Título dinámico: `"Panel de Inscriptos al Programa: {resumen.programa}"`
+- Muestra el skeleton/loader mientras carga el resumen.
+
+**`ResumenCards`** — 5 cards:
+
+| Card | Campo API | Detalle |
+|---|---|---|
+| Familias | `total_familias` | Número grande con label |
+| Participantes | `total_participantes` | Número grande con label |
+| Deuda Total | `total_deuda` | Formatear con `moneda` (ej. `€5.096,00`) |
+| Estado de Pago | `pendientes` / `parciales` / `pagados` | 3 mini-badges en una sola card |
+| Alertas | `con_alertas` | Con ícono ⚠ destacado si > 0 |
+
+---
+
+### 4.3. `InscriptosFiltros`
+
+- **`InputSearch`**: Input de texto libre. Implementar **debounce de 400ms** antes de actualizar el estado de filtros y disparar la búsqueda. Placeholder: `"Buscar por nombre, email o teléfono"`.
+- **`SelectEstadoPago`**: Dropdown con opciones: `TODOS | PENDIENTE | PARCIAL | PAGADO`. Default: `TODOS`.
+- **`ToggleSoloAlertas`**: Switch/Toggle. Label: `"Solo alertas"`. Al activarse filtra registros con `tieneAlertasSalud=true` O `tieneRestriccionesAlimentarias=true`.
+
+---
+
+### 4.4. `InscriptosTable` + `InscriptoRow`
+
+**Columnas de la tabla:**
+
+| # | Columna | Campo | Notas |
+|---|---|---|---|
+| 1 | Alertas | `tieneAlertasSalud` + `tieneRestriccionesAlimentarias` | Ver lógica de íconos abajo |
+| 2 | Responsable | `responsable` | Mostrar también `email` y `telefono` como subtexto |
+| 3 | Participantes | `participantes[]` + `cantidadParticipantes` | Lista de nombres o "2 participantes" |
+| 4 | Períodos | `cantidadPeriodos` | Número centrado |
+| 5 | Servicios | `cantidadServicios` | Número centrado |
+| 6 | Estado Pago | `estadoPago` | Badge con color |
+| 7 | Saldo | `saldo` + `moneda` | Solo el saldo (no el total original) |
+| 8 | Detalle | — | Botón/ícono de acción |
+
+**Lógica de íconos de alerta (columna 1) — 3 estados:**
+```
+tieneAlertasSalud = true               → 🩺 (rojo/naranja)
+tieneRestriccionesAlimentarias = true  → ⚠️ (amarillo)
+Ambos true                             → mostrar ambos íconos
+Ninguno true                           → ✅ o celda vacía (sin alarma)
+```
+
+**Badges de Estado de Pago:**
+```
+PENDIENTE → rojo / bg-red
+PARCIAL   → naranja / bg-amber
+PAGADO    → verde / bg-green
+SIN_CARGO → gris / bg-gray
+```
+
+---
+
+### 4.5. `DetalleInscripcionDrawer`
+
+Panel lateral (Drawer) que se abre al hacer click en "Ver detalle". Llama a `getDetalleInscripcion(idInscripcion)` internamente, mostrando un loader mientras carga.
+
+**Sección Header del Drawer:**
+
+```
+┌─────────────────────────────────────────────┐
+│ Nuria Costa                                 │
+│ +34600123456  •  nuria.costa@test.com       │
+│                                             │
+│ Estado Inscripción: [CONFIRMADA] badge      │
+│ Estado Pago:        [PENDIENTE]  badge      │
+│ Saldo:              €450,00                 │
+└─────────────────────────────────────────────┘
+```
+
+**Campos a mostrar del header:**
+- `responsable`, `telefono`, `email`
+- `estadoInscripcion` (badge)
+- `estadoPago` (badge con color)
+- `saldo` + `moneda` (formateado)
+- `totalOriginal` y `totalPagado` como subtexto adicional (ej. "Pagado: €0 / Total: €450")
+
+**Sección Participantes:**
+
+Iterar sobre `participantes[]` y renderizar un `ParticipanteCard` por cada uno.
+
+---
+
+### 4.6. `ParticipanteCard`
+
+Una tarjeta por niño/participante con las siguientes secciones:
+
+**Nombre:** `nombreCompleto` — como título destacado de la card.  
+Si `fechaNacimiento` no es null → mostrar edad o fecha.  
+Si `observaciones` no es null → mostrar como nota adicional.
+
+**📅 Períodos** (`periodos[]`):
+- Listar cada período: `nombre` (ej. "Setmana 1 - del 22/06 al 26/06")
+- Mostrar `precioBase + moneda` por período.
+
+**🍽 Servicios** (`servicios[]`):
+- Por cada servicio: `nombre` + cantidad/días (ej. "Menjador (5 días)")
+- Si `tipoCalculo = 'POR_DIA'` → mostrar `cantidadCalculada` como "X días"
+- Mostrar `subtotal + moneda`
+
+**⚠ Restricciones Alimentarias** (`restriccionesAlimentarias[]`):
+- Si el array está vacío → no mostrar la sección (o mostrar "Sin restricciones")
+- Por cada restricción:
+  - `texto` como label principal
+  - Si `requiereAlertaVisual = true` → destacar visualmente (ej. badge rojo)
+  - Si `esAlergeno = true` → ícono de alérgeno adicional
+  - `observaciones` como nota
+
+**🩺 Salud** (`salud`):
+- Si `salud = null` → no mostrar la sección.
+- Si tiene datos → mostrar descripción/observaciones del objeto salud.
+
+**👤 Retiro Autorizado** (`autorizadosRetiro[]`):
+- Si el array está vacío → mostrar "Sin autorizados registrados".
+- Por cada autorizado → mostrar nombre.
+
+---
+
+## 5. Fases de Ejecución
+
+### Fase 1 — Preparación (Tipos + Servicios)
+- [x] Crear `inscriptos.types.ts` con todas las interfaces del §2.
+- [x] Crear `inscriptosService.ts` con los 3 métodos del §3.
+- [x] Validar los endpoints contra la API real (verificar nombres de campos exactos).
+
+### Fase 2 — Layout y Resumen
+- [x] Crear la ruta/página `PanelInscriptosPage`.
+- [x] Agregar la entrada "Inscriptos" al menú lateral bajo "Gestión de inscripciones".
+- [x] Implementar `InscriptosHeader` con título dinámico.
+- [x] Implementar `ResumenCards` con las 5 cards (conectadas al endpoint `/resumen`).
+- [x] Manejar loading skeleton y estado de error en el resumen.
+
+### Fase 3 — Tabla y Filtros
+- [x] Implementar `InscriptosFiltros` (search con debounce, dropdown, toggle).
+- [x] Implementar `InscriptosTable` con todas las columnas.
+- [x] Implementar lógica de los 3 estados visuales de la columna de alertas.
+- [x] Implementar badges de color para `estadoPago`.
+- [x] Conectar cambio de filtros con llamada al endpoint de lista.
+- [x] Manejar empty state (sin resultados para el filtro aplicado).
+
+### Fase 4 — Vista de Detalle
+- [x] Implementar `DetalleInscripcionDrawer` con su header de responsable + estado financiero.
+- [x] Llamada on-demand a `getDetalleInscripcion` al abrir el drawer.
+- [x] Implementar `ParticipanteCard` con las 5 secciones (Períodos, Servicios, Restricciones, Salud, Retiro).
+- [x] Lógica condicional: no mostrar secciones `salud` o `autorizadosRetiro` si están vacías/null.
+- [x] Destacado visual de restricciones con `requiereAlertaVisual = true`.
+
+### Fase 5 — Pulido UI/UX
+- [x] Loaders / Skeletons en tabla y en drawer.
+- [x] Empty states con mensajes descriptivos.
+- [x] Revisión de responsiveness (tabla scrolleable en mobile).
+- [x] Formateo de moneda según el campo `moneda` (EUR, ARS, etc.).
+- [x] Tooltips en íconos de alerta de la grilla.
+- [x] Accesibilidad: `aria-label` en botones de ícono.
+
+---
+
+## 6. Decisiones de Diseño a Confirmar
+
+| # | Decisión | Opción A | Opción B |
+|---|---|---|---|
+| 1 | Vista de detalle | **Drawer lateral** (recomendado) | Modal grande |
+| 2 | Columna "Participantes" en grilla | Mostrar nombres como lista | Mostrar solo el número |
+| 3 | Saldo en grilla | Solo `saldo` | `saldo` + `totalOriginal` |
+| 4 | Sección Salud vacía | Ocultar la sección | Mostrar "Sin observaciones" |
+
+---
+
+## 7. Campos Clave a No Olvidar
+
+- `idRsvpGrupo`: presente en lista y detalle, útil para futuras acciones (pagos, comunicación).
+- `totalOriginal` vs `saldo`: la grilla muestra solo `saldo`; el detalle muestra ambos.
+- `estadoInscripcion` (CONFIRMADA/CANCELADA): no aparece en la grilla pero sí en el detalle. Mostrarlo en el header del drawer.
+- `idIdioma=1`: siempre enviar al llamar al endpoint de detalle operativo.
+- Filtros combinados: los tres parámetros (`q`, `estadoPago`, `soloAlertas`) pueden enviarse simultáneamente en una sola request.

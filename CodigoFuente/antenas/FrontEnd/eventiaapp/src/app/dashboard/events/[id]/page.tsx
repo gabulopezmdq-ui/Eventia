@@ -7,7 +7,7 @@ import {
     ChevronLeft, Calendar, MapPin, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
-    Link as LinkIcon
+    Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck
 } from 'lucide-react';
 
 import {
@@ -223,6 +223,153 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </div>
                     </div>
 
+                    {/* ── Accesos Rápidos (Módulos de Gestión) ── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Quick Link Card - Gestión de Invitados */}
+                        <div className="p-5 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-4">
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Gestión de Invitados</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Administrá la lista de invitados, controlá RSVPs y generá invitaciones 1-a-1.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/invitados`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 transition-all"
+                            >
+                                <Users className="w-3.5 h-3.5" />
+                                Ver Invitados
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Audiencias */}
+                        <div className="p-5 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center mb-4">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Captación y Audiencias</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Gestioná campañas públicas, inscripciones masivas y control de beneficios.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/audiencias`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 hover:bg-purple-400 transition-all"
+                            >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Ver Audiencias
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Gestión Inscripciones / Pagos */}
+                        <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
+                                <DollarSign className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Inscripciones y Pagos</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Controlá saldos, registrá pagos parciales y aplicá ajustes manuales.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/pagos`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                            >
+                                <DollarSign className="w-3.5 h-3.5" />
+                                Ver Pagos
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - CRM Inscriptos */}
+                        <div className="p-5 rounded-2xl bg-amber-600/10 border border-amber-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center mb-4">
+                                <CalendarRange className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Panel de Inscriptos</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                CRM operativo. Control de salud, menú, retiros y detalles por participante.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscriptos`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-amber-500 text-white font-bold text-xs shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition-all"
+                            >
+                                <CalendarRange className="w-3.5 h-3.5" />
+                                Ver Panel CRM
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Cocina */}
+                        <div className="p-5 rounded-2xl bg-teal-600/10 border border-teal-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center mb-4">
+                                <ChefHat className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Comedor y Cocina</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Organización del menú diario, restricciones alimentarias y alertas de salud.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/cocina`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-teal-500 text-white font-bold text-xs shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all"
+                            >
+                                <ChefHat className="w-3.5 h-3.5" />
+                                Ver Cocina
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Retiros QR */}
+                        <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
+                                <LogOut className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Retiros QR</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Control de retiros de participantes autorizados mediante escaneo de código QR.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/retiros`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                            >
+                                <LogOut className="w-3.5 h-3.5" />
+                                Ver Retiros
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Transporte */}
+                        <div className="p-5 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4">
+                                <Bus className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Transporte</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Listado operativo diario de participantes con servicio de transporte.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/transporte`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:bg-blue-400 transition-all"
+                            >
+                                <Bus className="w-3.5 h-3.5" />
+                                Ver Transporte
+                            </button>
+                        </div>
+
+                        {/* Quick Link Card - Autorizaciones */}
+                        <div className="p-5 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                            <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center mb-4">
+                                <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-bold text-foreground text-sm mb-1">Autorizaciones Legales</h4>
+                            <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                Control de firmas y aceptaciones de autorizaciones de todos los participantes.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/autorizaciones`)}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-violet-500 text-white font-bold text-xs shadow-lg shadow-violet-500/20 hover:bg-violet-400 transition-all"
+                            >
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                Ver Autorizaciones
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Basic Info & Messages */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <section className="p-6 rounded-2xl bg-card-bg border border-card-border space-y-6">
@@ -236,7 +383,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-muted uppercase block mb-1">Mensaje Bienvenida</label>
-                                    <p className="text-sm text-foreground leading-relaxed">{event.mensaje_bienvenida || '—'}</p>
+                                    <p className="text-sm text-foreground leading-relaxed">{event.mensajeBienvenida || '—'}</p>
                                 </div>
                             </div>
                         </section>
@@ -286,46 +433,6 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 <span className="font-mono text-[10px] text-foreground underline decoration-indigo-500/30">EVT-{event.id_evento}</span>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Quick Link Card */}
-                    <div className="p-6 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 space-y-4">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
-                            <Users className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-foreground text-sm">Gestión de Invitados</h4>
-                            <p className="text-muted text-xs mt-1 leading-relaxed">
-                                Administrá la lista de invitados, supervisá sus estados y generá invitaciones personalizadas (1-a-1).
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/invitados`)}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 transition-all"
-                        >
-                            <Users className="w-3.5 h-3.5" />
-                            Ver Invitados
-                        </button>
-                    </div>
-
-                    {/* Quick Link Card - Audiencias */}
-                    <div className="p-6 rounded-2xl bg-purple-600/10 border border-purple-500/20 space-y-4">
-                        <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center">
-                            <Sparkles className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-foreground text-sm">Captación y Audiencias</h4>
-                            <p className="text-muted text-xs mt-1 leading-relaxed">
-                                Gestioná campañas públicas, inscripciones masivas, control de acceso y entrega de beneficios.
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/audiencias`)}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 hover:bg-purple-400 transition-all"
-                        >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Ver Audiencias
-                        </button>
                     </div>
 
                     {/* Secondary Actions */}

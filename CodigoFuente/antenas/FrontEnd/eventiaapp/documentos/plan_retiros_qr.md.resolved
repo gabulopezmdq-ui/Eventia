@@ -1,0 +1,449 @@
+# Plan de Implementación — Módulo Retiros QR
+## Eventia · Colonias Vacaciones / Casales
+
+---
+
+> [!IMPORTANT]
+> Este plan respeta **todos** los patrones existentes del proyecto:
+> - Tipos en `features/programas/types.ts`
+> - Servicio en `features/programas/programas.service.ts`
+> - Proxies API en `app/api/programas/[idEvento]/...`
+> - Páginas en `app/dashboard/events/[id]/inscripciones/...`
+> - Componentes en `app/dashboard/events/[id]/inscripciones/.../components/`
+> - UX/UI idéntica a `cocina/page.tsx` (breadcrumb, header con filtro fecha, cards, grilla, drawers)
+
+---
+
+## 1. Resumen del Flujo
+
+```mermaid
+flowchart LR
+    A[Operador entra a Retiros] --> B[Escanear QR / Token manual]
+    B --> C[POST validar-qr]
+    C --> D{valido?}
+    D -->|No| E[Mostrar error / QR inválido]
+    D -->|Sí| F[Mostrar autorizado + lista niños]
+    F --> G[Seleccionar niños a retirar]
+    G --> H[POST registrar retiro]
+    H --> I[Toast éxito]
+    I --> J[Refrescar Retiros del Día]
+    J --> K[GET /retiros/dia?fecha=...]
+    K --> L[Card total + Grilla]
+```
+
+---
+
+## 2. Archivos a Crear/Modificar
+
+```
+src/
+├── features/programas/
+│   ├── types.ts                          ← MODIFICAR  (agregar tipos retiros)
+│   └── programas.service.ts              ← MODIFICAR  (agregar funciones retiros)
+│
+├── app/
+│   ├── api/programas/[idEvento]/
+│   │   └── retiros/
+│   │       ├── dia/
+│   │       │   └── route.ts              ← CREAR (GET proxy retiros del día)
+│   │       ├── validar-qr/
+│   │       │   └── route.ts              ← CREAR (POST proxy validar QR)
+│   │       └── registrar/
+│   │           └── route.ts              ← CREAR (POST proxy registrar retiro)
+│   │
+│   └── dashboard/events/[id]/
+│       └── inscripciones/
+│           └── retiros/
+│               ├── page.tsx              ← CREAR (página principal)
+│               └── components/
+│                   ├── RetirosSummaryCard.tsx     ← CREAR
+│                   ├── RetirosGrid.tsx             ← CREAR
+│                   ├── ValidarQRPanel.tsx          ← CREAR
+│                   └── RegistrarRetiroDrawer.tsx   ← CREAR
+```
+
+---
+
+## 3. Tipos TypeScript — `features/programas/types.ts`
+
+Agregar al final del archivo existente:
+
+```typescript
+// ── Retiros QR ──────────────────────────────────────────────────
+
+/** Payload para validar un QR de retiro */
+export interface ValidarQRPayload {
+    qrToken: string;
+    fechaOperativa: string; // YYYY-MM-DD
+}
+
+/** Un participante dentro de la respuesta de validar-qr */
+export interface ParticipanteAutorizado {
+    idInvitado: number;
+    idAutorizacion: number;
+    nombreCompleto: string;
+    yaRetiradoHoy: boolean;
+    fechaRetiro: string | null;
+}
+
+/** Respuesta del endpoint POST /programas/retiros/validar-qr */
+export interface ValidarQRResponse {
+    valido: boolean;
+    mensaje: string;
+    idEvento: number;
+    nombreAutorizado: string;
+    telefonoAutorizado: string | null;
+    relacion: string | null;
+    qrToken: string;
+    participantesAutorizados: ParticipanteAutorizado[];
+}
+
+/** Payload para registrar el retiro */
+export interface RegistrarRetiroPayload {
+    qrToken: string;
+    fechaOperativa: string;         // YYYY-MM-DD
+    idsInvitadosNinos: number[];
+    observaciones?: string;
+}
+
+/** Un retiro dentro de la respuesta de registrar */
+export interface RetiroRegistrado {
+    idRetiro: number;
+    idInvitado: number;
+    participante: string;
+    nombreRetirador: string;
+    fechaRetiro: string;
+}
+
+/** Respuesta del endpoint POST /programas/retiros/registrar */
+export interface RegistrarRetiroResponse {
+    ok: boolean;
+    mensaje: string;
+    fechaOperativa: string;
+    retiros: RetiroRegistrado[];
+}
+
+/** Un ítem de la grilla del día */
+export interface RetiroDiaItem {
+    idRetiro: number;
+    idInvitado: number;
+    participante: string;
+    nombreRetirador: string;
+    telefonoRetirador: string;
+    metodoValidacion: 'A' | 'M' | 'O';   // A=QR Autorizado, M=Manual, O=Otro
+    observaciones: string;
+    fechaRetiro: string;
+}
+
+/** Respuesta del endpoint GET /programas/{idEvento}/retiros/dia */
+export interface RetirosDiaResponse {
+    idEvento: number;
+    fecha: string;
+    totalRetiros: number;
+    items: RetiroDiaItem[];
+}
+```
+
+---
+
+## 4. Servicio — `features/programas/programas.service.ts`
+
+Agregar después de la sección `// Staff`:
+
+```typescript
+// ── Retiros QR ───────────────────────────────────────────────────
+
+export const validarQR = async (payload: ValidarQRPayload): Promise<ValidarQRResponse> => {
+    const res = await fetch(`${API_URL}/retiros/validar-qr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error al validar el QR');
+    return res.json();
+};
+
+export const registrarRetiro = async (payload: RegistrarRetiroPayload): Promise<RegistrarRetiroResponse> => {
+    const res = await fetch(`${API_URL}/retiros/registrar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error al registrar el retiro');
+    return res.json();
+};
+
+export const getRetirosDia = async (idEvento: number, fecha: string): Promise<RetirosDiaResponse> => {
+    const res = await fetch(`${API_URL}/${idEvento}/retiros/dia?fecha=${fecha}`);
+    if (!res.ok) throw new Error('Error al obtener los retiros del día');
+    return res.json();
+};
+```
+
+> [!NOTE]
+> `validarQR` y `registrarRetiro` apuntan a `/api/programas/retiros/...` (sin `idEvento` en la ruta)
+> porque el backend los diseñó sin el param de evento (el token ya identifica el contexto).
+> `getRetirosDia` sí lleva `idEvento` como path param.
+
+---
+
+## 5. API Proxies Next.js
+
+### 5.1 `GET /api/programas/[idEvento]/retiros/dia/route.ts`
+
+Patrón idéntico a `cocina/dia/route.ts`. Reenvía `?fecha=YYYY-MM-DD` al backend.
+
+```typescript
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ idEvento: string }> }
+) {
+    try {
+        const { idEvento } = await params;
+        const cookieStore = await cookies();
+        const token = cookieStore.get('access_token')?.value;
+        if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+
+        const { searchParams } = new URL(request.url);
+        const url = new URL(`${API_URL}/programas/${idEvento}/retiros/dia`);
+        searchParams.forEach((value, key) => url.searchParams.append(key, value));
+
+        const res = await fetch(url.toString(), {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            cache: 'no-store',
+        });
+        const text = await res.text();
+        return new NextResponse(text, { status: res.status, headers: { 'Content-Type': 'application/json' } });
+    } catch (error) {
+        console.error('ERROR API ROUTE RETIROS DIA:', error);
+        return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
+    }
+}
+```
+
+### 5.2 `POST /api/programas/[idEvento]/retiros/validar-qr/route.ts`
+
+> [!NOTE]
+> Aunque el backend no usa `idEvento` en esta ruta, el proxy vive dentro del segmento `[idEvento]`
+> para mantener consistencia y permitir que el servicio simplemente invoque `/api/programas/${idEvento}/retiros/validar-qr`.
+> El proxy reenvía el body tal cual al backend sin `idEvento`.
+
+```typescript
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ idEvento: string }> }
+) {
+    try {
+        await params; // necesario por Next.js pero no se usa
+        const cookieStore = await cookies();
+        const token = cookieStore.get('access_token')?.value;
+        if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+
+        const body = await request.json();
+        const res = await fetch(`${API_URL}/programas/retiros/validar-qr`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const text = await res.text();
+        return new NextResponse(text, { status: res.status, headers: { 'Content-Type': 'application/json' } });
+    } catch (error) {
+        console.error('ERROR API ROUTE VALIDAR QR:', error);
+        return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
+    }
+}
+```
+
+### 5.3 `POST /api/programas/[idEvento]/retiros/registrar/route.ts`
+
+Mismo patrón que `validar-qr`. Reenvía body completo.
+
+```typescript
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ idEvento: string }> }
+) {
+    try {
+        await params;
+        const cookieStore = await cookies();
+        const token = cookieStore.get('access_token')?.value;
+        if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+
+        const body = await request.json();
+        const res = await fetch(`${API_URL}/programas/retiros/registrar`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const text = await res.text();
+        return new NextResponse(text, { status: res.status, headers: { 'Content-Type': 'application/json' } });
+    } catch (error) {
+        console.error('ERROR API ROUTE REGISTRAR RETIRO:', error);
+        return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
+    }
+}
+```
+
+---
+
+## 6. Actualización del Servicio (ruta unificada)
+
+> [!WARNING]
+> **Corrección de ruta en el servicio:** dado que `validarQR` y `registrarRetiro` no llevan `idEvento` en la URL del backend,
+> pero sí necesitamos pasarlo a los proxies para respetar la estructura de carpetas de Next.js, 
+> las funciones del servicio deben recibir `idEvento` como argumento para construir la URL del proxy correctamente.
+
+```typescript
+// Versión final corregida:
+export const validarQR = async (idEvento: number, payload: ValidarQRPayload): Promise<ValidarQRResponse> => {
+    const res = await fetch(`${API_URL}/${idEvento}/retiros/validar-qr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error al validar el QR');
+    return res.json();
+};
+
+export const registrarRetiro = async (idEvento: number, payload: RegistrarRetiroPayload): Promise<RegistrarRetiroResponse> => {
+    const res = await fetch(`${API_URL}/${idEvento}/retiros/registrar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error al registrar el retiro');
+    return res.json();
+};
+```
+
+---
+
+## 7. Página Principal — `retiros/page.tsx`
+
+Estructura idéntica a `cocina/page.tsx`:
+
+```
+'use client'
+
+State:
+  - fechaSeleccionada: string (hoy por defecto)
+  - retirosDia: RetirosDiaResponse | null
+  - loading: boolean
+  - error: string | null
+  - qrResult: ValidarQRResponse | null  ← resultado del validar-qr
+  - drawerOpen: boolean                  ← para RegistrarRetiroDrawer
+
+Secciones en orden vertical:
+  1. <nav>  Breadcrumb: Eventos / Detalle #id / Retiros
+  2. <header> título "Panel de Retiros" + filtro <input type="date"> + botón RefreshCw
+  3. <ValidarQRPanel>  panel de escaneo / token manual
+  4. <RetirosSummaryCard>  card "Total retiros hoy: N"
+  5. <RetirosGrid>  grilla del día
+  6. <RegistrarRetiroDrawer> drawer lateral
+```
+
+---
+
+## 8. Componentes
+
+### 8.1 `ValidarQRPanel.tsx`
+- Input de texto para pegar token manualmente
+- Botón "Validar"
+- Llama `validarQR(idEvento, { qrToken, fechaOperativa })`
+- **Estados visuales:**
+  - Idle: solo input + botón
+  - Loading: spinner en botón
+  - Error (`valido: false`): card roja con `mensaje` del backend
+  - Éxito (`valido: true`): card verde con datos del autorizado → pasa resultado a `RegistrarRetiroDrawer` y lo abre
+- **Props:** `idEvento: number`, `fechaOperativa: string`, `onRetiroRegistrado: () => void`
+
+### 8.2 `RegistrarRetiroDrawer.tsx`
+- Drawer lateral (igual al patrón de `UpsertPeriodoDrawer.tsx`)
+- Muestra:
+  - **Autorizado:** nombre, relación, teléfono
+  - **Puede retirar:** lista de checkboxes de `participantesAutorizados`
+    - Checkbox deshabilitado si `yaRetiradoHoy === true` (con badge "Ya retirado HH:mm")
+    - Checkbox habilitado y seleccionable si `yaRetiradoHoy === false`
+  - **Observaciones:** `<textarea>` libre
+  - Botón "Registrar retiro" (deshabilitado si no hay ningún niño seleccionado)
+- Al confirmar → llama `registrarRetiro(idEvento, payload)` → toast éxito → cierra drawer → llama `onRetiroRegistrado()`
+- **Props:** `isOpen`, `onClose`, `idEvento`, `qrResult: ValidarQRResponse | null`, `fechaOperativa`, `onRetiroRegistrado`
+
+### 8.3 `RetirosSummaryCard.tsx`
+- Card simple: ícono LogOut + "Total retiros hoy" + número grande
+- Mismo estilo que las cards de `CocinaSummaryCards.tsx`
+- **Props:** `totalRetiros: number`
+
+### 8.4 `RetirosGrid.tsx`
+- Tabla con columnas: **Hora | Participante | Retiró | Teléfono | Método | Observaciones**
+- `metodoValidacion` mapeado: `A → "QR Autorizado"`, `M → "Manual"`, `O → "Otro"`
+- Badge de color para el método (verde para A, amarillo para M, gris para O)
+- Mismo estilo de tabla que `CocinaGrid.tsx`
+- **Props:** `items: RetiroDiaItem[]`
+
+---
+
+## 9. Lógica de Fechas
+
+- `fechaSeleccionada` arranca en `new Date().toISOString().split('T')[0]` (hoy)
+- Cada vez que cambia, refresca automáticamente la grilla con `getRetirosDia(idEvento, fecha)` via `useEffect([fechaSeleccionada])`
+- El panel QR también usa `fechaSeleccionada` como `fechaOperativa` al validar y registrar
+
+---
+
+## 10. Orden de Implementación Recomendado
+
+| # | Tarea | Archivo |
+|---|-------|---------|
+| 1 | Agregar tipos | `features/programas/types.ts` |
+| 2 | Agregar funciones al servicio | `features/programas/programas.service.ts` |
+| 3 | Crear proxy GET retiros/dia | `api/programas/[idEvento]/retiros/dia/route.ts` |
+| 4 | Crear proxy POST validar-qr | `api/programas/[idEvento]/retiros/validar-qr/route.ts` |
+| 5 | Crear proxy POST registrar | `api/programas/[idEvento]/retiros/registrar/route.ts` |
+| 6 | Crear `RetirosSummaryCard.tsx` | componente simple |
+| 7 | Crear `RetirosGrid.tsx` | tabla de retiros del día |
+| 8 | Crear `ValidarQRPanel.tsx` | input + llamada validar-qr |
+| 9 | Crear `RegistrarRetiroDrawer.tsx` | drawer con checkboxes y observaciones |
+| 10 | Crear `retiros/page.tsx` | orquesta todo |
+
+---
+
+## 11. Navegación (Sidebar B2B)
+
+En `dashboard/layout.tsx` ya existe el item de **Cocina** dentro de Gestión de Inscripciones. Agregar al mismo nivel:
+
+```tsx
+{ label: 'Retiros', href: `/dashboard/events/${id}/inscripciones/retiros`, icon: LogOut }
+```
+
+---
+
+## 12. Consideraciones Importantes
+
+> [!NOTE]
+> **El front NO toma decisiones de permisos.** Solo renderiza lo que devuelve el backend.
+> Si `valido: false`, muestra el mensaje de error tal cual. No hay lógica extra.
+
+> [!TIP]
+> Para el escaneo QR real (cámara), se puede agregar en una segunda iteración usando la librería
+> `html5-qrcode` o el nativo `BarcodeDetector`. Por ahora el input manual cubre el flujo completo.
+
+> [!WARNING]
+> La columna `metodoValidacion: 'A' | 'M' | 'O'` del tipo `RetiroDiaItem` debe
+> mapearse siempre en la UI. Nunca mostrar la letra cruda al usuario.
