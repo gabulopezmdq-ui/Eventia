@@ -4,6 +4,7 @@ using API.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
 
@@ -40,14 +41,14 @@ namespace API.Controllers.Programas
             if (User.Identity?.IsAuthenticated == true)
             {
                 // 1. Intentar obtener ID de usuario (dueño/admin)
-                string? sub = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-                bool isStaff = User.FindFirstValue("is_staff") == "true";
+                string? sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+                bool isStaff = User.FindFirst("is_staff")?.Value == "true";
 
                 if (isStaff)
                 {
                     // Caso Staff: Validar por Evento o Cuenta en claims
-                    string? idEventoStaffStr = User.FindFirstValue("id_evento");
-                    string? idCuentaStaffStr = User.FindFirstValue("id_cuenta");
+                    string? idEventoStaffStr = User.FindFirst("id_evento")?.Value;
+                    string? idCuentaStaffStr = User.FindFirst("id_cuenta")?.Value;
 
                     if (long.TryParse(idEventoStaffStr, out long idEvStaff) && idEvStaff == inscripcion.id_evento)
                         tieneAcceso = true;
