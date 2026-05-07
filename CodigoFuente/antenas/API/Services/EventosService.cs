@@ -681,7 +681,7 @@ namespace API.Services
         //}
 
 
-        public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
+        public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req, bool isSuperAdmin = false)
         {
             if (req == null)
                 throw new InvalidOperationException("Request inválido.");
@@ -700,8 +700,8 @@ namespace API.Services
             if (req.AnfitrionesTexto.Length > 500)
                 throw new InvalidOperationException("Anfitriones supera 500 caracteres.");
 
-            if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
-                throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+            // if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
+            //     throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
             bool existeIdioma = await _context.Set<ef_idiomas>()
                 .AnyAsync(i => i.id_idioma == idIdioma && i.activo == true);
@@ -776,8 +776,8 @@ namespace API.Services
                             ev.estado == EventoEstado.Borrador &&
                             ev.id_cuenta == null));
 
-                if (yaTieneBorrador)
-                    throw new InvalidOperationException("Ya tienes un evento en borrador. Activa o elimina ese evento para crear otro.");
+                if (yaTieneBorrador && !isSuperAdmin)
+                    throw new InvalidOperationException("Ya tienes un evento en borrador. Por favor, activa o elimina ese evento anterior para crear uno nuevo.");
 
                 var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan)
                     ? "B2C_FREE"
@@ -819,8 +819,18 @@ namespace API.Services
                     cuenta = await cuentasUsuarioQuery
                         .SingleOrDefaultAsync(c => c.id_cuenta == req.IdCuenta.Value);
 
-                    if (cuenta == null)
+                    if (cuenta == null && !isSuperAdmin)
                         throw new UnauthorizedAccessException("No tienes acceso a la cuenta indicada o la cuenta no está activa.");
+
+                    if (cuenta == null && isSuperAdmin)
+                    {
+                         // Si es SuperAdmin, cargamos la cuenta sin validar pertenencia
+                         cuenta = await _context.Set<ef_cuentas>()
+                            .SingleOrDefaultAsync(c => c.id_cuenta == req.IdCuenta.Value && c.estado == "A");
+                         
+                         if (cuenta == null)
+                            throw new InvalidOperationException("La cuenta no existe o no está activa.");
+                    }
                 }
                 else
                 {
@@ -1181,7 +1191,7 @@ namespace API.Services
         // =========================
         // UPDATE GENERAL
         // =========================
-        public async Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req)
+        public async Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req, bool isSuperAdmin = false)
         {
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);
@@ -1206,8 +1216,8 @@ namespace API.Services
                 ev.anfitriones_texto = req.AnfitrionesTexto.Trim();
             }
 
-            if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
-                throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+            // if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
+            //    throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
 
             if (req.IdDressCode.HasValue)
             {
@@ -1243,7 +1253,7 @@ namespace API.Services
             return await GetEventoMioAsync(idUsuario, idEvento);
         }
 
-        public async Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req)
+        public async Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req, bool isSuperAdmin = false)
         {
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);

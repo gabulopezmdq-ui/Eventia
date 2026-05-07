@@ -16,6 +16,11 @@ namespace API.Security
 
             return idUsuario;
         }
+
+        public static bool IsStaff(this ClaimsPrincipal user)
+        {
+            return user.FindFirstValue("is_staff") == "true";
+        }
     }
 }
 

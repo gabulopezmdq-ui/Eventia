@@ -66,7 +66,7 @@ namespace API.Controllers
         public async Task<ActionResult<EventoResponse>> Crear([FromBody] EventoCreateRequest req)
         {
             long idUsuario = User.GetUserId();
-            var creado = await _eventos.CrearEventoAsync(idUsuario, req);
+            var creado = await _eventos.CrearEventoAsync(idUsuario, req, User.IsStaff());
             return Ok(creado);
         }
 
@@ -77,7 +77,7 @@ namespace API.Controllers
             [FromBody] EventoUpdateGeneralRequest req)
         {
             long idUsuario = User.GetUserId();
-            var updated = await _eventos.UpdateGeneralAsync(idUsuario, idEvento, req);
+            var updated = await _eventos.UpdateGeneralAsync(idUsuario, idEvento, req, User.IsStaff());
             return Ok(updated);
         }
 
@@ -114,13 +114,12 @@ namespace API.Controllers
             return Ok(new { ok = true, id_evento = idEvento, id_acceso_default = idAcceso });
         }
 
-        //[Authorize]
-        [AllowAnonymous]
+        [Authorize]
         [HttpPut("{idEvento:long}/configuracion")]
         public async Task<ActionResult<EventoResponse>> UpdateConfiguracion(long idEvento, [FromBody] EventoUpdateConfiguracionRequest req)
         {
             long idUsuario = User.GetUserId();
-            var updated = await _eventos.UpdateConfiguracionAsync(idUsuario, idEvento, req);
+            var updated = await _eventos.UpdateConfiguracionAsync(idUsuario, idEvento, req, User.IsStaff());
             return Ok(updated);
         }
 
