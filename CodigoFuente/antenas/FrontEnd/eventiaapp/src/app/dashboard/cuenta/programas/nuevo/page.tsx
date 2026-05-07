@@ -107,20 +107,20 @@ export default function NuevoProgramaPage() {
 
         try {
             const payload = {
-                IdTipoEvento: formData.idTipoEvento,
-                IdIdioma: formData.idIdioma,
-                IdCuenta: cuenta?.id_cuenta || 0, // Se obtiene del contexto del token
-                IdUnidad: Number(b2bInfo.idUnidad),
-                IdCliente: b2bInfo.destinatario === 'CLIENTE' ? Number(b2bInfo.idCliente) : null,
-                Modalidad: b2bInfo.destinatario,
-                AnfitrionesTexto: formData.anfitrionesTexto,
-                Saludo: formData.saludo,
-                MensajeBienvenida: formData.mensajeBienvenida,
-                Notas: formData.notas,
-                FechaInicio: formData.fechaInicio ? new Date(formData.fechaInicio).toISOString().split('T')[0] : null,
-                FechaFin: formData.fechaFin ? new Date(formData.fechaFin).toISOString().split('T')[0] : null,
-                CodigoPlan: 'B2B_STARTER',
-                TipoOperacion: 'PROGRAMA' // Añadido explícitamente por si el backend lo requiere
+                id_tipo_evento: formData.idTipoEvento,
+                id_idioma: formData.idIdioma,
+                id_cuenta: cuenta?.id_cuenta || 0,
+                id_unidad: Number(b2bInfo.idUnidad),
+                id_cliente: b2bInfo.destinatario === 'CLIENTE' ? Number(b2bInfo.idCliente) : null,
+                modalidad: b2bInfo.destinatario,
+                anfitriones_texto: formData.anfitrionesTexto,
+                saludo: formData.saludo,
+                mensaje_bienvenida: formData.mensajeBienvenida,
+                notas: formData.notas,
+                fecha_inicio: formData.fechaInicio ? new Date(formData.fechaInicio).toISOString().split('T')[0] : null,
+                fecha_fin: formData.fechaFin ? new Date(formData.fechaFin).toISOString().split('T')[0] : null,
+                codigo_plan: 'B2B_STARTER',
+                tipo_operacion: 'PROGRAMA'
             };
 
             const result = await createPrograma(payload as any);
