@@ -84,6 +84,7 @@ export default function ProgramasCuentaPage() {
                             <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
                                 <tr>
                                     <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Información del Programa</th>
+                                    <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Información del Programa</th>
                                     <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Fechas</th>
                                     <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-right">Acciones</th>
                                 </tr>
@@ -91,6 +92,11 @@ export default function ProgramasCuentaPage() {
                             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
                                 {programas.map((prog, index) => (
                                     <tr key={(prog as any).id_evento || (prog as any).idEvento || index} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 transition-all duration-200 group">
+                                        <td className="px-6 py-5">
+                                            <p className="font-bold text-neutral-900 dark:text-white text-base group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
+                                                {prog.anfitriones_texto || 'Sin título'}
+                                            </p>
+                                        </td>
                                         <td className="px-6 py-5">
                                             <p className="font-bold text-neutral-900 dark:text-white text-base group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
                                                 {prog.saludo || prog.anfitriones_texto || 'Sin título'}

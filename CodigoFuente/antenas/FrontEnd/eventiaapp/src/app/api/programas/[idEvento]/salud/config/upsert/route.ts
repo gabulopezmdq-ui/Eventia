@@ -13,8 +13,13 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
 
         const body = await req.json();
 
-        // Mapeo snake_case -> PascalCase
+        // Mapeo exhaustivo para asegurar compatibilidad con cualquier deserializador en el backend
         const payload = {
+            // snake_case original
+            ...body,
+            id_evento: parseInt(idEvento),
+            
+            // camelCase
             idSaludConfig: body.id_salud_config,
             idEvento: parseInt(idEvento),
             pedirProblemaMedico: body.pedir_problema_medico,
@@ -33,7 +38,28 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
             observacionesFamiliaObligatorio: body.observaciones_familia_obligatorio,
             pedirMedicaciones: body.pedir_medicaciones,
             medicacionesObligatorio: body.medicaciones_obligatorio,
-            activo: body.activo
+            activo: body.activo,
+
+            // PascalCase
+            IdSaludConfig: body.id_salud_config,
+            IdEvento: parseInt(idEvento),
+            PedirProblemaMedico: body.pedir_problema_medico,
+            ProblemaMedicoObligatorio: body.problema_medico_obligatorio,
+            PedirAlergiasNoAlimentarias: body.pedir_alergias_no_alimentarias,
+            AlergiasNoAlimentariasObligatorio: body.alergias_no_alimentarias_obligatorio,
+            PedirNecesidadEspecial: body.pedir_necesidad_especial,
+            NecesidadEspecialObligatorio: body.necesidad_especial_obligatorio,
+            PedirCoberturaMedica: body.pedir_cobertura_medica,
+            CoberturaMedicaObligatorio: body.cobertura_medica_obligatorio,
+            PedirContactoEmergencia: body.pedir_contacto_emergencia,
+            ContactoEmergenciaObligatorio: body.contacto_emergencia_obligatorio,
+            PedirAutorizaEmergenciaMedica: body.pedir_autoriza_emergencia_medica,
+            AutorizaEmergenciaMedicaObligatorio: body.autoriza_emergencia_medica_obligatorio,
+            PedirObservacionesFamilia: body.pedir_observaciones_familia,
+            ObservacionesFamiliaObligatorio: body.observaciones_familia_obligatorio,
+            PedirMedicaciones: body.pedir_medicaciones,
+            MedicacionesObligatorio: body.medicaciones_obligatorio,
+            Activo: body.activo
         };
 
         const res = await fetch(`${API_URL}/programas/${idEvento}/salud/config/upsert`, {
@@ -54,25 +80,25 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
         
         // Mapeo PascalCase -> snake_case
         const mappedData = {
-            id_salud_config: data.idSaludConfig,
-            id_evento: data.idEvento,
-            pedir_problema_medico: data.pedirProblemaMedico,
-            problema_medico_obligatorio: data.problemaMedicoObligatorio,
-            pedir_alergias_no_alimentarias: data.pedirAlergiasNoAlimentarias,
-            alergias_no_alimentarias_obligatorio: data.alergiasNoAlimentariasObligatorio,
-            pedir_necesidad_especial: data.pedirNecesidadEspecial,
-            necesidad_especial_obligatorio: data.necesidadEspecialObligatorio,
-            pedir_cobertura_medica: data.pedirCoberturaMedica,
-            cobertura_medica_obligatorio: data.coberturaMedicaObligatorio,
-            pedir_contacto_emergencia: data.pedirContactoEmergencia,
-            contacto_emergencia_obligatorio: data.contactoEmergenciaObligatorio,
-            pedir_autoriza_emergencia_medica: data.pedirAutorizaEmergenciaMedica,
-            autoriza_emergencia_medica_obligatorio: data.autorizaEmergenciaMedicaObligatorio,
-            pedir_observaciones_familia: data.pedirObservacionesFamilia,
-            observaciones_familia_obligatorio: data.observacionesFamiliaObligatorio,
-            pedir_medicaciones: data.pedirMedicaciones,
-            medicaciones_obligatorio: data.medicacionesObligatorio,
-            activo: data.activo
+            id_salud_config: data.idSaludConfig ?? data.IdSaludConfig,
+            id_evento: data.idEvento ?? data.IdEvento,
+            pedir_problema_medico: data.pedirProblemaMedico ?? data.PedirProblemaMedico,
+            problema_medico_obligatorio: data.problemaMedicoObligatorio ?? data.ProblemaMedicoObligatorio,
+            pedir_alergias_no_alimentarias: data.pedirAlergiasNoAlimentarias ?? data.PedirAlergiasNoAlimentarias,
+            alergias_no_alimentarias_obligatorio: data.alergiasNoAlimentariasObligatorio ?? data.AlergiasNoAlimentariasObligatorio,
+            pedir_necesidad_especial: data.pedirNecesidadEspecial ?? data.PedirNecesidadEspecial,
+            necesidad_especial_obligatorio: data.necesidadEspecialObligatorio ?? data.NecesidadEspecialObligatorio,
+            pedir_cobertura_medica: data.pedirCoberturaMedica ?? data.PedirCoberturaMedica,
+            cobertura_medica_obligatorio: data.coberturaMedicaObligatorio ?? data.CoberturaMedicaObligatorio,
+            pedir_contacto_emergencia: data.pedirContactoEmergencia ?? data.PedirContactoEmergencia,
+            contacto_emergencia_obligatorio: data.contactoEmergenciaObligatorio ?? data.ContactoEmergenciaObligatorio,
+            pedir_autoriza_emergencia_medica: data.pedirAutorizaEmergenciaMedica ?? data.PedirAutorizaEmergenciaMedica,
+            autoriza_emergencia_medica_obligatorio: data.autorizaEmergenciaMedicaObligatorio ?? data.AutorizaEmergenciaMedicaObligatorio,
+            pedir_observaciones_familia: data.pedirObservacionesFamilia ?? data.PedirObservacionesFamilia,
+            observaciones_familia_obligatorio: data.observacionesFamiliaObligatorio ?? data.ObservacionesFamiliaObligatorio,
+            pedir_medicaciones: data.pedirMedicaciones ?? data.PedirMedicaciones,
+            medicaciones_obligatorio: data.medicacionesObligatorio ?? data.MedicacionesObligatorio,
+            activo: data.activo ?? data.Activo
         };
 
         return NextResponse.json(mappedData);
