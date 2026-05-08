@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getMisProgramas } from '@/src/features/programas/programas.service';
-import { CalendarDays, Loader2, MapPin, Plus, Clock, ExternalLink } from 'lucide-react';
+import { CalendarDays, Loader2, MapPin, Plus, Clock, ExternalLink, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { Programa } from '@/src/features/programas/types';
 
@@ -119,6 +119,14 @@ export default function ProgramasCuentaPage() {
                                                 >
                                                     <ExternalLink className="w-3.5 h-3.5" />
                                                     Ver Panel
+                                                </Link>
+                                                <Link
+                                                    href={`/dashboard/cuenta/programas/${(prog as any).id_evento ?? (prog as any).idEvento ?? (prog as any).id}`}
+                                                    title="Configuración del programa"
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-600 dark:text-emerald-400 dark:bg-emerald-900/20 dark:hover:bg-emerald-600 dark:hover:text-white rounded-lg transition-colors font-semibold text-xs"
+                                                >
+                                                    <Settings className="w-3.5 h-3.5" />
+                                                    Configuración
                                                 </Link>
                                             </div>
                                         </td>
