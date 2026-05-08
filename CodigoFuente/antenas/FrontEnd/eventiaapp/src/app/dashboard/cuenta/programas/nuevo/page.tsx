@@ -5,42 +5,44 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/context/AuthContext';
 import { createPrograma } from '@/src/features/programas/programas.service';
 import { getTiposEvento, getIdiomasActivos } from '@/src/features/events/event.service';
-import {
-    CalendarDays, Loader2, Users, MapPin, AlignLeft,
-    MessageSquare, ArrowLeft, Building2, PartyPopper, Calendar
-} from 'lucide-react';
+import { CalendarDays, Loader2, ArrowLeft, Building2, PartyPopper, Calendar, Save, X, Languages } from 'lucide-react';
 import type { TipoEvento, Idioma } from '@/src/features/events/types';
 
-// B2B — tipos auxiliares
-interface Unidad { id_unidad: number; nombre: string; }
-interface Cliente { id_cliente: number; nombre_cliente: string; }
+interface Unidad {
+    id_unidad: number;
+    nombre: string;
+}
+
+interface Cliente {
+    id_cliente: number;
+    nombre_cliente: string;
+}
+
 
 export default function NuevoProgramaPage() {
+
     const router = useRouter();
-    const { cuenta } = useAuth();
-
     const [loading, setLoading] = useState(false);
+    const [loadingSelects, setLoadingSelects] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    // Selects
     const [tiposEvento, setTiposEvento] = useState<TipoEvento[]>([]);
     const [idiomas, setIdiomas] = useState<Idioma[]>([]);
     const [unidades, setUnidades] = useState<Unidad[]>([]);
     const [clientes, setClientes] = useState<Cliente[]>([]);
-    const [loadingSelects, setLoadingSelects] = useState(true);
-
-    // Formulario
     const [formData, setFormData] = useState({
         idTipoEvento: 0,
         idIdioma: 0,
+
+        nombrePrograma: '',
         anfitrionesTexto: '',
+
         saludo: '',
         mensajeBienvenida: '',
         notas: '',
+
         fechaInicio: '',
         fechaFin: '',
     });
-
     const [b2bInfo, setB2bInfo] = useState<{
         idUnidad: number | '';
         destinatario: 'PROPIO' | 'CLIENTE';
@@ -52,260 +54,704 @@ export default function NuevoProgramaPage() {
     });
 
     useEffect(() => {
+
         async function loadData() {
+
             setLoadingSelects(true);
+
             try {
-                // TODO: En un futuro getTiposEvento podría aceptar un filtro tipoOperacion="PROGRAMA"
-                // Por ahora usamos el idioma 2 (Español)
-                const [tipos, idiomasData, resUnidades, resClientes] = await Promise.all([
-                    getTiposEvento(2, 'PROGRAMA'),
+
+                const [tipos, idiomasData,
+                    resUnidades,
+                    resClientes
+                ] = await Promise.all([
+                    getTiposEvento(1, 'PROGRAMA'),
                     getIdiomasActivos(),
-                    fetch('/api/cuenta-unidades'),
+                    fetch('/api/cuenta-unidades?soloActivas=true'),
                     fetch('/api/clientes')
                 ]);
 
-                // Asumimos que los tipos de evento con "programa", "colonia", "casal" son los que queremos
-                // Si el backend aún no los filtra, lo mostraremos todos o el primero
                 setTiposEvento(tipos);
                 setIdiomas(idiomasData);
 
-                if (tipos.length > 0) setFormData(prev => ({ ...prev, idTipoEvento: tipos[0].id }));
-                if (idiomasData.length > 0) setFormData(prev => ({ ...prev, idIdioma: idiomasData[0].id_idioma }));
+                if (tipos.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        idTipoEvento: tipos[0].id
+                    }));
+                }
+
+                if (idiomasData.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        idIdioma: idiomasData[0].id_idioma
+                    }));
+                }
 
                 if (resUnidades.ok) {
+
                     const data: Unidad[] = await resUnidades.json();
+
                     setUnidades(data);
-                    if (data.length > 0) setB2bInfo(prev => ({ ...prev, idUnidad: data[0].id_unidad }));
+
+                    if (data.length > 0) {
+
+                        setB2bInfo(prev => ({
+                            ...prev,
+                            idUnidad: data[0].id_unidad
+                        }));
+                    }
                 }
+
+
                 if (resClientes.ok) {
+
                     const data: Cliente[] = await resClientes.json();
+
                     setClientes(data);
                 }
+
+                setFormData(prev => ({
+                    ...prev,
+                    anfitrionesTexto: 'Aquamar'
+                }));
+
             } catch (err) {
-                console.error('Error cargando datos:', err);
-                setError('No se pudieron cargar los datos necesarios.');
+
+                console.error(err);
+
+                setError(
+                    'No se pudieron cargar los datos necesarios.'
+                );
+
             } finally {
+
                 setLoadingSelects(false);
             }
         }
+
         loadData();
+
     }, []);
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+
+    const handleFormChange = (
+        e: React.ChangeEvent<
+            HTMLInputElement |
+            HTMLTextAreaElement |
+            HTMLSelectElement
+        >
+    ) => {
+
         const { name, value } = e.target;
-        if (name === 'idTipoEvento' || name === 'idIdioma') {
-            setFormData(prev => ({ ...prev, [name]: parseInt(value, 10) || 0 }));
+
+        if (
+            name === 'idTipoEvento'
+            || name === 'idIdioma'
+        ) {
+
+            setFormData(prev => ({
+                ...prev,
+                [name]: parseInt(value, 10) || 0
+            }));
+
             return;
         }
-        setFormData(prev => ({ ...prev, [name]: value }));
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
-    const handleCrear = async (e: React.FormEvent) => {
+
+    const validateForm = () => {
+
+        if (!formData.idTipoEvento) {
+            return 'Debes seleccionar un tipo de programa.';
+        }
+
+        if (!formData.nombrePrograma.trim()) {
+            return 'Debes ingresar el nombre del programa.';
+        }
+
+        if (!formData.anfitrionesTexto.trim()) {
+            return 'Debes ingresar la entidad organizadora.';
+        }
+
+        if (!b2bInfo.idUnidad) {
+            return 'Debes seleccionar una unidad.';
+        }
+
+        if (
+            b2bInfo.destinatario === 'CLIENTE'
+            && !b2bInfo.idCliente
+        ) {
+            return 'Debes seleccionar un cliente.';
+        }
+
+        if (!formData.fechaInicio) {
+            return 'Debes seleccionar la fecha de inicio.';
+        }
+
+        if (!formData.fechaFin) {
+            return 'Debes seleccionar la fecha de finalización.';
+        }
+
+        if (
+            new Date(formData.fechaFin)
+            < new Date(formData.fechaInicio)
+        ) {
+            return 'La fecha de finalización no puede ser menor a la fecha de inicio.';
+        }
+
+        return null;
+    };
+
+    // ===============================
+    // SUBMIT
+    // ===============================
+
+    const handleCrear = async (
+        e: React.FormEvent
+    ) => {
+
         e.preventDefault();
+
         setLoading(true);
         setError(null);
 
         try {
+
+            const validationError = validateForm();
+
+            if (validationError) {
+
+                setError(validationError);
+                setLoading(false);
+
+                return;
+            }
+
             const payload = {
                 id_tipo_evento: formData.idTipoEvento,
                 id_idioma: formData.idIdioma,
-                id_cuenta: cuenta?.id_cuenta || 0,
                 id_unidad: Number(b2bInfo.idUnidad),
-                id_cliente: b2bInfo.destinatario === 'CLIENTE' ? Number(b2bInfo.idCliente) : null,
+
+                id_cliente:
+                    b2bInfo.destinatario === 'CLIENTE'
+                        ? Number(b2bInfo.idCliente)
+                        : null,
+
                 modalidad: b2bInfo.destinatario,
-                anfitriones_texto: formData.anfitrionesTexto,
-                saludo: formData.saludo || undefined,
-                mensaje_bienvenida: formData.mensajeBienvenida || undefined,
-                notas: formData.notas || undefined,
-                fecha_inicio: formData.fechaInicio ? new Date(formData.fechaInicio).toISOString().split('T')[0] : null,
-                fecha_fin: formData.fechaFin ? new Date(formData.fechaFin).toISOString().split('T')[0] : null,
+
+                anfitriones_texto:
+                    formData.anfitrionesTexto,
+
+                saludo:
+                    formData.nombrePrograma,
+
+                mensaje_bienvenida:
+                    formData.mensajeBienvenida || null,
+
+                notas:
+                    formData.notas || null,
+
+                fecha_inicio:
+                    formData.fechaInicio,
+
+                fecha_fin:
+                    formData.fechaFin,
+
                 codigo_plan: 'B2B_STARTER',
+
                 tipo_operacion: 'PROGRAMA'
             };
 
-            const result = await createPrograma(payload as any);
-            // Redirigir al detalle de configuración del programa recién creado
-            const eventId = result.id_evento || (result as any).idEvento;
-            router.push(`/dashboard/cuenta/programas/${eventId}`);
+            const result = await createPrograma(
+                payload as any
+            );
+
+            alert('Programa creado exitosamente');
+
+            const eventId =
+                result.id_evento
+                || (result as any).idEvento;
+            router.push(
+                `/dashboard/cuenta/programas/${eventId}`
+            );
+
         } catch (err: any) {
-            setError(err.message || 'Error al crear el programa.');
+
+            console.error(err);
+
+            setError(
+                err.message
+                || 'Error al crear el programa.'
+            );
+
             setLoading(false);
         }
     };
 
+    // ===============================
+    // LOADING
+    // ===============================
+
+    if (loadingSelects) {
+
+        return (
+            <section className="flex flex-col items-center justify-center py-32">
+
+                <Loader2 className="w-10 h-10 animate-spin text-emerald-600 mb-4" />
+
+                <p className="text-sm text-neutral-500">
+                    Cargando formulario...
+                </p>
+
+            </section>
+        );
+    }
+
+    // ===============================
+    // RENDER
+    // ===============================
+
     return (
-        <section className="max-w-3xl mx-auto pb-20 animate-in fade-in duration-500">
-            {/* Header */}
+
+        <section className="max-w-4xl mx-auto pb-24 animate-in fade-in duration-500">
+
+            {/* =============================== */}
+            {/* HEADER */}
+            {/* =============================== */}
+
             <div className="mb-8">
+
                 <button
+                    type="button"
                     onClick={() => router.back()}
-                    className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors mb-4 group"
+                    className="flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors mb-5 group"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-sm font-medium">Volver a programas</span>
+
+                    Volver a programas
                 </button>
-                <h1 className="text-3xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
+
+                <h1 className="flex items-center gap-3 text-3xl font-bold text-neutral-900 dark:text-white">
+
                     <CalendarDays className="w-8 h-8 text-emerald-600" />
+
                     Nuevo Programa
+
                 </h1>
-                <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-2">
-                    Configura la información básica para dar de alta una colonia, casal o campus.
+
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                    Configura la información inicial del programa,
+                    casal, campus o colonia.
                 </p>
+
             </div>
 
+            {/* =============================== */}
+            {/* ERROR */}
+            {/* =============================== */}
+
             {error && (
-                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-800/30 font-medium text-sm">
+
+                <div className="mb-6 p-4 rounded-2xl border border-red-200 bg-red-50 text-red-600 text-sm font-medium dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
                     {error}
                 </div>
             )}
 
-            {loadingSelects ? (
-                <div className="flex flex-col items-center justify-center py-24 space-y-4">
-                    <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
-                    <p className="text-neutral-500 font-medium">Cargando formulario...</p>
-                </div>
-            ) : (
-                <form onSubmit={handleCrear} className="space-y-6">
-                    {/* B2B Context */}
-                    <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                        <h2 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2 mb-6">
-                            <Building2 className="w-5 h-5 text-emerald-500" />
-                            Contexto Comercial
-                        </h2>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Unidad de Negocio</label>
+            {/* =============================== */}
+            {/* FORM */}
+            {/* =============================== */}
+
+            <form
+                onSubmit={handleCrear}
+                className="space-y-6"
+            >
+
+                {/* =============================== */}
+                {/* CONTEXTO COMERCIAL */}
+                {/* =============================== */}
+
+                <div className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+
+                    <h2 className="flex items-center gap-2 text-lg font-bold mb-6 text-neutral-900 dark:text-white">
+
+                        <Building2 className="w-5 h-5 text-emerald-500" />
+
+                        Contexto Comercial
+
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        {/* UNIDAD */}
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Unidad / Sede
+                            </label>
+
+                            <select
+                                value={b2bInfo.idUnidad}
+                                onChange={(e) =>
+                                    setB2bInfo(prev => ({
+                                        ...prev,
+                                        idUnidad:
+                                            e.target.value
+                                                ? Number(e.target.value)
+                                                : ''
+                                    }))
+                                }
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            >
+
+                                <option value="">
+                                    Seleccionar unidad
+                                </option>
+
+                                {unidades.map((u) => (
+
+                                    <option
+                                        key={u.id_unidad}
+                                        value={u.id_unidad}
+                                    >
+                                        {u.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* DESTINATARIO */}
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Destinatario
+                            </label>
+
+                            <select
+                                value={b2bInfo.destinatario}
+                                onChange={(e) => {
+
+                                    const value =
+                                        e.target.value as
+                                        'PROPIO'
+                                        | 'CLIENTE';
+
+                                    setB2bInfo(prev => ({
+                                        ...prev,
+                                        destinatario: value,
+                                        idCliente:
+                                            value === 'PROPIO'
+                                                ? ''
+                                                : prev.idCliente
+                                    }));
+                                }}
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            >
+
+                                <option value="PROPIO">
+                                    Programa Propio
+                                </option>
+
+                                <option value="CLIENTE">
+                                    Cliente Agencia
+                                </option>
+
+                            </select>
+                        </div>
+
+                        {/* CLIENTE */}
+
+                        {b2bInfo.destinatario === 'CLIENTE' && (
+
+                            <div className="md:col-span-2 animate-in fade-in slide-in-from-top-2">
+
+                                <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                    Cliente
+                                </label>
+
                                 <select
-                                    value={b2bInfo.idUnidad}
-                                    onChange={(e) => setB2bInfo(prev => ({ ...prev, idUnidad: e.target.value ? Number(e.target.value) : '' }))}
-                                    required
-                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none"
+                                    value={b2bInfo.idCliente}
+                                    onChange={(e) =>
+                                        setB2bInfo(prev => ({
+                                            ...prev,
+                                            idCliente:
+                                                e.target.value
+                                                    ? Number(e.target.value)
+                                                    : ''
+                                        }))
+                                    }
+                                    className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                                 >
-                                    <option value="" disabled>Seleccionar Unidad</option>
-                                    {unidades.map(u => (
-                                        <option key={u.id_unidad} value={u.id_unidad}>{u.nombre}</option>
+
+                                    <option value="">
+                                        Seleccionar cliente
+                                    </option>
+
+                                    {clientes.map((c) => (
+
+                                        <option
+                                            key={c.id_cliente}
+                                            value={c.id_cliente}
+                                        >
+                                            {c.nombre_cliente}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
-                            
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">¿Para quién es el programa?</label>
-                                <select
-                                    value={b2bInfo.destinatario}
-                                    onChange={(e) => {
-                                        const dest = e.target.value as 'PROPIO' | 'CLIENTE';
-                                        setB2bInfo(prev => ({ ...prev, destinatario: dest, idCliente: dest === 'PROPIO' ? '' : prev.idCliente }));
-                                    }}
-                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none"
-                                >
-                                    <option value="PROPIO">Programa Propio / Corporativo</option>
-                                    <option value="CLIENTE">Para un Cliente de Agencia</option>
-                                </select>
-                            </div>
+                        )}
+                    </div>
+                </div>
 
-                            {b2bInfo.destinatario === 'CLIENTE' && (
-                                <div className="md:col-span-2 animate-in fade-in slide-in-from-top-2">
-                                    <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Seleccionar Cliente</label>
-                                    <select
-                                        value={b2bInfo.idCliente}
-                                        onChange={(e) => setB2bInfo(prev => ({ ...prev, idCliente: e.target.value ? Number(e.target.value) : '' }))}
-                                        required
-                                        className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none"
+                {/* =============================== */}
+                {/* DATOS GENERALES */}
+                {/* =============================== */}
+
+                <div className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+
+                    <h2 className="flex items-center gap-2 text-lg font-bold mb-6 text-neutral-900 dark:text-white">
+
+                        <PartyPopper className="w-5 h-5 text-emerald-500" />
+
+                        Datos Generales
+
+                    </h2>
+
+                    <div className="space-y-6">
+
+                        {/* TIPO */}
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Tipo de Programa
+                            </label>
+
+                            <select
+                                name="idTipoEvento"
+                                value={formData.idTipoEvento}
+                                onChange={handleFormChange}
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            >
+
+                                {tiposEvento.map((tipo) => (
+
+                                    <option
+                                        key={tipo.id}
+                                        value={tipo.id}
                                     >
-                                        <option value="" disabled>Buscar cliente...</option>
-                                        {clientes.map(c => (
-                                            <option key={c.id_cliente} value={c.id_cliente}>{c.nombre_cliente}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                                        {tipo.texto}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* NOMBRE */}
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Nombre del Programa
+                            </label>
+
+                            <input
+                                type="text"
+                                name="nombrePrograma"
+                                value={formData.nombrePrograma}
+                                onChange={handleFormChange}
+                                placeholder="Ej: Campus de Fútbol 2026"
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            />
+
+                        </div>
+
+                        {/* ORGANIZA */}
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Organiza / Entidad
+                            </label>
+
+                            <input
+                                type="text"
+                                name="anfitrionesTexto"
+                                value={formData.anfitrionesTexto}
+                                onChange={handleFormChange}
+                                placeholder="Ej: Aquamar"
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            />
+
+                        </div>
+
+                        {/* IDIOMA */}
+
+                        <div>
+
+                            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+
+                                <Languages className="w-3 h-3" />
+
+                                Idioma
+                            </label>
+
+                            <select
+                                name="idIdioma"
+                                value={formData.idIdioma}
+                                onChange={handleFormChange}
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            >
+
+                                {idiomas.map((idioma) => (
+
+                                    <option
+                                        key={idioma.id_idioma}
+                                        value={idioma.id_idioma}
+                                    >
+                                        {idioma.nombre_largo}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
+                </div>
 
-                    {/* Datos del Programa */}
-                    <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                        <h2 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2 mb-6">
-                            <PartyPopper className="w-5 h-5 text-emerald-500" />
-                            Datos del Programa
-                        </h2>
+                {/* =============================== */}
+                {/* FECHAS */}
+                {/* =============================== */}
 
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Nombre del Programa</label>
-                                <input
-                                    name="anfitrionesTexto"
-                                    placeholder="Ej: Colonia de Verano 2026, Campus de Fútbol..."
-                                    value={formData.anfitrionesTexto}
-                                    onChange={handleFormChange}
-                                    required
-                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none"
-                                />
-                            </div>
+                <div className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Fecha de Inicio</label>
-                                    <input
-                                        type="date"
-                                        name="fechaInicio"
-                                        value={formData.fechaInicio}
-                                        onChange={handleFormChange}
-                                        required
-                                        className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Fecha de Finalización</label>
-                                    <input
-                                        type="date"
-                                        name="fechaFin"
-                                        value={formData.fechaFin}
-                                        onChange={handleFormChange}
-                                        required
-                                        className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none"
-                                    />
-                                </div>
-                            </div>
+                    <h2 className="flex items-center gap-2 text-lg font-bold mb-6 text-neutral-900 dark:text-white">
 
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Eslógan o Saludo Opcional</label>
-                                <input
-                                    name="saludo"
-                                    placeholder="Ej: ¡Preparate para la diversión!..."
-                                    value={formData.saludo}
-                                    onChange={handleFormChange}
-                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none"
-                                />
-                            </div>
+                        <Calendar className="w-5 h-5 text-emerald-500" />
 
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Mensaje de Bienvenida</label>
-                                <textarea
-                                    name="mensajeBienvenida"
-                                    placeholder="Texto descriptivo para la landing de inscripción..."
-                                    value={formData.mensajeBienvenida}
-                                    onChange={handleFormChange}
-                                    rows={3}
-                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm outline-none resize-none"
-                                />
-                            </div>
+                        Fechas
+
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Fecha Inicio
+                            </label>
+
+                            <input
+                                type="date"
+                                name="fechaInicio"
+                                value={formData.fechaInicio}
+                                onChange={handleFormChange}
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            />
+                        </div>
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Fecha Finalización
+                            </label>
+
+                            <input
+                                type="date"
+                                name="fechaFin"
+                                value={formData.fechaFin}
+                                onChange={handleFormChange}
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            />
                         </div>
                     </div>
+                </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end pt-4">
-                        <button
-                            type="submit"
-                            disabled={loading || !formData.anfitrionesTexto || !formData.fechaInicio || !formData.fechaFin}
-                            className="flex items-center gap-2 px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold rounded-xl shadow-md transition-all active:scale-95"
-                        >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Calendar className="w-5 h-5" />}
-                            Crear Programa
-                        </button>
+                {/* =============================== */}
+                {/* TEXTOS */}
+                {/* =============================== */}
+
+                <div className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+
+                    <h2 className="text-lg font-bold mb-6 text-neutral-900 dark:text-white">
+                        Textos Públicos
+                    </h2>
+
+                    <div className="space-y-6">
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Mensaje Bienvenida
+                            </label>
+
+                            <textarea
+                                name="mensajeBienvenida"
+                                value={formData.mensajeBienvenida}
+                                onChange={handleFormChange}
+                                rows={4}
+                                placeholder="Describe brevemente el programa..."
+                                className="w-full resize-none p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            />
+                        </div>
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Notas Internas
+                            </label>
+
+                            <textarea
+                                name="notas"
+                                value={formData.notas}
+                                onChange={handleFormChange}
+                                rows={3}
+                                placeholder="Notas visibles solo para el staff..."
+                                className="w-full resize-none p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            />
+                        </div>
                     </div>
-                </form>
-            )}
+                </div>
+
+                {/* =============================== */}
+                {/* ACTIONS */}
+                {/* =============================== */}
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+
+                    <button
+                        type="button"
+                        onClick={() => router.back()}
+                        className="flex items-center gap-2 px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+
+                        <X className="w-4 h-4" />
+
+                        Cancelar
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex items-center gap-2 px-7 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold shadow-md transition-all active:scale-95"
+                    >
+
+                        {loading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Save className="w-5 h-5" />
+                        )}
+
+                        Guardar Programa
+
+                    </button>
+
+                </div>
+            </form>
         </section>
     );
 }

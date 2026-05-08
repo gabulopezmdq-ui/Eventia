@@ -16,7 +16,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
     const [serviciosBase, setServiciosBase] = useState<ServicioBase[]>([]);
 
     const [formData, setFormData] = useState<ProgramaServicio>({
-        id_programa_servicio: 0,
+        id_programa_servicio: null,
         id_evento: idEvento,
         id_servicio_base: null,
         codigo: '',
@@ -236,6 +236,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                     >
                                         <option value="ARS">ARS</option>
                                         <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
                                     </select>
                                 </div>
                                 <div>
@@ -264,7 +265,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                     >
                                         <option value="POR_PROGRAMA">Único por Programa</option>
                                         <option value="POR_PERIODO">Por Período Inscrito</option>
-                                        <option value="DIARIO">Diario</option>
+                                        <option value="POR_DIA">Diario</option>
                                     </select>
                                 </div>
                                 <div>
