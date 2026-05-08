@@ -64,13 +64,24 @@ export const getServicios = async (idEvento: number, soloActivos = false): Promi
     return res.json();
 };
 
-export const upsertServicio = async (idEvento: number, payload: ProgramaServicio): Promise<ProgramaServicio> => {
-    const res = await fetch(`${API_URL}/${idEvento}/servicios/upsert`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Error guardando servicio');
+export const upsertServicio = async (
+    idEvento: number,
+    payload: ProgramaServicio
+): Promise<ProgramaServicio> => {
+
+    const res = await fetch(
+        `${API_URL}/${idEvento}/servicios/upsert`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }
+    );
+
+    if (!res.ok) {
+        throw new Error('Error guardando servicio');
+    }
+
     return res.json();
 };
 
@@ -232,3 +243,21 @@ export const getAutorizacionesInscripcion = async (
     if (!res.ok) throw new Error('Error al obtener las autorizaciones de la inscripción');
     return res.json();
 };
+
+export async function getProgramaDetalle(
+    idEvento: number
+) {
+
+    const response = await fetch(
+        `/api/events/${idEvento}`
+    );
+
+    if (!response.ok) {
+
+        throw new Error(
+            'Error obteniendo programa'
+        );
+    }
+
+    return response.json();
+}
