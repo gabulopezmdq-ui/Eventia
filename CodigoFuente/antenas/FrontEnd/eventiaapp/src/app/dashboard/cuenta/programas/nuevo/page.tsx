@@ -38,6 +38,7 @@ export default function NuevoProgramaPage() {
         saludo: '',
         mensajeBienvenida: '',
         notas: '',
+        infoPublica: '',
 
         fechaInicio: '',
         fechaFin: '',
@@ -60,30 +61,33 @@ export default function NuevoProgramaPage() {
 
             try {
 
-                const [tipos, idiomasData,
+                const [idiomasData,
                     resUnidades,
                     resClientes
                 ] = await Promise.all([
-                    getTiposEvento(1, 'PROGRAMA'),
                     getIdiomasActivos(),
                     fetch('/api/cuenta-unidades?soloActivas=true'),
                     fetch('/api/clientes')
                 ]);
 
-                setTiposEvento(tipos);
                 setIdiomas(idiomasData);
+
+                let initialIdioma = 1;
+                if (idiomasData.length > 0) {
+                    initialIdioma = idiomasData[0].id_idioma;
+                    setFormData(prev => ({
+                        ...prev,
+                        idIdioma: initialIdioma
+                    }));
+                }
+
+                const tipos = await getTiposEvento(initialIdioma, 'PROGRAMA');
+                setTiposEvento(tipos);
 
                 if (tipos.length > 0) {
                     setFormData(prev => ({
                         ...prev,
                         idTipoEvento: tipos[0].id
-                    }));
-                }
-
-                if (idiomasData.length > 0) {
-                    setFormData(prev => ({
-                        ...prev,
-                        idIdioma: idiomasData[0].id_idioma
                     }));
                 }
 
@@ -134,7 +138,7 @@ export default function NuevoProgramaPage() {
     }, []);
 
 
-    const handleFormChange = (
+    const handleFormChange = async (
         e: React.ChangeEvent<
             HTMLInputElement |
             HTMLTextAreaElement |
@@ -144,15 +148,43 @@ export default function NuevoProgramaPage() {
 
         const { name, value } = e.target;
 
-        if (
-            name === 'idTipoEvento'
-            || name === 'idIdioma'
-        ) {
+        if (name === 'idTipoEvento') {
 
             setFormData(prev => ({
                 ...prev,
                 [name]: parseInt(value, 10) || 0
             }));
+
+            return;
+        }
+
+        if (name === 'idIdioma') {
+
+            const newIdIdioma = parseInt(value, 10) || 0;
+
+            setFormData(prev => ({
+                ...prev,
+                idIdioma: newIdIdioma
+            }));
+
+            try {
+                const tipos = await getTiposEvento(newIdIdioma, 'PROGRAMA');
+                setTiposEvento(tipos);
+
+                if (tipos.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        idTipoEvento: tipos[0].id
+                    }));
+                } else {
+                    setFormData(prev => ({
+                        ...prev,
+                        idTipoEvento: 0
+                    }));
+                }
+            } catch (err) {
+                console.error('Error al obtener tipos de programa:', err);
+            }
 
             return;
         }
@@ -256,6 +288,9 @@ export default function NuevoProgramaPage() {
 
                 notas:
                     formData.notas || null,
+
+                info_publica:
+                    formData.infoPublica || null,
 
                 fecha_inicio:
                     formData.fechaInicio,
@@ -525,6 +560,36 @@ export default function NuevoProgramaPage() {
 
                     <div className="space-y-6">
 
+                        {/* IDIOMA */}
+
+                        <div>
+
+                            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+
+                                <Languages className="w-3 h-3" />
+
+                                Idioma
+                            </label>
+
+                            <select
+                                name="idIdioma"
+                                value={formData.idIdioma}
+                                onChange={handleFormChange}
+                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            >
+
+                                {idiomas.map((idioma) => (
+
+                                    <option
+                                        key={idioma.id_idioma}
+                                        value={idioma.id_idioma}
+                                    >
+                                        {idioma.nombre_largo}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* TIPO */}
 
                         <div>
@@ -588,36 +653,6 @@ export default function NuevoProgramaPage() {
                                 className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                             />
 
-                        </div>
-
-                        {/* IDIOMA */}
-
-                        <div>
-
-                            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
-
-                                <Languages className="w-3 h-3" />
-
-                                Idioma
-                            </label>
-
-                            <select
-                                name="idIdioma"
-                                value={formData.idIdioma}
-                                onChange={handleFormChange}
-                                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                            >
-
-                                {idiomas.map((idioma) => (
-
-                                    <option
-                                        key={idioma.id_idioma}
-                                        value={idioma.id_idioma}
-                                    >
-                                        {idioma.nombre_largo}
-                                    </option>
-                                ))}
-                            </select>
                         </div>
                     </div>
                 </div>
@@ -710,6 +745,22 @@ export default function NuevoProgramaPage() {
                                 onChange={handleFormChange}
                                 rows={3}
                                 placeholder="Notas visibles solo para el staff..."
+                                className="w-full resize-none p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            />
+                        </div>
+
+                        <div>
+
+                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                Información Pública
+                            </label>
+
+                            <textarea
+                                name="infoPublica"
+                                value={formData.infoPublica}
+                                onChange={handleFormChange}
+                                rows={3}
+                                placeholder="Información pública sobre el programa..."
                                 className="w-full resize-none p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                             />
                         </div>

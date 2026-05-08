@@ -24,25 +24,25 @@ export async function GET(req: Request, props: { params: Promise<{ idEvento: str
         
         // Mapeo PascalCase -> snake_case
         const mappedData = {
-            id_salud_config: data.idSaludConfig,
-            id_evento: data.idEvento,
-            pedir_problema_medico: data.pedirProblemaMedico,
-            problema_medico_obligatorio: data.problemaMedicoObligatorio,
-            pedir_alergias_no_alimentarias: data.pedirAlergiasNoAlimentarias,
-            alergias_no_alimentarias_obligatorio: data.alergiasNoAlimentariasObligatorio,
-            pedir_necesidad_especial: data.pedirNecesidadEspecial,
-            necesidad_especial_obligatorio: data.necesidadEspecialObligatorio,
-            pedir_cobertura_medica: data.pedirCoberturaMedica,
-            cobertura_medica_obligatorio: data.coberturaMedicaObligatorio,
-            pedir_contacto_emergencia: data.pedirContactoEmergencia,
-            contacto_emergencia_obligatorio: data.contactoEmergenciaObligatorio,
-            pedir_autoriza_emergencia_medica: data.pedirAutorizaEmergenciaMedica,
-            autoriza_emergencia_medica_obligatorio: data.autorizaEmergenciaMedicaObligatorio,
-            pedir_observaciones_familia: data.pedirObservacionesFamilia,
-            observaciones_familia_obligatorio: data.observacionesFamiliaObligatorio,
-            pedir_medicaciones: data.pedirMedicaciones,
-            medicaciones_obligatorio: data.medicacionesObligatorio,
-            activo: data.activo
+            id_salud_config: data.idSaludConfig ?? data.IdSaludConfig,
+            id_evento: data.idEvento ?? data.IdEvento,
+            pedir_problema_medico: data.pedirProblemaMedico ?? data.PedirProblemaMedico,
+            problema_medico_obligatorio: data.problemaMedicoObligatorio ?? data.ProblemaMedicoObligatorio,
+            pedir_alergias_no_alimentarias: data.pedirAlergiasNoAlimentarias ?? data.PedirAlergiasNoAlimentarias,
+            alergias_no_alimentarias_obligatorio: data.alergiasNoAlimentariasObligatorio ?? data.AlergiasNoAlimentariasObligatorio,
+            pedir_necesidad_especial: data.pedirNecesidadEspecial ?? data.PedirNecesidadEspecial,
+            necesidad_especial_obligatorio: data.necesidadEspecialObligatorio ?? data.NecesidadEspecialObligatorio,
+            pedir_cobertura_medica: data.pedirCoberturaMedica ?? data.PedirCoberturaMedica,
+            cobertura_medica_obligatorio: data.coberturaMedicaObligatorio ?? data.CoberturaMedicaObligatorio,
+            pedir_contacto_emergencia: data.pedirContactoEmergencia ?? data.PedirContactoEmergencia,
+            contacto_emergencia_obligatorio: data.contactoEmergenciaObligatorio ?? data.ContactoEmergenciaObligatorio,
+            pedir_autoriza_emergencia_medica: data.pedirAutorizaEmergenciaMedica ?? data.PedirAutorizaEmergenciaMedica,
+            autoriza_emergencia_medica_obligatorio: data.autorizaEmergenciaMedicaObligatorio ?? data.AutorizaEmergenciaMedicaObligatorio,
+            pedir_observaciones_familia: data.pedirObservacionesFamilia ?? data.PedirObservacionesFamilia,
+            observaciones_familia_obligatorio: data.observacionesFamiliaObligatorio ?? data.ObservacionesFamiliaObligatorio,
+            pedir_medicaciones: data.pedirMedicaciones ?? data.PedirMedicaciones,
+            medicaciones_obligatorio: data.medicacionesObligatorio ?? data.MedicacionesObligatorio,
+            activo: data.activo ?? data.Activo
         };
 
         return NextResponse.json(mappedData);
