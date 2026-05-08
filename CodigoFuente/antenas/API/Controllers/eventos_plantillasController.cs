@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services;
@@ -67,7 +67,7 @@ namespace API.Controllers
         {
             long idUsuario = User.GetUserId();
 
-            // ✅ Bloqueo por plan: PERMITIR_WIZARD_SIN_PLANTILLA = 0
+            // ? Bloqueo por plan: PERMITIR_WIZARD_SIN_PLANTILLA = 0
             var idPlan = await _context.Set<ef_eventos>()
                 .Where(e => e.id_evento == idEvento)
                 .Select(e => e.id_plan)
@@ -83,7 +83,7 @@ namespace API.Controllers
                     .FirstOrDefaultAsync();
 
                 if (permitir == 0)
-                    return BadRequest("Tu plan no permite crear estructura manual. Elegí una plantilla o actualizá el plan.");
+                    return BadRequest("Tu plan no permite crear estructura manual. Eleg� una plantilla o actualiz� el plan.");
             }
 
             var idSolicitud = await _service.CrearEstructuraManualAsync(idEvento, req, idUsuario);

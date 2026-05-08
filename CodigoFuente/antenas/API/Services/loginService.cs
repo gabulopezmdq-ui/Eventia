@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using DocumentFormat.OpenXml.Math;
 using Google.Apis.Auth;
@@ -171,6 +171,23 @@ namespace API.Services
 
             foreach (var rol in roles)
                 claims.Add(new Claim(ClaimTypes.Role, rol)); // <-- SUPERADMIN entra acá
+
+            // ✅ NUEVO: Agregar claim de STAFF para bypass de permisos
+            if (roles.Contains("SUPERADMIN"))
+            {
+                claims.Add(new Claim("is_staff", "true"));
+            }
+
+            // ✅ NUEVO: Agregar id_cuenta si el usuario tiene una asociada (B2B)
+            var idCuenta = await _context.Set<ef_cuenta_usuarios>()
+                .Where(cu => cu.id_usuario == usuario.id_usuario && cu.activo == true)
+                .Select(cu => (long?)cu.id_cuenta)
+                .FirstOrDefaultAsync();
+
+            if (idCuenta != null)
+            {
+                claims.Add(new Claim("id_cuenta", idCuenta.Value.ToString()));
+            }
 
             var expiresAtUtc = DateTimeOffset.UtcNow.AddHours(8);
 

@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +51,7 @@ namespace API.Controllers
             return Ok(db);
         }
 
-        // PUT /param_entidades  (edición de metadatos)
+        // PUT /param_entidades  (edici�n de metadatos)
         [HttpPut]
         public async Task<ActionResult> Update([FromBody] ef_param_entidades model)
         {

@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services;
@@ -28,7 +28,7 @@ namespace API.Controllers
             _eventos = eventos;
         }
 
-        // (Opcional) GetAll genérico (devuelve todo, sin filtro)
+        // (Opcional) GetAll gen�rico (devuelve todo, sin filtro)
         // GET /adminEventos/GetAll
         [HttpGet("GetAll")]
         public ActionResult<IEnumerable<ef_eventos>> GetAll()

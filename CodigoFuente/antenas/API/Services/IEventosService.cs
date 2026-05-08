@@ -17,5 +17,13 @@ namespace API.Services
         Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req);
         Task<List<MesaRestriccionesDTO>> GetReporteRestriccionesMesasAsync(long idEvento);
 
+        // Staff
+        Task<IEnumerable<EventoStaffDTO>> GetStaffAsync(long idEvento, long idUsuarioLogger);
+        Task<IEnumerable<object>> GetStaffCodigosAsync(long idEvento, long idUsuarioLogger);
+        Task<object> AddStaffAsync(long idEvento, AddEventoStaffRequest req, long idUsuarioLogger);
+        Task<bool> UpdateStaffAsync(long idEvento, long idEventoUsuario, UpdateEventoStaffRequest req, long idUsuarioLogger);
+        Task<bool> DeleteStaffAsync(long idEvento, long idEventoUsuario, long idUsuarioLogger);
+        Task<object> AceptarInvitacionStaffAsync(string token, long idUsuarioActual);
+
     }
 }

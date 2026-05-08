@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -121,7 +121,7 @@ namespace API.Controllers
         [HttpPost("registrar")]
         public async Task<IActionResult> Registrar([FromBody] AdminRegistrarAddonPagoRequestDTO req)
         {
-            if (req.id_scope_addon <= 0) return BadRequest("id_scope_addon inv√°lido.");
+            if (req.id_scope_addon <= 0) return BadRequest("id_scope_addon inv·lido.");
             if (req.importe <= 0) return BadRequest("importe debe ser > 0.");
 
             var sa = await _context.Set<ef_scope_addons>()
@@ -129,7 +129,7 @@ namespace API.Controllers
 
             if (sa == null) return NotFound("Solicitud inexistente.");
             if (sa.scope != "EVENTO") return BadRequest("La solicitud no es de EVENTO.");
-            if (sa.estado != "PENDIENTE") return BadRequest("La solicitud no est√° en estado PENDIENTE.");
+            if (sa.estado != "PENDIENTE") return BadRequest("La solicitud no est· en estado PENDIENTE.");
 
             var addon = await _context.Set<ef_addons>().AsNoTracking()
                 .SingleOrDefaultAsync(a => a.id_addon == sa.id_addon);

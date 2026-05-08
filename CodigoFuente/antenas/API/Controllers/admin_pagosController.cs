@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
 using API.Security;
@@ -25,8 +25,8 @@ namespace API.Controllers
 
         // =========================================================
         // GET /admin/pagos/pendientes
-        // Lista pagos PENDIENTE + evento/plan/datos b√°sicos
-        // y tambi√©n detecta inconsistencias (evento en P sin pago pendiente)
+        // Lista pagos PENDIENTE + evento/plan/datos b·sicos
+        // y tambiÈn detecta inconsistencias (evento en P sin pago pendiente)
         // =========================================================
         [HttpGet("pendientes")]
         public async Task<ActionResult<PagosPendientesResponseDTO>> Pendientes()
@@ -60,7 +60,7 @@ namespace API.Controllers
             ).ToListAsync();
 
             // 2) Inconsistencias: eventos con estado PendientePago pero sin pago pendiente
-            // (Esto no deber√≠a pasar si tu CrearEventoAsync siempre crea ef_pagos PENDIENTE)
+            // (Esto no deberÌa pasar si tu CrearEventoAsync siempre crea ef_pagos PENDIENTE)
             var eventosP = await _context.Set<ef_eventos>().AsNoTracking()
                 .Where(e => e.estado == EventoEstado.PendientePago)
                 .Select(e => new { e.id_evento, e.id_plan, e.id_tipo_evento, e.anfitriones_texto, e.estado })
@@ -114,9 +114,9 @@ namespace API.Controllers
 
             if (ev == null) return NotFound("Evento inexistente.");
 
-            // Solo tiene sentido si est√° en PendientePago
+            // Solo tiene sentido si est· en PendientePago
             if (ev.estado != EventoEstado.PendientePago)
-                return BadRequest("El evento no est√° en estado PendientePago (P).");
+                return BadRequest("El evento no est· en estado PendientePago (P).");
 
             // Ya existe pago pendiente?
             bool yaExiste = await _context.Set<ef_pagos>()
@@ -182,7 +182,7 @@ namespace API.Controllers
             ev.id_plan = plan.id_plan;
 
             // 2) Marcar pagos pendientes anteriores como "CANCELADO" (opcional pero recomendable)
-            // As√≠ queda 1 pago aprobado ‚Äúvigente‚Äù y evit√°s confusiones.
+            // AsÌ queda 1 pago aprobado ìvigenteî y evit·s confusiones.
             var pagosPendientesPrevios = await _context.Set<ef_pagos>()
                 .Where(p => p.id_evento == ev.id_evento && p.activo == true && p.estado == "PENDIENTE")
                 .ToListAsync();
@@ -218,10 +218,10 @@ namespace API.Controllers
                 id_usuario = idAdmin,
                 fecha = now,
                 estado = EventoEstado.Activo,
-                observaciones = $"Activaci√≥n por pago manual. Plan: {plan.codigo}. Importe: {req.Importe} {req.Moneda}"
+                observaciones = $"ActivaciÛn por pago manual. Plan: {plan.codigo}. Importe: {req.Importe} {req.Moneda}"
             });
 
-            // 5) Suscripci√≥n ACTIVA (historial)
+            // 5) SuscripciÛn ACTIVA (historial)
             _context.Set<ef_suscripciones>().Add(new ef_suscripciones
             {
                 scope = "EVENTO",

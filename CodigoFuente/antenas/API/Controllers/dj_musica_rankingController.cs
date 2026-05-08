@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,7 +41,7 @@ namespace API.Controllers
         public async Task<ActionResult> GetRanking(string token)
         {
             var link = await ValidarToken(token, "MUSICA_READ");
-            if (link == null) return Unauthorized(new { error = "Token inválido, vencido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv�lido, vencido o sin permisos." });
 
             var idEvento = link.id_evento;
 

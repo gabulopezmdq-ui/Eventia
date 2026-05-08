@@ -1,4 +1,4 @@
-ï»¿using API.DataSchema;
+using API.DataSchema;
 using API.Services.Musica;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +26,7 @@ namespace API.Controllers
         [HttpPost("{id_evento}/dj_link")]
         public async Task<ActionResult> CreateDjLink(long id_evento, [FromQuery] int vence_en_dias = 30)
         {
-            if (id_evento <= 0) return BadRequest(new { error = "id_evento invÃ¡lido." });
+            if (id_evento <= 0) return BadRequest(new { error = "id_evento inválido." });
             if (vence_en_dias <= 0) vence_en_dias = 30;
 
             // Si ya hay uno activo y vigente, lo devolvemos (evita generar 10 links)
@@ -59,7 +59,7 @@ namespace API.Controllers
                 tipo = "DJ_MUSICA",
                 token = token,
                 scopes = scopesJson,
-                descripcion = "Acceso DJ (solo lectura) - MÃºsica",
+                descripcion = "Acceso DJ (solo lectura) - Música",
                 fecha_vencimiento = DateTimeOffset.UtcNow.AddDays(vence_en_dias),
                 activo = true
             };

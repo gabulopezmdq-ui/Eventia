@@ -1,4 +1,4 @@
-ï»¿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +26,7 @@ namespace API.Controllers
         public async Task<IActionResult> QuieroInfo([FromBody] ProspectoB2BCreateRequestDTO req)
         {
             if (string.IsNullOrWhiteSpace(req.nombre_apellido)) return BadRequest("Nombre y apellido obligatorio.");
-            if (string.IsNullOrWhiteSpace(req.empresa_nombre)) return BadRequest("Nombre del salÃ³n/empresa obligatorio.");
+            if (string.IsNullOrWhiteSpace(req.empresa_nombre)) return BadRequest("Nombre del salón/empresa obligatorio.");
             if (string.IsNullOrWhiteSpace(req.ciudad)) return BadRequest("Ciudad obligatoria.");
             if (string.IsNullOrWhiteSpace(req.pais)) req.pais = "AR";
 
@@ -67,7 +67,7 @@ namespace API.Controllers
             _context.Set<ef_b2b_prospectos>().Add(row);
             await _context.SaveChangesAsync();
 
-            // historial automÃ¡tico
+            // historial automático
             _context.Set<ef_b2b_prospectos_hist>().Add(new ef_b2b_prospectos_hist
             {
                 id_prospecto = row.id_prospecto,
@@ -82,7 +82,7 @@ namespace API.Controllers
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
-            return Ok(new { ok = true, mensaje = "Â¡Listo! Te contactaremos a la brevedad.", id_prospecto = row.id_prospecto });
+            return Ok(new { ok = true, mensaje = "¡Listo! Te contactaremos a la brevedad.", id_prospecto = row.id_prospecto });
         }
 
         private static string NormalizarWhatsapp(string w)

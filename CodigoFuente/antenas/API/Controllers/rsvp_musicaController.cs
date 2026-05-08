@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services.Musica;
 using Microsoft.AspNetCore.Authorization;
@@ -49,25 +49,25 @@ namespace API.Controllers
                 .FirstOrDefaultAsync(x => x.rsvp_token == token);
 
             if (invitado == null)
-                return NotFound(new { error = "Token inv√°lido." });
+                return NotFound(new { error = "Token inv·lido." });
 
             if (!await IsFeatureActiva(invitado.id_evento, "MUSICA_SUGERENCIAS"))
-                return BadRequest(new { error = "MUSICA_SUGERENCIAS no est√° habilitada para este evento." });
+                return BadRequest(new { error = "MUSICA_SUGERENCIAS no est· habilitada para este evento." });
 
             if (request == null || request.item == null)
-                return BadRequest(new { error = "Body inv√°lido." });
+                return BadRequest(new { error = "Body inv·lido." });
 
             var item = request.item;
 
             if (string.IsNullOrWhiteSpace(item.titulo))
-                return BadRequest(new { error = "El t√≠tulo del tema es obligatorio." });
+                return BadRequest(new { error = "El tÌtulo del tema es obligatorio." });
 
-            // Por ahora: 1 sugerencia (luego lo at√°s a plan)
+            // Por ahora: 1 sugerencia (luego lo at·s a plan)
             var cantidadActivas = await _context.Set<ef_invitado_musica_sugerencias>()
                 .CountAsync(x => x.id_evento == invitado.id_evento && x.id_invitado == invitado.id_invitado && x.activo);
 
             if (cantidadActivas >= 1)
-                return BadRequest(new { error = "Por ahora solo se permite 1 sugerencia por invitado. (Luego ser√° por plan)" });
+                return BadRequest(new { error = "Por ahora solo se permite 1 sugerencia por invitado. (Luego ser· por plan)" });
 
             var normalizado = MusicaHelperService.Normalizar(item.titulo, item.artista);
             var hash = MusicaHelperService.Sha256Hex(normalizado);
@@ -105,13 +105,13 @@ namespace API.Controllers
                 .FirstOrDefaultAsync(x => x.rsvp_token == token);
 
             if (invitado == null)
-                return NotFound(new { error = "Token inv√°lido." });
+                return NotFound(new { error = "Token inv·lido." });
 
             if (!await IsFeatureActiva(invitado.id_evento, "MUSICA_VOTACION"))
-                return BadRequest(new { error = "MUSICA_VOTACION no est√° habilitada para este evento." });
+                return BadRequest(new { error = "MUSICA_VOTACION no est· habilitada para este evento." });
 
             if (request == null || request.id_invitado_musica_sugerencia <= 0)
-                return BadRequest(new { error = "Sugerencia inv√°lida." });
+                return BadRequest(new { error = "Sugerencia inv·lida." });
 
             // Validar que la sugerencia exista y sea del mismo evento
             var sugerencia = await _context.Set<ef_invitado_musica_sugerencias>()
@@ -123,9 +123,9 @@ namespace API.Controllers
             if (sugerencia == null)
                 return BadRequest(new { error = "La sugerencia no pertenece al evento o no existe." });
 
-            // UX SIMPLE: si quer√©s ‚Äúsolo voto tu propio tema‚Äù, descoment√° esta validaci√≥n:
+            // UX SIMPLE: si querÈs ìsolo voto tu propio temaî, descoment· esta validaciÛn:
             // if (sugerencia.id_invitado != invitado.id_invitado)
-            //     return BadRequest(new { error = "Solo pod√©s votar tu propia sugerencia." });
+            //     return BadRequest(new { error = "Solo podÈs votar tu propia sugerencia." });
 
             // Upsert voto (1 por invitado por evento)
             var voto = await _context.Set<ef_invitado_musica_votos>()

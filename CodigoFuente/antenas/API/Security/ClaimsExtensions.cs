@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Claims;
 
 namespace API.Security
@@ -15,6 +15,11 @@ namespace API.Security
                     "Token inválido: no se pudo obtener el id del usuario.");
 
             return idUsuario;
+        }
+
+        public static bool IsStaff(this ClaimsPrincipal user)
+        {
+            return user.FindFirstValue("is_staff") == "true";
         }
     }
 }

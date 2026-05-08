@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -26,12 +26,12 @@ namespace API.Controllers
         // GET /admin/cobranzas_cuentas/pendientes?diasProximo=7
         // - vencidas: end <= now
         // - por_vencer: end > now && end <= now + diasProximo
-        // - inconsistencias: cuenta A sin suscripci√≥n CUENTA activa
+        // - inconsistencias: cuenta A sin suscripciÛn CUENTA activa
         // =========================================================
         [HttpGet("pendientes")]
         public async Task<ActionResult<CobranzasCuentasResponseDTO>> Pendientes([FromQuery] int diasProximo = 7)
         {
-            // ‚úÖ diasProximo = 0 => "ver todo"
+            // ? diasProximo = 0 => "ver todo"
             bool verTodo = diasProximo == 0;
 
             if (diasProximo < 0) diasProximo = 7;
@@ -65,7 +65,7 @@ namespace API.Controllers
                     suscripcion_estado = s.estado,
                     periodo = s.periodo,
 
-                    // ‚úÖ FIX: forzar nullable
+                    // ? FIX: forzar nullable
                     end = (DateTimeOffset?)s.current_period_end,
 
                     fecha_alta_sub = s.fecha_alta,
@@ -142,7 +142,7 @@ namespace API.Controllers
                     continue;
                 }
 
-                // UNICO sin end: si verTodo, lo pod√©s listar como ‚Äúpor_vencer‚Äù (opcional)
+                // UNICO sin end: si verTodo, lo podÈs listar como ìpor_vencerî (opcional)
                 if (!v.end.HasValue)
                 {
                     if (verTodo)
@@ -205,7 +205,7 @@ namespace API.Controllers
                         periodo = null,
                         current_period_end = null,
                         dias_para_vencer = null,
-                        concepto = "INCONSISTENCIA: Cuenta activa sin suscripci√≥n CUENTA activa/past_due",
+                        concepto = "INCONSISTENCIA: Cuenta activa sin suscripciÛn CUENTA activa/past_due",
                         inconsistente = true
                     });
                 }
@@ -224,7 +224,7 @@ namespace API.Controllers
 
         private static CobranzaCuentaItemDTO MapCobranza(dynamic x, DateTimeOffset now)
         {
-            // end puede venir como DateTimeOffset? o DateTimeOffset seg√∫n c√≥mo EF materialice el anon type.
+            // end puede venir como DateTimeOffset? o DateTimeOffset seg˙n cÛmo EF materialice el anon type.
             DateTimeOffset? end = null;
 
             if (x.end is DateTimeOffset)
@@ -264,7 +264,7 @@ namespace API.Controllers
 
         // =========================================================
         // POST /admin/cobranzas_cuentas/registrar
-        // Registra pago manual APROBADO (cuenta) y avanza el per√≠odo.
+        // Registra pago manual APROBADO (cuenta) y avanza el perÌodo.
         // =========================================================
         [HttpPost("registrar")]
         public async Task<IActionResult> RegistrarPagoManual([FromBody] PagoManualCuentaRequestDTO req)
@@ -285,10 +285,10 @@ namespace API.Controllers
                     && s.activo == true);
 
             if (sub == null)
-                return BadRequest("Suscripci√≥n inexistente o no corresponde a la cuenta.");
+                return BadRequest("SuscripciÛn inexistente o no corresponde a la cuenta.");
 
             if (!sub.current_period_end.HasValue)
-                return BadRequest("La suscripci√≥n no tiene current_period_end. No se puede cobrar recurrente sin vencimiento.");
+                return BadRequest("La suscripciÛn no tiene current_period_end. No se puede cobrar recurrente sin vencimiento.");
 
             var now = DateTimeOffset.UtcNow;
             long idAdmin = User.GetUserId();
@@ -311,7 +311,7 @@ namespace API.Controllers
                 fecha_alta = now
             });
 
-            // Avanzar per√≠odo
+            // Avanzar perÌodo
             var prevEnd = sub.current_period_end.Value;
             sub.current_period_start = prevEnd;
 
@@ -333,7 +333,7 @@ namespace API.Controllers
 
         // =========================================================
         // POST /admin/cobranzas_cuentas/corregir-inconsistencia?idCuenta=7
-        // Crea suscripci√≥n CUENTA ACTIVA si falta (cuenta A sin suscripci√≥n activa).
+        // Crea suscripciÛn CUENTA ACTIVA si falta (cuenta A sin suscripciÛn activa).
         // =========================================================
         [HttpPost("corregir-inconsistencia")]
         public async Task<IActionResult> CorregirInconsistencia([FromQuery] long idCuenta)
@@ -344,13 +344,13 @@ namespace API.Controllers
                 .SingleOrDefaultAsync(c => c.id_cuenta == idCuenta);
 
             if (cuenta == null) return NotFound("Cuenta inexistente.");
-            if (cuenta.estado != "A") return BadRequest("La cuenta no est√° activa (estado != A).");
+            if (cuenta.estado != "A") return BadRequest("La cuenta no est· activa (estado != A).");
             if (cuenta.id_plan == null) return BadRequest("Cuenta activa sin id_plan asignado.");
 
             var plan = await _context.Set<ef_planes>()
                 .SingleOrDefaultAsync(p => p.id_plan == cuenta.id_plan.Value && p.activo == true && p.tipo == "B2B");
 
-            if (plan == null) return BadRequest("Plan B2B inv√°lido/inactivo para la cuenta.");
+            if (plan == null) return BadRequest("Plan B2B inv·lido/inactivo para la cuenta.");
 
             // Traer suscripciones activas/past_due de CUENTA para esa cuenta
             var subsActivas = await _context.Set<ef_suscripciones>()
@@ -363,7 +363,7 @@ namespace API.Controllers
 
             var resp = new CobranzasCorregirResponseDTO { ok = true, corregidos = 0 };
 
-            // Helper fin de per√≠odo
+            // Helper fin de perÌodo
             DateTimeOffset? CalcEnd(DateTimeOffset start)
             {
                 if (string.Equals(plan.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase)) return start.AddMonths(1);
@@ -375,7 +375,7 @@ namespace API.Controllers
 
             if (subsActivas.Count == 0)
             {
-                // 1) Crear suscripci√≥n faltante
+                // 1) Crear suscripciÛn faltante
                 var end = CalcEnd(now);
 
                 _context.Set<ef_suscripciones>().Add(new ef_suscripciones
@@ -395,11 +395,11 @@ namespace API.Controllers
                 });
 
                 resp.corregidos++;
-                resp.detalle.Add("Se cre√≥ suscripci√≥n CUENTA ACTIVA faltante.");
+                resp.detalle.Add("Se creÛ suscripciÛn CUENTA ACTIVA faltante.");
             }
             else
             {
-                // 2) Si hay duplicadas, cerrar todas menos la m√°s nueva (subsActivas[0])
+                // 2) Si hay duplicadas, cerrar todas menos la m·s nueva (subsActivas[0])
                 if (subsActivas.Count > 1)
                 {
                     var keep = subsActivas.First();
@@ -413,11 +413,11 @@ namespace API.Controllers
                     }
 
                     resp.corregidos++;
-                    resp.detalle.Add($"Se cerraron {subsActivas.Count - 1} suscripciones activas duplicadas. Se conserv√≥ id_suscripcion={keep.id_suscripcion}.");
+                    resp.detalle.Add($"Se cerraron {subsActivas.Count - 1} suscripciones activas duplicadas. Se conservÛ id_suscripcion={keep.id_suscripcion}.");
                 }
 
-                // 3) Si la suscripci√≥n ‚Äúvigente‚Äù no tiene end y el plan es MENSUAL/ANUAL, setear end.
-                var vigente = subsActivas.First(); // la m√°s nueva
+                // 3) Si la suscripciÛn ìvigenteî no tiene end y el plan es MENSUAL/ANUAL, setear end.
+                var vigente = subsActivas.First(); // la m·s nueva
                 if (!vigente.current_period_end.HasValue &&
                     (string.Equals(plan.periodo, "MENSUAL", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(plan.periodo, "ANUAL", StringComparison.OrdinalIgnoreCase)))
@@ -427,7 +427,7 @@ namespace API.Controllers
                     vigente.fecha_modif = now;
 
                     resp.corregidos++;
-                    resp.detalle.Add("Se complet√≥ current_period_end de la suscripci√≥n vigente.");
+                    resp.detalle.Add("Se completÛ current_period_end de la suscripciÛn vigente.");
                 }
             }
 
@@ -439,7 +439,7 @@ namespace API.Controllers
 
         // =========================================================
         // POST /admin/cobranzas_cuentas/corregir-inconsistencias
-        // Corrige todas las cuentas A sin suscripci√≥n CUENTA activa.
+        // Corrige todas las cuentas A sin suscripciÛn CUENTA activa.
         // =========================================================
         [HttpPost("corregir-inconsistencias")]
         public async Task<IActionResult> CorregirInconsistencias()
@@ -503,7 +503,7 @@ namespace API.Controllers
                     continue;
                 }
 
-                // Deduplicar: cerrar todas menos la m√°s nueva
+                // Deduplicar: cerrar todas menos la m·s nueva
                 if (subsActivas.Count > 1)
                 {
                     foreach (var s in subsActivas.Skip(1))

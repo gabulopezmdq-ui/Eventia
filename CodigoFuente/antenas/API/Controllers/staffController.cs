@@ -14,10 +14,10 @@ namespace API.Controllers
     [Authorize]
     public class staffController : ControllerBase
     {
-        private readonly StaffService _staffService;
+        private readonly IStaffService _staffService;
         private readonly ICuentaContextService _cuentaContext;
 
-        public staffController(StaffService staffService, ICuentaContextService cuentaContext)
+        public staffController(IStaffService staffService, ICuentaContextService cuentaContext)
         {
             _staffService  = staffService;
             _cuentaContext = cuentaContext;
@@ -92,9 +92,9 @@ namespace API.Controllers
     [AllowAnonymous]
     public class staffJoinController : ControllerBase
     {
-        private readonly StaffService _staffService;
+        private readonly IStaffService _staffService;
 
-        public staffJoinController(StaffService staffService)
+        public staffJoinController(IStaffService staffService)
         {
             _staffService = staffService;
         }

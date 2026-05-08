@@ -115,6 +115,13 @@ namespace API.DataSchema.ModelConfiguration
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(x => x.id_audiencia_persona);
+
+            builder.Property(x => x.es_staff)
+                .HasColumnName("es_staff")
+                .HasDefaultValue(false);
+
+            builder.Property(x => x.id_rol_staff)
+                .HasColumnName("id_rol_staff");
         }
         }
     }

@@ -42,6 +42,9 @@ namespace API.DataSchema
             public long? id_acceso_link { get; set; }
             public long? id_audiencia_persona { get; set; }
 
+            public bool es_staff { get; set; }
+            public short? id_rol_staff { get; set; }
+
 
         public virtual ef_eventos? evento { get; set; }
         public virtual ef_evento_accesos? acceso { get; set; }

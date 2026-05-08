@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace API.Services.Staff
 {
-    public class StaffService
+    public class StaffService : IStaffService
     {
         private readonly DataContext _context;
         private readonly IConfiguration _config;
@@ -27,11 +27,20 @@ namespace API.Services.Staff
         // ─────────────────────────────────────
         // GENERACIÓN DE CÓDIGO ÚNICO (8 caracteres: CCRRNNNN)
         // ─────────────────────────────────────
-        private async Task<string> GenerarCodigoUnicoAsync(long idCuenta, short idRol)
+        private async Task<string> GenerarCodigoUnicoAsync(long? idCuenta, long? idEvento, short idRol)
         {
-            // 1. Prefijo Cuenta (CC)
-            var cuenta = await _context.ef_cuentas.AsNoTracking().FirstOrDefaultAsync(x => x.id_cuenta == idCuenta);
-            string prefixCuenta = NormalizarParaCodigo(cuenta?.nombre_cuenta, 2);
+            string prefixFirst = "XX";
+
+            if (idCuenta.HasValue)
+            {
+                var cuenta = await _context.ef_cuentas.AsNoTracking().FirstOrDefaultAsync(x => x.id_cuenta == idCuenta);
+                prefixFirst = NormalizarParaCodigo(cuenta?.nombre_cuenta, 2);
+            }
+            else if (idEvento.HasValue)
+            {
+                var ev = await _context.ef_eventos.AsNoTracking().FirstOrDefaultAsync(x => x.id_evento == idEvento);
+                prefixFirst = NormalizarParaCodigo(ev?.anfitriones_texto ?? "EV", 2);
+            }
 
             // 2. Prefijo Rol (RR) - Tomamos lo que viene después de STAFF_
             var rol = await _context.ef_roles.AsNoTracking().FirstOrDefaultAsync(x => x.id_rol == idRol);
@@ -48,7 +57,7 @@ namespace API.Services.Staff
             {
                 // 3. Sufijo Numérico (NNNN)
                 string num = rng.Next(0, 10000).ToString("D4");
-                codigo = $"{prefixCuenta}{prefixRol}{num}";
+                codigo = $"{prefixFirst}{prefixRol}{num}";
             }
             while (await _context.ef_staff.AnyAsync(x => x.codigo == codigo));
 
@@ -69,7 +78,10 @@ namespace API.Services.Staff
         // ─────────────────────────────────────
         public async Task<StaffCreadoDTO> CrearStaffAsync(CrearStaffRequest req)
         {
-            var codigo = await GenerarCodigoUnicoAsync(req.id_cuenta, req.id_rol);
+            if (string.IsNullOrWhiteSpace(req.email))
+                throw new ArgumentException("El email del staff es obligatorio.");
+
+            var codigo = await GenerarCodigoUnicoAsync(req.id_cuenta, null, req.id_rol);
 
             var staff = new ef_staff
             {
@@ -102,6 +114,44 @@ namespace API.Services.Staff
                 }
                 await _context.SaveChangesAsync();
             }
+
+            return new StaffCreadoDTO
+            {
+                id_staff         = staff.id_staff,
+                codigo           = staff.codigo,
+                nombre           = staff.nombre,
+                apellido         = staff.apellido,
+                fecha_expiracion = staff.fecha_expiracion
+            };
+        }
+
+        // ─────────────────────────────────────
+        // CREAR STAFF (EVENT OWNER - B2C)
+        // El anfitrión carga los datos y se asigna directamente al evento.
+        // ─────────────────────────────────────
+        public async Task<StaffCreadoDTO> CrearStaffEventoAsync(long idEvento, string nombre, string apellido, string email, short idRol)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("El email del staff es obligatorio.");
+
+            var codigo = await GenerarCodigoUnicoAsync(null, idEvento, idRol);
+
+            var staff = new ef_staff
+            {
+                id_cuenta        = null,
+                id_evento        = idEvento,
+                id_rol           = idRol,
+                codigo           = codigo,
+                nombre           = string.IsNullOrWhiteSpace(nombre) ? "Staff" : nombre.Trim(),
+                apellido         = string.IsNullOrWhiteSpace(apellido) ? "Evento" : apellido.Trim(),
+                email            = email.Trim(),
+                activo           = true,
+                usos             = 0,
+                fecha_alta       = DateTimeOffset.UtcNow
+            };
+
+            _context.ef_staff.Add(staff);
+            await _context.SaveChangesAsync();
 
             return new StaffCreadoDTO
             {
@@ -207,6 +257,7 @@ namespace API.Services.Staff
             {
                 id_staff        = staff.id_staff,
                 id_cuenta       = staff.id_cuenta,
+                id_evento       = staff.id_evento,
                 nombre          = staff.nombre,
                 apellido        = staff.apellido,
                 rol_codigo      = rol?.codigo ?? "",
@@ -232,7 +283,8 @@ namespace API.Services.Staff
             {
                 new Claim(JwtRegisteredClaimNames.Sub, $"staff_{staff.id_staff}"),
                 new Claim("id_staff", staff.id_staff.ToString()),
-                new Claim("id_cuenta", staff.id_cuenta.ToString()),
+                new Claim("id_cuenta", staff.id_cuenta?.ToString() ?? ""),
+                new Claim("id_evento", staff.id_evento?.ToString() ?? ""),
                 new Claim(ClaimTypes.Role, rolCodigo),
                 new Claim("is_staff", "true")
             };

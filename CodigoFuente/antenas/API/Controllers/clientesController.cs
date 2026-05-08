@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services.Cuentas;
@@ -134,7 +134,7 @@ namespace API.Controllers
             long idCuenta = await _cuentaContext.GetCuentaIdActualAsync(idUsuario);
 
             bool okUnidad = await _cuentaContext.UnidadPerteneceACuentaAsync(idCuenta, req.id_unidad_principal);
-            if (!okUnidad) return BadRequest("Unidad principal inv√°lida o inactiva.");
+            if (!okUnidad) return BadRequest("Unidad principal inv·lida o inactiva.");
 
             var now = DateTimeOffset.UtcNow;
 
@@ -184,7 +184,7 @@ namespace API.Controllers
             if (c == null) return NotFound("Cliente inexistente.");
 
             bool okUnidad = await _cuentaContext.UnidadPerteneceACuentaAsync(idCuenta, req.id_unidad_principal);
-            if (!okUnidad) return BadRequest("Unidad principal inv√°lida o inactiva.");
+            if (!okUnidad) return BadRequest("Unidad principal inv·lida o inactiva.");
 
             c.nombre_cliente = req.nombre_cliente.Trim();
             c.email = string.IsNullOrWhiteSpace(req.email) ? null : req.email.Trim();

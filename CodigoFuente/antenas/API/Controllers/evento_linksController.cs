@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services.Musica;
 using Microsoft.AspNetCore.Authorization;
@@ -29,11 +29,11 @@ namespace API.Controllers
         [HttpPost("Create")]
         public async Task<ActionResult> Create([FromBody] eventoLinkCreate req)
         {
-            if (req == null) return BadRequest(new { error = "Body inv√°lido." });
-            if (req.id_evento <= 0) return BadRequest(new { error = "id_evento inv√°lido." });
+            if (req == null) return BadRequest(new { error = "Body inv·lido." });
+            if (req.id_evento <= 0) return BadRequest(new { error = "id_evento inv·lido." });
             if (string.IsNullOrWhiteSpace(req.tipo)) return BadRequest(new { error = "tipo es obligatorio." });
 
-            // token √∫nico
+            // token ˙nico
             string token;
             do
             {
@@ -70,7 +70,7 @@ namespace API.Controllers
         public async Task<ActionResult> Revoke([FromBody] eventoLinkRevoke req)
         {
             if (req == null || req.id_evento_link <= 0)
-                return BadRequest(new { error = "id_evento_link inv√°lido." });
+                return BadRequest(new { error = "id_evento_link inv·lido." });
 
             var link = await _context.Set<ef_evento_links>()
                 .FirstOrDefaultAsync(x => x.id_evento_link == req.id_evento_link);
