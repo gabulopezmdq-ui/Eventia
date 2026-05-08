@@ -21,6 +21,7 @@ interface PagoInfo {
     moneda_plan: string;
     estado_comercial: string;
     pago_pendiente: boolean;
+    plan_codigo: string;
 }
 
 interface PagosData {
@@ -64,6 +65,7 @@ export default function PagosEventosAdminPage() {
                 moneda_plan: item.moneda_plan ?? item.monedaPlan ?? 'ARS',
                 estado_comercial: item.estado_comercial ?? item.estadoComercial,
                 pago_pendiente: item.pago_pendiente ?? item.pagoPendiente,
+                plan_codigo: item.plan_codigo ?? item.planCodigo ?? '',
             });
             setData({
                 pendientes: (result.pendientes || []).map(mapPagoInfo),
@@ -98,7 +100,8 @@ export default function PagosEventosAdminPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id_evento: selectedEvento.id_evento,
-                    monto: Number(monto),
+                    codigo_plan: selectedEvento.plan_codigo,// era CodigoPlan
+                    importe: Number(monto),                   // era monto
                     moneda,
                     concepto
                 })
@@ -184,21 +187,19 @@ export default function PagosEventosAdminPage() {
                     <div className="flex bg-neutral-100 dark:bg-neutral-800/50 p-1 rounded-xl">
                         <button
                             onClick={() => setTab('pendientes')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                tab === 'pendientes'
-                                    ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
-                                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
-                            }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'pendientes'
+                                ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
+                                : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                                }`}
                         >
                             Pendientes ({data.pendientes.length})
                         </button>
                         <button
                             onClick={() => setTab('inconsistencias')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                                tab === 'inconsistencias'
-                                    ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
-                                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
-                            }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${tab === 'inconsistencias'
+                                ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
+                                : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                                }`}
                         >
                             Inconsistencias ({data.inconsistencias.length})
                             {data.inconsistencias.length > 0 && (
@@ -336,7 +337,7 @@ export default function PagosEventosAdminPage() {
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Concepto</label>
                                 <input
