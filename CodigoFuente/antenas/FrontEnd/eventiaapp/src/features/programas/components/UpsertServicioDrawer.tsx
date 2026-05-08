@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ProgramaServicio, CampoExtra } from '@/src/features/programas/types';
-import { upsertServicio } from '@/src/features/programas/programas.service';
+import { ProgramaServicio, CampoExtra, ServicioBase } from '@/src/features/programas/types';
+import { upsertServicio, getServiciosBase } from '@/src/features/programas/programas.service';
 import { Loader2, X, LayoutList, Plus, Trash2 } from 'lucide-react';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [serviciosBase, setServiciosBase] = useState<ServicioBase[]>([]);
 
     const [formData, setFormData] = useState<ProgramaServicio>({
         id_programa_servicio: 0,
@@ -37,6 +38,16 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
     const [camposExtra, setCamposExtra] = useState<CampoExtra[]>([]);
 
     useEffect(() => {
+        const fetchBases = async () => {
+            try {
+                const bases = await getServiciosBase();
+                setServiciosBase(bases);
+            } catch (err) {
+                console.error("Error obteniendo servicios base", err);
+            }
+        };
+        fetchBases();
+
         if (servicioToEdit) {
             setFormData(servicioToEdit);
             if (servicioToEdit.config_json) {
@@ -54,8 +65,23 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
-        
-        if (type === 'checkbox') {
+
+        if (name === 'id_servicio_base') {
+            const baseId = value === '' ? null : Number(value);
+            setFormData(prev => {
+                const newData = { ...prev, id_servicio_base: baseId };
+                // Si seleccionó uno base, autocompletamos
+                if (baseId) {
+                    const selectedBase = serviciosBase.find(b => b.id_servicio_base === baseId);
+                    if (selectedBase) {
+                        newData.nombre = selectedBase.nombre;
+                        newData.codigo = selectedBase.codigo;
+                        newData.descripcion = selectedBase.descripcion;
+                    }
+                }
+                return newData;
+            });
+        } else if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked;
             setFormData(prev => ({ ...prev, [name]: checked }));
         } else if (name === 'precio' || name === 'orden') {
@@ -70,7 +96,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
     // --- Manejo de Campos Extra Dinámicos ---
     const addCampoExtra = () => {
         setCamposExtra(prev => [
-            ...prev, 
+            ...prev,
             { codigo: `campo_${Date.now()}`, label: 'Nuevo Campo', tipo: 'TEXT', obligatorio: false }
         ]);
     };
@@ -98,7 +124,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
 
         try {
             const payloadToSave = { ...formData };
-            
+
             // Si hay campos extras, inyectarlos en config_json
             if (camposExtra.length > 0) {
                 payloadToSave.config_json = JSON.stringify({ campos_extra: camposExtra });
@@ -142,7 +168,25 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                         {/* 1. DATOS BÁSICOS */}
                         <div className="space-y-4">
                             <h4 className="text-sm font-bold text-neutral-900 dark:text-white border-b border-neutral-100 dark:border-neutral-800 pb-2">1. Datos Básicos</h4>
-                            
+
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">Servicio Base (Catálogo)</label>
+                                <select
+                                    name="id_servicio_base"
+                                    value={formData.id_servicio_base || ''}
+                                    onChange={handleChange}
+                                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-medium"
+                                >
+                                    <option value="">-- Personalizado / Otro --</option>
+                                    {serviciosBase.map(sb => (
+                                        <option key={sb.id_servicio_base} value={sb.id_servicio_base}>
+                                            {sb.nombre} ({sb.codigo})
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-[10px] text-neutral-400 mt-1">Seleccionar un servicio base autocompletará el nombre, código y descripción.</p>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-neutral-500 uppercase mb-1.5">Nombre</label>
@@ -241,7 +285,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                         {/* 2. REGLAS Y COMPORTAMIENTO */}
                         <div className="space-y-4">
                             <h4 className="text-sm font-bold text-neutral-900 dark:text-white border-b border-neutral-100 dark:border-neutral-800 pb-2">2. Reglas</h4>
-                            
+
                             <div className="grid grid-cols-2 gap-3">
                                 <label className="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700 cursor-pointer">
                                     <input type="checkbox" name="obligatorio" checked={formData.obligatorio} onChange={handleChange} className="accent-emerald-600" />
@@ -288,7 +332,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                             <div className="grid grid-cols-2 gap-3 pr-6">
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Pregunta/Etiqueta</label>
-                                                    <input 
+                                                    <input
                                                         value={campo.label}
                                                         onChange={(e) => updateCampoExtra(index, 'label', e.target.value)}
                                                         className="w-full p-2 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs outline-none bg-neutral-50 dark:bg-neutral-800/50"
@@ -297,7 +341,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Tipo de Campo</label>
-                                                    <select 
+                                                    <select
                                                         value={campo.tipo}
                                                         onChange={(e) => updateCampoExtra(index, 'tipo', e.target.value)}
                                                         className="w-full p-2 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs outline-none bg-neutral-50 dark:bg-neutral-800/50"
@@ -311,7 +355,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                                 {campo.tipo === 'SELECT' && (
                                                     <div className="col-span-2">
                                                         <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Opciones (Separadas por coma)</label>
-                                                        <input 
+                                                        <input
                                                             value={campo.opciones?.join(', ') || ''}
                                                             onChange={(e) => updateOpciones(index, e.target.value)}
                                                             className="w-full p-2 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs outline-none bg-neutral-50 dark:bg-neutral-800/50"
@@ -321,9 +365,9 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                                 )}
                                                 <div className="col-span-2 mt-1">
                                                     <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            checked={campo.obligatorio} 
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={campo.obligatorio}
                                                             onChange={(e) => updateCampoExtra(index, 'obligatorio', e.target.checked)}
                                                             className="accent-emerald-600"
                                                         />

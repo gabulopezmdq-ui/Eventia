@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function GET(req: Request, props: { params: Promise<{ idEvento: string }> }) {
+export async function GET(req: Request) {
     try {
-        const { idEvento } = await props.params;
         const cookieStore = await cookies();
         const token = cookieStore.get('access_token')?.value;
 
@@ -13,9 +12,8 @@ export async function GET(req: Request, props: { params: Promise<{ idEvento: str
 
         const url = new URL(req.url);
         const idIdioma = url.searchParams.get('idIdioma') || '3';
-        const soloActivas = url.searchParams.get('soloActivas') || 'false';
 
-        const res = await fetch(`${API_URL}/programas/${idEvento}/autorizaciones-config?idIdioma=${idIdioma}&soloActivas=${soloActivas}`, {
+        const res = await fetch(`${API_URL}/programas/autorizaciones-base?idIdioma=${idIdioma}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -27,17 +25,13 @@ export async function GET(req: Request, props: { params: Promise<{ idEvento: str
         const data = await res.json();
         
         const mappedData = data.map((item: any) => ({
-            id_programa_autorizacion_config: item.idProgramaAutorizacionConfig ?? item.IdProgramaAutorizacionConfig ?? item.id_programa_autorizacion_config,
-            id_evento: item.idEvento ?? item.IdEvento ?? item.id_evento,
             id_autorizacion_base: item.idAutorizacionBase ?? item.IdAutorizacionBase ?? item.id_autorizacion_base,
             codigo: item.codigo ?? item.Codigo,
             titulo: item.titulo ?? item.Titulo,
             texto: item.texto ?? item.Texto,
-            obligatoria: item.obligatoria ?? item.Obligatoria,
-            requiere_aceptacion: item.requiereAceptacion ?? item.RequiereAceptacion ?? item.requiere_aceptacion,
-            requiere_datos_responsable: item.requiereDatosResponsable ?? item.RequiereDatosResponsable ?? item.requiere_datos_responsable,
-            orden: item.orden ?? item.Orden,
-            activo: item.activo ?? item.Activo
+            obligatoria_default: item.obligatoriaDefault ?? item.ObligatoriaDefault ?? item.obligatoria_default,
+            requiere_aceptacion_default: item.requiereAceptacionDefault ?? item.RequiereAceptacionDefault ?? item.requiere_aceptacion_default,
+            requiere_datos_responsable_default: item.requiereDatosResponsableDefault ?? item.RequiereDatosResponsableDefault ?? item.requiere_datos_responsable_default
         }));
 
         return NextResponse.json(mappedData);
