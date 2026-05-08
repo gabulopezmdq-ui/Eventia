@@ -586,7 +586,7 @@ namespace API.Controllers.Programas
                     return false;
 
                 // Membresía directa al evento
-                bool esMiembroEvento = await _context.Set<ef_evento_usuarios>()
+                bool esMiembroEvento = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                     .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
                 if (esMiembroEvento) return true;
