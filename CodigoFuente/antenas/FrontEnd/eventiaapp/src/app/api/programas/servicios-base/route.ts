@@ -3,18 +3,17 @@ import { NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function GET(req: Request, props: { params: Promise<{ idEvento: string }> }) {
+export async function GET(req: Request) {
     try {
-        const { idEvento } = await props.params;
         const cookieStore = await cookies();
         const token = cookieStore.get('access_token')?.value;
 
         if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
         const url = new URL(req.url);
-        const soloActivos = url.searchParams.get('soloActivos') || 'false';
+        const idIdioma = url.searchParams.get('idIdioma') || '3';
 
-        const res = await fetch(`${API_URL}/programas/${idEvento}/periodos?soloActivos=${soloActivos}`, {
+        const res = await fetch(`${API_URL}/programas/servicios-base?idIdioma=${idIdioma}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -25,19 +24,12 @@ export async function GET(req: Request, props: { params: Promise<{ idEvento: str
 
         const data = await res.json();
         
-        // Mapeo PascalCase -> snake_case
         const mappedData = data.map((item: any) => ({
-            id_programa_periodo: item.idProgramaPeriodo ?? item.IdProgramaPeriodo ?? item.id_programa_periodo,
-            id_evento: item.idEvento ?? item.IdEvento ?? item.id_evento,
+            id_servicio_base: item.idServicioBase ?? item.IdServicioBase ?? item.id_servicio_base,
             codigo: item.codigo ?? item.Codigo,
             nombre: item.nombre ?? item.Nombre,
-            fecha_desde: item.fechaDesde ?? item.FechaDesde ?? item.fecha_desde,
-            fecha_hasta: item.fechaHasta ?? item.FechaHasta ?? item.fecha_hasta,
-            precio_base: item.precioBase ?? item.PrecioBase ?? item.precio_base,
-            moneda: item.moneda ?? item.Moneda,
-            cupo: item.cupo ?? item.Cupo,
-            orden: item.orden ?? item.Orden,
-            activo: item.activo ?? item.Activo
+            descripcion: item.descripcion ?? item.Descripcion,
+            config_json_defecto: item.configJsonDefecto ?? item.ConfigJsonDefecto ?? item.config_json_defecto
         }));
 
         return NextResponse.json(mappedData);

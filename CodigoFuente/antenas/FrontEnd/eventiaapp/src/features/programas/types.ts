@@ -45,6 +45,13 @@ export interface CampoExtra {
     opciones?: string[];
 }
 
+export interface ServicioBase {
+    id_servicio_base: number;
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+}
+
 export interface ProgramaServicioConfig {
     campos_extra?: CampoExtra[];
 }
@@ -67,6 +74,13 @@ export interface ProgramaServicio {
     orden: number;
     activo: boolean;
     config_json?: string | null;
+}
+
+export interface AutorizacionBase {
+    id_autorizacion_base: number;
+    codigo: string;
+    nombre: string;
+    descripcion?: string;
 }
 
 export interface AutorizacionConfig {

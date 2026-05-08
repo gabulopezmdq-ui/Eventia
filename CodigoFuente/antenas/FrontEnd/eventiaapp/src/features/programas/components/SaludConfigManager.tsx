@@ -50,12 +50,12 @@ export default function SaludConfigManager({ idEvento }: Props) {
 
     const handleToggle = (field: keyof SaludConfig) => {
         if (!config) return;
-        
+
         setConfig(prev => {
             if (!prev) return prev;
             const newValue = !prev[field];
             const updates = { [field]: newValue } as Partial<SaludConfig>;
-            
+
             // Si desactivo el "pedir", automáticamente desactivo el "obligatorio"
             if (field.startsWith('pedir_') && !newValue) {
                 const requiredField = field.replace('pedir_', '') + '_obligatorio';
@@ -114,7 +114,7 @@ export default function SaludConfigManager({ idEvento }: Props) {
                         />
                         <span className="text-sm text-neutral-600 dark:text-neutral-300 font-medium">Solicitar</span>
                     </label>
-                    
+
                     <label className={`flex items-center gap-2 ${!isPedir ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
                         <input
                             type="checkbox"
@@ -142,7 +142,7 @@ export default function SaludConfigManager({ idEvento }: Props) {
                         Selecciona qué información médica le pedirás a las familias al momento de inscribir.
                     </p>
                 </div>
-                
+
                 <button
                     onClick={handleSave}
                     disabled={saving}
@@ -156,7 +156,7 @@ export default function SaludConfigManager({ idEvento }: Props) {
             {error && (
                 <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">{error}</div>
             )}
-            
+
             {success && (
                 <div className="p-4 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-medium border border-emerald-100 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Configuración médica guardada correctamente.
@@ -164,50 +164,50 @@ export default function SaludConfigManager({ idEvento }: Props) {
             )}
 
             <div className="space-y-3">
-                <OptionRow 
-                    label="Problemas Médicos" 
+                <OptionRow
+                    label="Problemas Médicos"
                     description="Permite que la familia declare enfermedades, condiciones o afecciones."
                     baseField="pedir_problema_medico"
                     requiredField="problema_medico_obligatorio"
                 />
-                <OptionRow 
-                    label="Alergias (No alimentarias)" 
+                <OptionRow
+                    label="Alergias (No alimentarias)"
                     description="Alergias a medicamentos, picaduras, ambientales, etc. (Las alimentarias se configuran aparte en restricciones)."
                     baseField="pedir_alergias_no_alimentarias"
                     requiredField="alergias_no_alimentarias_obligatorio"
                 />
-                <OptionRow 
-                    label="Necesidades Especiales" 
+                <OptionRow
+                    label="Necesidades Especiales"
                     description="Condiciones neurodivergentes, motrices o de aprendizaje que el staff deba conocer."
                     baseField="pedir_necesidad_especial"
                     requiredField="necesidad_especial_obligatorio"
                 />
-                <OptionRow 
-                    label="Cobertura Médica (Obra Social / Prepaga)" 
+                <OptionRow
+                    label="Cobertura Médica (Obra Social / Prepaga)"
                     description="Pide la credencial, nombre y número de socio de la cobertura."
                     baseField="pedir_cobertura_medica"
                     requiredField="cobertura_medica_obligatorio"
                 />
-                <OptionRow 
-                    label="Medicaciones" 
+                <OptionRow
+                    label="Medicaciones"
                     description="Permite informar si el menor está tomando alguna medicación actualmente."
                     baseField="pedir_medicaciones"
                     requiredField="medicaciones_obligatorio"
                 />
-                <OptionRow 
-                    label="Contacto de Emergencia" 
+                <OptionRow
+                    label="Contacto de Emergencia"
                     description="Solicita el nombre, parentesco y teléfono de un tercero en caso de emergencia."
                     baseField="pedir_contacto_emergencia"
                     requiredField="contacto_emergencia_obligatorio"
                 />
-                <OptionRow 
-                    label="Autorización para Emergencia Médica" 
+                <OptionRow
+                    label="Autorización para Emergencia Médica"
                     description="Texto legal donde el padre autoriza a la organización a llamar al SAME/Emergencias."
                     baseField="pedir_autoriza_emergencia_medica"
                     requiredField="autoriza_emergencia_medica_obligatorio"
                 />
-                <OptionRow 
-                    label="Observaciones Generales" 
+                <OptionRow
+                    label="Observaciones Generales"
                     description="Un campo de texto libre para que la familia aclare cualquier otra cuestión."
                     baseField="pedir_observaciones_familia"
                     requiredField="observaciones_familia_obligatorio"
@@ -228,6 +228,88 @@ export default function SaludConfigManager({ idEvento }: Props) {
                     </div>
                 </label>
             </div>
+
+            {config.activo && (
+                <div className="mt-8 bg-neutral-50 dark:bg-neutral-900/50 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-inner space-y-6">
+                    <h4 className="text-sm font-bold text-neutral-900 dark:text-white uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-700 pb-2">
+                        Vista Previa del Formulario
+                    </h4>
+
+                    <div className="space-y-4 opacity-80 pointer-events-none">
+                        {config.pedir_cobertura_medica && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                                <span className="block text-xs font-bold text-neutral-500 mb-2">Cobertura Médica {config.cobertura_medica_obligatorio && <span className="text-red-500">*</span>}</span>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="h-10 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-center px-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Obra Social / Prepaga</div>
+                                    <div className="h-10 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-center px-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Número de Socio</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {config.pedir_contacto_emergencia && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                                <span className="block text-xs font-bold text-neutral-500 mb-2">Contacto de Emergencia {config.contacto_emergencia_obligatorio && <span className="text-red-500">*</span>}</span>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="h-10 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-center px-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Nombre Completo</div>
+                                    <div className="h-10 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-center px-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Teléfono</div>
+                                    <div className="h-10 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-center px-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Parentesco</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {config.pedir_problema_medico && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                                <span className="block text-xs font-bold text-neutral-500 mb-2">Problemas Médicos {config.problema_medico_obligatorio && <span className="text-red-500">*</span>}</span>
+                                <div className="h-16 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-start p-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Describa la condición médica...</div>
+                            </div>
+                        )}
+
+                        {config.pedir_alergias_no_alimentarias && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                                <span className="block text-xs font-bold text-neutral-500 mb-2">Alergias (No alimentarias) {config.alergias_no_alimentarias_obligatorio && <span className="text-red-500">*</span>}</span>
+                                <div className="h-16 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-start p-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Describa alergias (ej. Picaduras, Medicamentos)...</div>
+                            </div>
+                        )}
+
+                        {config.pedir_necesidad_especial && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                                <span className="block text-xs font-bold text-neutral-500 mb-2">Necesidades Especiales {config.necesidad_especial_obligatorio && <span className="text-red-500">*</span>}</span>
+                                <div className="h-16 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-start p-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Describa necesidades (TEA, TDAH, Motriz, etc)...</div>
+                            </div>
+                        )}
+
+                        {config.pedir_medicaciones && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                                <span className="block text-xs font-bold text-neutral-500 mb-2">Medicaciones {config.medicaciones_obligatorio && <span className="text-red-500">*</span>}</span>
+                                <div className="h-16 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-start p-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Indique medicación, dosis y horarios...</div>
+                            </div>
+                        )}
+
+                        {config.pedir_observaciones_familia && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                                <span className="block text-xs font-bold text-neutral-500 mb-2">Observaciones Generales {config.observaciones_familia_obligatorio && <span className="text-red-500">*</span>}</span>
+                                <div className="h-16 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-start p-3 text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700">Otras aclaraciones...</div>
+                            </div>
+                        )}
+
+                        {config.pedir_autoriza_emergencia_medica && (
+                            <div className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 flex items-start gap-3">
+                                <div className="w-4 h-4 rounded bg-neutral-200 dark:bg-neutral-700 mt-0.5"></div>
+                                <div>
+                                    <span className="block text-xs font-bold text-neutral-700 dark:text-neutral-300">Autorización de Emergencia {config.autoriza_emergencia_medica_obligatorio && <span className="text-red-500">*</span>}</span>
+                                    <span className="block text-[10px] text-neutral-500">Autorizo al personal a tomar las decisiones médicas de emergencia necesarias...</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {!config.pedir_cobertura_medica && !config.pedir_contacto_emergencia && !config.pedir_problema_medico && !config.pedir_alergias_no_alimentarias && !config.pedir_necesidad_especial && !config.pedir_medicaciones && !config.pedir_observaciones_familia && !config.pedir_autoriza_emergencia_medica && (
+                            <div className="text-center py-6 text-sm text-neutral-500 italic">
+                                No se solicitará información médica adicional.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getAutorizacionesConfig } from '@/src/features/programas/programas.service';
 import { AutorizacionConfig } from '@/src/features/programas/types';
-import { Plus, Loader2, CheckSquare, Pencil, FileText } from 'lucide-react';
+import { Plus, Loader2, CheckSquare, Pencil, FileText, Globe } from 'lucide-react';
 import UpsertAutorizacionDrawer from './UpsertAutorizacionDrawer';
+import TraduccionesAutorizacionDrawer from './TraduccionesAutorizacionDrawer';
 
 interface Props {
     idEvento: number;
@@ -15,6 +16,7 @@ export default function AutorizacionesManager({ idEvento }: Props) {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAuth, setSelectedAuth] = useState<AutorizacionConfig | null>(null);
+    const [traduccionesAuthId, setTraduccionesAuthId] = useState<number | null>(null);
 
     const loadData = async () => {
         setLoading(true);
@@ -106,7 +108,15 @@ export default function AutorizacionesManager({ idEvento }: Props) {
                                 )}
                             </div>
 
-                            <div className="mt-5 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex justify-end">
+                            <div className="mt-5 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex justify-end gap-2">
+                                {auth.id_programa_autorizacion_config && (
+                                    <button
+                                        onClick={() => setTraduccionesAuthId(auth.id_programa_autorizacion_config!)}
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
+                                    >
+                                        <Globe className="w-3.5 h-3.5" /> Traducciones
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => handleOpenDrawer(auth)}
                                     className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
@@ -126,6 +136,17 @@ export default function AutorizacionesManager({ idEvento }: Props) {
                     onClose={() => setIsDrawerOpen(false)}
                     onSuccess={() => {
                         setIsDrawerOpen(false);
+                        loadData();
+                    }}
+                />
+            )}
+
+            {traduccionesAuthId && (
+                <TraduccionesAutorizacionDrawer
+                    idConfig={traduccionesAuthId}
+                    onClose={() => setTraduccionesAuthId(null)}
+                    onSuccess={() => {
+                        setTraduccionesAuthId(null);
                         loadData();
                     }}
                 />

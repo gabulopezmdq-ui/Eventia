@@ -1,6 +1,6 @@
-import { 
-    Programa, CrearProgramaPayload, ProgramaPeriodo, ProgramaServicio,
-    AutorizacionConfig, TraduccionAutorizacion, SaludConfig, StaffPrograma,
+import {
+    Programa, CrearProgramaPayload, ProgramaPeriodo, ProgramaServicio, ServicioBase,
+    AutorizacionConfig, TraduccionAutorizacion, SaludConfig, StaffPrograma, AutorizacionBase,
     ValidarQRPayload, ValidarQRResponse,
     RegistrarRetiroPayload, RegistrarRetiroResponse,
     RetirosDiaResponse,
@@ -52,6 +52,12 @@ export const upsertPeriodo = async (idEvento: number, payload: ProgramaPeriodo):
 };
 
 // Servicios
+export const getServiciosBase = async (idIdioma = 3): Promise<ServicioBase[]> => {
+    const res = await fetch(`${API_URL}/servicios-base?idIdioma=${idIdioma}`);
+    if (!res.ok) throw new Error('Error obteniendo servicios base');
+    return res.json();
+};
+
 export const getServicios = async (idEvento: number, soloActivos = false): Promise<ProgramaServicio[]> => {
     const res = await fetch(`${API_URL}/${idEvento}/servicios?soloActivos=${soloActivos}`);
     if (!res.ok) throw new Error('Error obteniendo servicios');
@@ -69,6 +75,12 @@ export const upsertServicio = async (idEvento: number, payload: ProgramaServicio
 };
 
 // Autorizaciones
+export const getAutorizacionesBase = async (idIdioma = 3): Promise<AutorizacionBase[]> => {
+    const res = await fetch(`${API_URL}/autorizaciones-base?idIdioma=${idIdioma}`);
+    if (!res.ok) throw new Error('Error obteniendo autorizaciones base');
+    return res.json();
+};
+
 export const getAutorizacionesConfig = async (idEvento: number, idIdioma = 3, soloActivas = false): Promise<AutorizacionConfig[]> => {
     const res = await fetch(`${API_URL}/${idEvento}/autorizaciones-config?idIdioma=${idIdioma}&soloActivas=${soloActivas}`);
     if (!res.ok) throw new Error('Error obteniendo autorizaciones');
@@ -82,6 +94,12 @@ export const upsertAutorizacionConfig = async (idEvento: number, payload: Autori
         body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Error guardando autorización');
+    return res.json();
+};
+
+export const getTraducciones = async (idConfig: number): Promise<TraduccionAutorizacion[]> => {
+    const res = await fetch(`${API_URL}/autorizaciones-config/${idConfig}/traducciones`);
+    if (!res.ok) throw new Error('Error obteniendo traducciones');
     return res.json();
 };
 

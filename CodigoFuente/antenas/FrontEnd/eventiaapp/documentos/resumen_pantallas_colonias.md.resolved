@@ -1,0 +1,99 @@
+# Arquitectura Frontend - Módulo Colonias de Vacaciones (Eventia)
+**Resumen Consolidado de Pantallas y Componentes (Docs 1 al 8)**
+
+Este documento centraliza todas las pantallas B2B (Administrador) y B2C (Cliente Público) que componen el sistema integral de gestión de Casales, Colonias de Vacaciones y Eventos Deportivos, confirmando su implementación al 100%.
+
+---
+
+## ⚙️ 1. Configuración de Programas (B2B)
+**Ruta Base:** `/dashboard/events/[id]/estructura/...`
+**Objetivo:** Permitir a los organizadores configurar la oferta comercial, legal y médica antes de abrir las inscripciones.
+
+*   **Semanas / Períodos (`/periodos`)**: Grilla para gestionar los bloques de fechas (ej. "Semana 1: del 22/06 al 26/06") y sus precios base.
+*   **Servicios Adicionales (`/servicios`)**: Configuración de transporte, comedor, acogida matinal, etc. con opciones de cálculo de precio (Fijo o Por Día) apoyado en un *Drawer* dinámico.
+*   **Formulario de Salud (`/salud`)**: Panel para encender/apagar módulos de recolección de datos médicos (Tétanos, Alergias, Problemas Motores, Autorización de Paracetamol) con una vista de "Previsualización" en vivo.
+*   **Autorizaciones y Legales (`/autorizaciones`)**: Gestor de consentimientos obligatorios o condicionales (Imágenes, Salidas del predio), soportando traducciones dinámicas.
+
+---
+
+## 🌐 2. Motor de Inscripción Pública (B2C)
+**Ruta Base:** `/inscripcion/[token]`
+**Objetivo:** Flujo público ("Wizard") para que los padres/tutores registren a sus hijos sin fricciones. Diseñado para funcionar de manera jerárquica y reactiva.
+
+*   **Landing y Bienvenida**: Presentación del Casal con información general del programa.
+*   **Paso 1: Grupo Familiar**: Datos del responsable y contactos de emergencia.
+*   **Paso 2: Participantes**: Alta de los niños (nombre, fecha de nacimiento).
+*   **Paso 3: Períodos**: Selección de semanas a contratar (con carrito en tiempo real).
+*   **Paso 4: Servicios**: Selección de comedor/transporte, incluyendo selectores dinámicos de días específicos.
+*   **Paso 5: Salud**: Cuestionario dinámico (dependiente de la configuración B2B) y declaración de restricciones alimentarias (Alérgenos, Celiaquía).
+*   **Paso 6: Checkout / Revisión**: Resumen de cobro y aplicación de códigos de descuento (si aplica).
+*   **Paso 7: Autorizaciones (Firma)**: Aceptación de términos legales obligatorios.
+*   **Confirmación Final**: Pantalla de éxito generando los QRs automáticos para el posterior retiro de los menores.
+
+---
+
+## 💰 3. Gestión Financiera y Pagos (B2B)
+**Ruta Base:** `/dashboard/events/[id]/inscripciones/pagos`
+**Objetivo:** Panel de control de tesorería, cuentas corrientes y cobranzas.
+
+*   **Dashboard de Tesorería**: Grilla principal filtrable por estados de pago (Pendiente, Parcial, Pagado).
+*   **Drawer "Estado de Cuenta"**: Detalle financiero del responsable, discriminando deuda total vs recaudado.
+*   **Modal "Ajustes Manuales"**: Herramienta para aplicar bonificaciones, descuentos comerciales o recargos.
+*   **Modal "Registrar Pago"**: Registro de transferencias, efectivo o tarjeta de crédito.
+*   **Modal "Anular Pago"**: Cancelación de recibos con trazabilidad (motivo de anulación).
+
+---
+
+## 📊 4. Panel de Inscriptos (CRM Operativo B2B)
+**Ruta Base:** `/dashboard/events/[id]/inscriptos`
+**Objetivo:** El centro de mandos de los coordinadores para ver de un vistazo el volumen y necesidades especiales.
+
+*   **Dashboard Principal**: Tarjetas KPI (Total familias, Deuda global, Alertas críticas).
+*   **Buscador Inteligente**: Filtros por estado, texto libre y aislador de "Solo casos con alertas".
+*   **Drawer de Ficha Operativa**: Al hacer clic en un registro, despliega de forma consolidada todos los hijos, los periodos contratados de cada uno, las alertas de salud (resaltadas en rojo) y quiénes son los adultos autorizados a retirar.
+
+---
+
+## 🍳 5. Logística de Cocina y Comedor (B2B)
+**Ruta Base:** `/dashboard/events/[id]/inscripciones/cocina`
+**Objetivo:** Herramienta diaria para el equipo gastronómico, evitando riesgos sanitarios y de contaminación cruzada.
+
+*   **Vista Diaria (Date Picker)**: Muestra exclusivamente quién asiste y come "hoy".
+*   **Chips de Alérgenos**: Resumen rápido que totaliza menús especiales (ej. "3 Celíacos", "1 Alergia al Huevo").
+*   **Grilla de Comensales**: Fila teñida de alerta roja/amarilla según severidad alimenticia.
+*   **Ficha Médica (Drawer)**: Muestra instrucciones específicas como "Revisar postres o trazas de frutos secos".
+
+---
+
+## 🛡️ 6. Seguridad y Retiros QR (B2B)
+**Ruta Base:** `/dashboard/events/[id]/inscripciones/retiros`
+**Objetivo:** Evitar la entrega equivocada de menores validando digitalmente a los tutores.
+
+*   **Escáner / Validador de Token**: Input optimizado para pistolas lectoras de QR que lee el token de los padres.
+*   **Drawer de "Retiro Seguro"**: Al validar el QR, muestra la foto del tutor (opcional), parentesco y la lista de niños que puede llevarse.
+*   **Control de Duplicidad**: Deshabilita automáticamente (`yaRetiradoHoy`) a los niños que ya fueron entregados en el día, impidiendo que otro familiar los retire por error horas más tarde.
+*   **Bitácora Histórica**: Grilla con la hora exacta, el adulto y el método (QR/Manual) del retiro.
+
+---
+
+## 🚌 7. Logística de Transporte y Acogida (B2B)
+**Ruta Base:** `/dashboard/events/[id]/inscripciones/transporte`
+**Objetivo:** Manifiesto diario para los choferes y celadores de vehículos.
+
+*   **Dashboard de Logística**: Filtrable por fecha y tipo de ruta (Acogida, Transporte, Todos).
+*   **Grilla de Pasajeros**: Exposición de los teléfonos de los padres para emergencias rápidas.
+*   **Alertas Visibles**: Identificador de `tieneAlertaSalud = true` en la grilla para que el acompañante sepa qué niño tiene Asma o problemas motores durante el viaje.
+
+---
+
+## ✍️ 8. Control de Autorizaciones Legales (B2B)
+**Ruta Base:** `/dashboard/events/[id]/inscripciones/autorizaciones`
+**Objetivo:** Auditoría de firmas y consentimientos por si hay incidentes de relaciones públicas o requerimientos de imagen (fotos).
+
+*   **Buscador de Firmas**: Grilla unificada del evento.
+*   **Visor Legal (Drawer)**: Separa las autorizaciones en dos bloques (Grupo Familiar vs Participante).
+*   **Semáforo de Consentimiento**: Renderiza claramente (Check Verde / Cruz Roja) qué fue aceptado, almacenando el nombre de quien dio clic (IP/Token) y el timestamp exacto de la rúbrica.
+
+---
+
+> **Estado del Desarrollo:** Todos los módulos mencionados arriba se encuentran maquetados, enlazados y conectados con sus respectivas firmas TypeScript y proxies de servicio en la capa Frontend de Next.js.
