@@ -13,22 +13,17 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
 
         const body = await req.json();
 
+        // El backend es inconsistente: periodos requiere snake_case, pero servicios requiere camelCase
+        // Enviamos ambos formatos en el mismo JSON para que el ModelBinder de ASP.NET Core agarre el que necesite
         const payload = {
-            idProgramaServicio: body.id_programa_servicio,
+            ...body,
+            id_evento: parseInt(idEvento),
             idEvento: parseInt(idEvento),
+            idProgramaServicio: body.id_programa_servicio,
             idServicioBase: body.id_servicio_base,
-            codigo: body.codigo,
-            nombre: body.nombre,
-            descripcion: body.descripcion,
             tipoCalculo: body.tipo_calculo,
-            precio: body.precio,
-            moneda: body.moneda,
-            obligatorio: body.obligatorio,
             permiteCantidad: body.permite_cantidad,
             requiereSeleccionDias: body.requiere_seleccion_dias,
-            cupo: body.cupo,
-            orden: body.orden,
-            activo: body.activo,
             configJson: body.config_json
         };
 
@@ -49,22 +44,22 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
         const data = await res.json();
         
         const mappedData = {
-            id_programa_servicio: data.idProgramaServicio,
-            id_evento: data.idEvento,
-            id_servicio_base: data.idServicioBase,
-            codigo: data.codigo,
-            nombre: data.nombre,
-            descripcion: data.descripcion,
-            tipo_calculo: data.tipoCalculo,
-            precio: data.precio,
-            moneda: data.moneda,
-            obligatorio: data.obligatorio,
-            permite_cantidad: data.permiteCantidad,
-            requiere_seleccion_dias: data.requiereSeleccionDias,
-            cupo: data.cupo,
-            orden: data.orden,
-            activo: data.activo,
-            config_json: data.configJson
+            id_programa_servicio: data.idProgramaServicio ?? data.IdProgramaServicio ?? data.id_programa_servicio,
+            id_evento: data.idEvento ?? data.IdEvento ?? data.id_evento,
+            id_servicio_base: data.idServicioBase ?? data.IdServicioBase ?? data.id_servicio_base,
+            codigo: data.codigo ?? data.Codigo,
+            nombre: data.nombre ?? data.Nombre,
+            descripcion: data.descripcion ?? data.Descripcion,
+            tipo_calculo: data.tipoCalculo ?? data.TipoCalculo ?? data.tipo_calculo,
+            precio: data.precio ?? data.Precio,
+            moneda: data.moneda ?? data.Moneda,
+            obligatorio: data.obligatorio ?? data.Obligatorio,
+            permite_cantidad: data.permiteCantidad ?? data.PermiteCantidad ?? data.permite_cantidad,
+            requiere_seleccion_dias: data.requiereSeleccionDias ?? data.RequiereSeleccionDias ?? data.requiere_seleccion_dias,
+            cupo: data.cupo ?? data.Cupo,
+            orden: data.orden ?? data.Orden,
+            activo: data.activo ?? data.Activo,
+            config_json: data.configJson ?? data.ConfigJson ?? data.config_json
         };
 
         return NextResponse.json(mappedData);

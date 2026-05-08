@@ -13,19 +13,10 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
 
         const body = await req.json();
 
-        // Mapeo snake_case -> PascalCase para el backend
+        // El backend espera snake_case para los endpoints de programas
         const payload = {
-            idProgramaPeriodo: body.id_programa_periodo,
-            idEvento: parseInt(idEvento),
-            codigo: body.codigo,
-            nombre: body.nombre,
-            fechaDesde: body.fecha_desde,
-            fechaHasta: body.fecha_hasta,
-            precioBase: body.precio_base,
-            moneda: body.moneda,
-            cupo: body.cupo,
-            orden: body.orden,
-            activo: body.activo
+            ...body,
+            id_evento: parseInt(idEvento)
         };
 
         const res = await fetch(`${API_URL}/programas/${idEvento}/periodos/upsert`, {
@@ -46,17 +37,17 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
         
         // Mapeo de vuelta a snake_case
         const mappedData = {
-            id_programa_periodo: data.idProgramaPeriodo,
-            id_evento: data.idEvento,
-            codigo: data.codigo,
-            nombre: data.nombre,
-            fecha_desde: data.fechaDesde,
-            fecha_hasta: data.fechaHasta,
-            precio_base: data.precioBase,
-            moneda: data.moneda,
-            cupo: data.cupo,
-            orden: data.orden,
-            activo: data.activo
+            id_programa_periodo: data.idProgramaPeriodo ?? data.IdProgramaPeriodo ?? data.id_programa_periodo,
+            id_evento: data.idEvento ?? data.IdEvento ?? data.id_evento,
+            codigo: data.codigo ?? data.Codigo,
+            nombre: data.nombre ?? data.Nombre,
+            fecha_desde: data.fechaDesde ?? data.FechaDesde ?? data.fecha_desde,
+            fecha_hasta: data.fechaHasta ?? data.FechaHasta ?? data.fecha_hasta,
+            precio_base: data.precioBase ?? data.PrecioBase ?? data.precio_base,
+            moneda: data.moneda ?? data.Moneda,
+            cupo: data.cupo ?? data.Cupo,
+            orden: data.orden ?? data.Orden,
+            activo: data.activo ?? data.Activo
         };
 
         return NextResponse.json(mappedData);

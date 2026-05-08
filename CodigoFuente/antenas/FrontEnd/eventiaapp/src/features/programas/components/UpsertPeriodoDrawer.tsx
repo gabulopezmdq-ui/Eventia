@@ -59,11 +59,11 @@ export default function UpsertPeriodoDrawer({ idEvento, periodoToEdit, onClose, 
         setError(null);
 
         try {
-            // El backend requiere el idEvento y el payload
+            // El backend espera fechas en formato YYYY-MM-DD (DateOnly)
             const payloadToSave = {
                 ...formData,
-                fecha_desde: new Date(formData.fecha_desde).toISOString(),
-                fecha_hasta: new Date(formData.fecha_hasta).toISOString(),
+                fecha_desde: formData.fecha_desde,
+                fecha_hasta: formData.fecha_hasta,
             };
             
             await upsertPeriodo(idEvento, payloadToSave);
