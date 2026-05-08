@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -75,7 +75,7 @@ namespace API.Controllers.Programas
                     telefono_responsable = insc.responsable_telefono,
                     servicio = s.nombre,
                     servicio_codigo = s.codigo,
-                    //direccion = s.campos_extra, // futuro: dirección
+                    //direccion = s.campos_extra, // futuro: direcci�n
                     //observaciones_servicio = s.observaciones // a futuro tambien
                     direccion = (string?)null,
                     observaciones_servicio = (string?)null

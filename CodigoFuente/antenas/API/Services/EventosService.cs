@@ -681,13 +681,13 @@ namespace API.Services
         //}
 
 
-        public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req, bool isSuperAdmin = false)
+        public async Task<EventoResponse> CrearEventoAsync(long idUsuario, EventoCreateRequest req)
         {
             if (req == null)
                 throw new InvalidOperationException("Request inválido.");
 
             // ✅ NUEVO: Inferencia de Cuenta si llega en 0 o nulo (solución para fallos de binding en Front)
-            if ((req.IdCuenta == null || req.IdCuenta == 0) && !isSuperAdmin)
+            if ((req.IdCuenta == null || req.IdCuenta == 0))
             {
                 var cuentaAsociada = await _context.Set<ef_cuenta_usuarios>()
                     .Where(cu => cu.id_usuario == idUsuario && cu.activo == true)
@@ -790,7 +790,7 @@ namespace API.Services
                             ev.estado == EventoEstado.Borrador &&
                             ev.id_cuenta == null));
 
-                if (yaTieneBorrador && !isSuperAdmin)
+                if (yaTieneBorrador)
                     throw new InvalidOperationException("Ya tienes un evento en borrador. Por favor, activa o elimina ese evento anterior para crear uno nuevo.");
 
                 var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan)
@@ -833,10 +833,10 @@ namespace API.Services
                     cuenta = await cuentasUsuarioQuery
                         .SingleOrDefaultAsync(c => c.id_cuenta == req.IdCuenta.Value);
 
-                    if (cuenta == null && !isSuperAdmin)
+                    if (cuenta == null)
                         throw new UnauthorizedAccessException("No tienes acceso a la cuenta indicada o la cuenta no está activa.");
 
-                    if (cuenta == null && isSuperAdmin)
+                    if (cuenta == null)
                     {
                          // Si es SuperAdmin, cargamos la cuenta sin validar pertenencia
                          cuenta = await _context.Set<ef_cuentas>()
@@ -1205,7 +1205,7 @@ namespace API.Services
         // =========================
         // UPDATE GENERAL
         // =========================
-        public async Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req, bool isSuperAdmin = false)
+        public async Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req)
         {
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);
@@ -1267,7 +1267,7 @@ namespace API.Services
             return await GetEventoMioAsync(idUsuario, idEvento);
         }
 
-        public async Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req, bool isSuperAdmin = false)
+        public async Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req)
         {
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);

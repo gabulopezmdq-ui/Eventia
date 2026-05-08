@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -50,7 +50,7 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByParam(x => x.codigo == codigo));
         }
 
-        // ✅ ESTE ES EL QUE TE FALTABA PARA LAS CARDS
+        // ? ESTE ES EL QUE TE FALTABA PARA LAS CARDS
         // GET /plantillas_evento/GetByTipo?idTipoEvento=3&activo=true
         [HttpGet("GetByTipo")]
         public async Task<ActionResult<IEnumerable<ef_plantillas_evento>>> GetByTipo([FromQuery] int idTipoEvento, [FromQuery] string activo = null)
@@ -71,7 +71,7 @@ namespace API.Controllers
             return Ok(list);
         }
 
-        // ✅ DETALLE PARA ARMAR CARDS BIEN (tramos/accesos/relaciones)
+        // ? DETALLE PARA ARMAR CARDS BIEN (tramos/accesos/relaciones)
         // GET /plantillas_evento/2/Detalle
         [HttpGet("{idPlantilla:int}/Detalle")]
         public async Task<ActionResult<PlantillaDetalleDTO>> Detalle(short idPlantilla)

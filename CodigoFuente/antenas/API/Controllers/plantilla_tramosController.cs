@@ -1,4 +1,4 @@
-﻿using  API.DataSchema;
+using  API.DataSchema;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +55,7 @@ namespace API.Controllers
                 (act == null || x.activo == act.Value)
             );
 
-            // si querés ordenados:
+            // si quer�s ordenados:
             result = result.OrderBy(x => x.orden).ToList();
 
             return Ok(result);

@@ -1,4 +1,4 @@
-Ôªøusing  API.DataSchema;
+using  API.DataSchema;
 using API.DataSchema.DTO;
 using  API.Services;
 using  API.Utility;
@@ -45,7 +45,7 @@ namespace API.Controllers
             string? ua = Request.Headers.UserAgent.ToString();
 
             var result = await _svc.ScanQrAsync(request.QrToken, deviceId, idUsuarioOperador, ip, ua);
-            if (result == null) return NotFound("QR inv√°lido.");
+            if (result == null) return NotFound("QR inv·lido.");
             return Ok(result);
         }
 
@@ -55,7 +55,7 @@ namespace API.Controllers
         {
             try
             {
-                long? idUsuarioOperador = null; // si hay auth, lo tom√°s de claims
+                long? idUsuarioOperador = null; // si hay auth, lo tom·s de claims
                 var result = await _svc.ConfirmarRetiroAsync(dto.qrToken, dto, idUsuarioOperador);
                 return Ok(result);
             }
@@ -98,7 +98,7 @@ namespace API.Controllers
         {
             try
             {
-                long? idUsuarioOperador = null; // Si hay autenticaci√≥n
+                long? idUsuarioOperador = null; // Si hay autenticaciÛn
                 var result = await _svc.ConfirmarRetiroAsyncQR(request.qrToken, request, idUsuarioOperador);
                 return Ok(result);
             }

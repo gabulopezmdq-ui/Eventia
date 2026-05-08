@@ -1,4 +1,4 @@
-ï»¿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.AudienciaCRM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -299,7 +299,7 @@ namespace API.Controllers.Audiencia
                     new { codigo = "TODOS", texto = "Todos" },
                     new { codigo = "RESPONSABLE_PROGRAMA", texto = "Responsables / familias" },
                     new { codigo = "PARTICIPANTE_PROGRAMA", texto = "Participantes programas" },
-                    new { codigo = "EVENTO_PUBLICO", texto = "Asistentes eventos pÃºblicos" },
+                    new { codigo = "EVENTO_PUBLICO", texto = "Asistentes eventos públicos" },
                     new { codigo = "EVENTO_PRIVADO", texto = "Invitados eventos privados" },
                     new { codigo = "STAFF", texto = "Staff" },
                     new { codigo = "SIN_CLASIFICAR", texto = "Sin clasificar" }
@@ -307,7 +307,7 @@ namespace API.Controllers.Audiencia
                 alertas = new[]
                 {
                     new { codigo = "COMEDOR", texto = "Comedor" },
-                    new { codigo = "RESTRICCION_ALIMENTARIA", texto = "RestricciÃ³n alimentaria" },
+                    new { codigo = "RESTRICCION_ALIMENTARIA", texto = "Restricción alimentaria" },
                     new { codigo = "SALUD", texto = "Salud" }
                 }
             });
@@ -597,7 +597,7 @@ namespace API.Controllers.Audiencia
                 case "PARTICIPANTE_PROGRAMA":
                     return "Participante programa";
                 case "EVENTO_PUBLICO":
-                    return "Asistente evento pÃºblico";
+                    return "Asistente evento público";
                 case "EVENTO_PRIVADO":
                     return "Invitado evento privado";
                 default:

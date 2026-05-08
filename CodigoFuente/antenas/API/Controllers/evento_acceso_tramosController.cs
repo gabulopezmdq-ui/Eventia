@@ -28,7 +28,7 @@ namespace API.Controllers
         public async Task<IActionResult> GetByEvento([FromQuery] long idEvento)
         {
             long idUsuario = User.GetUserId();
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();
@@ -58,7 +58,7 @@ namespace API.Controllers
             if (acceso == null) return BadRequest("Acceso inexistente.");
 
             long idUsuario = User.GetUserId();
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == acceso.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();
@@ -85,7 +85,7 @@ namespace API.Controllers
             if (acceso == null) return BadRequest("Acceso inexistente.");
 
             long idUsuario = User.GetUserId();
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == acceso.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();

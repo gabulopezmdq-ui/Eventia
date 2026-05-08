@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -140,7 +140,7 @@ namespace API.Controllers
 
             row.fecha_modif = now;
 
-            // historial autom√°tico de update (si hubo algo relevante)
+            // historial autom·tico de update (si hubo algo relevante)
             if (cambio != null)
             {
                 _context.Set<ef_b2b_prospectos_hist>().Add(new ef_b2b_prospectos_hist
@@ -149,7 +149,7 @@ namespace API.Controllers
                     fecha = now,
                     id_usuario = idAdmin,
                     tipo = cambio,
-                    detalle = "Actualizaci√≥n desde panel admin.",
+                    detalle = "ActualizaciÛn desde panel admin.",
                     estado_nuevo = req.estado != null ? row.estado : null,
                     proximo_contacto = req.proximo_contacto
                 });

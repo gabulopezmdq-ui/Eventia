@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.Services;
 using API.Services.Musica;
 using Microsoft.AspNetCore.Authorization;
@@ -74,14 +74,14 @@ namespace API.Controllers
 
         private string? Validar(ef_evento_musica_bloqueos item)
         {
-            if (item == null) return "Body inv√°lido.";
-            if (item.id_evento <= 0) return "id_evento inv√°lido.";
+            if (item == null) return "Body inv·lido.";
+            if (item.id_evento <= 0) return "id_evento inv·lido.";
 
             var tieneTitulo = !string.IsNullOrWhiteSpace(item.titulo);
             var tieneArtista = !string.IsNullOrWhiteSpace(item.artista);
 
             if (!tieneTitulo && !tieneArtista)
-                return "Debe informar al menos t√≠tulo o artista.";
+                return "Debe informar al menos tÌtulo o artista.";
 
             return null;
         }

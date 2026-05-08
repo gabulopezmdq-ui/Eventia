@@ -66,7 +66,7 @@ namespace API.Controllers
             var idUsuario = User.GetUserId();
 
             // Opcional: validar que el evento sea del usuario (recomendado)
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -135,7 +135,7 @@ namespace API.Controllers
 
             var idUsuario = User.GetUserId();
 
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -199,7 +199,7 @@ namespace API.Controllers
 
             var idUsuario = User.GetUserId();
 
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)

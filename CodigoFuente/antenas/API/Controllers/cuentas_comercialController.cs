@@ -29,7 +29,7 @@ namespace API.Controllers
             long idUsuario = User.GetUserId();
 
             // Seguridad: el usuario debe estar vinculado a la cuenta (ajustá si tu tabla se llama distinto)
-            bool pertenece = User.IsStaff() || await _context.Set<ef_cuenta_usuarios>()
+            bool pertenece = await _context.Set<ef_cuenta_usuarios>()
                 .AnyAsync(x => x.id_cuenta == idCuenta && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -115,7 +115,7 @@ namespace API.Controllers
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = User.IsStaff() || await _context.Set<ef_cuenta_usuarios>()
+            bool pertenece = await _context.Set<ef_cuenta_usuarios>()
                 .AnyAsync(x => x.id_cuenta == idCuenta && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();

@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -77,7 +77,7 @@ namespace API.Controllers.Programas
                 .SingleOrDefaultAsync(x => x.id_inscripcion == idInscripcion && x.activo == true);
 
             if (insc == null)
-                return NotFound("Inscripci√≥n no encontrada.");
+                return NotFound("InscripciÛn no encontrada.");
 
             var resumen = await ArmarResumenPagoAsync(idInscripcion);
 
@@ -115,14 +115,14 @@ namespace API.Controllers.Programas
                 .SingleOrDefaultAsync(x => x.id_inscripcion == idInscripcion && x.activo == true);
 
             if (insc == null)
-                return NotFound("Inscripci√≥n no encontrada.");
+                return NotFound("InscripciÛn no encontrada.");
 
             var tipo = (req.Tipo ?? "").Trim().ToUpper();
 
             var tiposValidos = new List<string> { "DESCUENTO", "RECARGO", "BONIFICACION" };
 
             if (!tiposValidos.Contains(tipo))
-                return BadRequest("Tipo inv√°lido. Use DESCUENTO, RECARGO o BONIFICACION.");
+                return BadRequest("Tipo inv·lido. Use DESCUENTO, RECARGO o BONIFICACION.");
 
             if (req.IdTipoAjuste <= 0)
                 return BadRequest("Debe informar el tipo de ajuste.");
@@ -132,7 +132,7 @@ namespace API.Controllers.Programas
                 .AnyAsync(x => x.id_tipo_ajuste == req.IdTipoAjuste && x.activo == true);
 
             if (!tipoAjusteExiste)
-                return BadRequest("El tipo de ajuste no existe o est√° inactivo.");
+                return BadRequest("El tipo de ajuste no existe o est· inactivo.");
 
             if (req.Importe <= 0)
                 return BadRequest("El importe debe ser mayor a cero.");
@@ -164,7 +164,7 @@ namespace API.Controllers.Programas
                 .SingleOrDefaultAsync(x => x.id_inscripcion == idInscripcion && x.activo == true);
 
             if (insc == null)
-                return NotFound("Inscripci√≥n no encontrada.");
+                return NotFound("InscripciÛn no encontrada.");
 
             if (req.Importe <= 0)
                 return BadRequest("El importe debe ser mayor a cero.");
@@ -208,7 +208,7 @@ namespace API.Controllers.Programas
                 return NotFound("Pago no encontrado.");
 
             if (pago.anulado)
-                return BadRequest("El pago ya est√° anulado.");
+                return BadRequest("El pago ya est· anulado.");
 
             pago.anulado = true;
             pago.fecha_anulacion = DateTimeOffset.UtcNow;

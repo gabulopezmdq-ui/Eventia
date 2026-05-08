@@ -1,4 +1,4 @@
-ï»¿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services.Cuentas;
@@ -61,7 +61,7 @@ namespace API.Controllers
         [HttpPost("Solicitar")]
         public async Task<ActionResult<AddonSolicitudResponseDTO>> Solicitar([FromBody] AddonSolicitudRequestDTO req)
         {
-            if (req.id_addon <= 0) return BadRequest("id_addon invÃ¡lido.");
+            if (req.id_addon <= 0) return BadRequest("id_addon inválido.");
 
             long idUsuario = User.GetUserId();
             long idCuenta = await _cuentaContext.GetCuentaIdActualAsync(idUsuario);
@@ -83,7 +83,7 @@ namespace API.Controllers
                                 && sa.activo == true
                                 && (sa.estado == "PENDIENTE" || sa.estado == "ACTIVO" || sa.estado == "SUSPENDIDO"));
 
-            if (existe) return BadRequest("Ya existe una solicitud/contrataciÃ³n activa para este addon en la cuenta.");
+            if (existe) return BadRequest("Ya existe una solicitud/contratación activa para este addon en la cuenta.");
 
             var now = DateTimeOffset.UtcNow;
 

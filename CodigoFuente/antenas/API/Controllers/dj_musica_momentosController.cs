@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -46,7 +46,7 @@ namespace API.Controllers
         public async Task<ActionResult> GetMomentos(string token)
         {
             var link = await ValidarToken(token, "MUSICA_READ");
-            if (link == null) return Unauthorized(new { error = "Token inv√°lido, vencido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv·lido, vencido o sin permisos." });
 
             var momentos = await _context.Set<ef_evento_musica_momentos>()
                 .Where(x => x.id_evento == link.id_evento && x.activo)
@@ -75,7 +75,7 @@ namespace API.Controllers
         public async Task<ActionResult> GetOpcionesOrden(string token)
         {
             var link = await ValidarToken(token, "MUSICA_READ");
-            if (link == null) return Unauthorized(new { error = "Token inv√°lido, vencido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv·lido, vencido o sin permisos." });
 
             return Ok(new
             {

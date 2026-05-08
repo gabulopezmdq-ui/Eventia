@@ -1,4 +1,4 @@
-ï»¿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.DataSchema.DTO.Cuentas;
 using API.Security;
@@ -58,7 +58,7 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inesperado al obtener la cuenta del usuario.");
-                return StatusCode(500, new { message = "OcurriÃ³ un error interno." });
+                return StatusCode(500, new { message = "Ocurrió un error interno." });
             }
         }
 
@@ -85,7 +85,7 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inesperado al actualizar la cuenta del usuario.");
-                return StatusCode(500, new { message = "OcurriÃ³ un error interno." });
+                return StatusCode(500, new { message = "Ocurrió un error interno." });
             }
         }
 
@@ -112,7 +112,7 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inesperado al solicitar cuenta.");
-                return StatusCode(500, new { message = "OcurriÃ³ un error interno." });
+                return StatusCode(500, new { message = "Ocurrió un error interno." });
             }
         }
 

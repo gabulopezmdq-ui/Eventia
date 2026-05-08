@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -75,14 +75,14 @@ namespace API.Controllers
 
         private static bool IsValidLocaleFormat(string locale)
         {
-            // muy b√°sico (xx-YY). Si quer√©s ser estricto, metemos regex.
+            // muy b·sico (xx-YY). Si querÈs ser estricto, metemos regex.
             if (string.IsNullOrWhiteSpace(locale)) return false;
             if (locale.Length < 4 || locale.Length > 10) return false;
             return locale.Contains("-");
         }
 
-        // Si quer√©s, pod√©s validar existencia del "id_item" contra tabla base.
-        // Hoy no lo hago gen√©rico para evitar SQL din√°mico: se garantiza por UI/uso.
+        // Si querÈs, podÈs validar existencia del "id_item" contra tabla base.
+        // Hoy no lo hago genÈrico para evitar SQL din·mico: se garantiza por UI/uso.
         // =========================
 
         // ==========================================
@@ -99,7 +99,7 @@ namespace API.Controllers
             if (idItem <= 0) return BadRequest("idItem es requerido.");
 
             var entCfg = await GetEntidadConfigAsync(ent);
-            if (entCfg == null) return BadRequest("Entidad inv√°lida o inactiva.");
+            if (entCfg == null) return BadRequest("Entidad inv·lida o inactiva.");
 
             var data = await (
                 from t in _context.ef_param_traducciones
@@ -124,7 +124,7 @@ namespace API.Controllers
         }
 
         // ==========================================
-        // 2) POST: crear una traducci√≥n
+        // 2) POST: crear una traducciÛn
         // ==========================================
         // POST /param_traducciones
         [HttpPost]
@@ -138,7 +138,7 @@ namespace API.Controllers
             if (model.id_idioma <= 0) return BadRequest("id_idioma es requerido.");
 
             var entCfg = await GetEntidadConfigAsync(model.entidad);
-            if (entCfg == null) return BadRequest("Entidad inv√°lida o inactiva.");
+            if (entCfg == null) return BadRequest("Entidad inv·lida o inactiva.");
 
             var texto = NormalizeTexto(model.texto);
             if (string.IsNullOrWhiteSpace(texto)) return BadRequest("texto es requerido.");
@@ -146,7 +146,7 @@ namespace API.Controllers
             if (texto.Length > entCfg.max_len_texto)
                 return BadRequest($"texto excede max_len_texto ({entCfg.max_len_texto}).");
 
-            // valida idioma exista y activo (si quer√©s permitir traducciones para idiomas inactivos, sac√° el filtro)
+            // valida idioma exista y activo (si querÈs permitir traducciones para idiomas inactivos, sac· el filtro)
             var idioma = await _context.ef_idiomas.AsNoTracking().FirstOrDefaultAsync(x => x.id_idioma == model.id_idioma);
             if (idioma == null) return BadRequest("Idioma inexistente.");
 
@@ -154,7 +154,7 @@ namespace API.Controllers
             var exists = await _context.ef_param_traducciones.AnyAsync(x =>
                 x.entidad == model.entidad && x.id_item == model.id_item && x.id_idioma == model.id_idioma);
 
-            if (exists) return Conflict("Ya existe la traducci√≥n para esa entidad + item + idioma.");
+            if (exists) return Conflict("Ya existe la traducciÛn para esa entidad + item + idioma.");
 
             model.texto = texto;
             model.fecha_alta = DateTimeOffset.UtcNow;
@@ -167,7 +167,7 @@ namespace API.Controllers
         }
 
         // ==========================================
-        // 3) PUT: actualizar traducci√≥n existente
+        // 3) PUT: actualizar traducciÛn existente
         // ==========================================
         // PUT /param_traducciones
         [HttpPut]
@@ -181,9 +181,9 @@ namespace API.Controllers
 
             // entidad config (la del registro existente)
             var entCfg = await GetEntidadConfigAsync(db.entidad);
-            if (entCfg == null) return BadRequest("Entidad inv√°lida o inactiva.");
+            if (entCfg == null) return BadRequest("Entidad inv·lida o inactiva.");
 
-            // No permito cambiar la clave l√≥gica (entidad, id_item, id_idioma) por update
+            // No permito cambiar la clave lÛgica (entidad, id_item, id_idioma) por update
             // Solo editable: texto, orden, activo
             var texto = NormalizeTexto(model.texto);
             if (string.IsNullOrWhiteSpace(texto)) return BadRequest("texto es requerido.");
@@ -217,7 +217,7 @@ namespace API.Controllers
 
             // entidad config
             var entCfg = await GetEntidadConfigAsync(db.entidad);
-            if (entCfg == null) return BadRequest("Entidad inv√°lida o inactiva.");
+            if (entCfg == null) return BadRequest("Entidad inv·lida o inactiva.");
 
             _context.ef_param_traducciones.Remove(db);
             await _context.SaveChangesAsync();
@@ -239,9 +239,9 @@ namespace API.Controllers
             if (req.items == null || req.items.Count == 0) return BadRequest("items es requerido.");
 
             var entCfg = await GetEntidadConfigAsync(ent);
-            if (entCfg == null) return BadRequest("Entidad inv√°lida o inactiva.");
+            if (entCfg == null) return BadRequest("Entidad inv·lida o inactiva.");
 
-            // idiomas activos (para validar ‚Äútiene que estar es-AR‚Äù y/o ‚Äútiene que estar todos‚Äù)
+            // idiomas activos (para validar ìtiene que estar es-ARî y/o ìtiene que estar todosî)
             var idiomasActivos = await _context.ef_idiomas
                 .AsNoTracking()
                 .Where(x => x.activo)
@@ -252,7 +252,7 @@ namespace API.Controllers
             if (entCfg.requiere_es_ar && esAr == null)
                 return BadRequest("No existe idioma es-AR activo, y la entidad lo requiere.");
 
-            // Normalizo items (y filtro textos vac√≠os)
+            // Normalizo items (y filtro textos vacÌos)
             var itemsNorm = req.items
                 .Select(x => new ParamTraduccionUpsertItem
                 {
@@ -264,14 +264,14 @@ namespace API.Controllers
                 .Where(x => x.id_idioma > 0) // sanity
                 .ToList();
 
-            // Validaci√≥n: max_len_texto
+            // ValidaciÛn: max_len_texto
             foreach (var it in itemsNorm)
             {
                 if (!string.IsNullOrWhiteSpace(it.texto) && it.texto.Length > entCfg.max_len_texto)
                     return BadRequest($"texto excede max_len_texto ({entCfg.max_len_texto}) para idioma {it.id_idioma}.");
             }
 
-            // Validaci√≥n: requiere es-AR con texto
+            // ValidaciÛn: requiere es-AR con texto
             if (entCfg.requiere_es_ar)
             {
                 var itEs = itemsNorm.FirstOrDefault(x => x.id_idioma == esAr!.id_idioma);
@@ -279,7 +279,7 @@ namespace API.Controllers
                     return BadRequest("Falta texto en es-AR (requerido).");
             }
 
-            // Validaci√≥n: requiere todos idiomas activos (si lo activ√°s)
+            // ValidaciÛn: requiere todos idiomas activos (si lo activ·s)
             if (entCfg.requiere_todos_idiomas)
             {
                 var setEnRequest = new HashSet<short>(itemsNorm.Where(x => !string.IsNullOrWhiteSpace(x.texto)).Select(x => x.id_idioma));
@@ -296,11 +296,11 @@ namespace API.Controllers
             // Upsert por idioma
             foreach (var it in itemsNorm)
             {
-                // Si el texto est√° vac√≠o, no inserto ni actualizo. (Si prefer√≠s ‚Äúvaciar‚Äù, avisame y lo cambiamos)
+                // Si el texto est· vacÌo, no inserto ni actualizo. (Si preferÌs ìvaciarî, avisame y lo cambiamos)
                 if (string.IsNullOrWhiteSpace(it.texto))
                     continue;
 
-                // Si quer√©s que solo se traduzca a idiomas activos:
+                // Si querÈs que solo se traduzca a idiomas activos:
                 var idiomaActivo = idiomasActivos.Any(x => x.id_idioma == it.id_idioma);
                 if (!idiomaActivo)
                     continue;
@@ -345,11 +345,11 @@ namespace API.Controllers
             if (string.IsNullOrWhiteSpace(ent)) return BadRequest("entidad es requerida.");
 
             var entCfg = await GetEntidadConfigAsync(ent);
-            if (entCfg == null) return BadRequest("Entidad inv√°lida o inactiva.");
+            if (entCfg == null) return BadRequest("Entidad inv·lida o inactiva.");
 
             var idiomasActivos = await _context.ef_idiomas.CountAsync(x => x.activo);
 
-            // Cuenta idiomas distintos con traducci√≥n activa (por item)
+            // Cuenta idiomas distintos con traducciÛn activa (por item)
             var items = await (
                 from t in _context.ef_param_traducciones
                 join i in _context.ef_idiomas on t.id_idioma equals i.id_idioma
