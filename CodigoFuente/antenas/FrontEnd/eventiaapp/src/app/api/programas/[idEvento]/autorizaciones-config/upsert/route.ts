@@ -13,18 +13,15 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
 
         const body = await req.json();
 
+        // Enviamos ambos formatos (snake_case y camelCase) para que ASP.NET Core no falle por inconsistencias de atributos en los DTOs
         const payload = {
-            idProgramaAutorizacionConfig: body.id_programa_autorizacion_config,
+            ...body,
+            id_evento: parseInt(idEvento),
             idEvento: parseInt(idEvento),
+            idProgramaAutorizacionConfig: body.id_programa_autorizacion_config,
             idAutorizacionBase: body.id_autorizacion_base,
-            codigo: body.codigo,
-            titulo: body.titulo,
-            texto: body.texto,
-            obligatoria: body.obligatoria,
             requiereAceptacion: body.requiere_aceptacion,
-            requiereDatosResponsable: body.requiere_datos_responsable,
-            orden: body.orden,
-            activo: body.activo
+            requiereDatosResponsable: body.requiere_datos_responsable
         };
 
         const res = await fetch(`${API_URL}/programas/${idEvento}/autorizaciones-config/upsert`, {
@@ -44,17 +41,17 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
         const data = await res.json();
         
         const mappedData = {
-            id_programa_autorizacion_config: data.idProgramaAutorizacionConfig,
-            id_evento: data.idEvento,
-            id_autorizacion_base: data.idAutorizacionBase,
-            codigo: data.codigo,
-            titulo: data.titulo,
-            texto: data.texto,
-            obligatoria: data.obligatoria,
-            requiere_aceptacion: data.requiereAceptacion,
-            requiere_datos_responsable: data.requiereDatosResponsable,
-            orden: data.orden,
-            activo: data.activo
+            id_programa_autorizacion_config: data.idProgramaAutorizacionConfig ?? data.IdProgramaAutorizacionConfig ?? data.id_programa_autorizacion_config,
+            id_evento: data.idEvento ?? data.IdEvento ?? data.id_evento,
+            id_autorizacion_base: data.idAutorizacionBase ?? data.IdAutorizacionBase ?? data.id_autorizacion_base,
+            codigo: data.codigo ?? data.Codigo,
+            titulo: data.titulo ?? data.Titulo,
+            texto: data.texto ?? data.Texto,
+            obligatoria: data.obligatoria ?? data.Obligatoria,
+            requiere_aceptacion: data.requiereAceptacion ?? data.RequiereAceptacion ?? data.requiere_aceptacion,
+            requiere_datos_responsable: data.requiereDatosResponsable ?? data.RequiereDatosResponsable ?? data.requiere_datos_responsable,
+            orden: data.orden ?? data.Orden,
+            activo: data.activo ?? data.Activo
         };
 
         return NextResponse.json(mappedData);
