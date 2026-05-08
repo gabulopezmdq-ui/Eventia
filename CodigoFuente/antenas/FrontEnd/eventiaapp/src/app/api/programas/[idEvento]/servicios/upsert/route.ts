@@ -13,18 +13,58 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
 
         const body = await req.json();
 
-        // El backend es inconsistente: periodos requiere snake_case, pero servicios requiere camelCase
-        // Enviamos ambos formatos en el mismo JSON para que el ModelBinder de ASP.NET Core agarre el que necesite
+        // El backend es inconsistente: enviamos los formatos comunes (snake_case, camelCase y PascalCase)
+        // para asegurarnos de que el ModelBinder de ASP.NET Core lo pueda procesar correctamente.
         const payload = {
             ...body,
             id_evento: parseInt(idEvento),
             idEvento: parseInt(idEvento),
+            IdEvento: parseInt(idEvento),
+            
             idProgramaServicio: body.id_programa_servicio,
+            IdProgramaServicio: body.id_programa_servicio,
+            
             idServicioBase: body.id_servicio_base,
+            IdServicioBase: body.id_servicio_base,
+            
+            codigo: body.codigo,
+            Codigo: body.codigo,
+            
+            nombre: body.nombre,
+            Nombre: body.nombre,
+            
+            descripcion: body.descripcion,
+            Descripcion: body.descripcion,
+            
             tipoCalculo: body.tipo_calculo,
+            TipoCalculo: body.tipo_calculo,
+            
+            precio: body.precio,
+            Precio: body.precio,
+            
+            moneda: body.moneda,
+            Moneda: body.moneda,
+            
+            obligatorio: body.obligatorio,
+            Obligatorio: body.obligatorio,
+            
             permiteCantidad: body.permite_cantidad,
+            PermiteCantidad: body.permite_cantidad,
+            
             requiereSeleccionDias: body.requiere_seleccion_dias,
-            configJson: body.config_json
+            RequiereSeleccionDias: body.requiere_seleccion_dias,
+            
+            cupo: body.cupo,
+            Cupo: body.cupo,
+            
+            orden: body.orden,
+            Orden: body.orden,
+            
+            activo: body.activo,
+            Activo: body.activo,
+            
+            configJson: body.config_json,
+            ConfigJson: body.config_json
         };
 
         const res = await fetch(`${API_URL}/programas/${idEvento}/servicios/upsert`, {
@@ -37,7 +77,13 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
         });
 
         if (!res.ok) {
-            const errorBody = await res.json().catch(() => ({}));
+            const errorText = await res.text();
+            let errorBody = {};
+            try { 
+                errorBody = JSON.parse(errorText); 
+            } catch(e) { 
+                errorBody = { rawError: errorText }; 
+            }
             return NextResponse.json({ message: 'Error backend', details: errorBody }, { status: res.status });
         }
 

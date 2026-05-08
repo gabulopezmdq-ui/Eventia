@@ -10,6 +10,7 @@ import PeriodosManager from '@/src/features/programas/components/PeriodosManager
 import ServiciosManager from '@/src/features/programas/components/ServiciosManager';
 import AutorizacionesManager from '@/src/features/programas/components/AutorizacionesManager';
 import SaludConfigManager from '@/src/features/programas/components/SaludConfigManager';
+import GeneralProgramaManager from '@/src/features/programas/components/GeneralProgramaManager';
 import StaffManager from '@/src/features/programas/components/StaffManager';
 
 const TABS = [
@@ -29,32 +30,41 @@ export default function ProgramaDetallePage() {
     const [activeTab, setActiveTab] = useState('periodos');
     const [generatingLink, setGeneratingLink] = useState(false);
 
-    if (!idEvento) return null;
-
     const handleGenerarLink = async () => {
         setGeneratingLink(true);
+
         try {
-            // Asumimos que el front corre en el dominio principal y el flujo b2c está en /p/[codigo]
-            // o simplemente copiamos una URL predefinida. Si usamos el servicio:
-            const { generarLinkPublico } = await import('@/src/features/programas/programas.service');
+            const { generarLinkPublico } = await import(
+                '@/src/features/programas/programas.service'
+            );
+
             const data = await generarLinkPublico(idEvento);
-            
-            if (data && data.url) {
-                await navigator.clipboard.writeText(data.url);
+
+            if (data?.urlPublica) {
+
+                const fullUrl =
+                    `${window.location.origin}/${data.urlPublica}`;
+
+                await navigator.clipboard.writeText(fullUrl);
+
                 alert('¡Enlace de inscripción copiado al portapapeles!');
             } else {
-                // Fallback dummy
-                const fallbackUrl = `${window.location.origin}/inscripcion/${idEvento}`;
-                await navigator.clipboard.writeText(fallbackUrl);
-                alert('Link copiado (Modo Pruebas): ' + fallbackUrl);
+                throw new Error('La API no devolvió urlPublica');
             }
+
         } catch (err) {
+
             console.error(err);
-            // Fallback por si la API aún no está 100% lista en el backend
-            const fallbackUrl = `${window.location.origin}/inscripcion/${idEvento}`;
-            navigator.clipboard.writeText(fallbackUrl);
+
+            const fallbackUrl =
+                `${window.location.origin}/inscripcion/${idEvento}`;
+
+            await navigator.clipboard.writeText(fallbackUrl);
+
             alert('Enlace de pruebas copiado al portapapeles (API falló).');
+
         } finally {
+
             setGeneratingLink(false);
         }
     };
@@ -107,8 +117,8 @@ export default function ProgramaDetallePage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-6 py-4 font-semibold text-sm whitespace-nowrap transition-all border-b-2 ${isActive
-                                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10'
-                                    : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50 dark:hover:text-neutral-300 dark:hover:bg-neutral-800/50'
+                                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10'
+                                : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50 dark:hover:text-neutral-300 dark:hover:bg-neutral-800/50'
                                 }`}
                         >
                             <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-500' : 'text-neutral-400'}`} />
@@ -121,9 +131,7 @@ export default function ProgramaDetallePage() {
             {/* Contenido del Tab */}
             <div className="pt-4">
                 {activeTab === 'general' && (
-                    <div className="p-12 text-center text-neutral-500 border border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl bg-neutral-50 dark:bg-neutral-900/20">
-                        Aquí podrías editar los datos generales (nombre, fechas, mensaje de bienvenida) configurados en el alta.
-                    </div>
+                    <GeneralProgramaManager idEvento={idEvento} />
                 )}
 
                 {activeTab === 'periodos' && <PeriodosManager idEvento={idEvento} />}
