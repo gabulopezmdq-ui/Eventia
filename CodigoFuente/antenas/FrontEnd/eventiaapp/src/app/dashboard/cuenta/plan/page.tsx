@@ -80,151 +80,151 @@ export default function PlanCuentaPage() {
                         </div>
                     )}
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
 
-                    {/* Tarjeta Plan Actual */}
-                    <div className="md:col-span-8">
-                        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-sm">
-                            <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-neutral-900 relative">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-100/50 dark:bg-emerald-900/20 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                        {/* Tarjeta Plan Actual */}
+                        <div className="md:col-span-8">
+                            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-sm">
+                                <div className="p-8 border-b border-neutral-100 dark:border-neutral-800 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-neutral-900 relative">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-100/50 dark:bg-emerald-900/20 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
 
-                                <div className="flex justify-between items-start relative z-10">
-                                    <div>
-                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-widest mb-4">
-                                            {plan.estado === 'Activo' ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
-                                            {plan.estado}
-                                        </div>
-                                        <h2 className="text-3xl font-extrabold text-neutral-900 dark:text-white mb-2">
-                                            {plan.plan_nombre}
-                                        </h2>
-                                        <p className="text-neutral-500 dark:text-neutral-400 text-sm">
-                                            Facturado en forma {plan.periodo.toLowerCase()}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        {plan.precio > 0 ? (
-                                            <>
-                                                <span className="text-4xl font-black text-neutral-900 dark:text-white">${plan.precio}</span>
-                                                <span className="text-sm font-semibold text-neutral-400 uppercase ml-1">{plan.moneda}</span>
-                                                <p className="text-xs text-neutral-500 mt-1">por mes</p>
-                                            </>
-                                        ) : (
-                                            <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">Gratis</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-8">
-                                <h3 className="text-base font-bold text-neutral-900 dark:text-white mb-6">Límites y Características</h3>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="flex gap-4">
-                                        <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-indigo-600 dark:text-indigo-400 h-max">
-                                            <Package className="w-5 h-5" />
-                                        </div>
+                                    <div className="flex justify-between items-start relative z-10">
                                         <div>
-                                            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Límite de Eventos</p>
-                                            <p className="text-xl font-bold text-neutral-900 dark:text-white">
-                                                {plan.limite_eventos ? plan.limite_eventos : 'Ilimitado'}
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-widest mb-4">
+                                                {plan.estado === 'Activo' ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
+                                                {plan.estado}
+                                            </div>
+                                            <h2 className="text-3xl font-extrabold text-neutral-900 dark:text-white mb-2">
+                                                {plan.plan_nombre}
+                                            </h2>
+                                            <p className="text-neutral-500 dark:text-neutral-400 text-sm">
+                                                Facturado en forma {plan.periodo.toLowerCase()}
                                             </p>
                                         </div>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-sky-600 dark:text-sky-400 h-max">
-                                            <Users className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Usuarios Asignados</p>
-                                            <p className="text-xl font-bold text-neutral-900 dark:text-white">
-                                                {plan.limite_usuarios ? plan.limite_usuarios : 'Ilimitado'}
-                                            </p>
+                                        <div className="text-right">
+                                            {plan.precio > 0 ? (
+                                                <>
+                                                    <span className="text-4xl font-black text-neutral-900 dark:text-white">${plan.precio}</span>
+                                                    <span className="text-sm font-semibold text-neutral-400 uppercase ml-1">{plan.moneda}</span>
+                                                    <p className="text-xs text-neutral-500 mt-1">por mes</p>
+                                                </>
+                                            ) : (
+                                                <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">Gratis</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="p-8">
+                                    <h3 className="text-base font-bold text-neutral-900 dark:text-white mb-6">Límites y Características</h3>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="flex gap-4">
+                                            <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-indigo-600 dark:text-indigo-400 h-max">
+                                                <Package className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Límite de Eventos</p>
+                                                <p className="text-xl font-bold text-neutral-900 dark:text-white">
+                                                    {plan.limite_eventos ? plan.limite_eventos : 'Ilimitado'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-sky-600 dark:text-sky-400 h-max">
+                                                <Users className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1">Usuarios Asignados</p>
+                                                <p className="text-xl font-bold text-neutral-900 dark:text-white">
+                                                    {plan.limite_usuarios ? plan.limite_usuarios : 'Ilimitado'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+
+                        {/* Sidebar Upgrades */}
+                        <div className="md:col-span-4 space-y-6">
+                            <div className="bg-neutral-900 dark:bg-neutral-800 rounded-3xl p-6 text-white shadow-xl">
+                                <Sparkles className="w-8 h-8 text-amber-400 mb-4" />
+                                <h3 className="text-xl font-bold mb-2">¿Necesitás más capacidad?</h3>
+                                <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
+                                    Hacé un upgrade a Enterprise y desbloqueá facturación dividida, marca blanca y API access.
+                                </p>
+                                <button className="w-full py-3 bg-white text-neutral-900 font-bold rounded-xl hover:bg-neutral-100 transition-colors">
+                                    Cambiar Plan
+                                </button>
+                            </div>
+
+                            {plan.renovacion && (
+                                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6">
+                                    <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2 mb-4">
+                                        <Calendar className="w-4 h-4 text-emerald-600" /> Próxima facturación
+                                    </h3>
+                                    <p className="text-lg font-medium text-neutral-700 dark:text-neutral-300">
+                                        {new Date(plan.renovacion).toLocaleDateString('es-AR', { dateStyle: 'long' })}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Sidebar Upgrades */}
-                    <div className="md:col-span-4 space-y-6">
-                        <div className="bg-neutral-900 dark:bg-neutral-800 rounded-3xl p-6 text-white shadow-xl">
-                            <Sparkles className="w-8 h-8 text-amber-400 mb-4" />
-                            <h3 className="text-xl font-bold mb-2">¿Necesitás más capacidad?</h3>
-                            <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
-                                Hacé un upgrade a Enterprise y desbloqueá facturación dividida, marca blanca y API access.
-                            </p>
-                            <button className="w-full py-3 bg-white text-neutral-900 font-bold rounded-xl hover:bg-neutral-100 transition-colors">
-                                Cambiar Plan
-                            </button>
+                    {/* Historial de Pagos */}
+                    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-sm mt-8">
+                        <div className="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
+                            <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-400">
+                                <History className="w-5 h-5" />
+                            </div>
+                            <h3 className="font-bold text-lg text-neutral-900 dark:text-white">Historial de Pagos</h3>
                         </div>
 
-                        {plan.renovacion && (
-                            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6">
-                                <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2 mb-4">
-                                    <Calendar className="w-4 h-4 text-emerald-600" /> Próxima facturación
-                                </h3>
-                                <p className="text-lg font-medium text-neutral-700 dark:text-neutral-300">
-                                    {new Date(plan.renovacion).toLocaleDateString('es-AR', { dateStyle: 'long' })}
-                                </p>
+                        {pagos.length === 0 ? (
+                            <div className="p-8 text-center text-neutral-500 flex flex-col items-center">
+                                <Receipt className="w-12 h-12 mb-3 text-neutral-300 dark:text-neutral-700" />
+                                <p>No se registran pagos en esta cuenta.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-xs text-neutral-500 dark:text-neutral-400 uppercase bg-neutral-50 dark:bg-neutral-800/30">
+                                        <tr>
+                                            <th className="px-6 py-4 font-semibold">Fecha</th>
+                                            <th className="px-6 py-4 font-semibold">Concepto</th>
+                                            <th className="px-6 py-4 font-semibold text-right">Importe</th>
+                                            <th className="px-6 py-4 font-semibold">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+                                        {pagos.map((pago: any) => (
+                                            <tr key={pago.id_pago || pago.idPago || Math.random()} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                                                <td className="px-6 py-4 text-neutral-600 dark:text-neutral-300">
+                                                    {new Date(pago.fecha_alta || pago.fecha_alta).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 font-medium text-neutral-900 dark:text-white">
+                                                    {pago.concepto || 'Suscripción B2B'}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <span className="font-bold text-neutral-900 dark:text-white">
+                                                        ${(pago.monto || pago.importe || 0).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-xs text-neutral-500 ml-1">
+                                                        {pago.moneda || 'ARS'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="inline-flex px-2 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400 text-xs font-bold rounded">
+                                                        APROBADO
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>
-                </div>
-
-                {/* Historial de Pagos */}
-                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl overflow-hidden shadow-sm mt-8">
-                    <div className="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
-                        <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-xl text-neutral-600 dark:text-neutral-400">
-                            <History className="w-5 h-5" />
-                        </div>
-                        <h3 className="font-bold text-lg text-neutral-900 dark:text-white">Historial de Pagos</h3>
-                    </div>
-                    
-                    {pagos.length === 0 ? (
-                        <div className="p-8 text-center text-neutral-500 flex flex-col items-center">
-                            <Receipt className="w-12 h-12 mb-3 text-neutral-300 dark:text-neutral-700" />
-                            <p>No se registran pagos en esta cuenta.</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-neutral-500 dark:text-neutral-400 uppercase bg-neutral-50 dark:bg-neutral-800/30">
-                                    <tr>
-                                        <th className="px-6 py-4 font-semibold">Fecha</th>
-                                        <th className="px-6 py-4 font-semibold">Concepto</th>
-                                        <th className="px-6 py-4 font-semibold text-right">Importe</th>
-                                        <th className="px-6 py-4 font-semibold">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                                    {pagos.map((pago: any) => (
-                                        <tr key={pago.id_pago || pago.idPago || Math.random()} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-300">
-                                                {new Date(pago.fecha_pago || pago.fechaPago).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4 font-medium text-neutral-900 dark:text-white">
-                                                {pago.concepto || 'Suscripción B2B'}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <span className="font-bold text-neutral-900 dark:text-white">
-                                                    ${(pago.monto || pago.importe || 0).toLocaleString()}
-                                                </span>
-                                                <span className="text-xs text-neutral-500 ml-1">
-                                                    {pago.moneda || 'ARS'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="inline-flex px-2 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400 text-xs font-bold rounded">
-                                                    APROBADO
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
 
                 </div>
             ) : null}
