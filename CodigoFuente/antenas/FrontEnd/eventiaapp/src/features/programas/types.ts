@@ -57,7 +57,7 @@ export interface ProgramaServicioConfig {
 }
 
 export interface ProgramaServicio {
-    id_programa_servicio?: number;
+    id_programa_servicio?: number | null;
     id_evento: number;
     id_servicio_base: number | null;
     servicio_base_codigo?: string;

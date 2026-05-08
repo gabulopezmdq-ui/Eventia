@@ -20,6 +20,7 @@ export default function ServiciosManager({ idEvento }: Props) {
         setLoading(true);
         try {
             const data = await getServicios(idEvento);
+            console.log('SERVICIOS BACKEND', data);
             setServicios(data);
             setError(null);
         } catch (err: any) {
@@ -76,7 +77,7 @@ export default function ServiciosManager({ idEvento }: Props) {
                     {servicios.map(servicio => {
                         let configJsonObj = null;
                         if (servicio.config_json) {
-                            try { configJsonObj = JSON.parse(servicio.config_json); } catch(e){}
+                            try { configJsonObj = JSON.parse(servicio.config_json); } catch (e) { }
                         }
                         const hasCamposExtra = configJsonObj && configJsonObj.campos_extra && configJsonObj.campos_extra.length > 0;
 
@@ -128,7 +129,7 @@ export default function ServiciosManager({ idEvento }: Props) {
                 </div>
             )}
 
-             {isDrawerOpen && (
+            {isDrawerOpen && (
                 <UpsertServicioDrawer
                     idEvento={idEvento}
                     servicioToEdit={selectedServicio}
