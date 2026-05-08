@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.Services.Musica;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -51,7 +51,7 @@ namespace API.Controllers
         public async Task<IActionResult> ExportSi(string token)
         {
             var link = await ValidarToken(token, "EXPORT");
-            if (link == null) return Unauthorized(new { error = "Token inv√°lido, vencido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv·lido, vencido o sin permisos." });
 
             var data = await (
                 from p in _context.Set<ef_evento_musica_playlist>()
@@ -96,7 +96,7 @@ namespace API.Controllers
         public async Task<IActionResult> ExportNo(string token)
         {
             var link = await ValidarToken(token, "EXPORT");
-            if (link == null) return Unauthorized(new { error = "Token inv√°lido, vencido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv·lido, vencido o sin permisos." });
 
             var data = await _context.Set<ef_evento_musica_bloqueos>()
                 .Where(x => x.id_evento == link.id_evento && x.activo)

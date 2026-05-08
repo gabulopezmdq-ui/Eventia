@@ -91,6 +91,7 @@ namespace API.DataSchema
         public DbSet<ef_cuenta_unidades> ef_cuenta_unidades { get; set; }
         public DbSet<ef_cliente_unidades> ef_cliente_unidades { get; set; }
 
+
         // Módulo Staff
         public DbSet<ef_staff> ef_staff { get; set; }
         public DbSet<ef_staff_unidades> ef_staff_unidades { get; set; }
@@ -138,7 +139,26 @@ namespace API.DataSchema
         public DbSet<ef_param_programa_servicios_base> ef_param_programa_servicios_base { get; set; }
         public DbSet<ef_param_programa_servicio_base_traducciones> ef_param_programa_servicio_base_traducciones { get; set; }
         public DbSet<ef_param_programa_tipos_campo_extra> ef_param_programa_tipos_campo_extra { get; set; }
-
+        public DbSet<ef_param_programa_autorizaciones_base> ef_param_programa_autorizaciones_base { get; set; }
+        public DbSet<ef_param_programa_autorizacion_base_traducciones> ef_param_programa_autorizacion_base_traducciones { get; set; }
+        public DbSet<ef_programa_autorizaciones_config> ef_programa_autorizaciones_config { get; set; }
+        public DbSet<ef_param_programa_salud_tipos_accion> ef_param_programa_salud_tipos_accion { get; set; }
+        //public DbSet<ef_programa_salud_medicaciones> ef_programa_salud_medicaciones { get; set; }
+        public DbSet<ef_programa_salud_acciones> ef_programa_salud_acciones { get; set; }
+        //public DbSet<ef_programa_salud_fichas> ef_programa_salud_fichas { get; set; }
+        public DbSet<ef_programa_salud_config> ef_programa_salud_config { get; set; }
+        public DbSet<ef_programa_autorizacion_config_traducciones> ef_programa_autorizacion_config_traducciones { get; set; }
+        public DbSet<ef_programa_inscripciones> ef_programa_inscripciones { get; set; }
+        public DbSet<ef_programa_inscripcion_periodos> ef_programa_inscripcion_periodos { get; set; }
+        public DbSet<ef_programa_inscripcion_servicios> ef_programa_inscripcion_servicios { get; set; }
+        public DbSet<ef_programa_inscripcion_servicio_dias> ef_programa_inscripcion_servicio_dias { get; set; }
+        public DbSet<ef_programa_inscripcion_salud_fichas> ef_programa_inscripcion_salud_fichas { get; set; }
+        public DbSet<ef_programa_inscripcion_salud_contactos> ef_programa_inscripcion_salud_contactos { get; set; }
+        public DbSet<ef_programa_inscripcion_salud_medicaciones> ef_programa_inscripcion_salud_medicaciones { get; set; }
+        public DbSet<ef_programa_inscripcion_ajustes> ef_programa_inscripcion_ajustes { get; set; }
+        public DbSet<ef_programa_inscripcion_pagos> ef_programa_inscripcion_pagos { get; set; }
+        public DbSet<ef_param_programa_tipos_ajuste> ef_param_programa_tipos_ajuste { get; set; }
+        public DbSet<ef_programa_inscripcion_autorizaciones> ef_programa_inscripcion_autorizaciones { get; set; }
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -306,6 +326,26 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_programa_servicios_baseConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_servicio_base_traduccionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_campo_extraConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_autorizaciones_baseConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_autorizacion_base_traduccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_autorizaciones_configConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_salud_tipos_accionConfiguration());
+            //modelBuilder.ApplyConfiguration(new ef_programa_salud_medicacionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_salud_accionesConfiguration());
+            //modelBuilder.ApplyConfiguration(new ef_programa_salud_fichasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_salud_configConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_autorizacion_config_traduccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_periodosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_serviciosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_servicio_diasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_fichasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_contactosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_salud_medicacionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_ajustesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_pagosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_ajusteConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_autorizacionesConfiguration());
 
 
 

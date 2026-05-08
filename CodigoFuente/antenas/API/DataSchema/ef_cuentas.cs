@@ -23,6 +23,7 @@ namespace API.DataSchema
 
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
+        public string? moneda_default { get; set; }
 
         public virtual ef_planes plan { get; set; }
         public virtual ef_paises pais { get; set; }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/src/context/AuthContext';
 import { createPrograma } from '@/src/features/programas/programas.service';
 import { getTiposEvento, getIdiomasActivos } from '@/src/features/events/event.service';
 import { CalendarDays, Loader2, ArrowLeft, Building2, PartyPopper, Calendar, Save, X, Languages } from 'lucide-react';
@@ -267,7 +268,6 @@ export default function NuevoProgramaPage() {
             const payload = {
                 id_tipo_evento: formData.idTipoEvento,
                 id_idioma: formData.idIdioma,
-
                 id_unidad: Number(b2bInfo.idUnidad),
 
                 id_cliente:

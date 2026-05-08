@@ -19,6 +19,7 @@ namespace API.DataSchema
         public bool activo { get; set; } = true;
         public DateTimeOffset fecha_alta { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset? fecha_baja { get; set; }
+        public string? qr_token { get; set; }
 
         public ef_eventos evento { get; set; } = null!;
         public ef_invitados invitado_objetivo { get; set; } = null!;

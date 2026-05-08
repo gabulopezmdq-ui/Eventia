@@ -7,7 +7,10 @@ namespace API.DataSchema
         public long id_staff { get; set; }
 
         /// <summary>Cuenta propietaria (Salón, Planner, etc.)</summary>
-        public long id_cuenta { get; set; }
+        public long? id_cuenta { get; set; }
+
+        /// <summary>Evento específico (si es un evento personal B2C sin cuenta)</summary>
+        public long? id_evento { get; set; }
 
         /// <summary>Unidad operativa principal asignada</summary>
         public long? id_unidad { get; set; }
@@ -55,6 +58,7 @@ namespace API.DataSchema
 
         // Navegación
         public virtual ef_cuentas? ef_cuentas { get; set; }
+        public virtual ef_eventos? ef_eventos { get; set; }
         public virtual ef_roles? ef_roles { get; set; }
     }
 }

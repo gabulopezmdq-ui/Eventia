@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.Services;
 using API.Services.Musica;
 using Microsoft.AspNetCore.Authorization;
@@ -44,7 +44,7 @@ namespace API.Controllers
         public async Task<IActionResult> ExportRankingCsv(string token)
         {
             var link = await ValidarToken(token, "EXPORT");
-            if (link == null) return Unauthorized(new { error = "Token inválido, vencido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv�lido, vencido o sin permisos." });
 
             var idEvento = link.id_evento;
 

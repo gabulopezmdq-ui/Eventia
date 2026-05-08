@@ -1,4 +1,4 @@
-Ôªøusing API.Services;
+using API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -26,7 +26,7 @@ public class qrController : ControllerBase
 
             if (string.IsNullOrEmpty(qrToken))
             {
-                _logger.LogWarning("QR token vac√≠o o nulo");
+                _logger.LogWarning("QR token vacÌo o nulo");
                 return BadRequest("QR token requerido");
             }
 
@@ -38,7 +38,7 @@ public class qrController : ControllerBase
             if (result == null)
             {
                 _logger.LogWarning("QR no encontrado: {QrToken}", qrToken);
-                return NotFound("QR inv√°lido.");
+                return NotFound("QR inv·lido.");
             }
 
             _logger.LogInformation("Retornando OK con resultado");

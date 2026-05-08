@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +24,12 @@ namespace API.Controllers
         [HttpPut("sugerencias/moderar")]
         public async Task<ActionResult> Moderar(long id_evento, [FromBody] MusicaSugerenciaModerarDTO req)
         {
-            if (req == null) return BadRequest(new { error = "Body inv√°lido." });
-            if (req.id_invitado_musica_sugerencia <= 0) return BadRequest(new { error = "id_invitado_musica_sugerencia inv√°lido." });
+            if (req == null) return BadRequest(new { error = "Body inv·lido." });
+            if (req.id_invitado_musica_sugerencia <= 0) return BadRequest(new { error = "id_invitado_musica_sugerencia inv·lido." });
 
             var accion = (req.accion ?? "").Trim().ToUpper();
             if (accion != "INCLUIR" && accion != "RECHAZAR" && accion != "PENDIENTE")
-                return BadRequest(new { error = "accion inv√°lida. Use INCLUIR, RECHAZAR o PENDIENTE." });
+                return BadRequest(new { error = "accion inv·lida. Use INCLUIR, RECHAZAR o PENDIENTE." });
 
             var sug = await _context.Set<ef_invitado_musica_sugerencias>()
                 .FirstOrDefaultAsync(x => x.id_invitado_musica_sugerencia == req.id_invitado_musica_sugerencia && x.id_evento == id_evento && x.activo);
@@ -56,7 +56,7 @@ namespace API.Controllers
             {
                 estado.estado = "RECHAZADA";
                 estado.nota_interna = string.IsNullOrWhiteSpace(req.nota_interna) ? null : req.nota_interna.Trim();
-                estado.id_evento_musica_playlist = null; // queda sin v√≠nculo
+                estado.id_evento_musica_playlist = null; // queda sin vÌnculo
                 await _context.SaveChangesAsync();
                 return Ok(new { ok = true, estado = estado.estado });
             }
@@ -65,7 +65,7 @@ namespace API.Controllers
             {
                 estado.estado = "PENDIENTE";
                 estado.nota_interna = string.IsNullOrWhiteSpace(req.nota_interna) ? null : req.nota_interna.Trim();
-                // no tocamos playlist si ya exist√≠a (pod√©s decidir otra regla m√°s adelante)
+                // no tocamos playlist si ya existÌa (podÈs decidir otra regla m·s adelante)
                 await _context.SaveChangesAsync();
                 return Ok(new { ok = true, estado = estado.estado, id_evento_musica_playlist = estado.id_evento_musica_playlist });
             }

@@ -246,14 +246,22 @@ namespace API.Services
 
         public async Task<List<ParametricaDTO>> GetRestriccionesAlimentariasAsync(short idIdioma)
         {
-            return await GetParametricaAsync(
-                _context.ef_param_restricciones_alimentarias,
-                "RESTRICCION_ALIMENTARIA",
-                x => x.id_restriccion_alim,
-                x => x.codigo,
-                x => x.activo,
-                idIdioma
-            );
+            var query =
+                from r in _context.ef_param_restricciones_alimentarias
+                join tr in _context.ef_param_traducciones.Where(t => t.entidad == "RESTRICCION_ALIMENTARIA" && t.id_idioma == idIdioma && t.activo)
+                    on r.id_restriccion_alim equals tr.id_item into translations
+                from tr in translations.DefaultIfEmpty()
+                where r.activo
+                orderby tr.orden ?? 999, tr.texto ?? r.codigo
+                select new ParametricaDTO
+                {
+                    Id = r.id_restriccion_alim,
+                    Codigo = r.codigo,
+                    Texto = tr != null ? tr.texto : r.codigo,
+                    Orden = tr != null ? tr.orden : 999
+                };
+
+            return await query.ToListAsync();
         }
     }
 }

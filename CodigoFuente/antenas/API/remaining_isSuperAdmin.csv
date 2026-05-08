@@ -1,0 +1,5 @@
+"Path","LineNumber","Line"
+"C:\Desarrollo\Eventia\CodigoFuente\antenas\API\Services\EventosService.cs","690","            if ((req.IdCuenta == null || req.IdCuenta == 0) && !isSuperAdmin)"
+"C:\Desarrollo\Eventia\CodigoFuente\antenas\API\Services\EventosService.cs","793","                if (yaTieneBorrador && !isSuperAdmin)"
+"C:\Desarrollo\Eventia\CodigoFuente\antenas\API\Services\EventosService.cs","836","                    if (cuenta == null && !isSuperAdmin)"
+"C:\Desarrollo\Eventia\CodigoFuente\antenas\API\Services\EventosService.cs","839","                    if (cuenta == null && isSuperAdmin)"

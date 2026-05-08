@@ -58,7 +58,8 @@ namespace API.DataSchema.DTO.Staff
     public class StaffContextoDTO
     {
         public long id_staff { get; set; }
-        public long id_cuenta { get; set; }
+        public long? id_cuenta { get; set; }
+        public long? id_evento { get; set; }
         public string? nombre { get; set; }
         public string? apellido { get; set; }
         public string rol_codigo { get; set; } = null!;

@@ -66,6 +66,9 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.fecha_modif);
 
+            builder.Property(x => x.moneda_default)
+                    .HasMaxLength(3);
+
             builder.HasIndex(x => x.nombre_cuenta)
                    .IsUnique()
                    .HasDatabaseName("ux_ef_cuentas_nombre");

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -34,6 +34,10 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasOne(x => x.rol)
                    .WithMany()
                    .HasForeignKey(x => x.id_rol);
+
+            builder.HasOne(x => x.staff)
+                   .WithMany()
+                   .HasForeignKey(x => x.id_staff);
 
             // Índice único lógico
             builder.HasIndex(x => new { x.id_evento, x.id_usuario, x.id_rol })

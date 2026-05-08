@@ -1,4 +1,4 @@
-ï»¿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using API.Services.Cuentas;
@@ -62,14 +62,14 @@ namespace API.Controllers
         public async Task<ActionResult> Create([FromBody] CuentaUnidadCreateRequestDTO req)
         {
             if (string.IsNullOrWhiteSpace(req.codigo))
-                return BadRequest("CÃ³digo obligatorio.");
+                return BadRequest("Código obligatorio.");
             if (string.IsNullOrWhiteSpace(req.nombre))
                 return BadRequest("Nombre obligatorio.");
 
             long idUsuario = User.GetUserId();
             long idCuenta = await _cuentaContext.GetCuentaIdActualAsync(idUsuario);
 
-            // Solo admin de cuenta puede ABM (si querÃ©s permitir staff, sacÃ¡ esto)
+            // Solo admin de cuenta puede ABM (si querés permitir staff, sacá esto)
             bool esAdmin = await _cuentaContext.EsAdminCuentaAsync(idUsuario, idCuenta);
             if (!esAdmin) return Forbid();
 
@@ -77,7 +77,7 @@ namespace API.Controllers
                 .AnyAsync(x => x.id_cuenta == idCuenta && x.codigo == req.codigo);
 
             if (existe)
-                return BadRequest("Ya existe una unidad con ese cÃ³digo en tu cuenta.");
+                return BadRequest("Ya existe una unidad con ese código en tu cuenta.");
 
             var now = DateTimeOffset.UtcNow;
 
@@ -112,7 +112,7 @@ namespace API.Controllers
             if (unidad == null) return NotFound("Unidad inexistente.");
 
             if (string.IsNullOrWhiteSpace(req.codigo))
-                return BadRequest("CÃ³digo obligatorio.");
+                return BadRequest("Código obligatorio.");
             if (string.IsNullOrWhiteSpace(req.nombre))
                 return BadRequest("Nombre obligatorio.");
 
@@ -120,7 +120,7 @@ namespace API.Controllers
                 .AnyAsync(x => x.id_cuenta == idCuenta && x.codigo == req.codigo && x.id_unidad != req.id_unidad);
 
             if (existeOtro)
-                return BadRequest("Ya existe otra unidad con ese cÃ³digo.");
+                return BadRequest("Ya existe otra unidad con ese código.");
 
             unidad.codigo = req.codigo.Trim();
             unidad.nombre = req.nombre.Trim();

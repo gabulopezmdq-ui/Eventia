@@ -1,4 +1,4 @@
-ï»¿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,9 +38,9 @@ namespace API.Controllers
             if (!idPlanFree.HasValue)
                 return Ok(new List<FreeTrialAdminItemDTO>());
 
-            // 2) Traer suscripciones FREE de eventos (nos quedamos con la Ãºltima por evento)
-            //    (Para simplificar y evitar lÃ­os con GroupBy SQL, lo hacemos en memoria.
-            //     Para piloto/operaciÃ³n admin suele estar bien.)
+            // 2) Traer suscripciones FREE de eventos (nos quedamos con la última por evento)
+            //    (Para simplificar y evitar líos con GroupBy SQL, lo hacemos en memoria.
+            //     Para piloto/operación admin suele estar bien.)
             var subsFree = await _context.Set<ef_suscripciones>()
                 .AsNoTracking()
                 .Where(s => s.scope == "EVENTO"
@@ -59,7 +59,7 @@ namespace API.Controllers
             if (eventoIds.Count == 0)
                 return Ok(new List<FreeTrialAdminItemDTO>());
 
-            // 3) Detectar convertidos: existe suscripciÃ³n ACTIVA no-FREE posterior para el evento
+            // 3) Detectar convertidos: existe suscripción ACTIVA no-FREE posterior para el evento
             var subsPago = await _context.Set<ef_suscripciones>()
                 .AsNoTracking()
                 .Where(s => s.scope == "EVENTO"
@@ -108,7 +108,7 @@ namespace API.Controllers
                 }
             ).ToListAsync();
 
-            // Puede haber duplicados si hay mÃ¡s de un eu; nos quedamos con uno por evento (primero)
+            // Puede haber duplicados si hay más de un eu; nos quedamos con uno por evento (primero)
             var eventosById = eventosInfo
                 .GroupBy(x => x.id_evento)
                 .ToDictionary(g => g.Key, g => g.First());
@@ -163,7 +163,7 @@ namespace API.Controllers
                 });
             }
 
-            // orden: vencidos primero o por menos dÃ­as restantes
+            // orden: vencidos primero o por menos días restantes
             resp = resp
                 .OrderBy(x => x.vencido == true ? 0 : 1)
                 .ThenBy(x => x.dias_restantes ?? 9999)
