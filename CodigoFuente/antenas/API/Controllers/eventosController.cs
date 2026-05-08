@@ -57,7 +57,7 @@ namespace API.Controllers
         public async Task<ActionResult<EventoResponse>> GetEvento(long idEvento)
         {
             long idUsuario = User.GetUserId();
-            var ev = await _eventos.GetEventoMioAsync(idUsuario, idEvento);
+            var ev = await _eventos.GetEventoMioAsync(idUsuario, idEvento, User.IsStaff());
             return Ok(ev);
         }
 
@@ -88,7 +88,7 @@ namespace API.Controllers
             long idUsuario = User.GetUserId();
 
             // seguridad: el usuario debe pertenecer al evento
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -141,7 +141,7 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _eventos.GetStaffAsync(idEvento, User.GetUserId());
+                var result = await _eventos.GetStaffAsync(idEvento, User.GetUserId(), User.IsStaff());
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -154,7 +154,7 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _eventos.GetStaffCodigosAsync(idEvento, User.GetUserId());
+                var result = await _eventos.GetStaffCodigosAsync(idEvento, User.GetUserId(), User.IsStaff());
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -167,7 +167,7 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId());
+                var result = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId(), User.IsStaff());
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -192,7 +192,7 @@ namespace API.Controllers
 
                 // 2. Delegar asignación a EventosService (Responsable de ef_evento_usuarios)
                 req.IdStaff = staffCreado.id_staff;
-                var asignacion = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId());
+                var asignacion = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId(), User.IsStaff());
 
                 return Ok(asignacion);
             }
@@ -206,7 +206,7 @@ namespace API.Controllers
         {
             try
             {
-                await _eventos.UpdateStaffAsync(idEvento, idEventoUsuario, req, User.GetUserId());
+                await _eventos.UpdateStaffAsync(idEvento, idEventoUsuario, req, User.GetUserId(), User.IsStaff());
                 return Ok(new { ok = true });
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -220,7 +220,7 @@ namespace API.Controllers
         {
             try
             {
-                await _eventos.DeleteStaffAsync(idEvento, idEventoUsuario, User.GetUserId());
+                await _eventos.DeleteStaffAsync(idEvento, idEventoUsuario, User.GetUserId(), User.IsStaff());
                 return Ok(new { ok = true });
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }

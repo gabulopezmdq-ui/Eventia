@@ -44,7 +44,7 @@ namespace API.Controllers.Programas
             if (ev.tipo_operacion != "PROGRAMA")
                 return BadRequest("El evento indicado no es de tipo PROGRAMA.");
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x =>
                     x.id_evento == idEvento &&
                     x.id_usuario == idUsuario &&
@@ -115,7 +115,7 @@ namespace API.Controllers.Programas
                 await _context.SaveChangesAsync();
             }
 
-            string urlPublica = $"/programas/inscripcion/{link.token}";
+            string urlPublica = $"inscripcion/{link.token}";
 
             return Ok(new ProgramaLinkPublicoResponse
             {
@@ -395,7 +395,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -446,7 +446,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -555,7 +555,7 @@ namespace API.Controllers.Programas
             if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
                 return BadRequest("El período no pertenece a un programa válido.");
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x =>
                     x.id_evento == item.id_evento &&
                     x.id_usuario == idUsuario &&
@@ -583,7 +583,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -641,7 +641,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -804,7 +804,7 @@ namespace API.Controllers.Programas
             if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
                 return BadRequest("El servicio no pertenece a un programa válido.");
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x =>
                     x.id_evento == item.id_evento &&
                     x.id_usuario == idUsuario &&
@@ -956,7 +956,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1025,7 +1025,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1150,7 +1150,7 @@ namespace API.Controllers.Programas
             if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
                 return BadRequest("La autorización no pertenece a un programa válido.");
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x =>
                     x.id_evento == item.id_evento &&
                     x.id_usuario == idUsuario &&
@@ -1208,7 +1208,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1280,7 +1280,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1384,7 +1384,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1437,7 +1437,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1540,7 +1540,7 @@ namespace API.Controllers.Programas
             if (item.evento == null || item.evento.tipo_operacion != "PROGRAMA")
                 return BadRequest("La acción de salud no pertenece a un programa válido.");
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x =>
                     x.id_evento == item.id_evento &&
                     x.id_usuario == idUsuario &&
@@ -1570,7 +1570,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1715,7 +1715,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1815,7 +1815,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -1938,7 +1938,7 @@ namespace API.Controllers.Programas
             if (item == null)
                 return NotFound("Ficha médica inexistente.");
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x =>
                     x.id_evento == item.id_evento &&
                     x.id_usuario == idUsuario &&
@@ -1966,7 +1966,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -2043,7 +2043,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -2450,7 +2450,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -2672,7 +2672,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -2877,7 +2877,7 @@ namespace API.Controllers.Programas
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)

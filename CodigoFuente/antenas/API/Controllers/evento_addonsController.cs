@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -29,7 +29,7 @@ namespace API.Controllers
         {
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>().AsNoTracking()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>().AsNoTracking()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();
@@ -66,7 +66,7 @@ namespace API.Controllers
 
             long idUsuario = User.GetUserId();
 
-            bool pertenece = await _context.Set<ef_evento_usuarios>().AsNoTracking()
+            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>().AsNoTracking()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();

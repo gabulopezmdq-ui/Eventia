@@ -65,7 +65,7 @@ namespace API.Controllers.Programas
                 else if (long.TryParse(sub, out long idUsuario))
                 {
                     // Caso Dueño/Admin: Validar ef_evento_usuarios
-                    bool esMiembroEvento = await _context.Set<ef_evento_usuarios>()
+                    bool esMiembroEvento = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
                         .AnyAsync(x =>
                             x.id_evento == inscripcion.id_evento &&
                             x.id_usuario == idUsuario &&
