@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using API.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -82,7 +82,7 @@ namespace API.Controllers.Programas
             return Ok(new ProgramaRetiroValidarQrResponse
             {
                 Valido = true,
-                Mensaje = "QR v√°lido.",
+                Mensaje = "QR v·lido.",
                 IdEvento = idEvento,
                 NombreAutorizado = first.nombre_autorizado,
                 TelefonoAutorizado = first.telefono_autorizado,
@@ -148,7 +148,7 @@ namespace API.Controllers.Programas
                 .ToList();
 
             if (idsNoAutorizados.Any())
-                return BadRequest("El QR no autoriza a retirar uno o m√°s participantes seleccionados.");
+                return BadRequest("El QR no autoriza a retirar uno o m·s participantes seleccionados.");
 
             var yaRetirados = await _context.Set<ef_retiros>()
                 .AsNoTracking()
@@ -159,7 +159,7 @@ namespace API.Controllers.Programas
                 .ToListAsync();
 
             if (yaRetirados.Any())
-                return BadRequest("Uno o m√°s participantes ya fueron retirados en la fecha seleccionada.");
+                return BadRequest("Uno o m·s participantes ya fueron retirados en la fecha seleccionada.");
 
             var retirosCreados = new List<ProgramaRetiroRegistradoDTO>();
 

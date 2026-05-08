@@ -1,4 +1,4 @@
-﻿using  API.DataSchema;
+using  API.DataSchema;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +31,7 @@ namespace API.Controllers
 
         //[Authorize(Roles = "SUPERADMIN")]
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<ef_roles>>> Get() //TODO: el método no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
+        public async Task<ActionResult<IEnumerable<ef_roles>>> Get() //TODO: el m�todo no contiene await, ya que devuelve un IEnumerable, que no puede ser awaiteado, ver como se puede implementar
         {
             return Ok(_serviceGenerico.GetAll());
         }

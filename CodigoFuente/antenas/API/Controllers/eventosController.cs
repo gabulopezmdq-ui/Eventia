@@ -57,7 +57,7 @@ namespace API.Controllers
         public async Task<ActionResult<EventoResponse>> GetEvento(long idEvento)
         {
             long idUsuario = User.GetUserId();
-            var ev = await _eventos.GetEventoMioAsync(idUsuario, idEvento, User.IsStaff());
+            var ev = await _eventos.GetEventoMioAsync(idUsuario, idEvento);
             return Ok(ev);
         }
 
@@ -66,7 +66,7 @@ namespace API.Controllers
         public async Task<ActionResult<EventoResponse>> Crear([FromBody] EventoCreateRequest req)
         {
             long idUsuario = User.GetUserId();
-            var creado = await _eventos.CrearEventoAsync(idUsuario, req, User.IsStaff());
+            var creado = await _eventos.CrearEventoAsync(idUsuario, req);
             return Ok(creado);
         }
 
@@ -77,7 +77,7 @@ namespace API.Controllers
             [FromBody] EventoUpdateGeneralRequest req)
         {
             long idUsuario = User.GetUserId();
-            var updated = await _eventos.UpdateGeneralAsync(idUsuario, idEvento, req, User.IsStaff());
+            var updated = await _eventos.UpdateGeneralAsync(idUsuario, idEvento, req);
             return Ok(updated);
         }
 
@@ -88,7 +88,7 @@ namespace API.Controllers
             long idUsuario = User.GetUserId();
 
             // seguridad: el usuario debe pertenecer al evento
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
@@ -119,7 +119,7 @@ namespace API.Controllers
         public async Task<ActionResult<EventoResponse>> UpdateConfiguracion(long idEvento, [FromBody] EventoUpdateConfiguracionRequest req)
         {
             long idUsuario = User.GetUserId();
-            var updated = await _eventos.UpdateConfiguracionAsync(idUsuario, idEvento, req, User.IsStaff());
+            var updated = await _eventos.UpdateConfiguracionAsync(idUsuario, idEvento, req);
             return Ok(updated);
         }
 
@@ -141,7 +141,7 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _eventos.GetStaffAsync(idEvento, User.GetUserId(), User.IsStaff());
+                var result = await _eventos.GetStaffAsync(idEvento, User.GetUserId());
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -154,7 +154,7 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _eventos.GetStaffCodigosAsync(idEvento, User.GetUserId(), User.IsStaff());
+                var result = await _eventos.GetStaffCodigosAsync(idEvento, User.GetUserId());
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -167,7 +167,7 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId(), User.IsStaff());
+                var result = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId());
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -192,7 +192,7 @@ namespace API.Controllers
 
                 // 2. Delegar asignación a EventosService (Responsable de ef_evento_usuarios)
                 req.IdStaff = staffCreado.id_staff;
-                var asignacion = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId(), User.IsStaff());
+                var asignacion = await _eventos.AddStaffAsync(idEvento, req, User.GetUserId());
 
                 return Ok(asignacion);
             }
@@ -206,7 +206,7 @@ namespace API.Controllers
         {
             try
             {
-                await _eventos.UpdateStaffAsync(idEvento, idEventoUsuario, req, User.GetUserId(), User.IsStaff());
+                await _eventos.UpdateStaffAsync(idEvento, idEventoUsuario, req, User.GetUserId());
                 return Ok(new { ok = true });
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }
@@ -220,7 +220,7 @@ namespace API.Controllers
         {
             try
             {
-                await _eventos.DeleteStaffAsync(idEvento, idEventoUsuario, User.GetUserId(), User.IsStaff());
+                await _eventos.DeleteStaffAsync(idEvento, idEventoUsuario, User.GetUserId());
                 return Ok(new { ok = true });
             }
             catch (UnauthorizedAccessException ex) { return Forbid(); }

@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +51,7 @@ namespace API.Controllers
             [FromQuery] string? order_dir = "asc")
         {
             var link = await ValidarToken(token, "MUSICA_READ");
-            if (link == null) return Unauthorized(new { error = "Token inv√°lido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv·lido o sin permisos." });
 
             var q =
                 from p in _context.Set<ef_evento_musica_playlist>()
@@ -108,7 +108,7 @@ namespace API.Controllers
             [FromQuery] string? order_dir = "asc")
         {
             var link = await ValidarToken(token, "MUSICA_READ");
-            if (link == null) return Unauthorized(new { error = "Token inv√°lido o sin permisos." });
+            if (link == null) return Unauthorized(new { error = "Token inv·lido o sin permisos." });
 
             var q = _context.Set<ef_evento_musica_bloqueos>()
                 .Where(x => x.id_evento == link.id_evento && x.activo);

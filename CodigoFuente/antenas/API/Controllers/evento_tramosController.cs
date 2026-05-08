@@ -30,7 +30,7 @@ namespace API.Controllers
         {
             // (recomendado) validar pertenencia
             long idUsuario = User.GetUserId();
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();
@@ -55,7 +55,7 @@ namespace API.Controllers
 
             // validar pertenencia por evento
             long idUsuario = User.GetUserId();
-            bool pertenece = User.IsStaff() || await _context.Set<ef_evento_usuarios>()
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == ent.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece) return Forbid();

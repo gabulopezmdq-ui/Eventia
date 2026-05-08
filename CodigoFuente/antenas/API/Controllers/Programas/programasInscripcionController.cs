@@ -1,4 +1,4 @@
-Ôªøusing API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -305,7 +305,7 @@ namespace API.Controllers.Programas
                     x.activo == true);
 
             if (config == null)
-                throw new Exception("La autorizaci√≥n configurada no existe o est√° inactiva.");
+                throw new Exception("La autorizaciÛn configurada no existe o est· inactiva.");
 
             string? texto = await _context.Set<ef_programa_autorizacion_config_traducciones>()
                 .AsNoTracking()
@@ -392,7 +392,7 @@ namespace API.Controllers.Programas
 
             if (data.link.fecha_expiracion.HasValue &&
                 data.link.fecha_expiracion.Value < DateTimeOffset.UtcNow)
-                return BadRequest("El link de inscripci√≥n est√° expirado.");
+                return BadRequest("El link de inscripciÛn est· expirado.");
 
             await using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -443,7 +443,7 @@ namespace API.Controllers.Programas
 
                     rsvp_estado = "Y",
                     fecha_rsvp = now,
-                    rsvp_mensaje = "Inscripci√≥n p√∫blica de programa.",
+                    rsvp_mensaje = "InscripciÛn p˙blica de programa.",
 
                     activo = true,
                     fecha_alta = now,
@@ -499,7 +499,7 @@ namespace API.Controllers.Programas
                     origenRegistro: "PROGRAMA_INSCRIPCION"
                 );
 
-                // 6. Inscripci√≥n cabecera familiar
+                // 6. InscripciÛn cabecera familiar
                 var tokenConsulta = GenerarToken(32);
 
                 var monedaPrograma = await _context.Set<ef_cuentas>()
@@ -566,7 +566,7 @@ namespace API.Controllers.Programas
                         return BadRequest("Debe informar el apellido de todos los participantes.");
 
                     if (p.Periodos == null || p.Periodos.Count == 0)
-                        return BadRequest($"Debe seleccionar al menos un per√≠odo para {p.Nombre}.");
+                        return BadRequest($"Debe seleccionar al menos un perÌodo para {p.Nombre}.");
 
                     // 1. Audiencia participante / hijo
                     var audienciaParticipante = await UpsertAudienciaPersonaAsync(
@@ -623,7 +623,7 @@ namespace API.Controllers.Programas
                         id_rsvp_grupo = grupo.id_rsvp_grupo,
                         id_invitado = invitadoParticipante.id_invitado,
 
-                        // T = titular, A = acompa√±ante. Para no romper constraint existente usamos A.
+                        // T = titular, A = acompaÒante. Para no romper constraint existente usamos A.
                         rol = "A",
 
                         orden = ordenIntegrante,
@@ -658,7 +658,7 @@ namespace API.Controllers.Programas
                         .ToListAsync();
 
                     if (periodosDb.Count != idsPeriodosParticipante.Count)
-                        return BadRequest($"Uno o m√°s per√≠odos seleccionados para {p.Nombre} no existen o no est√°n activos.");
+                        return BadRequest($"Uno o m·s perÌodos seleccionados para {p.Nombre} no existen o no est·n activos.");
 
                     foreach (var periodo in periodosDb)
                     {
@@ -700,7 +700,7 @@ namespace API.Controllers.Programas
                             .ToListAsync();
 
                         if (serviciosDb.Count != idsServicios.Count)
-                            return BadRequest($"Uno o m√°s servicios seleccionados para {p.Nombre} no existen.");
+                            return BadRequest($"Uno o m·s servicios seleccionados para {p.Nombre} no existen.");
 
                         foreach (var srvReq in p.Servicios)
                         {
@@ -760,7 +760,7 @@ namespace API.Controllers.Programas
 
                             await _context.SaveChangesAsync();
 
-                            // d√≠as seleccionados para servicios POR_DIA
+                            // dÌas seleccionados para servicios POR_DIA
                             if (srvReq.Fechas != null &&
                                 srvReq.Fechas.Any())
                             {
@@ -932,7 +932,7 @@ namespace API.Controllers.Programas
                     IdRsvpGrupo = grupo.id_rsvp_grupo,
                     TokenConsulta = tokenConsulta,
                     TotalGeneral = inscripcion.total_general,
-                    Mensaje = "Inscripci√≥n familiar creada correctamente.",
+                    Mensaje = "InscripciÛn familiar creada correctamente.",
                     QrsRetiro = qrsRetiroDto
                 });
             }

@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -269,7 +269,7 @@ namespace API.Controllers.Programas
             ).FirstOrDefaultAsync();
 
             if (baseData == null)
-                return NotFound("No se encontró el participante para esa fecha/servicio.");
+                return NotFound("No se encontr� el participante para esa fecha/servicio.");
 
             var serviciosDelDia = await (
                 from sd in _context.Set<ef_programa_inscripcion_servicio_dias>().AsNoTracking()
