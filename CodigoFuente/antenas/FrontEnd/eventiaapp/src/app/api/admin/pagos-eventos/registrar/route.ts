@@ -23,8 +23,10 @@ export async function POST(request: Request) {
         });
 
         if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            return NextResponse.json({ message: 'Error al registrar pago', details: err }, { status: res.status });
+            const text = await res.text();
+            let err;
+            try { err = JSON.parse(text); } catch { err = text; }
+            return NextResponse.json({ message: 'Error al registrar pago', details: err, status: res.status }, { status: res.status });
         }
 
         return NextResponse.json(await res.json());
