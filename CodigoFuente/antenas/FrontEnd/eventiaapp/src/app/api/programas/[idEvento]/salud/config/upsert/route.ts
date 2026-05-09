@@ -78,27 +78,27 @@ export async function POST(req: Request, props: { params: Promise<{ idEvento: st
 
         const data = await res.json();
         
-        // Mapeo PascalCase -> snake_case
+        // Mapeo exhaustivo (snake_case, camelCase, PascalCase) y fallback a false para evitar perder propiedades
         const mappedData = {
-            id_salud_config: data.idSaludConfig ?? data.IdSaludConfig,
-            id_evento: data.idEvento ?? data.IdEvento,
-            pedir_problema_medico: data.pedirProblemaMedico ?? data.PedirProblemaMedico,
-            problema_medico_obligatorio: data.problemaMedicoObligatorio ?? data.ProblemaMedicoObligatorio,
-            pedir_alergias_no_alimentarias: data.pedirAlergiasNoAlimentarias ?? data.PedirAlergiasNoAlimentarias,
-            alergias_no_alimentarias_obligatorio: data.alergiasNoAlimentariasObligatorio ?? data.AlergiasNoAlimentariasObligatorio,
-            pedir_necesidad_especial: data.pedirNecesidadEspecial ?? data.PedirNecesidadEspecial,
-            necesidad_especial_obligatorio: data.necesidadEspecialObligatorio ?? data.NecesidadEspecialObligatorio,
-            pedir_cobertura_medica: data.pedirCoberturaMedica ?? data.PedirCoberturaMedica,
-            cobertura_medica_obligatorio: data.coberturaMedicaObligatorio ?? data.CoberturaMedicaObligatorio,
-            pedir_contacto_emergencia: data.pedirContactoEmergencia ?? data.PedirContactoEmergencia,
-            contacto_emergencia_obligatorio: data.contactoEmergenciaObligatorio ?? data.ContactoEmergenciaObligatorio,
-            pedir_autoriza_emergencia_medica: data.pedirAutorizaEmergenciaMedica ?? data.PedirAutorizaEmergenciaMedica,
-            autoriza_emergencia_medica_obligatorio: data.autorizaEmergenciaMedicaObligatorio ?? data.AutorizaEmergenciaMedicaObligatorio,
-            pedir_observaciones_familia: data.pedirObservacionesFamilia ?? data.PedirObservacionesFamilia,
-            observaciones_familia_obligatorio: data.observacionesFamiliaObligatorio ?? data.ObservacionesFamiliaObligatorio,
-            pedir_medicaciones: data.pedirMedicaciones ?? data.PedirMedicaciones,
-            medicaciones_obligatorio: data.medicacionesObligatorio ?? data.MedicacionesObligatorio,
-            activo: data.activo ?? data.Activo
+            id_salud_config: data.id_salud_config ?? data.idSaludConfig ?? data.IdSaludConfig ?? null,
+            id_evento: data.id_evento ?? data.idEvento ?? data.IdEvento ?? parseInt(idEvento),
+            pedir_problema_medico: data.pedir_problema_medico ?? data.pedirProblemaMedico ?? data.PedirProblemaMedico ?? false,
+            problema_medico_obligatorio: data.problema_medico_obligatorio ?? data.problemaMedicoObligatorio ?? data.ProblemaMedicoObligatorio ?? false,
+            pedir_alergias_no_alimentarias: data.pedir_alergias_no_alimentarias ?? data.pedirAlergiasNoAlimentarias ?? data.PedirAlergiasNoAlimentarias ?? false,
+            alergias_no_alimentarias_obligatorio: data.alergias_no_alimentarias_obligatorio ?? data.alergiasNoAlimentariasObligatorio ?? data.AlergiasNoAlimentariasObligatorio ?? false,
+            pedir_necesidad_especial: data.pedir_necesidad_especial ?? data.pedirNecesidadEspecial ?? data.PedirNecesidadEspecial ?? false,
+            necesidad_especial_obligatorio: data.necesidad_especial_obligatorio ?? data.necesidadEspecialObligatorio ?? data.NecesidadEspecialObligatorio ?? false,
+            pedir_cobertura_medica: data.pedir_cobertura_medica ?? data.pedirCoberturaMedica ?? data.PedirCoberturaMedica ?? false,
+            cobertura_medica_obligatorio: data.cobertura_medica_obligatorio ?? data.coberturaMedicaObligatorio ?? data.CoberturaMedicaObligatorio ?? false,
+            pedir_contacto_emergencia: data.pedir_contacto_emergencia ?? data.pedirContactoEmergencia ?? data.PedirContactoEmergencia ?? false,
+            contacto_emergencia_obligatorio: data.contacto_emergencia_obligatorio ?? data.contactoEmergenciaObligatorio ?? data.ContactoEmergenciaObligatorio ?? false,
+            pedir_autoriza_emergencia_medica: data.pedir_autoriza_emergencia_medica ?? data.pedirAutorizaEmergenciaMedica ?? data.PedirAutorizaEmergenciaMedica ?? false,
+            autoriza_emergencia_medica_obligatorio: data.autoriza_emergencia_medica_obligatorio ?? data.autorizaEmergenciaMedicaObligatorio ?? data.AutorizaEmergenciaMedicaObligatorio ?? false,
+            pedir_observaciones_familia: data.pedir_observaciones_familia ?? data.pedirObservacionesFamilia ?? data.PedirObservacionesFamilia ?? false,
+            observaciones_familia_obligatorio: data.observaciones_familia_obligatorio ?? data.observacionesFamiliaObligatorio ?? data.ObservacionesFamiliaObligatorio ?? false,
+            pedir_medicaciones: data.pedir_medicaciones ?? data.pedirMedicaciones ?? data.PedirMedicaciones ?? false,
+            medicaciones_obligatorio: data.medicaciones_obligatorio ?? data.medicacionesObligatorio ?? data.MedicacionesObligatorio ?? false,
+            activo: data.activo ?? data.Activo ?? true
         };
 
         return NextResponse.json(mappedData);
