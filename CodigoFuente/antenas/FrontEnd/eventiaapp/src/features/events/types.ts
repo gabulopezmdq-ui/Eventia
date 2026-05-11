@@ -24,6 +24,7 @@ export interface Event {
     idioma: unknown | null;
     dress_code: unknown | null;
     cliente: unknown | null;
+    tipoOperacion: string;
 }
 
 // Payload del POST /eventos (Paso 1 - Crear evento base)
