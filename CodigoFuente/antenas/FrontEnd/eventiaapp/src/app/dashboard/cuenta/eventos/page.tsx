@@ -17,7 +17,11 @@ export default function EventosCuentaPage() {
 
     useEffect(() => {
         getCuentaEventos()
-            .then(setEventos)
+            .then((data) => {
+                // Filtrar solo los eventos, ignorar los programas
+                const soloEventos = data.filter((ev: any) => ev.tipoOperacion !== 'PROGRAMA');
+                setEventos(soloEventos);
+            })
             .catch(() => setError('No se pudieron cargar los eventos de la cuenta'))
             .finally(() => setLoading(false));
     }, []);

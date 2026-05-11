@@ -7,7 +7,7 @@ import {
     ChevronLeft, Calendar, MapPin, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
-    Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck
+    Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck, Stethoscope
 } from 'lucide-react';
 
 import {
@@ -304,6 +304,24 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                     >
                                         <CalendarRange className="w-3.5 h-3.5" />
                                         Ver Panel CRM
+                                    </button>
+                                </div>
+
+                                {/* Salud */}
+                                <div className="p-5 rounded-2xl bg-red-600/10 border border-red-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                    <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center mb-4">
+                                        <Stethoscope className="w-5 h-5" />
+                                    </div>
+                                    <h4 className="font-bold text-foreground text-sm mb-1">Salud y Medicaciones</h4>
+                                    <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                        Fichas médicas, seguimiento de medicaciones y registro de incidentes diarios.
+                                    </p>
+                                    <button
+                                        onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/salud`)}
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all"
+                                    >
+                                        <Stethoscope className="w-3.5 h-3.5" />
+                                        Ver Panel de Salud
                                     </button>
                                 </div>
 
