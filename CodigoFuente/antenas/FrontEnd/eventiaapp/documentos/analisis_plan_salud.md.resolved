@@ -1,0 +1,209 @@
+# Análisis del Plan de Implementación — Módulo Salud
+
+## Estado General: ✅ El plan está bien estructurado pero le faltan detalles críticos
+
+---
+
+## ✅ Lo que está BIEN en el plan
+
+| Área | Estado |
+|------|--------|
+| Fases 1–5 como estructura general | ✅ Correcto |
+| Identificación de todos los endpoints del backend | ✅ Cubre los 7 endpoints del spec |
+| Tipos necesarios (Fase 1) | ✅ Listados correctamente |
+| Cards calculadas en el front | ✅ Correctamente identificado |
+| Lógica de filtros por tab | ✅ Mencionada |
+| Modal de Detalle del Participante con secciones | ✅ Cubre las 6 secciones |
+| Modal de Registro de Acción con campos correctos | ✅ Cubre los toggles y la lógica condicional |
+
+---
+
+## ❌ Lo que le FALTA o está INCOMPLETO en el plan
+
+### 1. Ruta de página principal — CRÍTICO
+
+**El plan dice:** `app/programas/[id]/salud/page.tsx`
+
+**La realidad del proyecto:** El módulo NO va en `/programas/[id]` sino en:
+```
+src/app/dashboard/events/[id]/inscripciones/salud/
+```
+
+La estructura **ya existente** es:
+```
+dashboard/events/[id]/inscripciones/
+  ├── autorizaciones/  ✅
+  ├── cocina/          ✅
+  ├── pagos/           ✅
+  ├── retiros/         ✅
+  ├── transporte/      ✅
+  └── salud/           ❌ FALTA
+```
+
+> [!CAUTION]
+> Si se crea en la ruta incorrecta, el módulo quedará desconectado del sidebar de navegación y del layout del evento.
+
+---
+
+### 2. Rutas Proxy — INCOMPLETO
+
+**El plan dice:** `app/api/programas/[id]/salud/...`
+
+**La realidad:** El prefijo correcto en el proyecto es `[idEvento]`, no `[id]`:
+```
+src/app/api/programas/[idEvento]/salud/
+  └── config/         ← ya existe (para configuración del programa)
+      └── upsert/
+```
+
+**Proxies que faltan y sus rutas correctas:**
+
+| Proxy a crear | Ruta en el proyecto |
+|---|---|
+| GET panel | `api/programas/[idEvento]/salud/panel/route.ts` |
+| GET participante detalle | `api/programas/[idEvento]/salud/participantes/[idInvitado]/detalle/route.ts` |
+| GET fichas | `api/programas/[idEvento]/salud/fichas/route.ts` |
+| GET medicaciones | `api/programas/[idEvento]/salud/medicaciones/route.ts` |
+| GET acciones | `api/programas/[idEvento]/salud/acciones/route.ts` |
+| POST registrar acción | `api/programas/[idEvento]/salud/acciones/registrar/route.ts` |
+| GET tipos-accion (global) | `api/programas/salud/tipos-accion/route.ts` |
+
+---
+
+### 3. Ubicación del Service — NO ESPECIFICADA
+
+**El plan dice:** `src/services/saludService.ts`
+
+**La realidad:** En este proyecto los services viven en:
+```
+src/features/programas/programas.service.ts   ← patrón existente
+```
+
+El service de salud debería ser **`src/features/programas/salud.service.ts`** o bien un archivo separado `src/features/inscripcion/salud.service.ts` si se considera parte de gestión de inscripciones.
+
+---
+
+### 4. Ubicación de los Tipos — AMBIGUA
+
+**El plan dice:** `src/types/salud.ts` o dentro de `types/programas.ts`
+
+**La realidad:** El proyecto tiene tipos en:
+```
+src/features/programas/types.ts           ← tipos de programas
+src/features/inscripcion/types/           ← subcarpeta con múltiples tipos
+  ├── cocina.types.ts
+  ├── inscripcion.types.ts
+  └── panel-inscriptos.types.ts
+```
+
+Lo correcto sería crear: **`src/features/inscripcion/types/salud.types.ts`**
+
+---
+
+### 5. Detalle de los Tipos — INCOMPLETO
+
+El plan lista los tipos pero **no especifica campos**. Hay inconsistencias en la API que el plan no advierte:
+
+| Campo problemático | Dónde ocurre |
+|---|---|
+| `idInscripcion` (camelCase) vs `id_inscripcion` (snake_case) | En el response de `acciones[]`, el campo viene como `idInscripcion: 0` mezclado con snake_case |
+| `ficha: null` | El detalle del participante puede tener `ficha: null` → hay que tipar como `SaludFicha \| null` |
+| `contactos_emergencia` | No está listado como tipo separado, pero viene dentro del detalle |
+
+---
+
+### 6. Componentes UI — SIN ESTRUCTURA DE ARCHIVOS
+
+El plan menciona "componentes" pero **no define la estructura de archivos**. Según el patrón de Cocina/Transporte debería ser:
+
+```
+src/app/dashboard/events/[id]/inscripciones/salud/
+  ├── page.tsx                          ← página principal con tabs
+  └── components/
+      ├── SaludSummaryCards.tsx         ← las 4 cards calculadas
+      ├── PanelPrincipalTab.tsx         ← tab 1
+      ├── FichasTab.tsx                 ← tab 2
+      ├── MedicacionesTab.tsx           ← tab 3
+      ├── AccionesTab.tsx               ← tab 4
+      ├── RestriccionesTab.tsx          ← tab 5
+      ├── DetalleParticipanteDrawer.tsx ← drawer "Ver detalle" (compartido)
+      └── RegistrarAccionModal.tsx      ← modal POST
+```
+
+---
+
+### 7. Lógica condicional del formulario Registrar Acción — NO MENCIONADA
+
+El spec especifica:
+
+> Si `requirio_contacto_familia = false` → **inhabilitar** el campo `contacto_realizado` y forzarlo en `false`
+
+El plan no menciona esta regla de validación en Fase 4 ni en Fase 5.
+
+---
+
+### 8. Tab Restricciones — NO ESPECIFICA el filtro base
+
+El plan dice "filtrando las restricciones", pero no especifica que el endpoint es el **mismo que el Panel** (`GET salud/panel`) con el parámetro `tieneRestricciones=true` forzado en la query. La grilla tiene columnas distintas al Panel Principal (sin Medicación/Seguimiento, agrega Nivel Alerta).
+
+---
+
+### 9. Navegación / Sidebar — NO MENCIONADA
+
+El plan no menciona agregar la entrada **"Salud"** al sidebar de navegación del evento. En el módulo de Cocina/Transporte/Retiros esto se configura en el `layout.tsx` del dashboard del evento.
+
+---
+
+### 10. Estado de compartición del Drawer "Ver Detalle" — NO ESPECIFICADO
+
+El spec dice explícitamente que el mismo drawer/modal se usa desde 4 lugares distintos:
+- Tab Panel → Ver detalle
+- Tab Fichas → Ver detalle  
+- Tab Medicaciones → Ver detalle (scroll a sección medicaciones)
+- Tab Acciones → Ver detalle (scroll a sección timeline)
+
+El plan menciona el drawer pero no su naturaleza compartida ni el mecanismo de scroll a sección.
+
+---
+
+## 🔄 Resumen de Correcciones al Plan
+
+```
+FASE 1 - Tipos: ✅ COMPLETADO
+  → Crear: src/features/inscripcion/types/salud.types.ts
+  → Agregar tipo: ContactoEmergencia { nombre, telefono, relacion, orden }
+  → Tipar: ficha?: SaludFicha | null en SaludParticipanteDetalle
+
+FASE 2 - Proxies: ✅ COMPLETADO
+  → Prefijo correcto: api/programas/[idEvento]/salud/ (no [id])
+  → Agregar: api/programas/salud/tipos-accion/route.ts (sin [idEvento])
+
+FASE 3 - Service: ✅ COMPLETADO
+  → Ubicación: src/features/inscripcion/salud.service.ts
+
+FASE 4 - UI: ✅ COMPLETADO
+  → Ruta: dashboard/events/[id]/inscripciones/salud/page.tsx
+  → Agregar la entrada al sidebar de navegación
+  → Documentar estructura de archivos de componentes
+  → Especificar lógica: requirio_contacto_familia → deshabilita contacto_realizado
+  → Especificar scroll a sección en drawer compartido
+
+FASE 5 - Testing:
+  → Verificar el campo mixto idInscripcion (camelCase) en acciones
+```
+
+---
+
+## Estado del Frontend Actual
+
+| Elemento | Estado |
+|---|---|
+| `SaludConfigManager.tsx` (config del programa) | ✅ Implementado |
+| API proxy `salud/config` | ✅ Implementado |
+| API proxy `salud/panel`, `fichas`, etc. | ✅ Implementado |
+| Página `inscripciones/salud/page.tsx` | ✅ Implementado |
+| Service `salud.service.ts` | ✅ Implementado |
+| Tipos `salud.types.ts` | ✅ Implementado |
+| Entrada en sidebar de navegación | ❌ Pendiente |
+
+**Conclusión: El plan de implementación cubre correctamente el QUÉ pero le faltan las rutas y ubicaciones exactas del proyecto (el DÓNDE). Con las correcciones listadas arriba, el plan estará listo para implementar.**

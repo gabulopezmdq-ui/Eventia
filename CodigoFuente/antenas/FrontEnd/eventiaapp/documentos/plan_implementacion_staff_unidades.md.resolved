@@ -1,0 +1,575 @@
+# Plan de Implementación – Módulo **Staff y Unidades**
+
+> Basado en `documentacion_staff_unidades.md`  
+> Stack: **Next.js App Router · TypeScript · CSS Modules**  
+> Fecha: Mayo 2026
+
+---
+
+## Resumen ejecutivo
+
+El módulo cubre **dos ámbitos diferenciados**:
+
+| Ámbito | Actor | Panel |
+|--------|-------|-------|
+| **Administración** | `ACCOUNT_ADMIN` | Dashboard existente (`/dashboard`) |
+| **Portal Staff** | Staff autenticado por código | Nueva ruta `/staff` (fuera del dashboard) |
+
+---
+
+## Arquitectura de archivos a crear
+
+```
+src/
+├── features/
+│   └── staff/
+│       ├── types.ts                    ← Interfaces TS
+│       ├── staff.service.ts            ← Llamadas a /api/staff/*
+│       └── components/
+│           ├── StaffTable.tsx
+│           ├── StaffModal.tsx          ← Create/Edit
+│           ├── StaffDeleteConfirm.tsx
+│           └── StaffUnidadesSelector.tsx
+│
+├── context/
+│   └── StaffAuthContext.tsx            ← Estado JWT del staff
+│
+├── app/
+│   ├── api/
+│   │   └── staff/
+│   │       ├── route.ts                ← POST /api/staff  (crear)
+│   │       ├── login/
+│   │       │   └── route.ts            ← POST /api/staff/login
+│   │       ├── [id]/
+│   │       │   └── route.ts            ← GET / PUT / DELETE / PATCH
+│   │       ├── unidades/
+│   │       │   └── [id_cuenta]/
+│   │       │       └── route.ts        ← GET listado staff+unidades
+│   │       └── miembros/
+│   │           └── route.ts            ← GET miembros por eventoId
+│   │
+│   ├── dashboard/
+│   │   ├── staff/                      ← Vista admin: gestión de staff
+│   │   │   └── page.tsx
+│   │   └── staff-unidades/             ← Vista admin: staff ↔ unidades
+│   │       └── page.tsx
+│   │
+│   └── staff/                          ← Portal del staff (sin sidebar)
+│       ├── layout.tsx                  ← Layout minimal (sin navbar admin)
+│       ├── login/
+│       │   └── page.tsx                ← Pantalla de ingreso del código
+│       ├── eventos/
+│       │   └── page.tsx                ← Lista eventos accesibles
+│       └── checkin/
+│           └── [id]/
+│               └── page.tsx            ← Confirmación de check-in
+```
+
+---
+
+## Fase 1 – Tipos TypeScript
+
+**Archivo:** `src/features/staff/types.ts`
+
+```ts
+// ── Roles disponibles ──────────────────────────────────────────────
+export type StaffRol =
+  | 'STAFF_DJ'
+  | 'STAFF_MESERO'
+  | 'STAFF_COCINA'
+  | 'STAFF_SEGURIDAD'
+  | 'STAFF_PROPIETARIO'
+  | 'ACCOUNT_ADMIN';
+
+// ── Entidad Staff ──────────────────────────────────────────────────
+export interface Staff {
+  id_staff: number;
+  codigo: string;          // sólo disponible al crear (no persiste en UI)
+  nombre: string;
+  apellido: string;
+  email?: string;
+  telefono?: string;
+  id_cuenta: number;
+  rol: StaffRol;
+  activo: boolean;
+  fecha_expiracion?: string;
+  fecha_alta?: string;
+  unidades: StaffUnidad[];
+}
+
+// ── Unidad vinculada al staff ──────────────────────────────────────
+export interface StaffUnidad {
+  id_unidad: number;
+  nombre: string;
+}
+
+// ── Payloads de API ────────────────────────────────────────────────
+export interface CreateStaffInput {
+  nombre: string;
+  apellido: string;
+  email?: string;
+  telefono?: string;
+  id_cuenta: number;
+  rol: StaffRol;
+  unidades: number[];      // array de id_unidad
+}
+
+export interface UpdateStaffInput {
+  nombre?: string;
+  apellido?: string;
+  email?: string;
+  telefono?: string;
+  rol?: StaffRol;
+  unidades?: number[];
+}
+
+// ── Respuesta de creación (código único) ───────────────────────────
+export interface CreateStaffResponse {
+  id_staff: number;
+  codigo: string;
+  activo: boolean;
+  fecha_expiracion: string;
+}
+
+// ── Login / JWT claims ─────────────────────────────────────────────
+export interface StaffLoginResponse {
+  token: string;
+}
+
+export interface StaffJwtClaims {
+  sub: string;
+  id_staff: number;
+  id_cuenta: number;
+  role: StaffRol;
+  is_staff: boolean;
+  exp: number;
+}
+
+// ── Estado del usuario en la app staff ────────────────────────────
+export interface StaffAuthUser {
+  idStaff: number;
+  idCuenta: number;
+  role: StaffRol;
+  unidades: StaffUnidad[];
+}
+
+// ── Evento accesible por el staff ─────────────────────────────────
+export interface StaffEvento {
+  id_evento: number;
+  nombre: string;
+  fecha_inicio: string;
+  unidad: string;
+  estado?: string;
+}
+```
+
+---
+
+## Fase 2 – Servicio Frontend
+
+**Archivo:** `src/features/staff/staff.service.ts`
+
+Expone funciones que llaman a los proxies Next.js (`/api/staff/*`).
+
+```ts
+import type {
+  Staff, CreateStaffInput, UpdateStaffInput,
+  CreateStaffResponse, StaffEvento
+} from './types';
+
+const BASE = '/api/staff';
+
+// ── Admin: CRUD ────────────────────────────────────────────────────
+
+export async function getStaffUnidades(idCuenta: number): Promise<Staff[]> {
+  const res = await fetch(`${BASE}/unidades/${idCuenta}`);
+  if (!res.ok) throw new Error('Error al cargar staff');
+  return res.json();
+}
+
+export async function getStaffById(id: number): Promise<Staff> {
+  const res = await fetch(`${BASE}/${id}`);
+  if (!res.ok) throw new Error('Error al cargar staff');
+  return res.json();
+}
+
+export async function createStaff(input: CreateStaffInput): Promise<CreateStaffResponse> {
+  const res = await fetch(BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new Error('Error al crear staff');
+  return res.json();
+}
+
+export async function updateStaff(id: number, input: UpdateStaffInput): Promise<{ ok: boolean }> {
+  const res = await fetch(`${BASE}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new Error('Error al actualizar staff');
+  return res.json();
+}
+
+export async function deleteStaff(id: number): Promise<{ ok: boolean }> {
+  const res = await fetch(`${BASE}/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Error al desactivar staff');
+  return res.json();
+}
+
+export async function patchStaffActivo(id: number, activo: boolean): Promise<{ ok: boolean }> {
+  const res = await fetch(`${BASE}/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ activo }),
+  });
+  if (!res.ok) throw new Error('Error al cambiar disponibilidad');
+  return res.json();
+}
+
+// ── Portal Staff: autenticación y eventos ─────────────────────────
+
+export async function loginStaff(codigo: string): Promise<string> {
+  const res = await fetch(`${BASE}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ codigo }),
+  });
+  if (!res.ok) throw new Error('Código inválido o expirado');
+  const data = await res.json();
+  return data.token as string;
+}
+
+export async function getEventosStaff(
+  tipo: 'personal' | 'cuenta',
+  params: { staffId?: number; cuentaId?: number; unidades?: number[] }
+): Promise<StaffEvento[]> {
+  const qs = new URLSearchParams();
+  if (tipo === 'personal' && params.staffId) qs.set('staffId', String(params.staffId));
+  if (tipo === 'cuenta' && params.cuentaId) {
+    qs.set('cuentaId', String(params.cuentaId));
+    if (params.unidades?.length) qs.set('unidades', params.unidades.join(','));
+  }
+  const res = await fetch(`/api/eventos?${qs.toString()}`);
+  if (!res.ok) throw new Error('Error al cargar eventos');
+  return res.json();
+}
+
+export async function checkinEvento(idEvento: number): Promise<{ ok: boolean; hora: string }> {
+  const res = await fetch(`/api/eventos/${idEvento}/checkin`, { method: 'POST' });
+  if (!res.ok) throw new Error('Error en check-in');
+  return res.json();
+}
+```
+
+---
+
+## Fase 3 – Proxies API (Next.js Route Handlers)
+
+### 3.1  `src/app/api/staff/route.ts` – Crear staff
+
+```ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+export async function POST(req: NextRequest) {
+  const session = await getServerSession();
+  const body = await req.json();
+  const res = await fetch(`${API}/staff`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${(session as any)?.accessToken}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}
+```
+
+### 3.2  `src/app/api/staff/login/route.ts` – Login (sin auth)
+
+```ts
+export async function POST(req: NextRequest) {
+  const body = await req.json();  // { codigo: string }
+  const res = await fetch(`${API}/staff/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}
+```
+
+### 3.3  `src/app/api/staff/[id]/route.ts` – GET / PUT / DELETE / PATCH
+
+```ts
+// GET, PUT, DELETE, PATCH sobre /staff/:id
+// Extrae id de params, reenvía con Bearer token de sesión
+```
+
+### 3.4  `src/app/api/staff/unidades/[id_cuenta]/route.ts` – Listado
+
+```ts
+// GET /staff/unidades/:id_cuenta → reenvía al backend con Bearer
+```
+
+### 3.5  `src/app/api/staff/miembros/route.ts` – Miembros por evento
+
+```ts
+// GET /staff/miembros?eventoId=XX
+```
+
+### 3.6  `src/app/api/eventos/[id]/checkin/route.ts` – Check-in
+
+```ts
+// POST /eventos/:id/checkin con token staff (desde cookie o header)
+```
+
+> **Nota:** Los proxies del checkin deben enviar el token JWT del staff (almacenado en `sessionStorage` o cookie `httpOnly`) porque **no** usan NextAuth session.
+
+---
+
+## Fase 4 – Contexto de autenticación Staff
+
+**Archivo:** `src/context/StaffAuthContext.tsx`
+
+```tsx
+'use client';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { StaffAuthUser, StaffUnidad, StaffJwtClaims } from '@/features/staff/types';
+
+interface StaffAuthCtx {
+  user: StaffAuthUser | null;
+  token: string | null;
+  login: (token: string) => void;
+  logout: () => void;
+  isLoading: boolean;
+}
+
+const Ctx = createContext<StaffAuthCtx | null>(null);
+
+export function StaffAuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<StaffAuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Hidratar desde sessionStorage al montar
+  useEffect(() => {
+    const saved = sessionStorage.getItem('staffToken');
+    if (saved) hydrate(saved);
+    setIsLoading(false);
+  }, []);
+
+  // Renovación automática 1h antes de expirar
+  useEffect(() => {
+    if (!token) return;
+    const claims = parseJwt(token);
+    const msLeft = claims.exp * 1000 - Date.now() - 3600_000;
+    if (msLeft <= 0) return;
+    const timer = setTimeout(() => refreshToken(), msLeft);
+    return () => clearTimeout(timer);
+  }, [token]);
+
+  function hydrate(jwt: string) {
+    const claims = parseJwt(jwt);
+    setToken(jwt);
+    setUser({ idStaff: claims.id_staff, idCuenta: claims.id_cuenta, role: claims.role, unidades: [] });
+    sessionStorage.setItem('staffToken', jwt);
+  }
+
+  function login(jwt: string) { hydrate(jwt); }
+
+  function logout() {
+    setUser(null);
+    setToken(null);
+    sessionStorage.removeItem('staffToken');
+  }
+
+  async function refreshToken() {
+    try {
+      const res = await fetch('/api/staff/refresh', { method: 'POST',
+        headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) { const d = await res.json(); hydrate(d.token); }
+    } catch { /* silencioso */ }
+  }
+
+  return (
+    <Ctx.Provider value={{ user, token, login, logout, isLoading }}>
+      {children}
+    </Ctx.Provider>
+  );
+}
+
+export function useStaffAuth() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error('useStaffAuth must be inside StaffAuthProvider');
+  return ctx;
+}
+
+function parseJwt(token: string): StaffJwtClaims {
+  return JSON.parse(atob(token.split('.')[1]));
+}
+```
+
+---
+
+## Fase 5 – Panel Admin: Gestión de Staff
+
+### 5.1  `src/app/dashboard/staff/page.tsx`
+
+**Funcionalidad:**
+- Tabla de staff con columnas: Nombre, Apellido, Rol, Unidades asignadas, Estado (badge), Acciones.
+- Botón "Nuevo Staff" → abre `StaffModal` en modo creación.
+- Al crear exitosamente, mostrar **modal secundario** con el código generado (`ACDJ3521`) y botón "Copiar" (el código sólo se expone una vez).
+- Acciones por fila: Editar (lápiz) · Desactivar/Activar (toggle) · Eliminar (papelera).
+
+### 5.2  `src/features/staff/components/StaffModal.tsx`
+
+Formulario de creación/edición con:
+
+| Campo | Control | Validación |
+|-------|---------|-----------|
+| Nombre | `<input>` | Requerido |
+| Apellido | `<input>` | Requerido |
+| Email | `<input type="email">` | Opcional |
+| Teléfono | `<input type="tel">` | Opcional |
+| Rol | `<select>` con opciones `STAFF_*` | Requerido |
+| Unidades | `StaffUnidadesSelector` (checkboxes multi-select) | Mínimo 1 |
+
+### 5.3  `src/features/staff/components/StaffUnidadesSelector.tsx`
+
+- Reutiliza `getMisUnidades()` de `cuenta.service.ts` (ya existe).
+- Muestra checkboxes con nombre de unidad.
+- Devuelve `number[]` (ids seleccionados).
+
+### 5.4  Sidebar entry
+
+Agregar ítem en `src/app/dashboard/layout.tsx` dentro del grupo B2B/Cuenta:
+
+```tsx
+{ href: '/dashboard/staff', label: 'Staff', icon: <UsersIcon /> }
+```
+
+---
+
+## Fase 6 – Portal Staff (ruta `/staff`)
+
+### 6.1  `src/app/staff/layout.tsx` – Layout mínimo
+
+Sin sidebar admin. Sólo header con logo + botón "Salir".  
+Envuelve con `<StaffAuthProvider>`.  
+Redirecciona a `/staff/login` si no hay token.
+
+### 6.2  `src/app/staff/login/page.tsx` – Pantalla de código
+
+**UI:**
+```
+┌──────────────────────────────────────────┐
+│  🎵  Eventia Staff Portal                │
+│                                          │
+│  Ingresá tu código de acceso             │
+│  ┌────────────────────────────────────┐  │
+│  │  A C D J 3 5 2 1                   │  │
+│  └────────────────────────────────────┘  │
+│  [  Ingresar  ]                          │
+│                                          │
+│  ⚠ El código tiene 8 caracteres         │
+└──────────────────────────────────────────┘
+```
+
+**Lógica:**
+1. `input` con `maxLength={8}`, `toUpperCase()`, filtro `/[^A-Z0-9]/g`.
+2. Al enviar → `loginStaff(codigo)` → obtiene JWT.
+3. Llama `GET /staff/unidades/{id_cuenta}` con Bearer → almacena unidades en contexto.
+4. Redirige a `/staff/eventos`.
+
+### 6.3  `src/app/staff/eventos/page.tsx` – Lista de eventos
+
+**Lógica de carga según rol:**
+- `role === 'STAFF_PROPIETARIO'` → `GET /eventos?staffId={idStaff}`
+- Cualquier otro rol B2B → `GET /eventos?cuentaId={idCuenta}&unidades={lista}`
+
+**UI:**
+- Cards de evento con: nombre, fecha, unidad badge.
+- Botón "Registrar Presencia" → `POST /eventos/{id}/checkin`.
+- Toast de confirmación con hora de check-in.
+
+### 6.4  `src/app/staff/checkin/[id]/page.tsx` – Confirmación
+
+Pantalla simple post check-in:
+```
+✅ Presencia registrada
+   Fiesta DJ – Bar Principal
+   Hora: 20:15 hs
+[ Volver a eventos ]
+```
+
+---
+
+## Checklist de archivos a crear/modificar
+
+| # | Archivo | Acción | Fase |
+|---|---------|--------|------|
+| 1 | `src/features/staff/types.ts` | ✅ Creado | 1 |
+| 2 | `src/features/staff/staff.service.ts` | ✅ Creado | 2 |
+| 3 | `src/app/api/staff/route.ts` | ✅ Creado | 3 |
+| 4 | `src/app/api/staff/login/route.ts` | ✅ Creado | 3 |
+| 5 | `src/app/api/staff/[id]/route.ts` | ✅ Creado | 3 |
+| 6 | `src/app/api/staff/unidades/[id_cuenta]/route.ts` | ✅ Creado | 3 |
+| 7 | `src/app/api/staff/miembros/route.ts` | ✅ Creado | 3 |
+| 8 | `src/app/api/eventos/[id]/checkin/route.ts` | ✅ Creado | 3 |
+| 9 | `src/context/StaffAuthContext.tsx` | ✅ Creado | 4 |
+| 10 | `src/app/dashboard/staff/page.tsx` | ✅ Creado | 5 |
+| 11 | `src/features/staff/components/StaffTable.tsx` | ✅ Creado | 5 |
+| 12 | `src/features/staff/components/StaffModal.tsx` | ✅ Creado | 5 |
+| 13 | `src/features/staff/components/StaffDeleteConfirm.tsx` | ✅ Creado | 5 |
+| 14 | `src/features/staff/components/StaffUnidadesSelector.tsx` | ✅ Creado | 5 |
+| 15 | `src/app/dashboard/layout.tsx` | ✅ Modificado | 5 |
+| 16 | `src/app/staff/layout.tsx` | ✅ Creado | 6 |
+| 17 | `src/app/staff/login/page.tsx` | ✅ Creado | 6 |
+| 18 | `src/app/staff/eventos/page.tsx` | ✅ Creado | 6 |
+| 19 | `src/app/staff/checkin/[id]/page.tsx` | ✅ Creado | 6 |
+
+---
+
+## Consideraciones de seguridad frontend
+
+> [!IMPORTANT]
+> - **Nunca persistir el `codigo`** después del login. Sólo el JWT.
+> - Guardar el token en `sessionStorage` (no `localStorage`) para que se borre al cerrar pestaña.
+> - El código del staff se muestra en un modal one-time **con botón copiar** — no se puede volver a ver.
+> - El `StaffAuthContext` valida `exp` del JWT en cada render protegido.
+
+---
+
+## Rutas registradas en el middleware
+
+En `src/middleware.ts`, agregar protección de rutas `/staff/eventos` y `/staff/checkin`:
+
+```ts
+// Rutas que requieren token staff (no NextAuth)
+const STAFF_ROUTES = ['/staff/eventos', '/staff/checkin'];
+
+// Lógica: si no hay sessionStorage 'staffToken' → redirect /staff/login
+// (verificar con cookie httpOnly si se prefiere SSR-safe)
+```
+
+> [!NOTE]
+> Dado que `sessionStorage` no está disponible en middleware SSR, se recomienda setear una **cookie de sesión** al hacer login y verificarla desde el middleware.
+
+---
+
+## Orden de ejecución sugerido
+
+```
+Fase 1 → Fase 2 → Fase 3 (proxies) → Fase 4 (contexto) → Fase 5 (admin) → Fase 6 (portal)
+```
+
+Cada fase es independiente y testeable de forma aislada.

@@ -2,6 +2,10 @@ import {
     AudienciaPersona,
     AudienciaPersonaDetalle,
     TagSugerido,
+    // Panel Audiencias CRM — nuevo modelo segmentado
+    AudienciaCRMPersona,
+    AudienciaCRMDetalle,
+    TipoPersonaCRM,
 } from './types';
 
 const API = '/api'; // Apunta al proxy de Next.js
@@ -71,5 +75,45 @@ export async function setTagActivo(
         { method: 'PUT' }
     );
     if (!res.ok) throw new Error('Error al actualizar tag');
+    return res.json();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PANEL AUDIENCIAS CRM — Nuevo modelo segmentado
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Listar audiencia CRM segmentada por tipo de persona.
+ * Consume GET /audiencia_crm/listar
+ */
+export async function getAudienciaCRM(params: {
+    idCuenta: number;
+    tipo?: TipoPersonaCRM;
+    q?: string;
+    idEvento?: number;
+}): Promise<AudienciaCRMPersona[]> {
+    const qs = new URLSearchParams({
+        idCuenta: String(params.idCuenta),
+        tipo: params.tipo ?? 'TODOS',
+        q: params.q ?? '',
+    });
+    if (params.idEvento) qs.set('idEvento', String(params.idEvento));
+
+    const res = await fetch(`${API}/audiencias-crm-listar?${qs.toString()}`);
+    if (!res.ok) throw new Error('Error al obtener audiencia CRM');
+    return res.json();
+}
+
+/**
+ * Obtener el detalle CRM enriquecido de una persona.
+ * Consume GET /audiencia_crm/{id}/detalle
+ */
+export async function getAudienciaCRMDetalle(
+    idAudienciaPersona: number
+): Promise<AudienciaCRMDetalle> {
+    const res = await fetch(
+        `${API}/audiencias-crm-detalle?id=${idAudienciaPersona}`
+    );
+    if (!res.ok) throw new Error('Error al obtener detalle CRM');
     return res.json();
 }
