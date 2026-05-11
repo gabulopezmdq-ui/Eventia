@@ -101,22 +101,35 @@ namespace API.Services
             }
         }
 
-        public async Task<List<CuentaHospedajePlantillaDTO>> MisPlantillasAsync(long idUsuario, bool soloActivas, long? idUnidad)
+        public async Task<List<CuentaHospedajePlantillaDTO>> MisPlantillasAsync(long idUsuario, bool soloActivas, long? idUnidad, string? q)
         {
             long idCuenta = await GetCuentaActivaDelUsuarioAsync(idUsuario);
 
-            var q = _context.Set<ef_cuenta_hospedaje_plantillas>()
+            var query = _context.Set<ef_cuenta_hospedaje_plantillas>()
                 .AsNoTracking()
                 .Where(x => x.id_cuenta == idCuenta);
 
             if (soloActivas)
-                q = q.Where(x => x.activo == true);
+                query = query.Where(x => x.activo == true);
 
+            // ✅ Unidad: recomendado para UX
+            // Si filtra por unidad, devolver: (plantillas de esa unidad) + (globales id_unidad=null)
             if (idUnidad.HasValue)
-                q = q.Where(x => x.id_unidad == idUnidad.Value);
+                query = query.Where(x => x.id_unidad == idUnidad.Value || x.id_unidad == null);
 
-            return await q
-                .OrderBy(x => x.nombre)
+            // ✅ Buscar por nombre o código (case-insensitive)
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = q.Trim();
+                query = query.Where(x =>
+                    EF.Functions.ILike(x.nombre, $"%{term}%") ||
+                    (x.codigo != null && EF.Functions.ILike(x.codigo, $"%{term}%"))
+                );
+            }
+
+            return await query
+                .OrderByDescending(x => x.id_unidad == null)  // opcional: globales arriba/abajo (ajustá)
+                .ThenBy(x => x.nombre)
                 .Select(x => new CuentaHospedajePlantillaDTO
                 {
                     id_hospedaje_plantilla = x.id_hospedaje_plantilla,

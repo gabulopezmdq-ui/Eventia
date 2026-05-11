@@ -7,7 +7,7 @@ namespace API.Services
     public interface ICuentaHospedajePlantillasService
     {
         Task<long> CrearOActualizarPlantillaAsync(long idUsuario, CuentaHospedajePlantillaUpsertRequestDTO req);
-        Task<List<CuentaHospedajePlantillaDTO>> MisPlantillasAsync(long idUsuario, bool soloActivas, long? idUnidad);
+        Task<List<CuentaHospedajePlantillaDTO>> MisPlantillasAsync(long idUsuario, bool soloActivas, long? idUnidad, string? q);
         Task<CuentaHospedajePlantillaDTO?> GetPlantillaAsync(long idUsuario, long idPlantilla);
 
         Task<List<CuentaHospedajePlantillaItemDTO>> GetItemsAsync(long idUsuario, long idPlantilla);
