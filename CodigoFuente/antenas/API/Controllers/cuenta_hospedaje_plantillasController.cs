@@ -20,10 +20,13 @@ namespace API.Controllers
         }
 
         [HttpGet("MisPlantillas")]
-        public async Task<IActionResult> MisPlantillas([FromQuery] bool soloActivas = true, [FromQuery] long? idUnidad = null)
+        public async Task<IActionResult> MisPlantillas(
+             [FromQuery] bool soloActivas = true,
+             [FromQuery] long? idUnidad = null,
+             [FromQuery] string? q = null)
         {
             long idUsuario = User.GetUserId();
-            var list = await _svc.MisPlantillasAsync(idUsuario, soloActivas, idUnidad);
+            var list = await _svc.MisPlantillasAsync(idUsuario, soloActivas, idUnidad, q);
             return Ok(list);
         }
 
