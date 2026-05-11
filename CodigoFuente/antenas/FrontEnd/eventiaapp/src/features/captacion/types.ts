@@ -401,3 +401,165 @@ export interface TagSugerido {
     orden: number;
     activo: boolean;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// PANEL AUDIENCIAS CRM — Nuevo modelo segmentado
+// Endpoint: GET /audiencia_crm/listar  |  GET /audiencia_crm/{id}/detalle
+// ═══════════════════════════════════════════════════════════════════
+
+export type TipoPersonaCRM =
+    | 'TODOS'
+    | 'RESPONSABLE_PROGRAMA'
+    | 'PARTICIPANTE_PROGRAMA'
+    | 'EVENTO_PUBLICO'
+    | 'EVENTO_PRIVADO'
+    | 'STAFF'
+    | 'SIN_CLASIFICAR';
+
+export type AlertaCRM = 'COMEDOR' | 'RESTRICCION_ALIMENTARIA' | 'SALUD';
+
+// ─── Filtros disponibles (GET /audiencia_crm/filtros) ─────────────
+
+export interface FiltroTipoCRM {
+    codigo: TipoPersonaCRM;
+    texto: string;
+}
+
+export interface FiltroAlertaCRM {
+    codigo: AlertaCRM;
+    texto: string;
+}
+
+export interface FiltrosCRM {
+    tipos: FiltroTipoCRM[];
+    alertas: FiltroAlertaCRM[];
+}
+
+// ─── Listado CRM segmentado (GET /audiencia_crm/listar) ───────────
+
+/** Fila del listado segmentado */
+export interface AudienciaCRMPersona {
+    id_audiencia_persona: number;
+    nombre: string;
+    apellido: string;
+    email: string | null;
+    celular: string | null;
+    tipo_persona: TipoPersonaCRM;
+    tipo_label: string;
+    contexto: string | null;
+    id_evento_contexto: number | null;
+    ultima_participacion: string | null;
+    eventos_registrados: number;
+    eventos_asistidos: number;
+    alertas: AlertaCRM[];
+    tags: string[];
+}
+
+// ─── Detalle CRM enriquecido (GET /audiencia_crm/{id}/detalle) ────
+
+export interface CRMResponsable {
+    idAudienciaPersona: number;
+    nombreCompleto: string;
+    email: string | null;
+    telefono: string | null;
+    relacion: string | null;
+}
+
+export interface CRMParticipanteGrupo {
+    idAudienciaPersona: number;
+    idInvitado: number;
+    idRsvpGrupoIntegrante: number;
+    nombreCompleto: string;
+    edad: number | null;
+}
+
+export interface CRMPeriodo {
+    nombre: string;
+    fechaDesde: string;
+    fechaHasta: string;
+    precioBase: number;
+    moneda: string;
+}
+
+export interface CRMServicio {
+    nombre: string;
+    codigo: string;
+    tipoCalculo: string;
+    precio: number;
+    subtotal: number;
+    moneda: string;
+    fechas: string[];
+}
+
+export interface CRMRestriccion {
+    idRestriccionAlim: number;
+    codigo: string;
+    categoria: string;
+    iconKey: string;
+    requiereAlertaVisual: boolean;
+    requiereConfirmacionOrganizador: boolean;
+    esAlergeno: boolean;
+    observaciones: string | null;
+    severidad: string | null;
+}
+
+export interface CRMSalud {
+    tieneProblemaMedico: boolean;
+    problemaMedicoDetalle: string | null;
+    tieneAlergiasNoAlimentarias: boolean;
+    alergiasNoAlimentariasDetalle: string | null;
+    necesidadEspecial: string | null;
+    coberturaMedica: string | null;
+    observacionesFamilia: string | null;
+    autorizaEmergenciaMedica: boolean;
+}
+
+export interface CRMAutorizadoRetiro {
+    nombreAutorizado: string;
+    telefonoAutorizado: string | null;
+    relacion: string | null;
+    observaciones: string | null;
+}
+
+export interface CRMProgramaDetalle {
+    id_evento: number;
+    evento: string;
+    id_inscripcion: number;
+    id_rsvp_grupo: number;
+    nombre_grupo: string;
+    responsable: CRMResponsable;
+    participantes_grupo: CRMParticipanteGrupo[];
+    periodos: CRMPeriodo[];
+    servicios: CRMServicio[];
+    restricciones: CRMRestriccion[];
+    salud: CRMSalud | null;
+    autorizados_retiro: CRMAutorizadoRetiro[];
+}
+
+export interface CRMHistorialItem {
+    id_evento: number;
+    evento: string;
+    tipo_operacion: string;
+    origen_registro: string;
+    fecha_registro: string;
+    asistio: boolean;
+    beneficio_otorgado: boolean;
+    beneficio_canjeado: boolean;
+}
+
+/** Detalle completo GET /audiencia_crm/{id}/detalle */
+export interface AudienciaCRMDetalle {
+    id_audiencia_persona: number;
+    nombre: string;
+    apellido: string;
+    email: string | null;
+    celular: string | null;
+    fecha_nacimiento: string | null;
+    edad: number | null;
+    tipo_persona: TipoPersonaCRM;
+    tipo_label: string;
+    alertas: AlertaCRM[];
+    tags: string[];
+    historial: CRMHistorialItem[];
+    programa: CRMProgramaDetalle | null;
+}
