@@ -66,6 +66,7 @@ export async function getMyEvents(): Promise<Event[]> {
         id_cliente: item.idCliente,
         id_dress_code: item.idDressCode,
         dress_code_descripcion: item.dressCodeDescripcion,
+        tipoOperacion: item.tipoOperacion,
     })) as Event[];
 }
 
@@ -99,6 +100,7 @@ export async function getEventById(id: string): Promise<Event> {
         id_cliente: item.idCliente,
         id_dress_code: item.idDressCode,
         dress_code_descripcion: item.dressCodeDescripcion,
+        tipoOperacion: item.tipoOperacion,
     } as Event;
 }
 
@@ -162,6 +164,7 @@ export async function getAdminEvents(): Promise<Event[]> {
         id_cliente: item.idCliente,
         id_dress_code: item.idDressCode,
         dress_code_descripcion: item.dressCodeDescripcion,
+        tipoOperacion: item.tipoOperacion,
     })) as Event[];
 }
 
@@ -213,6 +216,7 @@ export async function getAdminEventById(id: string): Promise<Event> {
         id_cliente: item.idCliente,
         id_dress_code: item.idDressCode,
         dress_code_descripcion: item.dressCodeDescripcion,
+        tipoOperacion: item.tipoOperacion,
     } as Event;
 }
 
