@@ -14,13 +14,40 @@ export async function POST(req: Request) {
 
         const body = await req.json();
 
+        const backendPayload = {
+            id_tipo_evento: body.idTipoEvento,
+            id_idioma: body.idIdioma,
+            id_plantilla: body.idPlantilla,
+            id_dress_code: body.idDressCode,
+            anfitriones_texto: body.anfitrionesTexto,
+            saludo: body.saludo,
+            mensaje_bienvenida: body.mensajeBienvenida,
+            notas: body.notas,
+            fecha_hora: body.fechaHora,
+            lugar: body.lugar,
+            direccion: body.direccion,
+            latitud: body.latitud,
+            longitud: body.longitud,
+            modalidad: body.modalidad,
+            id_unidad: body.idUnidad,
+            id_cliente: body.idCliente,
+            codigo_plan: body.codigoPlan,
+        };
+
+        // Limpiar undefined para que el JSON quede limpio
+        Object.keys(backendPayload).forEach(key => {
+            if (backendPayload[key as keyof typeof backendPayload] === undefined) {
+                delete backendPayload[key as keyof typeof backendPayload];
+            }
+        });
+
         const res = await fetch(`${API_URL}/eventos`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify(backendPayload),
         });
 
         if (!res.ok) {
