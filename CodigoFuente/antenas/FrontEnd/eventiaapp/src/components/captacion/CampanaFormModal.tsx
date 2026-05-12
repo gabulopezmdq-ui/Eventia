@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { saveCampana } from '@/src/features/captacion/captacion.service';
+import { saveCampana, getTiposBeneficio } from '@/src/features/captacion/captacion.service';
 import { getEstructuraEvento } from '@/src/features/events/event.service';
-import type { CaptacionLink, CaptacionLinkPayload } from '@/src/features/captacion/types';
+import type { CaptacionLink, CaptacionLinkPayload, TipoBeneficio } from '@/src/features/captacion/types';
 import type { EstructuraEvento } from '@/src/features/events/types';
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
 export default function CampanaFormModal({ idEvento, campana, onClose, onSave }: Props) {
     const [loading, setLoading] = useState(false);
     const [estructura, setEstructura] = useState<EstructuraEvento | null>(null);
+    const [tiposBeneficio, setTiposBeneficio] = useState<TipoBeneficio[]>([]);
 
     const [formData, setFormData] = useState<CaptacionLinkPayload>({
         id_acceso_link: campana?.id_acceso_link || null,
@@ -33,10 +34,15 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
         fecha_expiracion: campana?.fecha_expiracion ? new Date(campana.fecha_expiracion).toISOString().slice(0, 16) : '',
         mensaje_post_registro: campana?.mensaje_post_registro || '',
         cupo_beneficio: campana?.cupo_beneficio || 0,
+        id_tipo_beneficio_registro: campana?.id_tipo_beneficio_registro || null,
+        beneficio_titulo: campana?.beneficio_titulo || '',
+        beneficio_descripcion: campana?.beneficio_descripcion || '',
+        beneficio_hasta: campana?.beneficio_hasta ? new Date(campana.beneficio_hasta).toISOString().slice(0, 16) : '',
     });
 
     useEffect(() => {
         getEstructuraEvento(idEvento).then(setEstructura).catch(console.error);
+        getTiposBeneficio(idEvento).then(setTiposBeneficio).catch(console.error);
     }, [idEvento]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -49,6 +55,9 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
         }));
     };
 
+    const selectedAcceso = estructura?.accesos.find(a => a.id_acceso === Number(formData.id_acceso));
+    const isConBeneficio = selectedAcceso?.nombre.toLowerCase().includes('beneficio');
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -56,7 +65,9 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
             const payload = {
                 ...formData,
                 fecha_expiracion: formData.fecha_expiracion ? new Date(formData.fecha_expiracion).toISOString() : null,
-                cupo_beneficio: formData.cupo_beneficio || null,
+                beneficio_hasta: isConBeneficio && formData.beneficio_hasta ? new Date(formData.beneficio_hasta).toISOString() : null,
+                cupo_beneficio: isConBeneficio ? formData.cupo_beneficio || null : null,
+                id_tipo_beneficio_registro: isConBeneficio && formData.id_tipo_beneficio_registro ? Number(formData.id_tipo_beneficio_registro) : null,
             };
             await saveCampana(idEvento, payload);
             onSave();
@@ -94,26 +105,8 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                             />
                         </div>
 
-                        <div className="col-span-2">
-                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Acceso Destino</label>
-                            <select
-                                required
-                                name="id_acceso"
-                                value={formData.id_acceso || ''}
-                                onChange={handleChange}
-                                className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"
-                            >
-                                <option value="" disabled>Seleccione un acceso...</option>
-                                {estructura?.accesos.map(acc => (
-                                    <option key={acc.id_acceso} value={acc.id_acceso}>
-                                        {acc.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
                         <div>
-                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Cupo Total Personas</label>
+                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Cupo Total de Registros</label>
                             <input
                                 required
                                 type="number"
@@ -126,7 +119,7 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                         </div>
 
                         <div>
-                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Fecha de Expiración</label>
+                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Cierre de Registro</label>
                             <input
                                 type="datetime-local"
                                 name="fecha_expiracion"
@@ -147,6 +140,74 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                                 placeholder="Mensaje para quienes abren el enlace..."
                             />
                         </div>
+
+                        <div className="col-span-2 pt-4 border-t border-card-border mt-2">
+                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Acceso Destino</label>
+                            <select
+                                required
+                                name="id_acceso"
+                                value={formData.id_acceso || ''}
+                                onChange={handleChange}
+                                className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"
+                            >
+                                <option value="" disabled>Seleccione un acceso...</option>
+                                {estructura?.accesos.map(acc => (
+                                    <option key={acc.id_acceso} value={acc.id_acceso}>
+                                        {acc.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {isConBeneficio && (
+                            <div className="col-span-2 space-y-4 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-xl">
+                                <h3 className="text-sm font-bold text-indigo-400">Configuración de Beneficio</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2 sm:col-span-1">
+                                        <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Tipo de Beneficio</label>
+                                        <select
+                                            name="id_tipo_beneficio_registro"
+                                            value={formData.id_tipo_beneficio_registro || ''}
+                                            onChange={handleChange}
+                                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"
+                                        >
+                                            <option value="">Sin beneficio</option>
+                                            {tiposBeneficio.map(tipo => (
+                                                <option key={tipo.id} value={tipo.id}>
+                                                    {tipo.texto}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    
+                                    {formData.id_tipo_beneficio_registro ? (
+                                        <>
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Título del Beneficio</label>
+                                                <input
+                                                    name="beneficio_titulo"
+                                                    value={formData.beneficio_titulo || ''}
+                                                    onChange={handleChange}
+                                                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"
+                                                    placeholder="Ej: 2x1 en Tragos"
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Descripción</label>
+                                                <textarea
+                                                    name="beneficio_descripcion"
+                                                    value={formData.beneficio_descripcion || ''}
+                                                    onChange={handleChange}
+                                                    rows={2}
+                                                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none resize-none"
+                                                    placeholder="Detalles del beneficio..."
+                                                />
+                                            </div>
+                                        </>
+                                    ) : null}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-4 border-t border-card-border pt-6">
