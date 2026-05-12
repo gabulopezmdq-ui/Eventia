@@ -71,6 +71,17 @@ namespace API.Controllers
             return Ok(new { ok = ok });
         }
 
+        [HttpPut("{idPlantilla:long}/SetActivoItem")]
+        public async Task<IActionResult> SetActivoItem(
+            [FromRoute] long idPlantilla,
+            [FromQuery] long idItem,
+            [FromQuery] bool activo)
+        {
+            long idUsuario = User.GetUserId();
+            var ok = await _svc.SetActivoItemAsync(idUsuario, idPlantilla, idItem, activo);
+            return Ok(new { ok = ok });
+        }
+
         [HttpPost("{idPlantilla:long}/AplicarAEvento")]
         public async Task<IActionResult> AplicarAEvento([FromRoute] long idPlantilla, [FromBody] CuentaHospedajePlantillaAplicarRequestDTO req)
         {

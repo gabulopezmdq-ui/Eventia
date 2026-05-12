@@ -357,6 +357,24 @@ namespace API.Services
             return true;
         }
 
+        public async Task<bool> SetActivoItemAsync(long idUsuario, long idPlantilla, long idItem, bool activo)
+        {
+            await ValidarPlantillaAsync(idUsuario, idPlantilla);
+
+            var item = await _context.Set<ef_cuenta_hospedaje_plantilla_items>()
+                .SingleOrDefaultAsync(x =>
+                    x.id_hospedaje_plantilla_item == idItem &&
+                    x.id_hospedaje_plantilla == idPlantilla);
+
+            if (item == null) return false;
+
+            item.activo = activo;
+            item.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         // =========================
         // APLICAR A EVENTO
         // =========================

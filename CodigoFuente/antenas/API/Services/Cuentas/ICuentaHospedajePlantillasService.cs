@@ -15,5 +15,6 @@ namespace API.Services
         Task<bool> DeleteItemAsync(long idUsuario, long idPlantilla, long idItem);
 
         Task<object> AplicarAEventoAsync(long idUsuario, long idPlantilla, CuentaHospedajePlantillaAplicarRequestDTO req);
+        Task<bool> SetActivoItemAsync(long idUsuario, long idPlantilla, long idItem, bool activo);
     }
 }

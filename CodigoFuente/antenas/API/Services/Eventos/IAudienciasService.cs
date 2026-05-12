@@ -18,5 +18,6 @@ namespace API.Services
         Task<List<AudienciaTagSugeridoDTO>> GetTagsSugeridosAsync(long idUsuario);
         Task<AudienciaTagDTO> AgregarTagAsync(long idUsuario, long idAudienciaPersona, AudienciaTagCreateRequest req);
         Task SetTagActivoAsync(long idUsuario, long idAudienciaPersonaTag, bool activo);
+        Task<List<AudienciaPendienteManualBeneficioDTO>> GetPendientesManualBeneficioAsync(long idUsuario, long idEvento);
     }
 }

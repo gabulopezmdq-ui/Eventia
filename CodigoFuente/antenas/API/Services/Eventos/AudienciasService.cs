@@ -48,6 +48,118 @@ namespace API.Services
             var evento = await _context.Set<ef_eventos>()
                 .SingleAsync(x => x.id_evento == link.id_evento);
 
+            var emailNormalizado = string.IsNullOrWhiteSpace(req.email)
+                ? null
+                : req.email.Trim().ToLowerInvariant();
+
+            var celularNormalizado = string.IsNullOrWhiteSpace(req.celular)
+                ? null
+                : req.celular.Trim();
+
+            var nombreNormalizado = req.nombre.Trim().ToLowerInvariant();
+            var apellidoNormalizado = req.apellido.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(emailNormalizado) && string.IsNullOrWhiteSpace(celularNormalizado))
+                throw new Exception("Debe informar email o celular.");
+
+            var invitadoExistente = await _context.Set<ef_invitados>()
+                .FirstOrDefaultAsync(x =>
+                    x.id_evento == evento.id_evento
+                    && x.activo
+                    && (
+                        (!string.IsNullOrWhiteSpace(emailNormalizado)
+                            && x.email != null
+                            && x.email.ToLower() == emailNormalizado)
+                        ||
+                        (
+                            string.IsNullOrWhiteSpace(emailNormalizado)
+                            && !string.IsNullOrWhiteSpace(celularNormalizado)
+                            && x.celular == celularNormalizado
+                            && x.nombre.ToLower() == nombreNormalizado
+                            && x.apellido.ToLower() == apellidoNormalizado
+                        )
+                    ));
+
+            if (invitadoExistente != null)
+            {
+                var perfilExistente = await _context.Set<ef_invitados_perfiles>()
+                    .SingleOrDefaultAsync(x => x.id_invitado == invitadoExistente.id_invitado);
+
+                if (perfilExistente != null)
+                {
+                    perfilExistente.fecha_nacimiento = perfilExistente.fecha_nacimiento ?? req.fecha_nacimiento;
+                    perfilExistente.edad_anios = perfilExistente.edad_anios ?? (req.fecha_nacimiento.HasValue ? CalcularEdad(req.fecha_nacimiento.Value) : null);
+                    perfilExistente.instagram = string.IsNullOrWhiteSpace(perfilExistente.instagram) ? req.instagram : perfilExistente.instagram;
+                    perfilExistente.zona = string.IsNullOrWhiteSpace(perfilExistente.zona) ? req.zona : perfilExistente.zona;
+                    perfilExistente.ciudad = string.IsNullOrWhiteSpace(perfilExistente.ciudad) ? req.ciudad : perfilExistente.ciudad;
+                    perfilExistente.id_perfil_asistencia = perfilExistente.id_perfil_asistencia ?? req.id_perfil_asistencia;
+                    perfilExistente.acepta_terminos = perfilExistente.acepta_terminos || req.acepta_terminos;
+                    perfilExistente.acepta_comunicaciones = perfilExistente.acepta_comunicaciones || req.acepta_comunicaciones;
+                    perfilExistente.acepta_promociones = perfilExistente.acepta_promociones || req.acepta_promociones;
+                    perfilExistente.campania_fuente = string.IsNullOrWhiteSpace(perfilExistente.campania_fuente) ? req.campania_fuente : perfilExistente.campania_fuente;
+                    perfilExistente.campania_medio = string.IsNullOrWhiteSpace(perfilExistente.campania_medio) ? req.campania_medio : perfilExistente.campania_medio;
+                    perfilExistente.campania_nombre = string.IsNullOrWhiteSpace(perfilExistente.campania_nombre) ? req.campania_nombre : perfilExistente.campania_nombre;
+                    perfilExistente.campania_contenido = string.IsNullOrWhiteSpace(perfilExistente.campania_contenido) ? req.campania_contenido : perfilExistente.campania_contenido;
+                    perfilExistente.campania_termino = string.IsNullOrWhiteSpace(perfilExistente.campania_termino) ? req.campania_termino : perfilExistente.campania_termino;
+                    perfilExistente.pagina_origen = string.IsNullOrWhiteSpace(perfilExistente.pagina_origen) ? req.pagina_origen : perfilExistente.pagina_origen;
+                    perfilExistente.referer = string.IsNullOrWhiteSpace(perfilExistente.referer) ? req.referer : perfilExistente.referer;
+                    perfilExistente.fecha_modif = DateTimeOffset.UtcNow;
+                }
+
+                var apeExistente = await _context.Set<ef_audiencia_persona_eventos>()
+                    .SingleOrDefaultAsync(x =>
+                        x.id_evento == evento.id_evento &&
+                        x.id_invitado == invitadoExistente.id_invitado);
+
+                var audienciaExistente = apeExistente != null
+                    ? await _context.Set<ef_audiencias_personas>()
+                        .SingleOrDefaultAsync(x => x.id_audiencia_persona == apeExistente.id_audiencia_persona)
+                    : null;
+
+                if (audienciaExistente != null)
+                {
+                    audienciaExistente.nombre = invitadoExistente.nombre;
+                    audienciaExistente.apellido = invitadoExistente.apellido;
+                    audienciaExistente.email = string.IsNullOrWhiteSpace(audienciaExistente.email) ? invitadoExistente.email : audienciaExistente.email;
+                    audienciaExistente.celular = string.IsNullOrWhiteSpace(audienciaExistente.celular) ? invitadoExistente.celular : audienciaExistente.celular;
+                    audienciaExistente.fecha_nacimiento = audienciaExistente.fecha_nacimiento ?? req.fecha_nacimiento;
+                    audienciaExistente.instagram = string.IsNullOrWhiteSpace(audienciaExistente.instagram) ? req.instagram : audienciaExistente.instagram;
+                    audienciaExistente.zona = string.IsNullOrWhiteSpace(audienciaExistente.zona) ? req.zona : audienciaExistente.zona;
+                    audienciaExistente.ciudad = string.IsNullOrWhiteSpace(audienciaExistente.ciudad) ? req.ciudad : audienciaExistente.ciudad;
+                    audienciaExistente.acepta_comunicaciones = audienciaExistente.acepta_comunicaciones || req.acepta_comunicaciones;
+                    audienciaExistente.acepta_promociones = audienciaExistente.acepta_promociones || req.acepta_promociones;
+                    audienciaExistente.fecha_modif = DateTimeOffset.UtcNow;
+
+                    await UpsertTagAsync(
+                        audienciaExistente.id_audiencia_persona,
+                        "ORIGEN",
+                        !string.IsNullOrWhiteSpace(req.origen_registro)
+                            ? req.origen_registro
+                            : (link.origen_default ?? "STAFF"));
+                }
+
+                await _context.SaveChangesAsync();
+
+                var beneficioExistente = await _context.Set<ef_evento_beneficios_registro>()
+                    .AsNoTracking()
+                    .Where(x => x.id_evento == evento.id_evento && x.id_invitado == invitadoExistente.id_invitado)
+                    .OrderByDescending(x => x.fecha_otorgado)
+                    .FirstOrDefaultAsync();
+
+                return new EventoCaptacionRegistroResponse
+                {
+                    ok = true,
+                    id_invitado = invitadoExistente.id_invitado,
+                    id_audiencia_persona = apeExistente != null ? apeExistente.id_audiencia_persona : 0,
+                    beneficio_otorgado = beneficioExistente != null,
+                    id_beneficio_registro = beneficioExistente != null ? beneficioExistente.id_beneficio_registro : null,
+                    codigo_canje = beneficioExistente != null ? beneficioExistente.codigo_canje : null,
+                    rsvp_token = invitadoExistente.rsvp_token,
+                    qr_token = invitadoExistente.qr_token,
+                    mensaje_post_registro = "Ya estabas registrado. Te esperamos."
+                };
+            }
+
             long? idAudiencia = null;
             long? idBeneficio = null;
             string? codigoCanje = null;
@@ -88,7 +200,6 @@ namespace API.Services
                 acepta_terminos = req.acepta_terminos,
                 acepta_comunicaciones = req.acepta_comunicaciones,
                 acepta_promociones = req.acepta_promociones,
-                origen_registro = string.IsNullOrWhiteSpace(req.origen_registro) ? link.origen_default : req.origen_registro.Trim(),
                 campania_fuente = req.campania_fuente,
                 campania_medio = req.campania_medio,
                 campania_nombre = req.campania_nombre,
@@ -217,7 +328,9 @@ namespace API.Services
                     id_invitado = invitado.id_invitado,
                     id_acceso = link.id_acceso,
                     id_acceso_link = link.id_acceso_link,
-                    origen_registro = perfil.origen_registro,
+                    origen_registro = !string.IsNullOrWhiteSpace(req.origen_registro)
+                        ? req.origen_registro.Trim()
+                        : link.origen_default,
                     registrado = true,
                     asistio = false,
                     beneficio_otorgado = beneficioOtorgado,
@@ -274,7 +387,7 @@ namespace API.Services
                     i.id_acceso,
                     acceso_nombre = a != null ? a.nombre : null,
                     ape_id_acceso_link = ape != null ? ape.id_acceso_link : null,
-                    origen_registro = p != null ? p.origen_registro : null,
+                    origen_registro = ape != null ? ape.origen_registro : null,
                     id_perfil_asistencia = p != null ? p.id_perfil_asistencia : null,
                     acepta_comunicaciones = p != null && p.acepta_comunicaciones,
                     acepta_promociones = p != null && p.acepta_promociones,
@@ -481,17 +594,35 @@ namespace API.Services
                 .Where(x => ids.Contains(x.id_audiencia_persona))
                 .ToListAsync();
 
-            var tags = await _context.Set<ef_audiencia_persona_tags>()
-                .AsNoTracking()
-                .Where(x => ids.Contains(x.id_audiencia_persona) && x.activo)
-                .ToListAsync();
+            var tags = await (
+                from t in _context.Set<ef_audiencia_persona_tags>().AsNoTracking()
+                join p in _context.Set<ef_param_audiencia_tags>().AsNoTracking()
+                    on new { t.tag_tipo, t.tag_valor } equals new { p.tag_tipo, p.tag_valor } into pj
+                from p in pj.DefaultIfEmpty()
+                where ids.Contains(t.id_audiencia_persona) && t.activo
+                orderby t.tag_tipo, t.tag_valor
+                select new
+                {
+                    t.id_audiencia_persona,
+                    dto = new AudienciaTagVistaDTO
+                    {
+                        id_audiencia_persona_tag = t.id_audiencia_persona_tag,
+                        tag_tipo = t.tag_tipo,
+                        tag_valor = t.tag_valor,
+                        nombre_mostrar = p != null ? p.nombre_mostrar : t.tag_valor,
+                        origen = p != null ? p.origen : "MANUAL",
+                        activo = t.activo
+                    }
+                }
+            ).ToListAsync();
 
             return personas.Select(x =>
             {
                 var h = historial.Where(z => z.id_audiencia_persona == x.id_audiencia_persona).ToList();
-                var t = tags.Where(z => z.id_audiencia_persona == x.id_audiencia_persona)
-                    .Select(z => z.tag_valor)
-                    .Distinct()
+
+                var t = tags
+                    .Where(z => z.id_audiencia_persona == x.id_audiencia_persona)
+                    .Select(z => z.dto)
                     .ToList();
 
                 return new AudienciaPersonaDTO
@@ -511,7 +642,10 @@ namespace API.Services
                     fecha_alta = x.fecha_alta,
                     eventos_registrados = h.Count(z => z.registrado),
                     eventos_asistidos = h.Count(z => z.asistio),
-                    ultima_participacion = h.OrderByDescending(z => z.fecha_registro).Select(z => (DateTimeOffset?)z.fecha_registro).FirstOrDefault(),
+                    ultima_participacion = h
+                        .OrderByDescending(z => z.fecha_registro)
+                        .Select(z => (DateTimeOffset?)z.fecha_registro)
+                        .FirstOrDefault(),
                     tags = t
                 };
             }).ToList();
@@ -528,13 +662,23 @@ namespace API.Services
             if (persona == null)
                 throw new Exception("Audiencia inexistente.");
 
-            var tags = await _context.Set<ef_audiencia_persona_tags>()
-                .AsNoTracking()
-                .Where(x => x.id_audiencia_persona == idAudienciaPersona && x.activo)
-                .OrderBy(x => x.tag_tipo)
-                .ThenBy(x => x.tag_valor)
-                .Select(x => x.tag_valor)
-                .ToListAsync();
+            var tags = await (
+                from t in _context.Set<ef_audiencia_persona_tags>().AsNoTracking()
+                join p in _context.Set<ef_param_audiencia_tags>().AsNoTracking()
+                    on new { t.tag_tipo, t.tag_valor } equals new { p.tag_tipo, p.tag_valor } into pj
+                from p in pj.DefaultIfEmpty()
+                where t.id_audiencia_persona == idAudienciaPersona && t.activo
+                orderby t.tag_tipo, t.tag_valor
+                select new AudienciaTagVistaDTO
+                {
+                    id_audiencia_persona_tag = t.id_audiencia_persona_tag,
+                    tag_tipo = t.tag_tipo,
+                    tag_valor = t.tag_valor,
+                    nombre_mostrar = p != null ? p.nombre_mostrar : t.tag_valor,
+                    origen = p != null ? p.origen : "MANUAL",
+                    activo = t.activo
+                }
+            ).ToListAsync();
 
             var historial = await (
                 from ape in _context.Set<ef_audiencia_persona_eventos>().AsNoTracking()
@@ -908,6 +1052,91 @@ namespace API.Services
                 puede_canjear = puedeCanjear,
                 mensaje = mensaje
             };
+        }
+
+        public async Task<List<AudienciaPendienteManualBeneficioDTO>> GetPendientesManualBeneficioAsync(long idUsuario, long idEvento)
+        {
+            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
+
+            var beneficios = await (
+                from b in _context.Set<ef_evento_beneficios_registro>().AsNoTracking()
+                join i in _context.Set<ef_invitados>().AsNoTracking()
+                    on b.id_invitado equals i.id_invitado
+                join a in _context.Set<ef_evento_accesos>().AsNoTracking()
+                    on i.id_acceso equals a.id_acceso into aj
+                from a in aj.DefaultIfEmpty()
+                join l in _context.Set<ef_evento_acceso_links>().AsNoTracking()
+                    on b.id_acceso_link equals l.id_acceso_link into lj
+                from l in lj.DefaultIfEmpty()
+                where b.id_evento == idEvento
+                      && b.estado != "C"
+                select new
+                {
+                    b.id_beneficio_registro,
+                    b.id_evento,
+                    b.id_invitado,
+                    i.nombre,
+                    i.apellido,
+                    i.celular,
+                    acceso_nombre = a != null ? a.nombre : null,
+                    campania = l != null ? l.titulo : null,
+                    beneficio_titulo = b.titulo_snapshot
+                }
+            ).ToListAsync();
+
+            var idsInvitados = beneficios.Select(x => x.id_invitado).Distinct().ToList();
+
+            var apeList = await _context.Set<ef_audiencia_persona_eventos>()
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    x.id_invitado.HasValue &&
+                    idsInvitados.Contains(x.id_invitado.Value) &&
+                    x.asistio)
+                .ToListAsync();
+
+            var ultimosCheckins = await _context.Set<ef_evento_checkins>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == idEvento && idsInvitados.Contains(x.id_invitado))
+                .OrderByDescending(x => x.fecha)
+                .ToListAsync();
+
+            var resultado = beneficios
+                .Where(b => apeList.Any(a => a.id_invitado == b.id_invitado))
+                .Select(b =>
+                {
+                    var ultimo = ultimosCheckins
+                        .Where(c => c.id_invitado == b.id_invitado)
+                        .OrderByDescending(c => c.fecha)
+                        .FirstOrDefault();
+
+                    return new
+                    {
+                        item = b,
+                        ultimo = ultimo
+                    };
+                })
+                .Where(x =>
+                    x.ultimo != null &&
+                    !string.IsNullOrWhiteSpace(x.ultimo.observaciones) &&
+                    x.ultimo.observaciones.ToLower().Contains("manual"))
+                .Select(x => new AudienciaPendienteManualBeneficioDTO
+                {
+                    id_invitado = x.item.id_invitado,
+                    id_beneficio_registro = x.item.id_beneficio_registro,
+                    nombre = x.item.nombre,
+                    apellido = x.item.apellido,
+                    celular = x.item.celular,
+                    campania = x.item.campania,
+                    acceso_nombre = x.item.acceso_nombre,
+                    beneficio_titulo = x.item.beneficio_titulo,
+                    fecha_ingreso = x.ultimo != null ? (DateTimeOffset?)x.ultimo.fecha : null,
+                    observaciones_ingreso = x.ultimo != null ? x.ultimo.observaciones : null
+                })
+                .OrderByDescending(x => x.fecha_ingreso)
+                .ToList();
+
+            return resultado;
         }
 
         public async Task<List<AudienciaTagSugeridoDTO>> GetTagsSugeridosAsync(long idUsuario)

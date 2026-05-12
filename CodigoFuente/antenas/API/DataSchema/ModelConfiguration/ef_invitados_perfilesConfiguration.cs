@@ -17,7 +17,6 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.zona).HasMaxLength(120);
             builder.Property(x => x.ciudad).HasMaxLength(100);
 
-            builder.Property(x => x.origen_registro).HasMaxLength(30);
             builder.Property(x => x.campania_fuente).HasMaxLength(80);
             builder.Property(x => x.campania_medio).HasMaxLength(80);
             builder.Property(x => x.campania_nombre).HasMaxLength(120);
