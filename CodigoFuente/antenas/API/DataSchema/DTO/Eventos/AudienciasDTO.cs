@@ -374,6 +374,11 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("asistio")]
         public bool asistio { get; set; }
+        [JsonPropertyName("qr_token")]
+        public string? qr_token { get; set; }
+
+        [JsonPropertyName("rsvp_token")]
+        public string? rsvp_token { get; set; }
     }
 
     public class AudienciaPersonaDTO
