@@ -15,7 +15,6 @@ namespace API.DataSchema
         public bool acepta_terminos { get; set; }
         public bool acepta_comunicaciones { get; set; }
         public bool acepta_promociones { get; set; }
-        public string? origen_registro { get; set; }
         public string? campania_fuente { get; set; }
         public string? campania_medio { get; set; }
         public string? campania_nombre { get; set; }

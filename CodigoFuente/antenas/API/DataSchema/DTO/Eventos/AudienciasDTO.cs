@@ -427,7 +427,7 @@ namespace API.DataSchema.DTO
         public DateTimeOffset? ultima_participacion { get; set; }
 
         [JsonPropertyName("tags")]
-        public List<string> tags { get; set; } = new List<string>();
+        public List<AudienciaTagVistaDTO> tags { get; set; } = new List<AudienciaTagVistaDTO>();
     }
 
     public class AudienciaDetalleDTO
@@ -475,7 +475,7 @@ namespace API.DataSchema.DTO
         public DateTimeOffset fecha_alta { get; set; }
 
         [JsonPropertyName("tags")]
-        public List<string> tags { get; set; } = new List<string>();
+        public List<AudienciaTagVistaDTO> tags { get; set; } = new List<AudienciaTagVistaDTO>();
 
         [JsonPropertyName("historial")]
         public List<AudienciaDetalleEventoDTO> historial { get; set; } = new List<AudienciaDetalleEventoDTO>();

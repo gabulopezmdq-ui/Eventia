@@ -119,5 +119,13 @@ namespace API.Controllers
                 activo = activo
             });
         }
+
+        [Authorize]
+        [HttpGet("GetPendientesManualBeneficio")]
+        public async Task<ActionResult> GetPendientesManualBeneficio([FromQuery] long idEvento)
+        {
+            long idUsuario = User.GetUserId();
+            return Ok(await _service.GetPendientesManualBeneficioAsync(idUsuario, idEvento));
+        }
     }
 }
