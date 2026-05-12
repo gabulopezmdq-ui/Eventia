@@ -1,4 +1,4 @@
-﻿using  API.DataSchema;
+using  API.DataSchema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +29,7 @@ namespace API.Services
         Task<IEnumerable<T>> GetAllActivos();
         //Task<bool> UserDuplicate(T entity);
         //Task<bool> IsUserDuplicate(T entity);
-        Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null);
+        Task<IEnumerable<T>> GetByVigente(string? vigenteStatus = null);
         Task DeleteUsuario(int Id);
         //Task<bool> HasRelatedEntities(int id);
 

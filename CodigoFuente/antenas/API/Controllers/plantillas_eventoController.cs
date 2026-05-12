@@ -32,7 +32,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByActivo")]
-        public async Task<ActionResult<IEnumerable<ef_plantillas_evento>>> GetByVigente([FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_plantillas_evento>>> GetByVigente([FromQuery] string? activo = null)
         {
             var result = await _serviceGenerico.GetByVigente(activo);
             return Ok(result);
@@ -53,7 +53,7 @@ namespace API.Controllers
         // ? ESTE ES EL QUE TE FALTABA PARA LAS CARDS
         // GET /plantillas_evento/GetByTipo?idTipoEvento=3&activo=true
         [HttpGet("GetByTipo")]
-        public async Task<ActionResult<IEnumerable<ef_plantillas_evento>>> GetByTipo([FromQuery] int idTipoEvento, [FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_plantillas_evento>>> GetByTipo([FromQuery] int idTipoEvento, [FromQuery] string? activo = null)
         {
             bool? activoBool = null;
             if (!string.IsNullOrWhiteSpace(activo))

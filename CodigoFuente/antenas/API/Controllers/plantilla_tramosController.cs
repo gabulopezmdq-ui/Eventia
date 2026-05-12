@@ -1,4 +1,4 @@
-using  API.DataSchema;
+﻿using  API.DataSchema;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +31,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByActivo")]
-        public async Task<ActionResult<IEnumerable<ef_plantilla_tramos>>> GetByVigente([FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_plantilla_tramos>>> GetByVigente([FromQuery] string? activo = null)
         {
             var result = await _serviceGenerico.GetByVigente(activo);
             return Ok(result);
@@ -44,7 +44,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByPlantilla")]
-        public async Task<ActionResult<IEnumerable<ef_plantilla_tramos>>> GetByPlantilla([FromQuery] short idPlantilla, [FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_plantilla_tramos>>> GetByPlantilla([FromQuery] short idPlantilla, [FromQuery] string? activo = null)
         {
             bool? act = null;
             if (!string.IsNullOrWhiteSpace(activo))
@@ -55,7 +55,7 @@ namespace API.Controllers
                 (act == null || x.activo == act.Value)
             );
 
-            // si quer�s ordenados:
+            // si querés ordenados:
             result = result.OrderBy(x => x.orden).ToList();
 
             return Ok(result);
@@ -83,3 +83,4 @@ namespace API.Controllers
         //}
     }
 }
+

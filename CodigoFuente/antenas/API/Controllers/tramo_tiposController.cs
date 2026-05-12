@@ -36,7 +36,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByActivo")]
-        public async Task<ActionResult<IEnumerable<ef_tramo_tipos>>> GetByVigente([FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_tramo_tipos>>> GetByVigente([FromQuery] string? activo = null)
         {
             var result = await _serviceGenerico.GetByVigente(activo);
             return Ok(result);
@@ -57,7 +57,7 @@ namespace API.Controllers
         [HttpGet("Search")]
         public async Task<ActionResult<IEnumerable<ef_tramo_tipos>>> Search(
             [FromQuery] string field,
-            [FromQuery] string q = null,
+            [FromQuery] string? q = null,
             [FromQuery] string modo = "contains",
             [FromQuery] bool? activo = null)
         {

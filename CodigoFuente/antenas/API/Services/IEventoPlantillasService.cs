@@ -1,4 +1,4 @@
-﻿using API.DataSchema.DTO;
+using API.DataSchema.DTO;
 using System;
 using System.Threading.Tasks;
 
@@ -10,8 +10,8 @@ namespace API.Services
             long idEvento,
             short idPlantilla,
             DateTimeOffset fechaBase,
-            string lugarBase = null,
-            string direccionBase = null,
+            string? lugarBase = null,
+            string? direccionBase = null,
             decimal? latitudBase = null,
             decimal? longitudBase = null,
             bool borrarExistente = true
@@ -21,7 +21,7 @@ namespace API.Services
         Task<long?> CrearEstructuraManualAsync(long idEvento, CrearEstructuraManualRequestDTO req, long? idUsuario = null);
         Task ConfirmarSolicitudAsync(long idSolicitud, long? idUsuario = null);
 
-        Task<long> ConvertirSolicitudEnPlantillaAsync(long idSolicitud, string codigo, long idUsuarioAdmin, string observacionesAdmin = null, bool activo = true);
+        Task<long> ConvertirSolicitudEnPlantillaAsync(long idSolicitud, string codigo, long idUsuarioAdmin, string? observacionesAdmin = null, bool activo = true);
 
 
     }

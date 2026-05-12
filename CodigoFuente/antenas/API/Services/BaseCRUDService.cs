@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.Interfaz;
 using API.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +34,7 @@ namespace API.Services
             return _genericRepo.AllAsNoTracking();
         }
 
-        public async Task<IEnumerable<T>> GetByVigente(string vigenteStatus = null)
+        public async Task<IEnumerable<T>> GetByVigente(string? vigenteStatus = null)
         {
             var query = _genericRepo.AllAsNoTracking();
 
