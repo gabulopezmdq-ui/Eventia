@@ -9,7 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+using API.Services.Cuentas;
 
 namespace API.Services.Staff
 {
@@ -18,10 +18,13 @@ namespace API.Services.Staff
         private readonly DataContext _context;
         private readonly IConfiguration _config;
 
-        public StaffService(DataContext context, IConfiguration config)
+        private readonly ICuentaContextService _cuentaContext;
+
+        public StaffService(DataContext context, IConfiguration config, ICuentaContextService cuentaContext)
         {
             _context = context;
             _config = config;
+            _cuentaContext = cuentaContext;
         }
 
         // ─────────────────────────────────────
@@ -106,6 +109,11 @@ namespace API.Services.Staff
             {
                 foreach (var idUnidad in req.id_unidades)
                 {
+                    // Validar que la unidad pertenece a la cuenta
+                    bool pertenece = await _cuentaContext.UnidadPerteneceACuentaAsync(req.id_cuenta, idUnidad);
+                    if (!pertenece)
+                        throw new InvalidOperationException($"La unidad {idUnidad} no pertenece a la cuenta {req.id_cuenta}.");
+
                     _context.ef_staff_unidades.Add(new ef_staff_unidades
                     {
                         id_staff  = staff.id_staff,
