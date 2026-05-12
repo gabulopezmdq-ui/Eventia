@@ -19,12 +19,13 @@ import {
 } from 'lucide-react';
 
 interface PaisOption {
-    id_pais: number;
+    id_pais: string;
     nombre: string;
+    codigo: string;
 }
 
 interface TipoIdentificacionFiscal {
-    id_tipo_identificacion_fiscal: number;
+    id_tipo_identificacion_fiscal: string;
     nombre: string;
     codigo: string;
 }
@@ -57,8 +58,8 @@ export default function SolicitarCuentaPage() {
         web: '',
         telefono: '',
         ciudad: '',
-        id_pais: '' as string | number,
-        id_tipo_identificacion_fiscal: '' as string | number,
+        id_pais: '',
+        id_tipo_identificacion_fiscal: '',
         identificacion_fiscal: '',
         descripcion: '',
     });
@@ -68,28 +69,56 @@ export default function SolicitarCuentaPage() {
         const fetchPaises = async () => {
             try {
                 const res = await fetch('/api/parametrica/paises');
-                if (res.ok) {
-                    const data = await res.json();
-                    const mapped = (data || []).map((p: any) => ({
-                        id_pais: p.id_pais || p.idPais,
-                        nombre: p.texto || p.nombre || p.nombre_pais || p.nombrePais,
-                    }));
-                    setPaises(mapped);
-                    // Pre-seleccionar Argentina
-                    const ar = mapped.find((p: PaisOption) => p.nombre?.toLowerCase().includes('argentin'));
-                    if (ar) {
-                        setForm(prev => ({ ...prev, id_pais: ar.id_pais }));
-                    }
+
+                if (!res.ok) {
+                    console.error('Error fetching paises:', res.status);
+                    return;
                 }
-            } catch {
-                // No bloqueante
+
+                const data = await res.json();
+                console.log('DATA COMPLETA', JSON.stringify(data, null, 2));
+                console.log('PAISES RAW:', data);
+
+                const mapped: PaisOption[] = (data || []).map((p: any) => ({
+                    id_pais: String(
+                        p.id_pais ??
+                        p.idPais ??
+                        p.id
+                    ),
+                    nombre:
+                        p.texto ??
+                        p.nombre ??
+                        p.nombre_pais ??
+                        p.nombrePais ??
+                        'Sin nombre',
+                    codigo: p.codigo ?? '',
+                }));
+
+                console.log('PAISES MAPPED:', mapped);
+
+                setPaises(mapped);
+
+                // Preseleccionar Argentina
+                const argentina = mapped.find((p) =>
+                    p.nombre.toLowerCase().includes('argentin')
+                );
+
+                if (argentina) {
+                    setForm(prev => ({
+                        ...prev,
+                        id_pais: argentina.id_pais,
+                    }));
+                }
+
+            } catch (err) {
+                console.error('Error in fetchPaises:', err);
             } finally {
                 setLoadingPaises(false);
             }
         };
+
         fetchPaises();
     }, []);
-
     // ── Cargar tipos de identificación fiscal cuando cambia el país ──
     useEffect(() => {
         if (!form.id_pais) {
@@ -99,24 +128,35 @@ export default function SolicitarCuentaPage() {
 
         const fetchTiposId = async () => {
             setLoadingTiposId(true);
+
             try {
-                const res = await fetch(`/api/parametrica/tipos-id-fiscal?idPais=${form.id_pais}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setTiposIdFiscal(
-                        (data || []).map((t: any) => ({
-                            id_tipo_identificacion_fiscal: t.id_tipo_identificacion_fiscal || t.idTipoIdentificacionFiscal,
-                            nombre: t.nombre,
-                            codigo: t.codigo,
-                        }))
-                    );
-                }
-            } catch {
-                // No bloqueante
+                const res = await fetch(
+                    `/api/parametrica/tipos-id-fiscal?idPais=${form.id_pais}`
+                );
+
+                if (!res.ok) return;
+
+                const data = await res.json();
+
+                const mapped: TipoIdentificacionFiscal[] = (data || []).map((t: any) => ({
+                    id_tipo_identificacion_fiscal: String(
+                        t.id_tipo_identificacion_fiscal ??
+                        t.idTipoIdentificacionFiscal ??
+                        t.id
+                    ),
+                    nombre: t.nombre ?? '',
+                    codigo: t.codigo ?? '',
+                }));
+
+                setTiposIdFiscal(mapped);
+
+            } catch (err) {
+                console.error('Error tipos identificación fiscal:', err);
             } finally {
                 setLoadingTiposId(false);
             }
         };
+
         fetchTiposId();
     }, [form.id_pais]);
 
@@ -260,11 +300,10 @@ export default function SolicitarCuentaPage() {
                                         key={value}
                                         type="button"
                                         onClick={() => setForm(prev => ({ ...prev, tipo: value }))}
-                                        className={`relative text-left p-4 rounded-xl border-2 transition-all duration-200 ${
-                                            isSelected
-                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 shadow-sm'
-                                                : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-indigo-300 dark:hover:border-indigo-500/30'
-                                        }`}
+                                        className={`relative text-left p-4 rounded-xl border-2 transition-all duration-200 ${isSelected
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 shadow-sm'
+                                            : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-indigo-300 dark:hover:border-indigo-500/30'
+                                            }`}
                                     >
                                         <p className={`text-sm font-bold mb-0.5 ${isSelected ? 'text-indigo-600 dark:text-indigo-300' : 'text-neutral-900 dark:text-white'}`}>
                                             {label}
@@ -361,11 +400,19 @@ export default function SolicitarCuentaPage() {
                                 name="id_pais"
                                 value={form.id_pais}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-pointer"
                             >
-                                <option value="">Seleccioná un país...</option>
-                                {paises.map(p => (
-                                    <option key={p.id_pais} value={p.id_pais}>{p.nombre}</option>
+                                <option value="">
+                                    Seleccioná un país...
+                                </option>
+
+                                {paises.map((p) => (
+                                    <option
+                                        key={p.id_pais}
+                                        value={p.id_pais}
+                                    >
+                                        {p.nombre}{p.codigo ? ` (${p.codigo})` : ''}
+                                    </option>
                                 ))}
                             </select>
                         )}
