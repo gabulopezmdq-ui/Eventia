@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -36,6 +36,19 @@ namespace API.Services.Cuentas
 
         public async Task<bool> EsAdminCuentaAsync(long id_usuario, long id_cuenta)
         {
+            // 1. Si es SUPERADMIN, tiene acceso a todo
+            bool esSuperAdmin = await (
+                from ur in _context.Set<ef_usuarios_roles>().AsNoTracking()
+                join r in _context.Set<ef_roles>().AsNoTracking() on ur.id_rol equals r.id_rol
+                where ur.id_usuario == id_usuario 
+                      && r.codigo == "SUPERADMIN" 
+                      && ur.activo == true
+                select ur
+            ).AnyAsync();
+
+            if (esSuperAdmin) return true;
+
+            // 2. Si es ACCOUNT_ADMIN de la cuenta específica
             return await (
                 from cu in _context.Set<ef_cuenta_usuarios>().AsNoTracking()
                 join r in _context.Set<ef_roles>().AsNoTracking()
