@@ -56,6 +56,8 @@ export interface UIFlags {
 export interface UsuarioContext {
     id_usuario: number;
     email: string;
+    nombre?: string | null;
+    apellido?: string | null;
 }
 
 /**
