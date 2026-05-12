@@ -72,7 +72,7 @@ export default function SolicitarCuentaPage() {
                     const data = await res.json();
                     const mapped = (data || []).map((p: any) => ({
                         id_pais: p.id_pais || p.idPais,
-                        nombre: p.nombre || p.nombre_pais || p.nombrePais,
+                        nombre: p.texto || p.nombre || p.nombre_pais || p.nombrePais,
                     }));
                     setPaises(mapped);
                     // Pre-seleccionar Argentina
