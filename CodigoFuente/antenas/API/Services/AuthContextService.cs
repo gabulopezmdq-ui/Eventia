@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -149,7 +149,9 @@ namespace API.Services
                 usuario = new usuario_me
                 {
                     id_usuario = usuario.id_usuario,
-                    email = usuario.email
+                    email = usuario.email,
+                    nombre = usuario.nombre,
+                    apellido = usuario.apellido
                 },
                 roles_globales = roles_globales,
                 cuenta = cuenta,

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace API.DataSchema.DTO
 {
@@ -15,6 +15,8 @@ namespace API.DataSchema.DTO
     {
         public long id_usuario { get; set; }
         public string email { get; set; }
+        public string nombre { get; set; }
+        public string apellido { get; set; }
     }
 
     public class cuenta_me
