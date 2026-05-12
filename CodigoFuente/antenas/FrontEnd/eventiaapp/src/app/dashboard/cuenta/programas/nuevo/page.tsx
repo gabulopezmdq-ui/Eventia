@@ -115,11 +115,6 @@ export default function NuevoProgramaPage() {
                     setClientes(data);
                 }
 
-                setFormData(prev => ({
-                    ...prev,
-                    anfitrionesTexto: 'Aquamar'
-                }));
-
             } catch (err) {
 
                 console.error(err);

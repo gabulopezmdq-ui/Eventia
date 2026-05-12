@@ -33,6 +33,7 @@ export interface CreateEventPayload {
     idIdioma: number;
     idPlantilla?: number;
     idDressCode?: number;
+    DressCodeDescripcion?: string;
     anfitrionesTexto: string;
     saludo?: string;
     mensajeBienvenida?: string;

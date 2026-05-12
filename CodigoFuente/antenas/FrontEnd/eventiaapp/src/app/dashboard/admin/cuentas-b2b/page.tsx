@@ -87,11 +87,16 @@ export default function CuentasB2BAdminPage() {
         try {
             const payload: any = {
                 id_cuenta: selectedCuenta.id_cuenta,
-                observacion,
             };
             
-            if (modalAction === 'Aprobar' || modalAction === 'CambiarPlan') {
-                payload.codigo_plan = planCodigo;
+            if (modalAction === 'CambiarPlan') {
+                payload.codigo_plan_nuevo = planCodigo;
+                payload.motivo = observacion;
+            } else {
+                payload.observacion = observacion;
+                if (modalAction === 'Aprobar') {
+                    payload.codigo_plan = planCodigo;
+                }
             }
 
             const res = await fetch(`/api/admin/cuentas-b2b/actions?action=${modalAction}`, {
@@ -102,7 +107,8 @@ export default function CuentasB2BAdminPage() {
 
             if (!res.ok) {
                 const err = await res.json();
-                throw new Error(err.message || `Error al ${modalAction}`);
+                const backendMsg = err.details?.message || err.message;
+                throw new Error(backendMsg || `Error al ${modalAction}`);
             }
 
             setIsModalOpen(false);
@@ -247,12 +253,14 @@ export default function CuentasB2BAdminPage() {
                                                         Reactivar
                                                     </button>
                                                 )}
-                                                <button
-                                                    onClick={() => openModal(cuenta, 'CambiarPlan')}
-                                                    className="px-3 py-1 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-xs font-bold rounded"
-                                                >
-                                                    Plan
-                                                </button>
+                                                {cuenta.estado === 'A' && (
+                                                    <button
+                                                        onClick={() => openModal(cuenta, 'CambiarPlan')}
+                                                        className="px-3 py-1 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-xs font-bold rounded"
+                                                    >
+                                                        Plan
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
