@@ -577,6 +577,9 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("beneficio_canjeado")]
         public bool beneficio_canjeado { get; set; }
+       
+        [JsonPropertyName("campania")]
+        public string? campania { get; set; }
     }
 
     public class QrEntradaResolucionDTO

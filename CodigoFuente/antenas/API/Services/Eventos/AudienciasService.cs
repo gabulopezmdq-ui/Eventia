@@ -846,6 +846,7 @@ namespace API.Services
                     acceso_nombre = a != null ? a.nombre : null,
                     id_acceso_link = i.id_acceso_link,
                     origen_registro = l != null ? l.origen_default : null,
+                    campania = l != null ? l.titulo : null,
                     asistio = ape != null && ape.asistio,
                     beneficio_otorgado = ape != null && ape.beneficio_otorgado,
                     beneficio_canjeado = ape != null && ape.beneficio_canjeado
