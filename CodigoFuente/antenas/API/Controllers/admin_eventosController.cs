@@ -28,7 +28,7 @@ namespace API.Controllers
             _eventos = eventos;
         }
 
-        // (Opcional) GetAll genérico (devuelve todo, sin filtro)
+        // (Opcional) GetAll genÃ©rico (devuelve todo, sin filtro)
         // GET /adminEventos/GetAll
         [HttpGet("GetAll")]
         public ActionResult<IEnumerable<ef_eventos>> GetAll()
@@ -39,7 +39,7 @@ namespace API.Controllers
         // Admin: listar eventos (por estado opcional)
         // GET /adminEventos/Listar?estado=B
         [HttpGet("Listar")]
-        public async Task<ActionResult<List<EventoResponse>>> Listar([FromQuery] string estado = null)
+        public async Task<ActionResult<List<EventoResponse>>> Listar([FromQuery] string? estado = null)
         {
             var result = await _eventos.AdminListarEventosAsync(estado);
             return Ok(result);
@@ -65,3 +65,4 @@ namespace API.Controllers
         }
     }
 }
+

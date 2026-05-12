@@ -26,7 +26,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByActivo")]
-        public async Task<ActionResult<IEnumerable<ef_plantilla_accesos>>> GetByVigente([FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_plantilla_accesos>>> GetByVigente([FromQuery] string? activo = null)
         {
             var result = await _serviceGenerico.GetByVigente(activo);
             return Ok(result);
@@ -39,7 +39,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByPlantilla")]
-        public async Task<ActionResult<IEnumerable<ef_plantilla_accesos>>> GetByPlantilla([FromQuery] short idPlantilla, [FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_plantilla_accesos>>> GetByPlantilla([FromQuery] short idPlantilla, [FromQuery] string? activo = null)
         {
             bool? act = null;
             if (!string.IsNullOrWhiteSpace(activo))

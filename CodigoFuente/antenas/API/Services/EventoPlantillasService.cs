@@ -22,8 +22,8 @@ namespace API.Services
             long idEvento,
             short idPlantilla,
             DateTimeOffset fechaBase,
-            string lugarBase = null,
-            string direccionBase = null,
+            string? lugarBase = null,
+            string? direccionBase = null,
             decimal? latitudBase = null,
             decimal? longitudBase = null,
             bool borrarExistente = true)
@@ -564,7 +564,7 @@ namespace API.Services
             long idSolicitud,
             string codigo,
             long idUsuarioAdmin,
-            string observacionesAdmin = null,
+            string? observacionesAdmin = null,
             bool activo = true)
         {
             if (string.IsNullOrWhiteSpace(codigo))

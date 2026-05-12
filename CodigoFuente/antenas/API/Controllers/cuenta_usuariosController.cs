@@ -42,7 +42,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetByActivo")]
-        public async Task<ActionResult<IEnumerable<ef_cuenta_usuarios>>> GetByVigente([FromQuery] string activo = null)
+        public async Task<ActionResult<IEnumerable<ef_cuenta_usuarios>>> GetByVigente([FromQuery] string? activo = null)
         {
             var result = await _serviceGenerico.GetByVigente(activo);
             return Ok(result);
