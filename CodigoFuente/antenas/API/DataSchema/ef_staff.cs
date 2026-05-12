@@ -12,8 +12,6 @@ namespace API.DataSchema
         /// <summary>Evento específico (si es un evento personal B2C sin cuenta)</summary>
         public long? id_evento { get; set; }
 
-        /// <summary>Unidad operativa principal asignada</summary>
-        public long? id_unidad { get; set; }
 
         /// <summary>Rol: STAFF_DJ, STAFF_RECEPTOR, STAFF_BARTENDER, STAFF_MESERO, etc.</summary>
         public short id_rol { get; set; }
