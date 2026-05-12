@@ -393,7 +393,9 @@ namespace API.Services
                     acepta_promociones = p != null && p.acepta_promociones,
                     beneficio_otorgado = ape != null && ape.beneficio_otorgado,
                     beneficio_canjeado = ape != null && ape.beneficio_canjeado,
-                    asistio = ape != null && ape.asistio
+                    asistio = ape != null && ape.asistio,
+                    i.qr_token,
+                    i.rsvp_token
                 }
             ).ToListAsync();
 
@@ -436,7 +438,9 @@ namespace API.Services
                 acepta_promociones = x.acepta_promociones,
                 beneficio_otorgado = x.beneficio_otorgado,
                 beneficio_canjeado = x.beneficio_canjeado,
-                asistio = x.asistio
+                asistio = x.asistio,
+                qr_token = x.qr_token,
+                rsvp_token = x.rsvp_token
             }).ToList();
         }
 
