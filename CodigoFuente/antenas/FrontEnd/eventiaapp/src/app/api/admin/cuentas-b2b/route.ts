@@ -11,7 +11,7 @@ export async function GET() {
 
         if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
-        const res = await fetch(`${API_URL}/admin/cuentas/GetPendientes`, {
+        const res = await fetch(`${API_URL}/admin/cuentas/GetAll`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` },
         });
