@@ -440,15 +440,9 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between py-2 border-b border-card-border">
                                 <div className="flex items-center gap-2 text-xs text-muted">
-                                    <Globe className="w-3.5 h-3.5" /> Idioma
-                                </div>
-                                <span className="text-xs font-bold text-foreground">{event.id_idioma === 2 ? 'Español' : 'Otro'}</span>
-                            </div>
-                            <div className="flex items-center justify-between py-2 border-b border-card-border">
-                                <div className="flex items-center gap-2 text-xs text-muted">
                                     <Tag className="w-3.5 h-3.5" /> Tipo Evento
                                 </div>
-                                <span className="text-xs font-bold text-foreground">ID #{event.id_tipo_evento}</span>
+                                <span className="text-xs font-bold text-foreground">{event.tipoEventoDescripcion || `ID #${event.id_tipo_evento}`}</span>
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-card-border">
                                 <div className="flex items-center gap-2 text-xs text-muted">

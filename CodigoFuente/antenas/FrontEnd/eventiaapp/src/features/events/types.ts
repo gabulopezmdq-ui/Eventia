@@ -21,6 +21,7 @@ export interface Event {
     uniqueProperties: unknown[];
     tipo_evento: unknown | null;
     tipo_evento_codigo?: string;
+    tipoEventoDescripcion?: string;
     idioma: unknown | null;
     dress_code: unknown | null;
     cliente: unknown | null;
@@ -33,6 +34,7 @@ export interface CreateEventPayload {
     idIdioma: number;
     idPlantilla?: number;
     idDressCode?: number;
+    DressCodeDescripcion?: string;
     anfitrionesTexto: string;
     saludo?: string;
     mensajeBienvenida?: string;

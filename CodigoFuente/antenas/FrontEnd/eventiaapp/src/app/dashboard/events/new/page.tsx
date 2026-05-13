@@ -89,6 +89,7 @@ function NewEventContent() {
         idTipoEvento: 0,
         idIdioma: 0,
         idDressCode: 0,
+        dressCodeDescripcion: '',
         anfitrionesTexto: '',
         saludo: '',
         mensajeBienvenida: '',
@@ -326,6 +327,7 @@ function NewEventContent() {
                 idTipoEvento: basicInfo.idTipoEvento,
                 idIdioma: basicInfo.idIdioma,
                 idDressCode: basicInfo.idDressCode > 0 ? basicInfo.idDressCode : undefined,
+                DressCodeDescripcion: basicInfo.dressCodeDescripcion || undefined,
                 anfitrionesTexto: basicInfo.anfitrionesTexto,
                 saludo: basicInfo.saludo || undefined,
                 mensajeBienvenida: basicInfo.mensajeBienvenida || undefined,
@@ -651,29 +653,48 @@ function NewEventContent() {
 
                                 {/* Dress Code */}
                                 {dressCodes.length > 0 && (
-                                    <div className="animate-in fade-in slide-in-from-top-2 duration-400">
-                                        <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
-                                            <Shirt className="w-3 h-3" />
-                                            Dress Code
-                                            <span className="text-muted/50 font-normal lowercase tracking-normal">(opcional)</span>
-                                        </label>
-                                        <div className="relative">
-                                            <select
-                                                name="idDressCode"
-                                                value={basicInfo.idDressCode}
-                                                onChange={handleBasicInfoChange}
-                                                className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10"
-                                            >
-                                                <option value={0}>Sin dress code</option>
-                                                {dressCodes.map((dc) => (
-                                                    <option key={dc.id} value={dc.id}>
-                                                        {dc.texto}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-400 space-y-4">
+                                        <div>
+                                            <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
+                                                <Shirt className="w-3 h-3" />
+                                                Dress Code
+                                                <span className="text-muted/50 font-normal lowercase tracking-normal">(opcional)</span>
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    name="idDressCode"
+                                                    value={basicInfo.idDressCode}
+                                                    onChange={handleBasicInfoChange}
+                                                    className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10"
+                                                >
+                                                    <option value={0}>Sin dress code</option>
+                                                    {dressCodes.map((dc) => (
+                                                        <option key={dc.id} value={dc.id}>
+                                                            {dc.texto}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                </div>
                                             </div>
+                                        </div>
+
+                                        {/* Descripción Dress Code */}
+                                        <div>
+                                            <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
+                                                <AlignLeft className="w-3 h-3" />
+                                                Descripción Dress Code
+                                                <span className="text-muted/50 font-normal lowercase tracking-normal">(opcional)</span>
+                                            </label>
+                                            <textarea
+                                                name="dressCodeDescripcion"
+                                                placeholder="Describí las indicaciones o detalles del dress code para tus invitados..."
+                                                value={basicInfo.dressCodeDescripcion}
+                                                onChange={handleBasicInfoChange}
+                                                rows={2}
+                                                className="w-full p-4 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none placeholder:text-muted resize-none"
+                                            />
                                         </div>
                                     </div>
                                 )}
