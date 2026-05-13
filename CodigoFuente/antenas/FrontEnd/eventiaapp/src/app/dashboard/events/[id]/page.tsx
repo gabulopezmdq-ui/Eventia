@@ -41,7 +41,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 const request = isAdmin ? getAdminEventById(id) : getEventById(id);
                 const eventData = await request;
                 setEvent(eventData);
-
+                console.log('EVENT DATA', eventData);
                 // Intentar cargar la estructura para mostrar estadísticas
                 try {
                     const structData = await getEstructuraEvento(idEventoLong);
@@ -457,6 +457,49 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 <span className="font-mono text-[10px] text-foreground underline decoration-indigo-500/30">EVT-{event.id_evento}</span>
                             </div>
                         </div>
+                    </div>
+                    {/* Plan Actual */}
+                    <div className="p-6 rounded-2xl bg-card-bg border border-card-border space-y-5">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-foreground">
+                                    Plan del Evento
+                                </h3>
+                                <p className="text-xs text-muted">
+                                    Plan actualmente asignado al evento
+                                </p>
+                            </div>
+
+                            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
+                                <Sparkles className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-background border border-card-border">
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted">
+                                        Plan Actual
+                                    </p>
+
+                                    <h4 className="text-lg font-bold text-foreground">
+                                        {event.planNombre || 'Sin plan asignado'}
+                                    </h4>
+                                </div>
+
+                                <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+                                    Activo
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/plan`)}
+                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all"
+                        >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Cambiar Plan
+                        </button>
                     </div>
 
                     {/* Secondary Actions */}

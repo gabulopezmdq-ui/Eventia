@@ -103,6 +103,7 @@ export async function getEventById(id: string): Promise<Event> {
         id_dress_code: item.idDressCode,
         dress_code_descripcion: item.dressCodeDescripcion,
         tipoOperacion: item.tipoOperacion,
+        planNombre: item.planNombre,
     } as Event;
 }
 
