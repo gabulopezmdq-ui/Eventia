@@ -25,6 +25,22 @@ namespace API.Controllers
             _adminCuentasService = adminCuentasService;
         }
 
+
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<List<admin_cuenta_admin_dto>>> GetAll([FromQuery] string estado = null)
+        {
+            try
+            {
+                var result = await _adminCuentasService.GetAllAsync(estado);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener cuentas.");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpGet("GetPendientes")]
         public async Task<ActionResult<List<admin_cuenta_pendiente_dto>>> GetPendientes()
         {
