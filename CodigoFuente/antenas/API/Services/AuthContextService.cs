@@ -54,7 +54,8 @@ namespace API.Services
                 {
                     eu.id_evento,
                     rol_codigo = r.codigo,
-                    estado_evento = e.estado
+                    estado_evento = e.estado,
+                    id_cuenta = e.id_cuenta
                 }
             ).ToListAsync();
 
@@ -62,11 +63,11 @@ namespace API.Services
             var cantidad_compartidos = eventos_usuario.Count(x =>
                 x.rol_codigo == "EVENT_HOST" || x.rol_codigo == "EVENT_CLIENT_ADMIN");
 
-            // Regla B2C: puede crear evento si NO tiene borradores propios
-            var cantidad_borradores_propios = eventos_usuario.Count(x =>
-                x.rol_codigo == "EVENT_OWNER" && x.estado_evento == "B");
+            // Regla B2C: puede crear evento si NO tiene borradores propios (B2C)
+            var cantidad_borradores_propios_b2c = eventos_usuario.Count(x =>
+                x.rol_codigo == "EVENT_OWNER" && x.estado_evento == "B" && x.id_cuenta == null);
 
-            var puede_crear_evento_b2c = cantidad_borradores_propios == 0;
+            var puede_crear_evento_b2c = cantidad_borradores_propios_b2c == 0;
 
             // =========================
             // 4. CUENTA DEL USUARIO
