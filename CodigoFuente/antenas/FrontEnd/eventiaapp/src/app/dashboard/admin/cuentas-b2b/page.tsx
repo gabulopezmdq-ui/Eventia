@@ -39,6 +39,21 @@ export default function CuentasB2BAdminPage() {
     // Form state
     const [observacion, setObservacion] = useState('');
     const [planCodigo, setPlanCodigo] = useState('');
+    const [planesB2B, setPlanesB2B] = useState<any[]>([]);
+
+    const fetchPlanes = async () => {
+        try {
+            const res = await fetch('/api/planesPublic/PublicCatalog?tipo=B2B');
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setPlanesB2B(data);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching planes:', error);
+        }
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -47,9 +62,9 @@ export default function CuentasB2BAdminPage() {
             const res = await fetch('/api/admin/cuentas-b2b');
             if (!res.ok) throw new Error('Error al cargar datos');
             const result = await res.json();
-            
+
             const list = Array.isArray(result) ? result : (result.cuentas || result.data || []);
-            
+
             setData(list.map((item: any) => ({
                 id_cuenta: item.id_cuenta ?? item.idCuenta,
                 nombre_cuenta: item.nombre_cuenta ?? item.nombreCuenta,
@@ -70,6 +85,7 @@ export default function CuentasB2BAdminPage() {
 
     useEffect(() => {
         fetchData();
+        fetchPlanes();
     }, []);
 
     const openModal = (cuenta: CuentaAdminInfo, action: 'Aprobar' | 'Suspender' | 'Reactivar' | 'CambiarPlan') => {
@@ -88,7 +104,7 @@ export default function CuentasB2BAdminPage() {
             const payload: any = {
                 id_cuenta: selectedCuenta.id_cuenta,
             };
-            
+
             if (modalAction === 'CambiarPlan') {
                 payload.codigo_plan_nuevo = planCodigo;
                 payload.motivo = observacion;
@@ -302,10 +318,11 @@ export default function CuentasB2BAdminPage() {
                                         className="w-full px-3 py-2 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 focus:ring-2 focus:ring-indigo-500 outline-none"
                                     >
                                         <option value="">Seleccione un plan...</option>
-                                        <option value="PRO_MENSUAL">PRO_MENSUAL</option>
-                                        <option value="PREMIUM_MENSUAL">PREMIUM_MENSUAL</option>
-                                        <option value="AGENCIA_ANUAL">AGENCIA_ANUAL</option>
-                                        {/* TODO: Idealmente esto vendría de un endpoint GET /planes */}
+                                        {planesB2B.map(plan => (
+                                            <option key={plan.codigo} value={plan.codigo}>
+                                                {plan.nombre}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             )}
@@ -335,9 +352,8 @@ export default function CuentasB2BAdminPage() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className={`flex-1 py-2 rounded-xl text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
-                                        modalAction === 'Suspender' ? 'bg-red-600 hover:bg-red-500' : 'bg-indigo-600 hover:bg-indigo-500'
-                                    }`}
+                                    className={`flex-1 py-2 rounded-xl text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${modalAction === 'Suspender' ? 'bg-red-600 hover:bg-red-500' : 'bg-indigo-600 hover:bg-indigo-500'
+                                        }`}
                                 >
                                     {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                     Confirmar

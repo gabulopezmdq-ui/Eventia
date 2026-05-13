@@ -47,15 +47,15 @@ export default function OportunidadesAdminPage() {
             
             setData(list.map((item: any) => ({
                 id_evento: item.id_evento ?? item.idEvento,
-                fecha_alta: item.fecha_alta ?? item.fechaAlta,
+                fecha_alta: item.fecha_alta_evento ?? item.fecha_alta ?? item.fechaAlta,
                 anfitriones_texto: item.anfitriones_texto ?? item.anfitrionesTexto,
-                tipo_evento: item.tipo_evento ?? item.tipoEvento,
+                tipo_evento: item.tipo_evento_codigo ?? item.tipo_evento ?? item.tipoEvento,
                 plan_nombre: item.plan_nombre ?? item.planNombre,
                 owner_email: item.owner_email ?? item.ownerEmail,
-                trial_fecha_fin: item.trial_fecha_fin ?? item.trialFechaFin,
-                trial_dias_restantes: item.trial_dias_restantes ?? item.trialDiasRestantes,
-                trial_vencido: item.trial_vencido ?? item.trialVencido,
-                convertido: item.convertido
+                trial_fecha_fin: item.trial_fin ?? item.trial_fecha_fin ?? item.trialFechaFin,
+                trial_dias_restantes: item.dias_restantes ?? item.trial_dias_restantes ?? item.trialDiasRestantes,
+                trial_vencido: item.vencido ?? item.trial_vencido ?? item.trialVencido,
+                convertido: item.convertido_a_pago ?? item.convertido
             })));
         } catch (err: any) {
             setError(err.message);
