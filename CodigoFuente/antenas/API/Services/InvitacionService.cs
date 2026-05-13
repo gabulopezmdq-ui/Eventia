@@ -55,14 +55,6 @@ namespace API.Services
             // 1. Procesar cada persona enviada en la confirmación
             foreach (var persona in datos.Personas)
             {
-                // Validación: El titular debe tener email y celular obligatoriamente
-                if (persona.IdInvitado == titular.id_invitado)
-                {
-                    if (string.IsNullOrWhiteSpace(persona.Email))
-                        throw new Exception($"El email del titular ({persona.Nombre}) es obligatorio.");
-                    if (string.IsNullOrWhiteSpace(persona.Celular))
-                        throw new Exception($"El celular del titular ({persona.Nombre}) es obligatorio.");
-                }
 
                 // Buscar si ya existe como integrante
                 // Si IdInvitado > 0, buscar por ID; si es 0 (persona nueva sin ID asignado),
