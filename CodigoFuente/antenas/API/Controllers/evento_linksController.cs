@@ -1,6 +1,8 @@
 using API.DataSchema;
 using API.DataSchema.DTO;
+using API.Security;
 using API.Services.Musica;
+using API.Services.Planes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +34,41 @@ namespace API.Controllers
             if (req == null) return BadRequest(new { error = "Body inválido." });
             if (req.id_evento <= 0) return BadRequest(new { error = "id_evento inválido." });
             if (string.IsNullOrWhiteSpace(req.tipo)) return BadRequest(new { error = "tipo es obligatorio." });
+
+            long idUsuario = User.GetUserId();
+
+            // seguridad: debe pertenecer al evento
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AsNoTracking()
+                .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
+
+            if (!pertenece)
+                return Forbid();
+
+            // evento + plan + estado
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .Where(e => e.id_evento == req.id_evento)
+                .Select(e => new { e.estado, e.id_plan })
+                .SingleOrDefaultAsync();
+
+            if (ev == null)
+                return NotFound(new { error = "Evento inexistente." });
+
+            // Si no está activo, no debe generar links (plan pago pendiente, etc.)
+            if (ev.estado != "A")
+                return BadRequest(new { error = "El evento no está activo. No se pueden generar links en estado pendiente/borrador." });
+
+            if (!ev.id_plan.HasValue)
+                return BadRequest(new { error = "El evento no tiene plan asignado. No se pueden generar links." });
+
+            // bloqueo por plan: PERMITIR_GENERAR_LINKS
+            var helper = new PlanLimitesHelper(_context);
+            await helper.RequireLimiteEnabledAsync(
+                req.id_evento,
+                "PERMITIR_GENERAR_LINKS",
+                "Tu plan no permite generar links. Actualizá el plan para enviar invitaciones."
+            );
 
             // token único
             string token;

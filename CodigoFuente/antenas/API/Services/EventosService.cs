@@ -781,18 +781,7 @@ namespace API.Services
                 if (req.IdCliente.HasValue)
                     throw new InvalidOperationException("No corresponde informar cliente en un evento B2C.");
 
-                bool yaTieneBorrador = await _context.Set<ef_evento_usuarios>()
-                    .AnyAsync(eu =>
-                        eu.id_usuario == idUsuario &&
-                        eu.activo == true &&
-                        _context.Set<ef_eventos>().Any(ev =>
-                            ev.id_evento == eu.id_evento &&
-                            ev.estado == EventoEstado.Borrador &&
-                            ev.id_cuenta == null));
-
-                if (yaTieneBorrador)
-                    throw new InvalidOperationException("Ya tienes un evento en borrador. Por favor, activa o elimina ese evento anterior para crear uno nuevo.");
-
+                
                 var codigoPlan = string.IsNullOrWhiteSpace(req.CodigoPlan)
                     ? "B2C_FREE"
                     : req.CodigoPlan.Trim();
@@ -805,6 +794,44 @@ namespace API.Services
 
                 if (planB2C == null)
                     throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
+
+                // ✅ Anti-abuso: máximo trials activos por usuario (solo para B2C_FREE)
+                if (planB2C.codigo == "B2C_FREE")
+                {
+                    // Leer el límite desde ef_plan_limites (si no existe, default = 1)
+                    var maxTrials = await _context.Set<ef_plan_limites>()
+                        .AsNoTracking()
+                        .Where(l => l.id_plan == planB2C.id_plan
+                                 && l.codigo_limite == "MAX_TRIAL_EVENTOS_ACTIVOS"
+                                 && l.activo == true)
+                        .Select(l => l.valor_int)
+                        .FirstOrDefaultAsync();
+
+                    int maxTrialsFinal = (maxTrials.HasValue && maxTrials.Value > 0) ? maxTrials.Value : 1;
+
+                    // Contar trials activos del usuario (suscripción vigente)
+                    var nowUtc = DateTimeOffset.UtcNow;
+
+                    var trialsActivos = await (
+                        from s in _context.Set<ef_suscripciones>().AsNoTracking()
+                        join eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
+                            on s.id_evento equals eu.id_evento
+                        join ev in _context.Set<ef_eventos>().AsNoTracking()
+                            on s.id_evento equals ev.id_evento
+                        where s.scope == "EVENTO"
+                              && s.activo == true
+                              && s.estado == "ACTIVA"
+                              && s.current_period_end != null
+                              && s.current_period_end > nowUtc
+                              && eu.id_usuario == idUsuario
+                              && eu.activo == true
+                              && ev.id_cuenta == null // solo trials B2C
+                        select s.id_evento
+                    ).Distinct().CountAsync();
+
+                    if (trialsActivos >= maxTrialsFinal)
+                        throw new InvalidOperationException($"Ya tenés {trialsActivos} trial activo. Debés esperar a que venza o contratar un plan para crear otro trial.");
+                }
             }
             else
             {
@@ -916,11 +943,22 @@ namespace API.Services
                 idPlanEvento = planB2C.id_plan;
 
                 estadoInicial = planB2C.codigo == "B2C_FREE"
-                    ? EventoEstado.Borrador
+                    ? EventoEstado.Activo
                     : EventoEstado.PendientePago;
 
+                // Trial días parametrizable por plan
+                var trialDias = await _context.Set<ef_plan_limites>()
+                    .AsNoTracking()
+                    .Where(l => l.id_plan == planB2C.id_plan
+                             && l.codigo_limite == "TRIAL_DIAS"
+                             && l.activo == true)
+                    .Select(l => l.valor_int)
+                    .FirstOrDefaultAsync();
+
+                int trialDiasFinal = (trialDias.HasValue && trialDias.Value > 0) ? trialDias.Value : 7;
+
                 observacionHistorial = planB2C.codigo == "B2C_FREE"
-                    ? "Creación evento (FREE) - trial 7 días"
+                    ? $"Creación evento (FREE) - trial {trialDiasFinal} días"
                     : $"Creación evento (plan {planB2C.codigo}) - pendiente de pago";
             }
             else
@@ -988,15 +1026,51 @@ namespace API.Services
             // =====================================================
             // CREAR LINK DEFAULT DEL ACCESO
             // =====================================================
+            //var link = new ef_evento_acceso_links
+            //{
+            //    id_evento = evento.id_evento,
+            //    id_acceso = acceso.id_acceso,
+            //    titulo = "Principal",
+            //    token = TokenUtility.Generate(64),
+            //    max_personas_total = 200,
+            //    max_adultos = 200,
+            //    activo = true,
+            //    fecha_alta = now
+            //};
+            // Permitir generar links (default 1 si no existe límite)
+            var permitirLinks = await _context.Set<ef_plan_limites>()
+                .AsNoTracking()
+                .Where(l => l.id_plan == idPlanEvento
+                         && l.codigo_limite == "PERMITIR_GENERAR_LINKS"
+                         && l.activo == true)
+                .Select(l => l.valor_int)
+                .FirstOrDefaultAsync();
+
+            int permitirLinksFinal = (permitirLinks.HasValue) ? permitirLinks.Value : 1;
+
+            // Max invitados (si querés usarlo como cupo sugerido del link default)
+            var maxInv = await _context.Set<ef_plan_limites>()
+                .AsNoTracking()
+                .Where(l => l.id_plan == idPlanEvento
+                         && l.codigo_limite == "MAX_INVITADOS"
+                         && l.activo == true)
+                .Select(l => l.valor_int)
+                .FirstOrDefaultAsync();
+
+            int maxInvFinal = (maxInv.HasValue && maxInv.Value >= 1) ? maxInv.Value : 200;
+
+            // ✅ Link activo SOLO si el evento está ACTIVO y el plan permite links
+            bool linkActivo = (estadoInicial == EventoEstado.Activo) && (permitirLinksFinal != 0);
+
             var link = new ef_evento_acceso_links
             {
                 id_evento = evento.id_evento,
                 id_acceso = acceso.id_acceso,
                 titulo = "Principal",
                 token = TokenUtility.Generate(64),
-                max_personas_total = 200,
-                max_adultos = 200,
-                activo = true,
+                max_personas_total = maxInvFinal,
+                max_adultos = maxInvFinal,
+                activo = linkActivo,
                 fecha_alta = now
             };
 
@@ -1035,6 +1109,8 @@ namespace API.Services
             // =====================================================
             if (!esB2B)
             {
+                int trialDiasFinal = 7;
+
                 if (planB2C.codigo == "B2C_FREE")
                 {
                     _context.Set<ef_suscripciones>().Add(new ef_suscripciones
@@ -1046,7 +1122,7 @@ namespace API.Services
                         auto_renueva = false,
                         periodo = "UNICO",
                         current_period_start = now,
-                        current_period_end = now.AddDays(7),
+                        current_period_end = now.AddDays(trialDiasFinal),
                         activo = true,
                         fecha_alta = now
                     });
