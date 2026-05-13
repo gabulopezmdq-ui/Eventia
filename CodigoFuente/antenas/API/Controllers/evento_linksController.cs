@@ -35,15 +35,15 @@ namespace API.Controllers
             if (req.id_evento <= 0) return BadRequest(new { error = "id_evento inválido." });
             if (string.IsNullOrWhiteSpace(req.tipo)) return BadRequest(new { error = "tipo es obligatorio." });
 
-            long idUsuario = User.GetUserId();
+            //long idUsuario = User.GetUserId();
 
             // seguridad: debe pertenecer al evento
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
-                .AsNoTracking()
-                .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
+            //bool pertenece = await _context.Set<ef_evento_usuarios>()
+            //    .AsNoTracking()
+            //    .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
-            if (!pertenece)
-                return Forbid();
+            //if (!pertenece)
+            //    return Forbid();
 
             // evento + plan + estado
             var ev = await _context.Set<ef_eventos>()
@@ -109,10 +109,21 @@ namespace API.Controllers
             if (req == null || req.id_evento_link <= 0)
                 return BadRequest(new { error = "id_evento_link inválido." });
 
+            //long idUsuario = User.GetUserId();
+
             var link = await _context.Set<ef_evento_links>()
                 .FirstOrDefaultAsync(x => x.id_evento_link == req.id_evento_link);
 
             if (link == null) return NotFound(new { error = "Link no encontrado." });
+
+
+            //seguridad: usuario debe pertenecer al evento del link
+            //bool pertenece = await _context.Set<ef_evento_usuarios>()
+            //    .AsNoTracking()
+            //    .AnyAsync(x => x.id_evento == link.id_evento && x.id_usuario == idUsuario && x.activo == true);
+
+            //if (!pertenece)
+            //    return Forbid();
 
             link.activo = false;
 

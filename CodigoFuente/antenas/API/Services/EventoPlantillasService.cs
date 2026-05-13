@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
+using API.Services.Planes;
 
 namespace API.Services
 {
@@ -73,6 +74,38 @@ namespace API.Services
             var relTpl = await _context.Set<ef_plantilla_acceso_tramos>()
                 .Where(r => accesosTplIds.Contains(r.id_plantilla_acceso))
                 .ToListAsync();
+
+
+            // =====================================================
+            // LÍMITES POR PLAN (MAX_TRAMOS / MAX_ACCESOS)
+            // OJO: esto va ANTES de borrar_existente, así no borrás
+            // y después fallás por límite.
+            // =====================================================
+            var limites = new PlanLimitesHelper(_context);
+
+            var maxTramos = await limites.GetLimiteIntByEventoAsync(idEvento, "MAX_TRAMOS");
+            var maxAccesos = await limites.GetLimiteIntByEventoAsync(idEvento, "MAX_ACCESOS");
+
+            // Si el límite existe (incluso 0), se respeta.
+            // - null => sin límite definido (no bloquea)
+            // - 0 => no permitido
+            if (maxTramos.HasValue && tramosTpl.Count > maxTramos.Value)
+            {
+                throw new InvalidOperationException(
+                    $"Tu plan permite hasta {maxTramos.Value} tramos. La plantilla tiene {tramosTpl.Count}. " +
+                    $"Elegí otra plantilla o actualizá el plan."
+                );
+            }
+
+            if (maxAccesos.HasValue && accesosTpl.Count > maxAccesos.Value)
+            {
+                throw new InvalidOperationException(
+                    $"Tu plan permite hasta {maxAccesos.Value} tipos de invitación (accesos). La plantilla tiene {accesosTpl.Count}. " +
+                    $"Elegí otra plantilla o actualizá el plan."
+                );
+            }
+
+
 
             // Borrar existente (Limpieza Profunda)
             if (borrarExistente)
@@ -341,11 +374,39 @@ namespace API.Services
             await using var tx = await _context.Database.BeginTransactionAsync();
             var now = DateTimeOffset.UtcNow;
 
+            // 1) Evento
             var ev = await _context.Set<ef_eventos>()
                 .SingleOrDefaultAsync(e => e.id_evento == idEvento);
 
             if (ev == null)
                 throw new InvalidOperationException("Evento inexistente.");
+
+            // (opcional recomendado) solo si está activo
+            if (ev.estado != "A")
+                throw new InvalidOperationException("El evento no está activo. No se puede crear estructura manual.");
+
+            // 2) Límite: permitir wizard sin plantilla
+            // =====================================================
+            // BLOQUEO POR PLAN: PERMITIR_WIZARD_SIN_PLANTILLA
+            // Si el límite existe y es 0 → bloquea.
+            // Si no existe → no bloquea (planes superiores).
+            // =====================================================
+            var helper = new PlanLimitesHelper(_context);
+            await helper.RequireLimiteEnabledAsync(
+                idEvento,
+                "PERMITIR_WIZARD_SIN_PLANTILLA",
+                "Tu plan no permite crear estructura manual. Elegí una plantilla o actualizá el plan."
+            );
+
+            // 3) Límites de volumen (antes de borrar/crear)
+            var maxTramos = await helper.GetLimiteIntByEventoAsync(idEvento, "MAX_TRAMOS");
+            var maxAccesos = await helper.GetLimiteIntByEventoAsync(idEvento, "MAX_ACCESOS");
+
+            if (maxTramos.HasValue && req.tramos != null && req.tramos.Count > maxTramos.Value)
+                throw new InvalidOperationException($"Tu plan permite hasta {maxTramos.Value} tramos. Estás enviando {req.tramos.Count}.");
+
+            if (maxAccesos.HasValue && req.accesos != null && req.accesos.Count > maxAccesos.Value)
+                throw new InvalidOperationException($"Tu plan permite hasta {maxAccesos.Value} accesos. Estás enviando {req.accesos.Count}.");
 
             // Traer solicitud draft y validar estado D + evento
             var solicitud = await _context.Set<ef_solicitudes_plantilla>()
