@@ -50,8 +50,8 @@ namespace API.DataSchema.DTO
         public string Nombre { get; set; }
         public string Apellido { get; set; }
 
-        public string Email { get; set; }
-        public string Celular { get; set; }
+        public string? Email { get; set; }
+        public string? Celular { get; set; }
 
         public bool Asiste { get; set; }
 
@@ -78,8 +78,8 @@ namespace API.DataSchema.DTO
         public long IdInvitado { get; set; }
         public string Nombre { get; set; }
         public string Apellido { get; set; }
-        public string Email { get; set; }
-        public string Celular { get; set; }
+        public string? Email { get; set; }
+        public string? Celular { get; set; }
         public string? Token { get; set; }
         public List<TramoAgendaDTO>? Tramos { get; set; }
         public string RsvpEstado { get; set; } // "P", "Y", "N"
@@ -122,9 +122,9 @@ namespace API.DataSchema.DTO
 
         public string Apellido { get; set; }
 
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
-        public string Celular { get; set; }
+        public string? Celular { get; set; }
 
         public bool Titular { get; set; }
 
@@ -209,8 +209,8 @@ public class RsvpPersonaConfirmacionDTO
     {
         public string Nombre { get; set; }
         public string Apellido { get; set; }
-        public string Email { get; set; }
-        public string Celular { get; set; }
+        public string? Email { get; set; }
+        public string? Celular { get; set; }
         public string RolEvento { get; set; } // "A" o "N"
     }
 }
