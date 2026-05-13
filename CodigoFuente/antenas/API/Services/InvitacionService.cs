@@ -7,6 +7,8 @@ using System;
 using System.Threading.Tasks;
 using API.Utility;
 using System.Linq;
+using API.Services.Planes;
+
 
 using System.Collections.Generic;
 
@@ -149,6 +151,21 @@ namespace API.Services
                     if (persona.Asiste && persona.RolEvento != "A" && persona.RolEvento != "N")
                         throw new Exception("El rol de evento (Adulto/Niño) es obligatorio para invitados que asisten.");
 
+                    //Límite total de invitados por plan (evita que agreguen acompañantes infinitos)
+                    var helper = new PlanLimitesHelper(_context);
+                    var maxInv = await helper.GetLimiteIntByEventoAsync(titular.id_evento, "MAX_INVITADOS");
+                    if (maxInv.HasValue && maxInv.Value > 0)
+                    {
+                        var actuales = await _context.ef_invitados
+                            .AsNoTracking()
+                            .Where(i => i.id_evento == titular.id_evento && i.activo == true && i.es_staff == false)
+                            .CountAsync();
+
+                        if (actuales >= maxInv.Value)
+                            throw new Exception($"El evento alcanzó el máximo de invitados permitido por el plan ({maxInv.Value}).");
+                    }
+
+
                     // Crear nuevo invitado
                     var nuevoInvitado = new ef_invitados
                     {
@@ -251,12 +268,70 @@ namespace API.Services
 
         public async Task CargarInvitadosAsync(CrearGrupoInvitacionRequest req, long idUsuario)
         {
+            if (req == null) throw new Exception("Body inválido.");
+            if (req.IdEvento <= 0) throw new Exception("IdEvento inválido.");
+            if (req.IdAcceso <= 0) throw new Exception("IdAcceso inválido.");
+            if (req.Personas == null || req.Personas.Count == 0) throw new Exception("Debe informar al menos 1 persona.");
+            if (req.MaxPersonasTotal <= 0) throw new Exception("MaxPersonasTotal inválido.");
+            if (req.CantAdultosSinNombre < 0 || req.CantMenoresSinNombre < 0) throw new Exception("Cantidades sin nombre inválidas.");
+
+            //// Seguridad: el usuario debe pertenecer al evento
+            //bool pertenece = await _context.Set<ef_evento_usuarios>()
+            //    .AsNoTracking()
+            //    .AnyAsync(x => x.id_evento == req.IdEvento && x.id_usuario == idUsuario && x.activo == true);
+
             var evento = await _context.ef_eventos.FindAsync(req.IdEvento);
 
             if (evento == null)
                 throw new Exception("Evento inexistente");
 
+            // =====================================================
+            // LIMITES POR PLAN (Free y otros)
+            // - Reservamos cupo por grupo: actuales + MaxPersonasTotal <= límite
+            // - Si no existe el límite en BD, no bloquea
+            // =====================================================
+            var helper = new PlanLimitesHelper(_context);
+
+            int? maxManual = await helper.GetLimiteIntByEventoAsync(req.IdEvento, "MAX_INVITADOS_MANUAL");
+            int? maxTotal = await helper.GetLimiteIntByEventoAsync(req.IdEvento, "MAX_INVITADOS");
+
+            int? limite = null;
+            if (maxManual.HasValue && maxManual.Value > 0) limite = maxManual.Value;
+            if (maxTotal.HasValue && maxTotal.Value > 0) limite = limite.HasValue ? Math.Min(limite.Value, maxTotal.Value) : maxTotal.Value;
+
+            if (limite.HasValue)
+            {
+                // invitados actuales (excluimos staff)
+                var actuales = await _context.ef_invitados
+                    .AsNoTracking()
+                    .Where(i => i.id_evento == req.IdEvento && i.activo == true && i.es_staff == false)
+                    .CountAsync();
+
+                // “reservamos” lo que va a permitir el grupo (incluye sin nombre)
+                if (actuales + req.MaxPersonasTotal > limite.Value)
+                {
+                    throw new Exception(
+                        $"Tu plan permite hasta {limite.Value} invitados en total. " +
+                        $"Actualmente tenés {actuales} y este grupo permite {req.MaxPersonasTotal}. " +
+                        $"Reducí el cupo o actualizá el plan."
+                    );
+                }
+
+                // además, no dejes que el grupo declare un cupo mayor al límite
+                if (req.MaxPersonasTotal > limite.Value)
+                {
+                    throw new Exception(
+                        $"Tu plan permite hasta {limite.Value} invitados. " +
+                        $"MaxPersonasTotal no puede ser mayor a {limite.Value}."
+                    );
+                }
+            }
+
+
+
             var ahora = DateTimeOffset.UtcNow;
+
+            await using var tx = await _context.Database.BeginTransactionAsync();
 
             var grupo = new ef_rsvp_grupos
             {
@@ -315,6 +390,7 @@ namespace API.Services
             }
 
             await _context.SaveChangesAsync();
+            await tx.CommitAsync();
         }
         public async Task<List<InvitadoLinkDTO>> ObtenerInvitadosParaEnvioAsync(long idEvento)
         {
