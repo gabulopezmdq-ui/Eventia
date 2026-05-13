@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles, AlertCircle } from 'lucide-react';
-import { loginStaff } from '@/src/features/staff/staff.service';
+import { joinStaff } from '@/src/features/staff/staff.service';
 import { useStaffAuth } from '@/src/context/StaffAuthContext';
 
 export default function StaffLoginPage() {
@@ -21,17 +21,18 @@ export default function StaffLoginPage() {
     }, [isLoading, token, router]);
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Acepta entre 4 y 10 caracteres alfanuméricos (flexible según backend)
         let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        if (val.length > 8) val = val.substring(0, 8);
+        if (val.length > 10) val = val.substring(0, 10);
         setCodigo(val);
         setError(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (codigo.length < 8) {
-            setError('El código debe tener 8 caracteres.');
+
+        if (codigo.length < 4) {
+            setError('El código debe tener al menos 4 caracteres.');
             return;
         }
 
@@ -39,8 +40,8 @@ export default function StaffLoginPage() {
         setError(null);
 
         try {
-            const jwt = await loginStaff(codigo);
-            await login(jwt);
+            const joinResponse = await joinStaff(codigo);
+            login(joinResponse); // Pasa el objeto completo al contexto
             router.push('/staff/eventos');
         } catch (err: any) {
             setError(err.message ?? 'Código inválido o expirado.');
@@ -61,16 +62,16 @@ export default function StaffLoginPage() {
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] px-4">
             <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl shadow-indigo-500/10 border border-neutral-200 dark:border-neutral-800 p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-                
+
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-600/30 mx-auto mb-6">
                     <Sparkles className="w-8 h-8 text-white" />
                 </div>
-                
+
                 <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
                     Portal de Staff
                 </h1>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-8">
-                    Ingresá tu código de 8 caracteres para ver tus eventos asignados.
+                    Ingresá tu código de acceso para ver tus eventos asignados.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -79,15 +80,15 @@ export default function StaffLoginPage() {
                             type="text"
                             value={codigo}
                             onChange={handleInput}
-                            placeholder="Ej: ACDJ3521"
+                            placeholder="Ej: X8Y2Z1"
                             className="w-full px-6 py-4 text-center text-3xl font-mono tracking-[0.2em] font-bold text-indigo-600 dark:text-indigo-400 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition uppercase"
                             autoComplete="off"
                             spellCheck="false"
                         />
                         <div className="flex justify-between items-center px-1 text-xs text-neutral-400">
                             <span>Solo letras y números</span>
-                            <span className={codigo.length === 8 ? 'text-green-500' : ''}>
-                                {codigo.length}/8
+                            <span className={codigo.length >= 4 ? 'text-green-500' : ''}>
+                                {codigo.length} car.
                             </span>
                         </div>
                     </div>
@@ -101,7 +102,7 @@ export default function StaffLoginPage() {
 
                     <button
                         type="submit"
-                        disabled={submitting || codigo.length < 8}
+                        disabled={submitting || codigo.length < 4}
                         className="w-full flex items-center justify-center gap-2 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
                     >
                         {submitting && <Loader2 className="w-5 h-5 animate-spin" />}

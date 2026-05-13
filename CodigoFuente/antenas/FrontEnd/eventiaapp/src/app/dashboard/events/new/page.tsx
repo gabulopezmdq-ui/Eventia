@@ -358,8 +358,8 @@ function NewEventContent() {
             setIdEvento(eventId);
             setEventCreated(true);
             setCurrentStep(2);
-        } catch {
-            setError('No se pudo crear el evento. Por favor, intenta de nuevo.');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'No se pudo crear el evento. Por favor, intenta de nuevo.');
         } finally {
             setLoading(false);
         }

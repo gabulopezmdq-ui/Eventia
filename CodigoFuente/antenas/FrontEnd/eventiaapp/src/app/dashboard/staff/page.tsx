@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { UserCog, Plus, Loader2, RefreshCw } from 'lucide-react';
-import { getStaffUnidades } from '@/src/features/staff/staff.service';
+import { getStaffList } from '@/src/features/staff/staff.service';
 import { Staff } from '@/src/features/staff/types';
 import { StaffTable } from '@/src/features/staff/components/StaffTable';
 import { StaffModal } from '@/src/features/staff/components/StaffModal';
@@ -16,8 +16,7 @@ export default function StaffPage() {
     const [error, setError] = useState<string | null>(null);
 
     // Modal state
-    const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null);
-    const [selectedStaff, setSelectedStaff] = useState<Staff | undefined>(undefined);
+    const [modalOpen, setModalOpen] = useState(false);
     const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
 
     const loadStaff = async () => {
@@ -25,7 +24,7 @@ export default function StaffPage() {
         setLoading(true);
         setError(null);
         try {
-            const data = await getStaffUnidades(cuenta.id_cuenta);
+            const data = await getStaffList(cuenta.id_cuenta);
             setStaffList(data);
         } catch (err: any) {
             setError(err.message ?? 'No se pudo cargar la lista de staff.');
@@ -74,10 +73,7 @@ export default function StaffPage() {
                         <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                     <button
-                        onClick={() => {
-                            setModalMode('create');
-                            setSelectedStaff(undefined);
-                        }}
+                        onClick={() => setModalOpen(true)}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-sm transition-all"
                     >
                         <Plus className="w-5 h-5" />
@@ -102,21 +98,15 @@ export default function StaffPage() {
             ) : (
                 <StaffTable
                     staffList={staffList}
-                    onEdit={(staff) => {
-                        setSelectedStaff(staff);
-                        setModalMode('edit');
-                    }}
                     onDelete={(staff) => setStaffToDelete(staff)}
                     onRefresh={loadStaff}
                 />
             )}
 
             {/* Modals */}
-            {modalMode && (
+            {modalOpen && (
                 <StaffModal
-                    mode={modalMode}
-                    initialData={selectedStaff}
-                    onClose={() => setModalMode(null)}
+                    onClose={() => setModalOpen(false)}
                     onSuccess={loadStaff}
                 />
             )}
