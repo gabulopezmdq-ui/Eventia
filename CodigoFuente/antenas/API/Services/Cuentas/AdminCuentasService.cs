@@ -17,6 +17,57 @@ namespace API.Services.Cuentas
             _context = context;
         }
 
+        public async Task<List<admin_cuenta_admin_dto>> GetAllAsync(string estado = null)
+        {
+            var query = _context.ef_cuentas
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(estado))
+            {
+                estado = estado.Trim().ToUpper();
+                query = query.Where(c => c.estado == estado);
+            }
+
+            var result = await query
+                .OrderBy(c => c.nombre_cuenta)
+                .Select(c => new admin_cuenta_admin_dto
+                {
+                    id_cuenta = c.id_cuenta,
+                    nombre_cuenta = c.nombre_cuenta,
+                    tipo = c.tipo,
+                    estado = c.estado,
+
+                    id_plan = c.id_plan,
+                    plan_codigo = c.plan != null ? c.plan.codigo : null,
+                    plan_nombre = c.plan != null ? c.plan.nombre : null,
+
+                    instagram = c.instagram,
+                    web = c.web,
+                    telefono = c.telefono,
+                    ciudad = c.ciudad,
+
+                    id_pais = c.id_pais,
+                    pais_codigo_iso2 = c.pais != null ? c.pais.codigo_iso2 : null,
+                    pais_codigo_iso3 = c.pais != null ? c.pais.codigo_iso3 : null,
+
+                    id_tipo_identificacion_fiscal = c.id_tipo_identificacion_fiscal,
+                    tipo_identificacion_fiscal_codigo = c.tipo_identificacion_fiscal != null
+                        ? c.tipo_identificacion_fiscal.codigo
+                        : null,
+
+                    identificacion_fiscal = c.identificacion_fiscal,
+                    descripcion = c.descripcion,
+                    moneda_default = c.moneda_default,
+
+                    fecha_alta = c.fecha_alta,
+                    fecha_modif = c.fecha_modif
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
         public async Task<List<admin_cuenta_pendiente_dto>> GetPendientesAsync()
         {
             var result = await (
