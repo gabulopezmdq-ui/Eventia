@@ -159,6 +159,7 @@ namespace API.DataSchema
         public DbSet<ef_programa_inscripcion_pagos> ef_programa_inscripcion_pagos { get; set; }
         public DbSet<ef_param_programa_tipos_ajuste> ef_param_programa_tipos_ajuste { get; set; }
         public DbSet<ef_programa_inscripcion_autorizaciones> ef_programa_inscripcion_autorizaciones { get; set; }
+        public DbSet<ef_param_limites> ef_param_limites { get; set; }
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -346,6 +347,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_pagosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_ajusteConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_autorizacionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_limitesConfiguration());
 
 
 
