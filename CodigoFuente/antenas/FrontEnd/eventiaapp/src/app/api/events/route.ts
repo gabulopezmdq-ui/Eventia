@@ -14,24 +14,30 @@ export async function POST(req: Request) {
 
         const body = await req.json();
 
+        // El backend .NET espera snake_case. El frontend envía camelCase.
+        // Aceptamos camelCase, snake_case y PascalCase para mayor compatibilidad.
         const backendPayload = {
-            id_tipo_evento: body.idTipoEvento,
-            id_idioma: body.idIdioma,
-            id_plantilla: body.idPlantilla,
-            id_dress_code: body.idDressCode,
-            anfitriones_texto: body.anfitrionesTexto,
-            saludo: body.saludo,
-            mensaje_bienvenida: body.mensajeBienvenida,
-            notas: body.notas,
-            fecha_hora: body.fechaHora,
-            lugar: body.lugar,
-            direccion: body.direccion,
-            latitud: body.latitud,
-            longitud: body.longitud,
-            modalidad: body.modalidad,
-            id_unidad: body.idUnidad,
-            id_cliente: body.idCliente,
-            codigo_plan: body.codigoPlan,
+            id_tipo_evento:               body.idTipoEvento        ?? body.id_tipo_evento        ?? body.IdTipoEvento,
+            id_idioma:                    body.idIdioma             ?? body.id_idioma             ?? body.IdIdioma,
+            id_plantilla:                 body.idPlantilla          ?? body.id_plantilla          ?? body.IdPlantilla,
+            id_dress_code:                body.idDressCode          ?? body.id_dress_code         ?? body.IdDressCode,
+            anfitriones_texto:            body.anfitrionesTexto     ?? body.anfitriones_texto     ?? body.AnfitrionesTexto,
+            saludo:                       body.saludo               ?? body.Saludo,
+            mensaje_bienvenida:           body.mensajeBienvenida    ?? body.mensaje_bienvenida    ?? body.MensajeBienvenida,
+            notas:                        body.notas                ?? body.Notas,
+            info_publica:                 body.infoPublica          ?? body.info_publica          ?? body.InfoPublica,
+            fecha_hora:                   body.fechaHora            ?? body.fecha_hora            ?? body.FechaHora,
+            fecha_inicio:                 body.fechaInicio          ?? body.fecha_inicio          ?? body.FechaInicio,
+            fecha_fin:                    body.fechaFin             ?? body.fecha_fin             ?? body.FechaFin,
+            lugar:                        body.lugar                ?? body.Lugar,
+            direccion:                    body.direccion            ?? body.Direccion,
+            latitud:                      body.latitud              ?? body.Latitud,
+            longitud:                     body.longitud             ?? body.Longitud,
+            modalidad:                    body.modalidad            ?? body.Modalidad,
+            id_unidad:                    body.idUnidad             ?? body.id_unidad             ?? body.IdUnidad,
+            id_cliente:                   body.idCliente            ?? body.id_cliente            ?? body.IdCliente,
+            codigo_plan:                  body.codigoPlan           ?? body.codigo_plan           ?? body.CodigoPlan,
+            tipo_operacion:               body.tipoOperacion        ?? body.tipo_operacion        ?? body.TipoOperacion,
         };
 
         // Limpiar undefined para que el JSON quede limpio

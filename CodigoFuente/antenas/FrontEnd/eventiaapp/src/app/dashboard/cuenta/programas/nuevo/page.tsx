@@ -115,11 +115,6 @@ export default function NuevoProgramaPage() {
                     setClientes(data);
                 }
 
-                setFormData(prev => ({
-                    ...prev,
-                    anfitrionesTexto: 'Aquamar'
-                }));
-
             } catch (err) {
 
                 console.error(err);
@@ -266,41 +261,34 @@ export default function NuevoProgramaPage() {
             }
 
             const payload = {
-                id_tipo_evento: formData.idTipoEvento,
-                id_idioma: formData.idIdioma,
-                id_unidad: Number(b2bInfo.idUnidad),
+                idTipoEvento:      formData.idTipoEvento,
+                idIdioma:          formData.idIdioma,
+                idUnidad:          Number(b2bInfo.idUnidad),
 
-                id_cliente:
+                idCliente:
                     b2bInfo.destinatario === 'CLIENTE'
                         ? Number(b2bInfo.idCliente)
                         : null,
 
-                modalidad: b2bInfo.destinatario,
+                modalidad:         b2bInfo.destinatario,
 
-                anfitriones_texto:
-                    formData.anfitrionesTexto,
+                anfitrionesTexto:  formData.anfitrionesTexto,
 
-                saludo:
-                    formData.nombrePrograma,
+                saludo:            formData.nombrePrograma,
 
-                mensaje_bienvenida:
-                    formData.mensajeBienvenida || null,
+                mensajeBienvenida: formData.mensajeBienvenida || null,
 
-                notas:
-                    formData.notas || null,
+                notas:             formData.notas || null,
 
-                info_publica:
-                    formData.infoPublica || null,
+                infoPublica:       formData.infoPublica || null,
 
-                fecha_inicio:
-                    formData.fechaInicio,
+                fechaInicio:       formData.fechaInicio,
 
-                fecha_fin:
-                    formData.fechaFin,
+                fechaFin:          formData.fechaFin,
 
-                codigo_plan: 'B2B_STARTER',
+                codigoPlan:        'B2B_STARTER',
 
-                tipo_operacion: 'PROGRAMA'
+                tipoOperacion:     'PROGRAMA'
             };
 
             const result = await createPrograma(

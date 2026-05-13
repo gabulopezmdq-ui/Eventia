@@ -43,8 +43,7 @@ export default function DashboardPage() {
     }
 
     const userName =
-        authMe?.usuario?.email?.split("@")[0] ||
-        authMe?.email?.split("@")[0] ||
+        authMe?.usuario?.nombre ||
         "Invitado";
 
     const isB2B = canAccessB2B;
