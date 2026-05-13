@@ -334,6 +334,7 @@ export default function PagosEventosAdminPage() {
                                     >
                                         <option value="ARS">ARS</option>
                                         <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
                                     </select>
                                 </div>
                             </div>
