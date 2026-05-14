@@ -31,6 +31,8 @@ using QuestPDF.Infrastructure;
 using API.Services.Cuentas;
 using API.Services.Staff;
 using API.Services.Eventos;
+using API.Services.Precios;
+using API.Services.Planes;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -169,7 +171,10 @@ builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IProgramasService, ProgramasService>();
 
 
-
+//planes-precios
+builder.Services.AddScoped<IPreciosService, PreciosService>();
+builder.Services.AddScoped<IEventoPlanCambiosService, EventoPlanCambiosService>();
+builder.Services.AddScoped<IAdminEventoPlanCambiosService, AdminEventoPlanCambiosService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
