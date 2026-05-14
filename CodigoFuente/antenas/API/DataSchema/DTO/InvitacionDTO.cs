@@ -55,7 +55,7 @@ namespace API.DataSchema.DTO
 
         public bool Asiste { get; set; }
 
-        public string Mensaje { get; set; }
+        public string? Mensaje { get; set; }
 
         public List<RsvpAcompanianteDTO> Acompanantes { get; set; }
     }
@@ -155,7 +155,7 @@ public class RsvpPersonaConfirmacionDTO
 
     public class RsvpConfirmacionDTO
     {
-        public string MensajeGrupo { get; set; }
+        public string? MensajeGrupo { get; set; }
         public List<RsvpPersonaConfirmacionDTO> Personas { get; set; }
     }
 
@@ -200,7 +200,7 @@ public class RsvpPersonaConfirmacionDTO
     public class RegistroLinkRequest
     {
         public string TokenLink { get; set; }
-        public string NombreGrupo { get; set; }
+        public string? NombreGrupo { get; set; }
         public PersonaRegistroDTO Titular { get; set; }
         public List<PersonaRegistroDTO> Acompanantes { get; set; } // opcional
     }
