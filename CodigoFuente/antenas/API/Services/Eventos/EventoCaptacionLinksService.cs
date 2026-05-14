@@ -18,9 +18,9 @@ namespace API.Services
             _context = context;
         }
 
-        public async Task<List<EventoCaptacionLinkDTO_>> GetByEventoAsync(long idUsuario, long idEvento)
+        public async Task<List<EventoCaptacionLinkDTO_>> GetByEventoAsync(long idUsuario, long idEvento, bool esSuperadmin = false)
         {
-            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
+            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento, esSuperadmin);
 
             var links = await _context.Set<ef_evento_acceso_links>()
                 .AsNoTracking()
@@ -64,7 +64,7 @@ namespace API.Services
             )).ToList();
         }
 
-        public async Task<EventoCaptacionLinkDTO_> GetByIdAsync(long idUsuario, long idAccesoLink)
+        public async Task<EventoCaptacionLinkDTO_> GetByIdAsync(long idUsuario, long idAccesoLink, bool esSuperadmin = false)
         {
             var link = await _context.Set<ef_evento_acceso_links>()
                 .Include(x => x.acceso)
@@ -77,7 +77,7 @@ namespace API.Services
             if (link.id_evento <= 0)
                 throw new Exception("El link no tiene evento asociado.");
 
-            await ValidarUsuarioPerteneceEvento(idUsuario, link.id_evento);
+            await ValidarUsuarioPerteneceEvento(idUsuario, link.id_evento, esSuperadmin);
 
             int registrados = await _context.Set<ef_invitados>()
                 .CountAsync(x => x.id_acceso_link == idAccesoLink);
@@ -91,9 +91,9 @@ namespace API.Services
             return Map(link, registrados, otorgados, canjeados);
         }
 
-        public async Task<EventoCaptacionLinkDTO_> UpsertAsync(long idUsuario, long idEvento, EventoCaptacionLinkUpsertRequest req)
+        public async Task<EventoCaptacionLinkDTO_> UpsertAsync(long idUsuario, long idEvento, EventoCaptacionLinkUpsertRequest req, bool esSuperadmin = false)
         {
-            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento);
+            await ValidarUsuarioPerteneceEvento(idUsuario, idEvento, esSuperadmin);
 
             var acceso = await _context.Set<ef_evento_accesos>()
                 .AsNoTracking()
@@ -196,7 +196,7 @@ namespace API.Services
             return Map(result, 0, 0, 0);
         }
 
-        public async Task<object> SetActivoAsync(long idUsuario, long idAccesoLink, bool activo)
+        public async Task<object> SetActivoAsync(long idUsuario, long idAccesoLink, bool activo, bool esSuperadmin = false)
         {
             var link = await _context.Set<ef_evento_acceso_links>()
                 .SingleOrDefaultAsync(x => x.id_acceso_link == idAccesoLink);
@@ -207,7 +207,7 @@ namespace API.Services
             if (link.id_evento <= 0)
                 throw new Exception("El link no tiene evento asociado.");
 
-            await ValidarUsuarioPerteneceEvento(idUsuario, link.id_evento);
+            await ValidarUsuarioPerteneceEvento(idUsuario, link.id_evento, esSuperadmin);
 
             if (activo && !link.activo)
             {
@@ -267,8 +267,10 @@ namespace API.Services
             };
         }
 
-        private async Task ValidarUsuarioPerteneceEvento(long idUsuario, long idEvento)
+        private async Task ValidarUsuarioPerteneceEvento(long idUsuario, long idEvento, bool esSuperadmin = false)
         {
+            if (esSuperadmin) return;
+
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo);
 
