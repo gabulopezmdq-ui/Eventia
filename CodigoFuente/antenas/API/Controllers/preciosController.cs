@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using API.Services.Precios;
 
 namespace API.Controllers
 {
@@ -18,12 +19,14 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<ef_precios> _serviceGenerico;
         private readonly ILogger<preciosController> _logger;
+        private readonly IPreciosService _preciosService;
 
-        public preciosController(DataContext context, ILogger<preciosController> logger, ICRUDService<ef_precios> serviceGenerico)
+        public preciosController(DataContext context, ILogger<preciosController> logger, ICRUDService<ef_precios> serviceGenerico, IPreciosService preciosService)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
+            _preciosService = preciosService;
         }
 
         [HttpGet("GetAll")]
@@ -76,6 +79,40 @@ namespace API.Controllers
         {
             await _serviceGenerico.Update(item);
             return Ok(item);
+        }
+
+        // GET /precios/planes?tipo=B2C&mercado=AR
+        [HttpGet("planes")]
+        public async Task<ActionResult> GetPlanesPublicos(
+            [FromQuery] string tipo = "B2C",
+            [FromQuery] string mercado = "AR")
+        {
+            try
+            {
+                var datos = await _preciosService.GetPlanesAsync(tipo, mercado);
+                return Ok(datos);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        // GET /precios/planes/B2C_PRO?mercado=AR
+        [HttpGet("planes/{codigo_plan}")]
+        public async Task<ActionResult> GetPrecioPlanPublico(
+            string codigo_plan,
+            [FromQuery] string mercado = "AR")
+        {
+            try
+            {
+                var dato = await _preciosService.GetPrecioPlanAsync(codigo_plan, mercado);
+                return Ok(dato);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         //[HttpDelete]

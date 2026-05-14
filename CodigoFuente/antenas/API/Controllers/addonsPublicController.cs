@@ -43,14 +43,13 @@ namespace API.Controllers
 
             var ids = addons.Select(x => x.id_addon).ToList();
 
-            // precios vigentes por addon
             var precios = await _context.Set<ef_precios>().AsNoTracking()
                 .Where(p => p.activo == true
                             && p.objeto_tipo == "ADDON"
                             && p.id_addon != null
                             && ids.Contains(p.id_addon.Value)
-                            && p.mercado == mercado
-                            && p.moneda == moneda
+                            && p.codigo_mercado == mercado
+                            && p.codigo_moneda == moneda
                             && p.vigente_desde <= now
                             && (p.vigente_hasta == null || p.vigente_hasta > now))
                 .OrderByDescending(p => p.vigente_desde)
@@ -60,7 +59,6 @@ namespace API.Controllers
                 .GroupBy(x => x.id_addon!.Value)
                 .ToDictionary(g => g.Key, g => g.First());
 
-            // addon -> features
             var addonFeatures = await _context.Set<ef_addon_features>().AsNoTracking()
                 .Where(af => af.activo == true && ids.Contains(af.id_addon))
                 .Select(af => new { af.id_addon, af.id_feature })
@@ -90,17 +88,24 @@ namespace API.Controllers
 
                 if (precioPorAddon.TryGetValue(a.id_addon, out var pr))
                 {
+                    decimal importePublicado = ObtenerPrecioPublicado(pr, now);
+
                     dto.precio = new AddonPublicoPrecioDTO
                     {
-                        mercado = pr.mercado,
-                        moneda = pr.moneda,
-                        importe = pr.importe,
+                        mercado = pr.codigo_mercado,
+                        moneda = pr.codigo_moneda,
+                        importe = importePublicado,
                         impuestos_incluidos = pr.impuestos_incluidos,
                         vigente_desde = pr.vigente_desde
                     };
                 }
 
-                var idsFeat = addonFeatures.Where(x => x.id_addon == a.id_addon).Select(x => x.id_feature).Distinct().ToList();
+                var idsFeat = addonFeatures
+                    .Where(x => x.id_addon == a.id_addon)
+                    .Select(x => x.id_feature)
+                    .Distinct()
+                    .ToList();
+
                 foreach (var idF in idsFeat)
                 {
                     if (!featById.TryGetValue(idF, out var f)) continue;
@@ -115,12 +120,27 @@ namespace API.Controllers
                     });
                 }
 
-                dto.features = dto.features.OrderBy(x => x.categoria).ThenBy(x => x.nombre).ToList();
+                dto.features = dto.features
+                    .OrderBy(x => x.categoria)
+                    .ThenBy(x => x.nombre)
+                    .ToList();
 
                 resp.Add(dto);
             }
 
             return Ok(resp.OrderBy(x => x.codigo).ToList());
+        }
+
+        private static decimal ObtenerPrecioPublicado(ef_precios precio, DateTimeOffset now)
+        {
+            bool tieneLanzamiento =
+                precio.precio_lanzamiento.HasValue
+                && (!precio.lanzamiento_desde.HasValue || precio.lanzamiento_desde.Value <= now)
+                && (!precio.lanzamiento_hasta.HasValue || precio.lanzamiento_hasta.Value >= now);
+
+            return tieneLanzamiento
+                ? precio.precio_lanzamiento.Value
+                : precio.precio_lista;
         }
     }
 }

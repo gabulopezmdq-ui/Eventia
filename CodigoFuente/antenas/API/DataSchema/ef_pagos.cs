@@ -30,5 +30,27 @@ namespace API.DataSchema
         public bool activo { get; set; }
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
+
+        public string? objeto_tipo { get; set; }
+        public long? id_evento_plan_cambio { get; set; }
+
+        public long? id_plan { get; set; }
+        public long? id_addon { get; set; }
+
+        public string? codigo_mercado { get; set; }
+        public string? codigo_moneda { get; set; }
+
+        public decimal? precio_lista_snapshot { get; set; }
+        public decimal? precio_publicado_snapshot { get; set; }
+
+        public string? tipo_ajuste { get; set; }
+        public decimal? importe_ajuste { get; set; }
+
+        public decimal? total_a_cobrar_snapshot { get; set; }
+        public decimal? importe_pagado { get; set; }
+
+        public string? medio_pago { get; set; }
+        public string? referencia_pago { get; set; }
+        public string? observacion_admin { get; set; }
     }
 }

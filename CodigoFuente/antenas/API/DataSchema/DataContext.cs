@@ -160,6 +160,10 @@ namespace API.DataSchema
         public DbSet<ef_param_programa_tipos_ajuste> ef_param_programa_tipos_ajuste { get; set; }
         public DbSet<ef_programa_inscripcion_autorizaciones> ef_programa_inscripcion_autorizaciones { get; set; }
         public DbSet<ef_param_limites> ef_param_limites { get; set; }
+        public DbSet<ef_monedas> ef_monedas { get; set; }
+        public DbSet<ef_mercados> ef_mercados { get; set; }
+        public DbSet<ef_mercado_paises> ef_mercado_paises { get; set; }
+        public DbSet<ef_evento_plan_cambios> ef_evento_plan_cambios { get; set; }
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -272,7 +276,6 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_addon_featuresConfiguration());
             modelBuilder.ApplyConfiguration(new ef_scope_addonsConfiguration());
 
-            modelBuilder.ApplyConfiguration(new ef_preciosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_suscripcionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_pagosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_webhook_eventosConfiguration());
@@ -348,6 +351,12 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_ajusteConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_autorizacionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_limitesConfiguration());
+
+            modelBuilder.ApplyConfiguration(new ef_monedasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_mercadosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_mercado_paisesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_preciosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_plan_cambiosConfiguration());
 
 
 
