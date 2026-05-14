@@ -1,4 +1,5 @@
 ﻿using  API.DataSchema;
+using API.DataSchema.DTO.Invitados;
 using  API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,12 +19,14 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<ef_invitados> _serviceGenerico;
         private readonly ILogger<invitadosController> _logger;
+        private readonly IInvitacionService _invitacionService;
 
-        public invitadosController(DataContext context, ILogger<invitadosController> logger, ICRUDService<ef_invitados> serviceGenerico)
+        public invitadosController(DataContext context, ILogger<invitadosController> logger, ICRUDService<ef_invitados> serviceGenerico, IInvitacionService invitacionService)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
+            _invitacionService = invitacionService;
         }
 
         //[Authorize(Roles = "SUPERADMIN")]
@@ -71,6 +74,37 @@ namespace API.Controllers
         {
             await _serviceGenerico.Update(invitado);
             return Ok(invitado);
+        }
+
+        [HttpGet("GetPersonasEvento")]
+        public async Task<ActionResult<InvitadosPersonasResponseDTO>> GetPersonasEvento([FromQuery] long idEvento)
+        {
+            if (idEvento <= 0)
+                return BadRequest("idEvento inválido.");
+
+            var result = await _invitacionService.ObtenerPersonasInvitadasAsync(idEvento);
+            return Ok(result);
+        }
+
+        [HttpGet("GetGruposEvento")]
+        public async Task<ActionResult<InvitadosGruposResponseDTO>> GetGruposEvento([FromQuery] long idEvento)
+        {
+            if (idEvento <= 0)
+                return BadRequest("idEvento inválido.");
+
+            var result = await _invitacionService.ObtenerGruposInvitadosAsync(idEvento);
+
+            return Ok(result);
+        }
+
+        [HttpGet("GetResumenRsvp")]
+        public async Task<ActionResult<ResumenRsvpDTO>> GetResumenRsvp([FromQuery] string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return BadRequest("token obligatorio.");
+
+            var result = await _invitacionService.ObtenerResumenRsvpAsync(token);
+            return Ok(result);
         }
 
     }

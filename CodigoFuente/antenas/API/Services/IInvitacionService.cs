@@ -1,6 +1,7 @@
 ﻿using API.DataSchema.DTO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using API.DataSchema.DTO.Invitados;
 
 namespace API.Services
 {
@@ -16,5 +17,8 @@ namespace API.Services
         Task CargarInvitadosAsync(CrearGrupoInvitacionRequest req, long idUsuario);
         Task<InvitacionTitularDTO> ObtenerInvitacionTitularAsync(string token);
         Task<string> RegistrarGrupoDesdeLinkAsync(string tokenLink, RegistroLinkRequest request);
+        Task<InvitadosPersonasResponseDTO> ObtenerPersonasInvitadasAsync(long idEvento);
+        Task<InvitadosGruposResponseDTO> ObtenerGruposInvitadosAsync(long idEvento);
+        Task<ResumenRsvpDTO> ObtenerResumenRsvpAsync(string token);
     }
 }

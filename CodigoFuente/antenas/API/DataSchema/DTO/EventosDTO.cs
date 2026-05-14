@@ -14,6 +14,10 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("id_idioma")]
         public short IdIdioma { get; set; } // opcional
 
+        [JsonProperty("id_pais")]
+        [JsonPropertyName("id_pais")]
+        public short? IdPais { get; set; }
+
         // B2B
         [JsonProperty("id_cuenta")]
         [JsonPropertyName("id_cuenta")]
@@ -168,5 +172,17 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("fecha_fin")]
         public DateOnly? FechaFin { get; set; }
+
+        [JsonPropertyName("id_pais")]
+        public short? IdPais { get; set; }
+
+        [JsonPropertyName("pais_codigo_iso2")]
+        public string? PaisCodigoIso2 { get; set; }
+
+        [JsonPropertyName("codigo_mercado")]
+        public string? CodigoMercado { get; set; }
+
+        [JsonPropertyName("codigo_moneda")]
+        public string? CodigoMoneda { get; set; }
     }
 }

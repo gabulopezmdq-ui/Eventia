@@ -9662,23 +9662,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Guido\\.nuget\\packages\\": {},
+    "C:\\Users\\gabu_\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
+      "projectUniqueName": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
       "projectName": "API",
-      "projectPath": "E:\\desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
-      "packagesPath": "C:\\Users\\Guido\\.nuget\\packages\\",
-      "outputPath": "E:\\desarrollo\\Eventia\\CodigoFuente\\antenas\\API\\obj\\",
+      "projectPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\API.csproj",
+      "packagesPath": "C:\\Users\\gabu_\\.nuget\\packages\\",
+      "outputPath": "C:\\Desarrollo\\Eventia\\Eventia\\CodigoFuente\\antenas\\API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Guido\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\gabu_\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -9705,7 +9705,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -9841,7 +9841,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

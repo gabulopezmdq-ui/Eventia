@@ -19,6 +19,9 @@ namespace API.DataSchema.ModelConfiguration
 
             builder.Property(x => x.id_idioma)
                    .IsRequired();
+           
+            builder.Property(x => x.id_pais)
+                    .IsRequired(false);
 
             builder.Property(x => x.id_cuenta);
             builder.Property(x => x.id_unidad);
@@ -174,6 +177,12 @@ namespace API.DataSchema.ModelConfiguration
             builder.HasOne(x => x.unidad)
                    .WithMany()
                    .HasForeignKey(x => x.id_unidad)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<ef_paises>()
+                   .WithMany()
+                   .HasForeignKey(x => x.id_pais)
+                   .IsRequired(false)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

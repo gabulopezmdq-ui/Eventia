@@ -11,6 +11,8 @@ namespace API.DataSchema
         public int id_tipo_evento { get; set; }
         public short id_idioma { get; set; }
 
+        public short? id_pais { get; set; }
+
         // B2B
         public long? id_cuenta { get; set; }
         public long? id_unidad { get; set; }
