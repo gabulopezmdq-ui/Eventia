@@ -399,8 +399,14 @@ namespace API.Services
                     .ThenInclude(g => g.acceso)
                         .ThenInclude(a => a.acceso_tramos)
                             .ThenInclude(at => at.tramo)
-                .Where(x => x.id_evento == idEvento && x.activo && x.es_titular_grupo)
+                .Where(x => x.id_evento == idEvento && x.activo && !x.es_staff)
                 .ToListAsync();
+
+            // Mapear los tokens de los titulares por grupo para asignarlos a los acompañantes
+            var titularTokens = invitados
+                .Where(i => i.es_titular_grupo && i.id_rsvp_grupo != null && i.rsvp_token != null)
+                .GroupBy(i => i.id_rsvp_grupo!.Value)
+                .ToDictionary(g => g.Key, g => g.First().rsvp_token);
 
             return invitados.Select(x => new InvitadoLinkDTO
             {
@@ -409,7 +415,7 @@ namespace API.Services
                 Apellido = x.apellido,
                 Email = x.email,
                 Celular = x.celular,
-                Token = x.rsvp_token,
+                Token = x.rsvp_token ?? (x.id_rsvp_grupo.HasValue && titularTokens.TryGetValue(x.id_rsvp_grupo.Value, out var t) ? t : null),
                 RsvpEstado = x.rsvp_estado,
                 IdRsvpGrupo = x.id_rsvp_grupo,
                 IdAcceso = x.id_acceso,
