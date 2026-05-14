@@ -795,43 +795,33 @@ namespace API.Services
                 if (planB2C == null)
                     throw new InvalidOperationException("El plan seleccionado no existe o está inactivo.");
 
-                // ✅ Anti-abuso: máximo trials activos por usuario (solo para B2C_FREE)
-                if (planB2C.codigo == "B2C_FREE")
-                {
-                    // Leer el límite desde ef_plan_limites (si no existe, default = 1)
-                    var maxTrials = await _context.Set<ef_plan_limites>()
-                        .AsNoTracking()
-                        .Where(l => l.id_plan == planB2C.id_plan
-                                 && l.codigo_limite == "MAX_TRIAL_EVENTOS_ACTIVOS"
-                                 && l.activo == true)
-                        .Select(l => l.valor_int)
-                        .FirstOrDefaultAsync();
+                // ✅ Anti-abuso: máximo trials activos por usuario (basado en ef_plan_limites)
+                var helperPlan = new PlanLimitesHelper(_context);
+                int? maxTrials = await helperPlan.GetLimiteIntByPlanAsync(planB2C.id_plan, "MAX_TRIAL_EVENTOS_ACTIVOS");
+                int maxTrialsFinal = (maxTrials.HasValue && maxTrials.Value > 0) ? maxTrials.Value : 1;
 
-                    int maxTrialsFinal = (maxTrials.HasValue && maxTrials.Value > 0) ? maxTrials.Value : 1;
+                // Contar trials activos del usuario (suscripción vigente)
+                var nowUtc = DateTimeOffset.UtcNow;
 
-                    // Contar trials activos del usuario (suscripción vigente)
-                    var nowUtc = DateTimeOffset.UtcNow;
+                var trialsActivos = await (
+                    from s in _context.Set<ef_suscripciones>().AsNoTracking()
+                    join eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
+                        on s.id_evento equals eu.id_evento
+                    join ev in _context.Set<ef_eventos>().AsNoTracking()
+                        on s.id_evento equals ev.id_evento
+                    where s.scope == "EVENTO"
+                            && s.activo == true
+                            && s.estado == "ACTIVA"
+                            && s.current_period_end != null
+                            && s.current_period_end > nowUtc
+                            && eu.id_usuario == idUsuario
+                            && eu.activo == true
+                            && ev.id_cuenta == null // solo trials B2C
+                    select s.id_evento
+                ).Distinct().CountAsync();
 
-                    var trialsActivos = await (
-                        from s in _context.Set<ef_suscripciones>().AsNoTracking()
-                        join eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
-                            on s.id_evento equals eu.id_evento
-                        join ev in _context.Set<ef_eventos>().AsNoTracking()
-                            on s.id_evento equals ev.id_evento
-                        where s.scope == "EVENTO"
-                              && s.activo == true
-                              && s.estado == "ACTIVA"
-                              && s.current_period_end != null
-                              && s.current_period_end > nowUtc
-                              && eu.id_usuario == idUsuario
-                              && eu.activo == true
-                              && ev.id_cuenta == null // solo trials B2C
-                        select s.id_evento
-                    ).Distinct().CountAsync();
-
-                    if (trialsActivos >= maxTrialsFinal)
-                        throw new InvalidOperationException($"Ya tenés {trialsActivos} trial activo. Debés esperar a que venza o contratar un plan para crear otro trial.");
-                }
+                if (trialsActivos >= maxTrialsFinal)
+                    throw new InvalidOperationException($"Ya tenés {trialsActivos} trial activo. Debés esperar a que venza o contratar un plan para crear otro trial.");
             }
             else
             {
@@ -1024,39 +1014,13 @@ namespace API.Services
             await _context.SaveChangesAsync();
 
             // =====================================================
-            // CREAR LINK DEFAULT DEL ACCESO
+            // CREAR LINK DEFAULT DEL ACCESO (Validando límites)
             // =====================================================
-            //var link = new ef_evento_acceso_links
-            //{
-            //    id_evento = evento.id_evento,
-            //    id_acceso = acceso.id_acceso,
-            //    titulo = "Principal",
-            //    token = TokenUtility.Generate(64),
-            //    max_personas_total = 200,
-            //    max_adultos = 200,
-            //    activo = true,
-            //    fecha_alta = now
-            //};
-            // Permitir generar links (default 1 si no existe límite)
-            var permitirLinks = await _context.Set<ef_plan_limites>()
-                .AsNoTracking()
-                .Where(l => l.id_plan == idPlanEvento
-                         && l.codigo_limite == "PERMITIR_GENERAR_LINKS"
-                         && l.activo == true)
-                .Select(l => l.valor_int)
-                .FirstOrDefaultAsync();
-
+            var helper = new PlanLimitesHelper(_context);
+            int? permitirLinks = await helper.GetLimiteIntByPlanAsync(idPlanEvento, "PERMITIR_GENERAR_LINKS");
             int permitirLinksFinal = (permitirLinks.HasValue) ? permitirLinks.Value : 1;
 
-            // Max invitados (si querés usarlo como cupo sugerido del link default)
-            var maxInv = await _context.Set<ef_plan_limites>()
-                .AsNoTracking()
-                .Where(l => l.id_plan == idPlanEvento
-                         && l.codigo_limite == "MAX_INVITADOS"
-                         && l.activo == true)
-                .Select(l => l.valor_int)
-                .FirstOrDefaultAsync();
-
+            int? maxInv = await helper.GetLimiteIntByPlanAsync(idPlanEvento, "MAX_INVITADOS");
             int maxInvFinal = (maxInv.HasValue && maxInv.Value >= 1) ? maxInv.Value : 200;
 
             // ✅ Link activo SOLO si el evento está ACTIVO y el plan permite links

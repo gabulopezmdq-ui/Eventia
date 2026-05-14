@@ -60,6 +60,14 @@ namespace API.Controllers
 
             if (!pertenece) return Forbid();
 
+            // ✅ bloqueo por plan: PERMITIR_ESTRUCTURA_MANUAL
+            var helper = new API.Services.Planes.PlanLimitesHelper(_context);
+            await helper.RequireLimiteEnabledAsync(
+                ent.id_evento,
+                "PERMITIR_ESTRUCTURA_MANUAL",
+                "Tu plan no permite modificar la estructura manualmente. Actualizá el plan o usá plantillas."
+            );
+
             ent.nombre = req.nombre.Trim();
             ent.leyenda_visible = string.IsNullOrWhiteSpace(req.leyenda_visible) ? null : req.leyenda_visible.Trim();
             ent.fecha_hora_inicio = req.fecha_hora_inicio;

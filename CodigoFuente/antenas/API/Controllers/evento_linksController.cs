@@ -1,7 +1,5 @@
-using API.DataSchema;
-using API.DataSchema.DTO;
+ï»¿using API.DataSchema;
 using API.Security;
-using API.Services.Musica;
 using API.Services.Planes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +13,7 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [AllowAnonymous]
+    [Authorize]
     [Route("[controller]")]
     public class evento_linksController : ControllerBase
     {
@@ -31,21 +29,21 @@ namespace API.Controllers
         [HttpPost("Create")]
         public async Task<ActionResult> Create([FromBody] eventoLinkCreate req)
         {
-            if (req == null) return BadRequest(new { error = "Body inválido." });
-            if (req.id_evento <= 0) return BadRequest(new { error = "id_evento inválido." });
+            if (req == null) return BadRequest(new { error = "Body invÃ¡lido." });
+            if (req.id_evento <= 0) return BadRequest(new { error = "id_evento invÃ¡lido." });
             if (string.IsNullOrWhiteSpace(req.tipo)) return BadRequest(new { error = "tipo es obligatorio." });
 
-            //long idUsuario = User.GetUserId();
+            long idUsuario = User.GetUserId();
 
-            // seguridad: debe pertenecer al evento
-            //bool pertenece = await _context.Set<ef_evento_usuarios>()
-            //    .AsNoTracking()
-            //    .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
+            // âœ… seguridad: debe pertenecer al evento
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AsNoTracking()
+                .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
-            //if (!pertenece)
-            //    return Forbid();
+            if (!pertenece)
+                return Forbid();
 
-            // evento + plan + estado
+            // âœ… evento + plan + estado
             var ev = await _context.Set<ef_eventos>()
                 .AsNoTracking()
                 .Where(e => e.id_evento == req.id_evento)
@@ -55,27 +53,24 @@ namespace API.Controllers
             if (ev == null)
                 return NotFound(new { error = "Evento inexistente." });
 
-            // Si no está activo, no debe generar links (plan pago pendiente, etc.)
+            // Si no estÃ¡ activo, no debe generar links (plan pago pendiente, etc.)
             if (ev.estado != "A")
-                return BadRequest(new { error = "El evento no está activo. No se pueden generar links en estado pendiente/borrador." });
+                return BadRequest(new { error = "El evento no estÃ¡ activo. No se pueden generar links en estado pendiente/borrador." });
 
             if (!ev.id_plan.HasValue)
                 return BadRequest(new { error = "El evento no tiene plan asignado. No se pueden generar links." });
 
-            // bloqueo por plan: PERMITIR_GENERAR_LINKS
+            // âœ… bloqueo por plan: PERMITIR_GENERAR_LINKS
             var helper = new PlanLimitesHelper(_context);
             await helper.RequireLimiteEnabledAsync(
                 req.id_evento,
                 "PERMITIR_GENERAR_LINKS",
-                "Tu plan no permite generar links. Actualizá el plan para enviar invitaciones."
+                "Tu plan no permite generar links. ActualizÃ¡ el plan para enviar invitaciones."
             );
 
-            // token único
+            // token Ãºnico
             string token;
-            do
-            {
-                token = TokenHelper.NewToken();
-            }
+            do { token = TokenHelper.NewToken(); }
             while (await _context.Set<ef_evento_links>().AnyAsync(x => x.token == token));
 
             var scopesJson = (req.scopes == null || req.scopes.Length == 0)
@@ -107,23 +102,22 @@ namespace API.Controllers
         public async Task<ActionResult> Revoke([FromBody] eventoLinkRevoke req)
         {
             if (req == null || req.id_evento_link <= 0)
-                return BadRequest(new { error = "id_evento_link inválido." });
+                return BadRequest(new { error = "id_evento_link invÃ¡lido." });
 
-            //long idUsuario = User.GetUserId();
+            long idUsuario = User.GetUserId();
 
             var link = await _context.Set<ef_evento_links>()
                 .FirstOrDefaultAsync(x => x.id_evento_link == req.id_evento_link);
 
             if (link == null) return NotFound(new { error = "Link no encontrado." });
 
+            // âœ… seguridad: usuario debe pertenecer al evento del link
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AsNoTracking()
+                .AnyAsync(x => x.id_evento == link.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
-            //seguridad: usuario debe pertenecer al evento del link
-            //bool pertenece = await _context.Set<ef_evento_usuarios>()
-            //    .AsNoTracking()
-            //    .AnyAsync(x => x.id_evento == link.id_evento && x.id_usuario == idUsuario && x.activo == true);
-
-            //if (!pertenece)
-            //    return Forbid();
+            if (!pertenece)
+                return Forbid();
 
             link.activo = false;
 

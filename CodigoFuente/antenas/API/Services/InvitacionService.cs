@@ -432,6 +432,23 @@ namespace API.Services
             var acceso = await _context.ef_evento_accesos.FindAsync(dto.IdAcceso);
             if (acceso == null) throw new Exception("Acceso no encontrado");
 
+            // Validar límites del plan y estado del evento
+            var ev = await _context.ef_eventos.FindAsync(acceso.id_evento);
+            if (ev == null) throw new Exception("Evento no encontrado");
+            if (ev.estado != "A") throw new Exception("El evento no está activo. No se pueden generar links.");
+
+            var helper = new PlanLimitesHelper(_context);
+            await helper.RequireLimiteEnabledAsync(acceso.id_evento, "PERMITIR_GENERAR_LINKS", "Tu plan no permite generar links. Actualizá el plan para enviar invitaciones.");
+
+            var maxLinks = await helper.GetLimiteIntByEventoAsync(acceso.id_evento, "MAX_LINKS_ACCESO");
+            if (maxLinks.HasValue && maxLinks.Value > 0)
+            {
+                var actuales = await _context.ef_evento_acceso_links
+                    .CountAsync(x => x.id_evento == acceso.id_evento && x.activo);
+                if (actuales >= maxLinks.Value)
+                    throw new Exception($"Tu plan permite hasta {maxLinks.Value} links. Actualizá el plan para crear más.");
+            }
+
             var link = new ef_evento_acceso_links
             {
                 id_evento = acceso.id_evento,
@@ -458,6 +475,23 @@ namespace API.Services
 
             if (acceso == null)
                 throw new Exception("Acceso inexistente");
+
+            // Validar límites del plan y estado del evento
+            var ev = await _context.ef_eventos.FindAsync(acceso.id_evento);
+            if (ev == null) throw new Exception("Evento no encontrado");
+            if (ev.estado != "A") throw new Exception("El evento no está activo. No se pueden generar links.");
+
+            var helper = new PlanLimitesHelper(_context);
+            await helper.RequireLimiteEnabledAsync(acceso.id_evento, "PERMITIR_GENERAR_LINKS", "Tu plan no permite generar links. Actualizá el plan para enviar invitaciones.");
+
+            var maxLinks = await helper.GetLimiteIntByEventoAsync(acceso.id_evento, "MAX_LINKS_ACCESO");
+            if (maxLinks.HasValue && maxLinks.Value > 0)
+            {
+                var actuales = await _context.ef_evento_acceso_links
+                    .CountAsync(x => x.id_evento == acceso.id_evento && x.activo);
+                if (actuales >= maxLinks.Value)
+                    throw new Exception($"Tu plan permite hasta {maxLinks.Value} links. Actualizá el plan para crear más.");
+            }
 
             var token = TokenUtility.Generate(64);
 
