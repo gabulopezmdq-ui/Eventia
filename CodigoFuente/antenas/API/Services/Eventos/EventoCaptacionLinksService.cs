@@ -178,7 +178,7 @@ namespace API.Services
             entity.permite_reutilizar_audiencia = req.permite_reutilizar_audiencia;
             
             // Si el link se está creando o se está activando, validar límites
-            if (req.activo && (!entity.id_acceso_link.HasValue || entity.id_acceso_link == 0 || !entity.activo))
+            if (req.activo && (entity.id_acceso_link == 0 || !entity.activo))
             {
                 await ValidarPuedeGenerarLinksAsync(idEvento);
             }

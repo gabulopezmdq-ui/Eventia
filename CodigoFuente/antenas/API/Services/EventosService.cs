@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.DataSchema.DTO.Programas;
+using API.Services.Planes;
 
 namespace API.Services
 {
@@ -1016,11 +1017,13 @@ namespace API.Services
             // =====================================================
             // CREAR LINK DEFAULT DEL ACCESO (Validando límites)
             // =====================================================
+            if (!idPlanEvento.HasValue) throw new InvalidOperationException("No se pudo determinar el plan del evento para validar límites.");
+
             var helper = new PlanLimitesHelper(_context);
-            int? permitirLinks = await helper.GetLimiteIntByPlanAsync(idPlanEvento, "PERMITIR_GENERAR_LINKS");
+            int? permitirLinks = await helper.GetLimiteIntByPlanAsync(idPlanEvento.Value, "PERMITIR_GENERAR_LINKS");
             int permitirLinksFinal = (permitirLinks.HasValue) ? permitirLinks.Value : 1;
 
-            int? maxInv = await helper.GetLimiteIntByPlanAsync(idPlanEvento, "MAX_INVITADOS");
+            int? maxInv = await helper.GetLimiteIntByPlanAsync(idPlanEvento.Value, "MAX_INVITADOS");
             int maxInvFinal = (maxInv.HasValue && maxInv.Value >= 1) ? maxInv.Value : 200;
 
             // ✅ Link activo SOLO si el evento está ACTIVO y el plan permite links
