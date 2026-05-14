@@ -23,7 +23,8 @@ namespace API.Controllers
         public async Task<ActionResult> GetByEvento([FromQuery] long idEvento)
         {
             long idUsuario = User.GetUserId();
-            return Ok(await _service.GetByEventoAsync(idUsuario, idEvento));
+            bool esSuperadmin = User.IsInRole("SUPERADMIN");
+            return Ok(await _service.GetByEventoAsync(idUsuario, idEvento, esSuperadmin));
         }
 
         [Authorize]
@@ -31,7 +32,8 @@ namespace API.Controllers
         public async Task<ActionResult> GetById([FromQuery] long idAccesoLink)
         {
             long idUsuario = User.GetUserId();
-            return Ok(await _service.GetByIdAsync(idUsuario, idAccesoLink));
+            bool esSuperadmin = User.IsInRole("SUPERADMIN");
+            return Ok(await _service.GetByIdAsync(idUsuario, idAccesoLink, esSuperadmin));
         }
 
         [Authorize]
@@ -39,7 +41,8 @@ namespace API.Controllers
         public async Task<ActionResult> Upsert([FromQuery] long idEvento, [FromBody] EventoCaptacionLinkUpsertRequest req)
         {
             long idUsuario = User.GetUserId();
-            return Ok(await _service.UpsertAsync(idUsuario, idEvento, req));
+            bool esSuperadmin = User.IsInRole("SUPERADMIN");
+            return Ok(await _service.UpsertAsync(idUsuario, idEvento, req, esSuperadmin));
         }
 
         [Authorize]
@@ -47,7 +50,8 @@ namespace API.Controllers
         public async Task<ActionResult> SetActivo([FromQuery] long idAccesoLink, [FromQuery] bool activo)
         {
             long idUsuario = User.GetUserId();
-            return Ok(await _service.SetActivoAsync(idUsuario, idAccesoLink, activo));
+            bool esSuperadmin = User.IsInRole("SUPERADMIN");
+            return Ok(await _service.SetActivoAsync(idUsuario, idAccesoLink, activo, esSuperadmin));
         }
 
         [AllowAnonymous]

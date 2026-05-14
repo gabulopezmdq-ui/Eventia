@@ -36,9 +36,10 @@ namespace API.Controllers
             if (string.IsNullOrWhiteSpace(req.tipo)) return BadRequest(new { error = "tipo es obligatorio." });
 
             long idUsuario = User.GetUserId();
+            bool esSuperadmin = User.IsInRole("SUPERADMIN");
 
-            // ✅ seguridad: debe pertenecer al evento
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            // ✅ seguridad: debe pertenecer al evento (o ser superadmin)
+            bool pertenece = esSuperadmin || await _context.Set<ef_evento_usuarios>()
                 .AsNoTracking()
                 .AnyAsync(x => x.id_evento == req.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
@@ -107,14 +108,15 @@ namespace API.Controllers
                 return BadRequest(new { error = "id_evento_link inválido." });
 
             long idUsuario = User.GetUserId();
+            bool esSuperadmin = User.IsInRole("SUPERADMIN");
 
             var link = await _context.Set<ef_evento_links>()
                 .FirstOrDefaultAsync(x => x.id_evento_link == req.id_evento_link);
 
             if (link == null) return NotFound(new { error = "Link no encontrado." });
 
-            // ✅ seguridad: usuario debe pertenecer al evento del link
-            bool pertenece = await _context.Set<ef_evento_usuarios>()
+            // ✅ seguridad: usuario debe pertenecer al evento del link (o ser superadmin)
+            bool pertenece = esSuperadmin || await _context.Set<ef_evento_usuarios>()
                 .AsNoTracking()
                 .AnyAsync(x => x.id_evento == link.id_evento && x.id_usuario == idUsuario && x.activo == true);
 
