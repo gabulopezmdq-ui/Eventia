@@ -20,9 +20,9 @@ function StaffHeader() {
                         <h1 className="text-lg font-bold text-neutral-900 dark:text-white leading-none">
                             Eventia Staff
                         </h1>
-                        {user?.role && (
+                        {user?.rolCodigo && (
                             <span className="text-[10px] text-neutral-500 uppercase font-semibold">
-                                {user.role.replace('STAFF_', '')}
+                                {user.rolCodigo.replace('STAFF_', '')}
                             </span>
                         )}
                     </div>

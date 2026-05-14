@@ -131,7 +131,9 @@ export async function createEvent(
     });
 
     if (!res.ok) {
-        throw new Error('Error al crear el evento');
+        const errObj = await res.json().catch(() => ({}));
+        const errorMessage = errObj?.details?.error || errObj?.message || 'Error al crear el evento';
+        throw new Error(errorMessage);
     }
 
     return res.json();
