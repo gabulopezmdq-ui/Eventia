@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -176,6 +176,13 @@ namespace API.Services
             entity.mensaje_post_registro = string.IsNullOrWhiteSpace(req.mensaje_post_registro) ? null : req.mensaje_post_registro.Trim();
             entity.origen_default = string.IsNullOrWhiteSpace(req.origen_default) ? null : req.origen_default.Trim();
             entity.permite_reutilizar_audiencia = req.permite_reutilizar_audiencia;
+            
+            // Si el link se está creando o se está activando, validar límites
+            if (req.activo && (!entity.id_acceso_link.HasValue || entity.id_acceso_link == 0 || !entity.activo))
+            {
+                await ValidarPuedeGenerarLinksAsync(idEvento);
+            }
+
             entity.activo = req.activo;
 
             await _context.SaveChangesAsync();
@@ -201,6 +208,11 @@ namespace API.Services
                 throw new Exception("El link no tiene evento asociado.");
 
             await ValidarUsuarioPerteneceEvento(idUsuario, link.id_evento);
+
+            if (activo && !link.activo)
+            {
+                await ValidarPuedeGenerarLinksAsync(link.id_evento);
+            }
 
             link.activo = activo;
             link.fecha_modif = DateTimeOffset.UtcNow;
@@ -300,6 +312,47 @@ namespace API.Services
                 beneficios_otorgados = beneficiosOtorgados,
                 beneficios_canjeados = beneficiosCanjeados
             };
+        }
+
+        private async Task ValidarPuedeGenerarLinksAsync(long idEvento)
+        {
+            // 1) evento existe + estado
+            var ev = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .Where(e => e.id_evento == idEvento)
+                .Select(e => new { e.estado, e.id_plan })
+                .SingleOrDefaultAsync();
+
+            if (ev == null)
+                throw new InvalidOperationException("Evento inexistente.");
+
+            // solo ACTIVO
+            if (ev.estado != "A")
+                throw new InvalidOperationException("El evento no está activo. No se pueden generar/activar links.");
+
+            if (!ev.id_plan.HasValue)
+                throw new InvalidOperationException("El evento no tiene plan asignado.");
+
+            // 2) plan permite generar links
+            var helper = new API.Services.Planes.PlanLimitesHelper(_context);
+            await helper.RequireLimiteEnabledAsync(
+                idEvento,
+                "PERMITIR_GENERAR_LINKS",
+                "Tu plan no permite generar links. Actualizá el plan para enviar invitaciones."
+            );
+
+            // 3) máximo de links
+            var maxLinks = await helper.GetLimiteIntByEventoAsync(idEvento, "MAX_LINKS_ACCESO");
+            if (maxLinks.HasValue && maxLinks.Value > 0)
+            {
+                var actuales = await _context.Set<ef_evento_acceso_links>()
+                    .AsNoTracking()
+                    .Where(x => x.id_evento == idEvento && x.activo == true)
+                    .CountAsync();
+
+                if (actuales >= maxLinks.Value)
+                    throw new InvalidOperationException($"Tu plan permite hasta {maxLinks.Value} links. Actualizá el plan para crear más.");
+            }
         }
 
         private string GenerarTokenSeguro(int length)

@@ -77,11 +77,17 @@ namespace API.Services
 
 
             // =====================================================
-            // LÍMITES POR PLAN (MAX_TRAMOS / MAX_ACCESOS)
+            // LÍMITES POR PLAN (PERMITIR_PLANTILLAS / MAX_TRAMOS / MAX_ACCESOS)
             // OJO: esto va ANTES de borrar_existente, así no borrás
             // y después fallás por límite.
             // =====================================================
             var limites = new PlanLimitesHelper(_context);
+
+            await limites.RequireLimiteEnabledAsync(
+                idEvento,
+                "PERMITIR_PLANTILLAS",
+                "Tu plan no permite aplicar plantillas. Actualizá el plan para usar esta funcionalidad."
+            );
 
             var maxTramos = await limites.GetLimiteIntByEventoAsync(idEvento, "MAX_TRAMOS");
             var maxAccesos = await limites.GetLimiteIntByEventoAsync(idEvento, "MAX_ACCESOS");

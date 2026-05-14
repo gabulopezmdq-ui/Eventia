@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -41,6 +41,16 @@ namespace API.Services.Planes
 
             return await _context.ef_plan_limites
                 .Where(l => l.id_plan == idPlan.Value
+                         && l.codigo_limite == codigoLimite
+                         && l.activo == true)
+                .Select(l => l.valor_int)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<int?> GetLimiteIntByPlanAsync(long idPlan, string codigoLimite)
+        {
+            return await _context.ef_plan_limites
+                .Where(l => l.id_plan == idPlan
                          && l.codigo_limite == codigoLimite
                          && l.activo == true)
                 .Select(l => l.valor_int)
