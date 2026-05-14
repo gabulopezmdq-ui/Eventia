@@ -76,43 +76,6 @@ namespace API.Services
                 .ToListAsync();
 
 
-            // =====================================================
-            // LÍMITES POR PLAN (PERMITIR_PLANTILLAS / MAX_TRAMOS / MAX_ACCESOS)
-            // OJO: esto va ANTES de borrar_existente, así no borrás
-            // y después fallás por límite.
-            // =====================================================
-            var limites = new PlanLimitesHelper(_context);
-
-            await limites.RequireLimiteEnabledAsync(
-                idEvento,
-                "PERMITIR_PLANTILLAS",
-                "Tu plan no permite aplicar plantillas. Actualizá el plan para usar esta funcionalidad."
-            );
-
-            var maxTramos = await limites.GetLimiteIntByEventoAsync(idEvento, "MAX_TRAMOS");
-            var maxAccesos = await limites.GetLimiteIntByEventoAsync(idEvento, "MAX_ACCESOS");
-
-            // Si el límite existe (incluso 0), se respeta.
-            // - null => sin límite definido (no bloquea)
-            // - 0 => no permitido
-            if (maxTramos.HasValue && tramosTpl.Count > maxTramos.Value)
-            {
-                throw new InvalidOperationException(
-                    $"Tu plan permite hasta {maxTramos.Value} tramos. La plantilla tiene {tramosTpl.Count}. " +
-                    $"Elegí otra plantilla o actualizá el plan."
-                );
-            }
-
-            if (maxAccesos.HasValue && accesosTpl.Count > maxAccesos.Value)
-            {
-                throw new InvalidOperationException(
-                    $"Tu plan permite hasta {maxAccesos.Value} tipos de invitación (accesos). La plantilla tiene {accesosTpl.Count}. " +
-                    $"Elegí otra plantilla o actualizá el plan."
-                );
-            }
-
-
-
             // Borrar existente (Limpieza Profunda)
             if (borrarExistente)
             {
