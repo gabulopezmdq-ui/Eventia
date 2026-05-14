@@ -38,10 +38,10 @@ export default function CheckinSuccessPage({ params }: PageProps) {
                 // Buscamos de nuevo la lista de eventos para encontrar la info del evento de este checkin
                 // Podríamos tener un endpoint getEventoById público o del staff, pero con la lista ya alcanza
                 let data: StaffEvento[] = [];
-                if (user.role === 'STAFF_PROPIETARIO') {
+                if (user.rolCodigo === 'PROPIETARIO') {
                     data = await getEventosAccesibles('personal', { staffId: user.idStaff }, token);
                 } else {
-                    const unidadesIds = user.unidades.map((u: { id_unidad: number }) => u.id_unidad);
+                    const unidadesIds = user.unidades.map(u => u.id_unidad);
                     if (unidadesIds.length > 0) {
                         data = await getEventosAccesibles('cuenta', { cuentaId: user.idCuenta, unidades: unidadesIds }, token);
                     }

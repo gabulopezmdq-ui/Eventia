@@ -1,16 +1,19 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { StaffAuthUser, StaffJwtClaims } from '@/src/features/staff/types';
-import { getUnidadesStaff, refreshStaffToken } from '@/src/features/staff/staff.service';
+import type { StaffAuthUser, StaffJoinResponse } from '@/src/features/staff/types';
+import { refreshStaffToken } from '@/src/features/staff/staff.service';
 
 interface StaffAuthCtx {
     user: StaffAuthUser | null;
     token: string | null;
-    login: (token: string) => Promise<void>;
+    /** Inicializa la sesión con el objeto completo retornado por POST /staff/join */
+    login: (joinResponse: StaffJoinResponse) => void;
     logout: () => void;
     isLoading: boolean;
 }
+
+const STORAGE_KEY = 'staff_session';
 
 const Ctx = createContext<StaffAuthCtx | null>(null);
 
@@ -19,84 +22,93 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const hydrate = useCallback(async (jwt: string) => {
-        try {
-            const claims = parseJwt(jwt);
-            setToken(jwt);
-            
-            // Setear estado parcial para que la UI sepa que hay sesión (aunque falten unidades)
-            setUser({ 
-                idStaff: claims.id_staff, 
-                idCuenta: claims.id_cuenta, 
-                role: claims.role, 
-                unidades: [] 
-            });
+    /**
+     * Construye el StaffAuthUser a partir del objeto completo de /staff/join.
+     * Las unidades ya vienen incluidas — no se necesita un segundo fetch.
+     */
+    const buildUser = (resp: StaffJoinResponse): StaffAuthUser => ({
+        idStaff: resp.id_staff,
+        idCuenta: resp.id_cuenta,
+        idEvento: resp.id_evento,
+        nombre: resp.nombre,
+        apellido: resp.apellido,
+        rolCodigo: resp.rol_codigo,
+        unidades: resp.unidades,
+        token: resp.access_token,
+        expiresAt: resp.expires_at_utc,
+    });
 
-            // Llamada al backend para obtener las unidades del staff
-            const unidades = await getUnidadesStaff(claims.id_cuenta, jwt);
-            
-            // Completar el estado con las unidades
-            setUser({ 
-                idStaff: claims.id_staff, 
-                idCuenta: claims.id_cuenta, 
-                role: claims.role, 
-                unidades 
-            });
-            
-            sessionStorage.setItem('staffToken', jwt);
-        } catch (error) {
-            console.error('Error al hidratar sesión de staff:', error);
-            logout(); // Si falla (ej. token inválido), limpiamos todo
+    /**
+     * Restaura la sesión guardada en localStorage al montar el contexto.
+     * Verifica que el token no haya expirado antes de restaurar.
+     */
+    const hydrateFromStorage = useCallback(() => {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+
+            const session: StaffAuthUser = JSON.parse(raw);
+
+            // Verificar que la sesión no haya expirado
+            if (session.expiresAt && new Date(session.expiresAt) <= new Date()) {
+                localStorage.removeItem(STORAGE_KEY);
+                return;
+            }
+
+            setUser(session);
+            setToken(session.token);
+        } catch {
+            localStorage.removeItem(STORAGE_KEY);
         }
     }, []);
 
-    // Hidratar desde sessionStorage al montar
+    // Hidratar desde localStorage al montar
     useEffect(() => {
-        const saved = sessionStorage.getItem('staffToken');
-        if (saved) {
-            hydrate(saved).finally(() => setIsLoading(false));
-        } else {
-            setIsLoading(false);
-        }
-    }, [hydrate]);
+        hydrateFromStorage();
+        setIsLoading(false);
+    }, [hydrateFromStorage]);
 
     // Renovación automática 1h antes de expirar
     useEffect(() => {
-        if (!token) return;
-        
-        try {
-            const claims = parseJwt(token);
-            // exp está en segundos, Date.now() en ms
-            // timer disparará 1h (3600_000 ms) antes de la expiración
-            const msLeft = (claims.exp * 1000) - Date.now() - 3600_000;
-            
-            if (msLeft <= 0) return; // Ya expiró o falta menos de 1h (podríamos refrescar directo acá)
-            
-            const timer = setTimeout(async () => {
-                try {
-                    const newToken = await refreshStaffToken(token);
-                    await hydrate(newToken);
-                } catch (e) {
-                    console.error('Error al renovar token de staff', e);
-                }
-            }, msLeft);
-            
-            return () => clearTimeout(timer);
-        } catch (e) {
-            console.error('Token inválido en useEffect', e);
-        }
-    }, [token, hydrate]);
+        if (!token || !user?.expiresAt) return;
 
-    async function login(jwt: string) {
-        setIsLoading(true);
-        await hydrate(jwt);
-        setIsLoading(false);
+        const expiresMs = new Date(user.expiresAt).getTime();
+        const msLeft = expiresMs - Date.now() - 3_600_000; // 1h antes
+
+        if (msLeft <= 0) return;
+
+        const timer = setTimeout(async () => {
+            try {
+                const newToken = await refreshStaffToken(token);
+                // Actualizar token en el user persistido
+                const updatedUser: StaffAuthUser = { ...user!, token: newToken };
+                setToken(newToken);
+                setUser(updatedUser);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
+            } catch (e) {
+                console.error('Error al renovar token de staff', e);
+                logout();
+            }
+        }, msLeft);
+
+        return () => clearTimeout(timer);
+    }, [token, user?.expiresAt]);
+
+    /**
+     * Inicializa la sesión a partir del objeto completo de POST /staff/join.
+     * Guarda en localStorage para persistir entre recargas.
+     */
+    function login(joinResponse: StaffJoinResponse) {
+        const staffUser = buildUser(joinResponse);
+        setUser(staffUser);
+        setToken(joinResponse.access_token);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(staffUser));
     }
 
     function logout() {
         setUser(null);
         setToken(null);
-        sessionStorage.removeItem('staffToken');
+        localStorage.removeItem(STORAGE_KEY);
     }
 
     return (
@@ -110,17 +122,4 @@ export function useStaffAuth() {
     const ctx = useContext(Ctx);
     if (!ctx) throw new Error('useStaffAuth must be inside StaffAuthProvider');
     return ctx;
-}
-
-function parseJwt(token: string): StaffJwtClaims {
-    // Basic JWT decode (does not verify signature, that's done in backend)
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-        atob(base64)
-            .split('')
-            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-            .join('')
-    );
-    return JSON.parse(jsonPayload);
 }

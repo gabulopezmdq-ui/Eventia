@@ -1,148 +1,96 @@
 // ────────────────────────────────────────────────────────────────
-//  Módulo: Staff y Unidades – Service Layer
-//  Descripción: Funciones que consumen los proxies Next.js de
-//               /api/staff/* y los endpoints relacionados.
+//  Módulo: Staff – Service Layer
+//  Actualizado según: protocolo_comunicacion_staff.md
+//
 //  Separación de responsabilidades:
-//    · Admin (ACCOUNT_ADMIN) → CRUD staff + listado por cuenta
-//    · Portal staff           → login, eventos accesibles, check-in
+//    · Admin (ACCOUNT_ADMIN) → Listar, invitar y revocar staff de cuenta
+//    · Portal staff (Empleado) → join, eventos accesibles, check-in
 // ────────────────────────────────────────────────────────────────
 
 import type {
     Staff,
     CreateStaffInput,
-    UpdateStaffInput,
-    PatchStaffInput,
     CreateStaffResponse,
+    StaffJoinResponse,
     StaffEvento,
     StaffMiembro,
-    StaffUnidad,
     CheckinResponse,
 } from './types';
 
-const BASE_STAFF = '/api/staff';
-
 // ════════════════════════════════════════════════════════════════
-//  SECCIÓN 1 – Admin: CRUD de staff
+//  SECCIÓN 1 – Admin: Gestión de Staff de la Cuenta
 // ════════════════════════════════════════════════════════════════
 
 /**
- * Lista todos los integrantes de staff de una cuenta con sus unidades.
- * → GET /api/staff/unidades/:id_cuenta
+ * Lista todos los integrantes de staff de una cuenta con sus códigos y estado.
+ * → GET /api/cuenta/:id_cuenta/staff
  */
-export async function getStaffUnidades(idCuenta: number): Promise<Staff[]> {
-    const res = await fetch(`${BASE_STAFF}/unidades/${idCuenta}`);
+export async function getStaffList(idCuenta: number): Promise<Staff[]> {
+    const res = await fetch(`/api/cuenta/${idCuenta}/staff`);
     if (!res.ok) throw new Error('Error al cargar el staff de la cuenta');
     return res.json();
 }
 
 /**
- * Obtiene el detalle de un integrante de staff (incluye sus unidades).
- * → GET /api/staff/:id
+ * Genera una nueva invitación de staff para la cuenta.
+ * El backend devuelve un CÓDIGO ÚNICO que el admin debe entregar al empleado.
+ * ⚠ El código solo está disponible en esta respuesta – mostrarlo al admin para que lo copie.
+ * → POST /api/cuenta/:id_cuenta/staff
  */
-export async function getStaffById(id: number): Promise<Staff> {
-    const res = await fetch(`${BASE_STAFF}/${id}`);
-    if (!res.ok) throw new Error(`Error al cargar staff #${id}`);
-    return res.json();
-}
-
-/**
- * Crea un nuevo integrante de staff.
- * El backend genera el código de acceso (único) y lo devuelve en la respuesta.
- * ⚠ El código sólo está disponible en esta respuesta – mostrarlo al admin para que lo copie.
- * → POST /api/staff
- */
-export async function createStaff(
+export async function invitarStaff(
+    idCuenta: number,
     input: CreateStaffInput
 ): Promise<CreateStaffResponse> {
-    const res = await fetch(BASE_STAFF, {
+    const res = await fetch(`/api/cuenta/${idCuenta}/staff`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
     });
-    if (!res.ok) throw new Error('Error al crear el integrante de staff');
+    if (!res.ok) throw new Error('Error al invitar al integrante de staff');
     return res.json();
 }
 
 /**
- * Actualiza datos personales y/o unidades de un integrante de staff.
- * Si se omite `unidades` en el payload, el backend conserva las actuales.
- * → PUT /api/staff/:id
+ * Revoca el acceso de un miembro del staff de la cuenta.
+ * Desactiva el código y cualquier JWT activo del empleado.
+ * → DELETE /api/cuenta/:id_cuenta/staff/:id_staff
  */
-export async function updateStaff(
-    id: number,
-    input: UpdateStaffInput
+export async function revocarStaff(
+    idCuenta: number,
+    idStaff: number
 ): Promise<{ ok: boolean }> {
-    const res = await fetch(`${BASE_STAFF}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
+    const res = await fetch(`/api/cuenta/${idCuenta}/staff/${idStaff}`, {
+        method: 'DELETE',
     });
-    if (!res.ok) throw new Error(`Error al actualizar staff #${id}`);
-    return res.json();
-}
-
-/**
- * Desactiva (soft-delete) un integrante de staff y elimina sus relaciones
- * con unidades. Operación reversible desde el panel admin.
- * → DELETE /api/staff/:id
- */
-export async function deleteStaff(id: number): Promise<{ ok: boolean }> {
-    const res = await fetch(`${BASE_STAFF}/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error(`Error al desactivar staff #${id}`);
-    return res.json();
-}
-
-/**
- * Actualiza disponibilidad o expiración de un integrante de staff.
- * Puede ser invocado por el propio staff (auto-desactivación) o por el admin.
- * → PATCH /api/staff/:id
- */
-export async function patchStaff(
-    id: number,
-    input: PatchStaffInput
-): Promise<{ ok: boolean }> {
-    const res = await fetch(`${BASE_STAFF}/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-    });
-    if (!res.ok) throw new Error(`Error al actualizar disponibilidad de staff #${id}`);
-    return res.json();
-}
-
-/**
- * Obtiene los integrantes de staff que tienen acceso a un evento concreto
- * (filtrado por unidades vinculadas al evento).
- * → GET /api/staff/miembros?eventoId=XX
- */
-export async function getMiembrosPorEvento(
-    eventoId: number
-): Promise<StaffMiembro[]> {
-    const res = await fetch(`${BASE_STAFF}/miembros?eventoId=${eventoId}`);
-    if (!res.ok) throw new Error('Error al cargar los miembros del evento');
+    if (!res.ok) throw new Error(`Error al revocar acceso del staff #${idStaff}`);
     return res.json();
 }
 
 // ════════════════════════════════════════════════════════════════
-//  SECCIÓN 2 – Portal Staff: autenticación
+//  SECCIÓN 2 – Portal Staff: Acceso del Empleado (sin login previo)
 // ════════════════════════════════════════════════════════════════
 
 /**
- * Autentica al staff usando su código de 8 caracteres.
- * Devuelve el JWT (válido por 12 h) que debe guardarse de forma segura.
- * → POST /api/staff/login
+ * El empleado usa su código para unirse a la app.
+ * No requiere cuenta de usuario ni sesión previa.
+ * Devuelve el JWT y toda la información de contexto (nombre, rol, unidades).
+ * ⚠ Las `unidades` ya vienen en la respuesta – no es necesario un segundo fetch.
+ * → POST /api/staff/join
  */
-export async function loginStaff(codigo: string): Promise<string> {
-    const res = await fetch(`${BASE_STAFF}/login`, {
+export async function joinStaff(codigo: string): Promise<StaffJoinResponse> {
+    const res = await fetch('/api/staff/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codigo: codigo.toUpperCase() }),
     });
+
     if (!res.ok) {
-        throw new Error('Código inválido o expirado. Verificá las mayúsculas.');
+        const err = await res.json().catch(() => ({}));
+        const msg = (err as { message?: string }).message ?? 'Código inválido o expirado.';
+        throw new Error(msg);
     }
-    const data = await res.json();
-    return data.token as string;
+
+    return res.json();
 }
 
 /**
@@ -151,42 +99,17 @@ export async function loginStaff(codigo: string): Promise<string> {
  * → POST /api/staff/refresh
  */
 export async function refreshStaffToken(currentToken: string): Promise<string> {
-    const res = await fetch(`${BASE_STAFF}/refresh`, {
+    const res = await fetch('/api/staff/refresh', {
         method: 'POST',
         headers: { Authorization: `Bearer ${currentToken}` },
     });
     if (!res.ok) throw new Error('No se pudo renovar la sesión del staff');
     const data = await res.json();
-    return data.token as string;
+    return data.access_token ?? data.token as string;
 }
 
 // ════════════════════════════════════════════════════════════════
-//  SECCIÓN 3 – Portal Staff: unidades accesibles
-// ════════════════════════════════════════════════════════════════
-
-/**
- * Recupera las unidades a las que pertenece el staff autenticado.
- * Se invoca justo después del login para poblar el contexto global.
- * → GET /api/staff/unidades/:id_cuenta  (con Bearer token del staff)
- *
- * @param idCuenta  ID de la cuenta extraído del claim `id_cuenta` del JWT.
- * @param token     JWT del staff (se envía como Bearer desde el cliente).
- */
-export async function getUnidadesStaff(
-    idCuenta: number,
-    token: string
-): Promise<StaffUnidad[]> {
-    const res = await fetch(`${BASE_STAFF}/unidades/${idCuenta}`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error('Error al cargar las unidades del staff');
-    const data = await res.json();
-    // El backend puede devolver { staffId, unidades: [...] } o directo array
-    return Array.isArray(data) ? data : (data.unidades ?? []);
-}
-
-// ════════════════════════════════════════════════════════════════
-//  SECCIÓN 4 – Portal Staff: eventos y programas accesibles
+//  SECCIÓN 3 – Portal Staff: Eventos y Programas accesibles
 // ════════════════════════════════════════════════════════════════
 
 /**
@@ -200,6 +123,10 @@ export async function getUnidadesStaff(
  *
  * - `'programa'`: programas accesibles por unidades
  *   → GET /api/programas?cuentaId={cuentaId}&unidades=1,3
+ *
+ * @param tipo    Tipo de caso de uso.
+ * @param params  Parámetros de filtrado según el tipo.
+ * @param token   JWT del staff (obtenido de StaffJoinResponse.access_token).
  */
 export async function getEventosAccesibles(
     tipo: 'personal' | 'cuenta' | 'programa',
@@ -212,7 +139,6 @@ export async function getEventosAccesibles(
 ): Promise<StaffEvento[]> {
     const headers: HeadersInit = { Authorization: `Bearer ${token}` };
     const qs = new URLSearchParams();
-
     let url: string;
 
     if (tipo === 'personal') {
@@ -238,7 +164,28 @@ export async function getEventosAccesibles(
 }
 
 // ════════════════════════════════════════════════════════════════
-//  SECCIÓN 5 – Portal Staff: check-in
+//  SECCIÓN 4 – Portal Staff: Miembros por Evento
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Obtiene los integrantes de staff que tienen acceso a un evento concreto.
+ * → GET /api/staff/miembros?eventoId=XX
+ *
+ * @param eventoId  ID del evento.
+ * @param token     JWT del staff o del admin (opcional).
+ */
+export async function getMiembrosPorEvento(
+    eventoId: number,
+    token?: string
+): Promise<StaffMiembro[]> {
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`/api/staff/miembros?eventoId=${eventoId}`, { headers });
+    if (!res.ok) throw new Error('Error al cargar los miembros del evento');
+    return res.json();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SECCIÓN 5 – Portal Staff: Check-in
 // ════════════════════════════════════════════════════════════════
 
 /**
@@ -247,7 +194,7 @@ export async function getEventosAccesibles(
  * → POST /api/eventos/:id/checkin
  *
  * @param idEvento  ID del evento.
- * @param token     JWT del staff.
+ * @param token     JWT del staff (obtenido de StaffJoinResponse.access_token).
  */
 export async function registrarCheckin(
     idEvento: number,

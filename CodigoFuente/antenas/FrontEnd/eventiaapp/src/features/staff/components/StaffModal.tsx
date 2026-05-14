@@ -1,65 +1,71 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, Loader2, UserCog, Copy, Check } from 'lucide-react';
+import { X, Loader2, UserCog, Copy, Check, Calendar } from 'lucide-react';
 import {
     CreateStaffInput,
-    UpdateStaffInput,
-    Staff,
-    StaffRol,
 } from '@/src/features/staff/types';
-import { createStaff, updateStaff } from '@/src/features/staff/staff.service';
+import { invitarStaff } from '@/src/features/staff/staff.service';
 import { StaffUnidadesSelector } from './StaffUnidadesSelector';
 import { useAuth } from '@/src/context/AuthContext';
 
 interface StaffModalProps {
-    mode: 'create' | 'edit';
-    initialData?: Staff;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-const emptyForm: CreateStaffInput = {
+// Mapa de roles disponibles: descripción visible → id_rol (numérico según backend)
+const ROLES_DISPONIBLES = [
+    { id_rol: 1, label: 'Operador General' },
+    { id_rol: 2, label: 'DJ' },
+    { id_rol: 3, label: 'Mesero' },
+    { id_rol: 4, label: 'Cocina' },
+    { id_rol: 5, label: 'Seguridad' },
+    { id_rol: 6, label: 'Propietario / Organizador' },
+];
+
+const getDefaultExpiracion = () => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().split('T')[0]; // YYYY-MM-DD para el input date
+};
+
+const emptyForm = (): CreateStaffInput => ({
+    id_rol: 1,
     nombre: '',
     apellido: '',
     email: '',
     telefono: '',
-    id_cuenta: 0,
-    rol: 'STAFF_MESERO',
-    unidades: [],
-};
+    fecha_expiracion: getDefaultExpiracion(),
+    id_unidades: [],
+});
 
-export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModalProps) {
+export function StaffModal({ onClose, onSuccess }: StaffModalProps) {
     const { cuenta } = useAuth();
-    const [form, setForm] = useState<CreateStaffInput>(emptyForm);
+    const [form, setForm] = useState<CreateStaffInput>(emptyForm());
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     // Estado para mostrar el código tras creación exitosa
-    const [createdCode, setCreatedCode] = useState<string | null>(null);
+    const [createdInfo, setCreatedInfo] = useState<{
+        codigo: string;
+        nombre: string;
+        apellido: string;
+    } | null>(null);
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
-        if (mode === 'edit' && initialData) {
-            setForm({
-                nombre: initialData.nombre,
-                apellido: initialData.apellido,
-                email: initialData.email ?? '',
-                telefono: initialData.telefono ?? '',
-                id_cuenta: initialData.id_cuenta,
-                rol: initialData.rol,
-                unidades: initialData.unidades.map(u => u.id_unidad),
-            });
-        } else if (cuenta?.id_cuenta) {
-            setForm(prev => ({ ...prev, id_cuenta: cuenta.id_cuenta as number }));
-        }
-    }, [mode, initialData, cuenta]);
+        setForm(emptyForm());
+    }, []);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        setForm(prev => ({
+            ...prev,
+            [name]: name === 'id_rol' ? Number(value) : value,
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -70,31 +76,28 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
             setError('Nombre y apellido son obligatorios.');
             return;
         }
-
-        if (form.unidades.length === 0) {
+        if (!form.email.trim()) {
+            setError('El email es obligatorio.');
+            return;
+        }
+        if (form.id_unidades.length === 0) {
             setError('Debe seleccionar al menos una unidad.');
+            return;
+        }
+        if (!cuenta?.id_cuenta) {
+            setError('No se encontró el contexto de la cuenta.');
             return;
         }
 
         setSaving(true);
         try {
-            if (mode === 'create') {
-                const result = await createStaff(form);
-                setCreatedCode(result.codigo); // Muestra la pantalla del código
-                onSuccess(); // Refresca la lista de fondo
-            } else if (mode === 'edit' && initialData) {
-                const payload: UpdateStaffInput = {
-                    nombre: form.nombre,
-                    apellido: form.apellido,
-                    email: form.email,
-                    telefono: form.telefono,
-                    rol: form.rol,
-                    unidades: form.unidades,
-                };
-                await updateStaff(initialData.id_staff, payload);
-                onSuccess();
-                onClose();
-            }
+            const result = await invitarStaff(cuenta.id_cuenta, form);
+            setCreatedInfo({
+                codigo: result.codigo,
+                nombre: result.nombre,
+                apellido: result.apellido,
+            });
+            onSuccess(); // Refresca la lista en segundo plano
         } catch (err: any) {
             setError(err.message ?? 'Ocurrió un error inesperado.');
         } finally {
@@ -103,8 +106,8 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
     };
 
     const copyToClipboard = () => {
-        if (createdCode) {
-            navigator.clipboard.writeText(createdCode);
+        if (createdInfo) {
+            navigator.clipboard.writeText(createdInfo.codigo);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
@@ -113,7 +116,7 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
     // ─────────────────────────────────────────────────────────────────
     // VISTA DE ÉXITO (CÓDIGO GENERADO)
     // ─────────────────────────────────────────────────────────────────
-    if (createdCode) {
+    if (createdInfo) {
         return (
             <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
                 <div className="relative w-full max-w-sm mx-4 bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 p-6 text-center animate-in zoom-in-95">
@@ -121,16 +124,17 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
                         <Check className="w-8 h-8" />
                     </div>
                     <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-2">
-                        Staff Creado con Éxito
+                        Staff Invitado con Éxito
                     </h3>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-                        Este es el código de acceso para <strong>{form.nombre} {form.apellido}</strong>. 
-                        Copialo y compartilo ahora, no volverá a mostrarse.
+                        Este es el código de acceso para{' '}
+                        <strong>{createdInfo.nombre} {createdInfo.apellido}</strong>.{' '}
+                        Copialo y compartilo ahora — no volverá a mostrarse.
                     </p>
-                    
+
                     <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4 flex items-center justify-between mb-6 border border-neutral-200 dark:border-neutral-700">
                         <code className="text-xl font-mono font-bold tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-                            {createdCode}
+                            {createdInfo.codigo}
                         </code>
                         <button
                             onClick={copyToClipboard}
@@ -169,7 +173,7 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
                             <UserCog className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-                            {mode === 'create' ? 'Nuevo Staff' : 'Editar Staff'}
+                            Invitar Nuevo Staff
                         </h2>
                     </div>
                     <button
@@ -217,7 +221,7 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                                Email <span className="text-neutral-400 font-normal">(opcional)</span>
+                                Email <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="email"
@@ -243,24 +247,39 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
                         </div>
                     </div>
 
-                    {/* Rol */}
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                            Rol <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="rol"
-                            value={form.rol}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition appearance-none"
-                        >
-                            <option value="STAFF_DJ">DJ</option>
-                            <option value="STAFF_MESERO">Mesero</option>
-                            <option value="STAFF_COCINA">Cocina</option>
-                            <option value="STAFF_SEGURIDAD">Seguridad</option>
-                            <option value="STAFF_PROPIETARIO">Propietario / Organizador</option>
-                            <option value="ACCOUNT_ADMIN">Administrador de Cuenta</option>
-                        </select>
+                    {/* Rol y Fecha Expiración */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+                                Rol <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                name="id_rol"
+                                value={form.id_rol}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition appearance-none"
+                            >
+                                {ROLES_DISPONIBLES.map(r => (
+                                    <option key={r.id_rol} value={r.id_rol}>
+                                        {r.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                Expira el <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                name="fecha_expiracion"
+                                value={form.fecha_expiracion}
+                                onChange={handleChange}
+                                min={new Date().toISOString().split('T')[0]}
+                                className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                            />
+                        </div>
                     </div>
 
                     {/* Selector de Unidades */}
@@ -272,8 +291,8 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
                             Seleccioná a qué unidades/locaciones tendrá acceso este staff.
                         </p>
                         <StaffUnidadesSelector
-                            value={form.unidades}
-                            onChange={(unidades) => setForm(prev => ({ ...prev, unidades }))}
+                            value={form.id_unidades}
+                            onChange={(id_unidades) => setForm(prev => ({ ...prev, id_unidades }))}
                         />
                     </div>
 
@@ -299,7 +318,7 @@ export function StaffModal({ mode, initialData, onClose, onSuccess }: StaffModal
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
                         >
                             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {saving ? 'Guardando...' : mode === 'create' ? 'Crear Staff' : 'Guardar Cambios'}
+                            {saving ? 'Invitando...' : 'Generar Código de Acceso'}
                         </button>
                     </div>
                 </form>
