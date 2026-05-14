@@ -5,7 +5,6 @@ namespace API.DataSchema.DTO.Planes
     public class SolicitarCambioPlanDTO
     {
         public string codigo_plan_solicitado { get; set; } = null!;
-        public string codigo_mercado { get; set; } = "AR";
         public string? motivo_solicitud { get; set; }
     }
 

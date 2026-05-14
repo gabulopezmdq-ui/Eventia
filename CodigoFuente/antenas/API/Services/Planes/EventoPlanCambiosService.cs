@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-    
+
 namespace API.Services.Planes
 {
     public class EventoPlanCambiosService : IEventoPlanCambiosService
@@ -27,10 +27,7 @@ namespace API.Services.Planes
             if (string.IsNullOrWhiteSpace(req.codigo_plan_solicitado))
                 throw new Exception("Debe informar el plan solicitado.");
 
-            req.codigo_plan_solicitado = req.codigo_plan_solicitado.Trim().ToUpper();
-            req.codigo_mercado = string.IsNullOrWhiteSpace(req.codigo_mercado)
-                ? "AR"
-                : req.codigo_mercado.Trim().ToUpper();
+            req.codigo_plan_solicitado = req.codigo_plan_solicitado.Trim().ToUpperInvariant();
 
             var evento = await _context.ef_eventos
                 .FirstOrDefaultAsync(x => x.id_evento == id_evento);
@@ -77,10 +74,22 @@ namespace API.Services.Planes
             if (planSolicitado.id_plan == planActual.id_plan)
                 throw new Exception("El evento ya tiene ese plan.");
 
-            var precioActual = await _preciosService.GetPrecioPlanAsync(planActual.codigo, req.codigo_mercado);
-            var precioSolicitado = await _preciosService.GetPrecioPlanAsync(planSolicitado.codigo, req.codigo_mercado);
+            var mercadoMoneda = await ResolverMercadoMonedaEventoAsync(evento);
 
-            decimal diferenciaBase = precioSolicitado.precio_publicado - precioActual.precio_publicado;
+            var precioActual = await _preciosService.GetPrecioPlanAsync(
+                planActual.codigo,
+                mercadoMoneda.codigo_mercado
+            );
+
+            var precioSolicitado = await _preciosService.GetPrecioPlanAsync(
+                planSolicitado.codigo,
+                mercadoMoneda.codigo_mercado
+            );
+
+            decimal diferenciaBase =
+                precioSolicitado.precio_publicado
+                - precioActual.precio_publicado;
+
             if (diferenciaBase < 0)
                 diferenciaBase = 0;
 
@@ -89,10 +98,11 @@ namespace API.Services.Planes
                 id_evento = id_evento,
                 id_plan_actual = planActual.id_plan,
                 id_plan_solicitado = planSolicitado.id_plan,
+
                 estado = "PENDIENTE",
 
-                codigo_mercado = precioSolicitado.codigo_mercado,
-                codigo_moneda = precioSolicitado.codigo_moneda,
+                codigo_mercado = mercadoMoneda.codigo_mercado,
+                codigo_moneda = mercadoMoneda.codigo_moneda,
 
                 precio_plan_actual_reconocido = precioActual.precio_publicado,
                 precio_plan_solicitado_lista = precioSolicitado.precio_lista,
@@ -109,20 +119,26 @@ namespace API.Services.Planes
             };
 
             _context.ef_evento_plan_cambios.Add(cambio);
+
             await _context.SaveChangesAsync();
 
             return new CambioPlanDTO
             {
                 id_evento_plan_cambio = cambio.id_evento_plan_cambio,
                 id_evento = cambio.id_evento,
+
                 plan_actual_codigo = planActual.codigo,
                 plan_solicitado_codigo = planSolicitado.codigo,
+
                 codigo_mercado = cambio.codigo_mercado,
                 codigo_moneda = cambio.codigo_moneda,
+
                 precio_plan_actual_reconocido = cambio.precio_plan_actual_reconocido,
                 precio_plan_solicitado_publicado = cambio.precio_plan_solicitado_publicado,
+
                 diferencia_base = cambio.diferencia_base,
                 total_a_cobrar = cambio.total_a_cobrar,
+
                 estado = cambio.estado,
                 fecha_solicitud = cambio.fecha_solicitud
             };
@@ -155,14 +171,19 @@ namespace API.Services.Planes
                 {
                     id_evento_plan_cambio = c.id_evento_plan_cambio,
                     id_evento = c.id_evento,
+
                     plan_actual_codigo = pa.codigo,
                     plan_solicitado_codigo = ps.codigo,
+
                     codigo_mercado = c.codigo_mercado,
                     codigo_moneda = c.codigo_moneda,
+
                     precio_plan_actual_reconocido = c.precio_plan_actual_reconocido,
                     precio_plan_solicitado_publicado = c.precio_plan_solicitado_publicado,
+
                     diferencia_base = c.diferencia_base,
                     total_a_cobrar = c.total_a_cobrar,
+
                     estado = c.estado,
                     fecha_solicitud = c.fecha_solicitud
                 }
@@ -171,7 +192,51 @@ namespace API.Services.Planes
             return item;
         }
 
+        private async Task<(string codigo_mercado, string codigo_moneda)> ResolverMercadoMonedaEventoAsync(ef_eventos evento)
+        {
+            short? idPais = null;
+            string? monedaDefault = null;
 
+            if (evento.id_cuenta.HasValue)
+            {
+                var cuenta = await _context.ef_cuentas
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.id_cuenta == evento.id_cuenta.Value);
 
+                if (cuenta == null)
+                    throw new Exception("La cuenta asociada al evento no existe.");
+
+                idPais = cuenta.id_pais ?? evento.id_pais;
+                monedaDefault = cuenta.moneda_default;
+            }
+            else
+            {
+                idPais = evento.id_pais;
+            }
+
+            if (!idPais.HasValue)
+                throw new Exception("No se pudo determinar el país comercial del evento.");
+
+            var mercadoPais = await _context.ef_mercado_paises
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.id_pais == idPais.Value && x.activo);
+
+            if (mercadoPais == null)
+                throw new Exception("No se encontró mercado comercial para el país del evento.");
+
+            var mercado = await _context.ef_mercados
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.codigo_mercado == mercadoPais.codigo_mercado && x.activo);
+
+            if (mercado == null)
+                throw new Exception("El mercado comercial no existe o no está activo.");
+
+            string codigoMoneda =
+                !string.IsNullOrWhiteSpace(monedaDefault)
+                ? monedaDefault.Trim().ToUpperInvariant()
+                : mercado.codigo_moneda_default;
+
+            return (mercado.codigo_mercado, codigoMoneda);
+        }
     }
 }

@@ -112,7 +112,7 @@ namespace API.Services
                     TipoEventoDescripcion = (tr != null && !string.IsNullOrWhiteSpace(tr.texto)) ? tr.texto : te.codigo,
 
                     IdIdioma = ev.id_idioma,
-
+                    IdPais = ev.id_pais,
 
                     IdCuenta = ev.id_cuenta,
                     IdUnidad = ev.id_unidad,
@@ -961,10 +961,19 @@ namespace API.Services
                     : "Creación evento B2B propio de cuenta";
             }
 
+
+            var paisMercadoMoneda = await ResolverPaisMercadoMonedaEventoAsync(
+                    idUsuario,
+                    esB2B,
+                    cuenta,
+                    req.IdPais
+                );
+
             var evento = new ef_eventos
             {
                 id_tipo_evento = req.IdTipoEvento,
                 id_idioma = idIdioma,
+                id_pais = paisMercadoMoneda.id_pais,
 
                 id_cuenta = esB2B ? cuenta.id_cuenta : null,
                 id_unidad = esB2B ? req.IdUnidad : null,
@@ -1101,7 +1110,7 @@ namespace API.Services
                         id_evento = evento.id_evento,
                         tipo = "UNICO",
                         estado = "PENDIENTE",
-                        moneda = "ARS",
+                        moneda = paisMercadoMoneda.codigo_moneda,
                         importe = 0,
                         impuestos = 0,
                         total = 0,
@@ -1767,5 +1776,54 @@ namespace API.Services
 
             return new { ok = true, id_evento = invite.id_evento };
         }
+
+        private async Task<(short id_pais, string codigo_mercado, string codigo_moneda)> ResolverPaisMercadoMonedaEventoAsync(
+    long idUsuario,
+    bool esB2B,
+    ef_cuentas? cuenta,
+    short? idPaisRequest)
+        {
+            short? idPais = null;
+            string? monedaDefault = null;
+
+            if (esB2B)
+            {
+                idPais = cuenta?.id_pais;
+                monedaDefault = cuenta?.moneda_default;
+            }
+            else
+            {
+                var usuario = await _context.Set<ef_usuarios>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.id_usuario == idUsuario);
+
+                idPais = idPaisRequest ?? usuario?.id_pais ?? 4; // 4 = AR por default temporal
+            }
+
+            if (!idPais.HasValue)
+                throw new InvalidOperationException("No se pudo determinar el país comercial del evento.");
+
+            var mercadoPais = await _context.Set<ef_mercado_paises>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.id_pais == idPais.Value && x.activo == true);
+
+            if (mercadoPais == null)
+                throw new InvalidOperationException("No se encontró mercado comercial para el país del evento.");
+
+            var mercado = await _context.Set<ef_mercados>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.codigo_mercado == mercadoPais.codigo_mercado && x.activo == true);
+
+            if (mercado == null)
+                throw new InvalidOperationException("El mercado comercial no existe o no está activo.");
+
+            string codigoMoneda = !string.IsNullOrWhiteSpace(monedaDefault)
+                ? monedaDefault.Trim().ToUpperInvariant()
+                : mercado.codigo_moneda_default;
+
+            return (idPais.Value, mercado.codigo_mercado, codigoMoneda);
+        }
+
+
     }
 }
