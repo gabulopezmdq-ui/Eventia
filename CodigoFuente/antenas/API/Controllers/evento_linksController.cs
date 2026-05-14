@@ -1,6 +1,8 @@
-﻿using API.DataSchema;
+using API.DataSchema;
+using API.DataSchema.DTO;
 using API.Security;
 using API.Services.Planes;
+using API.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -70,7 +72,7 @@ namespace API.Controllers
 
             // token único
             string token;
-            do { token = TokenHelper.NewToken(); }
+            do { token = TokenUtility.Generate(64); }
             while (await _context.Set<ef_evento_links>().AnyAsync(x => x.token == token));
 
             var scopesJson = (req.scopes == null || req.scopes.Length == 0)
