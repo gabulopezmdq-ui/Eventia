@@ -42,7 +42,8 @@ namespace API.DataSchema.DTO.Cuentas
         [Required]
         public string ciudad { get; set; } = null!;
 
-        public short id_pais { get; set; }
+        [Required]
+        public short? id_pais { get; set; }
         public short? id_tipo_identificacion_fiscal { get; set; }
         public string? identificacion_fiscal { get; set; }
         public string? descripcion { get; set; }
@@ -65,7 +66,8 @@ namespace API.DataSchema.DTO.Cuentas
         [Required]
         public string ciudad { get; set; } = null!;
 
-        public short id_pais { get; set; }
+        [Required]
+        public short? id_pais { get; set; }
         public short? id_tipo_identificacion_fiscal { get; set; }
         public string? identificacion_fiscal { get; set; }
         public string? descripcion { get; set; }

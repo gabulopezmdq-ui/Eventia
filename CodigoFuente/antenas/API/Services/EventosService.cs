@@ -103,6 +103,21 @@ namespace API.Services
                     on cta.id_plan equals plCta.id_plan into plCtaJ
                 from plCta in plCtaJ.DefaultIfEmpty()
 
+                    // PAIS
+                join pais in _context.Set<ef_paises>()
+                    on ev.id_pais equals pais.id_pais into paisJ
+                from pais in paisJ.DefaultIfEmpty()
+
+                    // MERCADO PAIS
+                join mp in _context.Set<ef_mercado_paises>()
+                    on ev.id_pais equals mp.id_pais into mpJ
+                from mp in mpJ.DefaultIfEmpty()
+
+                    // MERCADO
+                join mer in _context.Set<ef_mercados>()
+                    on mp.codigo_mercado equals mer.codigo_mercado into merJ
+                from mer in merJ.DefaultIfEmpty()
+
 
                 select new EventoResponse
                 {
@@ -113,6 +128,9 @@ namespace API.Services
 
                     IdIdioma = ev.id_idioma,
                     IdPais = ev.id_pais,
+                    PaisCodigoIso2 = pais != null ? pais.codigo_iso2 : null,
+                    CodigoMercado = mer != null ? mer.codigo_mercado : null,
+                    CodigoMoneda = mer != null ? mer.codigo_moneda_default : null,
 
                     IdCuenta = ev.id_cuenta,
                     IdUnidad = ev.id_unidad,
@@ -1482,7 +1500,7 @@ namespace API.Services
                     IdUsuario = null,
                     Nombre = i.nombre,
                     Apellido = i.apellido,
-                    Email = i.email ?? "",
+                    Email = i.email,
                     IdRol = i.id_rol_staff ?? (short)0,
                     CodigoRol = r.codigo,
                     Activo = true,
