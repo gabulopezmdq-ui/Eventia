@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
 using Humanizer;
@@ -637,6 +637,29 @@ namespace API.Services
             };
             _context.ef_qr_scans.Add(scan);
             await _context.SaveChangesAsync();
+        }
+        public async Task<bool> RegistrarCheckinAsync(long idInvitado, long idAcceso, string? deviceId, long? idUsuarioOperador, string? ip, string? userAgent)
+        {
+            var invitado = await _context.ef_invitados.FindAsync(idInvitado);
+            if (invitado == null) throw new Exception("Invitado no encontrado.");
+
+            var checkin = new ef_evento_checkins
+            {
+                id_evento = invitado.id_evento,
+                id_invitado = idInvitado,
+                id_acceso = idAcceso,
+                tipo = "INGRESO",
+                fecha = DateTimeOffset.UtcNow,
+                id_usuario_operador = idUsuarioOperador
+            };
+
+            _context.ef_evento_checkins.Add(checkin);
+            await _context.SaveChangesAsync();
+
+            // Log del scan también
+            await LogScan(invitado.id_evento, invitado.qr_token ?? "CHECKIN_MANUAL", idInvitado, "O", "Check-in manual registrado", deviceId, idUsuarioOperador, ip, userAgent);
+
+            return true;
         }
     }
 }
