@@ -164,6 +164,7 @@ namespace API.DataSchema
         public DbSet<ef_mercados> ef_mercados { get; set; }
         public DbSet<ef_mercado_paises> ef_mercado_paises { get; set; }
         public DbSet<ef_evento_plan_cambios> ef_evento_plan_cambios { get; set; }
+        public DbSet<ef_param_medios_pago> ef_param_medios_pago { get; set; }
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -357,6 +358,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_mercado_paisesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_preciosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_plan_cambiosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_medios_pagoConfiguration());
 
 
 
