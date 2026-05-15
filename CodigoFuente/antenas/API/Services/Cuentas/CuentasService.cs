@@ -72,7 +72,7 @@ namespace API.Services.Cuentas
             cuenta.web = NormalizarTexto(request.web);
             cuenta.telefono = NormalizarTexto(request.telefono);
             cuenta.ciudad = NormalizarTexto(request.ciudad);
-            cuenta.id_pais = request.id_pais;
+            cuenta.id_pais = request.id_pais.Value;
             cuenta.id_tipo_identificacion_fiscal = request.id_tipo_identificacion_fiscal;
             cuenta.identificacion_fiscal = NormalizarTexto(request.identificacion_fiscal);
             cuenta.descripcion = NormalizarTexto(request.descripcion);
@@ -127,7 +127,7 @@ namespace API.Services.Cuentas
                 web = NormalizarTexto(request.web),
                 telefono = NormalizarTexto(request.telefono),
                 ciudad = NormalizarTexto(request.ciudad),
-                id_pais = request.id_pais,
+                id_pais = request.id_pais.Value,
                 id_tipo_identificacion_fiscal = request.id_tipo_identificacion_fiscal,
                 identificacion_fiscal = NormalizarTexto(request.identificacion_fiscal),
                 descripcion = NormalizarTexto(request.descripcion),
@@ -158,13 +158,13 @@ namespace API.Services.Cuentas
             };
         }
 
-        private async Task ValidarPaisYTipoFiscalAsync(short id_pais, short? id_tipo_identificacion_fiscal)
+        private async Task ValidarPaisYTipoFiscalAsync(short? id_pais, short? id_tipo_identificacion_fiscal)
         {
-            if (id_pais > 0)
+            if (id_pais.HasValue)
             {
                 var existePais = await _context.ef_paises
                     .AsNoTracking()
-                    .AnyAsync(x => x.id_pais == id_pais && x.activo);
+                    .AnyAsync(x => x.id_pais == id_pais.Value && x.activo);
 
                 if (!existePais)
                     throw new InvalidOperationException("El país seleccionado no existe o está inactivo.");
@@ -179,7 +179,10 @@ namespace API.Services.Cuentas
                 if (tipoFiscal == null)
                     throw new InvalidOperationException("El tipo de identificación fiscal seleccionado no existe o está inactivo.");
 
-                if (tipoFiscal.id_pais != id_pais)
+                if (!id_pais.HasValue)
+                    throw new InvalidOperationException("Debe seleccionar un país para informar el tipo de identificación fiscal.");
+
+                if (tipoFiscal.id_pais != id_pais.Value)
                     throw new InvalidOperationException("El tipo de identificación fiscal no corresponde al país seleccionado.");
             }
         }
@@ -187,7 +190,7 @@ namespace API.Services.Cuentas
         private void ValidarCuentaRequest(
             string nombre_cuenta,
             string tipo,
-            short id_pais,
+            short? id_pais,
             short? id_tipo_identificacion_fiscal,
             string identificacion_fiscal)
         {
@@ -197,15 +200,17 @@ namespace API.Services.Cuentas
             if (string.IsNullOrWhiteSpace(tipo))
                 throw new InvalidOperationException("El tipo de cuenta es obligatorio.");
 
-            if (id_pais <= 0)
-                throw new InvalidOperationException("El país es obligatorio.");
-
             if (id_tipo_identificacion_fiscal.HasValue && string.IsNullOrWhiteSpace(identificacion_fiscal))
                 throw new InvalidOperationException("Debe informar la identificación fiscal.");
 
             if (!id_tipo_identificacion_fiscal.HasValue && !string.IsNullOrWhiteSpace(identificacion_fiscal))
                 throw new InvalidOperationException("Debe seleccionar el tipo de identificación fiscal.");
 
+            if (id_tipo_identificacion_fiscal.HasValue && !id_pais.HasValue)
+                throw new InvalidOperationException("Debe seleccionar un país.");
+
+            if (!id_pais.HasValue)
+                throw new InvalidOperationException("El país de la cuenta es obligatorio.");
         }
 
         private static string NormalizarTexto(string valor)
