@@ -23,9 +23,6 @@ namespace API.Controllers
     [Route("auth")]
     public class authController : ControllerBase
     {
-        private readonly IConfiguration _config;
-        private readonly DataContext _context;
-        private readonly ICRUDService<ef_usuarios> _service;
         private readonly loginService _loginService;
         private readonly AuthContextService _authContextService;
 
