@@ -836,7 +836,7 @@ namespace API.Services
                     && x.es_titular_grupo == true)
                 .Select(x => new
                 {
-                    IdRsvpGrupo = x.id_rsvp_grupo.Value,
+                    IdRsvpGrupo = x.id_rsvp_grupo ?? 0,
                     Titular = (x.nombre + " " + x.apellido).Trim()
                 })
                 .ToListAsync();
@@ -854,7 +854,7 @@ namespace API.Services
                     && x.id_rsvp_grupo.HasValue
                     && idsGrupos.Contains(x.id_rsvp_grupo.Value)
                     && x.es_staff == false)
-                .GroupBy(x => x.id_rsvp_grupo.Value)
+                .GroupBy(x => x.id_rsvp_grupo ?? 0)
                 .Select(g => new
                 {
                     IdRsvpGrupo = g.Key,
@@ -1014,7 +1014,7 @@ namespace API.Services
                 .ToListAsync();
 
             var grupos = invitados
-                .GroupBy(x => x.id_rsvp_grupo.Value)
+                .GroupBy(x => x.id_rsvp_grupo ?? 0)
                 .Select(g =>
                 {
                     var titular = g.FirstOrDefault(x => x.es_titular_grupo);
@@ -1081,7 +1081,7 @@ namespace API.Services
 
         public async Task<ResumenRsvpDTO> ObtenerResumenRsvpAsync(string token)
         {
-            token = token?.Trim();
+            token = token?.Trim() ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(token))
                 throw new Exception("Token inválido.");
@@ -1089,7 +1089,7 @@ namespace API.Services
             var titular = await _context.ef_invitados
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x =>
-                    x.rsvp_token.ToLower() == token.ToLower()
+                    x.rsvp_token != null && x.rsvp_token.ToLower() == token.ToLower()
                     && x.activo == true);
 
             if (titular == null)

@@ -1482,7 +1482,7 @@ namespace API.Services
                     IdUsuario = null,
                     Nombre = i.nombre,
                     Apellido = i.apellido,
-                    Email = i.email,
+                    Email = i.email ?? "",
                     IdRol = i.id_rol_staff ?? (short)0,
                     CodigoRol = r.codigo,
                     Activo = true,

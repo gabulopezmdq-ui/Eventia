@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Planes;
 using API.Services.Precios;
 using Microsoft.EntityFrameworkCore;
@@ -206,7 +206,7 @@ namespace API.Services.Planes
                 if (cuenta == null)
                     throw new Exception("La cuenta asociada al evento no existe.");
 
-                idPais = cuenta.id_pais ?? evento.id_pais;
+                idPais = cuenta.id_pais;
                 monedaDefault = cuenta.moneda_default;
             }
             else

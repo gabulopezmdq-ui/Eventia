@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace API.DataSchema.DTO.Cuentas
@@ -16,7 +16,7 @@ namespace API.DataSchema.DTO.Cuentas
         public string? web { get; set; }
         public string telefono { get; set; } = null!;
         public string ciudad { get; set; } = null!;
-        public short? id_pais { get; set; }
+        public short id_pais { get; set; }
         public short? id_tipo_identificacion_fiscal { get; set; }
         public string? identificacion_fiscal { get; set; }
         public string? descripcion { get; set; }
@@ -42,7 +42,7 @@ namespace API.DataSchema.DTO.Cuentas
         [Required]
         public string ciudad { get; set; } = null!;
 
-        public short? id_pais { get; set; }
+        public short id_pais { get; set; }
         public short? id_tipo_identificacion_fiscal { get; set; }
         public string? identificacion_fiscal { get; set; }
         public string? descripcion { get; set; }
@@ -65,7 +65,7 @@ namespace API.DataSchema.DTO.Cuentas
         [Required]
         public string ciudad { get; set; } = null!;
 
-        public short? id_pais { get; set; }
+        public short id_pais { get; set; }
         public short? id_tipo_identificacion_fiscal { get; set; }
         public string? identificacion_fiscal { get; set; }
         public string? descripcion { get; set; }

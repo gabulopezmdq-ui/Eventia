@@ -1,4 +1,4 @@
-﻿using API.DataSchema.DTO;
+using API.DataSchema.DTO;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -19,6 +19,7 @@ namespace API.Services
         Task<List<PendienteRetiroDTO>> ListPendientesRetiroAsync(long idEvento);
         Task<PorteroResumenDTO> GetResumenAsync(long idEvento);
         Task<RetiroConfirmResponseDTO> ConfirmarRetiroAsyncQR(string qrToken, RetiroConfirmRequestDTO dto, long? idUsuarioOperador = null);
+        Task<bool> RegistrarCheckinAsync(long idInvitado, long idAcceso, string? deviceId, long? idUsuarioOperador, string? ip, string? userAgent);
 
 
     }
