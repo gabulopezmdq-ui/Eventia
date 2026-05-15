@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -47,7 +47,7 @@ namespace API.DataSchema.ModelConfiguration
                    .IsRequired(false);
 
             builder.Property(x => x.id_pais)
-                   .IsRequired(false);
+                   .IsRequired();
 
             builder.Property(x => x.id_tipo_identificacion_fiscal)
                    .IsRequired(false);

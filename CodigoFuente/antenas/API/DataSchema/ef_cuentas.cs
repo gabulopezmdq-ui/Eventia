@@ -16,7 +16,7 @@ namespace API.DataSchema
         public string web { get; set; }
         public string telefono { get; set; }
         public string ciudad { get; set; }
-        public short? id_pais { get; set; }
+        public short id_pais { get; set; }
         public short? id_tipo_identificacion_fiscal { get; set; }
         public string identificacion_fiscal { get; set; }
         public string descripcion { get; set; }
