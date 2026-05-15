@@ -53,7 +53,12 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("cantidad_eventos_compartidos")]
         public int cantidad_eventos_compartidos { get; set; }
 
+        [JsonPropertyName("cantidad_eventos_cuenta")]
+        public int cantidad_eventos_cuenta { get; set; }
+
         [JsonPropertyName("ultimo_evento_creado")]
         public string? ultimo_evento_creado { get; set; }
     }
+
+    
 }
