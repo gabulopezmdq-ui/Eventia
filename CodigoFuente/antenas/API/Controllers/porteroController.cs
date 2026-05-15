@@ -1,4 +1,4 @@
-using  API.DataSchema;
+ï»¿using  API.DataSchema;
 using API.DataSchema.DTO;
 using  API.Services;
 using  API.Utility;
@@ -23,14 +23,10 @@ namespace API.Controllers
     [Route("[controller]")]
     public class porteroController : ControllerBase
     {
-        private readonly IConfiguration _config;
-        private readonly DataContext _context;
-        private readonly ICRUDService<ef_usuarios> _service;
         private readonly IPorteroService _svc;
         public porteroController(IPorteroService svc )
         {
             _svc = svc;
-            // otros assignments
         }
 
 
@@ -45,75 +41,48 @@ namespace API.Controllers
             string? ua = Request.Headers.UserAgent.ToString();
 
             var result = await _svc.ScanQrAsync(request.QrToken, deviceId, idUsuarioOperador, ip, ua);
-            if (result == null) return NotFound("QR inválido.");
+            if (result == null) return NotFound("QR invÃ¡lido.");
+
             return Ok(result);
         }
 
-        // 2) Confirmar retiro
-        [HttpPost("retiro")]
-        public async Task<IActionResult> ConfirmarRetiro([FromBody] RetiroConfirmRequestDTO dto)
+        // 2) Registrar ingreso
+        [HttpPost("checkin")]
+        public async Task<IActionResult> Checkin([FromBody] CheckinRequest request)
         {
             try
             {
-                long? idUsuarioOperador = null; // si hay auth, lo tomás de claims
-                var result = await _svc.ConfirmarRetiroAsync(dto.qrToken, dto, idUsuarioOperador);
-                return Ok(result);
-            }
-            catch (ArgumentException ex) { return BadRequest(ex.Message); }
-            catch (InvalidOperationException ex) { return Conflict(ex.Message); }
-        }
+                string? deviceId = Request.Headers["Device-Id"].FirstOrDefault();
+                long? idUsuarioOperador = null;
+                string? ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                string? ua = Request.Headers.UserAgent.ToString();
 
+                var ok = await _svc.RegistrarCheckinAsync(
+                    request.IdInvitado,
+                    request.IdAcceso,
+                    deviceId,
+                    idUsuarioOperador,
+                    ip,
+                    ua
+                );
 
-        [HttpGet("retiros")]
-        public async Task<IActionResult> Retiros(long idEvento, [FromQuery] DateTimeOffset? desde = null, [FromQuery] DateTimeOffset? hasta = null)
-        {
-            var result = await _svc.ListRetirosAsync(idEvento, desde, hasta);
-            return Ok(result);
-        }
-
-        [HttpGet("scanList")]
-        public async Task<IActionResult> Scans(long idEvento, [FromQuery] DateTimeOffset? desde = null, [FromQuery] DateTimeOffset? hasta = null, [FromQuery] string? resultado = null)
-        {
-            var result = await _svc.ListScansAsync(idEvento, desde, hasta, resultado);
-            return Ok(result);
-        }
-
-        [HttpGet("pendientesRetiro")]
-        public async Task<IActionResult> PendientesRetiro(long idEvento)
-        {
-            var result = await _svc.ListPendientesRetiroAsync(idEvento);
-            return Ok(result);
-        }
-
-        [HttpGet("resumen")]
-        public async Task<IActionResult> Resumen(long idEvento)
-        {
-            var result = await _svc.GetResumenAsync(idEvento);
-            return Ok(result);
-        }
-
-
-        [HttpPost("retiroQR")]
-        public async Task<IActionResult> ConfirmarRetiroQR([FromBody] RetiroConfirmRequestDTO request)
-        {
-            try
-            {
-                long? idUsuarioOperador = null; // Si hay autenticación
-                var result = await _svc.ConfirmarRetiroAsyncQR(request.qrToken, request, idUsuarioOperador);
-                return Ok(result);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { error = ex.Message });
+                return Ok(new { ok = ok });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = "Error interno del servidor." });
+                return BadRequest(new { error = ex.Message });
             }
         }
+    }
+
+    public class ScanRequest
+    {
+        public string QrToken { get; set; } = null!;
+    }
+
+    public class CheckinRequest
+    {
+        public long IdInvitado { get; set; }
+        public long IdAcceso { get; set; }
     }
 }
