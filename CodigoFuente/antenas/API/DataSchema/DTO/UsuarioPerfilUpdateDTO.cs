@@ -5,25 +5,28 @@ namespace API.DataSchema.DTO
 {
     public class UsuarioPerfilUpdateDTO
     {
-        [JsonPropertyName("Nombre")]
+        [JsonPropertyName("nombre")]
         public string nombre { get; set; } = null!;
 
-        [JsonPropertyName("Apellido")]
+        [JsonPropertyName("apellido")]
         public string apellido { get; set; } = null!;
 
-        [JsonPropertyName("Telefono")]
+        [JsonPropertyName("telefono")]
         public string? telefono { get; set; }
 
-        [JsonPropertyName("Pais")]
-        public string? pais_codigo { get; set; } // Viene "AR", "ES", etc.
+        [JsonPropertyName("id_pais")]
+        public short? id_pais { get; set; }
 
-        [JsonPropertyName("IdiomaPreferido")]
-        public string? idioma_codigo { get; set; }
+        [JsonPropertyName("id_idioma_preferido")]
+        public short? id_idioma_preferido { get; set; }
 
-        [JsonPropertyName("RecibirNovedades")]
+        [JsonPropertyName("id_idioma_default_evento")]
+        public short? id_idioma_default_evento { get; set; }
+
+        [JsonPropertyName("recibir_novedades")]
         public bool? recibir_novedades { get; set; }
 
-        [JsonPropertyName("AvatarUrl")]
+        [JsonPropertyName("avatar_url")]
         public string? avatar_url { get; set; }
     }
 }
