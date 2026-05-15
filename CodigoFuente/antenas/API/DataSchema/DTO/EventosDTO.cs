@@ -40,7 +40,7 @@ namespace API.DataSchema.DTO
 
         [JsonProperty("anfitriones_texto")]
         [JsonPropertyName("anfitriones_texto")]
-        public string AnfitrionesTexto { get; set; } = null!;
+        public string? AnfitrionesTexto { get; set; }
 
         [JsonProperty("id_dress_code")]
         [JsonPropertyName("id_dress_code")]
