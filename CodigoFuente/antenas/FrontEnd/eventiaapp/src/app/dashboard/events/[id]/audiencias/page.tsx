@@ -117,7 +117,7 @@ function AudienciasContent({ params }: { params: Promise<{ id: string }> }) {
 
             {/* ── Tab Content ── */}
             <div className="min-h-[500px]">
-                {activeTab === 'campanas' && <CampanasTab idEvento={idEvento} />}
+                {activeTab === 'campanas' && <CampanasTab idEvento={idEvento} limites={event.limites} />}
                 {activeTab === 'registradas' && <PersonasRegistradasTab idEvento={idEvento} />}
                 {activeTab === 'qr_entrada' && <QrEntradaScreen idEvento={idEvento} />}
                 {activeTab === 'qr_beneficio' && <QrBeneficioScreen idEvento={idEvento} />}

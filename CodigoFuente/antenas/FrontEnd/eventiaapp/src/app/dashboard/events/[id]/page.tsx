@@ -155,6 +155,29 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 </div>
             </header>
 
+            {/* ── Avisos del Plan / Estado ── */}
+            {(isBorrador || event.limites?.permitirGenerarLinks === false) && (
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                    <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-amber-500">Invitaciones Deshabilitadas</h4>
+                        <p className="text-sm text-amber-500/80">
+                            {isBorrador 
+                                ? 'Tu evento se encuentra en estado Borrador. Debés activarlo para poder generar y enviar invitaciones.'
+                                : 'Tu plan actual no permite generar nuevas invitaciones ni links. Mejorá tu plan para habilitar esta función.'}
+                        </p>
+                    </div>
+                    {event.limites?.permitirGenerarLinks === false && !isBorrador && (
+                        <button
+                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/plan`)}
+                            className="ml-auto px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-400 transition-colors shrink-0"
+                        >
+                            Mejorar Plan
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* ── Main Content Area ── */}
                 <div className="lg:col-span-2 space-y-8">

@@ -8,8 +8,10 @@ import {
     MoreVertical, Mail, Phone, X, Check, Copy, AlertCircle, RefreshCw, Loader2
 } from 'lucide-react';
 import { crearGrupoManual, cargarInvitacion, listarInvitados, InvitadoListado } from '@/src/features/invitations/invitation.service';
-import { getEstructuraEvento } from '@/src/features/events/event.service';
-import { AccesoEvento } from '@/src/features/events/types';
+import { getEstructuraEvento, getEventById } from '@/src/features/events/event.service';
+import { AccesoEvento, LimitesEvento } from '@/src/features/events/types';
+import { usePlanLimit } from '@/src/context/PlanLimitContext';
+import { LockIcon } from '@/src/components/ui/LockIcon';
 
 export default function InvitadosPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -43,6 +45,10 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
     const [searchQuery, setSearchQuery] = useState('');
     const [copiedId, setCopiedId] = useState<number | null>(null);
 
+    // ── Plan limits ──
+    const { handlePlanLimitError, openUpsell } = usePlanLimit();
+    const [limites, setLimites] = useState<LimitesEvento | null>(null);
+
     // ── Fetch guest list ──
     const fetchInvitados = useCallback(async () => {
         setListLoading(true);
@@ -61,11 +67,19 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
         fetchInvitados();
     }, [fetchInvitados]);
 
-    // ── Fetch event structure (accesos) ──
+    // ── Fetch event structure (accesos) & limits ──
     useEffect(() => {
-        const fetchStructure = async () => {
+        const fetchData = async () => {
             try {
-                const structure = await getEstructuraEvento(Number(id));
+                const [structure, eventoData] = await Promise.all([
+                    getEstructuraEvento(Number(id)),
+                    getEventById(String(id)).catch(() => null)
+                ]);
+                
+                if (eventoData?.limites) {
+                    setLimites(eventoData.limites);
+                }
+
                 setAccesos(structure.accesos || []);
                 // Set default access if available
                 if (structure.id_acceso_default) {
@@ -76,10 +90,10 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                     setDefaultAccesoId(structure.accesos[0].id_acceso);
                 }
             } catch (err) {
-                console.error("Error fetching event structure:", err);
+                console.error("Error fetching event data:", err);
             }
         };
-        fetchStructure();
+        fetchData();
     }, [id]);
 
     // ── Derived / filtered list ──
@@ -136,7 +150,8 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
             await fetchInvitados();
             setGeneratedLink('__success__');
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al generar la invitación');
+            try { handlePlanLimitError(err); }
+            catch { setError(err instanceof Error ? err.message : 'Error al generar la invitación'); }
         } finally {
             setIsLoading(false);
         }
@@ -219,13 +234,23 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                     >
                         <RefreshCw className={`w-4 h-4 ${listLoading ? 'animate-spin' : ''}`} />
                     </button>
-                    <button
-                        onClick={() => setIsInviteModalOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Invitación Personalizada
-                    </button>
+                    {limites?.permitirGenerarLinks === false ? (
+                        <button
+                            onClick={() => openUpsell('Tu plan no permite generar invitaciones personalizadas ni links de registro. Mejorá tu plan para acceder a esta función.')}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-bold text-sm border border-amber-500/20 transition-all"
+                        >
+                            <LockIcon message="" size={16} />
+                            Invitación Personalizada
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setIsInviteModalOpen(true)}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Invitación Personalizada
+                        </button>
+                    )}
                 </div>
             </header>
 
