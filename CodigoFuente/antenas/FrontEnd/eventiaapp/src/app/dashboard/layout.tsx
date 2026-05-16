@@ -10,6 +10,7 @@ import {
     X,
     Database,
     FileCheck2,
+    FileText,
     Building2,
     Users,
     CreditCard,
@@ -137,6 +138,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                                     <SidebarItem href="/dashboard/cuenta/eventos" icon={CalendarRange} label="Eventos de Cuenta" />
                                     <SidebarItem href="/dashboard/cuenta/programas" icon={CalendarDays} label="Programas y Casales" />
                                     <SidebarItem href="/dashboard/cuenta/plan" icon={CreditCard} label="Plan y Facturación" />
+                                    <SidebarItem href="/dashboard/cuenta/perfil" icon={FileText} label="Perfil de Cuenta" />
                                 </>
                             )}
                         </>
