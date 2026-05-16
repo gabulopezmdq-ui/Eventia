@@ -4,9 +4,13 @@ import { useEffect, useState } from 'react';
 import { Plus, Link as LinkIcon, Power, PowerOff, Edit3, Trash2 } from 'lucide-react';
 import { getCampanas, toggleCampana } from '@/src/features/captacion/captacion.service';
 import type { CaptacionLink } from '@/src/features/captacion/types';
+import type { LimitesEvento } from '@/src/features/events/types';
+import { usePlanLimit } from '@/src/context/PlanLimitContext';
+import { LockIcon } from '@/src/components/ui/LockIcon';
 import CampanaFormModal from './CampanaFormModal';
 
-export default function CampanasTab({ idEvento }: { idEvento: number }) {
+export default function CampanasTab({ idEvento, limites }: { idEvento: number; limites?: LimitesEvento }) {
+    const { openUpsell } = usePlanLimit();
     const [campanas, setCampanas] = useState<CaptacionLink[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,13 +75,23 @@ export default function CampanasTab({ idEvento }: { idEvento: number }) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-foreground">Campañas Públicas</h2>
-                <button
-                    onClick={handleCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all"
-                >
-                    <Plus className="w-4 h-4" />
-                    Nueva Campaña
-                </button>
+                {limites?.permitirGenerarLinks === false ? (
+                    <button
+                        onClick={() => openUpsell('Tu plan no permite crear nuevas campañas públicas. Mejorá tu plan para acceder a esta función.')}
+                        className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-xl font-bold text-sm transition-all border border-amber-500/20"
+                    >
+                        <LockIcon message="" size={16} />
+                        Nueva Campaña
+                    </button>
+                ) : (
+                    <button
+                        onClick={handleCreate}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Nueva Campaña
+                    </button>
+                )}
             </div>
 
             {campanas.length === 0 ? (

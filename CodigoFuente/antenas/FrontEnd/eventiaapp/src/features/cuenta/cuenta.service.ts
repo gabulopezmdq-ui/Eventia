@@ -57,6 +57,44 @@ export interface CuentaPlan {
     renovacion?: string;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Perfil de Cuenta B2B
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CuentaPerfilInfo {
+    nombre_cuenta: string;
+    tipo: string;
+    estado: string;
+    id_plan: number | null;
+    instagram: string | null;
+    web: string | null;
+    telefono: string | null;
+    ciudad: string | null;
+    id_pais: number | null;
+    id_tipo_identificacion_fiscal: number | null;
+    identificacion_fiscal: string | null;
+    descripcion: string | null;
+    fecha_alta: string | null;
+    fecha_modif: string | null;
+}
+
+export interface UpdateCuentaPayload {
+    nombre_cuenta: string;
+    tipo: string;
+    estado: string;
+    id_plan: number | null;
+    instagram: string | null;
+    web: string | null;
+    telefono: string | null;
+    ciudad: string | null;
+    id_pais: number | null;
+    id_tipo_identificacion_fiscal: number | null;
+    identificacion_fiscal: string | null;
+    descripcion: string | null;
+    fecha_alta?: string | null;
+    fecha_modif?: string | null;
+}
+
 export async function getMisUnidades(soloActivas = true): Promise<Unidad[]> {
     const res = await fetch(`/api/cuenta-unidades?soloActivas=${soloActivas}`);
     if (!res.ok) throw new Error('Error al cargar unidades');
@@ -182,4 +220,40 @@ export async function getCuentaEventos(): Promise<any[]> {
         unidad_nombre: item.unidad_nombre || item.unidadNombre,
         unidadNombre: item.unidadNombre || item.unidad_nombre,
     }));
+}
+
+// ─── Perfil de Cuenta B2B ─────────────────────────────────────────────────
+
+export async function getMiCuentaPerfil(): Promise<CuentaPerfilInfo> {
+    const res = await fetch('/api/cuentas/perfil');
+    if (!res.ok) throw new Error('Error al cargar el perfil de cuenta');
+    const data = await res.json();
+    return {
+        nombre_cuenta:                 data.nombre_cuenta               ?? data.nombreCuenta               ?? '',
+        tipo:                          data.tipo                         ?? '',
+        estado:                        data.estado                       ?? '',
+        id_plan:                       data.id_plan                      ?? data.idPlan                      ?? null,
+        instagram:                     data.instagram                    ?? null,
+        web:                           data.web                          ?? null,
+        telefono:                      data.telefono                     ?? null,
+        ciudad:                        data.ciudad                       ?? null,
+        id_pais:                       data.id_pais                      ?? data.idPais                      ?? null,
+        id_tipo_identificacion_fiscal: data.id_tipo_identificacion_fiscal ?? data.idTipoIdentificacionFiscal ?? null,
+        identificacion_fiscal:         data.identificacion_fiscal        ?? data.identificacionFiscal        ?? null,
+        descripcion:                   data.descripcion                  ?? null,
+        fecha_alta:                    data.fecha_alta                   ?? data.fechaAlta                   ?? null,
+        fecha_modif:                   data.fecha_modif                  ?? data.fechaModif                  ?? null,
+    };
+}
+
+export async function updateMiCuentaPerfil(payload: UpdateCuentaPayload): Promise<void> {
+    const res = await fetch('/api/cuentas/perfil', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al actualizar el perfil de cuenta');
+    }
 }
