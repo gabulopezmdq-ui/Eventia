@@ -290,7 +290,7 @@ export default function AudienciaCRMDetallePage({ params }: { params: Promise<{ 
                                                         </p>
                                                     </div>
                                                     <span className="text-sm font-bold text-indigo-600">
-                                                        {p.precioBase.toLocaleString('es-AR', { style: 'currency', currency: p.moneda })}
+                                                        {p.precioBase.toLocaleString('es-AR', { style: 'currency', currency: p.moneda || 'EUR' })}
                                                     </span>
                                                 </div>
                                             ))}
@@ -310,7 +310,7 @@ export default function AudienciaCRMDetallePage({ params }: { params: Promise<{ 
                                                         <p className="text-xs text-muted">{s.tipoCalculo.replace('_', ' ')} · {s.fechas.length} día(s)</p>
                                                     </div>
                                                     <span className="text-sm font-bold text-emerald-600">
-                                                        {s.subtotal.toLocaleString('es-AR', { style: 'currency', currency: s.moneda })}
+                                                        {s.subtotal.toLocaleString('es-AR', { style: 'currency', currency: s.moneda || 'EUR' })}
                                                     </span>
                                                 </div>
                                             ))}
