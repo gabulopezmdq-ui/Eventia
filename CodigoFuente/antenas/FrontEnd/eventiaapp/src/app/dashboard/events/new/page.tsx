@@ -162,7 +162,7 @@ function NewEventContent() {
             setLoadingSelects(true);
             try {
                 const [tipos, idiomasData] = await Promise.all([
-                    getTiposEvento(2),
+                    getTiposEvento(2, 'EVENTO'),
                     getIdiomasActivos(),
                 ]);
                 setTiposEvento(tipos);
@@ -237,7 +237,7 @@ function NewEventContent() {
         async function reloadByIdioma() {
             try {
                 const [tipos, dressCodesData] = await Promise.all([
-                    getTiposEvento(basicInfo.idIdioma),
+                    getTiposEvento(basicInfo.idIdioma, 'EVENTO'),
                     getDressCodes(basicInfo.idIdioma),
                 ]);
                 setTiposEvento(tipos);
@@ -787,7 +787,7 @@ function NewEventContent() {
                                                     ) : (
                                                         planes.map(p => (
                                                             <option key={p.codigo} value={p.codigo}>
-                                                                {p.nombre}{p.precio !== null ? ` — $${p.precio}` : ''}
+                                                                {p.nombre}{p.precio !== null ? ` — $${typeof p.precio === 'object' ? (p.precio as any).importe : p.precio}` : ''}
                                                             </option>
                                                         ))
                                                     )}
@@ -1647,7 +1647,7 @@ function NewEventContent() {
                                             <p className="text-2xl font-extrabold text-foreground mb-0.5">
                                                 {plan.precio === null
                                                     ? (plan.codigo.includes('FREE') ? '$0' : 'Consultar')
-                                                    : `$${plan.precio}`}
+                                                    : `$${typeof plan.precio === 'object' ? (plan.precio as any).importe : plan.precio}`}
                                                 <span className="text-sm font-normal text-muted ml-1">
                                                     {plan.periodo && plan.periodo !== 'UNICO' ? `/${plan.periodo}` : ''}
                                                 </span>

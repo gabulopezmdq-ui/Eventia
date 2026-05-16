@@ -83,8 +83,9 @@ export default function ProgramasCuentaPage() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800">
                                 <tr>
+                                    <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Anfitriones</th>
                                     <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Información del Programa</th>
-                                    <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Información del Programa</th>
+                                    <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Tipo de evento</th>
                                     <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Fechas</th>
                                     <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-right">Acciones</th>
                                 </tr>
@@ -105,6 +106,11 @@ export default function ProgramasCuentaPage() {
                                                 <MapPin className="w-3.5 h-3.5 text-neutral-400" />
                                                 {prog.lugar || 'Unidad Principal'}
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300">
+                                                {prog.tipo_evento_codigo?.replace(/_/g, ' ') || 'N/A'}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-5">
                                             <div className="text-xs font-semibold text-neutral-500 flex items-center gap-1.5 mb-1">

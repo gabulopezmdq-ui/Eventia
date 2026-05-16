@@ -9,19 +9,23 @@ import {
     setAccesoDefault,
     createRelacionAccesoTramo,
     deleteRelacionAccesoTramo,
+    getEventById,
 } from '@/src/features/events/event.service';
 import { listarSolicitudes, confirmarSolicitud } from '@/src/features/plantillas/solicitudes-plantilla.service';
 import type {
     EstructuraEvento,
     TramoEvento,
     AccesoEvento,
+    LimitesEvento,
 } from '@/src/features/events/types';
 import {
     ArrowLeft, Clock, Users, LayoutGrid, Save, CheckCircle2,
-    MapPin, AlignLeft, Sparkles, Globe, Hash, Power,
+    MapPin, AlignLeft, Sparkles, Globe, Hash,
     Star, MessageSquare, Check, X, AlertTriangle, Send,
-    Link as LinkIcon
+    Link as LinkIcon, Lock,
 } from 'lucide-react';
+import { usePlanLimit } from '@/src/context/PlanLimitContext';
+import { LockIcon } from '@/src/components/ui/LockIcon';
 
 /* ═══════════ TABS ═══════════ */
 const TABS = [
@@ -53,8 +57,12 @@ export default function EstructuraPage() {
     const params = useParams();
     const idEvento = Number(params.id);
 
+    // ── Plan limits ──
+    const { handlePlanLimitError, openUpsell } = usePlanLimit();
+
     // ── State ──
     const [estructura, setEstructura] = useState<EstructuraEvento | null>(null);
+    const [limites, setLimites] = useState<LimitesEvento | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<TabId>('tramos');
@@ -82,12 +90,16 @@ export default function EstructuraPage() {
         async function load() {
             setLoading(true);
             try {
-                const [data, solicitudes] = await Promise.all([
+                const [data, eventoData, solicitudes] = await Promise.all([
                     getEstructuraEvento(idEvento),
-                    listarSolicitudes({ idEvento, estado: 'D' }).catch(() => []) // Catch preventivo
+                    getEventById(String(idEvento)).catch(() => null),
+                    listarSolicitudes({ idEvento, estado: 'D' }).catch(() => []),
                 ]);
                 setEstructura(data);
-
+                // Cargar flags de límites si el backend los devuelve
+                if (eventoData?.limites) {
+                    setLimites(eventoData.limites);
+                }
                 if (solicitudes.length > 0) {
                     setSolicitudDraftId(solicitudes[0].id_solicitud);
                 }
@@ -113,8 +125,6 @@ export default function EstructuraPage() {
         if (!edits || Object.keys(edits).length === 0) return;
         setSavingTramoId(tramo.id_tramo);
         try {
-            // Enviar objeto completo (original + edits) para evitar que el backend
-            // use defaults para campos faltantes (ej: orden=0 viola constraint unique)
             const { id_tramo, id_evento, ...tramoData } = tramo;
             void id_tramo; void id_evento;
             const payload = { ...tramoData, ...edits };
@@ -126,8 +136,10 @@ export default function EstructuraPage() {
             setTramoEdits(prev => { const n = { ...prev }; delete n[tramo.id_tramo]; return n; });
             setSavedTramoIds(prev => new Set(prev).add(tramo.id_tramo));
             setTimeout(() => setSavedTramoIds(prev => { const n = new Set(prev); n.delete(tramo.id_tramo); return n; }), 2500);
-        } catch {
-            setError('Error al guardar el tramo. Intenta de nuevo.');
+        } catch (err) {
+            // Si es un error de límite de plan, lo maneja el contexto (Toast + UpsellModal)
+            try { handlePlanLimitError(err); }
+            catch { setError('Error al guardar el tramo. Intenta de nuevo.'); }
         } finally {
             setSavingTramoId(null);
         }
@@ -146,7 +158,6 @@ export default function EstructuraPage() {
         if (!edits || Object.keys(edits).length === 0) return;
         setSavingAccesoId(acceso.id_acceso);
         try {
-            // Enviar objeto completo (original + edits) — mismo patrón que tramos
             const { id_acceso, id_evento, ...accesoData } = acceso;
             void id_acceso; void id_evento;
             const payload = { ...accesoData, ...edits };
@@ -158,8 +169,9 @@ export default function EstructuraPage() {
             setAccesoEdits(prev => { const n = { ...prev }; delete n[acceso.id_acceso]; return n; });
             setSavedAccesoIds(prev => new Set(prev).add(acceso.id_acceso));
             setTimeout(() => setSavedAccesoIds(prev => { const n = new Set(prev); n.delete(acceso.id_acceso); return n; }), 2500);
-        } catch {
-            setError('Error al guardar el acceso. Intenta de nuevo.');
+        } catch (err) {
+            try { handlePlanLimitError(err); }
+            catch { setError('Error al guardar el acceso. Intenta de nuevo.'); }
         } finally {
             setSavingAccesoId(null);
         }
@@ -274,6 +286,28 @@ export default function EstructuraPage() {
                 </div>
             </div>
 
+
+            {/* ── Banner de Restricción de Plan: Estructura Manual ── */}
+            {limites && limites.permitirEstructuraManual === false && (
+                <div className="mb-6 px-5 py-4 rounded-xl bg-amber-500/8 border border-amber-500/25 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-start gap-3">
+                        <Lock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-sm font-semibold text-amber-200">Edición de estructura restringida</p>
+                            <p className="text-xs text-muted mt-1 max-w-lg">
+                                Tu plan actual no permite editar manualmente los tramos. Podés aplicar una plantilla o mejorar tu plan para desbloquear la edición.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => openUpsell('Tu plan no permite editar la estructura del evento manualmente. Mejorá tu plan para personalizar tramos, horarios y lugares.')}
+                        className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-xs hover:bg-amber-500/25 transition-all w-full sm:w-auto justify-center"
+                    >
+                        ✨ Ver planes
+                    </button>
+                </div>
+            )}
+
             {/* ── Banner de Draft ── */}
             {solicitudDraftId && (
                 <div className="mb-6 px-5 py-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between animate-in fade-in slide-in-from-top-2">
@@ -300,6 +334,7 @@ export default function EstructuraPage() {
                     </button>
                 </div>
             )}
+
 
             {/* ── Mensaje de Éxito de Confirmación ── */}
             {confirmedSuccess && (
@@ -349,18 +384,24 @@ export default function EstructuraPage() {
                         const isSaving = savingTramoId === tramo.id_tramo;
                         const isSaved = savedTramoIds.has(tramo.id_tramo);
                         const isEdited = isTramoEdited(tramo.id_tramo);
+                        // Flag de restricción de plan: si limites existe y es false, bloquear
+                        const isLocked = limites !== null && limites.permitirEstructuraManual === false;
+                        const lockMsg = 'Tu plan no permite editar la estructura manualmente. Mejorá tu plan para personalizar tramos.';
+                        const inputClass = (base: string) =>
+                            `${base}${isLocked ? ' opacity-60 cursor-not-allowed' : ''}`;
                         return (
-                            <div key={tramo.id_tramo} className="p-5 sm:p-6 rounded-2xl bg-card-bg border border-card-border transition-all hover:border-muted/50">
+                            <div key={tramo.id_tramo} className={`p-5 sm:p-6 rounded-2xl bg-card-bg border transition-all ${isLocked ? 'border-amber-500/20' : 'border-card-border hover:border-muted/50'}`}>
                                 {/* Card header */}
                                 <div className="flex items-center justify-between mb-5">
                                     <div className="flex items-center gap-3">
                                         <span className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400">{idx + 1}</span>
                                         <h3 className="font-semibold text-foreground text-sm">{tramo.nombre}</h3>
+                                        {isLocked && <LockIcon message={lockMsg} size={14} />}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {isSaved && <span className="text-xs text-emerald-400 flex items-center gap-1 animate-in fade-in duration-200"><CheckCircle2 className="w-3 h-3" />Guardado</span>}
-                                        <label className="relative inline-flex items-center cursor-pointer" title={tv(tramo, 'activo') ? 'Activo' : 'Inactivo'}>
-                                            <input type="checkbox" checked={tv(tramo, 'activo') as boolean} onChange={e => handleTramoChange(tramo.id_tramo, 'activo', e.target.checked)} className="sr-only peer" />
+                                        <label className={`relative inline-flex items-center ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`} title={tv(tramo, 'activo') ? 'Activo' : 'Inactivo'}>
+                                            <input type="checkbox" checked={tv(tramo, 'activo') as boolean} onChange={e => !isLocked && handleTramoChange(tramo.id_tramo, 'activo', e.target.checked)} disabled={isLocked} className="sr-only peer" />
                                             <div className="w-9 h-5 bg-gray-600 rounded-full peer peer-checked:bg-indigo-500 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
                                         </label>
                                     </div>
@@ -372,7 +413,8 @@ export default function EstructuraPage() {
                                     <div>
                                         <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><AlignLeft className="w-3 h-3" />Nombre</label>
                                         <input value={tv(tramo, 'nombre') as string} onChange={e => handleTramoChange(tramo.id_tramo, 'nombre', e.target.value)}
-                                            className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm" />
+                                            disabled={isLocked}
+                                            className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm")} />
                                     </div>
 
                                     {/* Fechas */}
@@ -380,12 +422,14 @@ export default function EstructuraPage() {
                                         <div>
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><Clock className="w-3 h-3" />Fecha/Hora Inicio</label>
                                             <input type="datetime-local" value={toDatetimeLocal(tv(tramo, 'fecha_hora_inicio') as string | null)} onChange={e => handleTramoChange(tramo.id_tramo, 'fecha_hora_inicio', fromDatetimeLocal(e.target.value))}
-                                                className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm" />
+                                                disabled={isLocked}
+                                                className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm")} />
                                         </div>
                                         <div>
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><Clock className="w-3 h-3" />Fecha/Hora Fin <span className="text-muted/50 font-normal lowercase">(opc.)</span></label>
                                             <input type="datetime-local" value={toDatetimeLocal(tv(tramo, 'fecha_hora_fin') as string | null)} onChange={e => handleTramoChange(tramo.id_tramo, 'fecha_hora_fin', fromDatetimeLocal(e.target.value))}
-                                                className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm" />
+                                                disabled={isLocked}
+                                                className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm")} />
                                         </div>
                                     </div>
 
@@ -394,12 +438,14 @@ export default function EstructuraPage() {
                                         <div>
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><MapPin className="w-3 h-3" />Lugar</label>
                                             <input value={(tv(tramo, 'lugar') as string) || ''} onChange={e => handleTramoChange(tramo.id_tramo, 'lugar', e.target.value)}
-                                                placeholder="Nombre del lugar" className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm placeholder:text-muted" />
+                                                disabled={isLocked}
+                                                placeholder="Nombre del lugar" className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm placeholder:text-muted")} />
                                         </div>
                                         <div>
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><MapPin className="w-3 h-3" />Dirección</label>
                                             <input value={(tv(tramo, 'direccion') as string) || ''} onChange={e => handleTramoChange(tramo.id_tramo, 'direccion', e.target.value)}
-                                                placeholder="Calle, número, ciudad" className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm placeholder:text-muted" />
+                                                disabled={isLocked}
+                                                placeholder="Calle, número, ciudad" className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm placeholder:text-muted")} />
                                         </div>
                                     </div>
 
@@ -408,12 +454,14 @@ export default function EstructuraPage() {
                                         <div>
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><Globe className="w-3 h-3" />Latitud</label>
                                             <input type="number" step="any" value={(tv(tramo, 'latitud') as number) ?? ''} onChange={e => handleTramoChange(tramo.id_tramo, 'latitud', e.target.value ? parseFloat(e.target.value) : null)}
-                                                className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm" />
+                                                disabled={isLocked}
+                                                className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm")} />
                                         </div>
                                         <div>
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><Globe className="w-3 h-3" />Longitud</label>
                                             <input type="number" step="any" value={(tv(tramo, 'longitud') as number) ?? ''} onChange={e => handleTramoChange(tramo.id_tramo, 'longitud', e.target.value ? parseFloat(e.target.value) : null)}
-                                                className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm" />
+                                                disabled={isLocked}
+                                                className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm")} />
                                         </div>
                                     </div>
 
@@ -421,7 +469,8 @@ export default function EstructuraPage() {
                                     <div>
                                         <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5"><Sparkles className="w-3 h-3" />Leyenda visible</label>
                                         <input value={(tv(tramo, 'leyenda_visible') as string) || ''} onChange={e => handleTramoChange(tramo.id_tramo, 'leyenda_visible', e.target.value)}
-                                            placeholder="Texto visible para invitados" className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm placeholder:text-muted" />
+                                            disabled={isLocked}
+                                            placeholder="Texto visible para invitados" className={inputClass("w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm placeholder:text-muted")} />
                                     </div>
 
                                     {/* Orden + Save */}
@@ -429,13 +478,23 @@ export default function EstructuraPage() {
                                         <div className="flex items-center gap-3">
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest"><Hash className="w-3 h-3" />Orden</label>
                                             <input type="number" min={0} value={tv(tramo, 'orden') as number} onChange={e => handleTramoChange(tramo.id_tramo, 'orden', parseInt(e.target.value) || 0)}
-                                                className="w-16 p-2 rounded-lg bg-background border border-card-border text-foreground outline-none text-sm text-center" />
+                                                disabled={isLocked}
+                                                className="w-16 p-2 rounded-lg bg-background border border-card-border text-foreground outline-none text-sm text-center disabled:opacity-50" />
                                         </div>
-                                        <button onClick={() => handleSaveTramo(tramo)} disabled={!isEdited || isSaving}
-                                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all">
-                                            {isSaving ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Guardando...</>
-                                                : <><Save className="w-3.5 h-3.5" />Guardar Tramo</>}
-                                        </button>
+                                        {isLocked ? (
+                                            <button
+                                                onClick={() => openUpsell(lockMsg)}
+                                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 font-bold text-xs hover:bg-amber-500/20 transition-all"
+                                            >
+                                                🔒 Requiere plan superior
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => handleSaveTramo(tramo)} disabled={!isEdited || isSaving}
+                                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all">
+                                                {isSaving ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Guardando...</>
+                                                    : <><Save className="w-3.5 h-3.5" />Guardar Tramo</>}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -446,6 +505,7 @@ export default function EstructuraPage() {
                     )}
                 </div>
             )}
+
 
             {/* ═══════════ TAB 2: ACCESOS ═══════════ */}
             {activeTab === 'accesos' && (

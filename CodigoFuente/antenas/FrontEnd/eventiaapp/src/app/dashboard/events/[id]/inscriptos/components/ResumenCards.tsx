@@ -8,10 +8,10 @@ interface ResumenCardsProps {
 
 export default function ResumenCards({ resumen, isLoading }: ResumenCardsProps) {
   // Función para formatear moneda
-  const formatearMoneda = (valor: number, moneda: string = 'EUR') => {
+  const formatearMoneda = (valor: number, moneda?: string) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
-      currency: moneda,
+      currency: moneda || 'EUR',
     }).format(valor);
   };
 

@@ -27,6 +27,25 @@ export interface Event {
     cliente: unknown | null;
     tipoOperacion: string;
     planNombre?: string | null;
+    /** Flags de límites de plan devueltos por el backend (puede estar ausente en endpoints que no los incluyen) */
+    limites?: LimitesEvento;
+}
+
+/**
+ * Flags de límites comerciales devueltos por el backend en los endpoints de evento.
+ * NUNCA hardcodear lógica basada en el nombre del plan; usar siempre estos valores.
+ */
+export interface LimitesEvento {
+    /** Si el plan permite generar links de invitación/captación */
+    permitirGenerarLinks: boolean;
+    /** Si el plan permite editar manualmente la estructura (tramos, nombres, lugares) */
+    permitirEstructuraManual: boolean;
+    /** Máximo de invitados/links de acceso permitidos. null = sin límite. */
+    maxLinksAcceso: number | null;
+    /** Máximo de invitados por link genérico. null = sin límite. */
+    maxInvitados: number | null;
+    /** Si el plan permite usar plantillas predefinidas */
+    permitirPlantillas: boolean;
 }
 
 // Payload del POST /eventos (Paso 1 - Crear evento base)

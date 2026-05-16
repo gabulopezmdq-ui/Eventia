@@ -6,6 +6,7 @@ import { saveCampana, getTiposBeneficio } from '@/src/features/captacion/captaci
 import { getEstructuraEvento } from '@/src/features/events/event.service';
 import type { CaptacionLink, CaptacionLinkPayload, TipoBeneficio } from '@/src/features/captacion/types';
 import type { EstructuraEvento } from '@/src/features/events/types';
+import { usePlanLimit } from '@/src/context/PlanLimitContext';
 
 interface Props {
     idEvento: number;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function CampanaFormModal({ idEvento, campana, onClose, onSave }: Props) {
+    const { handlePlanLimitError } = usePlanLimit();
     const [loading, setLoading] = useState(false);
     const [estructura, setEstructura] = useState<EstructuraEvento | null>(null);
     const [tiposBeneficio, setTiposBeneficio] = useState<TipoBeneficio[]>([]);
@@ -72,8 +74,11 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
             await saveCampana(idEvento, payload);
             onSave();
         } catch (error) {
-            console.error(error);
-            alert('Error al guardar la campaña');
+            try { handlePlanLimitError(error); }
+            catch {
+                console.error(error);
+                alert('Error al guardar la campaña');
+            }
         } finally {
             setLoading(false);
         }

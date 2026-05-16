@@ -10,6 +10,7 @@ import {
     X,
     Database,
     FileCheck2,
+    FileText,
     Building2,
     Users,
     CreditCard,
@@ -94,10 +95,10 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                 <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
 
                     {/* ══════════════════════════════
-                        SECCIÓN: MI ESPACIO (B2C)
-                        Visible si ui.puede_crear_evento_b2c = true
+                        SECCIÓN: MI Espacio (B2C)
+                        Visible si ui.puede_crear_evento_b2c = true o es super admin
                     ══════════════════════════════ */}
-                    {(!loading && ui?.puede_crear_evento_b2c) && (
+                    {(!loading && (ui?.puede_crear_evento_b2c || isSuperAdmin)) && (
                         <>
                             <div className="px-4 mb-4">
                                 <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-600 uppercase tracking-widest">
@@ -137,6 +138,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                                     <SidebarItem href="/dashboard/cuenta/eventos" icon={CalendarRange} label="Eventos de Cuenta" />
                                     <SidebarItem href="/dashboard/cuenta/programas" icon={CalendarDays} label="Programas y Casales" />
                                     <SidebarItem href="/dashboard/cuenta/plan" icon={CreditCard} label="Plan y Facturación" />
+                                    <SidebarItem href="/dashboard/cuenta/perfil" icon={FileText} label="Perfil de Cuenta" />
                                 </>
                             )}
                         </>

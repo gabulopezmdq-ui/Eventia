@@ -15,7 +15,7 @@ export interface PlanPublico {
     codigo: string;
     nombre: string;
     descripcion: string;
-    precio: number | null;
+    precio: number | { importe: number; moneda?: string; impuestos_incluidos?: boolean } | null;
     moneda?: string;
     periodo: string | null;
     features: Array<{ codigo?: string; nombre: string; descripcion?: string } | string>;
