@@ -977,12 +977,44 @@ namespace API.Services
                 }
             }
 
+            var gruposResumen = await _context.ef_rsvp_grupos
+                .AsNoTracking()
+                .Where(g =>
+                    g.id_evento == idEvento
+                    && g.activo == true)
+                .Select(g => new
+                {
+                    g.id_rsvp_grupo,
+                    g.max_personas_total
+                })
+                .ToListAsync();
+
+            var totalGrupos = gruposResumen.Count;
+
+            var cuposInvitados = gruposResumen.Sum(x => x.max_personas_total);
+
+            var personasCargadas = items.Count;
+            var confirmados = items.Count(x => x.RsvpEstado == "Y");
+            var pendientes = items.Count(x => x.RsvpEstado == "P");
+            var noAsisten = items.Count(x => x.RsvpEstado == "N");
+
+            var cuposNoUsados = cuposInvitados - personasCargadas;
+
+            if (cuposNoUsados < 0)
+                cuposNoUsados = 0;
+
             var resumen = new InvitadosPersonasResumenDTO
             {
-                TotalPersonas = items.Count,
-                Confirmados = items.Count(x => x.RsvpEstado == "Y"),
-                Pendientes = items.Count(x => x.RsvpEstado == "P"),
-                Rechazados = items.Count(x => x.RsvpEstado == "N"),
+                TotalGrupos = totalGrupos,
+                CuposInvitados = cuposInvitados,
+                PersonasCargadas = personasCargadas,
+
+                Confirmados = confirmados,
+                Pendientes = pendientes,
+                NoAsisten = noAsisten,
+
+                CuposNoUsados = cuposNoUsados,
+
                 Ingresaron = items.Count(x => x.CheckinRealizado),
                 ConRestricciones = items.Count(x => x.TieneRestricciones)
             };

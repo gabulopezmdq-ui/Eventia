@@ -12,10 +12,16 @@ namespace API.DataSchema.DTO.Invitados
 
     public class InvitadosPersonasResumenDTO
     {
-        public int TotalPersonas { get; set; }
+        public int TotalGrupos { get; set; }
+        public int CuposInvitados { get; set; }
+        public int PersonasCargadas { get; set; }
+
         public int Confirmados { get; set; }
         public int Pendientes { get; set; }
-        public int Rechazados { get; set; }
+        public int NoAsisten { get; set; }
+
+        public int CuposNoUsados { get; set; }
+
         public int Ingresaron { get; set; }
         public int ConRestricciones { get; set; }
     }
