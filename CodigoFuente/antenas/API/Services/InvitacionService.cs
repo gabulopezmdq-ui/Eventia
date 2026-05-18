@@ -823,6 +823,7 @@ namespace API.Services
                 {
                     g.id_rsvp_grupo,
                     g.nombre_grupo,
+                    g.rsvp_mensaje,
                     g.max_adultos,
                     g.cant_adultos_sin_nombre,
                     g.cant_menores_sin_nombre
@@ -993,6 +994,7 @@ namespace API.Services
                         var grupoInfo = gruposInfoMap[idGrupo];
 
                         item.NombreGrupo = grupoInfo.nombre_grupo;
+                        item.RsvpMensajeGrupo = grupoInfo.rsvp_mensaje;
 
                         if (integrantesGrupoMap.ContainsKey(idGrupo))
                         {
