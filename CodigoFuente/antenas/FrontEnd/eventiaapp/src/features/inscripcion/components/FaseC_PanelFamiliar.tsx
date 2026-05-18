@@ -92,7 +92,12 @@ export function FaseC_PanelFamiliar() {
                     <ParticipanteCard
                         key={p._clientId}
                         participante={p}
-                        restriccionesConfig={state.programaData?.restricciones_alimentarias_config ?? []}
+                        restriccionesConfig={
+                            state.programaData?.restricciones_alimentarias_config ||
+                            (state.programaData as any)?.restricciones_alimentarias ||
+                            (state.programaData as any)?.restriccionesConfig ||
+                            []
+                        }
                     />
                 ))}
             </div>
