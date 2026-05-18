@@ -61,7 +61,7 @@ export function FaseC_PanelFamiliar() {
     return (
         <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 pb-32">
             {/* Header Responsable */}
-            <div 
+            <div
                 onClick={abrirDrawerResponsable}
                 className="flex justify-between items-center p-4 bg-white dark:bg-card-bg rounded-xl border border-gray-200 dark:border-card-border shadow-sm cursor-pointer hover:border-accent transition-colors mb-8 group"
             >
@@ -106,26 +106,26 @@ export function FaseC_PanelFamiliar() {
                             <X className="w-5 h-5" />
                         </button>
                     </div>
-                    
+
                     <form onSubmit={handleSubmitNuevo} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
-                                <input 
-                                    required type="text" 
-                                    value={nuevoParticipante.nombre} 
-                                    onChange={e => { setNuevoParticipante({...nuevoParticipante, nombre: e.target.value}); setErroresNuevo(prev => ({ ...prev, nombre: undefined })); }} 
-                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.nombre ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`} 
+                                <input
+                                    required type="text"
+                                    value={nuevoParticipante.nombre}
+                                    onChange={e => { setNuevoParticipante({ ...nuevoParticipante, nombre: e.target.value }); setErroresNuevo(prev => ({ ...prev, nombre: undefined })); }}
+                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.nombre ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`}
                                 />
                                 {erroresNuevo.nombre && <p className="text-xs text-red-500 mt-1">{erroresNuevo.nombre}</p>}
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Apellido *</label>
-                                <input 
-                                    required type="text" 
-                                    value={nuevoParticipante.apellido} 
-                                    onChange={e => { setNuevoParticipante({...nuevoParticipante, apellido: e.target.value}); setErroresNuevo(prev => ({ ...prev, apellido: undefined })); }} 
-                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.apellido ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`} 
+                                <input
+                                    required type="text"
+                                    value={nuevoParticipante.apellido}
+                                    onChange={e => { setNuevoParticipante({ ...nuevoParticipante, apellido: e.target.value }); setErroresNuevo(prev => ({ ...prev, apellido: undefined })); }}
+                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.apellido ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`}
                                 />
                                 {erroresNuevo.apellido && <p className="text-xs text-red-500 mt-1">{erroresNuevo.apellido}</p>}
                             </div>
@@ -133,43 +133,43 @@ export function FaseC_PanelFamiliar() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha nacim. *</label>
-                                <input 
-                                    required type="date" 
-                                    value={nuevoParticipante.fecha_nacimiento} 
-                                    onChange={e => { setNuevoParticipante({...nuevoParticipante, fecha_nacimiento: e.target.value}); setErroresNuevo(prev => ({ ...prev, fecha_nacimiento: undefined })); }} 
-                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.fecha_nacimiento ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`} 
+                                <input
+                                    required type="date"
+                                    value={nuevoParticipante.fecha_nacimiento}
+                                    onChange={e => { setNuevoParticipante({ ...nuevoParticipante, fecha_nacimiento: e.target.value }); setErroresNuevo(prev => ({ ...prev, fecha_nacimiento: undefined })); }}
+                                    className={`w-full px-4 py-2 rounded-lg border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none ${erroresNuevo.fecha_nacimiento ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-card-border focus:border-accent'}`}
                                 />
                                 {erroresNuevo.fecha_nacimiento && <p className="text-xs text-red-500 mt-1">{erroresNuevo.fecha_nacimiento}</p>}
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Documento</label>
-                                <input 
-                                    type="text" 
-                                    value={nuevoParticipante.documento} 
-                                    onChange={e => setNuevoParticipante({...nuevoParticipante, documento: e.target.value})} 
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none" 
+                                <input
+                                    type="text"
+                                    value={nuevoParticipante.documento}
+                                    onChange={e => setNuevoParticipante({ ...nuevoParticipante, documento: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                                 />
                             </div>
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Observaciones (opcional)</label>
-                            <input 
-                                type="text" 
-                                value={nuevoParticipante.observaciones} 
-                                onChange={e => setNuevoParticipante({...nuevoParticipante, observaciones: e.target.value})} 
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none" 
+                            <input
+                                type="text"
+                                value={nuevoParticipante.observaciones}
+                                onChange={e => setNuevoParticipante({ ...nuevoParticipante, observaciones: e.target.value })}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                             />
                         </div>
                         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <button 
-                                type="button" 
-                                onClick={handleCancelarNuevo} 
+                            <button
+                                type="button"
+                                onClick={handleCancelarNuevo}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                             >
                                 Cancelar
                             </button>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="px-6 py-2 text-sm font-medium bg-accent hover:bg-accent/90 text-white rounded-lg transition-colors"
                             >
                                 Agregar
@@ -179,7 +179,7 @@ export function FaseC_PanelFamiliar() {
                 </div>
             ) : (
                 <div className="mt-6">
-                    <button 
+                    <button
                         onClick={handleAgregarClick}
                         className="w-full flex flex-col items-center justify-center p-8 border-2 border-dashed border-accent/40 hover:border-accent/80 bg-accent/5 hover:bg-accent/10 rounded-xl transition-all group"
                     >
