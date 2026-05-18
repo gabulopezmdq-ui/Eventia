@@ -6,6 +6,8 @@ namespace API.DataSchema.DTO
 {
     public class EventoCreateRequest
     {
+        [JsonProperty("id_tipo_evento")]
+        [JsonPropertyName("id_tipo_evento")]
         public int IdTipoEvento { get; set; }
 
         public short IdIdioma { get; set; } // opcional
