@@ -62,5 +62,19 @@ namespace API.DataSchema.DTO.Invitados
         public List<string> Restricciones { get; set; } = new List<string>();
 
         public int CantidadSugerenciasMusica { get; set; }
+        public string? NombreGrupo { get; set; }
+        public string? GrupoResumenTexto { get; set; }
+
+        public int CantidadAdultosInvitadosGrupo { get; set; }
+        public int CantidadMenoresInvitadosGrupo { get; set; }
+
+        public int CantidadAdultosConfirmadosGrupo { get; set; }
+        public int CantidadMenoresConfirmadosGrupo { get; set; }
+
+        public int CantidadAdultosPendientesGrupo { get; set; }
+        public int CantidadMenoresPendientesGrupo { get; set; }
+
+        public int CantidadAdultosNoAsistenGrupo { get; set; }
+        public int CantidadMenoresNoAsistenGrupo { get; set; }
     }
 }
