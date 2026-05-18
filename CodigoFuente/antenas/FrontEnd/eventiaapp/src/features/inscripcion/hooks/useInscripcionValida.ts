@@ -54,7 +54,7 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
         }
 
         // ── Firma ────────────────────────────────────────────────
-        if (!state.firma?.nombre_completo?.trim()) {
+        if (state.fase === 'resumen' && !state.firma?.nombre_completo?.trim()) {
             errores.push('Falta la firma del responsable');
         }
 

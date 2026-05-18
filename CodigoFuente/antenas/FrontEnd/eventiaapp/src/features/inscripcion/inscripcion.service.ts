@@ -23,7 +23,32 @@ export async function getProgramaInscripcion(
 ): Promise<ProgramaInscripcionData> {
     const res = await fetch(`${API}/${token}?idIdioma=${idIdioma}`);
     if (!res.ok) throw new Error('Programa no encontrado o token inválido');
-    return res.json();
+    
+    const data = await res.json();
+    
+    // El backend no devuelve el token en el JSON, lo inyectamos acá para no perderlo
+    data.token = token;
+
+    // Parche: Si el backend no envía el catálogo, lo buscamos en el endpoint de paramétricas
+    if (data.id_evento && !data.restricciones_alimentarias_config) {
+        try {
+            const catRes = await fetch(`/api/parametrica/restricciones-alimentarias?idEvento=${data.id_evento}`);
+            if (catRes.ok) {
+                const catData = await catRes.json();
+                data.restricciones_alimentarias_config = catData.map((c: any) => ({
+                    id: c.idRestriccion,
+                    nombre: c.nombre
+                }));
+            } else {
+                data.restricciones_alimentarias_config = [];
+            }
+        } catch (e) {
+            console.warn('Error fetching restricciones catalog:', e);
+            data.restricciones_alimentarias_config = [];
+        }
+    }
+
+    return data;
 }
 
 // ═══════════════════════════════════════════════════════════════════
