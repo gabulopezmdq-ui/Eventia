@@ -180,6 +180,7 @@ builder.Services.AddScoped<IAdminEventoPlanCambiosService, AdminEventoPlanCambio
 //regalos
 builder.Services.AddScoped<IRegalosListaService, RegalosListaService>();
 builder.Services.AddScoped<IRegalosFondoService, RegalosFondoService>();
+builder.Services.AddScoped<IRegalosTransferenciasService, RegalosTransferenciasService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
