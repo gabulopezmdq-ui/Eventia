@@ -34,8 +34,10 @@ export function TabAlimentacion({ participante, restriccionesConfig }: Props) {
     const handleAgregar = () => {
         // Tomamos el primer id disponible o 0 si no hay catálogo
         const primerConfig = restriccionesConfig[0];
+        const primerId = primerConfig ? ((primerConfig as any).id_restriccion ?? primerConfig.id) : 0;
+        
         const nueva: RestriccionAlimentaria = {
-            id_restriccion_alimentaria: primerConfig?.id ?? 0,
+            id_restriccion_alimentaria: primerId,
             severidad: 'Leve',
             observacion: '',
         };
@@ -93,11 +95,15 @@ export function TabAlimentacion({ participante, restriccionesConfig }: Props) {
                                             }
                                             className={FIELD_CLASS}
                                         >
-                                            {restriccionesConfig.map(cfg => (
-                                                <option key={cfg.id} value={cfg.id}>
-                                                    {cfg.nombre}
-                                                </option>
-                                            ))}
+                                            {restriccionesConfig.map(cfg => {
+                                                const cfgId = (cfg as any).id_restriccion ?? cfg.id;
+                                                const cfgNombre = (cfg as any).descripcion ?? cfg.nombre;
+                                                return (
+                                                    <option key={cfgId} value={cfgId}>
+                                                        {cfgNombre}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     ) : (
                                         /* Fallback si el programa no trae catálogo */

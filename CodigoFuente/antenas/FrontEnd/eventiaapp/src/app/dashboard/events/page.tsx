@@ -51,6 +51,7 @@ export default function DashboardEventsPage() {
 
         const isActivo = event.estado === 'A';
         const isBorrador = event.estado === 'B';
+        const isPendiente = event.estado === 'P';
 
         return (
             <Link
@@ -70,10 +71,30 @@ export default function DashboardEventsPage() {
                                     ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-400'
                                     : isBorrador
                                         ? 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400'
-                                        : 'bg-neutral-50 text-neutral-700 ring-1 ring-inset ring-neutral-500/20 dark:bg-neutral-500/10 dark:text-neutral-400'
+                                        : isPendiente
+                                            ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-blue-500/10 dark:text-blue-400'
+                                            : 'bg-neutral-50 text-neutral-700 ring-1 ring-inset ring-neutral-500/20 dark:bg-neutral-500/10 dark:text-neutral-400'
                                     }`}>
-                                    <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${isActivo ? 'bg-emerald-500' : isBorrador ? 'bg-amber-500' : 'bg-neutral-500'}`}></span>
-                                    {isActivo ? 'Activo' : isBorrador ? 'Borrador' : String(event.estado)}
+                                    <span
+                                        className={`mr-1.5 h-1.5 w-1.5 rounded-full ${isActivo
+                                            ? 'bg-emerald-500'
+                                            : isBorrador
+                                                ? 'bg-amber-500'
+                                                : isPendiente
+                                                    ? 'bg-blue-500'
+                                                    : 'bg-neutral-500'
+                                            }`}
+                                    ></span>
+
+                                    {
+                                        isActivo
+                                            ? 'Activo'
+                                            : isBorrador
+                                                ? 'Borrador'
+                                                : isPendiente
+                                                    ? 'Pendiente'
+                                                    : String(event.estado)
+                                    }
                                 </span>
                                 {Boolean(event.tipo_evento_codigo) && (
                                     <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 dark:bg-indigo-400/10 dark:text-indigo-400">
