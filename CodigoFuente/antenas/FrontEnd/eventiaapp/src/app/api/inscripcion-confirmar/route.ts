@@ -11,7 +11,8 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const res = await fetch(`${API_URL}/programas/inscripcion/confirmar`, {
+        // El backend espera el token en la URL: POST /programas/inscripcion/{token}/confirmar
+        const res = await fetch(`${API_URL}/programas/inscripcion/${body.token}/confirmar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
