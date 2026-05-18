@@ -813,6 +813,42 @@ namespace API.Services
                 .Distinct()
                 .ToList();
 
+            var gruposInfo = await _context.ef_rsvp_grupos
+                .AsNoTracking()
+                .Where(g =>
+                    g.id_evento == idEvento
+                    && g.activo == true
+                    && idsGrupos.Contains(g.id_rsvp_grupo))
+                .Select(g => new
+                {
+                    g.id_rsvp_grupo,
+                    g.nombre_grupo,
+                    g.max_adultos,
+                    g.cant_adultos_sin_nombre,
+                    g.cant_menores_sin_nombre
+                })
+                .ToListAsync();
+
+            var integrantesGrupoInfo = await _context.ef_rsvp_grupo_integrantes
+                .AsNoTracking()
+                .Where(x =>
+                    idsGrupos.Contains(x.id_rsvp_grupo)
+                    && x.id_invitado > 0)
+                .Select(x => new
+                {
+                    x.id_rsvp_grupo,
+                    x.id_invitado,
+                    x.rol_evento,
+                    x.asiste
+                })
+                .ToListAsync();
+
+            var integrantesGrupoMap = integrantesGrupoInfo
+                .GroupBy(x => x.id_rsvp_grupo)
+                .ToDictionary(x => x.Key, x => x.ToList());
+
+            var gruposInfoMap = gruposInfo.ToDictionary(x => x.id_rsvp_grupo);
+
             if (!items.Any())
             {
                 return new InvitadosPersonasResponseDTO
@@ -951,6 +987,71 @@ namespace API.Services
 
                     if (cantidadesMap.ContainsKey(idGrupo))
                         item.CantidadIntegrantesGrupo = cantidadesMap[idGrupo];
+
+                    if (gruposInfoMap.ContainsKey(idGrupo))
+                    {
+                        var grupoInfo = gruposInfoMap[idGrupo];
+
+                        item.NombreGrupo = grupoInfo.nombre_grupo;
+
+                        if (integrantesGrupoMap.ContainsKey(idGrupo))
+                        {
+                            var integrantes = integrantesGrupoMap[idGrupo];
+
+                            item.CantidadAdultosConfirmadosGrupo =
+                                integrantes.Count(x => x.rol_evento == "A" && x.asiste == "Y");
+
+                            item.CantidadMenoresConfirmadosGrupo =
+                                integrantes.Count(x => x.rol_evento == "N" && x.asiste == "Y");
+
+                            item.CantidadAdultosPendientesGrupo =
+                                integrantes.Count(x => x.rol_evento == "A" && x.asiste == "P");
+
+                            item.CantidadMenoresPendientesGrupo =
+                                integrantes.Count(x => x.rol_evento == "N" && x.asiste == "P");
+
+                            item.CantidadAdultosNoAsistenGrupo =
+                                integrantes.Count(x => x.rol_evento == "A" && x.asiste == "N");
+
+                            item.CantidadMenoresNoAsistenGrupo =
+                                integrantes.Count(x => x.rol_evento == "N" && x.asiste == "N");
+
+                            var adultosReales = integrantes.Count(x => x.rol_evento == "A");
+                            var menoresReales = integrantes.Count(x => x.rol_evento == "N");
+
+                            item.CantidadAdultosInvitadosGrupo =
+                                adultosReales + (grupoInfo.cant_adultos_sin_nombre ?? 0);
+
+                            item.CantidadMenoresInvitadosGrupo =
+                                menoresReales + (grupoInfo.cant_menores_sin_nombre ?? 0);
+                        }
+                        else
+                        {
+                            item.CantidadAdultosInvitadosGrupo = grupoInfo.cant_adultos_sin_nombre ?? 0;
+                            item.CantidadMenoresInvitadosGrupo = grupoInfo.cant_menores_sin_nombre ?? 0;
+                        }
+
+                        var nombreBase = !string.IsNullOrWhiteSpace(item.NombreGrupo)
+                            ? item.NombreGrupo
+                            : item.GrupoTitular;
+
+                        var adultosExtra = item.CantidadAdultosInvitadosGrupo;
+
+                        if (item.EsTitularGrupo && adultosExtra > 0)
+                            adultosExtra = adultosExtra - 1;
+
+                        var partes = new List<string>();
+
+                        if (adultosExtra > 0)
+                            partes.Add(adultosExtra == 1 ? "+1 adulto" : "+" + adultosExtra + " adultos");
+
+                        if (item.CantidadMenoresInvitadosGrupo > 0)
+                            partes.Add(item.CantidadMenoresInvitadosGrupo == 1 ? "+1 menor" : "+" + item.CantidadMenoresInvitadosGrupo + " menores");
+
+                        item.GrupoResumenTexto = partes.Any()
+                            ? nombreBase + " (" + string.Join(" ", partes) + ")"
+                            : nombreBase;
+                    }
                 }
 
                 if (checkinsMap.ContainsKey(item.IdInvitado))
@@ -1002,7 +1103,7 @@ namespace API.Services
                 cuposNoUsados = 0;
 
             items = items
-                .OrderBy(x => x.GrupoTitular ?? x.NombreCompleto)
+                .OrderBy(x => x.NombreGrupo ?? x.GrupoTitular ?? x.NombreCompleto)
                 .ThenByDescending(x => x.EsTitularGrupo)
                 .ThenBy(x => x.Apellido)
                 .ThenBy(x => x.Nombre)
