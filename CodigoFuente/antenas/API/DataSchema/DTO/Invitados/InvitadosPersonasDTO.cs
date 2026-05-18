@@ -42,8 +42,8 @@ namespace API.DataSchema.DTO.Invitados
 
         public string RsvpEstado { get; set; }
         public DateTimeOffset? FechaRsvp { get; set; }
-        public string? RsvpMensaje { get; set; }
-
+        public string? RsvpMensaje { get; set; }       // mensaje individual
+        public string? RsvpMensajeGrupo { get; set; }  // mensaje del grupo
         public long? IdRsvpGrupo { get; set; }
         public bool EsTitularGrupo { get; set; }
         public string? GrupoTitular { get; set; }
