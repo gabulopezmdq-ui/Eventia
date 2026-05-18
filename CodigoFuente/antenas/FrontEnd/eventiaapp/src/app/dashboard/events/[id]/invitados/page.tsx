@@ -75,7 +75,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                     getEstructuraEvento(Number(id)),
                     getEventById(String(id)).catch(() => null)
                 ]);
-                
+
                 if (eventoData?.limites) {
                     setLimites(eventoData.limites);
                 }
@@ -151,7 +151,20 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
             setGeneratedLink('__success__');
         } catch (err) {
             try { handlePlanLimitError(err); }
-            catch { setError(err instanceof Error ? err.message : 'Error al generar la invitación'); }
+            catch {
+                let mensaje = 'Error al generar la invitación';
+                if (err instanceof Error) {
+                    try {
+                        const parsed = JSON.parse(err.message);
+                        mensaje = parsed.error || parsed.message || err.message;
+                    } catch {
+                        mensaje = err.message;
+                    }
+                } else if (typeof err === 'object' && err !== null) {
+                    mensaje = (err as any).error || (err as any).message || mensaje;
+                }
+                setError(mensaje);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -292,13 +305,23 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
                     <p className="text-muted max-w-sm text-sm mb-6">
                         Empezá a generar invitaciones personalizadas o utilizá los links masivos para que la gente comience a registrarse.
                     </p>
-                    <button
-                        onClick={() => setIsInviteModalOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-indigo-500/30 text-indigo-400 text-sm font-bold hover:bg-indigo-500/10 transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Crear primera invitación
-                    </button>
+                    {limites?.permitirGenerarLinks === false ? (
+                        <button
+                            onClick={() => openUpsell('Tu plan no permite generar invitaciones personalizadas. Mejorá tu plan para acceder a esta función.')}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/30 text-amber-500 text-sm font-bold hover:bg-amber-500/10 transition-colors"
+                        >
+                            <LockIcon message="" size={16} />
+                            Crear primera invitación
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setIsInviteModalOpen(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-indigo-500/30 text-indigo-400 text-sm font-bold hover:bg-indigo-500/10 transition-colors"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Crear primera invitación
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="rounded-2xl bg-card-bg border border-card-border overflow-hidden">

@@ -105,8 +105,29 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
     const eventDate = new Date(event.fecha_hora);
     const isBorrador = event.estado === 'B';
+    const isPendiente = event.estado === 'P';
+    const isInactivo = isBorrador || isPendiente;
     const isEvento = event.tipoOperacion === 'EVENTO';
     const isPrograma = event.tipoOperacion === 'PROGRAMA';
+    const estadoConfig = {
+        'B': {
+            label: 'Borrador',
+            classes: 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+        },
+        'P': {
+            label: 'Pendiente',
+            classes: 'bg-blue-500/10 border-blue-500/20 text-blue-500'
+        },
+        'A': {
+            label: 'Activo',
+            classes: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+        },
+    } as const;
+
+    const estadoActual = estadoConfig[event.estado as keyof typeof estadoConfig] ?? {
+        label: event.estado,
+        classes: 'bg-neutral-500/10 border-neutral-500/20 text-neutral-500'
+    };
 
     return (
         <div className="max-w-5xl mx-auto pb-20 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -124,11 +145,8 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 <div className="space-y-3">
                     <div className="flex items-center gap-3">
                         <h1 className="text-3xl font-bold text-foreground">{event.anfitriones_texto}</h1>
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${isBorrador
-                            ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
-                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
-                            }`}>
-                            {isBorrador ? 'Borrador' : 'Activo'}
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${estadoActual.classes}`}>
+                            {estadoActual.label}
                         </span>
                     </div>
                 </div>
@@ -156,15 +174,15 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             </header>
 
             {/* ── Avisos del Plan / Estado ── */}
-            {(isBorrador || event.limites?.permitirGenerarLinks === false) && (
+            {(isInactivo || event.limites?.permitirGenerarLinks === false) && (
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
                     <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                     <div className="space-y-1">
                         <h4 className="text-sm font-bold text-amber-500">Invitaciones Deshabilitadas</h4>
                         <p className="text-sm text-amber-500/80">
-                            {isBorrador 
-                                ? 'Tu evento se encuentra en estado Borrador. Debés activarlo para poder generar y enviar invitaciones.'
-                                : 'Tu plan actual no permite generar nuevas invitaciones ni links. Mejorá tu plan para habilitar esta función.'}
+                            {isInactivo
+                                ? 'Tu evento se encuentra en estado ' + (isBorrador ? 'Borrador' : 'Pendiente') + '. Debés activarlo para poder generar y enviar invitaciones.'
+                                : 'Tu plan actual no permite generar nuevas invitaciones...'}
                         </p>
                     </div>
                     {event.limites?.permitirGenerarLinks === false && !isBorrador && (

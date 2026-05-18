@@ -24,6 +24,7 @@ import type {
     AplicarPlantillaPayload,
     CreateEventPayload,
 } from '@/src/features/events/types';
+import { usePlanLimit } from '@/src/context/PlanLimitContext';
 import {
     Calendar,
     MapPin,
@@ -72,6 +73,8 @@ function NewEventContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const isB2BContext = searchParams.get('context') === 'cuenta';
+
+    const { handlePlanLimitError } = usePlanLimit();
 
     // ── Estado general ──────────────────────────────────
     const [currentStep, setCurrentStep] = useState(1);
@@ -384,8 +387,9 @@ function NewEventContent() {
             };
             await aplicarPlantilla(idEvento, payload);
             setCurrentStep(4); // → Step 4: Acceso y Confirmación
-        } catch {
-            setError('No se pudo aplicar la plantilla. Por favor, intenta de nuevo.');
+        } catch (error) {
+            try { handlePlanLimitError(error); }
+            catch { setError('No se pudo aplicar la plantilla. Por favor, intenta de nuevo.'); }
         } finally {
             setLoading(false);
         }

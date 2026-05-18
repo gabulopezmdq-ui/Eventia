@@ -10,7 +10,7 @@ import { LockIcon } from '@/src/components/ui/LockIcon';
 import CampanaFormModal from './CampanaFormModal';
 
 export default function CampanasTab({ idEvento, limites }: { idEvento: number; limites?: LimitesEvento }) {
-    const { openUpsell } = usePlanLimit();
+    const { handlePlanLimitError, openUpsell } = usePlanLimit();
     const [campanas, setCampanas] = useState<CaptacionLink[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,8 +40,11 @@ export default function CampanasTab({ idEvento, limites }: { idEvento: number; l
             await toggleCampana(campana.id_acceso_link, !campana.activo);
             await loadCampanas();
         } catch (error) {
-            console.error(error);
-            alert('Error al cambiar el estado de la campaña.');
+            try { handlePlanLimitError(error); }
+            catch {
+                console.error(error);
+                alert('Error al cambiar el estado de la campaña.');
+            }
         } finally {
             setIsToggling(null);
         }
