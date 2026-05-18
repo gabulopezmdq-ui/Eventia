@@ -11,6 +11,7 @@ namespace API.DataSchema.DTO.Invitados
     public class InvitadoGrupoDTO
     {
         public long IdRsvpGrupo { get; set; }
+        public string? NombreGrupo { get; set; }
 
         public string Titular { get; set; }
         public string? EmailTitular { get; set; }

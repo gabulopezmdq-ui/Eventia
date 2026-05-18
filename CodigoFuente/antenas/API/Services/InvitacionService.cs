@@ -1007,7 +1007,7 @@ namespace API.Services
                 .ThenBy(x => x.Apellido)
                 .ThenBy(x => x.Nombre)
                 .ToList();
-
+             
             var resumen = new InvitadosPersonasResumenDTO
             {
                 TotalGrupos = totalGrupos,
@@ -1034,6 +1034,18 @@ namespace API.Services
 
         public async Task<InvitadosGruposResponseDTO> ObtenerGruposInvitadosAsync(long idEvento)
         {
+            var gruposBase = await _context.ef_rsvp_grupos
+                .AsNoTracking()
+                .Where(g =>
+                    g.id_evento == idEvento
+                    && g.activo == true)
+                .Select(g => new
+                {
+                    g.id_rsvp_grupo,
+                    g.nombre_grupo
+                })
+                .ToListAsync();
+
             var invitados = await _context.ef_invitados
                 .AsNoTracking()
                 .Where(x =>
@@ -1050,13 +1062,16 @@ namespace API.Services
                     && x.tipo == "INGRESO")
                 .ToListAsync();
 
-            var grupos = invitados
-                .GroupBy(x => x.id_rsvp_grupo ?? 0)
-                .Select(g =>
+            var grupos = gruposBase
+                .Select(gb =>
                 {
-                    var titular = g.FirstOrDefault(x => x.es_titular_grupo);
+                    var integrantesGrupo = invitados
+                        .Where(x => x.id_rsvp_grupo == gb.id_rsvp_grupo)
+                        .ToList();
 
-                    var integrantes = g.Select(i => new InvitadoGrupoIntegranteDTO
+                    var titular = integrantesGrupo.FirstOrDefault(x => x.es_titular_grupo);
+
+                    var integrantes = integrantesGrupo.Select(i => new InvitadoGrupoIntegranteDTO
                     {
                         IdInvitado = i.id_invitado,
                         NombreCompleto = (i.nombre + " " + i.apellido).Trim(),
@@ -1068,22 +1083,23 @@ namespace API.Services
                     .ThenBy(x => x.NombreCompleto)
                     .ToList();
 
-                    var confirmados = g.Count(x => x.rsvp_estado == "Y");
-                    var pendientes = g.Count(x => x.rsvp_estado == "P");
-                    var rechazados = g.Count(x => x.rsvp_estado == "N");
+                    var confirmados = integrantesGrupo.Count(x => x.rsvp_estado == "Y");
+                    var pendientes = integrantesGrupo.Count(x => x.rsvp_estado == "P");
+                    var rechazados = integrantesGrupo.Count(x => x.rsvp_estado == "N");
 
                     string estadoGrupo = "PENDIENTE";
 
-                    if (confirmados == g.Count())
+                    if (integrantesGrupo.Count > 0 && confirmados == integrantesGrupo.Count)
                         estadoGrupo = "CONFIRMADO";
-                    else if (rechazados == g.Count())
+                    else if (integrantesGrupo.Count > 0 && rechazados == integrantesGrupo.Count)
                         estadoGrupo = "RECHAZADO";
                     else if (confirmados > 0)
                         estadoGrupo = "PARCIAL";
 
                     return new InvitadoGrupoDTO
                     {
-                        IdRsvpGrupo = g.Key,
+                        IdRsvpGrupo = gb.id_rsvp_grupo,
+                        NombreGrupo = gb.nombre_grupo,
 
                         Titular = titular != null
                             ? (titular.nombre + " " + titular.apellido).Trim()
@@ -1094,7 +1110,7 @@ namespace API.Services
 
                         RsvpMensaje = titular?.rsvp_mensaje,
 
-                        CantidadIntegrantes = g.Count(),
+                        CantidadIntegrantes = integrantesGrupo.Count,
 
                         Confirmados = confirmados,
                         Pendientes = pendientes,
@@ -1105,7 +1121,7 @@ namespace API.Services
                         Integrantes = integrantes
                     };
                 })
-                .OrderBy(x => x.Titular)
+                .OrderBy(x => x.NombreGrupo ?? x.Titular)
                 .ToList();
 
             return new InvitadosGruposResponseDTO
