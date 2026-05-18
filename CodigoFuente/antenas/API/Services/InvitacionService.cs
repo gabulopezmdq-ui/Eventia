@@ -802,9 +802,7 @@ namespace API.Services
                     CantidadSugerenciasMusica = 0
                 }
             )
-            .OrderBy(x => x.GrupoTitular)
-            .ThenByDescending(x => x.EsTitularGrupo)
-            .ThenBy(x => x.Apellido)
+            .OrderBy(x => x.Apellido)
             .ThenBy(x => x.Nombre)
             .ToListAsync();
 
@@ -1002,6 +1000,13 @@ namespace API.Services
 
             if (cuposNoUsados < 0)
                 cuposNoUsados = 0;
+
+            items = items
+                .OrderBy(x => x.GrupoTitular ?? x.NombreCompleto)
+                .ThenByDescending(x => x.EsTitularGrupo)
+                .ThenBy(x => x.Apellido)
+                .ThenBy(x => x.Nombre)
+                .ToList();
 
             var resumen = new InvitadosPersonasResumenDTO
             {
