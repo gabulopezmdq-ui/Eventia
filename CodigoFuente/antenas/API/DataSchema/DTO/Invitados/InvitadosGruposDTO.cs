@@ -12,6 +12,8 @@ namespace API.DataSchema.DTO.Invitados
     {
         public long IdRsvpGrupo { get; set; }
         public string? NombreGrupo { get; set; }
+        public string? GrupoResumenTexto { get; set; }
+        public string? RsvpMensajeGrupo { get; set; }
 
         public string Titular { get; set; }
         public string? EmailTitular { get; set; }
@@ -24,6 +26,11 @@ namespace API.DataSchema.DTO.Invitados
         public int Confirmados { get; set; }
         public int Pendientes { get; set; }
         public int Rechazados { get; set; }
+        public int CantidadAdultosInvitadosGrupo { get; set; }
+        public int CantidadMenoresInvitadosGrupo { get; set; }
+
+        public int CantidadAdultosConfirmadosGrupo { get; set; }
+        public int CantidadMenoresConfirmadosGrupo { get; set; }
 
         public string RsvpEstadoGrupo { get; set; }
 
@@ -39,6 +46,8 @@ namespace API.DataSchema.DTO.Invitados
         public bool EsTitularGrupo { get; set; }
 
         public string RsvpEstado { get; set; }
+        public string? RsvpMensaje { get; set; }
+        public string? RolEvento { get; set; }
 
         public bool CheckinRealizado { get; set; }
     }
