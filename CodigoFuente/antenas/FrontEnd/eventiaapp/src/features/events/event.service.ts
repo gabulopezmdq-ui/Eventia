@@ -104,6 +104,11 @@ export async function getEventById(id: string): Promise<Event> {
         dress_code_descripcion: item.dressCodeDescripcion,
         tipoOperacion: item.tipoOperacion,
         planNombre: item.planNombre,
+        planCodigo: item.planCodigo,
+        paisCodigoIso2: item.paisCodigoIso2,
+        codigoMercado: item.codigoMercado,
+        codigoMoneda: item.codigoMoneda,
+        idPais: item.idPais,
     } as Event;
 }
 
@@ -224,6 +229,12 @@ export async function getAdminEventById(id: string): Promise<Event> {
         id_dress_code: item.idDressCode,
         dress_code_descripcion: item.dressCodeDescripcion,
         tipoOperacion: item.tipoOperacion,
+        planNombre: item.planNombre,
+        planCodigo: item.planCodigo,
+        paisCodigoIso2: item.paisCodigoIso2,
+        codigoMercado: item.codigoMercado,
+        codigoMoneda: item.codigoMoneda,
+        idPais: item.idPais,
     } as Event;
 }
 

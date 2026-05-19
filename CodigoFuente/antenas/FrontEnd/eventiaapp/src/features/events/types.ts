@@ -27,6 +27,16 @@ export interface Event {
     cliente: unknown | null;
     tipoOperacion: string;
     planNombre?: string | null;
+    /** Código del plan activo del evento */
+    planCodigo?: string | null;
+    /** País del evento (código ISO 2) */
+    paisCodigoIso2?: string | null;
+    /** Código de mercado comercial (ej: AR, ES) */
+    codigoMercado?: string | null;
+    /** Código de moneda (ej: ARS, EUR) */
+    codigoMoneda?: string | null;
+    /** ID de país */
+    idPais?: number | null;
     /** Flags de límites de plan devueltos por el backend (puede estar ausente en endpoints que no los incluyen) */
     limites?: LimitesEvento;
 }
@@ -73,6 +83,8 @@ export interface CreateEventPayload {
     idCliente?: number | null;
     // B2C: plan seleccionado por el usuario
     codigoPlan?: string | null;
+    // País del evento (B2C: elige el usuario; B2B: lo fija el backend desde la cuenta)
+    IdPais?: number | null;
 }
 
 // Tipos de evento (ParametricaDTO del backend)
