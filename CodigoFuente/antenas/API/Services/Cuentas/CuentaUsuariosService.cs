@@ -454,6 +454,15 @@ namespace API.Services.Cuentas
             if (vinculo.id_usuario == id_usuario_admin && activo == false)
                 throw new InvalidOperationException("No podés desactivarte a vos misma de la cuenta.");
 
+            var rolActual = await _context.ef_roles
+                .AsNoTracking()
+                .Where(x => x.id_rol == vinculo.id_rol)
+                .Select(x => x.codigo)
+                .FirstOrDefaultAsync();
+
+            if (rolActual == "ACCOUNT_ADMIN" && activo == false)
+                await ValidarNoDejarCuentaSinAdminAsync(id_cuenta, vinculo.id_usuario);
+
             vinculo.activo = activo;
 
             await _context.SaveChangesAsync();

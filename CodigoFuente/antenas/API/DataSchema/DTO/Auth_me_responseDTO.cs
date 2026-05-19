@@ -6,7 +6,11 @@ namespace API.DataSchema.DTO
     {
         public usuario_me usuario { get; set; }
         public List<string> roles_globales { get; set; }
-        public cuenta_me cuenta { get; set; }
+
+        public cuenta_me cuenta { get; set; } // queda por compatibilidad
+
+        public List<espacio_me> espacios { get; set; } = new List<espacio_me>();
+
         public eventos_me eventos { get; set; }
         public ui_me ui { get; set; }
     }
@@ -32,6 +36,23 @@ namespace API.DataSchema.DTO
         public string plan_codigo { get; set; }
 
         public string rol_cuenta { get; set; }
+        public bool? vinculo_activo { get; set; }
+    }
+
+    public class espacio_me
+    {
+        public string tipo { get; set; } // PERSONAL / CUENTA
+
+        public long? id_cuenta { get; set; }
+
+        public string nombre { get; set; }
+
+        public string nombre_cuenta { get; set; }
+
+        public string rol_cuenta { get; set; }
+
+        public string estado { get; set; }
+
         public bool? vinculo_activo { get; set; }
     }
 

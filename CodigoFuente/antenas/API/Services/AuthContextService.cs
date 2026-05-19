@@ -70,18 +70,16 @@ namespace API.Services
             var puede_crear_evento_b2c = cantidad_borradores_propios_b2c == 0;
 
             // =========================
-            // 4. CUENTA DEL USUARIO
+            // 4. CUENTAS / ESPACIOS DEL USUARIO
             // =========================
-            // Para esta primera versión tomo una sola cuenta por usuario.
-            // Si más adelante abrís multi-cuenta, esto se transforma en lista.
-            var cuenta_row = await (
+            var cuentas_usuario = await (
                 from cu in _context.ef_cuenta_usuarios.AsNoTracking()
                 join c in _context.ef_cuentas.AsNoTracking() on cu.id_cuenta equals c.id_cuenta
                 join r in _context.ef_roles.AsNoTracking() on cu.id_rol equals r.id_rol
                 join p in _context.ef_planes.AsNoTracking() on c.id_plan equals p.id_plan into planes
                 from p in planes.DefaultIfEmpty()
                 where cu.id_usuario == id_usuario
-                orderby cu.id_cuenta_usuario descending
+                orderby c.nombre_cuenta
                 select new
                 {
                     c.id_cuenta,
@@ -93,7 +91,44 @@ namespace API.Services
                     rol_cuenta = r.codigo,
                     vinculo_activo = cu.activo
                 }
-            ).FirstOrDefaultAsync();
+            ).ToListAsync();
+
+            var espacios = new List<espacio_me>();
+
+            espacios.Add(new espacio_me
+            {
+                tipo = "PERSONAL",
+                id_cuenta = null,
+                nombre = "Mi espacio personal",
+                nombre_cuenta = null,
+                rol_cuenta = null,
+                estado = null,
+                vinculo_activo = true
+            });
+
+            foreach (var cta in cuentas_usuario.Where(x => x.estado == "A" && x.vinculo_activo))
+            {
+                espacios.Add(new espacio_me
+                {
+                    tipo = "CUENTA",
+                    id_cuenta = cta.id_cuenta,
+                    nombre = cta.nombre_cuenta,
+                    nombre_cuenta = cta.nombre_cuenta,
+                    rol_cuenta = cta.rol_cuenta,
+                    estado = cta.estado,
+                    vinculo_activo = cta.vinculo_activo
+                });
+            }
+
+            // Se mantiene cuenta para compatibilidad con el front actual.
+            // Si hay varias cuentas, toma la primera activa.
+            var cuenta_row = cuentas_usuario
+                .Where(x => x.vinculo_activo)
+                .OrderBy(x => x.nombre_cuenta)
+                .FirstOrDefault()
+                ?? cuentas_usuario
+                    .OrderBy(x => x.nombre_cuenta)
+                    .FirstOrDefault();
 
             cuenta_me cuenta = new cuenta_me();
 
@@ -122,7 +157,7 @@ namespace API.Services
 
                 if (cuenta_row.estado == "P")
                     cuenta.estado_ui = "CUENTA_PENDIENTE";
-                else if (cuenta_row.estado == "A")
+                else if (cuenta_row.estado == "A" && cuenta_row.vinculo_activo)
                     cuenta.estado_ui = "CUENTA_ACTIVA";
                 else if (cuenta_row.estado == "S")
                     cuenta.estado_ui = "CUENTA_SUSPENDIDA";
@@ -156,6 +191,7 @@ namespace API.Services
                 },
                 roles_globales = roles_globales,
                 cuenta = cuenta,
+                espacios = espacios,
                 eventos = new eventos_me
                 {
                     cantidad_propios = cantidad_propios,
