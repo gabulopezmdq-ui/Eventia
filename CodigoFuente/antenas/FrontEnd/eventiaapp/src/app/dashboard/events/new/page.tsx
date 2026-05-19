@@ -240,7 +240,7 @@ function NewEventContent() {
             setLoadingB2B(true);
             try {
                 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-                const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+                const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
                 const [resUnidades, resClientes, resCuenta] = await Promise.all([
                     fetch('/api/cuenta-unidades'),
