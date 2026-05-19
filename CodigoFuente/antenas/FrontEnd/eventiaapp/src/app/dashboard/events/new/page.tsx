@@ -24,6 +24,7 @@ import type {
     AplicarPlantillaPayload,
     CreateEventPayload,
 } from '@/src/features/events/types';
+import { usePlanLimit } from '@/src/context/PlanLimitContext';
 import {
     Calendar,
     MapPin,
@@ -73,6 +74,8 @@ function NewEventContent() {
     const searchParams = useSearchParams();
     const isB2BContext = searchParams.get('context') === 'cuenta';
 
+    const { handlePlanLimitError } = usePlanLimit();
+
     // ── Estado general ──────────────────────────────────
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -83,6 +86,12 @@ function NewEventContent() {
     const [idiomas, setIdiomas] = useState<Idioma[]>([]);
     const [dressCodes, setDressCodes] = useState<DressCode[]>([]);
     const [loadingSelects, setLoadingSelects] = useState(true);
+
+    // ── País del Evento ──────────────────────────────────
+    interface Pais { id_pais?: number; idPais?: number; id?: number; nombre?: string; texto?: string; codigo_iso2?: string; }
+    const [paises, setPaises] = useState<Pais[]>([]);
+    const [idPais, setIdPais] = useState<number | ''>('');
+    const [paisNombreB2B, setPaisNombreB2B] = useState<string>('');
 
     // ── Step 1 — Formulario ─────────────────────────────
     const [basicInfo, setBasicInfo] = useState({
@@ -194,21 +203,49 @@ function NewEventContent() {
                 } else {
                     setCodigoPlan('B2C_FREE');
                 }
+
+                // Cargar catálogo de países
+                try {
+                    const resPaises = await fetch('/api/parametrica/paises?idIdioma=1');
+                    if (resPaises.ok) {
+                        const paisesData: Pais[] = await resPaises.json();
+                        setPaises(paisesData);
+                        // Pre-cargar país del usuario desde perfil
+                        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                        if (token) {
+                            const resPerfil = await fetch('/api/perfil', {
+                                headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (resPerfil.ok) {
+                                const perfil = await resPerfil.json();
+                                if (perfil.id_pais) {
+                                    setIdPais(perfil.id_pais);
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error cargando países:', err);
+                }
             }
         }
         loadSelects();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // 5. Cargar unidades y clientes B2B al montar (solo si context=cuenta)
+    // 5. Cargar unidades, clientes y país de cuenta B2B al montar (solo si context=cuenta)
     useEffect(() => {
         if (!isB2BContext) return;
         async function loadB2BData() {
             setLoadingB2B(true);
             try {
-                const [resUnidades, resClientes] = await Promise.all([
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+                const [resUnidades, resClientes, resCuenta] = await Promise.all([
                     fetch('/api/cuenta-unidades'),
                     fetch('/api/clientes'),
+                    fetch('/api/cuentas', { headers: authHeaders }),
                 ]);
                 if (resUnidades.ok) {
                     const data: Unidad[] = await resUnidades.json();
@@ -220,6 +257,12 @@ function NewEventContent() {
                 if (resClientes.ok) {
                     const data: Cliente[] = await resClientes.json();
                     setClientes(data);
+                }
+                // Leer país de la cuenta para mostrarlo como solo lectura
+                if (resCuenta.ok) {
+                    const cuenta = await resCuenta.json();
+                    if (cuenta.id_pais) setIdPais(cuenta.id_pais);
+                    if (cuenta.pais_nombre) setPaisNombreB2B(cuenta.pais_nombre);
                 }
             } catch (err) {
                 console.error('Error cargando datos B2B:', err);
@@ -333,6 +376,9 @@ function NewEventContent() {
                 mensajeBienvenida: basicInfo.mensajeBienvenida || undefined,
                 notas: basicInfo.notas || undefined,
 
+                // País del evento (B2C lo elige el usuario; B2B sale de la cuenta)
+                IdPais: idPais !== '' ? (idPais as number) : undefined,
+
                 ...(isB2BContext
                     ? {
                         // Lógica para eventos de Cuenta (B2B)
@@ -384,8 +430,9 @@ function NewEventContent() {
             };
             await aplicarPlantilla(idEvento, payload);
             setCurrentStep(4); // → Step 4: Acceso y Confirmación
-        } catch {
-            setError('No se pudo aplicar la plantilla. Por favor, intenta de nuevo.');
+        } catch (error) {
+            try { handlePlanLimitError(error); }
+            catch { setError('No se pudo aplicar la plantilla. Por favor, intenta de nuevo.'); }
         } finally {
             setLoading(false);
         }
@@ -600,7 +647,7 @@ function NewEventContent() {
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                {/* Idioma y Tipo de Evento */}
+                                {/* Idioma + País del Evento */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
                                         <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
@@ -626,27 +673,67 @@ function NewEventContent() {
                                         </div>
                                     </div>
 
+                                    {/* País del Evento */}
                                     <div>
                                         <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
-                                            <Calendar className="w-3 h-3" />
-                                            Tipo de Evento
+                                            <MapPin className="w-3 h-3" />
+                                            País del Evento
+                                            {isB2BContext && (
+                                                <span className="text-muted/50 font-normal lowercase tracking-normal">(definido por la cuenta)</span>
+                                            )}
                                         </label>
-                                        <div className="relative">
-                                            <select
-                                                name="idTipoEvento"
-                                                value={basicInfo.idTipoEvento}
-                                                onChange={handleBasicInfoChange}
-                                                className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10"
-                                            >
-                                                {tiposEvento.map((tipo) => (
-                                                    <option key={tipo.id} value={tipo.id}>
-                                                        {tipo.texto}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        {isB2BContext ? (
+                                            /* B2B: solo lectura — sale de la cuenta */
+                                            <div className="w-full p-3.5 rounded-xl bg-background/50 border border-card-border text-muted cursor-not-allowed select-none">
+                                                {paisNombreB2B || (idPais !== '' ? `País ID: ${idPais}` : 'Cargando...')}
                                             </div>
+                                        ) : (
+                                            /* B2C: combo editable */
+                                            <div className="relative">
+                                                <select
+                                                    value={idPais}
+                                                    onChange={e => setIdPais(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+                                                    className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10"
+                                                >
+                                                    <option value="">Seleccioná un país...</option>
+                                                    {paises.map((p) => {
+                                                        const pId = p.id_pais ?? p.idPais ?? p.id;
+                                                        return (
+                                                            <option key={pId} value={pId}>
+                                                                {p.texto ?? p.nombre}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Tipo de Evento en su propia fila */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2 ml-1">
+                                        <Calendar className="w-3 h-3" />
+                                        Tipo de Evento
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            name="idTipoEvento"
+                                            value={basicInfo.idTipoEvento}
+                                            onChange={handleBasicInfoChange}
+                                            className="w-full p-3.5 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10"
+                                        >
+                                            {tiposEvento.map((tipo) => (
+                                                <option key={tipo.id} value={tipo.id}>
+                                                    {tipo.texto}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                         </div>
                                     </div>
                                 </div>

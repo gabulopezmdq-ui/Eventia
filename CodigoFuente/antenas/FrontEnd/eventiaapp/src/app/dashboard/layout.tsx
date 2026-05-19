@@ -23,7 +23,8 @@ import {
     BadgeDollarSign,
     HeartHandshake,
     Briefcase,
-    CalendarDays
+    CalendarDays,
+    ArrowRightLeft
 } from "lucide-react";
 import { SidebarItem } from "@/src/components/layout/SidebarItem";
 import { DashboardHeader } from "@/src/components/layout/DashboardHeader";
@@ -198,6 +199,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                             <SidebarItem href="/dashboard/admin/solicitudes-plantillas" icon={FileCheck2} label="Solicitudes Plantillas" />
                             <SidebarItem href="/dashboard/admin/prospectos-b2b" icon={FileSearch} label="Prospectos B2B" />
                             <SidebarItem href="/dashboard/admin/cuentas-b2b" icon={UserCog} label="Cuentas B2B" />
+                            <SidebarItem href="/dashboard/admin/eventos-planes" icon={ArrowRightLeft} label="Cambios de Plan (B2C)" />
                             <SidebarItem href="/dashboard/admin/pagos-eventos" icon={BadgeDollarSign} label="Pagos Eventos (B2C)" />
                             <SidebarItem href="/dashboard/admin/oportunidades" icon={HeartHandshake} label="Oportunidades Free/Trial" />
                             <SidebarItem href="/dashboard/admin/cobranzas-cuentas" icon={Briefcase} label="Cobranzas Cuentas (B2B)" />

@@ -70,13 +70,13 @@ export async function getMiPerfil(): Promise<PerfilData> {
 
 export async function updateMiPerfil(payload: Partial<PerfilData>): Promise<void> {
     const bodyArgs = {
-        Nombre: payload.nombre,
-        Apellido: payload.apellido,
-        Telefono: payload.telefono,
-        IdPais: payload.id_pais,
-        IdIdiomaPreferido: payload.id_idioma_preferido,
-        IdIdiomaDefaultEvento: payload.id_idioma_default_evento,
-        RecibirNovedades: payload.recibir_novedades,
+        nombre: payload.nombre,
+        apellido: payload.apellido,
+        telefono: payload.telefono,
+        id_pais: payload.id_pais,
+        id_idioma_preferido: payload.id_idioma_preferido,
+        id_idioma_default_evento: payload.id_idioma_default_evento,
+        recibir_novedades: payload.recibir_novedades,
     };
 
     const res = await fetch('/api/perfil', {
