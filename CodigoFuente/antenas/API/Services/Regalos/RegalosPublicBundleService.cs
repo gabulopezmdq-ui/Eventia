@@ -50,8 +50,21 @@ namespace API.Services.Regalos
             };
 
             // 3) Transferencias
+            // 3) Transferencias (Config + Destinos)
             if (featTransfer)
             {
+                // 3.1 Config (si no existe, devolvemos default sin insertar)
+                var cfg = await _context.ef_evento_regalos_transferencias_config
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.id_evento == idEvento);
+
+                dto.transferencias_config = new RegalosPublicTransferenciasConfigDTO
+                {
+                    titulo = (cfg?.titulo ?? "Regalos"),
+                    texto_intro = cfg?.texto_intro
+                };
+
+                // 3.2 Destinos
                 dto.transferencias = await _context.ef_evento_regalos_transferencias
                     .AsNoTracking()
                     .Where(x => x.id_evento == idEvento && x.activo == true)
@@ -66,8 +79,14 @@ namespace API.Services.Regalos
                     })
                     .ToListAsync();
 
-                // Si querés 100% estricto por feature, NO hagas override por "no hay registros".
-                // dto.mostrar_transferencias = dto.transferencias.Count > 0;
+                // Regla estricta por feature:
+                // mostrar_transferencias ya está en true por featTransfer
+                // y devolvemos config aunque no haya destinos cargados.
+            }
+            else
+            {
+                dto.transferencias_config = null;
+                dto.transferencias = new List<RegalosPublicTransferenciaDTO>();
             }
 
             // 4) Lista

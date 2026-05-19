@@ -182,6 +182,7 @@ builder.Services.AddScoped<IRegalosListaService, RegalosListaService>();
 builder.Services.AddScoped<IRegalosFondoService, RegalosFondoService>();
 builder.Services.AddScoped<IRegalosTransferenciasService, RegalosTransferenciasService>();
 builder.Services.AddScoped<IRegalosPublicBundleService, RegalosPublicBundleService>();
+builder.Services.AddScoped<IRegalosTransferenciasConfigService, RegalosTransferenciasConfigService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
