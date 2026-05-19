@@ -181,6 +181,7 @@ builder.Services.AddScoped<IAdminEventoPlanCambiosService, AdminEventoPlanCambio
 builder.Services.AddScoped<IRegalosListaService, RegalosListaService>();
 builder.Services.AddScoped<IRegalosFondoService, RegalosFondoService>();
 builder.Services.AddScoped<IRegalosTransferenciasService, RegalosTransferenciasService>();
+builder.Services.AddScoped<IRegalosPublicBundleService, RegalosPublicBundleService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

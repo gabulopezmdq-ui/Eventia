@@ -231,16 +231,54 @@ namespace API.Services.Regalos
         public async Task<RegalosFondoAporteDTO> CrearAportePublicoAsync(RegalosFondoCrearAporteDTO req)
         {
             if (req == null) throw new Exception("Body inválido.");
-            if (req.id_evento <= 0) throw new Exception("id_evento inválido.");
             if (req.id_fondo <= 0) throw new Exception("id_fondo inválido.");
             if (req.id_meta <= 0) throw new Exception("id_meta inválido.");
 
+            // ✅ Seguridad simple: no confiar en id_evento del body si viene rsvp_token
+            long idEventoSeguro = req.id_evento;
+
+            if (!string.IsNullOrWhiteSpace(req.rsvp_token))
+            {
+                var inv = await _context.ef_invitados
+                    .AsNoTracking()
+                    .Where(i => i.rsvp_token == req.rsvp_token && i.activo == true)
+                    .Select(i => new { i.id_evento })
+                    .FirstOrDefaultAsync();
+
+                if (inv == null)
+                    throw new Exception("Token inválido.");
+
+                idEventoSeguro = inv.id_evento;
+
+                if (req.id_evento > 0 && req.id_evento != idEventoSeguro)
+                    throw new Exception("Token no corresponde al evento.");
+            }
+            else
+            {
+                // Si no hay token, exigimos id_evento válido (tu decisión permitir o no)
+                if (req.id_evento <= 0) throw new Exception("id_evento inválido.");
+            }
+
+            // Fondo debe pertenecer al evento seguro
             var fondo = await _context.ef_evento_regalos_fondos
                 .AsNoTracking()
-                .FirstOrDefaultAsync(f => f.id_fondo == req.id_fondo && f.id_evento == req.id_evento && f.activo == true);
+                .FirstOrDefaultAsync(f => f.id_fondo == req.id_fondo
+                                       && f.id_evento == idEventoSeguro
+                                       && f.activo == true);
 
             if (fondo == null) throw new Exception("Fondo inexistente.");
 
+            // Meta debe pertenecer al fondo y al evento seguro
+            bool metaOk = await _context.ef_evento_regalos_fondo_metas
+                .AsNoTracking()
+                .AnyAsync(m => m.id_meta == req.id_meta
+                            && m.id_fondo == req.id_fondo
+                            && m.id_evento == idEventoSeguro
+                            && m.activo == true);
+
+            if (!metaOk) throw new Exception("Meta inexistente para este fondo.");
+
+            // Validación según modo
             if (fondo.modo_confirmacion == "INVITADO_Y_ORGANIZADOR")
             {
                 if (!req.monto_aporte.HasValue || req.monto_aporte.Value <= 0)
@@ -252,7 +290,7 @@ namespace API.Services.Regalos
 
             var aporte = new ef_evento_regalos_fondo_aportes
             {
-                id_evento = req.id_evento,
+                id_evento = idEventoSeguro,
                 id_fondo = req.id_fondo,
                 id_meta = req.id_meta,
 
