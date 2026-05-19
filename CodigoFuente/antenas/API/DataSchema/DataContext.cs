@@ -29,6 +29,7 @@ namespace API.DataSchema
         public DbSet<ef_clientes> ef_clientes{ get; set; }
         public DbSet<ef_cuentas> ef_cuentas { get; set; }
         public DbSet<ef_cuenta_usuarios> ef_cuenta_usuarios { get; set; }
+        public DbSet<ef_cuenta_usuario_invitaciones> ef_cuenta_usuario_invitaciones { get; set; }
         public DbSet<ef_invitados> ef_invitados { get; set; }
         public DbSet<ef_param_traducciones> ef_param_traducciones { get; set; }
         public DbSet<ef_tramo_tipos> ef_tramo_tipos { get; set; }
@@ -236,6 +237,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_clientesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cuentasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_cuenta_usuariosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuenta_usuario_invitacionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_invitadosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_traduccionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_tramo_tiposConfiguration());
