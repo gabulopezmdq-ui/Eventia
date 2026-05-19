@@ -21,5 +21,8 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("notas")]
         public string? Notas { get; set; }
+
+        [JsonPropertyName("id_idioma")]
+        public short? IdIdioma { get; set; }
     }
 }
