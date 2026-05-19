@@ -1,0 +1,343 @@
+# Plan de Implementación — Solicitud Cambio de Plan B2C por Evento
+
+## Resumen de áreas de cambio
+
+| Área | Archivo(s) principal(es) | Tipo |
+|---|---|---|
+| 1. Wizard Crear Evento | `events/new/page.tsx` | Modificar |
+| 2. API Proxies nuevos | `src/app/api/...` | Crear |
+| 3. Panel Plan del evento | `events/[id]/page.tsx` | Modificar |
+| 4. Modal Solicitar Cambio Plan | nuevo componente | Crear |
+| 5. Pantalla Admin – Cambios de Plan | nueva page en `dashboard/admin/` | Crear |
+| 6. Modal Gestionar Solicitud Admin | nuevo componente | Crear |
+
+---
+
+## FASE 1 — API Proxies (Next.js Route Handlers)
+
+### 1.1 Verificar solicitud pendiente
+```
+CREAR: src/app/api/eventos/[id]/plan-cambios/pendiente/route.ts
+```
+- **Método**: `GET`
+- **Destino**: `GET /eventos/{id_evento}/plan-cambios/pendiente`
+- **Auth**: Bearer Token del usuario
+
+### 1.2 Solicitar cambio de plan
+```
+CREAR: src/app/api/eventos/[id]/plan-cambios/solicitar/route.ts
+```
+- **Método**: `POST`
+- **Destino**: `POST /eventos/{id_evento}/plan-cambios/solicitar`
+- **Body**: `{ codigo_plan_solicitado, motivo_solicitud }`
+
+### 1.3 Listar solicitudes pendientes (Admin)
+```
+CREAR: src/app/api/admin/eventos-planes/pendientes/route.ts
+```
+- **Método**: `GET`
+- **Destino**: `GET /admin/eventos_planes/pendientes`
+- **Auth**: Bearer Token SuperAdmin
+
+### 1.4 Obtener detalle solicitud (Admin)
+```
+CREAR: src/app/api/admin/eventos-planes/[id]/route.ts
+```
+- **Método**: `GET`
+- **Destino**: `GET /admin/eventos_planes/{id_evento_plan_cambio}`
+
+### 1.5 Aprobar solicitud (Admin)
+```
+CREAR: src/app/api/admin/eventos-planes/aprobar/route.ts
+```
+- **Método**: `POST`
+- **Destino**: `POST /admin/eventos_planes/aprobar`
+
+### 1.6 Rechazar solicitud (Admin)
+```
+CREAR: src/app/api/admin/eventos-planes/rechazar/route.ts
+```
+- **Método**: `POST`
+- **Destino**: `POST /admin/eventos_planes/rechazar`
+
+### 1.7 Medios de pago (Admin)
+```
+VERIFICAR si existe: src/app/api/parametrica/...
+CREAR si no existe: src/app/api/medios-pago/route.ts
+```
+- **Método**: `GET`
+- **Destino**: `GET /medios_pago/GetAll?idIdioma=1`
+
+### 1.8 Países (para wizard de evento)
+```
+VERIFICAR si existe: src/app/api/parametrica/paises
+CREAR si no existe: src/app/api/paises/route.ts
+```
+- **Método**: `GET`
+- **Destino**: `GET /paises/GetAll?idIdioma=1`
+
+---
+
+## FASE 2 — Wizard "Crear Evento" (`events/new/page.tsx`)
+
+**Archivo**: `src/app/dashboard/events/new/page.tsx` (~111 KB, wizard grande)
+
+### Cambios requeridos
+
+#### 2.1 Agregar campo "País del Evento" (solo en B2C)
+
+**Ubicación en el wizard**: junto al campo "Idioma del Evento", en la misma fila. "Tipo de Evento" se mueve a línea siguiente.
+
+**Lógica de pre-carga del campo**:
+- Al renderizar el paso correspondiente, hacer `GET /api/perfil` para obtener `id_pais` del usuario.
+- **Si tiene país**: pre-seleccionar ese país en el combo pero permitir editarlo.
+- **Si no tiene país**: mostrar combo vacío para que el usuario elija.
+- Siempre cargar el catálogo completo de países vía `GET /api/paises?idIdioma={idIdioma}`.
+
+**Para B2B**:
+- Llamar a `GET /cuentas/MiCuenta` para obtener `id_pais`.
+- Mostrar el país como campo **solo lectura** (texto, no combo).
+
+#### 2.2 Modificar payload del POST /eventos
+
+En la función que arma el JSON para crear el evento, agregar:
+```json
+{
+  "IdPais": <id_pais seleccionado>
+}
+```
+
+> [!IMPORTANT]
+> El campo `id_pais` solo se incluye en el POST para B2C. Para B2B el backend lo toma de la cuenta.
+
+---
+
+## FASE 3 — Panel Plan del Evento (`events/[id]/page.tsx`)
+
+**Archivo**: `src/app/dashboard/events/[id]/page.tsx` (~37 KB)
+
+### 3.1 Ampliar la Card de Plan (sección "Plan")
+
+Actualmente muestra: **Plan actual** + **Estado**.
+
+**Agregar** (datos que ya vienen del endpoint `GET /eventos/GetEvento?idEvento=`):
+- **País comercial**: `paisCodigoIso2` (ej: "AR")
+- **Mercado / Moneda**: `codigoMercado` / `codigoMoneda` (ej: "AR / ARS")
+
+### 3.2 Botón "Cambiar Plan"
+
+Al hacer clic:
+
+**Paso 1** — Llamar al endpoint de verificación:
+```
+GET /api/eventos/{id}/plan-cambios/pendiente
+```
+
+**Resultado A — `tiene_pendiente: true`**:
+- Mostrar modal informativo **"Solicitud Pendiente"**:
+  - Solicitud #`id_evento_plan_cambio`
+  - Plan solicitado: `plan_solicitado_codigo`
+  - Estado: `PENDIENTE`
+  - Fecha: `fecha_solicitud`
+  - Botón "Cerrar"
+
+**Resultado B — `tiene_pendiente: false`**:
+- Abrir modal **"Solicitar Cambio de Plan"** (ver Fase 4).
+
+---
+
+## FASE 4 — Modal "Solicitar Cambio de Plan" (B2C – Organizador)
+
+**Crear**: `src/app/dashboard/events/[id]/components/ModalSolicitarCambioPlan.tsx`
+
+### Campos del modal
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| Plan actual | Text (solo lectura) | `planNombre` del evento |
+| Nuevo plan | Select | Cargar de `GET /api/precios/planes?tipo=B2C&mercado={codigoMercado}` |
+| Motivo | Textarea | Opcional |
+
+> [!NOTE]
+> El combo de "Nuevo plan" debe excluir el plan actual. El parámetro `mercado` sale de `codigoMercado` del evento (`GET /eventos/GetEvento`).
+
+### Al hacer clic en "Solicitar"
+
+```
+POST /api/eventos/{id}/plan-cambios/solicitar
+Body: { codigo_plan_solicitado, motivo_solicitud }
+```
+
+**Respuesta exitosa**: cerrar modal y mostrar toast/alert:
+> "Solicitud enviada. El equipo de Eventia revisará el cambio y confirmará el importe final."
+
+**Validaciones**:
+- Nuevo plan debe ser diferente al actual
+- Si se seleccionó un tipo de ajuste, importe_ajuste es requerido (esto aplica al admin, no al organizador)
+
+---
+
+## FASE 5 — Pantalla SuperAdmin "Cambios de Plan por Evento" ✅
+
+### 5.1 Crear la página
+
+**Crear**: `src/app/dashboard/admin/eventos-planes/page.tsx`
+
+**Ubicación en el menú**: `Administración → Comercial → Cambios de planes para eventos`
+
+> [!NOTE]
+> Hay que agregar este link al sidebar del dashboard para superadmins (`dashboard/layout.tsx`).
+
+### 5.2 Grilla de solicitudes pendientes
+
+**Datos**: `GET /api/admin/eventos-planes/pendientes`
+
+**Columnas**:
+
+| Columna | Campo API |
+|---|---|
+| Fecha | `fecha_solicitud` |
+| Evento | `evento_anfitriones` |
+| Plan actual | `plan_actual_nombre` |
+| Plan solicitado | `plan_solicitado_nombre` |
+| Mercado | `codigo_mercado` |
+| Precio actual reconocido | `precio_plan_actual_reconocido` |
+| Precio nuevo publicado | `precio_plan_solicitado_publicado` |
+| Diferencia base | `diferencia_base` |
+| Estado | `estado` (badge coloreado) |
+| Acciones | Botón "Ver / Gestionar" |
+
+### 5.3 Acción "Ver / Gestionar"
+
+Al hacer clic, abrir el modal de gestión (Fase 6).
+
+---
+
+## FASE 6 — Modal "Gestionar Solicitud" (Admin) ✅
+
+**Crear**: `src/app/dashboard/admin/eventos-planes/components/ModalGestionarSolicitud.tsx`
+
+**Datos cargados**: `GET /api/admin/eventos-planes/{id}`
+
+### Estructura del modal
+
+#### Header (solo lectura)
+- Solicitud: `#id_evento_plan_cambio`
+- Estado: badge (`PENDIENTE` / `APROBADO` / `RECHAZADO`)
+- Evento: `evento_anfitriones`
+- Fecha solicitud
+
+#### Resumen (solo lectura)
+- Plan actual: `plan_actual_nombre`
+- Plan solicitado: `plan_solicitado_nombre`
+- Motivo organizador: `motivo_solicitud`
+
+#### Comercial (solo lectura)
+- Precio reconocido plan actual: `precio_plan_actual_reconocido`
+- Precio lista plan solicitado: `precio_plan_solicitado_lista`
+- Precio publicado plan solicitado: `precio_plan_solicitado_publicado`
+- Diferencia base: `diferencia_base`
+
+#### Ajuste comercial (editable — solo en estado PENDIENTE)
+| Campo | Tipo | Regla |
+|---|---|---|
+| Tipo ajuste | Select | Opciones: null, `DESCUENTO`, `BONIFICACION`, `RECARGO` |
+| Importe ajuste | Number decimal | Requerido si hay tipo_ajuste |
+| Motivo ajuste | Text | Opcional |
+| Descripción ajuste | Textarea | Opcional |
+
+#### Cálculo en tiempo real (mostrar grande)
+```
+Sin ajuste:    total = diferencia_base
+DESCUENTO:     total = diferencia_base - importe_ajuste
+BONIFICACION:  total = diferencia_base - importe_ajuste
+RECARGO:       total = diferencia_base + importe_ajuste
+Si total < 0:  total = 0
+```
+**Mostrar: `Total a cobrar: XX.XXX ARS`**
+
+#### Pago (editable — solo en estado PENDIENTE)
+| Campo | Tipo | Regla |
+|---|---|---|
+| Importe pagado | Number decimal | Requerido |
+| Moneda | Text (solo lectura) | `codigo_moneda` del evento |
+| Medio de pago | Select | `GET /api/medios-pago?idIdioma=1` |
+| Referencia pago | Text | Opcional |
+| Observaciones Admin | Textarea | Opcional |
+
+#### Botones (solo en estado PENDIENTE)
+
+**"Aprobar Cambio de Plan"**:
+```
+POST /api/admin/eventos-planes/aprobar
+Body: { id_evento_plan_cambio, tipo_ajuste, importe_ajuste, motivo_ajuste,
+        descripcion_ajuste, importe_pagado, medio_pago, referencia_pago, observacion_admin }
+```
+
+**"Rechazar"** → abre mini-modal de confirmación con textarea de motivo:
+```
+POST /api/admin/eventos-planes/rechazar
+Body: { id_evento_plan_cambio, observacion_admin }
+```
+
+### Reglas de visualización por estado
+
+| Estado | Ajuste | Pago | Botones |
+|---|---|---|---|
+| PENDIENTE | Editable | Editable | Aprobar + Rechazar |
+| APROBADO | Solo lectura | Solo lectura | Ocultos |
+| RECHAZADO | Solo lectura | Solo lectura | Ocultos |
+
+---
+
+## FASE 7 — Sidebar / Navegación Admin ✅
+
+**Archivo**: `src/app/dashboard/layout.tsx`
+
+Agregar entrada en la sección Admin/Superadmin:
+- **Label**: "Cambios de Plan — Eventos"
+- **Href**: `/dashboard/admin/eventos-planes`
+- **Visible**: solo para `isSuperAdmin`
+
+---
+
+## Orden de ejecución sugerido
+
+```mermaid
+graph TD
+  A[FASE 1: API Proxies] --> B[FASE 2: Wizard País Evento]
+  A --> C[FASE 3: Card Plan + datos mercado]
+  C --> D[FASE 4: Modal Solicitar Cambio]
+  A --> E[FASE 5: Página Admin Grilla]
+  E --> F[FASE 6: Modal Gestionar Solicitud]
+  F --> G[FASE 7: Sidebar link Admin]
+```
+
+> [!TIP]
+> Empezar siempre por los API Proxies (Fase 1) ya que todas las demás fases dependen de ellos.
+
+---
+
+## Archivos a crear (resumen)
+
+| Archivo | Descripción |
+|---|---|
+| `src/app/api/eventos/[id]/plan-cambios/pendiente/route.ts` | GET verificar pendiente |
+| `src/app/api/eventos/[id]/plan-cambios/solicitar/route.ts` | POST solicitar cambio |
+| `src/app/api/admin/eventos-planes/pendientes/route.ts` | GET listar solicitudes admin |
+| `src/app/api/admin/eventos-planes/[id]/route.ts` | GET detalle solicitud admin |
+| `src/app/api/admin/eventos-planes/aprobar/route.ts` | POST aprobar |
+| `src/app/api/admin/eventos-planes/rechazar/route.ts` | POST rechazar |
+| `src/app/api/medios-pago/route.ts` | GET medios de pago |
+| `src/app/api/paises/route.ts` | GET países (si no existe) |
+| `src/app/dashboard/events/[id]/components/ModalSolicitarCambioPlan.tsx` | Modal organizador |
+| `src/app/dashboard/admin/eventos-planes/page.tsx` | Página admin grilla |
+| `src/app/dashboard/admin/eventos-planes/components/ModalGestionarSolicitud.tsx` | Modal admin |
+
+## Archivos a modificar (resumen)
+
+| Archivo | Cambio |
+|---|---|
+| `src/app/dashboard/events/new/page.tsx` | Campo País + payload IdPais |
+| `src/app/dashboard/events/[id]/page.tsx` | Card Plan ampliada + botón Cambiar Plan |
+| `src/app/dashboard/layout.tsx` | Link sidebar para admin |
