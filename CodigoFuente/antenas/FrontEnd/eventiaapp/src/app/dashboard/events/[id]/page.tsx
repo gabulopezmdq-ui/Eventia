@@ -7,7 +7,8 @@ import {
     ChevronLeft, Calendar, MapPin, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
-    Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck, Stethoscope
+    Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck, Stethoscope,
+    TrendingUp, X, AlertTriangle, Loader2
 } from 'lucide-react';
 
 import {
@@ -30,6 +31,26 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activating, setActivating] = useState(false);
+
+    // ── Plan Change State ────────────────────────────────
+    type SolicitudPendiente = {
+        id_evento_plan_cambio: number;
+        plan_solicitado_codigo: string;
+        plan_solicitado_nombre?: string;
+        estado: string;
+        fecha_solicitud: string;
+    };
+    type PlanItem = { codigo: string; nombre: string; precio?: number | null; };
+
+    const [checkingPlan, setCheckingPlan] = useState(false);
+    const [showPendingModal, setShowPendingModal] = useState(false);
+    const [showRequestModal, setShowRequestModal] = useState(false);
+    const [solicitudPendiente, setSolicitudPendiente] = useState<SolicitudPendiente | null>(null);
+    const [planesDisponibles, setPlanesDisponibles] = useState<PlanItem[]>([]);
+    const [planSeleccionado, setPlanSeleccionado] = useState('');
+    const [motivoSolicitud, setMotivoSolicitud] = useState('');
+    const [enviandoSolicitud, setEnviandoSolicitud] = useState(false);
+    const [solicitudEnviada, setSolicitudEnviada] = useState(false);
 
     const isAdmin = scope === 'admin';
     const idEventoLong = Number(id);
@@ -73,6 +94,68 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             alert('Error al activar el evento');
         } finally {
             setActivating(false);
+        }
+    };
+
+    // ── Handler: abrir flujo de cambio de plan ────────────────
+    const handleCambiarPlan = async () => {
+        if (!event) return;
+        setCheckingPlan(true);
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch(`/api/eventos/${event.id_evento}/plan-cambios/pendiente`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            if (data.tiene_pendiente) {
+                setSolicitudPendiente(data.solicitud);
+                setShowPendingModal(true);
+            } else {
+                // Cargar planes disponibles para el mercado del evento
+                const mercado = event.codigoMercado || 'AR';
+                const resPlanes = await fetch(`/api/planesPublic/PublicCatalog?tipo=B2C&mercado=${mercado}`);
+                if (resPlanes.ok) {
+                    const allPlanes = await resPlanes.json();
+                    // Excluir el plan actual
+                    const filtered = allPlanes.filter((p: PlanItem) => p.codigo !== event.planCodigo);
+                    setPlanesDisponibles(filtered);
+                    if (filtered.length > 0) setPlanSeleccionado(filtered[0].codigo);
+                }
+                setSolicitudEnviada(false);
+                setMotivoSolicitud('');
+                setShowRequestModal(true);
+            }
+        } catch {
+            alert('No se pudo verificar el estado del plan. Intentá de nuevo.');
+        } finally {
+            setCheckingPlan(false);
+        }
+    };
+
+    // ── Handler: enviar solicitud de cambio ─────────────────
+    const handleEnviarSolicitud = async () => {
+        if (!event || !planSeleccionado) return;
+        setEnviandoSolicitud(true);
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch(`/api/eventos/${event.id_evento}/plan-cambios/solicitar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    codigo_plan_solicitado: planSeleccionado,
+                    motivo_solicitud: motivoSolicitud || undefined,
+                }),
+            });
+            if (!res.ok) throw new Error();
+            setSolicitudEnviada(true);
+        } catch {
+            alert('No se pudo enviar la solicitud. Intentá de nuevo.');
+        } finally {
+            setEnviandoSolicitud(false);
         }
     };
 
@@ -499,48 +582,72 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             </div>
                         </div>
                     </div>
-                    {/* Plan Actual */}
+                    {/* Plan Actual — ampliado con país comercial + botón inteligente */}
                     <div className="p-6 rounded-2xl bg-card-bg border border-card-border space-y-5">
                         <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1">
-                                <h3 className="text-sm font-bold text-foreground">
-                                    Plan del Evento
-                                </h3>
-                                <p className="text-xs text-muted">
-                                    Plan actualmente asignado al evento
-                                </p>
+                                <h3 className="text-sm font-bold text-foreground">Plan del Evento</h3>
+                                <p className="text-xs text-muted">Plan y mercado asignados al evento</p>
                             </div>
-
                             <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
                                 <Sparkles className="w-4 h-4" />
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-2xl bg-background border border-card-border">
+                        {/* Card plan */}
+                        <div className="p-4 rounded-2xl bg-background border border-card-border space-y-3">
                             <div className="flex items-center justify-between gap-4">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted">
-                                        Plan Actual
-                                    </p>
-
+                                <div className="space-y-0.5">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted">Plan Actual</p>
                                     <h4 className="text-lg font-bold text-foreground">
                                         {event.planNombre || 'Sin plan asignado'}
                                     </h4>
                                 </div>
-
                                 <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
                                     Activo
                                 </div>
                             </div>
+
+                            {/* País + Mercado/Moneda */}
+                            {(event.paisCodigoIso2 || event.codigoMercado) && (
+                                <div className="pt-2 border-t border-card-border space-y-2">
+                                    {event.paisCodigoIso2 && (
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted flex items-center gap-1.5">
+                                                <Globe className="w-3 h-3" />
+                                                País Comercial
+                                            </span>
+                                            <span className="text-xs font-bold text-foreground">{event.paisCodigoIso2}</span>
+                                        </div>
+                                    )}
+                                    {(event.codigoMercado || event.codigoMoneda) && (
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted flex items-center gap-1.5">
+                                                <DollarSign className="w-3 h-3" />
+                                                Mercado / Moneda
+                                            </span>
+                                            <span className="text-xs font-bold text-foreground">
+                                                {[event.codigoMercado, event.codigoMoneda].filter(Boolean).join(' / ')}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
-                        <button
-                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/plan`)}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all"
-                        >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Cambiar Plan
-                        </button>
+                        {/* Botón Cambiar Plan */}
+                        {!isAdmin && (
+                            <button
+                                onClick={handleCambiarPlan}
+                                disabled={checkingPlan}
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-70"
+                            >
+                                {checkingPlan
+                                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Verificando...</>
+                                    : <><TrendingUp className="w-3.5 h-3.5" /> Cambiar Plan</>
+                                }
+                            </button>
+                        )}
                     </div>
 
                     {/* Secondary Actions */}
@@ -551,6 +658,173 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     </div>
                 </aside>
             </div>
+
+            {/* ════ MODAL: Solicitud Pendiente ════ */}
+            {showPendingModal && solicitudPendiente && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowPendingModal(false)}>
+                    <div className="w-full max-w-md rounded-2xl bg-card-bg border border-amber-500/30 shadow-2xl shadow-amber-500/10 p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                                    <AlertTriangle className="w-5 h-5 text-amber-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-foreground">Solicitud Pendiente</h3>
+                                    <p className="text-xs text-muted">Ya tenés una solicitud en revisión</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowPendingModal(false)} className="text-muted hover:text-foreground transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Info */}
+                        <div className="p-4 rounded-xl bg-background border border-card-border space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted">Solicitud</span>
+                                <span className="text-xs font-bold text-foreground">#{solicitudPendiente.id_evento_plan_cambio}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted">Plan solicitado</span>
+                                <span className="text-xs font-bold text-foreground">{solicitudPendiente.plan_solicitado_nombre || solicitudPendiente.plan_solicitado_codigo}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted">Estado</span>
+                                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest">{solicitudPendiente.estado}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted">Fecha</span>
+                                <span className="text-xs font-bold text-foreground">{new Date(solicitudPendiente.fecha_solicitud).toLocaleDateString('es-AR')}</span>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-muted text-center leading-relaxed">
+                            El equipo de Eventia está revisando tu solicitud. Te notificaremos cuando sea procesada.
+                        </p>
+
+                        <button
+                            onClick={() => setShowPendingModal(false)}
+                            className="w-full py-3 rounded-xl bg-card-border text-foreground font-bold text-sm hover:bg-card-border/70 transition-colors"
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ════ MODAL: Solicitar Cambio de Plan ════ */}
+            {showRequestModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => { if (!enviandoSolicitud) setShowRequestModal(false); }}>
+                    <div className="w-full max-w-md rounded-2xl bg-card-bg border border-indigo-500/30 shadow-2xl shadow-indigo-500/10 p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                                    <TrendingUp className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-foreground">Solicitar Cambio de Plan</h3>
+                                    <p className="text-xs text-muted">El equipo de Eventia lo revisará y te confirmará</p>
+                                </div>
+                            </div>
+                            {!enviandoSolicitud && (
+                                <button onClick={() => setShowRequestModal(false)} className="text-muted hover:text-foreground transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+
+                        {solicitudEnviada ? (
+                            /* — Éxito — */
+                            <div className="space-y-5">
+                                <div className="flex flex-col items-center gap-3 py-4">
+                                    <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                        <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+                                    </div>
+                                    <p className="text-center text-sm text-foreground font-semibold">Solicitud enviada</p>
+                                    <p className="text-center text-xs text-muted leading-relaxed">
+                                        El equipo de Eventia revisará el cambio y confirmará el importe final.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowRequestModal(false)}
+                                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors"
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        ) : (
+                            /* — Formulario — */
+                            <div className="space-y-4">
+                                {/* Plan actual */}
+                                <div className="p-3 rounded-xl bg-background border border-card-border">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted mb-1">Plan Actual</p>
+                                    <p className="text-sm font-bold text-foreground">{event?.planNombre || '—'}</p>
+                                </div>
+
+                                {/* Nuevo plan */}
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Nuevo Plan</label>
+                                    {planesDisponibles.length === 0 ? (
+                                        <p className="text-xs text-muted italic">No hay planes disponibles para cambio.</p>
+                                    ) : (
+                                        <div className="relative">
+                                            <select
+                                                value={planSeleccionado}
+                                                onChange={e => setPlanSeleccionado(e.target.value)}
+                                                className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10 text-sm"
+                                            >
+                                                {planesDisponibles.map(p => (
+                                                    <option key={p.codigo} value={p.codigo}>{p.nombre}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Motivo */}
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">
+                                        Motivo <span className="text-muted/50 font-normal lowercase tracking-normal">(opcional)</span>
+                                    </label>
+                                    <textarea
+                                        value={motivoSolicitud}
+                                        onChange={e => setMotivoSolicitud(e.target.value)}
+                                        placeholder="¿Por qué querés cambiar de plan?"
+                                        rows={3}
+                                        className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none placeholder:text-muted resize-none text-sm"
+                                    />
+                                </div>
+
+                                {/* Acciones */}
+                                <div className="flex gap-3 pt-1">
+                                    <button
+                                        onClick={() => setShowRequestModal(false)}
+                                        disabled={enviandoSolicitud}
+                                        className="flex-1 py-3 rounded-xl border border-card-border text-muted hover:text-foreground font-bold text-sm transition-colors disabled:opacity-50"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleEnviarSolicitud}
+                                        disabled={enviandoSolicitud || !planSeleccionado}
+                                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-60"
+                                    >
+                                        {enviandoSolicitud
+                                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
+                                            : 'Solicitar'
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
