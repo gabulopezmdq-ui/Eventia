@@ -114,27 +114,52 @@ namespace API.Services.Regalos
         public async Task<RegalosListaReservaDTO> ReservarAsync(RegalosListaReservarDTO req)
         {
             if (req == null) throw new Exception("Body inválido.");
-            if (req.id_evento <= 0) throw new Exception("id_evento inválido.");
             if (req.id_regalo_item <= 0) throw new Exception("id_regalo_item inválido.");
             if (req.cantidad <= 0) throw new Exception("cantidad inválida.");
+
+            // ✅ Seguridad simple: no confiar en id_evento del body si viene rsvp_token
+            long idEventoSeguro = req.id_evento;
+
+            if (!string.IsNullOrWhiteSpace(req.rsvp_token))
+            {
+                var inv = await _context.ef_invitados
+                    .AsNoTracking()
+                    .Where(i => i.rsvp_token == req.rsvp_token && i.activo == true)
+                    .Select(i => new { i.id_evento })
+                    .FirstOrDefaultAsync();
+
+                if (inv == null)
+                    throw new Exception("Token inválido.");
+
+                idEventoSeguro = inv.id_evento;
+
+                // Si el front mandó id_evento, tiene que coincidir con el token
+                if (req.id_evento > 0 && req.id_evento != idEventoSeguro)
+                    throw new Exception("Token no corresponde al evento.");
+            }
+            else
+            {
+                // Si NO viene token, al menos exigimos id_evento válido.
+                if (req.id_evento <= 0) throw new Exception("id_evento inválido.");
+            }
 
             // Sin vencimiento automático: no seteamos fecha_vencimiento jamás.
             using var tx = await _context.Database.BeginTransactionAsync();
 
-            // lock del item para evitar carreras
+            // lock del item para evitar carreras (usa idEventoSeguro)
             var item = await _context.ef_evento_regalos_lista_items
                 .FromSqlInterpolated($@"
-                    select * 
-                    from public.ef_evento_regalos_lista_items
-                    where id_regalo_item = {req.id_regalo_item} and id_evento = {req.id_evento}
-                    for update")
+            select * 
+            from public.ef_evento_regalos_lista_items
+            where id_regalo_item = {req.id_regalo_item} and id_evento = {idEventoSeguro}
+            for update")
                 .FirstOrDefaultAsync();
 
             if (item == null || item.activo != true || item.visible != true)
                 throw new Exception("Item no disponible.");
 
             int reservada = await _context.ef_evento_regalos_lista_reservas
-                .Where(r => r.id_evento == req.id_evento
+                .Where(r => r.id_evento == idEventoSeguro
                             && r.id_regalo_item == req.id_regalo_item
                             && r.activo == true
                             && r.estado == "RESERVA_ACTIVA")
@@ -147,9 +172,10 @@ namespace API.Services.Regalos
 
             var reserva = new ef_evento_regalos_lista_reservas
             {
-                id_evento = req.id_evento,
+                id_evento = idEventoSeguro,
                 id_regalo_item = req.id_regalo_item,
 
+                // Guardamos lo que venga (si vino token, queda auditado)
                 id_invitado = req.id_invitado,
                 rsvp_token = req.rsvp_token?.Trim(),
                 nombre_mostrado = req.nombre_mostrado?.Trim(),
