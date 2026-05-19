@@ -2,6 +2,12 @@ using API;
 using API.DataSchema;
 using API.Repositories;
 using API.Services;
+using API.Services.Cuentas;
+using API.Services.Eventos;
+using API.Services.Planes;
+using API.Services.Precios;
+using API.Services.Regalos;
+using API.Services.Staff;
 using API.Utility;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FluentAssertions.Common;
@@ -20,6 +26,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
 using Polly.Extensions.Http;
+using QuestPDF.Infrastructure;
 using System;
 using System.IO;
 //using API.Services.UsXRol;
@@ -27,12 +34,6 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
-using QuestPDF.Infrastructure;
-using API.Services.Cuentas;
-using API.Services.Staff;
-using API.Services.Eventos;
-using API.Services.Precios;
-using API.Services.Planes;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -175,6 +176,12 @@ builder.Services.AddScoped<IProgramasService, ProgramasService>();
 builder.Services.AddScoped<IPreciosService, PreciosService>();
 builder.Services.AddScoped<IEventoPlanCambiosService, EventoPlanCambiosService>();
 builder.Services.AddScoped<IAdminEventoPlanCambiosService, AdminEventoPlanCambiosService>();
+
+//regalos
+builder.Services.AddScoped<IRegalosListaService, RegalosListaService>();
+builder.Services.AddScoped<IRegalosFondoService, RegalosFondoService>();
+builder.Services.AddScoped<IRegalosTransferenciasService, RegalosTransferenciasService>();
+builder.Services.AddScoped<IRegalosPublicBundleService, RegalosPublicBundleService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

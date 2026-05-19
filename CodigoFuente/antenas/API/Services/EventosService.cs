@@ -722,10 +722,8 @@ namespace API.Services
             if (req.IdTipoEvento <= 0)
                 throw new InvalidOperationException("Tipo de evento obligatorio.");
 
-            if (req.IdIdioma <= 0)
-                throw new InvalidOperationException("Idioma obligatorio.");
-
-            short idIdioma = req.IdIdioma;
+            // ✅ Modificación: Si no viene idioma o es <= 0, se asigna el por defecto (1)
+            short idIdioma = req.IdIdioma > 0 ? req.IdIdioma : (short)1;
 
             if (string.IsNullOrWhiteSpace(req.AnfitrionesTexto))
                 throw new InvalidOperationException("Anfitriones obligatorio.");
@@ -1328,6 +1326,17 @@ namespace API.Services
 
             if (req.Notas != null)
                 ev.notas = string.IsNullOrWhiteSpace(req.Notas) ? null : req.Notas.Trim();
+
+            if (req.IdIdioma.HasValue)
+            {
+                bool existeIdioma = await _context.Set<ef_idiomas>()
+                    .AnyAsync(i => i.id_idioma == req.IdIdioma.Value && i.activo == true);
+
+                if (!existeIdioma)
+                    throw new InvalidOperationException("El idioma no existe o está inactivo.");
+
+                ev.id_idioma = req.IdIdioma.Value;
+            }
 
             ev.fecha_modif = DateTimeOffset.UtcNow;
 
