@@ -1,5 +1,6 @@
 using API.DataSchema.Configurations;
 using API.DataSchema.ModelConfiguration;
+using API.DataSchema.ModelConfiguration.Regalos;
 using API.DataSchema.QueryModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -165,6 +166,14 @@ namespace API.DataSchema
         public DbSet<ef_mercado_paises> ef_mercado_paises { get; set; }
         public DbSet<ef_evento_plan_cambios> ef_evento_plan_cambios { get; set; }
         public DbSet<ef_param_medios_pago> ef_param_medios_pago { get; set; }
+
+        //regalos
+        public DbSet<ef_evento_regalos_lista_items> ef_evento_regalos_lista_items { get; set; } = null!;
+        public DbSet<ef_evento_regalos_lista_reservas> ef_evento_regalos_lista_reservas { get; set; } = null!;
+        public DbSet<ef_evento_regalos_fondos> ef_evento_regalos_fondos { get; set; } = null!;
+        public DbSet<ef_evento_regalos_fondo_metas> ef_evento_regalos_fondo_metas { get; set; } = null!;
+        public DbSet<ef_evento_regalos_fondo_aportes> ef_evento_regalos_fondo_aportes { get; set; } = null!;
+        public DbSet<ef_evento_regalos_transferencias> ef_evento_regalos_transferencias { get; set; } = null!;
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -360,6 +369,14 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_evento_plan_cambiosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_medios_pagoConfiguration());
 
+
+            //regalos
+            modelBuilder.ApplyConfiguration(new ef_evento_regalos_lista_itemsConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_regalos_lista_reservasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_regalos_fondosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_regalos_fondo_metasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_regalos_fondo_aportesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_regalos_transferenciasConfiguration());
 
 
             // Likes: Clave primaria compuesta
