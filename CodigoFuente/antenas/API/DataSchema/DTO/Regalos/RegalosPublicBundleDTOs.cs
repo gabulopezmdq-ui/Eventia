@@ -20,9 +20,16 @@ namespace API.DataSchema.DTO.Regalos
         public bool mostrar_fondo { get; set; }
 
         public List<RegalosPublicTransferenciaDTO> transferencias { get; set; } = new();
+        public RegalosPublicTransferenciasConfigDTO? transferencias_config { get; set; }
 
         public RegalosPublicListaDTO? lista { get; set; }
         public RegalosPublicFondoDTO? fondo { get; set; }
+    }
+
+    public class RegalosPublicTransferenciasConfigDTO
+    {
+        public string titulo { get; set; } = null!;
+        public string? texto_intro { get; set; }
     }
 
     // ──────────────────────────────────────
