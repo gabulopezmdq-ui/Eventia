@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.DataSchema.DTO.Cuentas;
+
 
 namespace API.Controllers
 {
@@ -22,17 +24,20 @@ namespace API.Controllers
         private readonly ICRUDService<ef_cuenta_usuarios> _serviceGenerico;
         private readonly ILogger<cuenta_usuariosController> _logger;
         private readonly ICuentaContextService _cuentaContext;
+        private readonly ICuentaUsuariosService _cuentaUsuariosService;
 
         public cuenta_usuariosController(
             DataContext context,
             ILogger<cuenta_usuariosController> logger,
             ICRUDService<ef_cuenta_usuarios> serviceGenerico,
-            ICuentaContextService cuentaContext)
+            ICuentaContextService cuentaContext,
+            ICuentaUsuariosService cuentaUsuariosService)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
             _cuentaContext = cuentaContext;
+            _cuentaUsuariosService = cuentaUsuariosService;
         }
 
         [HttpGet("GetAll")]
@@ -76,10 +81,19 @@ namespace API.Controllers
         }
 
         [HttpGet("MisUsuarios")]
-        public async Task<ActionResult> MisUsuarios()
+        public async Task<ActionResult> MisUsuarios([FromQuery] long idCuenta)
         {
             long idUsuario = User.GetUserId();
-            long idCuenta = await _cuentaContext.GetCuentaIdActualAsync(idUsuario);
+
+            var pertenece = await _context.Set<ef_cuenta_usuarios>()
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.id_cuenta == idCuenta &&
+                    x.id_usuario == idUsuario &&
+                    x.activo);
+
+            if (!pertenece)
+                return Unauthorized("No tenés acceso a esta cuenta.");
 
             var q =
                 from cu in _context.Set<ef_cuenta_usuarios>().AsNoTracking()
@@ -91,6 +105,7 @@ namespace API.Controllers
                 orderby cu.fecha_alta descending
                 select new CuentaUsuarioDTO
                 {
+                    id_cuenta_usuario = cu.id_cuenta_usuario,
                     id_usuario = u.id_usuario,
                     nombre = u.nombre,
                     apellido = u.apellido,
@@ -102,5 +117,71 @@ namespace API.Controllers
 
             return Ok(await q.ToListAsync());
         }
+
+        [HttpPost("Invitar")]
+        public async Task<ActionResult> Invitar(
+            [FromQuery] long idCuenta,
+            [FromBody] CuentaUsuarioInvitarRequestDTO request)
+        {
+            long idUsuario = User.GetUserId();
+
+            var result = await _cuentaUsuariosService
+                .InvitarAsync(idUsuario, idCuenta, request);
+
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("ValidarInvitacion")]
+        public async Task<ActionResult> ValidarInvitacion([FromQuery] string token)
+        {
+            var result =
+                await _cuentaUsuariosService
+                    .ValidarInvitacionAsync(token);
+
+            return Ok(result);
+        }
+
+        [HttpPost("AceptarInvitacion")]
+        public async Task<ActionResult> AceptarInvitacion([FromBody] CuentaUsuarioAceptarInvitacionRequestDTO request)
+        {
+            long idUsuario = User.GetUserId();
+
+            var result =
+                await _cuentaUsuariosService
+                    .AceptarInvitacionAsync(
+                        idUsuario,
+                        request.token);
+
+            return Ok(result);
+        }
+
+        [HttpPut("CambiarRol")]
+        public async Task<ActionResult> CambiarRol(
+            [FromQuery] long idCuenta,
+            [FromBody] CuentaUsuarioCambiarRolRequestDTO request)
+        {
+            long idUsuario = User.GetUserId();
+
+            var result = await _cuentaUsuariosService
+                .CambiarRolAsync(idUsuario, idCuenta, request);
+
+            return Ok(result);
+        }
+
+        [HttpPut("SetActivo")]
+        public async Task<ActionResult> SetActivo(
+            [FromQuery] long idCuenta,
+            [FromQuery] long idCuentaUsuario,
+            [FromQuery] bool activo)
+        {
+            long idUsuario = User.GetUserId();
+
+            var result = await _cuentaUsuariosService
+                .SetActivoAsync(idUsuario, idCuenta, idCuentaUsuario, activo);
+
+            return Ok(result);
+        }
+
     }
 }

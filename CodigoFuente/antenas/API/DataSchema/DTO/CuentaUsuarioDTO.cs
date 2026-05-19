@@ -7,6 +7,7 @@ namespace API.DataSchema.DTO
     {
         [JsonPropertyName("id_usuario")]
         public long id_usuario { get; set; }
+        public long id_cuenta_usuario { get; set; }
 
         [JsonPropertyName("nombre")]
         public string? nombre { get; set; }
