@@ -149,6 +149,29 @@ namespace API.Services
                     FechaAlta = ev.fecha_alta,
 
                     TipoOperacion = ev.tipo_operacion,
+
+                    EsPublico = ev.es_publico,
+
+                    ModoUi =
+                        ev.tipo_operacion == "PROGRAMA"
+                            ? "PROGRAMA"
+                            : ev.es_publico
+                                ? "EVENTO_PUBLICO"
+                                : "EVENTO_PRIVADO",
+
+                                        MostrarGestionInvitados =
+                        ev.tipo_operacion == "EVENTO",
+
+                                        MostrarAudiencias =
+                        ev.tipo_operacion == "EVENTO" && ev.es_publico,
+
+                                        ModoGestionInvitados =
+                        ev.tipo_operacion == "PROGRAMA"
+                            ? "NO_APLICA"
+                            : ev.es_publico
+                                ? "SIMPLE"
+                                : "COMPLETA",
+
                     FechaInicio = ev.fecha_inicio,
                     FechaFin = ev.fecha_fin,
 

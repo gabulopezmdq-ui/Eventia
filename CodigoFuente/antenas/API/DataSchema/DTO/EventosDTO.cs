@@ -167,6 +167,21 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("tipo_operacion")]
         public string TipoOperacion { get; set; } = "EVENTO";
 
+        [JsonPropertyName("es_publico")]
+        public bool EsPublico { get; set; }
+
+        [JsonPropertyName("modo_ui")]
+        public string ModoUi { get; set; } = null!;
+
+        [JsonPropertyName("mostrar_gestion_invitados")]
+        public bool MostrarGestionInvitados { get; set; }
+
+        [JsonPropertyName("mostrar_audiencias")]
+        public bool MostrarAudiencias { get; set; }
+
+        [JsonPropertyName("modo_gestion_invitados")]
+        public string ModoGestionInvitados { get; set; } = null!;
+
         [JsonPropertyName("fecha_inicio")]
         public DateOnly? FechaInicio { get; set; }
 
@@ -184,5 +199,7 @@ namespace API.DataSchema.DTO
 
         [JsonPropertyName("codigo_moneda")]
         public string? CodigoMoneda { get; set; }
+
+
     }
 }
