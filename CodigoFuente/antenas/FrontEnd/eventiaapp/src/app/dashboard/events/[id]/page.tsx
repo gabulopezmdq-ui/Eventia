@@ -192,6 +192,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const isInactivo = isBorrador || isPendiente;
     const isEvento = event.tipoOperacion === 'EVENTO';
     const isPrograma = event.tipoOperacion === 'PROGRAMA';
+    const isPublicEvent = event.esPublico === true || (estructura?.accesos && estructura.accesos.length > 0 && estructura.accesos.some(a => a.es_publico));
     const estadoConfig = {
         'B': {
             label: 'Borrador',
@@ -375,7 +376,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             </div>
                         )}
                         {/* Quick Link Card - Audiencias */}
-                        {isEvento && (
+                        {isEvento && isPublicEvent && (
                             <div className="p-5 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
                                 <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center mb-4">
                                     <Sparkles className="w-5 h-5" />

@@ -203,13 +203,16 @@ function NewEventContent() {
                 } else {
                     setCodigoPlan('B2C_FREE');
                 }
+            }
 
-                // Cargar catálogo de países
-                try {
-                    const resPaises = await fetch('/api/parametrica/paises?idIdioma=1');
-                    if (resPaises.ok) {
-                        const paisesData: Pais[] = await resPaises.json();
-                        setPaises(paisesData);
+            // Cargar catálogo de países (necesario en B2C para elegirlo, y en B2B para resolver el nombre)
+            try {
+                const resPaises = await fetch('/api/parametrica/paises?idIdioma=1');
+                if (resPaises.ok) {
+                    const paisesData: Pais[] = await resPaises.json();
+                    setPaises(paisesData);
+                    
+                    if (!isB2BContext) {
                         // Pre-cargar país del usuario desde perfil
                         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                         if (token) {
@@ -224,9 +227,9 @@ function NewEventContent() {
                             }
                         }
                     }
-                } catch (err) {
-                    console.error('Error cargando países:', err);
                 }
+            } catch (err) {
+                console.error('Error cargando países:', err);
             }
         }
         loadSelects();
@@ -239,13 +242,10 @@ function NewEventContent() {
         async function loadB2BData() {
             setLoadingB2B(true);
             try {
-                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-                const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-
                 const [resUnidades, resClientes, resCuenta] = await Promise.all([
                     fetch('/api/cuenta-unidades'),
                     fetch('/api/clientes'),
-                    fetch('/api/cuentas', { headers: authHeaders }),
+                    fetch('/api/cuentas/perfil'),
                 ]);
                 if (resUnidades.ok) {
                     const data: Unidad[] = await resUnidades.json();
@@ -261,8 +261,11 @@ function NewEventContent() {
                 // Leer país de la cuenta para mostrarlo como solo lectura
                 if (resCuenta.ok) {
                     const cuenta = await resCuenta.json();
-                    if (cuenta.id_pais) setIdPais(cuenta.id_pais);
-                    if (cuenta.pais_nombre) setPaisNombreB2B(cuenta.pais_nombre);
+                    const cId = cuenta.id_pais ?? cuenta.idPais ?? cuenta.id;
+                    if (cId) setIdPais(cId);
+                    if (cuenta.pais_nombre || cuenta.paisNombre || cuenta.pais) {
+                        setPaisNombreB2B(cuenta.pais_nombre || cuenta.paisNombre || cuenta.pais);
+                    }
                 }
             } catch (err) {
                 console.error('Error cargando datos B2B:', err);
@@ -273,6 +276,19 @@ function NewEventContent() {
         loadB2BData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isB2BContext]);
+
+    // Resolver el nombre del país para B2B si no está seteado pero idPais está cargado y tenemos la lista de países
+    useEffect(() => {
+        if (isB2BContext && idPais !== '' && !paisNombreB2B && paises.length > 0) {
+            const found = paises.find(p => {
+                const pId = p.id_pais ?? p.idPais ?? p.id;
+                return pId === idPais;
+            });
+            if (found) {
+                setPaisNombreB2B(found.texto ?? found.nombre ?? '');
+            }
+        }
+    }, [isB2BContext, idPais, paisNombreB2B, paises]);
 
     // 2. Recargar tipos + dress codes cuando cambia el idioma
     useEffect(() => {
