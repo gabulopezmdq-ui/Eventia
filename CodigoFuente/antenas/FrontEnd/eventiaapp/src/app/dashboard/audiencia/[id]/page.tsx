@@ -1,13 +1,25 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
-import { getAudienciaCRMDetalle } from '@/src/features/captacion/audiencias.service';
-import type { AudienciaCRMDetalle, TipoPersonaCRM, AlertaCRM } from '@/src/features/captacion/types';
+import { 
+    getAudienciaCRMDetalle,
+    getAudienciaDetalle,
+    getTagsSugeridos,
+    agregarTag,
+    setTagActivo
+} from '@/src/features/captacion/audiencias.service';
+import type { 
+    AudienciaCRMDetalle, 
+    TipoPersonaCRM, 
+    AlertaCRM,
+    AudienciaTag,
+    TagSugerido
+} from '@/src/features/captacion/types';
 import {
     Loader2, ArrowLeft, Heart, UtensilsCrossed, Utensils,
     User, Mail, Phone, Calendar, AlertTriangle,
     Users, ShieldCheck, Stethoscope, ClipboardList,
-    Check, X as XIcon,
+    Check, X as XIcon, Plus
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -73,15 +85,79 @@ export default function AudienciaCRMDetallePage({ params }: { params: Promise<{ 
     const [persona, setPersona] = useState<AudienciaCRMDetalle | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError]    = useState<string | null>(null);
+    const [richTags, setRichTags] = useState<AudienciaTag[]>([]);
+    const [sugeridos, setSugeridos] = useState<TagSugerido[]>([]);
+    const [selectedTipo, setSelectedTipo] = useState<string>('');
+    const [selectedValor, setSelectedValor] = useState<string>('');
+    const [isSubmittingTag, setIsSubmittingTag] = useState(false);
+    const [removingTagId, setRemovingTagId] = useState<number | null>(null);
 
     useEffect(() => {
         setLoading(true);
         setError(null);
         getAudienciaCRMDetalle(Number(id))
-            .then(setPersona)
+            .then((crmData) => {
+                setPersona(crmData);
+                return Promise.allSettled([
+                    getAudienciaDetalle(Number(id)),
+                    getTagsSugeridos()
+                ]).then(([detResult, sugResult]) => {
+                    if (detResult.status === 'fulfilled') {
+                        setRichTags(detResult.value.tags ? detResult.value.tags.filter(t => t.activo) : []);
+                    }
+                    if (sugResult.status === 'fulfilled') {
+                        setSugeridos(sugResult.value);
+                    }
+                });
+            })
             .catch(() => setError('No se pudo cargar el detalle de esta persona.'))
             .finally(() => setLoading(false));
     }, [id]);
+
+    const handleRemoveTag = async (idAudienciaPersonaTag: number) => {
+        setRemovingTagId(idAudienciaPersonaTag);
+        try {
+            await setTagActivo(idAudienciaPersonaTag, false);
+            const det = await getAudienciaDetalle(Number(id));
+            setRichTags(det.tags ? det.tags.filter(t => t.activo) : []);
+        } catch (err) {
+            console.error('Error al remover tag:', err);
+        } finally {
+            setRemovingTagId(null);
+        }
+    };
+
+    const handleAddTag = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedTipo || !selectedValor || isSubmittingTag) return;
+        setIsSubmittingTag(true);
+        try {
+            await agregarTag(Number(id), selectedTipo, selectedValor);
+            setSelectedValor('');
+            const det = await getAudienciaDetalle(Number(id));
+            setRichTags(det.tags ? det.tags.filter(t => t.activo) : []);
+        } catch (err) {
+            console.error('Error al agregar tag:', err);
+        } finally {
+            setIsSubmittingTag(false);
+        }
+    };
+
+    // Filtrado de sugerencias manuales
+    const tiposManuales = Array.from(
+        new Set(
+            sugeridos
+                .filter(s => s.permite_asignacion_manual && s.activo)
+                .map(s => s.tag_tipo)
+        )
+    );
+
+    const tagsDisponibles = sugeridos.filter(s =>
+        s.permite_asignacion_manual &&
+        s.activo &&
+        s.tag_tipo === selectedTipo &&
+        !richTags.some(active => active.tag_valor === s.tag_valor && active.tag_tipo === s.tag_tipo)
+    );
 
     // ── Loading ──────────────────────────────────────────────────────────────
     if (loading) {
@@ -205,17 +281,116 @@ export default function AudienciaCRMDetallePage({ params }: { params: Promise<{ 
                     )}
 
                     {/* Tags */}
-                    {persona.tags.length > 0 && (
-                        <SectionCard title="Etiquetas (Tags)" icon={<ClipboardList className="w-4 h-4" />}>
+                    <SectionCard title="Etiquetas (Tags)" icon={<ClipboardList className="w-4 h-4" />}>
+                        {richTags.length === 0 ? (
+                            <p className="text-muted text-xs italic">Sin etiquetas asignadas.</p>
+                        ) : (
                             <div className="flex flex-wrap gap-2">
-                                {persona.tags.map((tag, i) => (
-                                    <span key={i} className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-600 text-xs font-bold">
-                                        {tag}
-                                    </span>
-                                ))}
+                                {richTags.map((tag) => {
+                                    const isManual = tag.origen === 'MANUAL';
+                                    return (
+                                        <span
+                                            key={tag.id_audiencia_persona_tag}
+                                            title={`Tipo: ${tag.tag_tipo} | Origen: ${isManual ? 'Manual' : 'Automático'}`}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+                                                isManual
+                                                    ? 'bg-purple-500/10 border-purple-500/20 text-purple-600'
+                                                    : 'bg-neutral-850 border border-neutral-700/50 text-neutral-400'
+                                            }`}
+                                        >
+                                            {tag.nombre_mostrar || tag.tag_valor}
+                                            {isManual && (
+                                                <button
+                                                    type="button"
+                                                    disabled={removingTagId !== null}
+                                                    onClick={() => handleRemoveTag(tag.id_audiencia_persona_tag)}
+                                                    className="hover:text-red-500 transition-colors p-0.5 rounded-full hover:bg-red-500/10 cursor-pointer"
+                                                >
+                                                    {removingTagId === tag.id_audiencia_persona_tag ? (
+                                                        <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                                    ) : (
+                                                        <XIcon className="w-2.5 h-2.5" />
+                                                    )}
+                                                </button>
+                                            )}
+                                        </span>
+                                    );
+                                })}
                             </div>
-                        </SectionCard>
-                    )}
+                        )}
+
+                        {/* Formulario de Asignación Manual */}
+                        <div className="mt-6 pt-6 border-t border-card-border">
+                            <h4 className="text-xs font-bold text-muted uppercase tracking-widest mb-3">
+                                Asignar Etiqueta Manual
+                            </h4>
+                            <form onSubmit={handleAddTag} className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] uppercase font-bold text-muted mb-1">
+                                        Tipo de Etiqueta
+                                    </label>
+                                    <select
+                                        value={selectedTipo}
+                                        onChange={(e) => {
+                                            setSelectedTipo(e.target.value);
+                                            setSelectedValor('');
+                                        }}
+                                        className="w-full bg-background border border-card-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
+                                    >
+                                        <option value="">Seleccione un tipo...</option>
+                                        {tiposManuales.map((tipo) => (
+                                            <option key={tipo} value={tipo}>
+                                                {tipo}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {selectedTipo && (
+                                    <div>
+                                        <label className="block text-[10px] uppercase font-bold text-muted mb-1">
+                                            Etiqueta
+                                        </label>
+                                        <select
+                                            value={selectedValor}
+                                            onChange={(e) => setSelectedValor(e.target.value)}
+                                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
+                                        >
+                                            <option value="">Seleccione una etiqueta...</option>
+                                            {tagsDisponibles.map((tag) => (
+                                                <option key={tag.id_param_audiencia_tag} value={tag.tag_valor}>
+                                                    {tag.nombre_mostrar || tag.tag_valor}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {tagsDisponibles.length === 0 && (
+                                            <p className="text-[10px] text-amber-500/80 mt-1.5 italic">
+                                                Todas las etiquetas de este tipo ya han sido asignadas.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={!selectedTipo || !selectedValor || isSubmittingTag}
+                                    className="w-full mt-2 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/30 disabled:text-purple-400/50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer"
+                                >
+                                    {isSubmittingTag ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            Asignando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Plus className="w-3.5 h-3.5" />
+                                            Asignar Etiqueta
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+                    </SectionCard>
                 </div>
 
                 {/* ══════════════════════════════════════════════════════
