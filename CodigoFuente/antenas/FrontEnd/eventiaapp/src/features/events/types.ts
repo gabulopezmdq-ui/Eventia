@@ -39,6 +39,10 @@ export interface Event {
     idPais?: number | null;
     /** Flags de límites de plan devueltos por el backend (puede estar ausente en endpoints que no los incluyen) */
     limites?: LimitesEvento;
+    /** Indica si el evento es público */
+    esPublico?: boolean;
+    /** Versión snake_case de esPublico */
+    es_publico?: boolean;
 }
 
 /**

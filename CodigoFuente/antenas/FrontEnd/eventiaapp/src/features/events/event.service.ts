@@ -109,6 +109,8 @@ export async function getEventById(id: string): Promise<Event> {
         codigoMercado: item.codigoMercado,
         codigoMoneda: item.codigoMoneda,
         idPais: item.idPais,
+        esPublico: item.esPublico,
+        es_publico: item.esPublico,
     } as Event;
 }
 
@@ -235,6 +237,8 @@ export async function getAdminEventById(id: string): Promise<Event> {
         codigoMercado: item.codigoMercado,
         codigoMoneda: item.codigoMoneda,
         idPais: item.idPais,
+        esPublico: item.esPublico,
+        es_publico: item.esPublico,
     } as Event;
 }
 

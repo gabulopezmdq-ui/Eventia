@@ -92,6 +92,34 @@ export interface ConfirmarRsvpPayload {
     personas: PersonaConfirmarPayload[];
 }
 
+// ── Tipos para Resumen de RSVP ──
+
+export interface IntegranteResumen {
+    idInvitado: number;
+    nombreCompleto: string;
+    esTitularGrupo: boolean;
+    rsvpEstado: string; // Y = Confirmado, R = Rechazado, P = Pendiente
+    qrToken: string | null;
+    rsvpMensaje: string | null;
+    fechaRsvp: string | null;
+    idMesa: number | null;
+    mesaNombre: string | null;
+    tieneRestricciones: boolean;
+    restricciones: string[];
+    cantidadSugerenciasMusica: number;
+    sugerenciasMusica: string[];
+}
+
+export interface ResumenRsvpResponse {
+    idEvento: number;
+    evento: string;
+    idRsvpGrupo: number;
+    titular: string;
+    rsvpEstadoGrupo: string; // e.g. "CONFIRMADO"
+    rsvpMensaje: string | null;
+    integrantes: IntegranteResumen[];
+}
+
 // ── Tipos legacy (mantener compatibilidad) ──
 
 export interface NinosPayload {
@@ -225,4 +253,21 @@ export async function guardarRestricciones(token: string, payload: GuardarRestri
     }
 
     return res.json().catch(() => ({}));
+}
+
+/**
+ * Obtener el resumen de RSVP del grupo (incluyendo integrantes y sus qrToken).
+ * GET /api/invitados/resumen-rsvp?token={token}
+ */
+export async function getResumenRsvp(token: string): Promise<ResumenRsvpResponse> {
+    const res = await fetch(`/api/invitados/resumen-rsvp?token=${token}`);
+
+    if (!res.ok) {
+        const errText = await res.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { message: errText }; }
+        throw new Error(errData?.message || 'Error al obtener el resumen del RSVP');
+    }
+
+    return res.json();
 }

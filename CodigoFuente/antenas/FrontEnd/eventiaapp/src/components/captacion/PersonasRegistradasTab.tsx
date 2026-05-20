@@ -78,7 +78,7 @@ export default function PersonasRegistradasTab({ idEvento }: { idEvento: number 
                                 </tr>
                             ) : (
                                 filtered.map(p => (
-                                    <tr key={p.id_audiencia_persona} className="hover:bg-white/5 transition-colors">
+                                    <tr key={p.id_invitado} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-foreground">{p.nombre} {p.apellido}</div>
                                             <div className="text-xs text-muted flex gap-2 mt-1">
