@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Info, Users, Link as LinkIcon, QrCode, Ticket } from 'lucide-react';
+import { ChevronLeft, Info, Users, Link as LinkIcon, QrCode, Ticket, ClipboardCheck, BarChart3 } from 'lucide-react';
 import { getEventById, getAdminEventById } from '@/src/features/events/event.service';
 import type { Event } from '@/src/features/events/types';
 import { useSearchParams } from 'next/navigation';
@@ -11,8 +11,10 @@ import CampanasTab from '@/src/components/captacion/CampanasTab';
 import PersonasRegistradasTab from '@/src/components/captacion/PersonasRegistradasTab';
 import QrEntradaScreen from '@/src/components/captacion/QrEntradaScreen';
 import QrBeneficioScreen from '@/src/components/captacion/QrBeneficioScreen';
+import AsistenciaTab from '@/src/components/captacion/AsistenciaTab';
+import MetricasTab from '@/src/components/captacion/MetricasTab';
 
-type TabId = 'campanas' | 'registradas' | 'qr_entrada' | 'qr_beneficio';
+type TabId = 'campanas' | 'registradas' | 'qr_entrada' | 'qr_beneficio' | 'asistencia' | 'metricas';
 
 function AudienciasContent({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -73,6 +75,8 @@ function AudienciasContent({ params }: { params: Promise<{ id: string }> }) {
         { id: 'registradas', label: 'Personas Registradas', icon: Users },
         { id: 'qr_entrada', label: 'Control de Ingreso', icon: QrCode },
         { id: 'qr_beneficio', label: 'Canje de Beneficios', icon: Ticket },
+        { id: 'asistencia', label: 'Asistencia Real', icon: ClipboardCheck },
+        { id: 'metricas', label: 'Métricas', icon: BarChart3 },
     ];
 
     return (
@@ -121,6 +125,8 @@ function AudienciasContent({ params }: { params: Promise<{ id: string }> }) {
                 {activeTab === 'registradas' && <PersonasRegistradasTab idEvento={idEvento} />}
                 {activeTab === 'qr_entrada' && <QrEntradaScreen idEvento={idEvento} />}
                 {activeTab === 'qr_beneficio' && <QrBeneficioScreen idEvento={idEvento} />}
+                {activeTab === 'asistencia' && <AsistenciaTab idEvento={idEvento} />}
+                {activeTab === 'metricas' && <MetricasTab idEvento={idEvento} />}
             </div>
         </div>
     );
