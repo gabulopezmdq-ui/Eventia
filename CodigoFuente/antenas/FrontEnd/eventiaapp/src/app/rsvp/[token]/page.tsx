@@ -4,13 +4,13 @@ import { useEffect, useState, use } from 'react';
 import {
     CheckCircle2, AlertCircle, ChefHat, User, MessageSquare,
     ArrowRight, HeartPulse, Baby, Phone, Mail,
-    MapPin, Calendar, Users, PlusCircle, Trash2
+    MapPin, Calendar, Users, PlusCircle, Trash2, Download, QrCode
 } from 'lucide-react';
 import {
     confirmarRsvp, getInvitacionPersonal,
     getCatalogoRestricciones, getCatalogoParametrico, getDatosInvitacion,
     InvitacionPersonalResponse, PersonaInvitacion, PersonaConfirmarPayload,
-    CatalogoRestriccion
+    CatalogoRestriccion, getResumenRsvp, ResumenRsvpResponse
 } from '@/src/features/rsvp/rsvp.service';
 
 type Step = 'LOADING' | 'VERIFYING' | 'RSVP' | 'SUCCESS' | 'ERROR';
@@ -62,6 +62,9 @@ export default function RsvpPage({
     // --- Restrictions catalogue (loaded at start, keyed by idRestriccion) ---
     const [catalogo, setCatalogo] = useState<CatalogoRestriccion[]>([]);
 
+    // --- Resumen RSVP (QRs y datos post-confirmación) ---
+    const [resumenRsvp, setResumenRsvp] = useState<ResumenRsvpResponse | null>(null);
+
     useEffect(() => {
         verificarEstado();
     }, [token]);
@@ -69,6 +72,19 @@ export default function RsvpPage({
     const verificarEstado = async () => {
         setStep('VERIFYING');
         try {
+            // 1. Intentar cargar el resumen primero por si ya está confirmado
+            try {
+                const resumen = await getResumenRsvp(token);
+                if (resumen && resumen.rsvpEstadoGrupo === 'CONFIRMADO') {
+                    setResumenRsvp(resumen);
+                    setStep('SUCCESS');
+                    return;
+                }
+            } catch (errResumen) {
+                console.log('El grupo aún no tiene confirmación registrada o falló la consulta:', errResumen);
+            }
+
+            // 2. Si no está confirmado, continuar con el flujo normal de carga
             // Try the unified endpoint first
             let inviteData: InvitacionPersonalResponse | null = null;
             try {
@@ -279,10 +295,39 @@ export default function RsvpPage({
             console.log('=== RSVP PAYLOAD UNIFICADO ===', JSON.stringify(payloadAEnviar, null, 2));
 
             await confirmarRsvp(token, payloadAEnviar);
+
+            // Intentar obtener el resumen de confirmación tras registrar el RSVP
+            try {
+                const resumen = await getResumenRsvp(token);
+                setResumenRsvp(resumen);
+            } catch (errResumen) {
+                console.error('Error al obtener el resumen del RSVP tras confirmación:', errResumen);
+            }
+
             setStep('SUCCESS');
         } catch (err: any) {
             setErrorMsg(err.message || 'Error al confirmar asistencia');
             setStep('ERROR');
+        }
+    };
+
+    // --- Helper para descargar imagen QR como blob ---
+    const handleDownloadQr = async (qrToken: string, name: string) => {
+        try {
+            const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrToken)}&format=png`);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `qr_${name.toLowerCase().replace(/\s+/g, '_')}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Error downloading QR code:', error);
+            // Fallback: abrir en nueva pestaña
+            window.open(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrToken)}&format=png`, '_blank');
         }
     };
 
@@ -314,17 +359,95 @@ export default function RsvpPage({
     }
 
     if (step === 'SUCCESS') {
-        return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
+        const integrantesConfirmados = resumenRsvp?.integrantes?.filter(
+            i => i.rsvpEstado === 'Y' && i.qrToken
+        ) || [];
 
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center mb-8 relative z-10 shadow-2xl shadow-emerald-500/20 animate-in zoom-in duration-500">
-                    <CheckCircle2 className="w-12 h-12 text-black" />
+        return (
+            <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center p-6 md:py-20 relative overflow-x-hidden">
+                {/* Ambient background */}
+                <div className="fixed inset-0 pointer-events-none">
+                    <div className="absolute top-0 right-0 w-[50vw] h-[50vh] bg-indigo-500/5 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3" />
+                    <div className="absolute bottom-0 left-0 w-[50vw] h-[50vh] bg-purple-500/5 blur-[100px] rounded-full -translate-x-1/3 translate-y-1/3" />
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 relative z-10">¡Todo Listo!</h1>
-                <p className="text-muted text-lg max-w-lg mx-auto relative z-10">
-                    Gracias por tu confirmación. Ya registramos tus respuestas y preferencias correctamente.
-                </p>
+
+                <div className="max-w-2xl w-full mx-auto relative z-10 flex flex-col items-center">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center mb-6 shadow-2xl shadow-emerald-500/20 animate-in zoom-in duration-500">
+                        <CheckCircle2 className="w-10 h-10 text-black" />
+                    </div>
+
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-3">
+                        Confirmación registrada
+                    </h1>
+
+                    <p className="text-muted text-center max-w-md mb-8 text-sm md:text-base">
+                        {integrantesConfirmados.length > 0
+                            ? 'Guardá tus QR para el ingreso al evento. Estos son tus QR de ingreso:'
+                            : 'Gracias por tu respuesta. Ya registramos tus respuestas y preferencias correctamente.'}
+                    </p>
+
+                    {integrantesConfirmados.length > 0 && (
+                        <div className="w-full space-y-6 animate-in fade-in duration-500">
+                            {integrantesConfirmados.map((integrante) => (
+                                <div key={integrante.idInvitado} className="w-full p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 transition-all duration-300 hover:border-white/20">
+                                    {/* Left section: Text Info */}
+                                    <div className="flex flex-col justify-between text-center sm:text-left space-y-4">
+                                        <div className="space-y-2">
+                                            <h2 className="text-xl font-bold text-white tracking-tight">
+                                                {integrante.nombreCompleto}
+                                            </h2>
+                                            <div>
+                                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wider ${
+                                                    integrante.esTitularGrupo
+                                                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                                        : 'bg-white/5 text-muted border border-white/10'
+                                                }`}>
+                                                    {integrante.esTitularGrupo ? 'Titular' : 'Acompañante'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {integrante.mesaNombre && (
+                                            <div className="text-xs text-muted/80">
+                                                Mesa: <strong className="text-white">{integrante.mesaNombre}</strong>
+                                            </div>
+                                        )}
+
+                                        <button
+                                            onClick={() => handleDownloadQr(integrante.qrToken!, integrante.nombreCompleto)}
+                                            className="hidden sm:flex items-center gap-2 py-2.5 px-5 rounded-xl bg-white text-black font-bold text-xs hover:bg-white/90 active:scale-95 transition-all shadow-md mt-auto cursor-pointer"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Descargar QR
+                                        </button>
+                                    </div>
+
+                                    {/* Right section: QR Visual */}
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="bg-white/5 rounded-2xl p-3 border border-white/10 flex items-center justify-center shrink-0">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(integrante.qrToken!)}`}
+                                                alt={`QR de ingreso para ${integrante.nombreCompleto}`}
+                                                width={180}
+                                                height={180}
+                                                className="rounded-xl border border-white/5"
+                                            />
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleDownloadQr(integrante.qrToken!, integrante.nombreCompleto)}
+                                            className="flex sm:hidden w-full items-center justify-center gap-2 py-3 px-6 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 active:scale-95 transition-all shadow-md cursor-pointer"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Descargar QR
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }

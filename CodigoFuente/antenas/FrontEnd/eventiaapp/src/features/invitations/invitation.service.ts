@@ -120,3 +120,34 @@ export async function listarInvitados(idEvento: number): Promise<InvitadoListado
 
     return res.json();
 }
+
+export async function listarPersonasEvento(idEvento: number): Promise<{ idEvento: number; resumen: any; items: any[] }> {
+    const res = await fetch(`/api/invitaciones/personas?idEvento=${idEvento}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        const errText = await res.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { message: errText }; }
+        throw new Error(errData?.message || 'Error al obtener personas del evento');
+    }
+
+    return res.json();
+}
+
+export async function listarGruposEvento(idEvento: number): Promise<{ idEvento: number; items: any[] }> {
+    const res = await fetch(`/api/invitaciones/grupos?idEvento=${idEvento}`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        const errText = await res.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { message: errText }; }
+        throw new Error(errData?.message || 'Error al obtener grupos del evento');
+    }
+
+    return res.json();
+}
+
