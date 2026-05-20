@@ -707,6 +707,47 @@ namespace API.Controllers.Programas
                 }
             }
 
+            var codigoBase = servicioBase.codigo.Trim().ToUpperInvariant();
+            var esPersonalizado = codigoBase == "PERSONALIZADO";
+
+            string codigoServicio;
+
+            if (esPersonalizado)
+            {
+                if (string.IsNullOrWhiteSpace(req.Codigo))
+                    return BadRequest("Para servicios personalizados debe informar un código.");
+
+                codigoServicio = req.Codigo.Trim().ToUpperInvariant();
+            }
+            else
+            {
+                codigoServicio = codigoBase;
+            }
+
+            if (codigoServicio.Length > 30)
+                return BadRequest("El código del servicio no puede superar los 30 caracteres.");
+
+            bool existeMismoCodigo = await _context.Set<ef_programa_servicios>()
+                .AnyAsync(x =>
+                    x.id_evento == idEvento &&
+                    x.codigo == codigoServicio &&
+                    x.id_programa_servicio != (req.IdProgramaServicio ?? 0));
+
+            if (existeMismoCodigo)
+                return BadRequest("Ya existe un servicio con ese código para este programa.");
+
+            if (!esPersonalizado)
+            {
+                bool existeMismoServicioBase = await _context.Set<ef_programa_servicios>()
+                    .AnyAsync(x =>
+                        x.id_evento == idEvento &&
+                        x.id_servicio_base == req.IdServicioBase.Value &&
+                        x.id_programa_servicio != (req.IdProgramaServicio ?? 0));
+
+                if (existeMismoServicioBase)
+                    return BadRequest("Ese servicio base ya fue agregado al programa.");
+            }
+
             var now = DateTimeOffset.UtcNow;
 
             ef_programa_servicios? item;
@@ -720,26 +761,9 @@ namespace API.Controllers.Programas
 
                 if (item == null)
                     return NotFound("Servicio inexistente.");
-
-                bool existeOtroMismoServicioBase = await _context.Set<ef_programa_servicios>()
-                    .AnyAsync(x =>
-                        x.id_evento == idEvento &&
-                        x.id_servicio_base == req.IdServicioBase.Value &&
-                        x.id_programa_servicio != req.IdProgramaServicio.Value);
-
-                if (existeOtroMismoServicioBase)
-                    return BadRequest("Ese servicio base ya fue agregado al programa.");
             }
             else
             {
-                bool existeServicioBase = await _context.Set<ef_programa_servicios>()
-                    .AnyAsync(x =>
-                        x.id_evento == idEvento &&
-                        x.id_servicio_base == req.IdServicioBase.Value);
-
-                if (existeServicioBase)
-                    return BadRequest("Ese servicio base ya fue agregado al programa.");
-
                 item = new ef_programa_servicios
                 {
                     id_evento = idEvento,
@@ -750,7 +774,7 @@ namespace API.Controllers.Programas
             }
 
             item.id_servicio_base = req.IdServicioBase.Value;
-            item.codigo = servicioBase.codigo;
+            item.codigo = codigoServicio;
             item.nombre = req.Nombre.Trim();
             item.descripcion = string.IsNullOrWhiteSpace(req.Descripcion) ? null : req.Descripcion.Trim();
             item.tipo_calculo = tipoCalculo;

@@ -7,7 +7,7 @@ namespace API.DataSchema.DTO.Programas
     {
         [JsonPropertyName("nombre_autorizado")]
         [JsonProperty("nombre_autorizado")]
-        public string NombreAutorizado { get; set; } = null!;
+        public string? NombreAutorizado { get; set; } = null!;
 
         [JsonPropertyName("telefono_autorizado")]
         [JsonProperty("telefono_autorizado")]
