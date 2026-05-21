@@ -365,6 +365,85 @@ namespace API.Services.Staff
                 expires_at_utc = jwt.expiresAtUtc
             };
         }
+
+        public async Task<StaffListItemDTO> GetByIdAsync(long idCuenta, long idStaff)
+        {
+            var item = await (
+                from s in _context.ef_staff.AsNoTracking()
+                join r in _context.ef_roles.AsNoTracking() on s.id_rol equals r.id_rol
+                where s.id_cuenta == idCuenta && s.id_staff == idStaff
+                select new StaffListItemDTO
+                {
+                    id_staff = s.id_staff,
+                    nombre = s.nombre,
+                    apellido = s.apellido,
+                    email = s.email,
+                    telefono = s.telefono,
+                    rol_codigo = r.codigo,
+                    rol_descripcion = r.descripcion,
+                    codigo = s.codigo,
+                    activo = s.activo,
+                    fecha_expiracion = s.fecha_expiracion,
+                    usos = s.usos,
+                    fecha_uso = s.fecha_uso
+                }
+            ).SingleOrDefaultAsync();
+
+            if (item == null)
+                throw new InvalidOperationException("Staff no encontrado en esta cuenta.");
+
+            return item;
+        }
+
+        public async Task<StaffListItemDTO> UpdateStaffAsync(long idCuenta, long idStaff, API.DataSchema.DTO.Staff.StaffUpdateRequest req)
+        {
+            var staff = await _context.ef_staff
+                .FirstOrDefaultAsync(x => x.id_staff == idStaff && x.id_cuenta == idCuenta);
+
+            if (staff == null)
+                throw new InvalidOperationException("Staff no encontrado en esta cuenta.");
+
+            if (req.id_rol.HasValue)
+            {
+                var rol = await _context.ef_roles
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r =>
+                        r.id_rol == req.id_rol.Value &&
+                        r.activo &&
+                        r.asignable_staff_operativo &&
+                        r.permite_codigo_staff);
+
+                if (rol == null)
+                    throw new InvalidOperationException("Rol inválido para staff operativo.");
+
+                staff.id_rol = req.id_rol.Value;
+            }
+
+            if (req.nombre != null)
+                staff.nombre = string.IsNullOrWhiteSpace(req.nombre) ? null : req.nombre.Trim();
+
+            if (req.apellido != null)
+                staff.apellido = string.IsNullOrWhiteSpace(req.apellido) ? null : req.apellido.Trim();
+
+            if (req.email != null)
+                staff.email = string.IsNullOrWhiteSpace(req.email) ? null : req.email.Trim();
+
+            if (req.telefono != null)
+                staff.telefono = string.IsNullOrWhiteSpace(req.telefono) ? null : req.telefono.Trim();
+
+            staff.fecha_expiracion = req.fecha_expiracion;
+
+            if (req.activo.HasValue)
+                staff.activo = req.activo.Value;
+
+            staff.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return await GetByIdAsync(idCuenta, idStaff);
+        }
+
+
         private (string token, DateTimeOffset expiresAtUtc) GenerarJwtStaff(ef_staff staff, string rolCodigo)
         {
             var issuer = _config["Jwt:Issuer"];
