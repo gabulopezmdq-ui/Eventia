@@ -1,4 +1,5 @@
 using API.DataSchema.DTO.Staff;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,5 +12,6 @@ namespace API.Services.Staff
         Task<List<StaffListItemDTO>> ListarStaffAsync(long id_cuenta);
         Task<bool> RevocarStaffAsync(long id_cuenta, long id_staff);
         Task<StaffContextoDTO> UsarCodigoAsync(string codigo);
+        Task<StaffCreadoDTO> RenovarCodigoAsync(long idCuenta, long idStaff, DateTimeOffset? fechaExpiracion);
     }
 }

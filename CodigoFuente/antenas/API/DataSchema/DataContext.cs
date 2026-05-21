@@ -97,6 +97,10 @@ namespace API.DataSchema
         // Módulo Staff
         public DbSet<ef_staff> ef_staff { get; set; }
         public DbSet<ef_staff_unidades> ef_staff_unidades { get; set; }
+        public DbSet<ef_evento_staff> ef_evento_staff { get; set; }
+
+
+        //eventos hospedajes
         public DbSet<ef_evento_hospedaje_bloques> ef_evento_hospedaje_bloques { get; set; }
         public DbSet<ef_evento_hospedajes> ef_evento_hospedajes { get; set; }
         public DbSet<ef_hospedaje_tags> ef_hospedaje_tags { get; set; }
@@ -304,6 +308,8 @@ namespace API.DataSchema
             // Módulo Staff
             modelBuilder.ApplyConfiguration(new ef_staffConfiguration());
             modelBuilder.ApplyConfiguration(new ef_staff_unidadesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_staffConfiguration());
+
 
             modelBuilder.ApplyConfiguration(new ef_evento_hospedaje_bloquesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_hospedajesConfiguration());

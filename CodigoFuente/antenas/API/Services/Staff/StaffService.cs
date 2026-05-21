@@ -310,11 +310,8 @@ namespace API.Services.Staff
                 }
             ).ToListAsync();
 
-            var rol = await _context.ef_roles
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.id_rol == staff.id_rol);
-
             string? tipoOperacion = null;
+            List<API.DataSchema.DTO.Eventos.StaffJoinRolDTO> rolesEvento = new();
 
             if (staff.id_evento.HasValue)
             {
@@ -323,9 +320,26 @@ namespace API.Services.Staff
                     .Where(e => e.id_evento == staff.id_evento.Value)
                     .Select(e => e.tipo_operacion)
                     .FirstOrDefaultAsync();
+
+                rolesEvento = await (
+                    from es in _context.Set<ef_evento_staff>().AsNoTracking()
+                    join r in _context.Set<ef_roles>().AsNoTracking() on es.id_rol equals r.id_rol
+                    where es.id_evento == staff.id_evento.Value
+                          && es.id_staff == staff.id_staff
+                          && es.activo
+                    orderby r.orden_ui
+                    select new API.DataSchema.DTO.Eventos.StaffJoinRolDTO
+                    {
+                        id_evento_staff = es.id_evento_staff,
+                        id_rol = es.id_rol,
+                        codigo_rol = r.codigo,
+                        rol_texto = r.codigo,
+                        pantalla_inicio = r.pantalla_inicio
+                    }
+                ).ToListAsync();
             }
 
-            var jwt = GenerarJwtStaff(staff, rol?.codigo ?? "STAFF_GENERIC");
+            var jwt = GenerarJwtStaff(staff, "STAFF");
 
             string displayName = string.Join(" ",
                 new[] { staff.nombre, staff.apellido }
@@ -343,9 +357,9 @@ namespace API.Services.Staff
                 nombre = staff.nombre,
                 apellido = staff.apellido,
                 display_name = displayName,
-                rol_codigo = rol?.codigo ?? "",
-                pantalla_inicio = rol?.pantalla_inicio,
                 tipo_operacion = tipoOperacion,
+                roles_evento = rolesEvento,
+                pantalla_inicio_default = rolesEvento.Count == 1 ? rolesEvento[0].pantalla_inicio : "OPERACION_GENERAL",
                 unidades = unidades,
                 access_token = jwt.token,
                 expires_at_utc = jwt.expiresAtUtc
@@ -385,6 +399,29 @@ namespace API.Services.Staff
             );
 
             return (new JwtSecurityTokenHandler().WriteToken(jwt), expiresAtUtc);
+        }
+
+        public async Task<StaffCreadoDTO> RenovarCodigoAsync(long idCuenta, long idStaff, DateTimeOffset? fechaExpiracion)
+        {
+            var staff = await _context.ef_staff
+                .FirstOrDefaultAsync(x => x.id_staff == idStaff && x.id_cuenta == idCuenta);
+
+            if (staff == null)
+                throw new InvalidOperationException("Staff inexistente para esta cuenta.");
+
+            staff.fecha_expiracion = fechaExpiracion;
+            staff.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new StaffCreadoDTO
+            {
+                id_staff = staff.id_staff,
+                codigo = staff.codigo,
+                nombre = staff.nombre,
+                apellido = staff.apellido,
+                fecha_expiracion = staff.fecha_expiracion
+            };
         }
     }
 }
