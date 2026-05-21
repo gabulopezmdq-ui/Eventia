@@ -267,6 +267,20 @@ export interface QrBeneficioResult {
     mensaje: string | null;
 }
 
+/** Beneficio pendiente para asistentes marcados manualmente */
+export interface PendienteManualBeneficio {
+    id_invitado: number;
+    id_beneficio_registro: number;
+    nombre: string;
+    apellido: string;
+    celular: string | null;
+    campania: string | null;
+    beneficio_titulo: string | null;
+    fecha_hora: string;
+    observaciones: string | null;
+    estado_beneficio: string;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // ASISTENCIA (check-ins)
 // ═══════════════════════════════════════════════════════════════════
