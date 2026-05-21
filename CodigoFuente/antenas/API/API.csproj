@@ -57,6 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DataSchema\DTO\Staff\" />
     <Folder Include="DataSchema\Extensions\" />
     <Folder Include="Migrations\" />
     <Folder Include="Test\" />
