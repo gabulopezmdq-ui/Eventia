@@ -1,5 +1,6 @@
 ﻿using  API.DataSchema;
 using  API.Services;
+using API.Services.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -18,12 +19,14 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ICRUDService<ef_roles> _serviceGenerico;
         private readonly ILogger<RolesController> _logger;
+        private readonly IRolesService _rolesService;
 
-        public RolesController(DataContext context, ILogger<RolesController> logger, ICRUDService<ef_roles> serviceGenerico)
+        public RolesController(DataContext context, ILogger<RolesController> logger, ICRUDService<ef_roles> serviceGenerico, IRolesService rolesService)
         {
             _context = context;
             _logger = logger;
             _serviceGenerico = serviceGenerico;
+            _rolesService = rolesService;
         }
 
         [HttpGet("ping")]
@@ -49,12 +52,6 @@ namespace API.Controllers
             return Ok(await _serviceGenerico.GetByIDShort(Id));
         }
 
-        //[HttpGet("GetByName")]
-        //public async Task<ActionResult<ef_usuarios>> Get(string Name)
-        //{
-        //    return Ok(await _serviceGenerico.GetByParam(u => u.Descripcion == Name));
-        //}
-
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] ef_roles rol)
         {
@@ -74,6 +71,22 @@ namespace API.Controllers
         {
             await _serviceGenerico.Update(rol);
             return Ok(rol);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("combo-equipo")]
+        public async Task<ActionResult> GetComboEquipo([FromQuery] short idIdioma, [FromQuery] string tipoOperacion = "EVENTO")
+        {
+            var result = await _rolesService.GetComboEquipoAsync(idIdioma, tipoOperacion);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("combo-staff")]
+        public async Task<ActionResult> GetComboStaff([FromQuery] short idIdioma, [FromQuery] string tipoOperacion = "EVENTO")
+        {
+            var result = await _rolesService.GetComboStaffAsync(idIdioma, tipoOperacion);
+            return Ok(result);
         }
 
     }

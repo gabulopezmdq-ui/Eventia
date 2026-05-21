@@ -7,6 +7,7 @@ using API.Services.Eventos;
 using API.Services.Planes;
 using API.Services.Precios;
 using API.Services.Regalos;
+using API.Services.Roles;
 using API.Services.Staff;
 using API.Utility;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
@@ -157,6 +158,8 @@ builder.Services.AddScoped<ICuentaHospedajePlantillasService, CuentaHospedajePla
 
 builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksService>();
 builder.Services.AddScoped<IAudienciasService, AudienciasService>();
+
+builder.Services.AddScoped<IRolesService, RolesService>();
 
 
 // Módulo Álbum
