@@ -216,10 +216,66 @@ namespace API.Services.Staff
             return true;
         }
 
-        // ─────────────────────────────────────
-        // USO DEL CÓDIGO (EMPLEADO — sin login previo)
-        // Solo ingresa el código y recibe un JWT de sesión
-        // ─────────────────────────────────────
+        //// ─────────────────────────────────────
+        //// USO DEL CÓDIGO (EMPLEADO — sin login previo)
+        //// Solo ingresa el código y recibe un JWT de sesión
+        //// ─────────────────────────────────────
+        //public async Task<StaffContextoDTO> UsarCodigoAsync(string codigo)
+        //{
+        //    var ahora = DateTimeOffset.UtcNow;
+
+        //    var staff = await _context.ef_staff
+        //        .FirstOrDefaultAsync(x => x.codigo == codigo);
+
+        //    if (staff == null)
+        //        throw new InvalidOperationException("Código inválido.");
+
+        //    if (!staff.activo)
+        //        throw new InvalidOperationException("El código está desactivado.");
+
+        //    if (staff.fecha_expiracion.HasValue && staff.fecha_expiracion.Value < ahora)
+        //        throw new InvalidOperationException("El código ha expirado.");
+
+        //    // Registrar primer uso y contar accesos
+        //    if (staff.fecha_uso == null)
+        //        staff.fecha_uso = ahora;
+
+        //    staff.usos       += 1;
+        //    staff.fecha_modif = ahora;
+        //    await _context.SaveChangesAsync();
+
+        //    // Obtener unidades asignadas
+        //    var unidades = await (
+        //        from su in _context.ef_staff_unidades.AsNoTracking()
+        //        join u in _context.ef_cuenta_unidades.AsNoTracking() on su.id_unidad equals u.id_unidad
+        //        where su.id_staff == staff.id_staff
+        //        select new StaffUnidadDTO
+        //        {
+        //            id_unidad = u.id_unidad,
+        //            nombre    = u.nombre
+        //        }
+        //    ).ToListAsync();
+
+        //    var rol = await _context.ef_roles.AsNoTracking()
+        //        .FirstOrDefaultAsync(r => r.id_rol == staff.id_rol);
+
+        //    // Generar JWT para el Staff
+        //    var jwt = GenerarJwtStaff(staff, rol?.codigo ?? "STAFF_GENERIC");
+
+        //    return new StaffContextoDTO
+        //    {
+        //        id_staff        = staff.id_staff,
+        //        id_cuenta       = staff.id_cuenta,
+        //        id_evento       = staff.id_evento,
+        //        nombre          = staff.nombre,
+        //        apellido        = staff.apellido,
+        //        rol_codigo      = rol?.codigo ?? "",
+        //        unidades        = unidades,
+        //        access_token    = jwt.token,
+        //        expires_at_utc  = jwt.expiresAtUtc
+        //    };
+        //}
+
         public async Task<StaffContextoDTO> UsarCodigoAsync(string codigo)
         {
             var ahora = DateTimeOffset.UtcNow;
@@ -236,15 +292,13 @@ namespace API.Services.Staff
             if (staff.fecha_expiracion.HasValue && staff.fecha_expiracion.Value < ahora)
                 throw new InvalidOperationException("El código ha expirado.");
 
-            // Registrar primer uso y contar accesos
             if (staff.fecha_uso == null)
                 staff.fecha_uso = ahora;
 
-            staff.usos       += 1;
+            staff.usos += 1;
             staff.fecha_modif = ahora;
             await _context.SaveChangesAsync();
 
-            // Obtener unidades asignadas
             var unidades = await (
                 from su in _context.ef_staff_unidades.AsNoTracking()
                 join u in _context.ef_cuenta_unidades.AsNoTracking() on su.id_unidad equals u.id_unidad
@@ -252,30 +306,51 @@ namespace API.Services.Staff
                 select new StaffUnidadDTO
                 {
                     id_unidad = u.id_unidad,
-                    nombre    = u.nombre
+                    nombre = u.nombre
                 }
             ).ToListAsync();
 
-            var rol = await _context.ef_roles.AsNoTracking()
+            var rol = await _context.ef_roles
+                .AsNoTracking()
                 .FirstOrDefaultAsync(r => r.id_rol == staff.id_rol);
 
-            // Generar JWT para el Staff
+            string? tipoOperacion = null;
+
+            if (staff.id_evento.HasValue)
+            {
+                tipoOperacion = await _context.ef_eventos
+                    .AsNoTracking()
+                    .Where(e => e.id_evento == staff.id_evento.Value)
+                    .Select(e => e.tipo_operacion)
+                    .FirstOrDefaultAsync();
+            }
+
             var jwt = GenerarJwtStaff(staff, rol?.codigo ?? "STAFF_GENERIC");
+
+            string displayName = string.Join(" ",
+                new[] { staff.nombre, staff.apellido }
+                .Where(x => !string.IsNullOrWhiteSpace(x)))
+                .Trim();
+
+            if (string.IsNullOrWhiteSpace(displayName))
+                displayName = "Staff";
 
             return new StaffContextoDTO
             {
-                id_staff        = staff.id_staff,
-                id_cuenta       = staff.id_cuenta,
-                id_evento       = staff.id_evento,
-                nombre          = staff.nombre,
-                apellido        = staff.apellido,
-                rol_codigo      = rol?.codigo ?? "",
-                unidades        = unidades,
-                access_token    = jwt.token,
-                expires_at_utc  = jwt.expiresAtUtc
+                id_staff = staff.id_staff,
+                id_cuenta = staff.id_cuenta,
+                id_evento = staff.id_evento,
+                nombre = staff.nombre,
+                apellido = staff.apellido,
+                display_name = displayName,
+                rol_codigo = rol?.codigo ?? "",
+                pantalla_inicio = rol?.pantalla_inicio,
+                tipo_operacion = tipoOperacion,
+                unidades = unidades,
+                access_token = jwt.token,
+                expires_at_utc = jwt.expiresAtUtc
             };
         }
-
         private (string token, DateTimeOffset expiresAtUtc) GenerarJwtStaff(ef_staff staff, string rolCodigo)
         {
             var issuer = _config["Jwt:Issuer"];
