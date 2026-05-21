@@ -81,6 +81,26 @@ namespace API.Controllers
 
             return Ok(new { ok = true });
         }
+
+
+        [HttpPut("{id_staff}/renovar")]
+        public async Task<ActionResult> Renovar(long id_cuenta, long id_staff, [FromBody] API.DataSchema.DTO.Staff.StaffRenovarRequest req)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool esAdmin = await _cuentaContext.EsAdminCuentaAsync(idUsuario, id_cuenta);
+            if (!esAdmin) return Forbid();
+
+            try
+            {
+                var resultado = await _staffService.RenovarCodigoAsync(id_cuenta, id_staff, req.fecha_expiracion);
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -116,6 +136,8 @@ namespace API.Controllers
             }
         }
     }
+
+
 
     public class StaffJoinRequest
     {

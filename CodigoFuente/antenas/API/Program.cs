@@ -162,6 +162,7 @@ builder.Services.AddScoped<IAudienciasService, AudienciasService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IEventoEquipoInternoService, EventoEquipoInternoService>();
 builder.Services.AddScoped<IEventoStaffOperativoService, EventoStaffOperativoService>();
+builder.Services.AddScoped<IEventoStaffAsignacionService, EventoStaffAsignacionService>();
 
 
 // Módulo Álbum

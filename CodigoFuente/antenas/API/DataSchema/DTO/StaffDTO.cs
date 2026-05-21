@@ -1,3 +1,4 @@
+using API.DataSchema.DTO.Eventos;
 using System;
 using System.Collections.Generic;
 
@@ -65,10 +66,10 @@ namespace API.DataSchema.DTO.Staff
         public string? apellido { get; set; }
         public string? display_name { get; set; }
 
-        public string rol_codigo { get; set; } = null!;
-        public string? pantalla_inicio { get; set; }
-        public string? ruta_inicio { get; set; }
         public string? tipo_operacion { get; set; }
+
+        public List<StaffJoinRolDTO> roles_evento { get; set; } = new();
+        public string? pantalla_inicio_default { get; set; }
 
         public List<StaffUnidadDTO> unidades { get; set; } = new();
 
