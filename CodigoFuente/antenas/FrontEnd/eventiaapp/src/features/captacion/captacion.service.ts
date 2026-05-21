@@ -14,7 +14,9 @@ import {
     MetricasEvento,
     Parametrica,
     TipoBeneficio,
+    PendienteManualBeneficio,
 } from './types';
+
 
 const API = '/api'; // Apunta al proxy de Next.js
 
@@ -81,7 +83,31 @@ export async function registrarAudiencia(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Error al registrar audiencia');
+    if (!res.ok) {
+        let msg = 'Error al registrar audiencia';
+        try {
+            const errJson = await res.json();
+            if (errJson) {
+                const details = errJson.details;
+                if (details) {
+                    if (typeof details === 'string') {
+                        msg = details;
+                    } else if (details.message) {
+                        msg = details.message;
+                    } else if (details.error) {
+                        msg = details.error;
+                    } else if (details.mensaje) {
+                        msg = details.mensaje;
+                    } else if (typeof details === 'object') {
+                        msg = details.message || details.error || details.mensaje || JSON.stringify(details);
+                    }
+                } else if (errJson.message) {
+                    msg = errJson.message;
+                }
+            }
+        } catch (_) {}
+        throw new Error(msg);
+    }
     return res.json();
 }
 
@@ -240,3 +266,17 @@ export async function getPreferenciasMusicales(idEvento: number): Promise<Parame
     if (!res.ok) throw new Error('Error al obtener preferencias musicales');
     return res.json();
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// BENEFICIOS PENDIENTES MANUAL
+// ═══════════════════════════════════════════════════════════════════
+
+/** Listar beneficios pendientes para ingreso manual */
+export async function getPendientesManualBeneficio(
+    idEvento: number
+): Promise<PendienteManualBeneficio[]> {
+    const res = await fetch(`${API}/audiencias-pendientes-manual?idEvento=${idEvento}`);
+    if (!res.ok) throw new Error('Error al obtener beneficios pendientes manuales');
+    return res.json();
+}
+

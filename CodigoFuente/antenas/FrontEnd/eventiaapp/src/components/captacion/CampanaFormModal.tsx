@@ -27,6 +27,8 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
         titulo: campana?.titulo || '',
         leyenda_publica: campana?.leyenda_publica || '',
         max_personas_total: campana?.max_personas_total || 100,
+        max_adultos: campana?.max_adultos ?? 1,
+        origen_default: campana?.origen_default || '',
         es_captacion_publica: campana?.es_captacion_publica ?? true,
         requiere_registro: campana?.requiere_registro ?? true,
         requiere_nombres_acompanantes: campana?.requiere_nombres_acompanantes ?? false,
@@ -50,7 +52,7 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
-        
+
         setFormData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
@@ -70,6 +72,8 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                 beneficio_hasta: isConBeneficio && formData.beneficio_hasta ? new Date(formData.beneficio_hasta).toISOString() : null,
                 cupo_beneficio: isConBeneficio ? formData.cupo_beneficio || null : null,
                 id_tipo_beneficio_registro: isConBeneficio && formData.id_tipo_beneficio_registro ? Number(formData.id_tipo_beneficio_registro) : null,
+                max_adultos: formData.max_adultos ? Number(formData.max_adultos) : 1,
+                origen_default: formData.origen_default || null,
             };
             await saveCampana(idEvento, payload);
             onSave();
@@ -134,6 +138,37 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                             />
                         </div>
 
+                        <div>
+                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Acompañantes Máximos / Adultos</label>
+                            <input
+                                required
+                                type="number"
+                                name="max_adultos"
+                                value={formData.max_adultos ?? 1}
+                                onChange={handleChange}
+                                className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"
+                                min={1}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Origen por Defecto</label>
+                            <select
+                                name="origen_default"
+                                value={formData.origen_default || ''}
+                                onChange={handleChange}
+                                className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none animate-in fade-in"
+                            >
+                                <option value="">Sin origen específico (Default)</option>
+                                <option value="INSTAGRAM">INSTAGRAM</option>
+                                <option value="QR_BARRA">QR_BARRA</option>
+                                <option value="WHATSAPP">WHATSAPP</option>
+                                <option value="VIP">VIP</option>
+                                <option value="INFLUENCERS">INFLUENCERS</option>
+                                <option value="STAFF">STAFF</option>
+                            </select>
+                        </div>
+
                         <div className="col-span-2">
                             <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Leyenda Pública (Landing)</label>
                             <textarea
@@ -184,7 +219,7 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                                             ))}
                                         </select>
                                     </div>
-                                    
+
                                     {formData.id_tipo_beneficio_registro ? (
                                         <>
                                             <div className="col-span-2 sm:col-span-1">
@@ -197,8 +232,30 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                                                     placeholder="Ej: 2x1 en Tragos"
                                                 />
                                             </div>
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Cupo del Beneficio</label>
+                                                <input
+                                                    type="number"
+                                                    name="cupo_beneficio"
+                                                    value={formData.cupo_beneficio || 0}
+                                                    onChange={handleChange}
+                                                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"
+                                                    min={0}
+                                                    placeholder="0 = Sin límite"
+                                                />
+                                            </div>
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Vencimiento del Beneficio</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    name="beneficio_hasta"
+                                                    value={formData.beneficio_hasta || ''}
+                                                    onChange={handleChange}
+                                                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"
+                                                />
+                                            </div>
                                             <div className="col-span-2">
-                                                <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Descripción</label>
+                                                <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Descripción del Beneficio</label>
                                                 <textarea
                                                     name="beneficio_descripcion"
                                                     value={formData.beneficio_descripcion || ''}
@@ -217,7 +274,7 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
 
                     <div className="space-y-4 border-t border-card-border pt-6">
                         <h3 className="text-sm font-bold text-foreground">Configuraciones Adicionales</h3>
-                        
+
                         <label className="flex items-center gap-3 p-3 bg-background border border-card-border rounded-xl cursor-pointer hover:border-indigo-500/50 transition-colors">
                             <input
                                 type="checkbox"
@@ -245,6 +302,46 @@ export default function CampanaFormModal({ idEvento, campana, onClose, onSave }:
                                 <div className="text-xs text-muted">Si elige venir con amigos, se pedirán sus nombres</div>
                             </div>
                         </label>
+
+                        <label className="flex items-center gap-3 p-3 bg-background border border-card-border rounded-xl cursor-pointer hover:border-indigo-500/50 transition-colors">
+                            <input
+                                type="checkbox"
+                                name="mostrar_disponibles"
+                                checked={formData.mostrar_disponibles}
+                                onChange={handleChange}
+                                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-card-bg border-card-border"
+                            />
+                            <div>
+                                <div className="text-sm font-bold text-foreground">Mostrar Disponibles</div>
+                                <div className="text-xs text-muted">Muestra la disponibilidad de cupos públicamente</div>
+                            </div>
+                        </label>
+
+                        <label className="flex items-center gap-3 p-3 bg-background border border-card-border rounded-xl cursor-pointer hover:border-indigo-500/50 transition-colors">
+                            <input
+                                type="checkbox"
+                                name="permite_reutilizar_audiencia"
+                                checked={formData.permite_reutilizar_audiencia}
+                                onChange={handleChange}
+                                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-card-bg border-card-border"
+                            />
+                            <div>
+                                <div className="text-sm font-bold text-foreground">Permite Reutilizar Audiencia</div>
+                                <div className="text-xs text-muted">Evita duplicar personas en la base de datos general si ya se registraron antes</div>
+                            </div>
+                        </label>
+
+                        <div className="col-span-2 pt-2">
+                            <label className="text-xs font-bold text-muted uppercase tracking-widest block mb-2">Mensaje Post Registro</label>
+                            <textarea
+                                name="mensaje_post_registro"
+                                value={formData.mensaje_post_registro || ''}
+                                onChange={handleChange}
+                                rows={2}
+                                className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none resize-none"
+                                placeholder="Ej: ¡Registro exitoso! Muestra este QR en el ingreso..."
+                            />
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-6 border-t border-card-border">
