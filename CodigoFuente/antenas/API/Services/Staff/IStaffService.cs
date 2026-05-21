@@ -13,5 +13,8 @@ namespace API.Services.Staff
         Task<bool> RevocarStaffAsync(long id_cuenta, long id_staff);
         Task<StaffContextoDTO> UsarCodigoAsync(string codigo);
         Task<StaffCreadoDTO> RenovarCodigoAsync(long idCuenta, long idStaff, DateTimeOffset? fechaExpiracion);
+        Task<StaffListItemDTO> GetByIdAsync(long idCuenta, long idStaff);
+        Task<StaffListItemDTO> UpdateStaffAsync(long idCuenta, long idStaff, API.DataSchema.DTO.Staff.StaffUpdateRequest req);
+        //Task<bool> EliminarStaffAsync(long idCuenta, long idStaff);
     }
 }

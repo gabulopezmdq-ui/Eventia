@@ -165,6 +165,7 @@ builder.Services.AddScoped<IEventoStaffOperativoService, EventoStaffOperativoSer
 builder.Services.AddScoped<IEventoStaffAsignacionService, EventoStaffAsignacionService>();
 
 
+
 // Módulo Álbum
 builder.Services.AddScoped<IStorageService, StorageService>();
 builder.Services.AddScoped<IFeatureGuardService, FeatureGuardService>();

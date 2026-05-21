@@ -101,7 +101,49 @@ namespace API.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        [HttpGet("{id_staff}")]
+        public async Task<ActionResult> GetById(long id_cuenta, long id_staff)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool esAdmin = await _cuentaContext.EsAdminCuentaAsync(idUsuario, id_cuenta);
+            if (!esAdmin) return Forbid();
+
+            try
+            {
+                var item = await _staffService.GetByIdAsync(id_cuenta, id_staff);
+                return Ok(item);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id_staff}")]
+        public async Task<ActionResult> Update(long id_cuenta, long id_staff, [FromBody] API.DataSchema.DTO.Staff.StaffUpdateRequest req)
+        {
+            long idUsuario = User.GetUserId();
+
+            bool esAdmin = await _cuentaContext.EsAdminCuentaAsync(idUsuario, id_cuenta);
+            if (!esAdmin) return Forbid();
+
+            try
+            {
+                var result = await _staffService.UpdateStaffAsync(id_cuenta, id_staff, req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+
+
     }
+
 
     // ─────────────────────────────────────────────
     // POST /staff/join
@@ -135,6 +177,8 @@ namespace API.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+
     }
 
 
