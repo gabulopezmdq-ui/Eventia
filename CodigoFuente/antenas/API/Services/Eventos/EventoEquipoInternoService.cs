@@ -65,11 +65,30 @@ namespace API.Services.Eventos
 
             var email = req.email.Trim().ToLowerInvariant();
 
+            var evento = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
+
+            if (evento == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
             var usuario = await _context.Set<ef_usuarios>()
                 .SingleOrDefaultAsync(x => x.email.ToLower() == email);
 
             if (usuario == null)
                 throw new KeyNotFoundException("No existe un usuario con ese email.");
+
+            if (evento.id_cuenta.HasValue)
+            {
+                bool perteneceCuenta = await _context.Set<ef_cuenta_usuarios>()
+                    .AnyAsync(x =>
+                        x.id_cuenta == evento.id_cuenta.Value &&
+                        x.id_usuario == usuario.id_usuario &&
+                        x.activo);
+
+                if (!perteneceCuenta)
+                    throw new InvalidOperationException("El usuario no pertenece a la cuenta del evento.");
+            }
 
             var rol = await _context.Set<ef_roles>()
                 .AsNoTracking()
@@ -81,13 +100,6 @@ namespace API.Services.Eventos
 
             if (rol == null)
                 throw new InvalidOperationException("Rol inválido para equipo interno.");
-
-            var evento = await _context.Set<ef_eventos>()
-                .AsNoTracking()
-                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
-
-            if (evento == null)
-                throw new KeyNotFoundException("Evento inexistente.");
 
             if (rol.aplica_tipo_operacion != "AMBOS" && rol.aplica_tipo_operacion != evento.tipo_operacion)
                 throw new InvalidOperationException("El rol no aplica al tipo de operación del evento.");
