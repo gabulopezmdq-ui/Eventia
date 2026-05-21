@@ -4,7 +4,14 @@ using Newtonsoft.Json;
 
 namespace API.DataSchema.DTO.Portal
 {
-    public class PortalPublicoDTO
+    public class PortalLandingDTO
+    {
+        [JsonPropertyName("evento")]
+        [JsonProperty("evento")]
+        public PortalEventoDTO Evento { get; set; } = new();
+    }
+
+    public class PortalDashboardDTO
     {
         [JsonPropertyName("evento")]
         [JsonProperty("evento")]

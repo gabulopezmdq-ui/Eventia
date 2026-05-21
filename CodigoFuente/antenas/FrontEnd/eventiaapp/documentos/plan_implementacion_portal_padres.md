@@ -172,12 +172,14 @@ Al ingresar a `/portal/{token}`, el portal mostrará una vista básica no sensib
 sequenceDiagram
     Parent->>Frontend: Ingresa a /portal/{token}
     Frontend->>Backend: GET /api/portal/{token}
-    Backend-->>Frontend: Token válido (Retorna config pública)
+    Backend-->>Frontend: Token válido (Retorna Info del Evento y Logo)
     Frontend->>Parent: Muestra landing básica + Modal de Verificación
     Parent->>Frontend: Ingresa su email (ej. juan@mail.com)
     Frontend->>Backend: POST /api/portal/{token}/verificar { email: "juan@mail.com" }
     Backend-->>Frontend: Verificación Correcta (Retorna JWT temporal de sesión)
-    Frontend->>Parent: Desbloquea secciones sensibles (Salud, Fotos, QRs) usando el JWT
+    Frontend->>Backend: GET /api/portal/dashboard (con JWT)
+    Backend-->>Frontend: Retorna datos del participante y secciones habilitadas
+    Frontend->>Parent: Renderiza el Dashboard con acceso a los portales
 ```
 
 ### B. Cumplimiento de Expiración (Derecho al Olvido y Limitación de Almacenamiento)
@@ -203,13 +205,13 @@ Para asegurar la coherencia estética con el dashboard B2B existente (basado en 
 
 El frontend consumirá los siguientes endpoints expuestos por `portalController.cs`. A continuación se detalla qué debe enviar y qué recibirá.
 
-### A. Endpoint de Inicio (Público)
+### A. Endpoint de Landing (Público, sin datos sensibles)
 **Ruta:** `GET /api/portal/{token_consulta}`
 
 - **¿Qué envía el Frontend?**
   Solo el `token_consulta` proveniente de la URL como un parámetro de ruta. No requiere Headers de autenticación.
 - **¿Qué recibe el Frontend?**
-  Un objeto `PortalPublicoDTO` con información no sensible del evento y la configuración de las secciones habilitadas.
+  Un objeto `PortalLandingDTO` que retorna **SÓLO** los datos generales del evento para pintar la bienvenida, sin exponer el nombre del responsable ni qué secciones aplican.
   ```json
   {
     "evento": {
@@ -218,16 +220,7 @@ El frontend consumirá los siguientes endpoints expuestos por `portalController.
       "fecha_fin": "2026-12-31",
       "logo_url": null,
       "estado": "ACTIVO"
-    },
-    "participante": {
-      "nombre_responsable": "Juan",
-      "apellido_responsable": "Pérez"
-    },
-    "secciones_habilitadas": [
-      { "codigo": "RESUMEN", "orden": 1, "titulo": "Resumen General" },
-      { "codigo": "SALUD", "orden": 2, "titulo": "Ficha Médica" },
-      { "codigo": "FOTOS", "orden": 3, "titulo": "Galería de Fotos" }
-    ]
+    }
   }
   ```
 
@@ -252,16 +245,45 @@ Cuando el padre intente acceder a una sección sensible (como la Galería de Fot
   }
   ```
 
-### C. Endpoints Sensibles (Protegidos por el JWT Temporal)
+### C. Endpoint de Dashboard (Protegido por JWT)
+**Ruta:** `GET /api/portal/dashboard`
+
+Una vez que el usuario se ha verificado exitosamente y el frontend tiene el token JWT, debe llamar a este endpoint para popular la vista principal.
+
+- **¿Qué envía el Frontend?**
+  Cabecera de autorización: `Authorization: Bearer <JWT_Temporal>`
+- **¿Qué recibe el Frontend?**
+  Un objeto `PortalDashboardDTO` con los datos completos:
+  ```json
+  {
+    "evento": {
+      "nombre": "Colonia de Verano 2026",
+      "fecha_inicio": "2026-12-01",
+      "fecha_fin": "2026-12-31",
+      "logo_url": null,
+      "estado": "ACTIVO"
+    },
+    "participante": {
+      "nombre_responsable": "Juan",
+      "apellido_responsable": "Pérez"
+    },
+    "secciones_habilitadas": [
+      { "codigo": "RESUMEN", "orden": 1, "titulo": "Resumen General" },
+      { "codigo": "SALUD", "orden": 2, "titulo": "Ficha Médica" },
+      { "codigo": "FOTOS", "orden": 3, "titulo": "Galería de Fotos" }
+    ]
+  }
+  ```
+
+### D. Endpoints de cada módulo (Protegidos por JWT)
 **Rutas de ejemplo (A Desarrollar):** 
 - `GET /api/portal/salud`
 - `GET /api/portal/fotos`
 
 - **¿Qué envía el Frontend?**
-  Debe enviar en los Headers la autorización usando el Bearer Token obtenido en la verificación suave:
   `Authorization: Bearer <JWT_Temporal>`
 - **¿Qué recibe el Frontend?**
-  Listados detallados según la sección.
+  Listados detallados y específicos para pintar el componente en cuestión.
 
 ---
 

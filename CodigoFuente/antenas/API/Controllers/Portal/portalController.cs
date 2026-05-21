@@ -29,7 +29,7 @@ namespace API.Controllers.Portal
 
         [HttpGet("{token}")]
         [AllowAnonymous]
-        public async Task<ActionResult<PortalPublicoDTO>> GetPortal(string token)
+        public async Task<ActionResult<PortalLandingDTO>> GetPortal(string token)
         {
             var inscripcion = await _context.ef_programa_inscripciones
                 .Include(i => i.evento)
@@ -40,13 +40,41 @@ namespace API.Controllers.Portal
                 return NotFound("Token inválido o expirado.");
             }
 
+            var dto = new PortalLandingDTO
+            {
+                Evento = new PortalEventoDTO
+                {
+                    Nombre = inscripcion.evento.anfitriones_texto,
+                    FechaInicio = inscripcion.evento.fecha_inicio?.ToString("yyyy-MM-dd") ?? "",
+                    FechaFin = inscripcion.evento.fecha_fin?.ToString("yyyy-MM-dd") ?? "",
+                    LogoUrl = null,
+                    Estado = inscripcion.evento.estado
+                }
+            };
+
+            return Ok(dto);
+        }
+
+        [HttpGet("dashboard")]
+        [Authorize]
+        public async Task<ActionResult<PortalDashboardDTO>> GetDashboard()
+        {
+            var tokenStr = User.Claims.FirstOrDefault(c => c.Type == "TokenConsulta")?.Value;
+            if (string.IsNullOrEmpty(tokenStr)) return Unauthorized();
+
+            var inscripcion = await _context.ef_programa_inscripciones
+                .Include(i => i.evento)
+                .FirstOrDefaultAsync(i => i.token_consulta == tokenStr && i.activo);
+
+            if (inscripcion == null || inscripcion.evento == null) return NotFound("Inscripción no encontrada.");
+
             var configs = await _context.ef_evento_portal_config
                 .Include(c => c.portal_seccion)
                 .Where(c => c.id_evento == inscripcion.id_evento && c.visible && c.activo)
                 .OrderBy(c => c.orden)
                 .ToListAsync();
 
-            var dto = new PortalPublicoDTO
+            var dto = new PortalDashboardDTO
             {
                 Evento = new PortalEventoDTO
                 {
