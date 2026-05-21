@@ -108,6 +108,38 @@ export function FaseD_ResumenFirma() {
                                     Semanas: <strong className="text-gray-900 dark:text-white">{p.periodos.length}</strong>
                                     {p.servicios.length > 0 && <span> • Servicios: <strong className="text-gray-900 dark:text-white">{p.servicios.length}</strong></span>}
                                 </p>
+                                {p.servicios.length > 0 && (
+                                    <div className="mt-2 pl-4 text-sm text-gray-500 dark:text-gray-400 space-y-1 border-l-2 border-accent/20">
+                                        {p.servicios.map((svcSel) => {
+                                            const svcDef = state.programaData?.servicios.find(
+                                                (s) => s.idProgramaServicio === svcSel.id_programa_servicio
+                                            );
+                                            if (!svcDef) return null;
+                                            
+                                            const extraFieldsText = svcSel.campos_extra
+                                                ? Object.entries(svcSel.campos_extra)
+                                                      .map(([key, val]) => {
+                                                          const campoDef = (svcDef.configJson as any)?.campos_extra?.find(
+                                                              (c: any) => c.codigo === key
+                                                          );
+                                                          const displayVal = val === 'true' ? 'Sí' : val === 'false' ? 'No' : val;
+                                                          return `${campoDef?.label || key}: ${displayVal}`;
+                                                      })
+                                                      .filter(t => t.trim() !== '')
+                                                      .join(', ')
+                                                : '';
+
+                                            return (
+                                                <div key={svcSel.id_programa_servicio} className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                                    <span className="font-medium text-gray-700 dark:text-gray-300">• {svcDef.nombre}</span>
+                                                    {extraFieldsText && (
+                                                        <span className="text-xs text-gray-400 dark:text-gray-500">({extraFieldsText})</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

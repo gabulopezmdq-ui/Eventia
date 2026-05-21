@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ProgramaServicio, CampoExtra, ServicioBase } from '@/src/features/programas/types';
-import { upsertServicio, getServiciosBase } from '@/src/features/programas/programas.service';
+import { ProgramaServicio, CampoExtra, ServicioBase, TipoCalculo } from '@/src/features/programas/types';
+import { upsertServicio, getServiciosBase, getTiposCalculo, getProgramaDetalle } from '@/src/features/programas/programas.service';
 import { Loader2, X, LayoutList, Plus, Trash2 } from 'lucide-react';
 
 interface Props {
@@ -14,6 +14,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [serviciosBase, setServiciosBase] = useState<ServicioBase[]>([]);
+    const [tiposCalculo, setTiposCalculo] = useState<TipoCalculo[]>([]);
 
     const [formData, setFormData] = useState<ProgramaServicio>({
         id_programa_servicio: null,
@@ -36,17 +37,46 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
 
     // Estado local para los campos extra dinámicos
     const [camposExtra, setCamposExtra] = useState<CampoExtra[]>([]);
+    const [opcionesInputs, setOpcionesInputs] = useState<string[]>([]);
 
     useEffect(() => {
-        const fetchBases = async () => {
+        const fetchBasesAndCalcs = async () => {
             try {
-                const bases = await getServiciosBase();
+                // Fetch event details to get the language ID
+                const eventDetails = await getProgramaDetalle(idEvento);
+                const languageId = eventDetails.idIdioma || eventDetails.id_idioma || 1;
+
+                // Load bases and calculation types in parallel using the correct language
+                const [bases, calcs] = await Promise.all([
+                    getServiciosBase(languageId),
+                    getTiposCalculo(languageId)
+                ]);
+
                 setServiciosBase(bases);
+                setTiposCalculo(calcs);
+
+                // Si es nuevo servicio (no editando), auto-seleccionar el primero
+                if (!servicioToEdit) {
+                    setFormData(prev => {
+                        const newData = { ...prev };
+                        if (bases.length > 0) {
+                            const first = bases[0];
+                            newData.id_servicio_base = first.id_servicio_base;
+                            newData.nombre = first.nombre;
+                            newData.codigo = first.codigo;
+                            newData.descripcion = first.descripcion;
+                        }
+                        if (calcs.length > 0) {
+                            newData.tipo_calculo = calcs[0].codigo;
+                        }
+                        return newData;
+                    });
+                }
             } catch (err) {
-                console.error("Error obteniendo servicios base", err);
+                console.error("Error obteniendo servicios base o tipos de cálculo", err);
             }
         };
-        fetchBases();
+        fetchBasesAndCalcs();
 
         if (servicioToEdit) {
             setFormData(servicioToEdit);
@@ -55,13 +85,14 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                     const parsed = JSON.parse(servicioToEdit.config_json);
                     if (parsed.campos_extra) {
                         setCamposExtra(parsed.campos_extra);
+                        setOpcionesInputs(parsed.campos_extra.map((c: CampoExtra) => c.opciones?.join(', ') || ''));
                     }
                 } catch (e) {
                     console.error("Error parseando config_json", e);
                 }
             }
         }
-    }, [servicioToEdit]);
+    }, [servicioToEdit, idEvento]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
@@ -99,6 +130,7 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
             ...prev,
             { codigo: `campo_${Date.now()}`, label: 'Nuevo Campo', tipo: 'TEXT', obligatorio: false }
         ]);
+        setOpcionesInputs(prev => [...prev, '']);
     };
 
     const updateCampoExtra = (index: number, field: keyof CampoExtra, value: any) => {
@@ -109,11 +141,16 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
 
     const removeCampoExtra = (index: number) => {
         setCamposExtra(prev => prev.filter((_, i) => i !== index));
+        setOpcionesInputs(prev => prev.filter((_, i) => i !== index));
     };
 
-    const updateOpciones = (index: number, value: string) => {
-        // Asume opciones separadas por coma
-        const opciones = value.split(',').map(s => s.trim()).filter(s => s);
+    const handleOpcionesChange = (index: number, val: string) => {
+        const nextInputs = [...opcionesInputs];
+        nextInputs[index] = val;
+        setOpcionesInputs(nextInputs);
+
+        // Update the parsed options array in parent state
+        const opciones = val.split(',').map(s => s.trim()).filter(s => s);
         updateCampoExtra(index, 'opciones', opciones);
     };
 
@@ -175,9 +212,9 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                     name="id_servicio_base"
                                     value={formData.id_servicio_base || ''}
                                     onChange={handleChange}
+                                    required
                                     className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm font-medium"
                                 >
-                                    <option value="">-- Personalizado / Otro --</option>
                                     {serviciosBase.map(sb => (
                                         <option key={sb.id_servicio_base} value={sb.id_servicio_base}>
                                             {sb.nombre} ({sb.codigo})
@@ -261,11 +298,14 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                         name="tipo_calculo"
                                         value={formData.tipo_calculo}
                                         onChange={handleChange}
+                                        required
                                         className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm"
                                     >
-                                        <option value="POR_PROGRAMA">Único por Programa</option>
-                                        <option value="POR_PERIODO">Por Período Inscrito</option>
-                                        <option value="POR_DIA">Diario</option>
+                                        {tiposCalculo.map(tc => (
+                                            <option key={tc.id} value={tc.codigo}>
+                                                {tc.texto}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div>
@@ -357,8 +397,8 @@ export default function UpsertServicioDrawer({ idEvento, servicioToEdit, onClose
                                                     <div className="col-span-2">
                                                         <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Opciones (Separadas por coma)</label>
                                                         <input
-                                                            value={campo.opciones?.join(', ') || ''}
-                                                            onChange={(e) => updateOpciones(index, e.target.value)}
+                                                            value={opcionesInputs[index] || ''}
+                                                            onChange={(e) => handleOpcionesChange(index, e.target.value)}
                                                             className="w-full p-2 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs outline-none bg-neutral-50 dark:bg-neutral-800/50"
                                                             placeholder="Ej: S, M, L, XL"
                                                         />
