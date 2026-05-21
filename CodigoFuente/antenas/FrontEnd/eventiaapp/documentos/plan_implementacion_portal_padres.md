@@ -120,7 +120,7 @@ ON CONFLICT (codigo) DO NOTHING;
 
 ## 3. Estructura de Archivos a Crear y Modificar
 
-### Backend (.NET Core API)
+### Backend (.NET Core API) [COMPLETADO]
 ```
 MODIFICAR
 ├── API/DataSchema/DataContext.cs                      ← Registrar DbSets de las nuevas entidades.
@@ -164,21 +164,20 @@ Dado que el portal es de acceso público (sin login) y gestiona información alt
 
 Para mitigar riesgos por exposición o reenvío accidental de enlaces:
 
-### A. Mecanismo de Doble Validación (2FA sin Registro)
+### A. Mecanismo de Doble Validación (Soft Verification por Email)
 Al ingresar a `/portal/{token}`, el portal mostrará una vista básica no sensible (ej. mensaje de bienvenida y fechas generales del evento). Para desbloquear los paneles críticos (**Salud**, **QRs de Retiro** y **Galería de Fotos**), el padre deberá superar una validación secundaria:
-1. **Desbloqueo por Teléfono**: El usuario debe introducir los últimos 4 dígitos del celular del responsable registrado en la inscripción. El backend compara esto contra `ef_programa_inscripciones.responsable_telefono`.
-2. **Desbloqueo por OTP (One-Time Password)**: Alternativamente, si se requiere seguridad estricta, el usuario solicita un código de 6 dígitos que se envía automáticamente vía **WhatsApp o Email** al contacto del responsable legal, el cual tiene una validez de 10 minutos.
+- **Verificación por Email (Soft Verification)**: El usuario debe introducir el email del responsable de la inscripción. El backend compara esto (ignorando mayúsculas/minúsculas) contra `ef_programa_inscripciones.responsable_email`. Si coincide, se genera y devuelve un JWT temporal válido por 24 horas que habilita las secciones sensibles.
 
 ```mermaid
 sequenceDiagram
     Parent->>Frontend: Ingresa a /portal/{token}
-    Frontend->>Backend: GET /portal/{token}/check-auth
-    Backend-->>Frontend: Token válido (Requiere verificación)
+    Frontend->>Backend: GET /api/portal/{token}
+    Backend-->>Frontend: Token válido (Retorna config pública)
     Frontend->>Parent: Muestra landing básica + Modal de Verificación
-    Parent->>Frontend: Ingresa últimos 4 dígitos de celular
-    Frontend->>Backend: POST /portal/{token}/verificar { telefonoFin: "4321" }
+    Parent->>Frontend: Ingresa su email (ej. juan@mail.com)
+    Frontend->>Backend: POST /api/portal/{token}/verificar { email: "juan@mail.com" }
     Backend-->>Frontend: Verificación Correcta (Retorna JWT temporal de sesión)
-    Frontend->>Parent: Desbloquea secciones sensibles (Salud, Fotos, QRs)
+    Frontend->>Parent: Desbloquea secciones sensibles (Salud, Fotos, QRs) usando el JWT
 ```
 
 ### B. Cumplimiento de Expiración (Derecho al Olvido y Limitación de Almacenamiento)
@@ -200,9 +199,75 @@ Para asegurar la coherencia estética con el dashboard B2B existente (basado en 
 
 ---
 
-## 6. Siguientes Pasos
+## 6. Integración Frontend (Contratos de Endpoints)
 
-1. **Fase de Base de Datos**: Ejecución de las migraciones SQL y carga de las secciones semilla.
-2. **Fase de Backend API**: Creación de las entidades de dominio y el controlador `/portal/{token}` con mapeo unificado.
-3. **Fase de Integración en Inscripción**: Modificar la respuesta de confirmación de inscripción para inyectar y persistir el `token_consulta` si no existe.
-4. **Fase Frontend**: Maquetación de la landing pública de portal y sus respectivas vistas.
+El frontend consumirá los siguientes endpoints expuestos por `portalController.cs`. A continuación se detalla qué debe enviar y qué recibirá.
+
+### A. Endpoint de Inicio (Público)
+**Ruta:** `GET /api/portal/{token_consulta}`
+
+- **¿Qué envía el Frontend?**
+  Solo el `token_consulta` proveniente de la URL como un parámetro de ruta. No requiere Headers de autenticación.
+- **¿Qué recibe el Frontend?**
+  Un objeto `PortalPublicoDTO` con información no sensible del evento y la configuración de las secciones habilitadas.
+  ```json
+  {
+    "evento": {
+      "nombre": "Colonia de Verano 2026",
+      "fecha_inicio": "2026-12-01",
+      "fecha_fin": "2026-12-31",
+      "logo_url": null,
+      "estado": "ACTIVO"
+    },
+    "participante": {
+      "nombre_responsable": "Juan",
+      "apellido_responsable": "Pérez"
+    },
+    "secciones_habilitadas": [
+      { "codigo": "RESUMEN", "orden": 1, "titulo": "Resumen General" },
+      { "codigo": "SALUD", "orden": 2, "titulo": "Ficha Médica" },
+      { "codigo": "FOTOS", "orden": 3, "titulo": "Galería de Fotos" }
+    ]
+  }
+  ```
+
+### B. Endpoint de Verificación Suave (Soft Verification)
+**Ruta:** `POST /api/portal/{token_consulta}/verificar`
+
+Cuando el padre intente acceder a una sección sensible (como la Galería de Fotos o Salud), el frontend desplegará un prompt pidiendo su Email de acceso. 
+
+- **¿Qué envía el Frontend?**
+  Body (`PortalVerificarRequest`):
+  ```json
+  {
+    "email": "juan.perez@example.com"
+  }
+  ```
+- **Lógica Backend:** El backend comprueba si el `email` proporcionado coincide (ignorando mayúsculas y minúsculas) con el `responsable_email` de la inscripción mapeada por ese token.
+- **¿Qué recibe el Frontend?**
+  Body (`PortalVerificarResponse`):
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6Ik..." // JWT Temporal de Sesión (Válido por 24 hs)
+  }
+  ```
+
+### C. Endpoints Sensibles (Protegidos por el JWT Temporal)
+**Rutas de ejemplo (A Desarrollar):** 
+- `GET /api/portal/salud`
+- `GET /api/portal/fotos`
+
+- **¿Qué envía el Frontend?**
+  Debe enviar en los Headers la autorización usando el Bearer Token obtenido en la verificación suave:
+  `Authorization: Bearer <JWT_Temporal>`
+- **¿Qué recibe el Frontend?**
+  Listados detallados según la sección.
+
+---
+
+## 7. Estado de Implementación y Siguientes Pasos
+
+1. **Fase de Base de Datos**: `[COMPLETADO]` Creación de tablas, DbSets e INSERT semilla en SQL.
+2. **Fase de Backend API**: `[COMPLETADO]` Creación de entidades, DTOs y el `portalController.cs` con el mapeo y verificación por email.
+3. **Fase de Integración en Inscripción**: `[COMPLETADO]` Se inyecta la URL del portal en `ProgramaInscripcionConfirmarResponse`.
+4. **Fase Frontend**: `[PENDIENTE]` Construcción de la UI en Next.js (maquetación, estado de verificación, fetch de datos) basándose en los contratos definidos en el punto 6.

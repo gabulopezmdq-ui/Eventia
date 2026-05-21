@@ -124,6 +124,11 @@ namespace API.DataSchema
         public DbSet<ef_evento_album_rankings> ef_evento_album_rankings { get; set; }
         public DbSet<ef_evento_album_ranking_votos> ef_evento_album_ranking_votos { get; set; }
 
+        // Portal Padres
+        public DbSet<ef_param_portal_secciones> ef_param_portal_secciones { get; set; }
+        public DbSet<ef_evento_portal_config> ef_evento_portal_config { get; set; }
+        public DbSet<ef_evento_portal_fotos> ef_evento_portal_fotos { get; set; }
+
         //audiencia
         public DbSet<ef_audiencias_personas> ef_audiencias_personas { get; set; }
         public DbSet<ef_audiencia_persona_eventos> ef_audiencia_persona_eventos { get; set; }
@@ -326,6 +331,11 @@ namespace API.DataSchema
             {
                 entity.HasKey(e => e.id_evento);
             });
+
+            // Portal Padres
+            modelBuilder.ApplyConfiguration(new ef_param_portal_seccionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_portal_configConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_portal_fotosConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_beneficios_registroConfiguration());
