@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -21,6 +21,10 @@ namespace API.DataSchema.DTO.Programas
         [JsonPropertyName("token_consulta")]
         [JsonProperty("token_consulta")]
         public string TokenConsulta { get; set; } = null!;
+
+        [JsonPropertyName("url_portal")]
+        [JsonProperty("url_portal")]
+        public string? UrlPortal { get; set; }
 
         [JsonPropertyName("total_general")]
         [JsonProperty("total_general")]
