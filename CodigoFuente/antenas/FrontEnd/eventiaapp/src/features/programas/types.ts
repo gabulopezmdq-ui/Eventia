@@ -271,3 +271,10 @@ export interface AutorizacionesInscripcionResponse {
     autorizaciones_grupo: AutorizacionInscripcionItem[];
     autorizaciones_participantes: AutorizacionInscripcionItem[];
 }
+
+export interface TipoCalculo {
+    id: number;
+    codigo: string;
+    texto: string;
+    orden: number | null;
+}

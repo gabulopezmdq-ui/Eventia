@@ -41,7 +41,19 @@ export default function PeriodosManager({ idEvento }: Props) {
 
     const formatearFecha = (fecha: string) => {
         if (!fecha) return '-';
-        return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(fecha));
+        try {
+            // Evitar desvío de huso horario para fechas en formato YYYY-MM-DD
+            const partes = fecha.split('T')[0].split('-');
+            if (partes.length === 3) {
+                const [anio, mes, dia] = partes.map(Number);
+                return new Intl.DateTimeFormat('es-AR', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                }).format(new Date(anio, mes - 1, dia));
+            }
+            return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(fecha));
+        } catch {
+            return fecha;
+        }
     };
 
     return (
