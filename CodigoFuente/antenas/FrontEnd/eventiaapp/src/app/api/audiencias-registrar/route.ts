@@ -25,7 +25,13 @@ export async function POST(req: Request) {
         );
 
         if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
+            let err: any = {};
+            const text = await res.text().catch(() => '');
+            try {
+                err = JSON.parse(text);
+            } catch (_) {
+                err = text ? { message: text } : {};
+            }
             return NextResponse.json(
                 { message: 'Error al registrar audiencia', details: err },
                 { status: res.status }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Users, Gift, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Calendar, Users, Gift, Sparkles, CheckCircle2, Download } from 'lucide-react';
 import type { LandingData, RegistroAudienciaResponse } from '@/src/features/captacion/types';
 import RegistroAudienciaForm from './RegistroAudienciaForm';
 
@@ -13,6 +13,81 @@ interface Props {
 export default function PublicLanding({ data, token }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [registroSuccess, setRegistroSuccess] = useState<RegistroAudienciaResponse | null>(null);
+
+    const handleDownloadQR = async () => {
+        if (!registroSuccess || !registroSuccess.qr_token) return;
+        try {
+            const size = 400; // tamaño del QR
+            const extraHeight = registroSuccess.codigo_canje ? 80 : 0; // espacio extra para el texto de canje
+            
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(registroSuccess.qr_token)}`;
+            
+            // 1. Descargar el QR como blob y crear Object URL
+            const response = await fetch(qrUrl);
+            const blob = await response.blob();
+            const qrBlobUrl = window.URL.createObjectURL(blob);
+
+            // 2. Cargar en una imagen en memoria para dibujar en Canvas
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = qrBlobUrl;
+
+            img.onload = () => {
+                // 3. Crear canvas y su contexto 2D
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size + extraHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) throw new Error('No se pudo crear contexto de Canvas');
+
+                // Rellenar fondo blanco
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Dibujar el QR
+                ctx.drawImage(img, 0, 0, size, size);
+
+                // Si hay código de canje, lo imprimimos debajo con una línea divisoria
+                if (registroSuccess.codigo_canje) {
+                    ctx.strokeStyle = '#E2E8F0';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(30, size);
+                    ctx.lineTo(size - 30, size);
+                    ctx.stroke();
+
+                    // Estilo del texto del código de canje
+                    ctx.fillStyle = '#4F46E5'; // Color Indigo-600
+                    ctx.font = 'bold 24px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(registroSuccess.codigo_canje, size / 2, size + (extraHeight / 2));
+                }
+
+                // 4. Exportar el canvas a blob y simular el clic de descarga
+                canvas.toBlob((canvasBlob) => {
+                    if (canvasBlob) {
+                        const finalUrl = window.URL.createObjectURL(canvasBlob);
+                        const a = document.createElement('a');
+                        a.href = finalUrl;
+                        a.download = `Eventia-Acceso-${registroSuccess.codigo_canje || 'QR'}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(finalUrl);
+                    }
+                    window.URL.revokeObjectURL(qrBlobUrl);
+                }, 'image/png');
+            };
+
+            img.onerror = () => {
+                throw new Error('Error al renderizar el QR');
+            };
+        } catch (error) {
+            console.error('Error al descargar el QR:', error);
+            alert('No se pudo descargar el QR directamente. Podés guardar la imagen manteniendo presionado o haciendo clic derecho sobre ella.');
+        }
+    };
 
     const bgImageUrl = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop';
 
@@ -35,7 +110,7 @@ export default function PublicLanding({ data, token }: Props) {
                     </p>
 
                     {registroSuccess.beneficio_otorgado && (
-                        <div className="mt-8 p-6 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl animate-in fade-in slide-in-from-bottom-4 delay-300">
+                        <div className="mt-8 p-6 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 rounded-2xl animate-in fade-in slide-in-from-bottom-4 delay-300 flex flex-col items-center">
                             <div className="inline-flex p-3 rounded-full bg-purple-500/20 text-purple-400 mb-4">
                                 <Gift className="w-6 h-6" />
                             </div>
@@ -44,16 +119,32 @@ export default function PublicLanding({ data, token }: Props) {
                                 Presentá el siguiente QR en puerta o barra para canjearlo.
                             </p>
 
-                            {/* Dummy QR Display */}
-                            <div className="bg-white p-4 rounded-xl mx-auto w-48 h-48 flex items-center justify-center">
-                                {/* Acá iría un componente QRCode real con registroSuccess.qr_token */}
-                                <div className="text-black text-center text-xs font-mono">
-                                    <span className="block mb-2 font-bold text-lg">QR</span>
-                                    {registroSuccess.qr_token?.slice(0, 16)}...
-                                </div>
+                            {/* Real QR display */}
+                            <div className="bg-white p-4 rounded-2xl mx-auto w-48 h-48 flex items-center justify-center shadow-inner">
+                                {registroSuccess.qr_token ? (
+                                    <img
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registroSuccess.qr_token)}`}
+                                        alt="QR de acceso"
+                                        className="w-40 h-40 object-contain"
+                                    />
+                                ) : (
+                                    <span className="text-black text-center text-xs font-mono font-bold">
+                                        {registroSuccess.codigo_canje}
+                                    </span>
+                                )}
                             </div>
+
+                            {registroSuccess.qr_token && (
+                                <button
+                                    onClick={handleDownloadQR}
+                                    className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest bg-indigo-500/10 hover:bg-indigo-500/20 px-4 py-2.5 rounded-xl border border-indigo-500/20 shadow-sm"
+                                >
+                                    <Download className="w-3.5 h-3.5" /> Descargar QR
+                                </button>
+                            )}
+
                             {registroSuccess.codigo_canje && (
-                                <p className="mt-4 font-mono font-bold text-purple-300 tracking-widest bg-purple-500/10 py-2 rounded-lg">
+                                <p className="mt-4 w-full font-mono font-bold text-purple-300 tracking-widest bg-purple-500/10 py-2 rounded-lg text-center">
                                     {registroSuccess.codigo_canje}
                                 </p>
                             )}
@@ -169,6 +260,7 @@ export default function PublicLanding({ data, token }: Props) {
                             <RegistroAudienciaForm
                                 token={token}
                                 idEvento={data.id_evento}
+                                origenDefault={data.origen_default}
                                 onSuccess={(res) => setRegistroSuccess(res)}
                             />
                         </div>
