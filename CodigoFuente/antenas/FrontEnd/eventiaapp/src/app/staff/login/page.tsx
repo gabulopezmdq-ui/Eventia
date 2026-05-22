@@ -7,7 +7,7 @@ import { joinStaff } from '@/src/features/staff/staff.service';
 import { useStaffAuth } from '@/src/context/StaffAuthContext';
 
 export default function StaffLoginPage() {
-    const { token, login, isLoading } = useStaffAuth();
+    const { token, login, isLoading, user, activeRol } = useStaffAuth();
     const router = useRouter();
 
     const [codigo, setCodigo] = useState('');
@@ -16,9 +16,15 @@ export default function StaffLoginPage() {
 
     useEffect(() => {
         if (!isLoading && token) {
-            router.replace('/staff/eventos');
+            if (user?.rolesEvento && user.rolesEvento.length > 1 && !activeRol) {
+                router.replace('/staff/seleccionar-funcion');
+            } else if (activeRol) {
+                router.replace(activeRol.pantalla_inicio || '/staff/home');
+            } else {
+                router.replace('/staff/home');
+            }
         }
-    }, [isLoading, token, router]);
+    }, [isLoading, token, user, activeRol, router]);
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         // Acepta entre 4 y 10 caracteres alfanuméricos (flexible según backend)
@@ -42,7 +48,15 @@ export default function StaffLoginPage() {
         try {
             const joinResponse = await joinStaff(codigo);
             login(joinResponse); // Pasa el objeto completo al contexto
-            router.push('/staff/eventos');
+            
+            if (joinResponse.roles_evento && joinResponse.roles_evento.length === 1) {
+                const screen = joinResponse.roles_evento[0].pantalla_inicio || '/staff/home';
+                router.push(screen);
+            } else if (joinResponse.roles_evento && joinResponse.roles_evento.length > 1) {
+                router.push('/staff/seleccionar-funcion');
+            } else {
+                router.push('/staff/home');
+            }
         } catch (err: any) {
             setError(err.message ?? 'Código inválido o expirado.');
         } finally {

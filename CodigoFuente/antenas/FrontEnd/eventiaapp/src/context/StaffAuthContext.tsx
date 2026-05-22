@@ -11,6 +11,8 @@ interface StaffAuthCtx {
     login: (joinResponse: StaffJoinResponse) => void;
     logout: () => void;
     isLoading: boolean;
+    activeRol: { id_rol: number; rol_codigo: string; rol_texto: string; pantalla_inicio: string; } | null;
+    selectRol: (rol: { id_rol: number; rol_codigo: string; rol_texto: string; pantalla_inicio: string; }) => void;
 }
 
 const STORAGE_KEY = 'staff_session';
@@ -21,22 +23,42 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<StaffAuthUser | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeRol, setActiveRol] = useState<{ id_rol: number; rol_codigo: string; rol_texto: string; pantalla_inicio: string; } | null>(null);
 
     /**
      * Construye el StaffAuthUser a partir del objeto completo de /staff/join.
      * Las unidades ya vienen incluidas — no se necesita un segundo fetch.
      */
-    const buildUser = (resp: StaffJoinResponse): StaffAuthUser => ({
-        idStaff: resp.id_staff,
-        idCuenta: resp.id_cuenta,
-        idEvento: resp.id_evento,
-        nombre: resp.nombre,
-        apellido: resp.apellido,
-        rolCodigo: resp.rol_codigo,
-        unidades: resp.unidades,
-        token: resp.access_token,
-        expiresAt: resp.expires_at_utc,
-    });
+    const buildUser = (resp: StaffJoinResponse): StaffAuthUser => {
+        // Extraer el primer evento disponible si viene en eventos_disponibles
+        const firstEvento = resp.eventos_disponibles?.[0];
+        const rawRoles = firstEvento?.roles_evento || resp.roles_evento || [];
+
+        // Mapear roles a formato homogéneo en frontend
+        const rolesEvento = rawRoles.map(r => ({
+            id_rol: r.id_rol,
+            // Soportar codigo_rol del backend o rol_codigo
+            rol_codigo: (r as any).codigo_rol || (r as any).rol_codigo || '',
+            rol_texto: r.rol_texto || '',
+            pantalla_inicio: '/staff/home'
+        }));
+
+        const primaryRolCodigo = rolesEvento[0]?.rol_codigo || resp.rol_codigo || '';
+
+        return {
+            idStaff: resp.id_staff,
+            idCuenta: resp.id_cuenta,
+            idEvento: firstEvento?.id_evento || resp.id_evento || 0,
+            nombre: resp.nombre,
+            apellido: resp.apellido,
+            rolCodigo: primaryRolCodigo,
+            unidades: resp.unidades || [],
+            token: resp.access_token,
+            expiresAt: resp.expires_at_utc,
+            rolesEvento: rolesEvento,
+            pantallaInicioDefault: firstEvento?.pantalla_inicio_default || resp.pantalla_inicio_default || '/staff/home',
+        };
+    };
 
     /**
      * Restaura la sesión guardada en localStorage al montar el contexto.
@@ -57,6 +79,11 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
 
             setUser(session);
             setToken(session.token);
+            if (session.activeRol) {
+                setActiveRol(session.activeRol);
+            } else if (session.rolesEvento && session.rolesEvento.length === 1) {
+                setActiveRol(session.rolesEvento[0]);
+            }
         } catch {
             localStorage.removeItem(STORAGE_KEY);
         }
@@ -100,19 +127,49 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
      */
     function login(joinResponse: StaffJoinResponse) {
         const staffUser = buildUser(joinResponse);
+        
+        // Si tiene un solo rol, lo pre-seleccionamos como activo
+        if (staffUser.rolesEvento && staffUser.rolesEvento.length === 1) {
+            staffUser.activeRol = staffUser.rolesEvento[0];
+            setActiveRol(staffUser.rolesEvento[0]);
+        } else if (staffUser.rolesEvento && staffUser.rolesEvento.length > 1) {
+            // Múltiples roles: activeRol se seleccionará en pantalla intermedia
+        } else {
+            // Fallback por compatibilidad
+            const singleRol = {
+                id_rol: 0,
+                rol_codigo: staffUser.rolCodigo,
+                rol_texto: staffUser.rolCodigo ? staffUser.rolCodigo.replace('STAFF_', '') : '',
+                pantalla_inicio: '/staff/home'
+            };
+            staffUser.activeRol = singleRol;
+            setActiveRol(singleRol);
+        }
+
         setUser(staffUser);
         setToken(joinResponse.access_token);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(staffUser));
     }
 
+    const selectRol = useCallback((rol: { id_rol: number; rol_codigo: string; rol_texto: string; pantalla_inicio: string; }) => {
+        setActiveRol(rol);
+        setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, activeRol: rol };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        });
+    }, []);
+
     function logout() {
         setUser(null);
         setToken(null);
+        setActiveRol(null);
         localStorage.removeItem(STORAGE_KEY);
     }
 
     return (
-        <Ctx.Provider value={{ user, token, login, logout, isLoading }}>
+        <Ctx.Provider value={{ user, token, login, logout, isLoading, activeRol, selectRol }}>
             {children}
         </Ctx.Provider>
     );

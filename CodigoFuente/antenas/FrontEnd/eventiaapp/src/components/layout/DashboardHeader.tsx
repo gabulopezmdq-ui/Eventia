@@ -1,15 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Search, Menu } from "lucide-react";
+import { Bell, Search, Menu, ChevronDown, Building2, User, Check } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import ThemeToggle from "@/src/components/ui/ThemeToggle";
+import { useAuth } from "@/src/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface DashboardHeaderProps {
     onMenuClick: () => void;
 }
 
 export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
+    const { espacios, selectedEspacioId, selectEspacio, cuenta } = useAuth();
+    const router = useRouter();
+    const [dropdownOpen, setDropdownOpen] = useState(false);
     const [userEmail, setUserEmail] = useState<string>("Cargando...");
     const [initials, setInitials] = useState<string>("");
 
@@ -38,6 +43,12 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
         }
     }, []);
 
+    // Calcular datos del espacio seleccionado
+    const activeSpace = espacios?.find(e => e.id_cuenta === selectedEspacioId);
+    const activeSpaceName = selectedEspacioId === null 
+        ? "Espacio Personal" 
+        : (cuenta?.nombre_cuenta || activeSpace?.nombre_cuenta || "Mi Cuenta B2B");
+
     return (
         <header className="h-20 flex items-center justify-between px-4 lg:px-8 bg-white/50 dark:bg-neutral-950/50 backdrop-blur-xl border-b border-neutral-200 dark:border-neutral-800/50 sticky top-0 z-10">
             <div className="flex items-center gap-4">
@@ -56,6 +67,108 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             </div>
 
             <div className="flex items-center gap-3">
+                {/* Selector rápido de espacios */}
+                {espacios && espacios.length > 1 && (
+                    <div className="relative">
+                        <button
+                            onClick={() => setDropdownOpen(!dropdownOpen)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-800/80 bg-white/50 dark:bg-neutral-900/40 hover:bg-neutral-100 dark:hover:bg-neutral-900/80 transition-all text-xs font-semibold text-neutral-700 dark:text-neutral-300"
+                        >
+                            {selectedEspacioId === null ? (
+                                <User className="w-3.5 h-3.5 text-indigo-400" />
+                            ) : (
+                                <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                            )}
+                            <span className="max-w-[120px] truncate">{activeSpaceName}</span>
+                            <ChevronDown className="w-3.5 h-3.5 text-neutral-400 transition-colors" />
+                        </button>
+
+                        {/* Overlay invisible para cerrar el menú haciendo clic afuera */}
+                        {dropdownOpen && (
+                            <div
+                                className="fixed inset-0 z-20 cursor-default"
+                                onClick={() => setDropdownOpen(false)}
+                            />
+                        )}
+
+                        {/* Dropdown Menu */}
+                        {dropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl shadow-2xl p-1.5 space-y-1 z-30 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="px-3 py-1.5 text-[10px] font-bold text-neutral-400 uppercase tracking-wider border-b border-neutral-100 dark:border-neutral-900 mb-1">
+                                    Cambiar de Espacio
+                                </div>
+
+                                {/* Opción Personal (B2C) */}
+                                <button
+                                    onClick={() => {
+                                        selectEspacio(null);
+                                        setDropdownOpen(false);
+                                        router.push('/dashboard');
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all ${
+                                        selectedEspacioId === null
+                                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-semibold'
+                                            : 'hover:bg-neutral-100 dark:hover:bg-neutral-900/60 text-neutral-600 dark:text-neutral-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                                            selectedEspacioId === null ? 'bg-indigo-500/20' : 'bg-neutral-100 dark:bg-neutral-900'
+                                        }`}>
+                                            <User className="w-4 h-4 text-indigo-500" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-semibold truncate">Mi Espacio Personal</p>
+                                            <p className="text-[10px] text-neutral-400 truncate">Eventos sociales</p>
+                                        </div>
+                                    </div>
+                                    {selectedEspacioId === null && <Check className="w-4 h-4 text-indigo-500 flex-shrink-0" />}
+                                </button>
+
+                                {/* Opciones B2B (Cuentas) */}
+                                {espacios
+                                    .filter(space => space.tipo === 'CUENTA' && space.id_cuenta !== null)
+                                    .map((space) => {
+                                        const isSelected = selectedEspacioId === space.id_cuenta;
+                                        const isAdmin = space.rol_cuenta === 'ACCOUNT_ADMIN';
+                                        return (
+                                            <button
+                                                key={space.id_cuenta}
+                                                onClick={() => {
+                                                    selectEspacio(space.id_cuenta);
+                                                    setDropdownOpen(false);
+                                                    router.push('/dashboard/cuenta');
+                                                }}
+                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all ${
+                                                    isSelected
+                                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold'
+                                                        : 'hover:bg-neutral-100 dark:hover:bg-neutral-900/60 text-neutral-600 dark:text-neutral-300'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                                                        isSelected ? 'bg-emerald-500/20' : 'bg-neutral-100 dark:bg-neutral-900'
+                                                    }`}>
+                                                        <Building2 className="w-4 h-4 text-emerald-500" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-semibold truncate">
+                                                            {space.nombre_cuenta || space.nombre}
+                                                        </p>
+                                                        <p className="text-[10px] text-neutral-400 truncate uppercase tracking-wider">
+                                                            {isAdmin ? 'ADMIN' : 'STAFF'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {isSelected && <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
+                                            </button>
+                                        );
+                                    })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Theme Toggle */}
                 <ThemeToggle />
 

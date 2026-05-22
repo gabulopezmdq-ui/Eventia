@@ -5,7 +5,8 @@ import {
     RegistrarRetiroPayload, RegistrarRetiroResponse,
     RetirosDiaResponse,
     TransporteDiaResponse, TransporteServicioCodigo,
-    AutorizacionesInscripcionResponse, TipoCalculo
+    AutorizacionesInscripcionResponse, TipoCalculo,
+    EquipoMiembro, StaffOperativoMiembro
 } from './types';
 
 const API_URL = '/api/programas';
@@ -267,3 +268,123 @@ export async function getProgramaDetalle(
 
     return response.json();
 }
+
+// ── EQUIPO INTERNO ──────────────────────────────────────────────
+export const getEquipoInterno = async (idEvento: number, idIdioma = 1): Promise<EquipoMiembro[]> => {
+    const res = await fetch(`/api/eventos/${idEvento}/equipo?idIdioma=${idIdioma}`);
+    if (!res.ok) throw new Error('Error al obtener el equipo interno');
+    return res.json();
+};
+
+export const addMiembroInterno = async (idEvento: number, payload: { email: string; id_rol: number }, idIdioma = 1): Promise<EquipoMiembro> => {
+    const res = await fetch(`/api/eventos/${idEvento}/equipo?idIdioma=${idIdioma}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al añadir miembro interno');
+    }
+    return res.json();
+};
+
+export const updateMiembroInterno = async (idEvento: number, idEventoUsuario: number, activo: boolean): Promise<any> => {
+    const res = await fetch(`/api/eventos/${idEvento}/equipo/${idEventoUsuario}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activo }),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al actualizar estado del miembro');
+    }
+    return res.json();
+};
+
+export const deleteMiembroInterno = async (idEvento: number, idEventoUsuario: number): Promise<{ ok: boolean }> => {
+    const res = await fetch(`/api/eventos/${idEvento}/equipo/${idEventoUsuario}`, {
+        method: 'DELETE',
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al eliminar miembro del equipo');
+    }
+    return res.json();
+};
+
+export const getComboRolesEquipo = async (idIdioma = 1, tipoOperacion: 'PROGRAMA' | 'EVENTO'): Promise<any[]> => {
+    const res = await fetch(`/api/roles/combo-equipo?idIdioma=${idIdioma}&tipoOperacion=${tipoOperacion}`);
+    if (!res.ok) throw new Error('Error al cargar roles de equipo');
+    return res.json();
+};
+
+// ── STAFF OPERATIVO ─────────────────────────────────────────────
+export const getStaffOperativo = async (idEvento: number, idIdioma = 1): Promise<StaffOperativoMiembro[]> => {
+    const res = await fetch(`/api/eventos/${idEvento}/staff?idIdioma=${idIdioma}`);
+    if (!res.ok) throw new Error('Error al obtener el staff operativo');
+    return res.json();
+};
+
+export const addStaffDesdeCuenta = async (idEvento: number, payload: { id_staff: number; id_rol: number }, idIdioma = 1): Promise<StaffOperativoMiembro> => {
+    const res = await fetch(`/api/eventos/${idEvento}/staff/desde-cuenta?idIdioma=${idIdioma}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al asignar staff desde cuenta');
+    }
+    return res.json();
+};
+
+export const addNuevoStaff = async (idEvento: number, payload: {
+    nombre: string;
+    apellido: string;
+    email?: string;
+    telefono?: string;
+    id_rol: number;
+    fecha_expiracion?: string;
+}, idIdioma = 1): Promise<StaffOperativoMiembro> => {
+    const res = await fetch(`/api/eventos/${idEvento}/staff/nuevo?idIdioma=${idIdioma}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al crear nuevo staff');
+    }
+    return res.json();
+};
+
+export const updateStaffOperativo = async (idEvento: number, idEventoStaff: number, activo: boolean): Promise<any> => {
+    const res = await fetch(`/api/eventos/${idEvento}/staff/${idEventoStaff}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activo }),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al actualizar asignación de staff');
+    }
+    return res.json();
+};
+
+export const deleteStaffOperativo = async (idEvento: number, idEventoStaff: number): Promise<{ ok: boolean }> => {
+    const res = await fetch(`/api/eventos/${idEvento}/staff/${idEventoStaff}`, {
+        method: 'DELETE',
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al eliminar asignación de staff');
+    }
+    return res.json();
+};
+
+export const getComboRolesStaff = async (idIdioma = 1, tipoOperacion: 'PROGRAMA' | 'EVENTO'): Promise<any[]> => {
+    const res = await fetch(`/api/roles/combo-staff?idIdioma=${idIdioma}&tipoOperacion=${tipoOperacion}`);
+    if (!res.ok) throw new Error('Error al cargar roles de staff');
+    return res.json();
+};

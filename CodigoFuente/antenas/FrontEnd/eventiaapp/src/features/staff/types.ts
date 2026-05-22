@@ -18,7 +18,7 @@ export interface Staff {
     apellido: string;
     email: string;
     telefono?: string;
-    /** Código de acceso: solo disponible al momento de la creación (POST). */
+    /** Código de acceso. */
     codigo?: string;
     rol_codigo: string;
     rol_descripcion: string;
@@ -28,6 +28,8 @@ export interface Staff {
     usos: number;
     /** Fecha en que el código fue usado por última vez. */
     fecha_uso?: string;
+    /** Sectores/unidades asignadas. */
+    id_unidades?: number[];
 }
 
 // ── Payload de creación (Admin) ───────────────────────────────────
@@ -76,13 +78,33 @@ export interface StaffJoinPayload {
 export interface StaffJoinResponse {
     id_staff: number;
     id_cuenta: number;
-    id_evento: number;
+    id_evento?: number;
     nombre: string;
     apellido: string;
-    rol_codigo: string;
-    unidades: StaffUnidad[];
+    rol_codigo?: string;
+    unidades?: StaffUnidad[];
     access_token: string;
     expires_at_utc: string;
+    eventos_disponibles?: {
+        id_evento: number;
+        tipo_operacion: string;
+        nombre_evento: string;
+        roles_evento: {
+            id_evento_staff: number;
+            id_rol: number;
+            codigo_rol: string;
+            rol_texto: string;
+            pantalla_inicio: string;
+        }[];
+        pantalla_inicio_default?: string;
+    }[];
+    roles_evento?: {
+        id_rol: number;
+        rol_codigo: string;
+        rol_texto: string;
+        pantalla_inicio: string;
+    }[];
+    pantalla_inicio_default?: string;
 }
 
 // ── Claims del JWT del empleado ───────────────────────────────────
@@ -112,6 +134,19 @@ export interface StaffAuthUser {
     unidades: StaffUnidad[];
     token: string;
     expiresAt: string;
+    rolesEvento?: {
+        id_rol: number;
+        rol_codigo: string;
+        rol_texto: string;
+        pantalla_inicio: string;
+    }[];
+    pantallaInicioDefault?: string;
+    activeRol?: {
+        id_rol: number;
+        rol_codigo: string;
+        rol_texto: string;
+        pantalla_inicio: string;
+    };
 }
 
 // ── Eventos y programas accesibles ───────────────────────────────
@@ -139,4 +174,29 @@ export interface StaffMiembro {
 export interface CheckinResponse {
     ok: boolean;
     hora: string;
+}
+
+// ── Payload de edición ──────────────────────────────────────────
+export interface UpdateStaffInput {
+    nombre: string;
+    apellido: string;
+    email: string;
+    telefono?: string;
+    id_rol: number;
+    fecha_expiracion: string;
+    activo: boolean;
+    id_unidades?: number[];
+}
+
+// ── Item de combo de roles ──────────────────────────────────────
+export interface StaffRolCombo {
+    id_rol: number;
+    codigo: string;
+    texto: string;
+    categoria?: string;
+    aplica_tipo_operacion?: string;
+    requiere_usuario?: boolean;
+    permite_codigo_staff?: boolean;
+    pantalla_inicio?: string;
+    orden_ui?: number;
 }

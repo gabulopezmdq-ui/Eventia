@@ -15,6 +15,8 @@ import type {
     StaffEvento,
     StaffMiembro,
     CheckinResponse,
+    UpdateStaffInput,
+    StaffRolCombo,
 } from './types';
 
 // ════════════════════════════════════════════════════════════════
@@ -66,6 +68,68 @@ export async function revocarStaff(
     return res.json();
 }
 
+/**
+ * Obtiene el detalle completo de un integrante de staff de la cuenta.
+ * → GET /api/cuenta/:id_cuenta/staff/:id_staff
+ */
+export async function getStaffDetail(
+    idCuenta: number,
+    idStaff: number
+): Promise<Staff> {
+    const res = await fetch(`/api/cuenta/${idCuenta}/staff/${idStaff}`);
+    if (!res.ok) throw new Error(`Error al obtener los detalles del staff #${idStaff}`);
+    return res.json();
+}
+
+/**
+ * Actualiza los datos de un integrante de staff de la cuenta.
+ * → PUT /api/cuenta/:id_cuenta/staff/:id_staff
+ */
+export async function actualizarStaff(
+    idCuenta: number,
+    idStaff: number,
+    input: UpdateStaffInput
+): Promise<Staff> {
+    const res = await fetch(`/api/cuenta/${idCuenta}/staff/${idStaff}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+    });
+    if (!res.ok) throw new Error(`Error al actualizar el staff #${idStaff}`);
+    return res.json();
+}
+
+/**
+ * Renueva la vigencia del código de un staff de la cuenta (extiende fecha expiración).
+ * → PUT /api/cuenta/:id_cuenta/staff/:id_staff/renovar
+ */
+export async function renovarStaff(
+    idCuenta: number,
+    idStaff: number,
+    fechaExpiracion: string
+): Promise<Staff> {
+    const res = await fetch(`/api/cuenta/${idCuenta}/staff/${idStaff}/renovar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha_expiracion: fechaExpiracion }),
+    });
+    if (!res.ok) throw new Error(`Error al renovar la vigencia del staff #${idStaff}`);
+    return res.json();
+}
+
+/**
+ * Obtiene los roles operativos del staff para combos.
+ * → GET /api/roles/combo-staff?idIdioma=1&tipoOperacion=EVENTO
+ */
+export async function getRolesComboStaff(
+    idIdioma = 1,
+    tipoOperacion = 'EVENTO'
+): Promise<StaffRolCombo[]> {
+    const res = await fetch(`/api/roles/combo-staff?idIdioma=${idIdioma}&tipoOperacion=${tipoOperacion}`);
+    if (!res.ok) throw new Error('Error al cargar la lista de roles de staff');
+    return res.json();
+}
+
 // ════════════════════════════════════════════════════════════════
 //  SECCIÓN 2 – Portal Staff: Acceso del Empleado (sin login previo)
 // ════════════════════════════════════════════════════════════════
@@ -86,7 +150,7 @@ export async function joinStaff(codigo: string): Promise<StaffJoinResponse> {
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        const msg = (err as { message?: string }).message ?? 'Código inválido o expirado.';
+        const msg = err.details?.error || err.details?.message || err.message || 'Código inválido o expirado.';
         throw new Error(msg);
     }
 

@@ -5,9 +5,11 @@ import { LogOut, Sparkles } from 'lucide-react';
 import { useStaffAuth } from '@/src/context/StaffAuthContext';
 
 function StaffHeader() {
-    const { token, logout, user } = useStaffAuth();
+    const { token, logout, user, activeRol } = useStaffAuth();
 
     if (!token) return null;
+
+    const displayRol = activeRol?.rol_codigo || user?.rolCodigo || '';
 
     return (
         <header className="sticky top-0 z-40 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
@@ -20,9 +22,9 @@ function StaffHeader() {
                         <h1 className="text-lg font-bold text-neutral-900 dark:text-white leading-none">
                             Eventia Staff
                         </h1>
-                        {user?.rolCodigo && (
+                        {displayRol && (
                             <span className="text-[10px] text-neutral-500 uppercase font-semibold">
-                                {user.rolCodigo.replace('STAFF_', '')}
+                                {displayRol.replace('STAFF_', '')}
                             </span>
                         )}
                     </div>
