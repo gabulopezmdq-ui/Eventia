@@ -31,8 +31,14 @@ namespace API.Services.Staff
         // ─────────────────────────────────────
         // GENERACIÓN DE CÓDIGO ÚNICO (8 caracteres: CCRRNNNN)
         // ─────────────────────────────────────
-        private async Task<string> GenerarCodigoUnicoAsync(long? idCuenta, long? idEvento, short idRol)
+        // Patrón: CCNNNNNN
+        //   CC  = 2 primeras letras de la cuenta u evento (uppercase, solo alfanumérico)
+        //   NN  = 2 primeras letras del NOMBRE de la persona (no del rol, para que sea
+        //         estable aunque el staff tenga múltiples roles en distintos eventos)
+        //   NNNN= 4 dígitos aleatorios (0000-9999)
+        private async Task<string> GenerarCodigoUnicoAsync(long? idCuenta, long? idEvento, string nombre)
         {
+            // 1. Prefijo Cuenta/Evento (CC)
             string prefixFirst = "XX";
 
             if (idCuenta.HasValue)
@@ -46,22 +52,18 @@ namespace API.Services.Staff
                 prefixFirst = NormalizarParaCodigo(ev?.anfitriones_texto ?? "EV", 2);
             }
 
-            // 2. Prefijo Rol (RR) - Tomamos lo que viene después de STAFF_
-            var rol = await _context.ef_roles.AsNoTracking().FirstOrDefaultAsync(x => x.id_rol == idRol);
-            string rolNombre = rol?.codigo ?? "XX";
-            if (rolNombre.Contains("_"))
-            {
-                rolNombre = rolNombre.Split('_').Last();
-            }
-            string prefixRol = NormalizarParaCodigo(rolNombre, 2);
+            // 2. Prefijo Nombre (NN) - 2 primeras letras del nombre de la persona
+            //    Centrado en la persona, no en el rol, para que el código sea estable
+            //    incluso cuando el staff tenga múltiples roles en distintos eventos.
+            string prefixNombre = NormalizarParaCodigo(nombre, 2);
 
+            // 3. Sufijo Numérico (NNNN)
             var rng = new Random();
             string codigo;
             do
             {
-                // 3. Sufijo Numérico (NNNN)
                 string num = rng.Next(0, 10000).ToString("D4");
-                codigo = $"{prefixFirst}{prefixRol}{num}";
+                codigo = $"{prefixFirst}{prefixNombre}{num}";
             }
             while (await _context.ef_staff.AnyAsync(x => x.codigo == codigo));
 
@@ -85,7 +87,7 @@ namespace API.Services.Staff
             if (string.IsNullOrWhiteSpace(req.email))
                 throw new ArgumentException("El email del staff es obligatorio.");
 
-            var codigo = await GenerarCodigoUnicoAsync(req.id_cuenta, null, req.id_rol);
+            var codigo = await GenerarCodigoUnicoAsync(req.id_cuenta, null, req.nombre ?? "XX");
 
             var staff = new ef_staff
             {
@@ -143,7 +145,7 @@ namespace API.Services.Staff
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("El email del staff es obligatorio.");
 
-            var codigo = await GenerarCodigoUnicoAsync(null, idEvento, idRol);
+            var codigo = await GenerarCodigoUnicoAsync(null, idEvento, nombre ?? "XX");
 
             var staff = new ef_staff
             {
