@@ -39,6 +39,10 @@ namespace API.DataSchema.DTO.Programas
         [JsonProperty("restricciones_alimentarias")]
         public List<ProgramaInscripcionRestriccionRequest> RestriccionesAlimentarias { get; set; } = new();
 
+        [JsonPropertyName("modalidad_retiro")]
+        [JsonProperty("modalidad_retiro")]
+        public string? ModalidadRetiro { get; set; }
+
         [JsonPropertyName("autorizados_retiro")]
         [JsonProperty("autorizados_retiro")]
         public List<ProgramaInscripcionAutorizadoRetiroRequest> AutorizadosRetiro { get; set; } = new();
@@ -50,5 +54,7 @@ namespace API.DataSchema.DTO.Programas
         [JsonPropertyName("salud")]
         [JsonProperty("salud")]
         public ProgramaInscripcionSaludRequest? Salud { get; set; }
+
+
     }
 }

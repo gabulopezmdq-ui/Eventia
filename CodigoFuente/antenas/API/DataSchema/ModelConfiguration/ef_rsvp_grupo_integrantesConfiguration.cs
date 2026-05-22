@@ -29,6 +29,10 @@ namespace API.DataSchema.ModelConfiguration
                 .HasColumnType("char(1)")
                 .IsRequired();
 
+            builder.Property(x => x.modalidad_retiro)
+                .HasColumnName("modalidad_retiro")
+                .HasMaxLength(30);
+
             builder.Property(x => x.orden)
                 .HasColumnName("orden")
                 .HasDefaultValue(1)
@@ -103,10 +107,10 @@ namespace API.DataSchema.ModelConfiguration
                 "ck_rgi_edad_anios",
                 "edad_anios IS NULL OR (edad_anios >= 0 AND edad_anios <= 120)");
             
-            builder.Property(x => x.rol_evento)
-                 .HasColumnType("character(1)")
-                 .HasDefaultValue("A")
-                 .IsRequired();
+
+            builder.HasCheckConstraint(
+                "ck_rsvp_grupo_integrantes_modalidad_retiro",
+                "modalidad_retiro IS NULL OR modalidad_retiro IN ('SE_RETIRA_SOLO','REQUIERE_AUTORIZADO','NO_APLICA')");
         }
     }
 }

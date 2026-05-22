@@ -31,6 +31,11 @@ namespace API.DataSchema
         /// </summary>
         public string rol_evento { get; set; } = "A";
 
+        /// <summary>
+        /// SE_RETIRA_SOLO / REQUIERE_AUTORIZADO / NO_APLICA
+        /// </summary>
+        public string? modalidad_retiro { get; set; }
+
         public string asiste { get; set; } // P Y N
 
         public DateTimeOffset? fecha_respuesta { get; set; }
