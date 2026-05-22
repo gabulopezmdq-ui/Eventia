@@ -66,6 +66,28 @@ export default function CheckinSuccessPage({ params }: PageProps) {
         minute: '2-digit'
     });
 
+    const formatFechaInicio = (fecha?: string) => {
+        if (!fecha) return '';
+        try {
+            const partes = fecha.split('T')[0].split('-');
+            if (partes.length === 3) {
+                const [anio, mes, dia] = partes.map(Number);
+                return new Date(anio, mes - 1, dia).toLocaleDateString('es-AR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                });
+            }
+            return new Date(fecha).toLocaleDateString('es-AR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+            });
+        } catch {
+            return fecha || '';
+        }
+    };
+
     if (isLoading || loadingData) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh]">
@@ -108,11 +130,7 @@ export default function CheckinSuccessPage({ params }: PageProps) {
                                 <div className="flex items-center gap-3 text-sm text-neutral-600 dark:text-neutral-300">
                                     <CalendarRange className="w-4 h-4 text-neutral-400" />
                                     <span>
-                                        {new Date(evento.fecha_inicio).toLocaleDateString('es-AR', {
-                                            weekday: 'long',
-                                            day: 'numeric',
-                                            month: 'long'
-                                        })}
+                                        {formatFechaInicio(evento.fecha_inicio)}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-500/10 p-2.5 rounded-xl border border-green-100 dark:border-green-500/20">

@@ -89,14 +89,31 @@ export default function GeneralProgramaManager({
 
         if (!fecha) return '-';
 
-        return new Intl.DateTimeFormat(
-            'es-AR',
-            {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
+        try {
+            // Evitar desvío de huso horario para fechas en formato YYYY-MM-DD
+            const partes = fecha.split('T')[0].split('-');
+            if (partes.length === 3) {
+                const [anio, mes, dia] = partes.map(Number);
+                return new Intl.DateTimeFormat(
+                    'es-AR',
+                    {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                    }
+                ).format(new Date(anio, mes - 1, dia));
             }
-        ).format(new Date(fecha));
+            return new Intl.DateTimeFormat(
+                'es-AR',
+                {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }
+            ).format(new Date(fecha));
+        } catch {
+            return fecha;
+        }
     };
 
     // ===============================

@@ -7,7 +7,7 @@ interface Props {
     onChange: (fechas: string[]) => void;
 }
 
-function generarFechasLaborables(start: string, end: string): { fechaStr: string; label: string }[] {
+function generarFechasPeriodo(start: string, end: string): { fechaStr: string; label: string }[] {
     const dates = [];
     const curr = new Date(`${start}T12:00:00Z`);
     const limit = new Date(`${end}T12:00:00Z`);
@@ -15,11 +15,9 @@ function generarFechasLaborables(start: string, end: string): { fechaStr: string
 
     while (curr <= limit) {
         const dia = curr.getUTCDay();
-        if (dia !== 0 && dia !== 6) {
-            const fechaStr = curr.toISOString().split('T')[0];
-            const label = `${diasSemana[dia]} ${curr.getUTCDate()}`;
-            dates.push({ fechaStr, label });
-        }
+        const fechaStr = curr.toISOString().split('T')[0];
+        const label = `${diasSemana[dia]} ${curr.getUTCDate()}`;
+        dates.push({ fechaStr, label });
         curr.setUTCDate(curr.getUTCDate() + 1);
     }
     return dates;
@@ -52,7 +50,7 @@ export function DaySelector({ periodos, periodosSeleccionadosIds, fechasSeleccio
             
             <div className="space-y-4">
                 {periodosActivos.map(p => {
-                    const diasLaborables = generarFechasLaborables(p.fecha_desde, p.fecha_hasta);
+                    const diasPeriodo = generarFechasPeriodo(p.fecha_desde, p.fecha_hasta);
                     
                     return (
                         <div key={p.id_programa_periodo}>
@@ -60,7 +58,7 @@ export function DaySelector({ periodos, periodosSeleccionadosIds, fechasSeleccio
                                 {p.nombre}
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                {diasLaborables.map(({ fechaStr, label }) => {
+                                {diasPeriodo.map(({ fechaStr, label }) => {
                                     const isChecked = fechasSeleccionadas.includes(fechaStr);
                                     return (
                                         <label 

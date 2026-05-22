@@ -5,7 +5,7 @@ import {
     RegistrarRetiroPayload, RegistrarRetiroResponse,
     RetirosDiaResponse,
     TransporteDiaResponse, TransporteServicioCodigo,
-    AutorizacionesInscripcionResponse
+    AutorizacionesInscripcionResponse, TipoCalculo
 } from './types';
 
 const API_URL = '/api/programas';
@@ -54,7 +54,13 @@ export const upsertPeriodo = async (idEvento: number, payload: ProgramaPeriodo):
 // Servicios
 export const getServiciosBase = async (idIdioma = 3): Promise<ServicioBase[]> => {
     const res = await fetch(`${API_URL}/servicios-base?idIdioma=${idIdioma}`);
-    if (!res.ok) throw new Error('Error obteniendo servicios base');
+    if (!res.ok) throw new Error('Error obtaining servicios base');
+    return res.json();
+};
+
+export const getTiposCalculo = async (idIdioma = 1): Promise<TipoCalculo[]> => {
+    const res = await fetch(`${API_URL}/tipos-calculo?idIdioma=${idIdioma}`);
+    if (!res.ok) throw new Error('Error al obtener tipos de cálculo');
     return res.json();
 };
 
