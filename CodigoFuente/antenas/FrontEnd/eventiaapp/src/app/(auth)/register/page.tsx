@@ -1,10 +1,24 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { register } from '@/src/features/auth/auth.service';
 import { GoogleSignInButton } from '@/src/features/auth/GoogleSignInButton';
-import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Briefcase, Star, PartyPopper, Building2, HelpCircle } from 'lucide-react';
+import { 
+    User, 
+    Mail, 
+    Lock, 
+    ArrowRight, 
+    Eye, 
+    EyeOff, 
+    Briefcase, 
+    Star, 
+    PartyPopper, 
+    Building2, 
+    HelpCircle, 
+    Sparkles, 
+    AlertCircle 
+} from 'lucide-react';
 import Link from 'next/link';
 
 export default function RegisterPage() {
@@ -36,12 +50,52 @@ function RegisterForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [success, setSuccess] = useState(false);
 
+    // Estados para invitación
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [inviteData, setInviteData] = useState<{
+        nombre_cuenta: string;
+        email_invitado: string;
+        rol_codigo: string;
+    } | null>(null);
+    const [inviteError, setInviteError] = useState<string | null>(null);
+
     const [form, setForm] = useState({
         email: '',
         password: '',
         nombre: '',
         apellido: '',
     });
+
+    useEffect(() => {
+        const queryToken = searchParams.get('token');
+        const storedToken = sessionStorage.getItem('eventia_invite_token');
+        const token = queryToken || storedToken;
+        if (!token) return;
+
+        const validate = async () => {
+            setInviteLoading(true);
+            setInviteError(null);
+            try {
+                const res = await fetch(`/api/cuenta_usuarios/ValidarInvitacion?token=${token}`);
+                const data = await res.json();
+                if (res.ok && data.valida) {
+                    setInviteData(data);
+                    setForm(f => ({ ...f, email: data.email_invitado }));
+                    setSelectedFlow('cuenta'); // Si viene por invitación, es flujo corporativo
+                    sessionStorage.setItem('eventia_invite_token', token);
+                    sessionStorage.setItem('eventia_invite_data', JSON.stringify(data));
+                } else {
+                    setInviteError(data.mensaje || 'La invitación es inválida o ha expirado.');
+                }
+            } catch (err) {
+                setInviteError('No se pudo validar la invitación.');
+            } finally {
+                setInviteLoading(false);
+            }
+        };
+
+        validate();
+    }, [searchParams]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({
@@ -74,7 +128,7 @@ function RegisterForm() {
             }
 
             // Guardar el flow elegido para que el login haga la redirección inteligente
-            const finalFlow = flow || selectedFlow || 'b2c';
+            const finalFlow = inviteData ? 'cuenta' : (flow || selectedFlow || 'b2c');
             sessionStorage.setItem('eventia_flow', finalFlow);
 
             setSuccess(true);
@@ -121,7 +175,12 @@ function RegisterForm() {
                 )}
 
                 <h1 className="text-2xl font-semibold text-white">
-                    {isB2B ? (
+                    {inviteData ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <Sparkles className="w-6 h-6 text-indigo-500" />
+                            Invitación de Cuenta
+                        </span>
+                    ) : isB2B || selectedFlow === 'cuenta' ? (
                         <span className="flex items-center justify-center gap-2">
                             <Briefcase className="w-6 h-6 text-indigo-500" />
                             Cuenta profesional
@@ -131,12 +190,44 @@ function RegisterForm() {
                     )}
                 </h1>
                 <p className="text-neutral-400 text-sm">
-                    {isB2B
+                    {inviteData
+                        ? `Sumate al equipo de ${inviteData.nombre_cuenta}`
+                        : isB2B || selectedFlow === 'cuenta'
                         ? 'Gestioná tus unidades y eventos corporativos'
                         : 'Empezá a organizar tus eventos hoy mismo'
                     }
                 </p>
             </div>
+
+            {/* Banner de invitación */}
+            {inviteLoading && (
+                <div className="mb-6 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center gap-3 animate-pulse">
+                    <div className="w-4 h-4 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+                    <span className="text-xs text-indigo-400 font-medium">Validando invitación a cuenta B2B...</span>
+                </div>
+            )}
+
+            {inviteData && !inviteLoading && (
+                <div className="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs leading-relaxed flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Sparkles className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="font-bold text-white mb-1">¡Tenés una invitación activa!</p>
+                        <p>Registrate para sumarte a la cuenta <strong className="text-indigo-300 font-semibold">{inviteData.nombre_cuenta}</strong>.</p>
+                        <p className="mt-1 text-[11px] text-neutral-400">Registrate usando el email precargado <span className="underline decoration-indigo-400/50">{inviteData.email_invitado}</span>.</p>
+                    </div>
+                </div>
+            )}
+
+            {inviteError && !inviteLoading && (
+                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs leading-relaxed flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="font-bold text-white mb-1">Invitación inválida</p>
+                        <p>{inviteError}</p>
+                        <p className="mt-1 text-[11px] text-neutral-400">Por favor, solicitá un nuevo enlace al administrador de la cuenta.</p>
+                    </div>
+                </div>
+            )}
 
             {/* Google Sign Up - Primero para mejor conversión */}
             <GoogleSignInButton text="signup" />
@@ -154,8 +245,8 @@ function RegisterForm() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
 
-                {/* ═══ Combo "¿Cómo querés empezar?" (solo si no viene ?flow=) ═══ */}
-                {!flow && (
+                {/* ═══ Combo "¿Cómo querés empezar?" (solo si no viene ?flow= ni por invitación) ═══ */}
+                {!flow && !inviteData && (
                     <div className="mb-2">
                         <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2.5">
                             <HelpCircle className="w-3 h-3" />
@@ -232,8 +323,13 @@ function RegisterForm() {
                         placeholder="Email"
                         value={form.email}
                         onChange={handleChange}
+                        readOnly={!!inviteData}
                         required
-                        className="w-full pl-10 pr-4 py-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className={`w-full pl-10 pr-4 py-3 rounded-lg border text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
+                            inviteData 
+                                ? 'bg-neutral-800/50 border-neutral-700/50 text-neutral-400 cursor-not-allowed select-none' 
+                                : 'bg-neutral-800 border-neutral-700 placeholder:text-neutral-500'
+                        }`}
                     />
                 </div>
 

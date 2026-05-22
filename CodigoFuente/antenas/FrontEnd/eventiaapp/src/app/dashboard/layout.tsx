@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { SidebarItem } from "@/src/components/layout/SidebarItem";
 import { DashboardHeader } from "@/src/components/layout/DashboardHeader";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { logout } from "@/src/features/auth/auth.service";
 import { AuthProvider, useAuth } from "@/src/context/AuthContext";
 
@@ -41,6 +41,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
     const [cuentaExpanded, setCuentaExpanded] = useState(true);
     const { ui, cuenta, isSuperAdmin, loading } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -52,6 +53,18 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
             router.replace("/login");
         }
     };
+
+    const isSelectSpacePage = pathname === "/dashboard/select-space";
+
+    if (isSelectSpacePage) {
+        return (
+            <section className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white flex overflow-hidden font-sans transition-colors">
+                <main className="flex-1 overflow-y-auto custom-scrollbar">
+                    {children}
+                </main>
+            </section>
+        );
+    }
 
     return (
         <section className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white flex overflow-hidden font-sans transition-colors">
@@ -134,6 +147,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                                     <SidebarItem href="/dashboard/cuenta" icon={LayoutDashboard} label="Dashboard Cuenta" />
                                     <SidebarItem href="/dashboard/cuenta/unidades" icon={Building2} label="Unidades" />
                                     <SidebarItem href="/dashboard/cuenta/clientes" icon={Users} label="Clientes" />
+                                    <SidebarItem href="/dashboard/cuenta/usuarios" icon={Users} label="Usuarios" />
                                     <SidebarItem href="/dashboard/staff" icon={UserCog} label="Staff y Accesos" />
                                     <SidebarItem href="/dashboard/audiencia" icon={Sparkles} label="Audiencias (CRM)" />
                                     <SidebarItem href="/dashboard/cuenta/eventos" icon={CalendarRange} label="Eventos de Cuenta" />
