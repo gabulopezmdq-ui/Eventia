@@ -617,6 +617,25 @@ namespace API.Controllers.Programas
                             edadAnios = (short)edad;
                     }
 
+                    var modalidadRetiro = string.IsNullOrWhiteSpace(p.ModalidadRetiro)
+                            ? null
+                            : p.ModalidadRetiro.Trim().ToUpperInvariant();
+
+                    if (modalidadRetiro != null &&
+                        modalidadRetiro != "SE_RETIRA_SOLO" &&
+                        modalidadRetiro != "REQUIERE_AUTORIZADO" &&
+                        modalidadRetiro != "NO_APLICA")
+                    {
+                        return BadRequest($"Modalidad de retiro inválida para {p.Nombre}.");
+                    }
+
+                    if (modalidadRetiro == "REQUIERE_AUTORIZADO" &&
+                        (p.AutorizadosRetiro == null ||
+                         !p.AutorizadosRetiro.Any(x => !string.IsNullOrWhiteSpace(x.NombreAutorizado))))
+                    {
+                        return BadRequest($"Debe informar al menos un autorizado de retiro para {p.Nombre}.");
+                    }
+
                     // 4. Integrante participante / hijo
                     var integranteParticipante = new ef_rsvp_grupo_integrantes
                     {
@@ -636,6 +655,7 @@ namespace API.Controllers.Programas
 
                         // Por ahora usamos A porque ya es el default de tu entity.
                         rol_evento = "A",
+                        modalidad_retiro = modalidadRetiro,
 
                         asiste = "Y",
                         fecha_respuesta = now
