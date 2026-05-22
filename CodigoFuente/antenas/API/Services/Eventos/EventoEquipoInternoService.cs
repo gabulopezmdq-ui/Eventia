@@ -164,6 +164,13 @@ namespace API.Services.Eventos
             if (item == null)
                 throw new KeyNotFoundException("Miembro del equipo inexistente.");
 
+            var rol = await _context.Set<ef_roles>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(r => r.id_rol == item.id_rol);
+
+            if (rol != null && rol.codigo == "EVENT_OWNER" && req.activo == false)
+                throw new InvalidOperationException("No se puede inactivar al owner del evento/programa.");
+
             item.activo = req.activo;
             item.fecha_modif = DateTimeOffset.UtcNow;
 
@@ -182,6 +189,13 @@ namespace API.Services.Eventos
 
             if (item == null)
                 throw new KeyNotFoundException("Miembro del equipo inexistente.");
+
+            var rol = await _context.Set<ef_roles>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(r => r.id_rol == item.id_rol);
+
+            if (rol != null && rol.codigo == "EVENT_OWNER")
+                throw new InvalidOperationException("No se puede quitar al owner del evento/programa.");
 
             _context.Set<ef_evento_usuarios>().Remove(item);
             await _context.SaveChangesAsync();
