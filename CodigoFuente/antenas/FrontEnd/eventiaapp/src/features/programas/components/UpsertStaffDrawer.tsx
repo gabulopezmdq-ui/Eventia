@@ -355,7 +355,7 @@ export default function UpsertStaffDrawer({
                                     >
                                         {roles.map((r) => {
                                             const rId = r.id_rol || r.idRol;
-                                            const rText = r.rol_texto || r.rolTexto || r.nombre || r.descripcion;
+                                            const rText = r.texto || r.rol_texto || r.rolTexto || r.nombre || r.descripcion;
                                             return (
                                                 <option key={rId} value={rId} className="bg-white dark:bg-neutral-900 font-semibold">
                                                     {rText}
