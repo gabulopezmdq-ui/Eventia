@@ -3,6 +3,37 @@ import type { Participante } from '../../types/inscripcion.types';
 import { DaySelector } from './DaySelector';
 import { Copy } from 'lucide-react';
 
+interface CampoExtra {
+    codigo: string;
+    label: string;
+    tipo: 'TEXT' | 'NUMBER' | 'SELECT' | 'DATE' | 'BOOLEAN';
+    obligatorio: boolean;
+    opciones?: string[];
+}
+
+function getCamposExtra(configJson: any): CampoExtra[] {
+    if (!configJson) return [];
+    // If configJson is a string, parse it first
+    let parsed = configJson;
+    if (typeof configJson === 'string') {
+        try {
+            parsed = JSON.parse(configJson);
+        } catch {
+            return [];
+        }
+    }
+    const campos = parsed?.campos_extra;
+    if (Array.isArray(campos)) {
+        return campos as CampoExtra[];
+    }
+    return [];
+}
+
+/** Extracts configJson from a servicio, handling both camelCase and snake_case field names */
+function getConfigJson(servicio: any): any {
+    return servicio?.configJson ?? servicio?.config_json ?? null;
+}
+
 export function TabServicios({ participante }: { participante: Participante }) {
     const { state, actualizarParticipante, copiarServiciosDeHermano } = useInscripcion();
     const { programaData } = state;
@@ -15,12 +46,19 @@ export function TabServicios({ participante }: { participante: Participante }) {
         if (existe) {
             nuevosServicios = participante.servicios.filter(s => s.id_programa_servicio !== idProgramaServicio);
         } else {
+            const servicioDef = programaData.servicios.find(s => s.idProgramaServicio === idProgramaServicio);
+            const campos = getCamposExtra(getConfigJson(servicioDef));
+            const initialCamposExtra: Record<string, string> = {};
+            campos.forEach(c => {
+                initialCamposExtra[c.codigo] = '';
+            });
+
             nuevosServicios = [...participante.servicios, {
                 id_programa_servicio: idProgramaServicio,
                 id_programa_periodo: null,
                 fechas: [],
                 cantidad: 1,
-                campos_extra: null
+                campos_extra: Object.keys(initialCamposExtra).length > 0 ? initialCamposExtra : null
             }];
         }
         actualizarParticipante(participante._clientId, { servicios: nuevosServicios });
@@ -30,6 +68,22 @@ export function TabServicios({ participante }: { participante: Participante }) {
         const nuevos = participante.servicios.map(s => 
             s.id_programa_servicio === idProgramaServicio ? { ...s, fechas } : s
         );
+        actualizarParticipante(participante._clientId, { servicios: nuevos });
+    };
+
+    const handleCampoExtraChange = (idProgramaServicio: number, codigo: string, valor: string) => {
+        const nuevos = participante.servicios.map(s => {
+            if (s.id_programa_servicio === idProgramaServicio) {
+                return {
+                    ...s,
+                    campos_extra: {
+                        ...(s.campos_extra || {}),
+                        [codigo]: valor
+                    }
+                };
+            }
+            return s;
+        });
         actualizarParticipante(participante._clientId, { servicios: nuevos });
     };
 
@@ -61,6 +115,7 @@ export function TabServicios({ participante }: { participante: Participante }) {
                 {programaData.servicios.map(servicio => {
                     const svcSel = participante.servicios.find(s => s.id_programa_servicio === servicio.idProgramaServicio);
                     const checked = !!svcSel;
+                    const camposExtra = getCamposExtra(getConfigJson(servicio));
 
                     return (
                         <div 
@@ -103,6 +158,71 @@ export function TabServicios({ participante }: { participante: Participante }) {
                                     fechasSeleccionadas={svcSel?.fechas || []}
                                     onChange={(fechas) => handleFechasChange(servicio.idProgramaServicio, fechas)}
                                 />
+                            )}
+
+                            {checked && camposExtra.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-4">
+                                    <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Datos adicionales requeridos
+                                    </h5>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {camposExtra.map((campo) => {
+                                            const valor = svcSel.campos_extra?.[campo.codigo] || '';
+                                            
+                                            return (
+                                                <div key={campo.codigo} className="space-y-1.5">
+                                                    {campo.tipo !== 'BOOLEAN' && (
+                                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                            {campo.label} {campo.obligatorio && <span className="text-red-500">*</span>}
+                                                        </label>
+                                                    )}
+
+                                                    {campo.tipo === 'SELECT' ? (
+                                                        <select
+                                                            value={valor}
+                                                            onChange={(e) => handleCampoExtraChange(servicio.idProgramaServicio, campo.codigo, e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
+                                                        >
+                                                            <option value="">-- Seleccionar --</option>
+                                                            {campo.opciones?.map((opc) => (
+                                                                <option key={opc} value={opc}>
+                                                                    {opc}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    ) : campo.tipo === 'BOOLEAN' ? (
+                                                        <div className="flex items-center gap-2 pt-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                id={`${participante._clientId}-${campo.codigo}`}
+                                                                checked={valor === 'true'}
+                                                                onChange={(e) => handleCampoExtraChange(servicio.idProgramaServicio, campo.codigo, e.target.checked ? 'true' : 'false')}
+                                                                className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
+                                                            />
+                                                            <label htmlFor={`${participante._clientId}-${campo.codigo}`} className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                                                                {campo.label} {campo.obligatorio && <span className="text-red-500">*</span>}
+                                                            </label>
+                                                        </div>
+                                                    ) : campo.tipo === 'NUMBER' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={valor}
+                                                            onChange={(e) => handleCampoExtraChange(servicio.idProgramaServicio, campo.codigo, e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
+                                                        />
+                                                    ) : (
+                                                        <input
+                                                            type="text"
+                                                            value={valor}
+                                                            onChange={(e) => handleCampoExtraChange(servicio.idProgramaServicio, campo.codigo, e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-1 focus:ring-accent outline-none"
+                                                        />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     );

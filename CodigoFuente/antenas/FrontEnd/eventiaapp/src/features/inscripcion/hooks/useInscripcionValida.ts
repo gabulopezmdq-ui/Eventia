@@ -50,6 +50,26 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
                 if (p.autorizados_retiro.length === 0) {
                     errores.push(`${label}: agregá al menos un autorizado de retiro (tab Retiro)`);
                 }
+
+                // Servicios — validar campos extras obligatorios
+                p.servicios.forEach((svcSel) => {
+                    const servicioDef = programaData?.servicios.find(
+                        (s) => s.idProgramaServicio === svcSel.id_programa_servicio
+                    );
+                    if (servicioDef && servicioDef.configJson) {
+                        const campos = (servicioDef.configJson.campos_extra || []) as any[];
+                        campos.forEach((campo) => {
+                            if (campo.obligatorio) {
+                                const valor = svcSel.campos_extra?.[campo.codigo];
+                                if (!valor || !valor.trim() || valor === '') {
+                                    errores.push(
+                                        `${label}: completá el campo obligatorio "${campo.label}" en el servicio "${servicioDef.nombre}"`
+                                    );
+                                }
+                            }
+                        });
+                    }
+                });
             });
         }
 
@@ -104,9 +124,29 @@ export function getParticipanteBadges(p: Participante, programaData?: ProgramaIn
 
     const saludCompleta = !faltaAutorizacion && !faltaContacto;
 
+    let serviciosWarn = false;
+    if (p.servicios.length > 0 && programaData) {
+        p.servicios.forEach((svcSel) => {
+            const servicioDef = programaData.servicios.find(
+                (s) => s.idProgramaServicio === svcSel.id_programa_servicio
+            );
+            if (servicioDef && servicioDef.configJson) {
+                const campos = (servicioDef.configJson.campos_extra || []) as any[];
+                campos.forEach((campo) => {
+                    if (campo.obligatorio) {
+                        const valor = svcSel.campos_extra?.[campo.codigo];
+                        if (!valor || !valor.trim() || valor === '') {
+                            serviciosWarn = true;
+                        }
+                    }
+                });
+            }
+        });
+    }
+
     return {
         semanas:      p.periodos.length > 0 ? 'ok' : 'warn',
-        servicios:    p.servicios.length > 0 ? 'ok' : 'empty',
+        servicios:    p.servicios.length > 0 ? (serviciosWarn ? 'warn' : 'ok') : 'empty',
         alimentacion: p.restricciones_alimentarias.length > 0 ? 'ok' : 'empty',
         salud:        saludCompleta ? 'ok' : 'warn',
         retiro:       p.autorizados_retiro.length > 0 ? 'ok' : 'warn',

@@ -22,11 +22,24 @@ export function StaffTable({ staffList, onDelete }: StaffTableProps) {
 
     const formatFecha = (fecha?: string) => {
         if (!fecha) return '-';
-        return new Date(fecha).toLocaleDateString('es-AR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
+        try {
+            const partes = fecha.split('T')[0].split('-');
+            if (partes.length === 3) {
+                const [anio, mes, dia] = partes.map(Number);
+                return new Date(anio, mes - 1, dia).toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                });
+            }
+            return new Date(fecha).toLocaleDateString('es-AR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+            });
+        } catch {
+            return fecha;
+        }
     };
 
     return (
