@@ -62,11 +62,24 @@ namespace API.Services.Eventos
         {
             await ValidarAccesoEventoAsync(idEvento, idUsuarioSolicitante);
 
-            var evento = await _context.Set<ef_eventos>().AsNoTracking().SingleOrDefaultAsync(x => x.id_evento == idEvento);
-            if (evento == null) throw new KeyNotFoundException("Evento inexistente.");
+            var evento = await _context.Set<ef_eventos>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.id_evento == idEvento);
 
-            var staff = await _context.Set<ef_staff>().SingleOrDefaultAsync(x => x.id_staff == req.id_staff);
-            if (staff == null) throw new KeyNotFoundException("Staff inexistente.");
+            if (evento == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            if (!evento.id_cuenta.HasValue)
+                throw new InvalidOperationException("Este evento no pertenece a una cuenta. Para B2C use 'Nuevo staff'.");
+
+            var staff = await _context.Set<ef_staff>()
+                .SingleOrDefaultAsync(x => x.id_staff == req.id_staff);
+
+            if (staff == null)
+                throw new KeyNotFoundException("Staff inexistente.");
+
+            if (staff.id_cuenta != evento.id_cuenta.Value)
+                throw new InvalidOperationException("El staff no pertenece a la cuenta del evento.");
 
             var rol = await ValidarRolStaffAsync(req.id_rol, evento.tipo_operacion);
 
