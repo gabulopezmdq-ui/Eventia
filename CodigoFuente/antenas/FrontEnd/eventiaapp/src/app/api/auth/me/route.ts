@@ -64,7 +64,7 @@ export async function GET() {
 
         const backendData = await backendRes.json();
 
-        // Fusionamos: legacy (rol, email, exp) + respuesta completa del backend (ui, cuenta, eventos)
+        // Fusionamos: legacy (rol, email, exp) + respuesta completa del backend (ui, cuenta, eventos, espacios)
         return NextResponse.json({
             // ── Campos legacy (código existente los sigue leyendo sin cambios) ──
             email: legacy.email,
@@ -76,6 +76,7 @@ export async function GET() {
             eventos: backendData.eventos ?? null,
             ui: backendData.ui ?? null,
             roles_globales: backendData.roles_globales ?? [],
+            espacios: backendData.espacios ?? [],
         });
     } catch (error) {
         console.error('Error en proxy /auth/me:', error);

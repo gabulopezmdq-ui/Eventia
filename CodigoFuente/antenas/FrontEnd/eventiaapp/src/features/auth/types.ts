@@ -60,6 +60,16 @@ export interface UsuarioContext {
     apellido?: string | null;
 }
 
+export interface EspacioContext {
+    tipo: 'PERSONAL' | 'CUENTA';
+    id_cuenta: number | null;
+    nombre: string | null;
+    nombre_cuenta: string | null;
+    rol_cuenta: string | null;
+    estado: string | null;
+    vinculo_activo: boolean | null;
+}
+
 /**
  * Respuesta completa fusionada del proxy /api/auth/me.
  * Incluye campos legacy (email, rol, exp) para backward compat
@@ -76,4 +86,5 @@ export interface AuthMeResponse {
     eventos: EventosContext | null;
     ui: UIFlags | null;
     roles_globales: string[];
+    espacios: EspacioContext[];
 }
