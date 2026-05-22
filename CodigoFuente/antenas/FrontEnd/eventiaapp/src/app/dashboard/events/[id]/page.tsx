@@ -394,6 +394,25 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 </button>
                             </div>
                         )}
+                        {/* Quick Link Card - Equipo y Staff */}
+                        {isEvento && (
+                            <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
+                                    <ShieldCheck className="w-5 h-5" />
+                                </div>
+                                <h4 className="font-bold text-foreground text-sm mb-1">Equipo y Staff</h4>
+                                <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                    Administrá el equipo interno del evento y asigná el staff operativo con códigos de acceso.
+                                </p>
+                                <button
+                                    onClick={() => router.push(`/dashboard/events/${event.id_evento}/staff`)}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                                >
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    Ver Equipo y Staff
+                                </button>
+                            </div>
+                        )}
                         {isPrograma && (
                             <>
                                 {/* Inscripciones y Pagos */}

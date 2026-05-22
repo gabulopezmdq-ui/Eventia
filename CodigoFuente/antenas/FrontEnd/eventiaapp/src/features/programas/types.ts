@@ -278,3 +278,38 @@ export interface TipoCalculo {
     texto: string;
     orden: number | null;
 }
+
+export interface EquipoMiembro {
+    id_evento_usuario: number;
+    id_evento: number;
+    id_usuario: number;
+    nombre: string;
+    apellido: string;
+    email: string;
+    id_rol: number;
+    codigo_rol: string;
+    rol_texto: string;
+    activo: boolean;
+    fecha_alta: string;
+}
+
+export interface StaffOperativoMiembro {
+    id_evento_staff: number;
+    id_evento: number;
+    id_staff: number;
+    nombre: string;
+    apellido: string;
+    email: string | null;
+    telefono: string | null;
+    id_rol: number;
+    codigo_rol: string;
+    rol_texto: string;
+    pantalla_inicio: string;
+    codigo_acceso: string;
+    activo: boolean;
+    fecha_expiracion: string | null;
+    fecha_uso: string | null;
+    usos: number;
+    fecha_alta: string;
+}
+
