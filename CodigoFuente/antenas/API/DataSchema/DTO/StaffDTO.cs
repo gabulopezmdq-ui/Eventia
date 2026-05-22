@@ -60,21 +60,24 @@ namespace API.DataSchema.DTO.Staff
     {
         public long id_staff { get; set; }
         public long? id_cuenta { get; set; }
-        public long? id_evento { get; set; }
 
         public string? nombre { get; set; }
         public string? apellido { get; set; }
         public string? display_name { get; set; }
 
-        public string? tipo_operacion { get; set; }
-
-        public List<StaffJoinRolDTO> roles_evento { get; set; } = new();
-        public string? pantalla_inicio_default { get; set; }
-
-        public List<StaffUnidadDTO> unidades { get; set; } = new();
+        public List<StaffEventoContextoDTO> eventos_disponibles { get; set; } = new();
 
         public string access_token { get; set; } = null!;
         public DateTimeOffset expires_at_utc { get; set; }
+    }
+
+    public class StaffEventoContextoDTO
+    {
+        public long id_evento { get; set; }
+        public string? tipo_operacion { get; set; }
+        public string? nombre_evento { get; set; }
+        public List<StaffJoinRolDTO> roles_evento { get; set; } = new();
+        public string? pantalla_inicio_default { get; set; }
     }
 
     public class StaffUnidadDTO

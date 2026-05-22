@@ -299,45 +299,47 @@ namespace API.Services.Staff
             staff.fecha_modif = ahora;
             await _context.SaveChangesAsync();
 
-            var unidades = await (
-                from su in _context.ef_staff_unidades.AsNoTracking()
-                join u in _context.ef_cuenta_unidades.AsNoTracking() on su.id_unidad equals u.id_unidad
-                where su.id_staff == staff.id_staff
-                select new StaffUnidadDTO
+            var asignaciones = await (
+                from es in _context.Set<ef_evento_staff>().AsNoTracking()
+                join r in _context.Set<ef_roles>().AsNoTracking() on es.id_rol equals r.id_rol
+                join e in _context.ef_eventos.AsNoTracking() on es.id_evento equals e.id_evento
+                where es.id_staff == staff.id_staff && es.activo
+                orderby es.id_evento, r.orden_ui
+                select new
                 {
-                    id_unidad = u.id_unidad,
-                    nombre = u.nombre
+                    es.id_evento_staff,
+                    es.id_evento,
+                    e.tipo_operacion,
+                    nombre_evento = e.anfitriones_texto,
+                    es.id_rol,
+                    r.codigo,
+                    r.pantalla_inicio
                 }
             ).ToListAsync();
 
-            string? tipoOperacion = null;
-            List<API.DataSchema.DTO.Eventos.StaffJoinRolDTO> rolesEvento = new();
+            if (asignaciones.Count == 0)
+                throw new InvalidOperationException("El staff no tiene asignaciones activas.");
 
-            if (staff.id_evento.HasValue)
-            {
-                tipoOperacion = await _context.ef_eventos
-                    .AsNoTracking()
-                    .Where(e => e.id_evento == staff.id_evento.Value)
-                    .Select(e => e.tipo_operacion)
-                    .FirstOrDefaultAsync();
-
-                rolesEvento = await (
-                    from es in _context.Set<ef_evento_staff>().AsNoTracking()
-                    join r in _context.Set<ef_roles>().AsNoTracking() on es.id_rol equals r.id_rol
-                    where es.id_evento == staff.id_evento.Value
-                          && es.id_staff == staff.id_staff
-                          && es.activo
-                    orderby r.orden_ui
-                    select new API.DataSchema.DTO.Eventos.StaffJoinRolDTO
+            var eventosDisponibles = asignaciones
+                .GroupBy(x => new { x.id_evento, x.tipo_operacion, x.nombre_evento })
+                .Select(g => new StaffEventoContextoDTO
+                {
+                    id_evento = g.Key.id_evento,
+                    tipo_operacion = g.Key.tipo_operacion,
+                    nombre_evento = g.Key.nombre_evento,
+                    roles_evento = g.Select(x => new API.DataSchema.DTO.Eventos.StaffJoinRolDTO
                     {
-                        id_evento_staff = es.id_evento_staff,
-                        id_rol = es.id_rol,
-                        codigo_rol = r.codigo,
-                        rol_texto = r.codigo,
-                        pantalla_inicio = r.pantalla_inicio
-                    }
-                ).ToListAsync();
-            }
+                        id_evento_staff = x.id_evento_staff,
+                        id_rol = x.id_rol,
+                        codigo_rol = x.codigo,
+                        rol_texto = x.codigo,
+                        pantalla_inicio = x.pantalla_inicio
+                    }).ToList(),
+                    pantalla_inicio_default = g.Count() == 1
+                        ? g.First().pantalla_inicio
+                        : "OPERACION_GENERAL"
+                })
+                .ToList();
 
             var jwt = GenerarJwtStaff(staff, "STAFF");
 
@@ -353,14 +355,10 @@ namespace API.Services.Staff
             {
                 id_staff = staff.id_staff,
                 id_cuenta = staff.id_cuenta,
-                id_evento = staff.id_evento,
                 nombre = staff.nombre,
                 apellido = staff.apellido,
                 display_name = displayName,
-                tipo_operacion = tipoOperacion,
-                roles_evento = rolesEvento,
-                pantalla_inicio_default = rolesEvento.Count == 1 ? rolesEvento[0].pantalla_inicio : "OPERACION_GENERAL",
-                unidades = unidades,
+                eventos_disponibles = eventosDisponibles,
                 access_token = jwt.token,
                 expires_at_utc = jwt.expiresAtUtc
             };
