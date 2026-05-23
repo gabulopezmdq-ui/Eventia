@@ -1,10 +1,9 @@
 import { useInscripcion } from '../../hooks/useInscripcion';
 import type { Participante, RestriccionAlimentaria, RestriccionAlimentariaConfig } from '../../types/inscripcion.types';
-import { Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Utensils } from 'lucide-react';
 
 interface Props {
     participante: Participante;
-    /** Catálogo de restricciones que viene del GET del programa */
     restriccionesConfig: RestriccionAlimentariaConfig[];
 }
 
@@ -16,154 +15,160 @@ export function TabAlimentacion({ participante, restriccionesConfig }: Props) {
 
     const restricciones = participante.restricciones_alimentarias;
 
-    const handleChange = (
-        index: number,
-        campo: keyof RestriccionAlimentaria,
-        valor: string | number
-    ) => {
-        const nuevas = [...restricciones];
-        nuevas[index] = { ...nuevas[index], [campo]: valor };
+    // Obtener valores mapeados de una restricción del catálogo
+    const getCatalogValues = (cfg: any) => {
+        const id = Number(cfg.id_restriccion ?? cfg.id ?? 0);
+        const nombre = String(cfg.descripcion ?? cfg.nombre ?? '');
+        return { id, nombre };
+    };
+
+    const handleToggle = (cfgId: number) => {
+        const existeIndex = restricciones.findIndex(r => r.id_restriccion_alimentaria === cfgId);
+        let nuevasRestricciones;
+
+        if (existeIndex !== -1) {
+            // Desmarcar: remover de la lista
+            nuevasRestricciones = restricciones.filter((_, idx) => idx !== existeIndex);
+        } else {
+            // Marcar: agregar nuevo registro con valores por defecto
+            const nueva: RestriccionAlimentaria = {
+                id_restriccion_alimentaria: cfgId,
+                severidad: 'Leve',
+                observacion: '',
+            };
+            nuevasRestricciones = [...restricciones, nueva];
+        }
+
+        actualizarParticipante(participante._clientId, { restricciones_alimentarias: nuevasRegistraciones(nuevasRestricciones) });
+    };
+
+    // Filtra duplicados o nulos y devuelve sanitizada la lista
+    const nuevasRegistraciones = (lista: RestriccionAlimentaria[]) => {
+        return lista.filter(r => r.id_restriccion_alimentaria !== undefined);
+    };
+
+    const handleSeverityChange = (cfgId: number, severidad: 'Leve' | 'Moderada' | 'Severa') => {
+        const nuevas = restricciones.map(r => 
+            r.id_restriccion_alimentaria === cfgId ? { ...r, severidad } : r
+        );
         actualizarParticipante(participante._clientId, { restricciones_alimentarias: nuevas });
     };
 
-    const handleEliminar = (index: number) => {
-        const nuevas = restricciones.filter((_, i) => i !== index);
+    const handleObservacionChange = (cfgId: number, observacion: string) => {
+        const nuevas = restricciones.map(r => 
+            r.id_restriccion_alimentaria === cfgId ? { ...r, observacion } : r
+        );
         actualizarParticipante(participante._clientId, { restricciones_alimentarias: nuevas });
-    };
-
-    const handleAgregar = () => {
-        // Tomamos el primer id disponible o 0 si no hay catálogo
-        const primerConfig = restriccionesConfig[0];
-        const primerId = primerConfig ? ((primerConfig as any).id_restriccion ?? primerConfig.id) : 0;
-        
-        const nueva: RestriccionAlimentaria = {
-            id_restriccion_alimentaria: primerId,
-            severidad: 'Leve',
-            observacion: '',
-        };
-        actualizarParticipante(participante._clientId, {
-            restricciones_alimentarias: [...restricciones, nueva],
-        });
     };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 uppercase tracking-wide">
+                    <Utensils className="w-4 h-4 text-accent" />
                     Restricciones Alimentarias
                 </h4>
-                <p className="text-sm text-gray-500">
-                    Indicá si el participante tiene alguna dieta especial o alergia alimentaria.
+                <p className="text-xs text-gray-500 mt-0.5">
+                    Indicá si el participante sigue alguna dieta especial o tiene alguna alergia alimentaria.
                 </p>
             </div>
 
-            {restricciones.length === 0 ? (
-                <div className="p-6 text-center border-2 border-dashed border-gray-200 dark:border-card-border rounded-xl">
-                    <p className="text-gray-500 text-sm mb-4">No hay restricciones registradas.</p>
-                    <button
-                        type="button"
-                        onClick={handleAgregar}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80"
-                    >
-                        <Plus className="w-4 h-4" /> Agregar restricción
-                    </button>
+            {restriccionesConfig.length === 0 ? (
+                <div className="p-6 text-center border border-dashed border-gray-200 dark:border-card-border rounded-xl">
+                    <p className="text-gray-500 text-sm">No hay catálogo de restricciones alimentarias disponible.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {restricciones.map((rest, index) => (
-                        <div
-                            key={index}
-                            className="p-4 bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-card-border relative"
-                        >
-                            <button
-                                type="button"
-                                onClick={() => handleEliminar(index)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
+                    {restriccionesConfig.map(cfg => {
+                        const { id: cfgId, nombre: cfgNombre } = getCatalogValues(cfg);
+                        const restSel = restricciones.find(r => r.id_restriccion_alimentaria === cfgId);
+                        const isChecked = !!restSel;
+                        const isOtra = cfgNombre.toLowerCase().includes('otra') || cfgNombre.toLowerCase().includes('otro');
+
+                        return (
+                            <div 
+                                key={cfgId}
+                                className={`p-5 border rounded-2xl transition-all bg-white dark:bg-card-bg ${
+                                    isChecked 
+                                        ? 'border-accent shadow-sm ring-1 ring-accent/10' 
+                                        : 'border-gray-200 dark:border-card-border hover:border-gray-300 dark:hover:border-gray-700'
+                                }`}
                             >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pr-8">
-                                {/* Tipo — usa catálogo del GET */}
-                                <div className="space-y-1.5">
-                                    <label className={LABEL_CLASS}>Tipo de dieta / Alergia *</label>
-                                    {restriccionesConfig.length > 0 ? (
-                                        <select
-                                            value={rest.id_restriccion_alimentaria}
-                                            onChange={e =>
-                                                handleChange(index, 'id_restriccion_alimentaria', Number(e.target.value))
-                                            }
-                                            className={FIELD_CLASS}
-                                        >
-                                            {restriccionesConfig.map(cfg => {
-                                                const cfgId = (cfg as any).id_restriccion ?? cfg.id;
-                                                const cfgNombre = (cfg as any).descripcion ?? cfg.nombre;
-                                                return (
-                                                    <option key={cfgId} value={cfgId}>
-                                                        {cfgNombre}
-                                                    </option>
-                                                );
-                                            })}
-                                        </select>
-                                    ) : (
-                                        /* Fallback si el programa no trae catálogo */
-                                        <select
-                                            value={rest.id_restriccion_alimentaria}
-                                            onChange={e =>
-                                                handleChange(index, 'id_restriccion_alimentaria', Number(e.target.value))
-                                            }
-                                            className={FIELD_CLASS}
-                                        >
-                                            <option value={0}>Seleccionar...</option>
-                                        </select>
-                                    )}
-                                </div>
-
-                                {/* Severidad */}
-                                <div className="space-y-1.5">
-                                    <label className={LABEL_CLASS}>Severidad *</label>
-                                    <select
-                                        value={rest.severidad}
-                                        onChange={e =>
-                                            handleChange(index, 'severidad', e.target.value)
-                                        }
-                                        className={FIELD_CLASS}
-                                    >
-                                        <option value="Leve">Leve</option>
-                                        <option value="Moderada">Moderada</option>
-                                        <option value="Severa">Severa — Alergia grave</option>
-                                    </select>
-                                </div>
-
-                                {/* Observación */}
-                                <div className="space-y-1.5 sm:col-span-2">
-                                    <label className={LABEL_CLASS}>
-                                        Observaciones
-                                        {rest.id_restriccion_alimentaria === 0 && (
-                                            <span className="text-red-500 ml-1">*</span>
-                                        )}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Ej: Contaminación cruzada, sin trazas..."
-                                        value={rest.observacion}
-                                        onChange={e =>
-                                            handleChange(index, 'observacion', e.target.value)
-                                        }
-                                        className={FIELD_CLASS}
+                                <label className="flex items-center cursor-pointer select-none">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={isChecked} 
+                                        onChange={() => handleToggle(cfgId)}
+                                        className="w-5 h-5 text-accent border-gray-300 rounded focus:ring-accent accent-accent"
                                     />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                                    <span className={`ml-4 font-semibold text-sm ${isChecked ? 'text-accent' : 'text-gray-900 dark:text-white'}`}>
+                                        {cfgNombre}
+                                    </span>
+                                </label>
 
-                    <button
-                        type="button"
-                        onClick={handleAgregar}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80"
-                    >
-                        <Plus className="w-4 h-4" /> Agregar otra restricción
-                    </button>
+                                {isChecked && restSel && (
+                                    <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                                        
+                                        {/* Severidad Selector de Botones Premium */}
+                                        <div className="space-y-2">
+                                            <label className={LABEL_CLASS}>Severidad *</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(['Leve', 'Moderada', 'Severa'] as const).map(sev => {
+                                                    const isSelected = restSel.severidad === sev;
+                                                    
+                                                    // Colores basados en severidad
+                                                    const colorClasses = 
+                                                        sev === 'Leve' 
+                                                            ? isSelected ? 'bg-green-600 border-green-600 text-white' : 'hover:bg-green-50 dark:hover:bg-green-950/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
+                                                            : sev === 'Moderada'
+                                                            ? isSelected ? 'bg-amber-500 border-amber-500 text-white' : 'hover:bg-amber-50 dark:hover:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                                                            : isSelected ? 'bg-red-600 border-red-600 text-white' : 'hover:bg-red-50 dark:hover:bg-red-950/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800';
+
+                                                    return (
+                                                        <button
+                                                            key={sev}
+                                                            type="button"
+                                                            onClick={() => handleSeverityChange(cfgId, sev)}
+                                                            className={`px-4 py-1.5 rounded-full border text-xs font-semibold tracking-wider uppercase transition-all shadow-sm ${colorClasses}`}
+                                                        >
+                                                            {sev}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Observación */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                                                Observaciones 
+                                                {isOtra ? (
+                                                    <span className="text-red-500 font-bold flex items-center gap-1">
+                                                        * <span className="text-[10px] text-red-400 font-normal">(Requerido para "Otra")</span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400 font-normal text-[10px]">(Opcional)</span>
+                                                )}
+                                            </label>
+                                            <textarea
+                                                rows={2}
+                                                placeholder={isOtra ? "Por favor detallá la restricción alimentaria aquí..." : "Ej: Evitar contaminación cruzada, trazas, etc."}
+                                                value={restSel.observacion}
+                                                onChange={e => handleObservacionChange(cfgId, e.target.value)}
+                                                className={`${FIELD_CLASS} resize-none`}
+                                            />
+                                            {isOtra && !restSel.observacion.trim() && (
+                                                <p className="text-[11px] text-red-500 flex items-center gap-1 mt-1">
+                                                    <AlertCircle className="w-3.5 h-3.5" />
+                                                    El detalle de observaciones es obligatorio al seleccionar esta opción.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>

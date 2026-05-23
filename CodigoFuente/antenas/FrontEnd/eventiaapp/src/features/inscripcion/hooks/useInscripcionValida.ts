@@ -36,7 +36,7 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
                     errores.push(`${label}: seleccioná al menos una semana`);
                 }
 
-                // Salud — autorización emergencia médica
+                // Salud — autorización de emergencia médica
                 if (configSalud.pedir_autoriza_emergencia_medica && configSalud.autoriza_emergencia_medica_obligatorio && !p.salud?.autoriza_emergencia_medica) {
                     errores.push(`${label}: debe autorizar la atención de emergencias médicas (tab Salud)`);
                 }
@@ -46,10 +46,37 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
                     errores.push(`${label}: agregá al menos un contacto de emergencia (tab Salud)`);
                 }
 
-                // Retiro — al menos 1 autorizado
-                if (p.autorizados_retiro.length === 0) {
-                    errores.push(`${label}: agregá al menos un autorizado de retiro (tab Retiro)`);
+                // Retiro — Modalidad obligatoria
+                if (!p.modalidad_retiro) {
+                    errores.push(`${label}: seleccioná una modalidad de retiro (tab Retiro)`);
+                } else if (p.modalidad_retiro === 'REQUIERE_AUTORIZADO') {
+                    // Si requiere autorizado, al menos 1 persona con nombre y teléfono
+                    if (p.autorizados_retiro.length === 0) {
+                        errores.push(`${label}: agregá al menos un autorizado de retiro (tab Retiro)`);
+                    } else {
+                        p.autorizados_retiro.forEach((aut, idx) => {
+                            if (!aut.nombre_autorizado?.trim()) {
+                                errores.push(`${label}: el autorizado ${idx + 1} no tiene nombre completo`);
+                            }
+                            if (!aut.telefono_autorizado?.trim()) {
+                                errores.push(`${label}: el autorizado ${idx + 1} no tiene teléfono`);
+                            }
+                        });
+                    }
                 }
+
+                // Restricciones Alimentarias — observaciones obligatorias en "Otra"
+                p.restricciones_alimentarias.forEach((r) => {
+                    const cfg = programaData?.restricciones_alimentarias_config?.find(
+                        (c) => Number(c.id) === r.id_restriccion_alimentaria || Number((c as any).id_restriccion) === r.id_restriccion_alimentaria
+                    );
+                    const nombre = cfg?.nombre || (cfg as any)?.descripcion || '';
+                    const isOtra = nombre.toLowerCase().includes('otra') || nombre.toLowerCase().includes('otro');
+                    
+                    if (isOtra && !r.observacion?.trim()) {
+                        errores.push(`${label}: las observaciones son obligatorias al marcar la opción "${nombre}"`);
+                    }
+                });
 
                 // Servicios — validar campos extras obligatorios
                 p.servicios.forEach((svcSel) => {
@@ -57,7 +84,7 @@ export function useInscripcionValida(state: InscripcionState): ValidationResult 
                         (s) => s.idProgramaServicio === svcSel.id_programa_servicio
                     );
                     if (servicioDef && servicioDef.configJson) {
-                        const campos = (servicioDef.configJson.campos_extra || []) as any[];
+                        const campos = ((servicioDef.configJson as any).campos_extra || []) as any[];
                         campos.forEach((campo) => {
                             if (campo.obligatorio) {
                                 const valor = svcSel.campos_extra?.[campo.codigo];
@@ -109,7 +136,7 @@ export interface ParticipanteBadges {
 
 /**
  * Calcula el estado visual de cada tab para un participante dado.
- * Considera la configuración de salud del programa.
+ * Considera la configuración de salud del programa y las nuevas reglas de retiro y alimentación.
  */
 export function getParticipanteBadges(p: Participante, programaData?: ProgramaInscripcionData | null): ParticipanteBadges {
     const configSalud = (programaData?.configuracion_salud || {
@@ -124,6 +151,7 @@ export function getParticipanteBadges(p: Participante, programaData?: ProgramaIn
 
     const saludCompleta = !faltaAutorizacion && !faltaContacto;
 
+    // Servicios obligatorios campos extras
     let serviciosWarn = false;
     if (p.servicios.length > 0 && programaData) {
         p.servicios.forEach((svcSel) => {
@@ -131,7 +159,7 @@ export function getParticipanteBadges(p: Participante, programaData?: ProgramaIn
                 (s) => s.idProgramaServicio === svcSel.id_programa_servicio
             );
             if (servicioDef && servicioDef.configJson) {
-                const campos = (servicioDef.configJson.campos_extra || []) as any[];
+                const campos = ((servicioDef.configJson as any).campos_extra || []) as any[];
                 campos.forEach((campo) => {
                     if (campo.obligatorio) {
                         const valor = svcSel.campos_extra?.[campo.codigo];
@@ -144,11 +172,35 @@ export function getParticipanteBadges(p: Participante, programaData?: ProgramaIn
         });
     }
 
+    // Alimentación observaciones requeridas en "Otra"
+    let alimentacionWarn = false;
+    p.restricciones_alimentarias.forEach((r) => {
+        const cfg = programaData?.restricciones_alimentarias_config?.find(
+            (c) => Number(c.id) === r.id_restriccion_alimentaria || Number((c as any).id_restriccion) === r.id_restriccion_alimentaria
+        );
+        const nombre = cfg?.nombre || (cfg as any)?.descripcion || '';
+        const isOtra = nombre.toLowerCase().includes('otra') || nombre.toLowerCase().includes('otro');
+        if (isOtra && !r.observacion?.trim()) {
+            alimentacionWarn = true;
+        }
+    });
+
+    // Retiros validación dinámica
+    let retiroStatus: TabBadgeStatus = 'warn';
+    if (p.modalidad_retiro === 'SE_RETIRA_SOLO' || p.modalidad_retiro === 'NO_APLICA') {
+        retiroStatus = 'ok';
+    } else if (p.modalidad_retiro === 'REQUIERE_AUTORIZADO') {
+        const tieneValido = p.autorizados_retiro.length > 0 && p.autorizados_retiro.every(
+            a => a.nombre_autorizado?.trim() && a.telefono_autorizado?.trim()
+        );
+        retiroStatus = tieneValido ? 'ok' : 'warn';
+    }
+
     return {
         semanas:      p.periodos.length > 0 ? 'ok' : 'warn',
         servicios:    p.servicios.length > 0 ? (serviciosWarn ? 'warn' : 'ok') : 'empty',
-        alimentacion: p.restricciones_alimentarias.length > 0 ? 'ok' : 'empty',
+        alimentacion: p.restricciones_alimentarias.length > 0 ? (alimentacionWarn ? 'warn' : 'ok') : 'empty',
         salud:        saludCompleta ? 'ok' : 'warn',
-        retiro:       p.autorizados_retiro.length > 0 ? 'ok' : 'warn',
+        retiro:       retiroStatus,
     };
 }

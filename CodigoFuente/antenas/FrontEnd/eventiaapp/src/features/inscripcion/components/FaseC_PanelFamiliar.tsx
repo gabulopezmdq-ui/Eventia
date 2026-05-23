@@ -49,6 +49,7 @@ export function FaseC_PanelFamiliar() {
             fecha_nacimiento: nuevoParticipante.fecha_nacimiento,
             documento: nuevoParticipante.documento || null,
             observaciones: nuevoParticipante.observaciones,
+            modalidad_retiro: null,
             periodos: [],
             servicios: [],
             restricciones_alimentarias: [],

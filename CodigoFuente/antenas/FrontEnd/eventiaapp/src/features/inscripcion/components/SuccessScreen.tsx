@@ -8,7 +8,7 @@ export function SuccessScreen() {
 
     useEffect(() => {
         limpiarDraft();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -22,7 +22,7 @@ export function SuccessScreen() {
                     </div>
 
                     <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
-                        ¡Inscripción Confirmada!
+                        ¡Inscripcion Confirmada!
                     </h1>
 
                     <p className="text-gray-600 dark:text-gray-400 text-lg">
