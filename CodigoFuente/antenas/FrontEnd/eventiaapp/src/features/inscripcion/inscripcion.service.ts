@@ -2,6 +2,7 @@ import type {
     ProgramaInscripcionData,
     InscripcionPayload,
     ConfirmacionResponse,
+    TotalEstimado,
 } from './types/inscripcion.types';
 
 const API = '/api/inscripcion';
@@ -70,5 +71,26 @@ export async function confirmarInscripcion(
         body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Error al confirmar la inscripción. Intentá nuevamente.');
+    return res.json();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// POST — Cotizar inscripción en tiempo real
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Envía el payload al backend para calcular los importes y descuentos reales.
+ * Se llama dinámicamente antes de confirmar para mostrar la cotización oficial.
+ */
+export async function cotizarInscripcion(
+    token: string,
+    payload: InscripcionPayload
+): Promise<TotalEstimado> {
+    const res = await fetch(`${API}/${token}/cotizar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Error al cotizar la inscripción.');
     return res.json();
 }
