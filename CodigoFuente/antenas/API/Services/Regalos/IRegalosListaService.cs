@@ -13,5 +13,6 @@ namespace API.Services.Regalos
         Task<RegalosListaReservaDTO> ReservarAsync(RegalosListaReservarDTO req);
         Task<bool> CancelarReservaAsync(long id_evento, long id_reserva);
         Task<bool> UpdateItemAsync(long id_evento, long id_regalo_item, RegalosListaUpdateItemDTO req);
+        Task<RegalosListaItemDTO> DuplicarItemAsync(long id_evento, long id_regalo_item);
     }
 }
