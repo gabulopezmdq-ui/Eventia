@@ -186,6 +186,10 @@ namespace API.DataSchema
         public DbSet<ef_evento_regalos_transferencias> ef_evento_regalos_transferencias { get; set; } = null!;
         public DbSet<ef_evento_regalos_transferencias_config> ef_evento_regalos_transferencias_config { get; set; } = null!;
 
+        //transporte
+        public DbSet<ef_evento_transporte> ef_evento_transporte { get; set; }
+        public DbSet<ef_evento_transporte_pro_config> ef_evento_transporte_pro_config { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -397,6 +401,10 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_evento_regalos_fondo_aportesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_regalos_transferenciasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_regalos_transferencias_configConfiguration());
+
+            //transporte
+            modelBuilder.ApplyConfiguration(new ef_evento_transporteConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_transporte_pro_configConfiguration());
 
 
             // Likes: Clave primaria compuesta

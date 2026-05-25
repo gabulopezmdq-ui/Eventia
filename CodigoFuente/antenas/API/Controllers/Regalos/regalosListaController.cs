@@ -65,5 +65,21 @@ namespace API.Controllers.Regalos
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        [HttpPost("{id_regalo_item}/duplicar")]
+        public async Task<ActionResult> Duplicar(long id_evento, long id_regalo_item)
+        {
+            try
+            {
+                var dto = await _service.DuplicarItemAsync(id_evento, id_regalo_item);
+                return Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+
     }
 }

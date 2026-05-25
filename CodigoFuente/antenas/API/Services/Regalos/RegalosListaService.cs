@@ -252,5 +252,61 @@ namespace API.Services.Regalos
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<RegalosListaItemDTO> DuplicarItemAsync(long id_evento, long id_regalo_item)
+        {
+            if (id_evento <= 0) throw new Exception("id_evento inválido.");
+            if (id_regalo_item <= 0) throw new Exception("id_regalo_item inválido.");
+
+            var original = await _context.ef_evento_regalos_lista_items
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.id_evento == id_evento && x.id_regalo_item == id_regalo_item);
+
+            if (original == null) throw new Exception("Item no encontrado.");
+
+            // Orden al final
+            short maxOrden = await _context.ef_evento_regalos_lista_items
+                .Where(x => x.id_evento == id_evento)
+                .Select(x => (short?)x.orden)
+                .MaxAsync() ?? (short)0;
+
+            var nuevo = new ef_evento_regalos_lista_items
+            {
+                id_evento = id_evento,
+                titulo = original.titulo,
+                descripcion = original.descripcion,
+                cantidad_total = original.cantidad_total,
+                permitir_excedente = original.permitir_excedente,
+                url_referencia = original.url_referencia,
+                imagen_url = original.imagen_url,
+                orden = (short)(maxOrden + 1),
+                visible = original.visible,
+                activo = true,
+                fecha_alta = DateTimeOffset.UtcNow
+            };
+
+            _context.ef_evento_regalos_lista_items.Add(nuevo);
+            await _context.SaveChangesAsync();
+
+            // DTO: tu RegalosListaItemDTO NO incluye permitir_excedente/url_referencia/imagen_url
+            return new RegalosListaItemDTO
+            {
+                id_regalo_item = nuevo.id_regalo_item,
+                id_evento = nuevo.id_evento,
+                titulo = nuevo.titulo,
+                descripcion = nuevo.descripcion,
+                cantidad_total = nuevo.cantidad_total,
+
+                // calculados (nuevo arranca en 0)
+                cantidad_reservada = 0,
+                cantidad_disponible = nuevo.cantidad_total,
+
+                orden = nuevo.orden,
+                visible = nuevo.visible,
+                activo = nuevo.activo
+            };
+        }
+
+
     }
 }

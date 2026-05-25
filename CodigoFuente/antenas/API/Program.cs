@@ -10,6 +10,7 @@ using API.Services.Precios;
 using API.Services.Regalos;
 using API.Services.Roles;
 using API.Services.Staff;
+using API.Services.Transporte;
 using API.Utility;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FluentAssertions.Common;
@@ -195,6 +196,10 @@ builder.Services.AddScoped<IRegalosFondoService, RegalosFondoService>();
 builder.Services.AddScoped<IRegalosTransferenciasService, RegalosTransferenciasService>();
 builder.Services.AddScoped<IRegalosPublicBundleService, RegalosPublicBundleService>();
 builder.Services.AddScoped<IRegalosTransferenciasConfigService, RegalosTransferenciasConfigService>();
+
+//transporte
+builder.Services.AddScoped<ITransporteEventoService, TransporteEventoService>();
+builder.Services.AddScoped<ITransporteProConfigService, TransporteProConfigService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
