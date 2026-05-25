@@ -6,7 +6,7 @@ namespace API.Services.Regalos
 {
     public interface IRegalosTransferenciasService
     {
-        Task<List<RegalosTransferenciaDTO>> ListarAsync(long id_evento);
+        Task<List<RegalosTransferenciaDTO>> ListarAsync(long id_evento, bool? activo = true);
         Task<RegalosTransferenciaDTO> UpsertAsync(RegalosTransferenciaUpsertDTO dto);
         Task<bool> SetActivoAsync(long id_evento, long id_evento_regalo_transferencia, bool activo);
     }

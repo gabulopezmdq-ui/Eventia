@@ -4,6 +4,7 @@ using API.Repositories;
 using API.Services;
 using API.Services.Cuentas;
 using API.Services.Eventos;
+using API.Services.Monedas;
 using API.Services.Planes;
 using API.Services.Precios;
 using API.Services.Regalos;
@@ -150,6 +151,9 @@ builder.Services.AddScoped<AuthContextService>();
 builder.Services.AddScoped<IAdminCuentasService, AdminCuentasService>();
 builder.Services.AddScoped<ICuentaContextService, CuentaContextService>();
 builder.Services.AddScoped<IMesasService, MesasService>();
+
+
+builder.Services.AddScoped<IMonedasService, MonedasService>();
 
 builder.Services.AddScoped<IEventoHospedajesService, EventoHospedajesService>();
 builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();

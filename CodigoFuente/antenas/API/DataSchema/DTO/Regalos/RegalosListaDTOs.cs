@@ -20,6 +20,17 @@ namespace API.DataSchema.DTO.Regalos
         public short orden { get; set; } = 1;
         public bool visible { get; set; } = true;
     }
+    public class RegalosListaUpdateItemDTO
+    {
+        public string titulo { get; set; } = null!;
+        public string? descripcion { get; set; }
+        public int cantidad_total { get; set; }
+        public bool permitir_excedente { get; set; }
+        public string? url_referencia { get; set; }
+        public string? imagen_url { get; set; }
+        public short orden { get; set; }
+        public bool visible { get; set; }
+    }
 
     public class RegalosListaItemDTO
     {

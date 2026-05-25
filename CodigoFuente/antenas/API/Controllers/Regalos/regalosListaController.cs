@@ -50,5 +50,20 @@ namespace API.Controllers.Regalos
 
             return Ok(new { ok = true });
         }
+
+        [HttpPut("{id_regalo_item}")]
+        public async Task<ActionResult> UpdateItem(long id_evento, long id_regalo_item, [FromBody] RegalosListaUpdateItemDTO req)
+        {
+            try
+            {
+                var ok = await _service.UpdateItemAsync(id_evento, id_regalo_item, req);
+                if (!ok) return NotFound(new { error = "Item no encontrado." });
+                return Ok(new { ok = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }

@@ -17,12 +17,19 @@ namespace API.Services.Regalos
             _context = context;
         }
 
-        public async Task<List<RegalosTransferenciaDTO>> ListarAsync(long id_evento)
+        public async Task<List<RegalosTransferenciaDTO>> ListarAsync(long id_evento, bool? activo = true)
         {
-            var list = await _context.ef_evento_regalos_transferencias
+            var q = _context.ef_evento_regalos_transferencias
                 .AsNoTracking()
-                .Where(x => x.id_evento == id_evento && x.activo == true)
+                .Where(x => x.id_evento == id_evento);
+
+            if (activo.HasValue)
+                q = q.Where(x => x.activo == activo.Value);
+
+            var list = await q
                 .OrderBy(x => x.orden)
+                .ThenBy(x => x.codigo_moneda)
+                .ThenBy(x => x.id_evento_regalo_transferencia)
                 .ToListAsync();
 
             return list.Select(x => new RegalosTransferenciaDTO
@@ -47,8 +54,9 @@ namespace API.Services.Regalos
 
             string moneda = dto.codigo_moneda.Trim().ToUpper();
 
-            // validar moneda existe
-            bool monedaOk = await _context.ef_monedas.AsNoTracking().AnyAsync(m => m.codigo_moneda == moneda && m.activo == true);
+            bool monedaOk = await _context.ef_monedas.AsNoTracking()
+                .AnyAsync(m => m.codigo_moneda == moneda && m.activo == true);
+
             if (!monedaOk) throw new Exception("Moneda inexistente o inactiva.");
 
             ef_evento_regalos_transferencias? entity = null;
@@ -56,7 +64,9 @@ namespace API.Services.Regalos
             if (dto.id_evento_regalo_transferencia.HasValue)
             {
                 entity = await _context.ef_evento_regalos_transferencias
-                    .FirstOrDefaultAsync(x => x.id_evento == dto.id_evento && x.id_evento_regalo_transferencia == dto.id_evento_regalo_transferencia.Value);
+                    .FirstOrDefaultAsync(x => x.id_evento == dto.id_evento
+                                           && x.id_evento_regalo_transferencia == dto.id_evento_regalo_transferencia.Value);
+
                 if (entity == null) throw new Exception("Registro no encontrado.");
             }
             else
@@ -96,12 +106,14 @@ namespace API.Services.Regalos
         public async Task<bool> SetActivoAsync(long id_evento, long id_evento_regalo_transferencia, bool activo)
         {
             var entity = await _context.ef_evento_regalos_transferencias
-                .FirstOrDefaultAsync(x => x.id_evento == id_evento && x.id_evento_regalo_transferencia == id_evento_regalo_transferencia);
+                .FirstOrDefaultAsync(x => x.id_evento == id_evento
+                                       && x.id_evento_regalo_transferencia == id_evento_regalo_transferencia);
 
             if (entity == null) return false;
 
             entity.activo = activo;
             entity.fecha_modif = DateTimeOffset.UtcNow;
+
             await _context.SaveChangesAsync();
             return true;
         }
