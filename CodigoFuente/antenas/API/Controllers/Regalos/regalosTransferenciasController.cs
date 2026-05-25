@@ -19,13 +19,16 @@ namespace API.Controllers.Regalos
             _service = service;
         }
 
+        // GET /eventos/{id_evento}/regalos/transferencias
+        // GET /eventos/{id_evento}/regalos/transferencias?activo=true|false  (opcional)
         [HttpGet]
-        public async Task<ActionResult> GetAll(long id_evento)
+        public async Task<ActionResult> GetAll(long id_evento, [FromQuery] bool? activo = null)
         {
-            var list = await _service.ListarAsync(id_evento);
+            var list = await _service.ListarAsync(id_evento, activo);
             return Ok(list);
         }
 
+        // POST /eventos/{id_evento}/regalos/transferencias  (upsert)
         [HttpPost]
         public async Task<ActionResult> Upsert(long id_evento, [FromBody] RegalosTransferenciaUpsertDTO dto)
         {
@@ -42,6 +45,7 @@ namespace API.Controllers.Regalos
             }
         }
 
+        // PUT /eventos/{id_evento}/regalos/transferencias/{id}/activo?activo=true|false
         [HttpPut("{id_evento_regalo_transferencia}/activo")]
         public async Task<ActionResult> SetActivo(long id_evento, long id_evento_regalo_transferencia, [FromQuery] bool activo)
         {

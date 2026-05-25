@@ -225,5 +225,32 @@ namespace API.Services.Regalos
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> UpdateItemAsync(long id_evento, long id_regalo_item, RegalosListaUpdateItemDTO req)
+        {
+            if (req == null) throw new Exception("Body inválido.");
+            if (id_evento <= 0) throw new Exception("id_evento inválido.");
+            if (id_regalo_item <= 0) throw new Exception("id_regalo_item inválido.");
+            if (string.IsNullOrWhiteSpace(req.titulo)) throw new Exception("El título es obligatorio.");
+            if (req.cantidad_total <= 0) throw new Exception("cantidad_total inválida.");
+
+            var item = await _context.ef_evento_regalos_lista_items
+                .FirstOrDefaultAsync(x => x.id_evento == id_evento && x.id_regalo_item == id_regalo_item);
+
+            if (item == null) return false;
+
+            item.titulo = req.titulo.Trim();
+            item.descripcion = req.descripcion?.Trim();
+            item.cantidad_total = req.cantidad_total;
+            item.permitir_excedente = req.permitir_excedente;
+            item.url_referencia = req.url_referencia?.Trim();
+            item.imagen_url = req.imagen_url?.Trim();
+            item.orden = req.orden;
+            item.visible = req.visible;
+            item.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
