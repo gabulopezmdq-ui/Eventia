@@ -250,3 +250,23 @@ export function createFichaSaludVacia(): FichaSalud {
         medicaciones: [],
     };
 }
+
+// ── Payloads para cotizar backend C# ──────────────────────────────
+
+export interface CotizarPeriodoRequest {
+    id_programa_periodo: number;
+}
+
+export interface CotizarServicioRequest {
+    id_programa_servicio: number;
+    id_programa_periodo: number | null;
+    fechas: string[];
+    cantidad: number | null;
+    campos_extra: Record<string, string> | null;
+}
+
+export interface CotizarPayload {
+    id_idioma: number;
+    periodos: CotizarPeriodoRequest[];
+    servicios: CotizarServicioRequest[];
+}

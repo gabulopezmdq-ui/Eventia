@@ -7,6 +7,9 @@ import type {
     InscripcionPayload,
     FaseActual,
     ConfirmacionResponse,
+    CotizarPayload,
+    CotizarPeriodoRequest,
+    CotizarServicioRequest,
 } from '../types/inscripcion.types';
 import { createFichaSaludVacia } from '../types/inscripcion.types';
 
@@ -154,6 +157,45 @@ export function useInscripcion() {
         };
     }, [state]);
 
+    /**
+     * Construye el CotizarPayload listo para el POST de cotización al backend C#.
+     * Consolida de forma plana todos los períodos y servicios seleccionados por los participantes.
+     */
+    const buildCotizarPayload = useCallback((): CotizarPayload => {
+        const { idIdioma, participantes } = state;
+
+        const periodos: CotizarPeriodoRequest[] = [];
+        const servicios: CotizarServicioRequest[] = [];
+
+        // Evitar duplicados de periodos a nivel global de la cotización
+        const periodIdsUnicos = new Set<number>();
+
+        participantes.forEach(p => {
+            p.periodos.forEach(pe => {
+                if (!periodIdsUnicos.has(pe.id_programa_periodo)) {
+                    periodIdsUnicos.add(pe.id_programa_periodo);
+                    periodos.push({ id_programa_periodo: pe.id_programa_periodo });
+                }
+            });
+
+            p.servicios.forEach(s => {
+                servicios.push({
+                    id_programa_servicio: s.id_programa_servicio,
+                    id_programa_periodo: s.id_programa_periodo,
+                    fechas: s.fechas,
+                    cantidad: s.cantidad,
+                    campos_extra: s.campos_extra
+                });
+            });
+        });
+
+        return {
+            id_idioma: idIdioma,
+            periodos,
+            servicios,
+        };
+    }, [state]);
+
     return {
         state,
         // Fases
@@ -178,6 +220,7 @@ export function useInscripcion() {
         setConfirmado,
         // POST
         buildPayload,
+        buildCotizarPayload,
         // Draft
         limpiarDraft,
     };

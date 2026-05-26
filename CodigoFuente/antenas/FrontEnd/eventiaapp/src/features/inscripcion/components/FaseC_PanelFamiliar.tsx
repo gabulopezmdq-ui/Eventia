@@ -192,7 +192,7 @@ export function FaseC_PanelFamiliar() {
                         <div className="bg-white dark:bg-card-bg p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform mb-3">
                             <Plus className="w-6 h-6 text-accent" />
                         </div>
-                        <span className="text-lg font-semibold text-accent">Agregar hijo/a</span>
+                        <span className="text-lg font-semibold text-accent">Agregar Participante</span>
                         <span className="text-sm text-gray-500 dark:text-gray-400 mt-1">Podés agregar hasta 6 participantes</span>
                     </button>
                 </div>

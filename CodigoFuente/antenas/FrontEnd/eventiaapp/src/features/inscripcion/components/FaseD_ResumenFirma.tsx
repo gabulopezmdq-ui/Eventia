@@ -6,7 +6,7 @@ import type { TotalEstimado } from '../types/inscripcion.types';
 import { ArrowLeft, CheckCircle2, DollarSign, FileText, Loader2, Mail, Phone, Users, Server, AlertCircle } from 'lucide-react';
 
 export function FaseD_ResumenFirma() {
-    const { state, irAFase, guardarFirma, buildPayload, setLoading, setError, setConfirmado } = useInscripcion();
+    const { state, irAFase, guardarFirma, buildPayload, buildCotizarPayload, setLoading, setError, setConfirmado } = useInscripcion();
     
     // Cálculo local como fallback inmediato
     const localEstimado = useTotalEstimado(state.participantes, state.programaData);
@@ -34,14 +34,7 @@ export function FaseD_ResumenFirma() {
                 setLoadingCotizacion(true);
                 setErrorCotizacion(false);
                 
-                // Bypassear la firma para la cotización
-                const tempFirma = {
-                    nombre_completo: 'TEMP_COTIZAR_USER',
-                    fecha: new Date().toISOString().split('T')[0],
-                    autorizaciones: []
-                };
-
-                const payload = buildPayload(tempFirma);
+                const payload = buildCotizarPayload();
                 const res = await cotizarInscripcion(state.programaData!.token, payload);
                 setCotizacion(res);
             } catch (e) {
