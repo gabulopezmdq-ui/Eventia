@@ -278,9 +278,99 @@ namespace API.Services.Staff
         //    };
         //}
 
+        ////este era el ultimo antes de agregarle las fechas de inicio y fin del evento
+        //public async Task<StaffContextoDTO> UsarCodigoAsync(string codigo)
+        //{
+        //    var ahora = DateTimeOffset.UtcNow;
+
+        //    var staff = await _context.ef_staff
+        //        .FirstOrDefaultAsync(x => x.codigo == codigo);
+
+        //    if (staff == null)
+        //        throw new InvalidOperationException("Código inválido.");
+
+        //    if (!staff.activo)
+        //        throw new InvalidOperationException("El código está desactivado.");
+
+        //    if (staff.fecha_expiracion.HasValue && staff.fecha_expiracion.Value < ahora)
+        //        throw new InvalidOperationException("El código ha expirado.");
+
+        //    if (staff.fecha_uso == null)
+        //        staff.fecha_uso = ahora;
+
+        //    staff.usos += 1;
+        //    staff.fecha_modif = ahora;
+        //    await _context.SaveChangesAsync();
+
+        //    var asignaciones = await (
+        //        from es in _context.Set<ef_evento_staff>().AsNoTracking()
+        //        join r in _context.Set<ef_roles>().AsNoTracking() on es.id_rol equals r.id_rol
+        //        join e in _context.ef_eventos.AsNoTracking() on es.id_evento equals e.id_evento
+        //        where es.id_staff == staff.id_staff && es.activo
+        //        orderby es.id_evento, r.orden_ui
+        //        select new
+        //        {
+        //            es.id_evento_staff,
+        //            es.id_evento,
+        //            e.tipo_operacion,
+        //            nombre_evento = e.anfitriones_texto,
+        //            es.id_rol,
+        //            r.codigo,
+        //            r.pantalla_inicio
+        //        }
+        //    ).ToListAsync();
+
+        //    if (asignaciones.Count == 0)
+        //        throw new InvalidOperationException("El staff no tiene asignaciones activas.");
+
+        //    var eventosDisponibles = asignaciones
+        //        .GroupBy(x => new { x.id_evento, x.tipo_operacion, x.nombre_evento })
+        //        .Select(g => new StaffEventoContextoDTO
+        //        {
+        //            id_evento = g.Key.id_evento,
+        //            tipo_operacion = g.Key.tipo_operacion,
+        //            nombre_evento = g.Key.nombre_evento,
+        //            roles_evento = g.Select(x => new API.DataSchema.DTO.Eventos.StaffJoinRolDTO
+        //            {
+        //                id_evento_staff = x.id_evento_staff,
+        //                id_rol = x.id_rol,
+        //                codigo_rol = x.codigo,
+        //                rol_texto = x.codigo,
+        //                pantalla_inicio = x.pantalla_inicio
+        //            }).ToList(),
+        //            pantalla_inicio_default = g.Count() == 1
+        //                ? g.First().pantalla_inicio
+        //                : "OPERACION_GENERAL"
+        //        })
+        //        .ToList();
+
+        //    var jwt = GenerarJwtStaff(staff, "STAFF");
+
+        //    string displayName = string.Join(" ",
+        //        new[] { staff.nombre, staff.apellido }
+        //        .Where(x => !string.IsNullOrWhiteSpace(x)))
+        //        .Trim();
+
+        //    if (string.IsNullOrWhiteSpace(displayName))
+        //        displayName = "Staff";
+
+        //    return new StaffContextoDTO
+        //    {
+        //        id_staff = staff.id_staff,
+        //        id_cuenta = staff.id_cuenta,
+        //        nombre = staff.nombre,
+        //        apellido = staff.apellido,
+        //        display_name = displayName,
+        //        eventos_disponibles = eventosDisponibles,
+        //        access_token = jwt.token,
+        //        expires_at_utc = jwt.expiresAtUtc
+        //    };
+        //}
+
         public async Task<StaffContextoDTO> UsarCodigoAsync(string codigo)
         {
             var ahora = DateTimeOffset.UtcNow;
+            var hoy = DateOnly.FromDateTime(ahora.UtcDateTime);
 
             var staff = await _context.ef_staff
                 .FirstOrDefaultAsync(x => x.codigo == codigo);
@@ -311,37 +401,146 @@ namespace API.Services.Staff
                 {
                     es.id_evento_staff,
                     es.id_evento,
-                    e.tipo_operacion,
-                    nombre_evento = e.anfitriones_texto,
                     es.id_rol,
-                    r.codigo,
-                    r.pantalla_inicio
+                    rol_codigo = r.codigo,
+                    r.pantalla_inicio,
+
+                    e.tipo_operacion,
+                    e.anfitriones_texto,
+                    e.saludo,
+                    e.estado,
+                    e.fecha_evento,
+                    e.fecha_inicio,
+                    e.fecha_fin
                 }
             ).ToListAsync();
 
             if (asignaciones.Count == 0)
                 throw new InvalidOperationException("El staff no tiene asignaciones activas.");
 
-            var eventosDisponibles = asignaciones
-                .GroupBy(x => new { x.id_evento, x.tipo_operacion, x.nombre_evento })
-                .Select(g => new StaffEventoContextoDTO
+            var idsEvento = asignaciones
+                .Select(x => x.id_evento)
+                .Distinct()
+                .ToList();
+
+            var tramosPorEvento = await (
+                from t in _context.Set<ef_evento_tramos>().AsNoTracking()
+                where idsEvento.Contains(t.id_evento)
+                select new
                 {
-                    id_evento = g.Key.id_evento,
-                    tipo_operacion = g.Key.tipo_operacion,
-                    nombre_evento = g.Key.nombre_evento,
-                    roles_evento = g.Select(x => new API.DataSchema.DTO.Eventos.StaffJoinRolDTO
+                    t.id_evento,
+                    t.orden,
+                    t.fecha_hora_inicio,
+                    t.fecha_hora_fin
+                }
+            ).ToListAsync();
+
+            var eventosDisponibles = asignaciones
+                .GroupBy(x => new
+                {
+                    x.id_evento,
+                    x.tipo_operacion,
+                    x.anfitriones_texto,
+                    x.saludo,
+                    x.estado,
+                    x.fecha_evento,
+                    x.fecha_inicio,
+                    x.fecha_fin
+                })
+                .Select(g =>
+                {
+                    DateTimeOffset? fechaInicioOperativa = null;
+                    DateTimeOffset? fechaFinOperativa = null;
+
+                    if (string.Equals(g.Key.tipo_operacion, "PROGRAMA", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (g.Key.fecha_inicio.HasValue)
+                            fechaInicioOperativa = new DateTimeOffset(
+                                g.Key.fecha_inicio.Value.Year,
+                                g.Key.fecha_inicio.Value.Month,
+                                g.Key.fecha_inicio.Value.Day,
+                                0, 0, 0,
+                                TimeSpan.Zero);
+
+                        if (g.Key.fecha_fin.HasValue)
+                            fechaFinOperativa = new DateTimeOffset(
+                                g.Key.fecha_fin.Value.Year,
+                                g.Key.fecha_fin.Value.Month,
+                                g.Key.fecha_fin.Value.Day,
+                                23, 59, 59,
+                                TimeSpan.Zero);
+                    }
+                    else
+                    {
+                        if (g.Key.fecha_evento.HasValue)
+                        {
+                            fechaInicioOperativa = g.Key.fecha_evento.Value;
+                            fechaFinOperativa = g.Key.fecha_evento.Value.AddDays(1);
+                        }
+                        else
+                        {
+                            var tramosEvento = tramosPorEvento
+                                .Where(t => t.id_evento == g.Key.id_evento)
+                                .OrderBy(t => t.orden)
+                                .ToList();
+
+                            var primerTramo = tramosEvento.FirstOrDefault();
+                            var ultimoTramo = tramosEvento.LastOrDefault();
+
+                            fechaInicioOperativa = primerTramo?.fecha_hora_inicio;
+
+                            fechaFinOperativa =
+                                ultimoTramo?.fecha_hora_fin
+                                ?? ultimoTramo?.fecha_hora_inicio
+                                ?? primerTramo?.fecha_hora_fin
+                                ?? primerTramo?.fecha_hora_inicio;
+                        }
+                    }
+
+                    bool vigente;
+                    if (string.Equals(g.Key.tipo_operacion, "PROGRAMA", StringComparison.OrdinalIgnoreCase))
+                    {
+                        vigente = !g.Key.fecha_fin.HasValue || g.Key.fecha_fin.Value >= hoy;
+                    }
+                    else
+                    {
+                        vigente = !fechaFinOperativa.HasValue || fechaFinOperativa.Value >= ahora;
+                    }
+
+                    var nombreEvento =
+                        !string.IsNullOrWhiteSpace(g.Key.saludo)
+                            ? g.Key.saludo
+                            : g.Key.anfitriones_texto;
+
+                    var roles = g.Select(x => new API.DataSchema.DTO.Eventos.StaffJoinRolDTO
                     {
                         id_evento_staff = x.id_evento_staff,
                         id_rol = x.id_rol,
-                        codigo_rol = x.codigo,
-                        rol_texto = x.codigo,
+                        codigo_rol = x.rol_codigo,
+                        rol_texto = x.rol_codigo,
                         pantalla_inicio = x.pantalla_inicio
-                    }).ToList(),
-                    pantalla_inicio_default = g.Count() == 1
-                        ? g.First().pantalla_inicio
-                        : "OPERACION_GENERAL"
+                    }).ToList();
+
+                    return new StaffEventoContextoDTO
+                    {
+                        id_evento = g.Key.id_evento,
+                        tipo_operacion = g.Key.tipo_operacion,
+                        nombre_evento = nombreEvento,
+                        fecha_inicio_operativa = fechaInicioOperativa,
+                        fecha_fin_operativa = fechaFinOperativa,
+                        vigente = vigente,
+                        estado_evento = g.Key.estado,
+                        roles_evento = roles,
+                        pantalla_inicio_default = roles.Count == 1
+                            ? roles[0].pantalla_inicio
+                            : "OPERACION_GENERAL"
+                    };
                 })
+                .OrderByDescending(x => x.vigente)
+                .ThenBy(x => x.fecha_inicio_operativa ?? DateTimeOffset.MaxValue)
                 .ToList();
+
+            var eventosVigentes = eventosDisponibles.Where(x => x.vigente).ToList();
 
             var jwt = GenerarJwtStaff(staff, "STAFF");
 
@@ -360,12 +559,11 @@ namespace API.Services.Staff
                 nombre = staff.nombre,
                 apellido = staff.apellido,
                 display_name = displayName,
-                eventos_disponibles = eventosDisponibles,
+                eventos_disponibles = eventosVigentes.Count > 0 ? eventosVigentes : eventosDisponibles,
                 access_token = jwt.token,
                 expires_at_utc = jwt.expiresAtUtc
             };
         }
-
         public async Task<StaffListItemDTO> GetByIdAsync(long idCuenta, long idStaff)
         {
             var item = await (

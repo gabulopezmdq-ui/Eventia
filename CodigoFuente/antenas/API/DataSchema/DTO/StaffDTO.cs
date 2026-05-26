@@ -76,6 +76,13 @@ namespace API.DataSchema.DTO.Staff
         public long id_evento { get; set; }
         public string? tipo_operacion { get; set; }
         public string? nombre_evento { get; set; }
+
+        public DateTimeOffset? fecha_inicio_operativa { get; set; }
+        public DateTimeOffset? fecha_fin_operativa { get; set; }
+
+        public bool vigente { get; set; }
+        public string? estado_evento { get; set; }
+
         public List<StaffJoinRolDTO> roles_evento { get; set; } = new();
         public string? pantalla_inicio_default { get; set; }
     }
