@@ -1,4 +1,6 @@
-﻿namespace API.DataSchema.DTO.Cuentas
+﻿using System;
+
+namespace API.DataSchema.DTO.Cuentas
 {
     public class CuentaUsuarioInvitarRequestDTO
     {
@@ -47,6 +49,18 @@
     {
         public bool ok { get; set; }
         public string mensaje { get; set; } = null!;
+    }
+
+    public class CuentaUsuarioInvitacionPendienteDTO
+    {
+        public long id_cuenta_usuario_invitacion { get; set; }
+        public string email_invitado { get; set; }
+        public string rol_codigo { get; set; }
+        public string estado { get; set; }
+        public DateTimeOffset? fecha_expiracion { get; set; }
+        public DateTimeOffset fecha_alta { get; set; }
+        public string token { get; set; }
+        public string url_invitacion { get; set; }
     }
 
 }

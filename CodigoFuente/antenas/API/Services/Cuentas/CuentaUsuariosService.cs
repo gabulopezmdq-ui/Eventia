@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace API.Services.Cuentas
 {
@@ -45,46 +46,28 @@ namespace API.Services.Cuentas
             var email = request.email.Trim().ToLower();
             var rolCodigo = request.rol_codigo.Trim().ToUpper();
 
-            // Solo roles permitidos
-            if (rolCodigo != "ACCOUNT_ADMIN" &&
-                rolCodigo != "ACCOUNT_STAFF")
-            {
+            if (rolCodigo != "ACCOUNT_ADMIN" && rolCodigo != "ACCOUNT_STAFF")
                 throw new InvalidOperationException("Rol inválido.");
-            }
 
-
-            // Seguridad: solo admin cuenta
-            var esAdmin =
-                await _cuentaContext.EsAdminCuentaAsync(
-                    id_usuario_invita,
-                    id_cuenta);
+            var esAdmin = await _cuentaContext.EsAdminCuentaAsync(id_usuario_invita, id_cuenta);
 
             if (!esAdmin)
-                throw new UnauthorizedAccessException(
-                    "Solo ACCOUNT_ADMIN puede invitar usuarios.");
+                throw new UnauthorizedAccessException("Solo ACCOUNT_ADMIN puede invitar usuarios.");
 
-            // Obtener rol
             var rol = await _context.ef_roles
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
-                    x.codigo == rolCodigo &&
-                    x.activo);
+                .FirstOrDefaultAsync(x => x.codigo == rolCodigo && x.activo);
 
             if (rol == null)
-                throw new InvalidOperationException(
-                    "El rol no existe.");
+                throw new InvalidOperationException("El rol no existe.");
 
-            // ¿Ya existe usuario con ese mail?
             var usuarioExistente = await _context.ef_usuarios
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
-                    x.email.ToLower() == email);
+                .FirstOrDefaultAsync(x => x.email.ToLower() == email);
 
-            // Si existe, verificar que no pertenezca ya
             if (usuarioExistente != null)
             {
-                var yaPertenece =
-                    await _context.ef_cuenta_usuarios
+                var yaPertenece = await _context.ef_cuenta_usuarios
                     .AsNoTracking()
                     .AnyAsync(x =>
                         x.id_cuenta == id_cuenta &&
@@ -92,13 +75,10 @@ namespace API.Services.Cuentas
                         x.activo);
 
                 if (yaPertenece)
-                    throw new InvalidOperationException(
-                        "El usuario ya pertenece a la cuenta.");
+                    throw new InvalidOperationException("El usuario ya pertenece a la cuenta.");
             }
 
-            // Cancelar invitaciones pendientes previas
-            var pendientes =
-                await _context.ef_cuenta_usuario_invitaciones
+            var pendientes = await _context.ef_cuenta_usuario_invitaciones
                 .Where(x =>
                     x.id_cuenta == id_cuenta &&
                     x.email_invitado.ToLower() == email &&
@@ -114,32 +94,24 @@ namespace API.Services.Cuentas
 
             var token = TokenUtility.Generate(64);
 
-            var invitacion =
-                new ef_cuenta_usuario_invitaciones
-                {
-                    id_cuenta = id_cuenta,
-                    email_invitado = email,
-                    id_rol = rol.id_rol,
-                    token = token,
-                    estado = "P",
-                    fecha_expiracion = DateTimeOffset.UtcNow.AddDays(15),
-                    id_usuario_invita = id_usuario_invita,
-                    activo = true,
-                    fecha_alta = DateTimeOffset.UtcNow
-                };
+            var invitacion = new ef_cuenta_usuario_invitaciones
+            {
+                id_cuenta = id_cuenta,
+                email_invitado = email,
+                id_rol = rol.id_rol,
+                token = token,
+                estado = "P",
+                fecha_expiracion = DateTimeOffset.UtcNow.AddDays(15),
+                id_usuario_invita = id_usuario_invita,
+                activo = true,
+                fecha_alta = DateTimeOffset.UtcNow
+            };
 
-            _context.ef_cuenta_usuario_invitaciones
-                .Add(invitacion);
+            _context.ef_cuenta_usuario_invitaciones.Add(invitacion);
 
             await _context.SaveChangesAsync();
 
-            // Front login normal
-            var frontendUrl =
-                _config["Frontend:BaseUrl"]
-                ?? "https://eventiaapp.vercel.app";
-
-            var url =
-                $"{frontendUrl}/login?invite=account&token={token}";
+            var url = GetFrontendBaseUrl() + "/login?invite=account&token=" + token;
 
             return new CuentaUsuarioInvitarResponseDTO
             {
@@ -172,7 +144,6 @@ namespace API.Services.Cuentas
                 where inv.token == token
                 select new
                 {
-                    inv.id_cuenta_usuario_invitacion,
                     inv.email_invitado,
                     inv.estado,
                     inv.activo,
@@ -305,16 +276,14 @@ namespace API.Services.Cuentas
 
             if (!yaExiste)
             {
-                var cuentaUsuario = new ef_cuenta_usuarios
+                _context.ef_cuenta_usuarios.Add(new ef_cuenta_usuarios
                 {
                     id_cuenta = invitacion.id_cuenta,
                     id_usuario = id_usuario_acepta,
                     id_rol = invitacion.id_rol,
                     activo = true,
                     fecha_alta = DateTimeOffset.UtcNow
-                };
-
-                _context.ef_cuenta_usuarios.Add(cuentaUsuario);
+                });
             }
             else
             {
@@ -371,6 +340,7 @@ namespace API.Services.Cuentas
                 throw new InvalidOperationException("El rol es obligatorio.");
 
             var esAdmin = await _cuentaContext.EsAdminCuentaAsync(id_usuario_admin, id_cuenta);
+
             if (!esAdmin)
                 throw new UnauthorizedAccessException("Solo ACCOUNT_ADMIN puede cambiar roles.");
 
@@ -440,6 +410,7 @@ namespace API.Services.Cuentas
                 throw new InvalidOperationException("Cuenta inválida.");
 
             var esAdmin = await _cuentaContext.EsAdminCuentaAsync(id_usuario_admin, id_cuenta);
+
             if (!esAdmin)
                 throw new UnauthorizedAccessException("Solo ACCOUNT_ADMIN puede activar o desactivar usuarios.");
 
@@ -476,6 +447,44 @@ namespace API.Services.Cuentas
             };
         }
 
+        public async Task<List<CuentaUsuarioInvitacionPendienteDTO>> MisInvitacionesPendientesAsync(
+            long id_usuario,
+            long id_cuenta)
+        {
+            if (id_cuenta <= 0)
+                throw new InvalidOperationException("Cuenta inválida.");
+
+            var esAdmin = await _cuentaContext.EsAdminCuentaAsync(id_usuario, id_cuenta);
+
+            if (!esAdmin)
+                throw new UnauthorizedAccessException("Solo ACCOUNT_ADMIN puede ver invitaciones pendientes.");
+
+            var frontendUrl = GetFrontendBaseUrl();
+
+            var items = await (
+                from inv in _context.ef_cuenta_usuario_invitaciones.AsNoTracking()
+                join r in _context.ef_roles.AsNoTracking()
+                    on inv.id_rol equals r.id_rol
+                where inv.id_cuenta == id_cuenta
+                      && inv.activo
+                      && inv.estado == "P"
+                orderby inv.fecha_alta descending
+                select new CuentaUsuarioInvitacionPendienteDTO
+                {
+                    id_cuenta_usuario_invitacion = inv.id_cuenta_usuario_invitacion,
+                    email_invitado = inv.email_invitado,
+                    rol_codigo = r.codigo,
+                    estado = inv.estado,
+                    fecha_expiracion = inv.fecha_expiracion,
+                    fecha_alta = inv.fecha_alta,
+                    token = inv.token,
+                    url_invitacion = frontendUrl + "/login?invite=account&token=" + inv.token
+                }
+            ).ToListAsync();
+
+            return items;
+        }
+
         private async Task ValidarNoDejarCuentaSinAdminAsync(long id_cuenta, long id_usuario_afectado)
         {
             var idRolAdmin = await _context.ef_roles
@@ -499,7 +508,14 @@ namespace API.Services.Cuentas
                 throw new InvalidOperationException("La cuenta debe tener al menos un ACCOUNT_ADMIN activo.");
         }
 
+        private string GetFrontendBaseUrl()
+        {
+            var frontendUrl = _config["Frontend:BaseUrl"];
 
+            if (string.IsNullOrWhiteSpace(frontendUrl))
+                throw new InvalidOperationException("No está configurado Frontend:BaseUrl.");
 
+            return frontendUrl.TrimEnd('/');
+        }
     }
 }

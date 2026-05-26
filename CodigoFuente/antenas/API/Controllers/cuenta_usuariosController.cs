@@ -183,5 +183,16 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("MisInvitacionesPendientes")]
+        public async Task<ActionResult> MisInvitacionesPendientes([FromQuery] long idCuenta)
+        {
+            long idUsuario = User.GetUserId();
+
+            var result = await _cuentaUsuariosService
+                .MisInvitacionesPendientesAsync(idUsuario, idCuenta);
+
+            return Ok(result);
+        }
+
     }
 }
