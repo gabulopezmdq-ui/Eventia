@@ -3,23 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStaffAuth } from '@/src/context/StaffAuthContext';
-import { 
-    Loader2, 
-    QrCode, 
-    Search, 
-    UserCheck, 
-    Users, 
-    Check, 
-    ChefHat, 
-    Utensils, 
-    AlertTriangle, 
+import {
+    Loader2,
+    QrCode,
+    Search,
+    UserCheck,
+    Users,
+    Check,
+    ChefHat,
+    Utensils,
+    AlertTriangle,
     SearchCode,
-    Sparkles, 
-    Gift, 
-    RefreshCw, 
-    ArrowLeftRight, 
-    TrendingUp, 
-    Clock, 
+    Sparkles,
+    Gift,
+    RefreshCw,
+    ArrowLeftRight,
+    TrendingUp,
+    Clock,
     X,
     Calendar,
     Flame,
@@ -77,13 +77,15 @@ export default function StaffHomePage() {
     }, [isLoading, user, activeRol, router, selectRol]);
 
     // ==========================================
-    // ESTADOS COMUNES
+    // ESTADOS COMUNES Y ESCÁNER REAL
     // ==========================================
     const [scannerOpen, setScannerOpen] = useState(false);
     const [scanResult, setScanResult] = useState<any>(null);
     const [scanType, setScanType] = useState<'ENTRADA' | 'RACION' | 'BENEFICIO'>('ENTRADA');
     const [loadingAction, setLoadingAction] = useState(false);
-    
+    const [cameraError, setCameraError] = useState<string | null>(null);
+    const [scannerInstance, setScannerInstance] = useState<any>(null);
+
     // ==========================================
     // ESTADOS ROL: PUERTA / RECEPTOR
     // ==========================================
@@ -128,10 +130,10 @@ export default function StaffHomePage() {
         setTimeout(() => {
             setParticipantes(prev => prev.map(p => {
                 if (p.id === id) {
-                    return { 
-                        ...p, 
-                        ingresado: true, 
-                        hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) 
+                    return {
+                        ...p,
+                        ingresado: true,
+                        hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
                     };
                 }
                 return p;
@@ -190,10 +192,10 @@ export default function StaffHomePage() {
         setTimeout(() => {
             setBeneficios(prev => prev.map(b => {
                 if (b.codigo.toUpperCase() === codigo.toUpperCase()) {
-                    return { 
-                        ...b, 
-                        estado: 'Canjeado', 
-                        fechaCanje: `Hoy ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs` 
+                    return {
+                        ...b,
+                        estado: 'Canjeado',
+                        fechaCanje: `Hoy ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`
                     };
                 }
                 return b;
@@ -203,23 +205,27 @@ export default function StaffHomePage() {
     };
 
     // ==========================================
-    // MOCK QR SCANNER LOGIC
+    // QR SCANNER LOGIC (REAL & SIMULATED)
     // ==========================================
     const triggerScan = (type: typeof scanType) => {
         setScanType(type);
         setScannerOpen(true);
         setScanResult(null);
+        setCameraError(null);
     };
 
-    const simulateSuccessfulScan = () => {
+    const handleRealScanSuccess = (scannedText: string) => {
         setLoadingAction(true);
-        setTimeout(() => {
-            setLoadingAction(false);
-            if (scanType === 'ENTRADA') {
-                // Selecciona un participante al azar que no haya ingresado
-                const pendientes = participantes.filter(p => !p.ingresado);
-                if (pendientes.length > 0) {
-                    const target = pendientes[Math.floor(Math.random() * pendientes.length)];
+        const code = scannedText.trim();
+
+        if (scanType === 'ENTRADA') {
+            const target = participantes.find(
+                p => p.ticket.toUpperCase() === code.toUpperCase() ||
+                    p.email.toLowerCase() === code.toLowerCase()
+            );
+
+            if (target) {
+                if (!target.ingresado) {
                     setScanResult({
                         success: true,
                         title: '¡Acceso Permitido!',
@@ -233,45 +239,127 @@ export default function StaffHomePage() {
                         success: false,
                         title: 'Ticket Ya Ingresado',
                         subtitle: 'Este participante ya ingresó previamente.',
-                        details: 'Último check-in registrado a las ' + participantes[1].hora + ' hs'
+                        details: `Último check-in registrado a las ${target.hora} hs`
                     });
                 }
-            } else if (scanType === 'RACION') {
-                // Ración de cocina
-                const pendAlergias = alergias.filter(a => !a.verificado);
-                if (pendAlergias.length > 0) {
-                    const target = pendAlergias[Math.floor(Math.random() * pendAlergias.length)];
+            } else {
+                setScanResult({
+                    success: false,
+                    title: 'Ticket Inválido',
+                    subtitle: 'No se encontró ningún participante con este ticket.',
+                    details: `Código escaneado: "${code}"`
+                });
+            }
+        } else if (scanType === 'RACION') {
+            const targetAlergia = alergias.find(
+                a => a.nombre.toLowerCase().includes(code.toLowerCase()) ||
+                    a.apellido.toLowerCase().includes(code.toLowerCase()) ||
+                    code.toUpperCase().includes(a.nombre.toUpperCase()) ||
+                    code.toUpperCase().includes(a.apellido.toUpperCase())
+            );
+
+            if (targetAlergia) {
+                setScanResult({
+                    success: true,
+                    title: 'Dieta Especial Validada',
+                    subtitle: `¡Atención Alergia: ${targetAlergia.alergia}!`,
+                    name: `${targetAlergia.nombre} ${targetAlergia.apellido}`,
+                    details: `Menú Asignado: ${targetAlergia.racion}`,
+                    action: () => handleVerifyDiet(targetAlergia.id)
+                });
+            } else {
+                const part = participantes.find(
+                    p => p.ticket.toUpperCase() === code.toUpperCase() ||
+                        p.email.toLowerCase() === code.toLowerCase()
+                );
+
+                if (part) {
                     setScanResult({
                         success: true,
-                        title: 'Dieta Especial Validada',
-                        subtitle: `¡Atención Alergia: ${target.alergia}!`,
-                        name: `${target.nombre} ${target.apellido}`,
-                        details: `Menú Asignado: ${target.racion}`,
-                        action: () => handleVerifyDiet(target.id)
+                        title: 'Ración Estándar Validada',
+                        subtitle: 'Ticket de comida aprobado sin restricciones médicas.',
+                        name: `${part.nombre} ${part.apellido}`,
+                        details: 'Ración estándar del menú del día',
+                        action: () => setRacionesServidas(r => Math.min(racionesTotales, r + 1))
                     });
                 } else {
                     setScanResult({
                         success: true,
                         title: 'Ración Estándar Validada',
                         subtitle: 'Ticket de comida aprobado sin restricciones médicas.',
-                        name: 'Santiago López',
-                        details: 'Ración estándar del menú del día',
+                        name: code.includes('@') ? code : 'Santiago López',
+                        details: `Ración estándar del menú del día • Código: ${code}`,
                         action: () => setRacionesServidas(r => Math.min(racionesTotales, r + 1))
                     });
                 }
-            } else {
-                // Beneficio
-                const disponibles = beneficios.filter(b => b.estado === 'Disponible');
-                if (disponibles.length > 0) {
-                    const target = disponibles[Math.floor(Math.random() * disponibles.length)];
+            }
+        } else {
+            // BENEFICIO
+            const targetBeneficio = beneficios.find(
+                b => b.codigo.toUpperCase() === code.toUpperCase() ||
+                    b.titular.toLowerCase().includes(code.toLowerCase())
+            );
+
+            if (targetBeneficio) {
+                if (targetBeneficio.estado === 'Disponible') {
                     setScanResult({
                         success: true,
                         title: '¡Cupón de Beneficio Válido!',
-                        subtitle: `Item: ${target.item}`,
-                        name: `Titular: ${target.titular}`,
-                        details: `Código: ${target.codigo}`,
-                        action: () => handleCanjeCupon(target.codigo)
+                        subtitle: `Item: ${targetBeneficio.item}`,
+                        name: `Titular: ${targetBeneficio.titular}`,
+                        details: `Código: ${targetBeneficio.codigo}`,
+                        action: () => handleCanjeCupon(targetBeneficio.codigo)
                     });
+                } else {
+                    setScanResult({
+                        success: false,
+                        title: 'Cupón Ya Canjeado',
+                        subtitle: 'El beneficio ya fue canjeado previamente.',
+                        details: `Canjeado el: ${targetBeneficio.fechaCanje}`
+                    });
+                }
+            } else {
+                setScanResult({
+                    success: false,
+                    title: 'Cupón Inválido',
+                    subtitle: 'El código del cupón no coincide con ningún beneficio.',
+                    details: `Código escaneado: "${code}"`
+                });
+            }
+        }
+        setLoadingAction(false);
+    };
+
+    const simulateSuccessfulScan = () => {
+        setLoadingAction(true);
+        setTimeout(() => {
+            setLoadingAction(false);
+            if (scanType === 'ENTRADA') {
+                const pendientes = participantes.filter(p => !p.ingresado);
+                if (pendientes.length > 0) {
+                    const target = pendientes[Math.floor(Math.random() * pendientes.length)];
+                    handleRealScanSuccess(target.ticket);
+                } else {
+                    setScanResult({
+                        success: false,
+                        title: 'Ticket Ya Ingresado',
+                        subtitle: 'Todos los participantes ya ingresaron previamente.',
+                        details: 'No quedan participantes pendientes en el Mock.'
+                    });
+                }
+            } else if (scanType === 'RACION') {
+                const pendAlergias = alergias.filter(a => !a.verificado);
+                if (pendAlergias.length > 0) {
+                    const target = pendAlergias[Math.floor(Math.random() * pendAlergias.length)];
+                    handleRealScanSuccess(target.nombre);
+                } else {
+                    handleRealScanSuccess('Santiago López');
+                }
+            } else {
+                const disponibles = beneficios.filter(b => b.estado === 'Disponible');
+                if (disponibles.length > 0) {
+                    const target = disponibles[Math.floor(Math.random() * disponibles.length)];
+                    handleRealScanSuccess(target.codigo);
                 } else {
                     setScanResult({
                         success: false,
@@ -281,16 +369,121 @@ export default function StaffHomePage() {
                     });
                 }
             }
-        }, 1200);
+        }, 800);
     };
+
+    // Ciclo de vida y control de cámara física usando html5-qrcode
+    useEffect(() => {
+        let qrScanner: any = null;
+        let isMounted = true;
+
+        if (scannerOpen && !scanResult) {
+            // Retraso de 350ms para asegurar montaje de div#qr-reader
+            const timer = setTimeout(async () => {
+                try {
+                    // Importación dinámica para prevenir errores en Next.js (SSR)
+                    const { Html5Qrcode } = await import('html5-qrcode');
+
+                    if (!isMounted) return;
+                    setCameraError(null);
+
+                    const scanner = new Html5Qrcode("qr-reader");
+                    qrScanner = scanner;
+                    setScannerInstance(scanner);
+
+                    const scanConfig = {
+                        fps: 12,
+                        qrbox: (width: number, height: number) => {
+                            const size = Math.min(width, height) * 0.75;
+                            return { width: size, height: size };
+                        },
+                        aspectRatio: 1.0
+                    };
+
+                    const onScanSuccess = (decodedText: string) => {
+                        if (isMounted) {
+                            handleRealScanSuccess(decodedText);
+                            scanner.stop().catch((err: any) => console.error("Error al detener cámara tras escaneo:", err));
+                        }
+                    };
+
+                    const onScanError = () => {
+                        // Errores de lectura ordinarios se ignoran
+                    };
+
+                    try {
+                        // 1. Intentar cámara trasera (ideal para personal operando en campo)
+                        await scanner.start(
+                            { facingMode: "environment" },
+                            scanConfig,
+                            onScanSuccess,
+                            onScanError
+                        );
+                    } catch (firstErr) {
+                        console.warn("Cámara trasera ('environment') no disponible. Reintentando con frontal/webcam...", firstErr);
+                        
+                        if (isMounted) {
+                            try {
+                                // 2. Fallback: cámara delantera (útil para notebooks y webcams de escritorio)
+                                await scanner.start(
+                                    { facingMode: "user" },
+                                    scanConfig,
+                                    onScanSuccess,
+                                    onScanError
+                                );
+                            } catch (secondErr) {
+                                console.warn("Cámara frontal ('user') tampoco disponible. Intentando predeterminada...", secondErr);
+                                
+                                if (isMounted) {
+                                    // 3. Último recurso: iniciar sin restricciones de cámara
+                                    await scanner.start(
+                                        {},
+                                        scanConfig,
+                                        onScanSuccess,
+                                        onScanError
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error("Fallo al iniciar escáner QR de cámara:", err);
+                    if (isMounted) {
+                        const errMsg = String(err).toLowerCase();
+                        let msg = "No se pudo acceder a la cámara del dispositivo.";
+                        if (errMsg.includes("notallowederror") || errMsg.includes("permission denied")) {
+                            msg = "Permiso de cámara denegado. Por favor, habilitalo en tu navegador.";
+                        } else if (errMsg.includes("notfounderror") || errMsg.includes("no camera found")) {
+                            msg = "No se detectaron cámaras en este dispositivo.";
+                        }
+                        setCameraError(msg);
+                    }
+                }
+            }, 350);
+
+            return () => {
+                isMounted = false;
+                clearTimeout(timer);
+                if (qrScanner && qrScanner.isScanning) {
+                    qrScanner.stop().catch((err: any) => console.error("Error al detener cámara en cleanup:", err));
+                }
+                setScannerInstance(null);
+            };
+        }
+
+        return () => {
+            isMounted = false;
+            setScannerInstance(null);
+        };
+    }, [scannerOpen, scanResult]);
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">
-            
+
             {/* Cabecera Adaptativa de la Home Operativa */}
             <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none" />
-                
+
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
@@ -325,10 +518,10 @@ export default function StaffHomePage() {
             {/* ========================================================================= */}
             {currentRolCode.includes('RECEPTOR') && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
+
                     {/* Botones de acción rápida en columna lateral */}
                     <div className="md:col-span-1 space-y-6">
-                        
+
                         {/* Tarjeta de Lector QR principal */}
                         <button
                             onClick={() => triggerScan('ENTRADA')}
@@ -364,33 +557,33 @@ export default function StaffHomePage() {
                             <form onSubmit={handleCreateParticipante} className="space-y-3">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-neutral-400">Nombre</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         required
                                         value={manualNombre}
                                         onChange={e => setManualNombre(e.target.value)}
-                                        placeholder="Ej: Juan" 
+                                        placeholder="Ej: Juan"
                                         className="w-full text-xs px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                     />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-neutral-400">Apellido</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         required
                                         value={manualApellido}
                                         onChange={e => setManualApellido(e.target.value)}
-                                        placeholder="Ej: Pérez" 
+                                        placeholder="Ej: Pérez"
                                         className="w-full text-xs px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                     />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-neutral-400">Ticket Opcional</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={manualTicket}
                                         onChange={e => setManualTicket(e.target.value.toUpperCase())}
-                                        placeholder="Ej: EV-12345" 
+                                        placeholder="Ej: EV-12345"
                                         className="w-full text-xs px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
                                     />
                                 </div>
@@ -408,7 +601,7 @@ export default function StaffHomePage() {
                     {/* Buscador y listado de participantes */}
                     <div className="md:col-span-2 space-y-4">
                         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-md space-y-4">
-                            
+
                             {/* Titular y búsqueda */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div className="space-y-1">
@@ -439,9 +632,9 @@ export default function StaffHomePage() {
                                     .filter(p => {
                                         const term = searchQuery.toLowerCase();
                                         return p.nombre.toLowerCase().includes(term) ||
-                                               p.apellido.toLowerCase().includes(term) ||
-                                               p.ticket.toLowerCase().includes(term) ||
-                                               p.email.toLowerCase().includes(term);
+                                            p.apellido.toLowerCase().includes(term) ||
+                                            p.ticket.toLowerCase().includes(term) ||
+                                            p.email.toLowerCase().includes(term);
                                     })
                                     .map(p => (
                                         <div
@@ -456,13 +649,12 @@ export default function StaffHomePage() {
                                                     <span className="text-[10px] font-mono tracking-wider text-neutral-400 bg-neutral-200 dark:bg-neutral-800 px-2 py-0.5 rounded-md">
                                                         {p.ticket}
                                                     </span>
-                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                                                        p.categoria === 'V.I.P' 
-                                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' 
+                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${p.categoria === 'V.I.P'
+                                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
                                                             : p.categoria === 'Expositor'
-                                                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400'
-                                                            : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
-                                                    }`}>
+                                                                ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400'
+                                                                : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+                                                        }`}>
                                                         {p.categoria}
                                                     </span>
                                                 </div>
@@ -504,10 +696,10 @@ export default function StaffHomePage() {
             {/* ========================================================================= */}
             {currentRolCode.includes('COCINA') && (
                 <div className="space-y-6">
-                    
+
                     {/* Grilla superior de estadisticas de raciones */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        
+
                         {/* Raciones Totales / Servidas */}
                         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-5 shadow-md flex items-center gap-4">
                             <div className="p-4 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-2xl shrink-0">
@@ -524,8 +716,8 @@ export default function StaffHomePage() {
                                     </span>
                                 </div>
                                 <div className="w-full bg-neutral-100 dark:bg-neutral-800 h-2 rounded-full overflow-hidden mt-1.5">
-                                    <div 
-                                        className="bg-amber-500 h-full rounded-full transition-all duration-500" 
+                                    <div
+                                        className="bg-amber-500 h-full rounded-full transition-all duration-500"
                                         style={{ width: `${(racionesServidas / racionesTotales) * 100}%` }}
                                     />
                                 </div>
@@ -568,7 +760,7 @@ export default function StaffHomePage() {
 
                     {/* Panel de control de Alergias Críticas & Buscador */}
                     <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-md space-y-4">
-                        
+
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-neutral-100 dark:border-neutral-800">
                             <div className="space-y-1">
                                 <h3 className="font-extrabold text-lg text-neutral-950 dark:text-white flex items-center gap-2">
@@ -609,15 +801,14 @@ export default function StaffHomePage() {
                                                 <span className="font-bold text-neutral-900 dark:text-neutral-50 text-sm">
                                                     {a.nombre} {a.apellido}
                                                 </span>
-                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
-                                                    a.nivel === 'CRÍTICO' 
-                                                        ? 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400' 
+                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${a.nivel === 'CRÍTICO'
+                                                        ? 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400'
                                                         : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
-                                                }`}>
+                                                    }`}>
                                                     {a.nivel}
                                                 </span>
                                             </div>
-                                            
+
                                             <div className="flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400">
                                                 <AlertTriangle className="w-3.5 h-3.5" />
                                                 <span>Alergia: {a.alergia}</span>
@@ -657,10 +848,10 @@ export default function StaffHomePage() {
             {/* ========================================================================= */}
             {currentRolCode.includes('OPERADOR') && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
+
                     {/* Botones de acción rápida en columna lateral */}
                     <div className="md:col-span-1 space-y-6">
-                        
+
                         {/* Lector QR Canjes */}
                         <button
                             onClick={() => triggerScan('BENEFICIO')}
@@ -696,11 +887,11 @@ export default function StaffHomePage() {
                             <div className="space-y-3">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-neutral-400">Código de Cupón</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={manualCouponCode}
                                         onChange={e => setManualCouponCode(e.target.value.toUpperCase())}
-                                        placeholder="Ej: BEN-KIT-01" 
+                                        placeholder="Ej: BEN-KIT-01"
                                         className="w-full text-sm px-4 py-3 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono tracking-wider font-bold text-center text-emerald-600 dark:text-emerald-400"
                                     />
                                 </div>
@@ -723,7 +914,7 @@ export default function StaffHomePage() {
                     {/* Listado de cupones y estado de canjes */}
                     <div className="md:col-span-2 space-y-4">
                         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-md space-y-4">
-                            
+
                             {/* Titular y búsqueda */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div className="space-y-1">
@@ -754,8 +945,8 @@ export default function StaffHomePage() {
                                     .filter(b => {
                                         const term = searchBeneficios.toLowerCase();
                                         return b.codigo.toLowerCase().includes(term) ||
-                                               b.titular.toLowerCase().includes(term) ||
-                                               b.item.toLowerCase().includes(term);
+                                            b.titular.toLowerCase().includes(term) ||
+                                            b.item.toLowerCase().includes(term);
                                     })
                                     .map(b => (
                                         <div
@@ -810,7 +1001,7 @@ export default function StaffHomePage() {
             {scannerOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        
+
                         <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
                             <h3 className="font-extrabold text-neutral-950 dark:text-white flex items-center gap-2">
                                 <QrCode className="w-5 h-5 text-indigo-500 animate-pulse" />
@@ -825,44 +1016,64 @@ export default function StaffHomePage() {
                         </div>
 
                         <div className="p-6 flex flex-col items-center justify-center space-y-6">
-                            
+
                             {!scanResult ? (
                                 <>
-                                    {/* MOCK SCANNING AREA */}
+                                    {/* CONTENEDOR DE CÁMARA REAL */}
                                     <div className="w-64 h-64 border-4 border-dashed border-indigo-500/50 dark:border-indigo-400/40 rounded-3xl relative flex items-center justify-center overflow-hidden bg-neutral-950">
-                                        
-                                        {/* Laser scan animation bar */}
-                                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent animate-[bounce_3s_infinite]" />
-                                        
-                                        <div className="flex flex-col items-center space-y-2 text-center text-white p-4">
-                                            <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
-                                            <span className="text-xs tracking-wider text-neutral-400 font-bold uppercase">
-                                                Enfoque la credencial
-                                            </span>
-                                        </div>
+
+                                        {/* Laser scan animation bar (capa superior) */}
+                                        {!cameraError && (
+                                            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent animate-[bounce_3s_infinite] z-10 pointer-events-none" />
+                                        )}
+
+                                        {cameraError ? (
+                                            <div className="flex flex-col items-center space-y-3 text-center text-white p-6 z-10">
+                                                <AlertTriangle className="w-10 h-10 text-red-500 animate-bounce" />
+                                                <span className="text-xs text-neutral-300 font-bold leading-relaxed">
+                                                    {cameraError}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full h-full relative">
+                                                {/* ID requerido por html5-qrcode. 
+                                                    Aplicamos estilos Tailwind para asegurar que el video cubra todo el contenedor redondeado. */}
+                                                <div
+                                                    id="qr-reader"
+                                                    className="w-full h-full object-cover [&_video]:object-cover [&_video]:w-full [&_video]:h-full [&_video]:rounded-2xl"
+                                                ></div>
+
+                                                {/* Overlay de instrucciones de carga/enfoque */}
+                                                <div className="absolute inset-0 bg-neutral-950/40 flex flex-col items-center justify-end pb-4 pointer-events-none z-10">
+                                                    <span className="text-[10px] tracking-wider text-white/90 bg-black/60 px-3 py-1 rounded-full font-bold uppercase backdrop-blur-sm">
+                                                        Enfoque el código QR
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="text-center space-y-2">
                                         <p className="text-xs text-neutral-400 max-w-xs mx-auto">
-                                            La app simula la lectura real del sensor de cámara integrando la respuesta encriptada del token.
+                                            Alineá el código QR del participante dentro del marco de la cámara para escanearlo automáticamente.
                                         </p>
 
+                                        {/* Botón de simulación secundario para desarrollo y testing rápido */}
                                         <button
                                             onClick={simulateSuccessfulScan}
                                             disabled={loadingAction}
-                                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98]"
+                                            className="text-neutral-400 hover:text-indigo-500 dark:hover:text-indigo-400 text-xs font-bold underline transition-colors block mx-auto mt-2"
                                         >
-                                            {loadingAction ? 'Escaneando...' : 'Simular Lectura QR'}
+                                            {loadingAction ? 'Escaneando...' : 'Simular escaneo de prueba'}
                                         </button>
                                     </div>
                                 </>
                             ) : (
                                 <div className="w-full text-center space-y-6 py-4 animate-in zoom-in-95 duration-300">
-                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-sm border ${
-                                        scanResult.success 
+                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-sm border ${scanResult.success
                                             ? 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-500/20'
                                             : 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20'
-                                    }`}>
+                                        }`}>
                                         {scanResult.success ? <Check className="w-8 h-8" /> : <X className="w-8 h-8" />}
                                     </div>
 
@@ -896,7 +1107,7 @@ export default function StaffHomePage() {
                                         >
                                             Escanear Otro
                                         </button>
-                                        
+
                                         {scanResult.success && scanResult.action && (
                                             <button
                                                 onClick={() => {
