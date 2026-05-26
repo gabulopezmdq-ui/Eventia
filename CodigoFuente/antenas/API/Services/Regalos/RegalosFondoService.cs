@@ -359,5 +359,97 @@ namespace API.Services.Regalos
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<List<RegalosFondoAporteListItemDTO>> ListarAportesAsync(long id_evento, string? estado = null)
+        {
+            if (id_evento <= 0) throw new Exception("id_evento inválido.");
+
+            // Tomo el fondo activo (para obtener id_fondo); si no hay, lista vacía
+            var fondo = await _context.ef_evento_regalos_fondos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.id_evento == id_evento && x.activo == true);
+
+            if (fondo == null)
+                return new List<RegalosFondoAporteListItemDTO>();
+
+            var q = _context.ef_evento_regalos_fondo_aportes
+                .AsNoTracking()
+                .Where(a => a.id_evento == id_evento
+                         && a.id_fondo == fondo.id_fondo
+                         && a.activo == true);
+
+            if (!string.IsNullOrWhiteSpace(estado))
+            {
+                string st = estado.Trim().ToUpper();
+                q = q.Where(a => a.estado.ToUpper() == st);
+            }
+
+            // join para traer el título de la meta
+            var result = await (
+                from a in q
+                join m in _context.ef_evento_regalos_fondo_metas.AsNoTracking()
+                    on a.id_meta equals m.id_meta
+                select new RegalosFondoAporteListItemDTO
+                {
+                    id_aporte = a.id_aporte,
+                    id_evento = a.id_evento,
+                    id_fondo = a.id_fondo,
+                    id_meta = a.id_meta,
+                    meta_titulo = m.titulo,
+
+                    estado = a.estado,
+
+                    monto_aporte = a.monto_aporte,
+                    moneda_aporte = a.moneda_aporte,
+
+                    monto_base_calculado = a.monto_base_calculado,
+                    tipo_cambio_usado = a.tipo_cambio_usado,
+
+                    nombre_mostrado = a.nombre_mostrado,
+                    es_anonimo = a.es_anonimo,
+
+                    mensaje = a.mensaje,
+                    mostrar_en_muro = a.mostrar_en_muro,
+
+                    fecha_declara = a.fecha_declara,
+                    fecha_confirma = a.fecha_confirma,
+                    id_usuario_confirma = a.id_usuario_confirma,
+
+                    activo = a.activo
+                }
+            )
+            .OrderByDescending(x => x.fecha_declara)
+            .ThenByDescending(x => x.id_aporte)
+            .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<bool> UpdateMetaAsync(long id_evento, long id_meta, RegalosFondoUpdateMetaDTO req)
+        {
+            if (req == null) throw new Exception("Body inválido.");
+            if (id_evento <= 0) throw new Exception("id_evento inválido.");
+            if (id_meta <= 0) throw new Exception("id_meta inválido.");
+            if (string.IsNullOrWhiteSpace(req.titulo)) throw new Exception("El título es obligatorio.");
+            if (req.objetivo_monto <= 0) throw new Exception("objetivo_monto inválido.");
+            if (req.orden <= 0) throw new Exception("orden inválido.");
+
+            var meta = await _context.ef_evento_regalos_fondo_metas
+                .FirstOrDefaultAsync(x => x.id_evento == id_evento && x.id_meta == id_meta);
+
+            if (meta == null) return false;
+
+            meta.titulo = req.titulo.Trim();
+            meta.descripcion = req.descripcion?.Trim();
+            meta.objetivo_monto = req.objetivo_monto;
+            meta.orden = req.orden;
+            meta.visible = req.visible;
+            meta.url_referencia = req.url_referencia?.Trim();
+            meta.imagen_url = req.imagen_url?.Trim();
+            meta.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

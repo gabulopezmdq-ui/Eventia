@@ -92,5 +92,38 @@ namespace API.Controllers.Regalos
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+
+        [HttpGet("aportes")]
+        public async Task<ActionResult> Aportes(long id_evento, [FromQuery] string? estado = null)
+        {
+            try
+            {
+                var list = await _service.ListarAportesAsync(id_evento, estado);
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("metas/{id_meta}")]
+        public async Task<ActionResult> UpdateMeta(long id_evento, long id_meta, [FromBody] RegalosFondoUpdateMetaDTO req)
+        {
+            try
+            {
+                var ok = await _service.UpdateMetaAsync(id_evento, id_meta, req);
+                if (!ok) return NotFound(new { error = "Meta no encontrada." });
+
+                return Ok(new { ok = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+
     }
 }
