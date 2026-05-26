@@ -3,6 +3,7 @@ import type {
     InscripcionPayload,
     ConfirmacionResponse,
     TotalEstimado,
+    CotizarPayload,
 } from './types/inscripcion.types';
 
 const API = '/api/inscripcion';
@@ -84,7 +85,7 @@ export async function confirmarInscripcion(
  */
 export async function cotizarInscripcion(
     token: string,
-    payload: InscripcionPayload
+    payload: CotizarPayload
 ): Promise<TotalEstimado> {
     const res = await fetch(`${API}/${token}/cotizar`, {
         method: 'POST',
@@ -92,5 +93,12 @@ export async function cotizarInscripcion(
         body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Error al cotizar la inscripción.');
-    return res.json();
+    const data = await res.json();
+    
+    return {
+        subtotal: Number((data.base ?? 0) + (data.servicios_total ?? 0)),
+        descuento: 0,
+        total: Number(data.total ?? 0),
+        moneda: String(data.moneda ?? 'EUR'),
+    };
 }
