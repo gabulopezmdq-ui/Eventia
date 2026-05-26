@@ -28,19 +28,19 @@ export function FaseA_Landing() {
                         {programaData.mensaje_bienvenida}
                     </p>
                 </div>
-                
+
                 {programaData.idiomas.length > 1 && (
                     <div className="flex items-center gap-2 bg-white dark:bg-card-bg px-3 py-2 rounded-lg border border-gray-200 dark:border-card-border shadow-sm shrink-0">
                         <Globe className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                        <select 
-                            value={state.idIdioma} 
+                        <select
+                            value={state.idIdioma}
                             onChange={(e) => cambiarIdioma(Number(e.target.value))}
                             className="text-sm bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white cursor-pointer outline-none"
                         >
                             {programaData.idiomas.map((idioma) => (
-                                <option 
-                                    key={idioma.idIdioma} 
-                                    value={idioma.idIdioma} 
+                                <option
+                                    key={idioma.idIdioma}
+                                    value={idioma.idIdioma}
                                     className="text-gray-900"
                                 >
                                     {idioma.nombreLargo}
@@ -54,7 +54,7 @@ export function FaseA_Landing() {
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Acordeón Semanas */}
                 <div className="bg-white dark:bg-card-bg rounded-xl shadow-sm border border-gray-200 dark:border-card-border overflow-hidden self-start">
-                    <button 
+                    <button
                         onClick={() => setSemanasAbiertas(!semanasAbiertas)}
                         className="w-full px-6 py-4 border-b border-gray-200 dark:border-card-border bg-gray-50 dark:bg-black/20 flex justify-between items-center hover:bg-gray-100 dark:hover:bg-black/40 transition-colors"
                     >
@@ -64,7 +64,7 @@ export function FaseA_Landing() {
                         </h2>
                         {semanasAbiertas ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
                     </button>
-                    
+
                     {semanasAbiertas && (
                         <ul className="divide-y divide-gray-200 dark:divide-card-border max-h-[350px] overflow-y-auto">
                             {programaData.periodos.map(periodo => (
@@ -88,7 +88,7 @@ export function FaseA_Landing() {
 
                 {/* Acordeón Servicios */}
                 <div className="bg-white dark:bg-card-bg rounded-xl shadow-sm border border-gray-200 dark:border-card-border overflow-hidden self-start">
-                    <button 
+                    <button
                         onClick={() => setServiciosAbiertos(!serviciosAbiertos)}
                         className="w-full px-6 py-4 border-b border-gray-200 dark:border-card-border bg-gray-50 dark:bg-black/20 flex justify-between items-center hover:bg-gray-100 dark:hover:bg-black/40 transition-colors"
                     >
@@ -125,7 +125,7 @@ export function FaseA_Landing() {
                     )}
                 </div>
             </div>
-            
+
             {/* Información adicional: Pago */}
             <div className="mt-8 space-y-6">
                 {/* Sección de Pago / Información Pública */}
@@ -143,7 +143,7 @@ export function FaseA_Landing() {
             </div>
 
             <div className="mt-12 text-center">
-                <button 
+                <button
                     onClick={handleComenzar}
                     className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white font-semibold py-4 px-10 rounded-full shadow-lg transition-all transform hover:-translate-y-1 hover:shadow-xl text-lg"
                 >
