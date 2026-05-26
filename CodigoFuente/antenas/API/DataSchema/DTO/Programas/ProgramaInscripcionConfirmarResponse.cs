@@ -26,6 +26,14 @@ namespace API.DataSchema.DTO.Programas
         [JsonProperty("url_portal")]
         public string? UrlPortal { get; set; }
 
+        [JsonPropertyName("token_portal")]
+        [JsonProperty("token_portal")]
+        public System.Guid? TokenPortal { get; set; }
+
+        [JsonPropertyName("url_mi_eventia")]
+        [JsonProperty("url_mi_eventia")]
+        public string? UrlMiEventia { get; set; }
+
         [JsonPropertyName("total_general")]
         [JsonProperty("total_general")]
         public decimal TotalGeneral { get; set; }

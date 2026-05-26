@@ -109,18 +109,52 @@ namespace API.Controllers.Portal
 
             if (inscripcion == null)
             {
+                await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
+                {
+                    TokenConsulta = token,
+                    EmailUsado = req?.Email ?? string.Empty,
+                    FechaHora = DateTime.UtcNow,
+                    ResultadoOk = false
+                });
+                await _context.SaveChangesAsync();
                 return NotFound("Token inválido.");
             }
 
             if (string.IsNullOrWhiteSpace(inscripcion.responsable_email))
             {
+                await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
+                {
+                    TokenConsulta = token,
+                    EmailUsado = req?.Email ?? string.Empty,
+                    FechaHora = DateTime.UtcNow,
+                    ResultadoOk = false
+                });
+                await _context.SaveChangesAsync();
                 return BadRequest("No hay un email registrado para esta inscripción.");
             }
 
-            if (!string.Equals(inscripcion.responsable_email.Trim(), req.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+            if (req == null || string.IsNullOrWhiteSpace(req.Email) || !string.Equals(inscripcion.responsable_email.Trim(), req.Email.Trim(), StringComparison.OrdinalIgnoreCase))
             {
+                await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
+                {
+                    TokenConsulta = token,
+                    EmailUsado = req?.Email ?? string.Empty,
+                    FechaHora = DateTime.UtcNow,
+                    ResultadoOk = false
+                });
+                await _context.SaveChangesAsync();
                 return Unauthorized("Email incorrecto.");
             }
+
+            // Success
+            await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
+            {
+                TokenConsulta = token,
+                EmailUsado = req.Email,
+                FechaHora = DateTime.UtcNow,
+                ResultadoOk = true
+            });
+            await _context.SaveChangesAsync();
 
             var jwtToken = GenerarJwtToken(inscripcion);
 

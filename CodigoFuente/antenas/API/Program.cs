@@ -183,6 +183,7 @@ builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksSer
 // Módulo Staff
 builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IProgramasService, ProgramasService>();
+builder.Services.AddScoped<MiEventiaService>();
 
 
 //planes-precios
