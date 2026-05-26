@@ -243,7 +243,7 @@ export default function InvitadosPage({ params }: { params: Promise<{ id: string
     };
 
     const copyInvitadoLink = (inv: any) => {
-        const tokenVal = inv.qrToken || inv.token || inv.rsvpToken;
+        const tokenVal = inv.rsvpToken || inv.token || inv.qrToken;
         let link = `${window.location.origin}/rsvp/${tokenVal}`;
         if (inv.idAcceso) {
             link += `?idAcceso=${inv.idAcceso}`;

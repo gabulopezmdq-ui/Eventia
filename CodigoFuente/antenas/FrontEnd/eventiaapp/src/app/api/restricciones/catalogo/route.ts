@@ -31,7 +31,7 @@ export async function GET(req: Request) {
         const locale = searchParams.get('locale') || 'es-AR';
 
         // Guest endpoint, no need for access_token cookie
-        const res = await fetch(`${API_URL}/restricciones/catalogo?locale=${locale}`, {
+        const res = await fetch(`${API_URL}/alimentacion/catalogo/${locale}`, {
             method: 'GET'
         });
 
