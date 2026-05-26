@@ -12,8 +12,9 @@ namespace API.Services.Regalos
         Task<List<RegalosFondoMetaDTO>> ListarMetasAsync(long id_evento);
         Task<RegalosFondoMetaDTO> CrearMetaAsync(RegalosFondoCrearMetaDTO req);
         Task<bool> SetVisibleMetaAsync(long id_evento, long id_meta, bool visible);
-
         Task<RegalosFondoAporteDTO> CrearAportePublicoAsync(RegalosFondoCrearAporteDTO req);
         Task<bool> ConfirmarAporteAsync(long id_evento, long id_aporte, long id_usuario_admin, RegalosFondoConfirmarAporteDTO req);
+        Task<List<RegalosFondoAporteListItemDTO>> ListarAportesAsync(long id_evento, string? estado = null);
+        Task<bool> UpdateMetaAsync(long id_evento, long id_meta, RegalosFondoUpdateMetaDTO req);
     }
 }
