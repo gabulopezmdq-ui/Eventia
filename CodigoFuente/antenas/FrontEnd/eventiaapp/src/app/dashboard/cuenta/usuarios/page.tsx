@@ -97,8 +97,7 @@ export default function CuentaUsuariosPage() {
             const res = await invitarUsuario(cuenta.id_cuenta, inviteEmail.trim(), inviteRol);
             
             // Generar enlace
-            const token = res.token || '';
-            const link = res.link || `${window.location.origin}/register?token=${token}`;
+            const link = res.url_invitacion || res.link || (res.token ? `${window.location.origin}/register?token=${res.token}` : '');
             setGeneratedLink(link);
             
             // Reset form
