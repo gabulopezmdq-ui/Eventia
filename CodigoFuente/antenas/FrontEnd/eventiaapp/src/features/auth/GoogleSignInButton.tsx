@@ -58,8 +58,11 @@ export function GoogleSignInButton({
                 localStorage.setItem('access_token', data.access_token);
             }
 
-            onSuccess?.();
-            window.location.href = '/dashboard';
+            if (onSuccess) {
+                onSuccess();
+            } else {
+                window.location.href = '/dashboard';
+            }
         } catch (err) {
             const errorMessage = 'Error al autenticar con Google';
             setError(errorMessage);

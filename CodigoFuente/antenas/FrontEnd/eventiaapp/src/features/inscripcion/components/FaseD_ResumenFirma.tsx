@@ -1,20 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useInscripcion } from '../hooks/useInscripcion';
 import { useTotalEstimado } from '../hooks/useTotalEstimado';
-import { confirmarInscripcion } from '../inscripcion.service';
-import { ArrowLeft, CheckCircle2, DollarSign, FileText, Loader2, Mail, Phone, Users } from 'lucide-react';
+import { confirmarInscripcion, cotizarInscripcion } from '../inscripcion.service';
+import type { TotalEstimado } from '../types/inscripcion.types';
+import { ArrowLeft, CheckCircle2, DollarSign, FileText, Loader2, Mail, Phone, Users, Server, AlertCircle } from 'lucide-react';
 
 export function FaseD_ResumenFirma() {
-    const { state, irAFase, guardarFirma, buildPayload, setLoading, setError, setConfirmado } = useInscripcion();
-    const { subtotal, descuento, total, moneda } = useTotalEstimado(state.participantes, state.programaData);
+    const { state, irAFase, guardarFirma, buildPayload, buildCotizarPayload, setLoading, setError, setConfirmado } = useInscripcion();
+    
+    // Cálculo local como fallback inmediato
+    const localEstimado = useTotalEstimado(state.participantes, state.programaData);
     const autorizacionesConfig = state.programaData?.autorizaciones_configuradas ?? [];
 
     const [nombreFirma, setNombreFirma] = useState(state.firma.nombre_completo || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Cotización real del backend
+    const [cotizacion, setCotizacion] = useState<TotalEstimado | null>(null);
+    const [loadingCotizacion, setLoadingCotizacion] = useState(false);
+    const [errorCotizacion, setErrorCotizacion] = useState(false);
+
     // Estado local de checkboxes de autorizaciones
     const [autorizaciones, setAutorizaciones] = useState<Record<number, boolean>>(
         () => Object.fromEntries(autorizacionesConfig.map(a => [a.id, false]))
     );
+
+    // ── Obtener Cotización Oficial al Montar ──────────────────────
+    useEffect(() => {
+        if (!state.programaData?.token) return;
+
+        async function obtenerCotizacionServidor() {
+            try {
+                setLoadingCotizacion(true);
+                setErrorCotizacion(false);
+                
+                const payload = buildCotizarPayload();
+                const res = await cotizarInscripcion(state.programaData!.token, payload);
+                setCotizacion(res);
+            } catch (e) {
+                console.warn('Error al cotizar desde el backend, usando fallback local:', e);
+                setErrorCotizacion(true);
+            } finally {
+                setLoadingCotizacion(false);
+            }
+        }
+
+        obtenerCotizacionServidor();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleConfirmar = async () => {
         if (!nombreFirma.trim()) {
@@ -58,6 +91,12 @@ export function FaseD_ResumenFirma() {
             setLoading(false);
         }
     };
+
+    // Usar la cotización del servidor si está disponible, de lo contrario usar el estimado local
+    const subtotalDisplay = cotizacion ? cotizacion.subtotal : localEstimado.subtotal;
+    const descuentoDisplay = cotizacion ? cotizacion.descuento : localEstimado.descuento;
+    const totalDisplay = cotizacion ? cotizacion.total : localEstimado.total;
+    const monedaDisplay = cotizacion ? cotizacion.moneda : localEstimado.moneda;
 
     return (
         <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8 pb-32 animate-in slide-in-from-right-8 duration-300">
@@ -104,13 +143,14 @@ export function FaseD_ResumenFirma() {
                                 <p className="font-semibold text-gray-900 dark:text-white text-lg flex items-center gap-2">
                                     👦👧 {p.nombre} {p.apellido}
                                 </p>
-                                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                                <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
                                     Semanas: <strong className="text-gray-900 dark:text-white">{p.periodos.length}</strong>
                                     {p.servicios.length > 0 && <span> • Servicios: <strong className="text-gray-900 dark:text-white">{p.servicios.length}</strong></span>}
+                                    {p.modalidad_retiro && <span> • Retiro: <strong className="text-gray-900 dark:text-white">{p.modalidad_retiro === 'REQUIERE_AUTORIZADO' ? 'Con autorizado' : p.modalidad_retiro === 'SE_RETIRA_SOLO' ? 'Se retira solo/a' : 'No aplica'}</strong></span>}
                                 </p>
                                 {p.servicios.length > 0 && (
-                                    <div className="mt-2 pl-4 text-sm text-gray-500 dark:text-gray-400 space-y-1 border-l-2 border-accent/20">
-                                        {p.servicios.map((svcSel) => {
+                                    <div className="mt-2 pl-4 text-xs text-gray-500 dark:text-gray-400 space-y-1 border-l-2 border-accent/20">
+                                        {p.servicios.map((svcSel, idx) => {
                                             const svcDef = state.programaData?.servicios.find(
                                                 (s) => s.idProgramaServicio === svcSel.id_programa_servicio
                                             );
@@ -129,11 +169,19 @@ export function FaseD_ResumenFirma() {
                                                       .join(', ')
                                                 : '';
 
+                                            const periodoDef = state.programaData?.periodos.find(
+                                                (pe) => pe.id_programa_periodo === svcSel.id_programa_periodo
+                                            );
+
                                             return (
-                                                <div key={svcSel.id_programa_servicio} className="flex flex-col sm:flex-row sm:items-center gap-1">
-                                                    <span className="font-medium text-gray-700 dark:text-gray-300">• {svcDef.nombre}</span>
+                                                <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                                                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                                                        • {svcDef.nombre} 
+                                                        {periodoDef && <span className="text-[10px] text-gray-400 ml-1">({periodoDef.nombre})</span>}
+                                                        {svcSel.fechas.length > 0 && <span className="text-[10px] text-accent ml-1 font-semibold">({svcSel.fechas.length} días)</span>}
+                                                    </span>
                                                     {extraFieldsText && (
-                                                        <span className="text-xs text-gray-400 dark:text-gray-500">({extraFieldsText})</span>
+                                                        <span className="text-[10px] text-gray-400 dark:text-gray-500">({extraFieldsText})</span>
                                                     )}
                                                 </div>
                                             );
@@ -145,28 +193,53 @@ export function FaseD_ResumenFirma() {
                     </div>
                 </div>
 
-                {/* Resumen Totales */}
-                <div className="bg-accent/5 p-6 rounded-xl border-2 border-accent/20">
+                {/* Resumen Totales / Presupuesto */}
+                <div className="bg-accent/5 p-6 rounded-2xl border-2 border-accent/20 relative overflow-hidden">
                     <h3 className="text-sm font-bold text-accent uppercase tracking-wider mb-4 flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
-                        Presupuesto Estimado
+                        Presupuesto Final
                     </h3>
-                    <div className="space-y-2 text-gray-700 dark:text-gray-300">
-                        <div className="flex justify-between items-center">
-                            <span>Subtotal:</span>
-                            <span className="font-medium">{subtotal} {moneda}</span>
+
+                    {loadingCotizacion ? (
+                        /* Pulse Loader Premium */
+                        <div className="space-y-3 animate-pulse">
+                            <div className="h-4 bg-accent/10 rounded w-1/3" />
+                            <div className="h-4 bg-accent/10 rounded w-1/4" />
+                            <div className="h-8 bg-accent/15 rounded w-1/2 mt-4" />
                         </div>
-                        {descuento > 0 && (
-                            <div className="flex justify-between items-center text-green-600 dark:text-green-400 font-medium">
-                                <span>Descuento hermanos (10%):</span>
-                                <span>-{descuento} {moneda}</span>
+                    ) : (
+                        <div className="space-y-2 text-gray-700 dark:text-gray-300">
+                            <div className="flex justify-between items-center text-sm">
+                                <span>Subtotal:</span>
+                                <span className="font-medium">{subtotalDisplay} {monedaDisplay}</span>
                             </div>
-                        )}
-                        <div className="flex justify-between items-center pt-4 mt-2 border-t border-accent/20 text-xl font-bold text-gray-900 dark:text-white">
-                            <span>Total a abonar:</span>
-                            <span>{total} <span className="text-sm font-normal text-gray-500">{moneda}</span></span>
+                            {descuentoDisplay > 0 && (
+                                <div className="flex justify-between items-center text-green-600 dark:text-green-400 font-medium text-sm">
+                                    <span>Descuento aplicado:</span>
+                                    <span>-{descuentoDisplay} {monedaDisplay}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center pt-4 mt-2 border-t border-accent/20 text-xl font-bold text-gray-900 dark:text-white">
+                                <span>Total a abonar:</span>
+                                <span>{totalDisplay} <span className="text-sm font-normal text-gray-500">{monedaDisplay}</span></span>
+                            </div>
+
+                            {/* Badge de estado de cotización */}
+                            <div className="pt-2 flex justify-end">
+                                {cotizacion ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-green-100 dark:bg-green-950/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full border border-green-200 dark:border-green-800">
+                                        <Server className="w-3 h-3" />
+                                        Precios oficiales validados por servidor
+                                    </span>
+                                ) : errorCotizacion ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800">
+                                        <AlertCircle className="w-3 h-3" />
+                                        Servidor no disponible, cálculo local estimado
+                                    </span>
+                                ) : null}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Autorizaciones del programa */}
@@ -199,7 +272,7 @@ export function FaseD_ResumenFirma() {
                 {/* Firma */}
                 <div className="bg-white dark:bg-card-bg p-8 rounded-xl border border-gray-200 dark:border-card-border shadow-lg">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Firma de Autorización</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                    <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed text-sm">
                         Al ingresar mi nombre completo a continuación, acepto las condiciones del programa, 
                         declaro que los datos médicos y personales provistos son verdaderos, y autorizo 
                         la participación en las actividades de la colonia.
@@ -220,10 +293,10 @@ export function FaseD_ResumenFirma() {
 
                     <button 
                         onClick={handleConfirmar}
-                        disabled={isSubmitting || !nombreFirma.trim()}
+                        disabled={isSubmitting || !nombreFirma.trim() || loadingCotizacion}
                         className={`
                             mt-8 w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all
-                            ${nombreFirma.trim() && !isSubmitting 
+                            ${nombreFirma.trim() && !isSubmitting && !loadingCotizacion
                                 ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5' 
                                 : 'bg-gray-200 dark:bg-gray-800 text-gray-500 cursor-not-allowed'
                             }

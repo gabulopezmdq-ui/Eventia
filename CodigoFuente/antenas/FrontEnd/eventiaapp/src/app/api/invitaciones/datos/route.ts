@@ -12,8 +12,8 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: 'Missing token' }, { status: 400 });
         }
 
-        // Backend expects: GET /invitacion/DatosInvitacion/{token}
-        const res = await fetch(`${API_URL}/invitacion/DatosInvitacion/${token}`, {
+        // Backend expects: GET /invitacion/datos/{token}
+        const res = await fetch(`${API_URL}/invitacion/datos/${token}`, {
             method: 'GET'
         });
 

@@ -24,7 +24,7 @@ export function FaseB_ResponsableDrawer() {
                         Datos del Responsable
                     </h2>
                     {responsable.nombre && responsable.apellido && responsable.email && (
-                        <button 
+                        <button
                             onClick={cerrarDrawerResponsable}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                             aria-label="Cerrar"
@@ -38,21 +38,21 @@ export function FaseB_ResponsableDrawer() {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
-                            <input 
+                            <input
                                 required
-                                name="nombre" 
-                                value={responsable.nombre || ''} 
-                                onChange={handleChange} 
+                                name="nombre"
+                                value={responsable.nombre || ''}
+                                onChange={handleChange}
                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                             />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Apellido *</label>
-                            <input 
+                            <input
                                 required
-                                name="apellido" 
-                                value={responsable.apellido || ''} 
-                                onChange={handleChange} 
+                                name="apellido"
+                                value={responsable.apellido || ''}
+                                onChange={handleChange}
                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                             />
                         </div>
@@ -63,12 +63,12 @@ export function FaseB_ResponsableDrawer() {
                             <Mail className="w-4 h-4 text-gray-400" />
                             Email de contacto *
                         </label>
-                        <input 
+                        <input
                             required
                             type="email"
-                            name="email" 
-                            value={responsable.email || ''} 
-                            onChange={handleChange} 
+                            name="email"
+                            value={responsable.email || ''}
+                            onChange={handleChange}
                             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                         />
                     </div>
@@ -78,12 +78,12 @@ export function FaseB_ResponsableDrawer() {
                             <Phone className="w-4 h-4 text-gray-400" />
                             Teléfono (Móvil) *
                         </label>
-                        <input 
+                        <input
                             required
                             type="tel"
-                            name="telefono" 
-                            value={responsable.telefono || ''} 
-                            onChange={handleChange} 
+                            name="telefono"
+                            value={responsable.telefono || ''}
+                            onChange={handleChange}
                             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                         />
                     </div>
@@ -93,12 +93,12 @@ export function FaseB_ResponsableDrawer() {
                             <User className="w-4 h-4 text-gray-400" />
                             Documento / Pasaporte *
                         </label>
-                        <input 
+                        <input
                             required
                             type="text"
-                            name="documento" 
-                            value={responsable.documento || ''} 
-                            onChange={handleChange} 
+                            name="documento"
+                            value={responsable.documento || ''}
+                            onChange={handleChange}
                             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                         />
                     </div>
@@ -108,16 +108,18 @@ export function FaseB_ResponsableDrawer() {
                             <Heart className="w-4 h-4 text-gray-400" />
                             Relación con el participante *
                         </label>
-                        <select 
+                        <select
                             required
-                            name="relacion" 
-                            value={responsable.relacion || ''} 
+                            name="relacion"
+                            value={responsable.relacion || ''}
                             onChange={handleChange}
                             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-card-border bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                         >
                             <option value="">Seleccione...</option>
-                            <option value="Padre/Madre">Padre / Madre</option>
-                            <option value="Tutor">Tutor Legal</option>
+                            <option value="Titular">Titular</option>
+                            <option value="Madre">Madre</option>
+                            <option value="Padre">Padre</option>
+                            <option value="Tutor/a">Tutor/a Legal</option>
                             <option value="Familiar">Familiar (Abuelo/a, Tío/a)</option>
                             <option value="Otro">Otro</option>
                         </select>
@@ -125,7 +127,7 @@ export function FaseB_ResponsableDrawer() {
 
                     <div className="pt-2 space-y-3">
                         <label className="flex items-start gap-3 cursor-pointer">
-                            <input 
+                            <input
                                 type="checkbox"
                                 name="acepta_comunicaciones"
                                 checked={responsable.acepta_comunicaciones || false}
@@ -135,7 +137,7 @@ export function FaseB_ResponsableDrawer() {
                             <span className="text-sm text-gray-600 dark:text-gray-400">Acepto recibir comunicaciones importantes relacionadas con el programa.</span>
                         </label>
                         <label className="flex items-start gap-3 cursor-pointer">
-                            <input 
+                            <input
                                 type="checkbox"
                                 name="acepta_promociones"
                                 checked={responsable.acepta_promociones || false}
@@ -147,8 +149,8 @@ export function FaseB_ResponsableDrawer() {
                     </div>
 
                     <div className="pt-4">
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                         >
                             <CheckCircle2 className="w-5 h-5" />

@@ -37,6 +37,35 @@ export async function GET(req: Request) {
         }
 
         const data = await res.json();
+
+        // Obtener la lista de tokens para asociar el rsvpToken correcto a cada invitado
+        let tokensMap: Record<number, string> = {};
+        try {
+            const tokensRes = await fetch(`${API_URL}/invitacion/tokens?idEvento=${idEvento}`, {
+                method: 'GET'
+            });
+            if (tokensRes.ok) {
+                const tokensData = await tokensRes.json();
+                if (Array.isArray(tokensData)) {
+                    tokensData.forEach((t: any) => {
+                        if (t.idInvitado && t.token) {
+                            tokensMap[t.idInvitado] = t.token;
+                        }
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Proxy Error: Fallo al obtener los tokens de invitados para unificar:', e);
+        }
+
+        // Si existen los items, inyectamos el rsvpToken correspondiente
+        if (data && Array.isArray(data.items)) {
+            data.items = data.items.map((item: any) => ({
+                ...item,
+                rsvpToken: tokensMap[item.idInvitado] || null
+            }));
+        }
+
         return NextResponse.json(data);
     } catch (error) {
         console.error('Proxy Error GET /invitaciones/personas:', error);
