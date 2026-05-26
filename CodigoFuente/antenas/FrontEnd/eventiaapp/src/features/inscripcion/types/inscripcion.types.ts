@@ -73,7 +73,7 @@ export interface ProgramaInscripcionData {
 
 // ── Payload que va en el POST /programas/inscripcion/confirmar ───
 
-export type RelacionResponsable = 'Madre' | 'Padre' | 'Tutor/a' | 'Familiar' | 'Otro';
+export type RelacionResponsable = 'Madre' | 'Padre' | 'Tutor/a' | 'Familiar' | 'Otro' | 'Titular';
 
 export interface Responsable {
     nombre: string;
@@ -132,6 +132,8 @@ export interface FichaSalud {
     medicaciones: Medicacion[];
 }
 
+export type ModalidadRetiro = 'SE_RETIRA_SOLO' | 'REQUIERE_AUTORIZADO' | 'NO_APLICA';
+
 /** Persona autorizada a retirar al participante */
 export interface AutorizadoRetiro {
     nombre_autorizado: string;
@@ -163,6 +165,7 @@ export interface Participante {
     fecha_nacimiento: string;
     documento: string | null;
     observaciones: string;
+    modalidad_retiro: ModalidadRetiro | null;
     periodos: { id_programa_periodo: number }[];
     servicios: ServicioSeleccionado[];
     restricciones_alimentarias: RestriccionAlimentaria[];
@@ -246,4 +249,24 @@ export function createFichaSaludVacia(): FichaSalud {
         contactos_emergencia: [],
         medicaciones: [],
     };
+}
+
+// ── Payloads para cotizar backend C# ──────────────────────────────
+
+export interface CotizarPeriodoRequest {
+    id_programa_periodo: number;
+}
+
+export interface CotizarServicioRequest {
+    id_programa_servicio: number;
+    id_programa_periodo: number | null;
+    fechas: string[];
+    cantidad: number | null;
+    campos_extra: Record<string, string> | null;
+}
+
+export interface CotizarPayload {
+    id_idioma: number;
+    periodos: CotizarPeriodoRequest[];
+    servicios: CotizarServicioRequest[];
 }

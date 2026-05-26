@@ -20,6 +20,9 @@ export interface InvitarResponse {
     mensaje?: string;
     token?: string; // token generado de invitacion
     link?: string;  // link de invitacion pre-calculado
+    url_invitacion?: string;
+    email_invitado?: string;
+    rol_codigo?: string;
 }
 
 /**
@@ -52,7 +55,7 @@ export async function invitarUsuario(idCuenta: number, email: string, rolCodigo:
     const res = await fetch(`/api/cuenta_usuarios/Invitar?idCuenta=${idCuenta}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, rolCodigo }),
+        body: JSON.stringify({ email, rol_codigo: rolCodigo }),
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -68,7 +71,7 @@ export async function cambiarRolUsuario(idCuenta: number, idCuentaUsuario: numbe
     const res = await fetch(`/api/cuenta_usuarios/CambiarRol?idCuenta=${idCuenta}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idCuentaUsuario, rolCodigo }),
+        body: JSON.stringify({ id_cuenta_usuario: idCuentaUsuario, rol_codigo: rolCodigo }),
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));

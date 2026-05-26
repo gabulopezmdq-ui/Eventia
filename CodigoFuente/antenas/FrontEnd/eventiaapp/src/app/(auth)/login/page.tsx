@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { login } from '@/src/features/auth/auth.service';
 import { GoogleSignInButton } from '@/src/features/auth/GoogleSignInButton';
-import { Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles, AlertCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
@@ -36,6 +36,11 @@ function LoginForm() {
     } | null>(null);
     const [inviteError, setInviteError] = useState<string | null>(null);
     const [inviteToken, setInviteToken] = useState<string | null>(null);
+
+    // Estados para el modal interactivo de aceptación
+    const [showAcceptModal, setShowAcceptModal] = useState(false);
+    const [acceptingInvite, setAcceptingInvite] = useState(false);
+    const [acceptSuccess, setAcceptSuccess] = useState(false);
 
     useEffect(() => {
         const queryToken = searchParams.get('token');
@@ -74,6 +79,103 @@ function LoginForm() {
         validate();
     }, [searchParams]);
 
+    const proceedRedirection = async (forcedSelectedCuentaId?: number) => {
+        // ── Redirección inteligente según flow del registro o multi-cuenta ──
+        const flow = sessionStorage.getItem('eventia_flow');
+        sessionStorage.removeItem('eventia_flow'); // consumir una sola vez
+
+        try {
+            const meRes = await fetch('/api/auth/me');
+            if (meRes.ok) {
+                const me = await meRes.json();
+                
+                // Si el usuario tiene múltiples espacios de trabajo, redirigir al selector
+                const espacios = me.espacios ?? [];
+                const hasActiveToken = inviteToken || sessionStorage.getItem('eventia_invite_token') || forcedSelectedCuentaId;
+                
+                if (espacios.length > 1) {
+                    window.location.href = '/dashboard/select-space';
+                    return;
+                }
+
+                // Si solo tiene un espacio y el flujo es cuenta (B2B)
+                if (flow === 'cuenta' || hasActiveToken) {
+                    const estadoUI = me.cuenta?.estado_ui;
+                    if (estadoUI === 'CUENTA_ACTIVA') {
+                        window.location.href = '/dashboard/cuenta';
+                        return;
+                    } else if (estadoUI === 'CUENTA_PENDIENTE') {
+                        window.location.href = '/dashboard/cuenta';
+                        return;
+                    } else {
+                        // SIN_CUENTA → solicitar
+                        window.location.href = '/dashboard/cuenta/solicitar';
+                        return;
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error al verificar espacios en el login:', err);
+        }
+
+        if (flow === 'b2c') {
+            // B2C: ir directo a crear evento
+            window.location.href = '/dashboard/events/new';
+            return;
+        }
+
+        // Default: dashboard general
+        window.location.href = '/dashboard';
+    };
+
+    const handleAcceptInvitation = async () => {
+        const activeToken = inviteToken || sessionStorage.getItem('eventia_invite_token');
+        if (!activeToken) return;
+
+        setAcceptingInvite(true);
+        setError(null);
+
+        try {
+            const acceptRes = await fetch('/api/cuenta_usuarios/AceptarInvitacion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: activeToken }),
+            });
+            
+            if (acceptRes.ok) {
+                const acceptData = await acceptRes.json();
+                // Guardar la nueva cuenta B2B como la seleccionada para ingresar de una!
+                if (acceptData.id_cuenta) {
+                    localStorage.setItem('eventia_selected_cuenta_id', String(acceptData.id_cuenta));
+                }
+                
+                // Mostrar animación de éxito
+                setAcceptSuccess(true);
+                
+                // Limpiar sessionStorage de invitaciones
+                sessionStorage.removeItem('eventia_invite_token');
+                sessionStorage.removeItem('eventia_invite_data');
+
+                // Retardo visual y redirección inteligente
+                setTimeout(async () => {
+                    await proceedRedirection(acceptData.id_cuenta);
+                }, 1500);
+            } else {
+                const errData = await acceptRes.json();
+                setError(errData.message || 'Error al vincular con la cuenta corporativa.');
+                setShowAcceptModal(false);
+            }
+        } catch (err) {
+            console.error('Error en la llamada a AceptarInvitacion:', err);
+            setError('Error al vincular con la cuenta corporativa.');
+            setShowAcceptModal(false);
+        } finally {
+            setAcceptingInvite(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -85,87 +187,17 @@ function LoginForm() {
                 localStorage.setItem('access_token', data.access_token);
             }
 
-            // Si hay un token de invitación activo, lo aceptamos
+            // Si hay un token de invitación activo, pausamos para confirmación manual
             const activeToken = inviteToken || sessionStorage.getItem('eventia_invite_token');
             if (activeToken) {
-                try {
-                    const acceptRes = await fetch('/api/cuenta_usuarios/AceptarInvitacion', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ token: activeToken }),
-                    });
-                    
-                    if (acceptRes.ok) {
-                        const acceptData = await acceptRes.json();
-                        // Guardar la nueva cuenta B2B como la seleccionada para ingresar de una!
-                        if (acceptData.id_cuenta) {
-                            localStorage.setItem('eventia_selected_cuenta_id', String(acceptData.id_cuenta));
-                        }
-                        
-                        // Limpiar sessionStorage de invitaciones
-                        sessionStorage.removeItem('eventia_invite_token');
-                        sessionStorage.removeItem('eventia_invite_data');
-                    } else {
-                        const errData = await acceptRes.json();
-                        // Si el error indica que el email es incorrecto u otro error, se lo mostramos al usuario
-                        setError(errData.message || 'Error al vincular con la cuenta corporativa.');
-                        setLoading(false);
-                        return;
-                    }
-                } catch (err) {
-                    console.error('Error en la llamada a AceptarInvitacion:', err);
-                }
-            }
-
-            // ── Redirección inteligente según flow del registro o multi-cuenta ──
-            const flow = sessionStorage.getItem('eventia_flow');
-            sessionStorage.removeItem('eventia_flow'); // consumir una sola vez
-
-            try {
-                const meRes = await fetch('/api/auth/me');
-                if (meRes.ok) {
-                    const me = await meRes.json();
-                    
-                    // Si el usuario tiene múltiples espacios de trabajo, redirigir al selector
-                    const espacios = me.espacios ?? [];
-                    if (espacios.length > 1) {
-                        window.location.href = '/dashboard/select-space';
-                        return;
-                    }
-
-                    // Si solo tiene un espacio y el flujo es cuenta (B2B)
-                    if (flow === 'cuenta' || activeToken) {
-                        const estadoUI = me.cuenta?.estado_ui;
-                        if (estadoUI === 'CUENTA_ACTIVA') {
-                            window.location.href = '/dashboard/cuenta';
-                            return;
-                        } else if (estadoUI === 'CUENTA_PENDIENTE') {
-                            window.location.href = '/dashboard/cuenta';
-                            return;
-                        } else {
-                            // SIN_CUENTA → solicitar
-                            window.location.href = '/dashboard/cuenta/solicitar';
-                            return;
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error('Error al verificar espacios en el login:', err);
-            }
-
-            if (flow === 'b2c') {
-                // B2C: ir directo a crear evento
-                window.location.href = '/dashboard/events/new';
+                setShowAcceptModal(true);
+                setLoading(false);
                 return;
             }
 
-            // Default: dashboard general
-            window.location.href = '/dashboard';
+            await proceedRedirection();
         } catch (err) {
             setError('Email o contraseña incorrectos');
-        } finally {
             setLoading(false);
         }
     };
@@ -213,7 +245,17 @@ function LoginForm() {
             )}
 
             {/* Google Sign In - Primero para mejor conversión */}
-            <GoogleSignInButton text="signin" />
+            <GoogleSignInButton 
+                text="signin" 
+                onSuccess={async () => {
+                    const activeToken = inviteToken || sessionStorage.getItem('eventia_invite_token');
+                    if (activeToken) {
+                        setShowAcceptModal(true);
+                    } else {
+                        await proceedRedirection();
+                    }
+                }}
+            />
 
             {/* Divider */}
             <div className="relative my-6">
@@ -320,6 +362,85 @@ function LoginForm() {
                     Registrate gratis
                 </Link>
             </p>
+
+            {/* ═══ MODAL INTERACTIVO DE CONFIRMACIÓN DE INVITACIÓN ═══ */}
+            {showAcceptModal && inviteData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="relative w-full max-w-md mx-4 bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
+                        
+                        {acceptSuccess ? (
+                            <div className="space-y-4 py-4 animate-in zoom-in-90 duration-300">
+                                <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/35 rounded-full flex items-center justify-center mx-auto text-emerald-400 animate-pulse">
+                                    <Check className="w-10 h-10 animate-bounce" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="text-2xl font-black text-white">¡Bienvenido al Equipo!</h3>
+                                    <p className="text-neutral-400 text-sm">
+                                        Te vinculaste exitosamente a la cuenta <strong className="text-indigo-400 font-semibold">{inviteData.nombre_cuenta}</strong>.
+                                    </p>
+                                </div>
+                                <p className="text-xs text-neutral-500 animate-pulse pt-2">
+                                    Ingresando al panel de control...
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="w-20 h-20 bg-indigo-500/10 border border-indigo-500/25 rounded-full flex items-center justify-center mx-auto text-indigo-400">
+                                    <Sparkles className="w-10 h-10 text-indigo-400 animate-pulse" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h3 className="text-2xl font-black text-white">¡Ingreso Exitoso!</h3>
+                                    <p className="text-neutral-400 text-sm leading-relaxed">
+                                        Estás a un clic de sumarte a la cuenta corporativa de <br />
+                                        <strong className="text-white text-base font-bold bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full inline-block mt-2">
+                                            {inviteData.nombre_cuenta}
+                                        </strong>
+                                    </p>
+                                    <div className="text-xs text-neutral-500 mt-2 bg-neutral-950 border border-neutral-800/80 p-3.5 rounded-xl inline-flex flex-col gap-1 items-center">
+                                        <span>Rol que se te asignará:</span>
+                                        <span className="font-bold text-indigo-300 uppercase tracking-widest text-[10px]">
+                                            {inviteData.rol_codigo === 'ACCOUNT_ADMIN' ? 'Administrador de Cuenta' : 'Colaborador (Staff)'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 pt-2">
+                                    <button
+                                        onClick={handleAcceptInvitation}
+                                        disabled={acceptingInvite}
+                                        className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-600/10 text-white font-bold text-sm transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    >
+                                        {acceptingInvite ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                <span>Vinculando cuenta...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>Aceptar Invitación y Entrar</span>
+                                                <ArrowRight className="w-4 h-4" />
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        onClick={async () => {
+                                            // Fallback por si quieren saltear la invitación e ir al personal
+                                            setShowAcceptModal(false);
+                                            await proceedRedirection();
+                                        }}
+                                        disabled={acceptingInvite}
+                                        className="w-full py-3 rounded-xl border border-neutral-800 text-neutral-500 hover:text-neutral-300 text-xs font-semibold hover:bg-neutral-800/50 transition cursor-pointer"
+                                    >
+                                        Omitir por ahora (Ir a mi espacio personal)
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

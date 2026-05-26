@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useInscripcion } from '../hooks/useInscripcion';
-import { Calendar, Clock, DollarSign, Info, ChevronRight, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Info, ChevronRight, Globe, ChevronDown, ChevronUp, Users } from 'lucide-react';
 
 export function FaseA_Landing() {
     const { state, irAFase, abrirDrawerResponsable, cambiarIdioma } = useInscripcion();
@@ -124,6 +124,22 @@ export function FaseA_Landing() {
                         )
                     )}
                 </div>
+            </div>
+            
+            {/* Información adicional: Pago */}
+            <div className="mt-8 space-y-6">
+                {/* Sección de Pago / Información Pública */}
+                {programaData.info_publica && (
+                    <div className="bg-white dark:bg-card-bg border border-gray-200 dark:border-card-border rounded-2xl p-6 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+                            <DollarSign className="w-5 h-5 text-accent" />
+                            Información de Pago e Inscripción
+                        </h3>
+                        <div className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line leading-relaxed">
+                            {programaData.info_publica}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="mt-12 text-center">
