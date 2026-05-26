@@ -3,6 +3,7 @@ using API.Services.Regalos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers.Regalos
@@ -19,6 +20,9 @@ namespace API.Controllers.Regalos
             _service = service;
         }
 
+        // ─────────────────────────────
+        // GET /eventos/{id_evento}/regalos/lista
+        // ─────────────────────────────
         [HttpGet]
         public async Task<ActionResult> GetItems(long id_evento)
         {
@@ -26,6 +30,23 @@ namespace API.Controllers.Regalos
             return Ok(items);
         }
 
+        // ─────────────────────────────
+        // GET /eventos/{id_evento}/regalos/lista/{id_regalo_item}
+        // Para precargar modal desde backend (si lo querés)
+        // ─────────────────────────────
+        [HttpGet("{id_regalo_item}")]
+        public async Task<ActionResult> GetItemById(long id_evento, long id_regalo_item)
+        {
+            var items = await _service.ListarItemsAsync(id_evento);
+            var item = items.FirstOrDefault(x => x.id_regalo_item == id_regalo_item);
+            if (item == null) return NotFound(new { error = "Item no encontrado." });
+            return Ok(item);
+        }
+
+        // ─────────────────────────────
+        // POST /eventos/{id_evento}/regalos/lista
+        // Crear item
+        // ─────────────────────────────
         [HttpPost]
         public async Task<ActionResult> CrearItem(long id_evento, [FromBody] RegalosListaCrearItemDTO req)
         {
@@ -42,15 +63,10 @@ namespace API.Controllers.Regalos
             }
         }
 
-        [HttpPut("{id_regalo_item}/visible")]
-        public async Task<ActionResult> SetVisible(long id_evento, long id_regalo_item, [FromQuery] bool visible)
-        {
-            var ok = await _service.SetVisibleItemAsync(id_evento, id_regalo_item, visible);
-            if (!ok) return NotFound(new { error = "Item no encontrado." });
-
-            return Ok(new { ok = true });
-        }
-
+        // ─────────────────────────────
+        // PUT /eventos/{id_evento}/regalos/lista/{id_regalo_item}
+        // Editar item (NO duplica)
+        // ─────────────────────────────
         [HttpPut("{id_regalo_item}")]
         public async Task<ActionResult> UpdateItem(long id_evento, long id_regalo_item, [FromBody] RegalosListaUpdateItemDTO req)
         {
@@ -58,6 +74,7 @@ namespace API.Controllers.Regalos
             {
                 var ok = await _service.UpdateItemAsync(id_evento, id_regalo_item, req);
                 if (!ok) return NotFound(new { error = "Item no encontrado." });
+
                 return Ok(new { ok = true });
             }
             catch (Exception ex)
@@ -66,6 +83,10 @@ namespace API.Controllers.Regalos
             }
         }
 
+        // ─────────────────────────────
+        // POST /eventos/{id_evento}/regalos/lista/{id_regalo_item}/duplicar
+        // Duplica item al final (orden = max+1)
+        // ─────────────────────────────
         [HttpPost("{id_regalo_item}/duplicar")]
         public async Task<ActionResult> Duplicar(long id_evento, long id_regalo_item)
         {
@@ -80,6 +101,16 @@ namespace API.Controllers.Regalos
             }
         }
 
+        // ─────────────────────────────
+        // PUT /eventos/{id_evento}/regalos/lista/{id_regalo_item}/visible?visible=true|false
+        // ─────────────────────────────
+        [HttpPut("{id_regalo_item}/visible")]
+        public async Task<ActionResult> SetVisible(long id_evento, long id_regalo_item, [FromQuery] bool visible)
+        {
+            var ok = await _service.SetVisibleItemAsync(id_evento, id_regalo_item, visible);
+            if (!ok) return NotFound(new { error = "Item no encontrado." });
 
+            return Ok(new { ok = true });
+        }
     }
 }
