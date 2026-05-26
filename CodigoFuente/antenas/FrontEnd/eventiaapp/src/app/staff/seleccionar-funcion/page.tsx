@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useStaffAuth } from '@/src/context/StaffAuthContext';
+import { useStaffAuth, isEventActiveToday } from '@/src/context/StaffAuthContext';
 import { 
     Loader2, 
     QrCode, 
@@ -13,11 +13,15 @@ import {
     ShieldAlert, 
     Utensils,
     UserCheck,
-    LogOut
+    LogOut,
+    HeartPulse,
+    Music,
+    LayoutGrid,
+    Activity
 } from 'lucide-react';
 
 export default function SeleccionarFuncionPage() {
-    const { token, user, isLoading, selectRol, activeRol } = useStaffAuth();
+    const { token, user, isLoading, selectRol, activeRol, logout } = useStaffAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -26,9 +30,17 @@ export default function SeleccionarFuncionPage() {
         }
     }, [isLoading, token, router]);
 
-    // Redirigir si no tiene múltiples roles
+    // Redirigir si no tiene múltiples roles o si falta elegir evento
     useEffect(() => {
         if (!isLoading && user) {
+            const allEvents = user.eventosDisponibles || [];
+            const activeEvents = allEvents.filter(e => isEventActiveToday(e));
+
+            if (activeEvents.length > 1 && !user.idEvento) {
+                router.replace('/staff/seleccionar-evento');
+                return;
+            }
+
             if (!user.rolesEvento || user.rolesEvento.length === 0) {
                 // Sin roles asignados
                 return;
@@ -37,7 +49,7 @@ export default function SeleccionarFuncionPage() {
                 // Si tiene uno solo, lo mandamos a su pantalla de inicio
                 const singleRol = user.rolesEvento[0];
                 selectRol(singleRol);
-                router.replace(singleRol.pantalla_inicio || '/staff/home');
+                router.replace('/staff/home');
             }
         }
     }, [isLoading, user, router, selectRol]);
@@ -78,7 +90,7 @@ export default function SeleccionarFuncionPage() {
                 description: 'Gestión del comedor diario, racionamiento y control de alergias.'
             };
         }
-        if (cod.includes('OPERADOR') || cod.includes('BENEFICIO') || cod.includes('BAR')) {
+        if (cod.includes('OPERADOR') || cod.includes('BENEFICIO') || cod.includes('BAR') || cod.includes('BARTENDER')) {
             return {
                 icon: Gift,
                 bgGlow: 'bg-emerald-500/10 dark:bg-emerald-500/5',
@@ -87,6 +99,50 @@ export default function SeleccionarFuncionPage() {
                 accentColor: 'from-emerald-600 to-teal-500',
                 btnHover: 'group-hover:bg-emerald-600 group-hover:text-white',
                 description: 'Canje de beneficios, bebidas y productos mediante códigos QR.'
+            };
+        }
+        if (cod.includes('SALUD') || cod.includes('MEDICO') || cod.includes('ENFERMERO') || cod.includes('AMBULANCIA')) {
+            return {
+                icon: HeartPulse,
+                bgGlow: 'bg-red-500/10 dark:bg-red-500/5',
+                borderHover: 'hover:border-red-500/50 hover:shadow-red-500/5',
+                iconColor: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50',
+                accentColor: 'from-red-600 to-rose-500',
+                btnHover: 'group-hover:bg-red-600 group-hover:text-white',
+                description: 'Fichas médicas de participantes, registro de incidentes y alergias.'
+            };
+        }
+        if (cod.includes('MUSICA') || cod.includes('DJ') || cod.includes('PLAYLIST')) {
+            return {
+                icon: Music,
+                bgGlow: 'bg-fuchsia-500/10 dark:bg-fuchsia-500/5',
+                borderHover: 'hover:border-fuchsia-500/50 hover:shadow-fuchsia-500/5',
+                iconColor: 'text-fuchsia-600 dark:text-fuchsia-400 bg-fuchsia-50 dark:bg-fuchsia-950/50',
+                accentColor: 'from-fuchsia-600 to-pink-500',
+                btnHover: 'group-hover:bg-fuchsia-600 group-hover:text-white',
+                description: 'Módulo DJ, control de playlist y sugerencias de temas en vivo.'
+            };
+        }
+        if (cod.includes('MESAS') || cod.includes('SERVICIO') || cod.includes('MOZO')) {
+            return {
+                icon: LayoutGrid,
+                bgGlow: 'bg-cyan-500/10 dark:bg-cyan-500/5',
+                borderHover: 'hover:border-cyan-500/50 hover:shadow-cyan-500/5',
+                iconColor: 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50',
+                accentColor: 'from-cyan-600 to-blue-500',
+                btnHover: 'group-hover:bg-cyan-600 group-hover:text-white',
+                description: 'Control y distribución de mesas, servicio de mozos y pedidos.'
+            };
+        }
+        if (cod.includes('OPERACION_GENERAL') || cod.includes('GENERAL') || cod.includes('OPERACION')) {
+            return {
+                icon: Activity,
+                bgGlow: 'bg-slate-500/10 dark:bg-slate-500/5',
+                borderHover: 'hover:border-slate-500/50 hover:shadow-slate-500/5',
+                iconColor: 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50',
+                accentColor: 'from-slate-600 to-zinc-500',
+                btnHover: 'group-hover:bg-slate-600 group-hover:text-white',
+                description: 'Home simplificado y panel operativo multifunción contextual.'
             };
         }
         // General o default
@@ -103,7 +159,7 @@ export default function SeleccionarFuncionPage() {
 
     const handleSelect = (rol: typeof roles[0]) => {
         selectRol(rol);
-        router.push(rol.pantalla_inicio || '/staff/home');
+        router.push('/staff/home');
     };
 
     return (
@@ -189,10 +245,17 @@ export default function SeleccionarFuncionPage() {
                 </div>
             )}
 
-            <div className="text-center pt-8">
+            <div className="text-center pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                {user.eventosDisponibles && user.eventosDisponibles.filter(e => isEventActiveToday(e)).length > 1 && (
+                    <button
+                        onClick={() => router.push('/staff/seleccionar-evento')}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
+                    >
+                        Volver a eventos
+                    </button>
+                )}
                 <button
                     onClick={() => {
-                        const { logout } = useStaffAuth(); // en realidad la tenemos en destructuring arriba
                         logout();
                         router.push('/staff/login');
                     }}

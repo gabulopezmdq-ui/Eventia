@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import { joinStaff } from '@/src/features/staff/staff.service';
-import { useStaffAuth } from '@/src/context/StaffAuthContext';
+import { useStaffAuth, isEventActiveToday } from '@/src/context/StaffAuthContext';
 
 export default function StaffLoginPage() {
     const { token, login, isLoading, user, activeRol } = useStaffAuth();
@@ -15,11 +15,21 @@ export default function StaffLoginPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!isLoading && token) {
-            if (user?.rolesEvento && user.rolesEvento.length > 1 && !activeRol) {
+        if (!isLoading && token && user) {
+            const allEvents = user.eventosDisponibles || [];
+            const activeEvents = allEvents.filter(e => isEventActiveToday(e));
+
+            if (activeEvents.length === 0 || activeEvents.length > 1) {
+                if (!user.idEvento) {
+                    router.replace('/staff/seleccionar-evento');
+                    return;
+                }
+            }
+
+            if (user.rolesEvento && user.rolesEvento.length > 1 && !activeRol) {
                 router.replace('/staff/seleccionar-funcion');
             } else if (activeRol) {
-                router.replace(activeRol.pantalla_inicio || '/staff/home');
+                router.replace('/staff/home');
             } else {
                 router.replace('/staff/home');
             }
@@ -49,13 +59,18 @@ export default function StaffLoginPage() {
             const joinResponse = await joinStaff(codigo);
             login(joinResponse); // Pasa el objeto completo al contexto
             
-            if (joinResponse.roles_evento && joinResponse.roles_evento.length === 1) {
-                const screen = joinResponse.roles_evento[0].pantalla_inicio || '/staff/home';
-                router.push(screen);
-            } else if (joinResponse.roles_evento && joinResponse.roles_evento.length > 1) {
-                router.push('/staff/seleccionar-funcion');
+            const allEvents = joinResponse.eventos_disponibles || [];
+            const activeEvents = allEvents.filter(e => isEventActiveToday(e));
+
+            if (activeEvents.length === 1) {
+                const singleEvent = activeEvents[0];
+                if (singleEvent.roles_evento && singleEvent.roles_evento.length === 1) {
+                    router.push('/staff/home');
+                } else {
+                    router.push('/staff/seleccionar-funcion');
+                }
             } else {
-                router.push('/staff/home');
+                router.push('/staff/seleccionar-evento');
             }
         } catch (err: any) {
             setError(err.message ?? 'Código inválido o expirado.');
