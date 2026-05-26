@@ -1,4 +1,4 @@
-using API.DataSchema;
+ï»¿using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +16,12 @@ namespace API.Controllers.Programas
     public class programasInscripcionController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly API.Services.MiEventiaService _miEventiaService;
 
-        public programasInscripcionController(DataContext context)
+        public programasInscripcionController(DataContext context, API.Services.MiEventiaService miEventiaService)
         {
             _context = context;
+            _miEventiaService = miEventiaService;
         }
 
         private static string GenerarToken(int bytes = 32)
@@ -305,7 +307,7 @@ namespace API.Controllers.Programas
                     x.activo == true);
 
             if (config == null)
-                throw new Exception("La autorización configurada no existe o está inactiva.");
+                throw new Exception("La autorizaciï¿½n configurada no existe o estï¿½ inactiva.");
 
             string? texto = await _context.Set<ef_programa_autorizacion_config_traducciones>()
                 .AsNoTracking()
@@ -392,7 +394,7 @@ namespace API.Controllers.Programas
 
             if (data.link.fecha_expiracion.HasValue &&
                 data.link.fecha_expiracion.Value < DateTimeOffset.UtcNow)
-                return BadRequest("El link de inscripción está expirado.");
+                return BadRequest("El link de inscripciï¿½n estï¿½ expirado.");
 
             await using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -443,7 +445,7 @@ namespace API.Controllers.Programas
 
                     rsvp_estado = "Y",
                     fecha_rsvp = now,
-                    rsvp_mensaje = "Inscripción pública de programa.",
+                    rsvp_mensaje = "Inscripciï¿½n pï¿½blica de programa.",
 
                     activo = true,
                     fecha_alta = now,
@@ -499,7 +501,7 @@ namespace API.Controllers.Programas
                     origenRegistro: "PROGRAMA_INSCRIPCION"
                 );
 
-                // 6. Inscripción cabecera familiar
+                // 6. Inscripciï¿½n cabecera familiar
                 var tokenConsulta = GenerarToken(32);
 
                 var monedaPrograma = await _context.Set<ef_cuentas>()
@@ -566,7 +568,7 @@ namespace API.Controllers.Programas
                         return BadRequest("Debe informar el apellido de todos los participantes.");
 
                     if (p.Periodos == null || p.Periodos.Count == 0)
-                        return BadRequest($"Debe seleccionar al menos un período para {p.Nombre}.");
+                        return BadRequest($"Debe seleccionar al menos un perï¿½odo para {p.Nombre}.");
 
                     // 1. Audiencia participante / hijo
                     var audienciaParticipante = await UpsertAudienciaPersonaAsync(
@@ -626,7 +628,7 @@ namespace API.Controllers.Programas
                         modalidadRetiro != "REQUIERE_AUTORIZADO" &&
                         modalidadRetiro != "NO_APLICA")
                     {
-                        return BadRequest($"Modalidad de retiro inválida para {p.Nombre}.");
+                        return BadRequest($"Modalidad de retiro invï¿½lida para {p.Nombre}.");
                     }
 
                     if (modalidadRetiro == "REQUIERE_AUTORIZADO" &&
@@ -642,7 +644,7 @@ namespace API.Controllers.Programas
                         id_rsvp_grupo = grupo.id_rsvp_grupo,
                         id_invitado = invitadoParticipante.id_invitado,
 
-                        // T = titular, A = acompañante. Para no romper constraint existente usamos A.
+                        // T = titular, A = acompaï¿½ante. Para no romper constraint existente usamos A.
                         rol = "A",
 
                         orden = ordenIntegrante,
@@ -678,7 +680,7 @@ namespace API.Controllers.Programas
                         .ToListAsync();
 
                     if (periodosDb.Count != idsPeriodosParticipante.Count)
-                        return BadRequest($"Uno o más períodos seleccionados para {p.Nombre} no existen o no están activos.");
+                        return BadRequest($"Uno o mï¿½s perï¿½odos seleccionados para {p.Nombre} no existen o no estï¿½n activos.");
 
                     foreach (var periodo in periodosDb)
                     {
@@ -720,7 +722,7 @@ namespace API.Controllers.Programas
                             .ToListAsync();
 
                         if (serviciosDb.Count != idsServicios.Count)
-                            return BadRequest($"Uno o más servicios seleccionados para {p.Nombre} no existen.");
+                            return BadRequest($"Uno o mï¿½s servicios seleccionados para {p.Nombre} no existen.");
 
                         foreach (var srvReq in p.Servicios)
                         {
@@ -780,7 +782,7 @@ namespace API.Controllers.Programas
 
                             await _context.SaveChangesAsync();
 
-                            // días seleccionados para servicios POR_DIA
+                            // dï¿½as seleccionados para servicios POR_DIA
                             if (srvReq.Fechas != null &&
                                 srvReq.Fechas.Any())
                             {
@@ -943,6 +945,20 @@ namespace API.Controllers.Programas
                 })
                 .ToList();
 
+                                var tokenPortal = await _miEventiaService.VincularAccesoAsync(
+                    nombre: req.Responsable.Nombre.Trim() + " " + req.Responsable.Apellido.Trim(),
+                    email: req.Responsable.Email,
+                    telefono: req.Responsable.Telefono,
+                    tipo: "PROGRAMA",
+                    idEvento: idEvento,
+                    idInscripcion: inscripcion.id_inscripcion,
+                    idInvitado: null,
+                    tokenConsulta: tokenConsulta,
+                    titulo: data.ev.anfitriones_texto ?? "Programa",
+                    estado: "ACTIVO",
+                    grupoId: null
+                );
+
                 await tx.CommitAsync();
 
                 return Ok(new ProgramaInscripcionConfirmarResponse
@@ -952,8 +968,10 @@ namespace API.Controllers.Programas
                     IdRsvpGrupo = grupo.id_rsvp_grupo,
                     TokenConsulta = tokenConsulta,
                     TotalGeneral = inscripcion.total_general,
-                    Mensaje = "Inscripción familiar creada correctamente.",
-                    QrsRetiro = qrsRetiroDto
+                    Mensaje = "InscripciÃƒÂ³n familiar creada correctamente.",
+                    QrsRetiro = qrsRetiroDto,
+                    TokenPortal = tokenPortal,
+                    UrlMiEventia = $"/mi-eventia/{tokenPortal}"
                 });
             }
             catch
