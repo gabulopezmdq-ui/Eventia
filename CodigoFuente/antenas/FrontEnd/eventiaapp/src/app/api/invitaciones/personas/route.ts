@@ -6,7 +6,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function GET(req: Request) {
     try {
         const cookieStore = await cookies();
-        const authToken = cookieStore.get('access_token')?.value;
+        let authToken = cookieStore.get('access_token')?.value;
+
+        if (!authToken) {
+            const authHeader = req.headers.get('Authorization');
+            if (authHeader?.startsWith('Bearer ')) {
+                authToken = authHeader.substring(7);
+            }
+        }
 
         if (!authToken) {
             return NextResponse.json({ message: 'No autorizado' }, { status: 401 });

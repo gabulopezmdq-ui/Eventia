@@ -89,7 +89,7 @@ export default function StaffHomePage() {
     // ==========================================
     // ESTADOS ROL: PUERTA / RECEPTOR
     // ==========================================
-    const [participantes, setParticipantes] = useState(MOCK_PARTICIPANTES);
+    const [participantes, setParticipantes] = useState<any[]>(MOCK_PARTICIPANTES);
     const [searchQuery, setSearchQuery] = useState('');
     const [manualTicket, setManualTicket] = useState('');
     const [manualNombre, setManualNombre] = useState('');
@@ -98,7 +98,7 @@ export default function StaffHomePage() {
     // ==========================================
     // ESTADOS ROL: COCINA
     // ==========================================
-    const [alergias, setAlergias] = useState(MOCK_ALERGIAS);
+    const [alergias, setAlergias] = useState<any[]>(MOCK_ALERGIAS);
     const [searchAlergias, setSearchAlergias] = useState('');
     const [racionesServidas, setRacionesServidas] = useState(142);
     const [racionesTotales] = useState(250);
@@ -106,9 +106,172 @@ export default function StaffHomePage() {
     // ==========================================
     // ESTADOS ROL: OPERADOR / BENEFICIOS
     // ==========================================
-    const [beneficios, setBeneficios] = useState(MOCK_BENEFICIOS);
+    const [beneficios, setBeneficios] = useState<any[]>(MOCK_BENEFICIOS);
     const [searchBeneficios, setSearchBeneficios] = useState('');
     const [manualCouponCode, setManualCouponCode] = useState('');
+
+    // ==========================================
+    // CARGAR PARTICIPANTES REALES SI EXISTE idEvento
+    // ==========================================
+    useEffect(() => {
+        if (user && user.idEvento) {
+            const fetchRealParticipants = async () => {
+                try {
+                    const res = await fetch(`/api/invitaciones/personas?idEvento=${user.idEvento}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && Array.isArray(data.items)) {
+                            // Mapear al formato de participantes esperado por el Front
+                            const realList = data.items.map((item: any) => ({
+                                id: item.idInvitado,
+                                nombre: item.nombre || '',
+                                apellido: item.apellido || '',
+                                email: item.email || `${item.nombreCompleto?.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
+                                ticket: item.qrToken || item.rsvpToken || `EV-${item.idInvitado}`,
+                                ingresado: !!item.checkinRealizado,
+                                categoria: item.accesoNombre || 'General',
+                                hora: item.fechaCheckin 
+                                    ? new Date(item.fechaCheckin).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) 
+                                    : '-',
+                                idInvitado: item.idInvitado,
+                                idAcceso: item.idAcceso,
+                                idAccesoLink: item.idAccesoLink || null
+                            }));
+                            setParticipantes(realList);
+
+                            // Opcional: Cargar alergias reales en cocina si tienen restricciones
+                            const realAlergias = data.items
+                                .filter((item: any) => item.tieneRestricciones || (item.restricciones && item.restricciones.length > 0))
+                                .map((item: any) => ({
+                                    id: item.idInvitado,
+                                    nombre: item.nombre || '',
+                                    apellido: item.apellido || '',
+                                    alergia: item.restricciones?.join(', ') || 'Restricción Alimentaria',
+                                    nivel: 'CRÍTICO',
+                                    racion: 'Menú Especial TACC Free',
+                                    verificado: !!item.checkinRealizado
+                                }));
+                            if (realAlergias.length > 0) {
+                                setAlergias(realAlergias);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al cargar participantes del backend:', error);
+                }
+            };
+            fetchRealParticipants();
+        }
+    }, [user]);
+
+    // Ciclo de vida y control de cámara física usando html5-qrcode
+    useEffect(() => {
+        let qrScanner: any = null;
+        let isMounted = true;
+
+        if (scannerOpen && !scanResult) {
+            // Retraso de 350ms para asegurar montaje de div#qr-reader
+            const timer = setTimeout(async () => {
+                try {
+                    // Importación dinámica para prevenir errores en Next.js (SSR)
+                    const { Html5Qrcode } = await import('html5-qrcode');
+
+                    if (!isMounted) return;
+                    setCameraError(null);
+
+                    const scanner = new Html5Qrcode("qr-reader");
+                    qrScanner = scanner;
+                    setScannerInstance(scanner);
+
+                    const scanConfig = {
+                        fps: 12,
+                        qrbox: (width: number, height: number) => {
+                            const size = Math.min(width, height) * 0.75;
+                            return { width: size, height: size };
+                        },
+                        aspectRatio: 1.0
+                    };
+
+                    const onScanSuccess = (decodedText: string) => {
+                        if (isMounted) {
+                            handleRealScanSuccess(decodedText);
+                            scanner.stop().catch((err: any) => console.error("Error al detener cámara tras escaneo:", err));
+                        }
+                    };
+
+                    const onScanError = () => {
+                        // Errores de lectura ordinarios se ignoran
+                    };
+
+                    try {
+                        // 1. Intentar cámara trasera (ideal para personal operando en campo)
+                        await scanner.start(
+                            { facingMode: "environment" },
+                            scanConfig,
+                            onScanSuccess,
+                            onScanError
+                        );
+                    } catch (firstErr) {
+                        console.warn("Cámara trasera ('environment') no disponible. Reintentando con frontal/webcam...", firstErr);
+                        
+                        if (isMounted) {
+                            try {
+                                // 2. Fallback: cámara delantera (útil para notebooks y webcams de escritorio)
+                                await scanner.start(
+                                    { facingMode: "user" },
+                                    scanConfig,
+                                    onScanSuccess,
+                                    onScanError
+                                );
+                            } catch (secondErr) {
+                                console.warn("Cámara frontal ('user') tampoco disponible. Intentando predeterminada...", secondErr);
+                                
+                                if (isMounted) {
+                                    // 3. Último recurso: iniciar sin restricciones de cámara
+                                    await scanner.start(
+                                        {},
+                                        scanConfig,
+                                        onScanSuccess,
+                                        onScanError
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error("Fallo al iniciar escáner QR de cámara:", err);
+                    if (isMounted) {
+                        const errMsg = String(err).toLowerCase();
+                        let msg = "No se pudo acceder a la cámara del dispositivo.";
+                        if (errMsg.includes("notallowederror") || errMsg.includes("permission denied")) {
+                            msg = "Permiso de cámara denegado. Por favor, habilitalo en tu navegador.";
+                        } else if (errMsg.includes("notfounderror") || errMsg.includes("no camera found")) {
+                            msg = "No se detectaron cámaras en este dispositivo.";
+                        }
+                        setCameraError(msg);
+                    }
+                }
+            }, 350);
+
+            return () => {
+                isMounted = false;
+                clearTimeout(timer);
+                if (qrScanner && qrScanner.isScanning) {
+                    qrScanner.stop().catch((err: any) => console.error("Error al detener cámara en cleanup:", err));
+                }
+                setScannerInstance(null);
+            };
+        }
+
+        return () => {
+            isMounted = false;
+            setScannerInstance(null);
+        };
+    }, [scannerOpen, scanResult]);
 
     // Loader general
     if (isLoading || !user || !activeRol) {
@@ -125,21 +288,54 @@ export default function StaffHomePage() {
     // ==========================================
     // MANEJADORES: RECEPTOR / PUERTA
     // ==========================================
-    const handleCheckInManual = (id: number) => {
+    const handleCheckInManual = async (id: number) => {
         setLoadingAction(true);
-        setTimeout(() => {
-            setParticipantes(prev => prev.map(p => {
-                if (p.id === id) {
-                    return {
-                        ...p,
-                        ingresado: true,
-                        hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
-                    };
-                }
-                return p;
-            }));
-            setLoadingAction(false);
-        }, 600);
+        const target = participantes.find(p => p.id === id);
+
+        if (target && user && user.idEvento) {
+            try {
+                // Registrar el check-in real en la base de datos a través del proxy local
+                await fetch('/api/audiencias-checkin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        id_evento: user.idEvento,
+                        id_invitado: target.idInvitado || target.id,
+                        id_acceso: target.idAcceso || 0,
+                        id_acceso_link: target.idAccesoLink || null,
+                        tipo: 'INGRESO',
+                        observaciones: 'Check-in en vivo desde panel staff'
+                    })
+                });
+            } catch (error) {
+                console.error('Error al registrar checkin real en servidor:', error);
+            }
+        }
+
+        // Mantener la actualización de estado local instantánea para el personal
+        setParticipantes(prev => prev.map(p => {
+            if (p.id === id) {
+                return {
+                    ...p,
+                    ingresado: true,
+                    hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+                };
+            }
+            return p;
+        }));
+
+        // También actualizar el estado en alergias si corresponde
+        setAlergias(prev => prev.map(a => {
+            if (a.id === id) {
+                return { ...a, verificado: true };
+            }
+            return a;
+        }));
+
+        setLoadingAction(false);
     };
 
     const handleCreateParticipante = (e: React.FormEvent) => {
@@ -372,110 +568,6 @@ export default function StaffHomePage() {
         }, 800);
     };
 
-    // Ciclo de vida y control de cámara física usando html5-qrcode
-    useEffect(() => {
-        let qrScanner: any = null;
-        let isMounted = true;
-
-        if (scannerOpen && !scanResult) {
-            // Retraso de 350ms para asegurar montaje de div#qr-reader
-            const timer = setTimeout(async () => {
-                try {
-                    // Importación dinámica para prevenir errores en Next.js (SSR)
-                    const { Html5Qrcode } = await import('html5-qrcode');
-
-                    if (!isMounted) return;
-                    setCameraError(null);
-
-                    const scanner = new Html5Qrcode("qr-reader");
-                    qrScanner = scanner;
-                    setScannerInstance(scanner);
-
-                    const scanConfig = {
-                        fps: 12,
-                        qrbox: (width: number, height: number) => {
-                            const size = Math.min(width, height) * 0.75;
-                            return { width: size, height: size };
-                        },
-                        aspectRatio: 1.0
-                    };
-
-                    const onScanSuccess = (decodedText: string) => {
-                        if (isMounted) {
-                            handleRealScanSuccess(decodedText);
-                            scanner.stop().catch((err: any) => console.error("Error al detener cámara tras escaneo:", err));
-                        }
-                    };
-
-                    const onScanError = () => {
-                        // Errores de lectura ordinarios se ignoran
-                    };
-
-                    try {
-                        // 1. Intentar cámara trasera (ideal para personal operando en campo)
-                        await scanner.start(
-                            { facingMode: "environment" },
-                            scanConfig,
-                            onScanSuccess,
-                            onScanError
-                        );
-                    } catch (firstErr) {
-                        console.warn("Cámara trasera ('environment') no disponible. Reintentando con frontal/webcam...", firstErr);
-                        
-                        if (isMounted) {
-                            try {
-                                // 2. Fallback: cámara delantera (útil para notebooks y webcams de escritorio)
-                                await scanner.start(
-                                    { facingMode: "user" },
-                                    scanConfig,
-                                    onScanSuccess,
-                                    onScanError
-                                );
-                            } catch (secondErr) {
-                                console.warn("Cámara frontal ('user') tampoco disponible. Intentando predeterminada...", secondErr);
-                                
-                                if (isMounted) {
-                                    // 3. Último recurso: iniciar sin restricciones de cámara
-                                    await scanner.start(
-                                        {},
-                                        scanConfig,
-                                        onScanSuccess,
-                                        onScanError
-                                    );
-                                }
-                            }
-                        }
-                    }
-                } catch (err) {
-                    console.error("Fallo al iniciar escáner QR de cámara:", err);
-                    if (isMounted) {
-                        const errMsg = String(err).toLowerCase();
-                        let msg = "No se pudo acceder a la cámara del dispositivo.";
-                        if (errMsg.includes("notallowederror") || errMsg.includes("permission denied")) {
-                            msg = "Permiso de cámara denegado. Por favor, habilitalo en tu navegador.";
-                        } else if (errMsg.includes("notfounderror") || errMsg.includes("no camera found")) {
-                            msg = "No se detectaron cámaras en este dispositivo.";
-                        }
-                        setCameraError(msg);
-                    }
-                }
-            }, 350);
-
-            return () => {
-                isMounted = false;
-                clearTimeout(timer);
-                if (qrScanner && qrScanner.isScanning) {
-                    qrScanner.stop().catch((err: any) => console.error("Error al detener cámara en cleanup:", err));
-                }
-                setScannerInstance(null);
-            };
-        }
-
-        return () => {
-            isMounted = false;
-            setScannerInstance(null);
-        };
-    }, [scannerOpen, scanResult]);
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">
