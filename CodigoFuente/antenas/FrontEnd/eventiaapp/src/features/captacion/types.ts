@@ -297,6 +297,7 @@ export interface CheckinEvento {
     campania: string | null;
     tipo: 'INGRESO' | 'REINGRESO';
     fecha_hora: string;
+    fecha?: string;
     observaciones: string | null;
 }
 

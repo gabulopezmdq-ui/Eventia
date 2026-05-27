@@ -12,8 +12,9 @@ import {
 const API_URL = '/api/programas';
 
 // Generales
-export const getMisProgramas = async (): Promise<Programa[]> => {
-    const res = await fetch(`${API_URL}/mis-programas`);
+export const getMisProgramas = async (idCuenta?: number | null): Promise<Programa[]> => {
+    const url = idCuenta ? `${API_URL}/mis-programas?idCuenta=${idCuenta}` : `${API_URL}/mis-programas`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Error al obtener programas');
     return res.json();
 };

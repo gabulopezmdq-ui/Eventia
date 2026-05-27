@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
         const cookieStore = await cookies();
         const token = cookieStore.get('access_token')?.value;
@@ -12,7 +12,14 @@ export async function GET() {
             return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
         }
 
-        const res = await fetch(`${API_URL}/programas/mis-programas`, {
+        const { searchParams } = new URL(request.url);
+        const idCuenta = searchParams.get('idCuenta');
+
+        const fetchUrl = idCuenta
+            ? `${API_URL}/programas/mis-programas?idCuenta=${idCuenta}`
+            : `${API_URL}/programas/mis-programas`;
+
+        const res = await fetch(fetchUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`

@@ -25,7 +25,7 @@ export default function CuentaDashboardPage() {
                     getMiPlan().catch(() => null),
                     getMisClientes().catch(() => []),
                     getMisUnidades().catch(() => []),
-                    getCuentaEventos().catch(() => [])
+                    getCuentaEventos(cuenta?.id_cuenta).catch(() => [])
                 ]);
 
                 setPlan(planData);
@@ -40,7 +40,7 @@ export default function CuentaDashboardPage() {
         };
 
         fetchData();
-    }, [authLoading]);
+    }, [authLoading, cuenta?.id_cuenta]);
 
     if (loading || authLoading) {
         return (
