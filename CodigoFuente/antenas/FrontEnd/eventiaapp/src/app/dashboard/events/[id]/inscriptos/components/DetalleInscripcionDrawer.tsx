@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   X, 
   User, 
@@ -10,15 +10,27 @@ import {
   Stethoscope, 
   UserMinus,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Pencil,
+  Trash2,
+  Plus,
+  Download,
+  Eye,
+  QrCode
 } from 'lucide-react';
 import { 
   DetalleInscripcionOperativo,
   ParticipanteDetalle,
   EstadoPago,
-  EstadoInscripcion
+  EstadoInscripcion,
+  AutorizadoRetiro
 } from '@/src/features/inscripcion/types/panel-inscriptos.types';
 import { getDetalleInscripcion } from '@/src/features/inscripcion/panel-inscriptos.service';
+import {
+  createAutorizacionOperador,
+  updateAutorizacion,
+  deleteAutorizacion
+} from '@/src/features/programas/autorizaciones-retiro.service';
 
 interface DetalleInscripcionDrawerProps {
   isOpen: boolean;
@@ -31,29 +43,25 @@ export default function DetalleInscripcionDrawer({ isOpen, onClose, idInscripcio
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadDetalle() {
-      if (!idInscripcion) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await getDetalleInscripcion(idInscripcion);
-        setDetalle(data);
-      } catch (err) {
-        setError('No se pudo cargar el detalle operativo.');
-      } finally {
-        setIsLoading(false);
-      }
+  const loadDetalle = useCallback(async () => {
+    if (!idInscripcion) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getDetalleInscripcion(idInscripcion);
+      setDetalle(data);
+    } catch (err) {
+      setError('No se pudo cargar el detalle operativo.');
+    } finally {
+      setIsLoading(false);
     }
+  }, [idInscripcion]);
 
+  useEffect(() => {
     if (isOpen) {
       loadDetalle();
-    } else {
-      // Limpiar al cerrar después de la animación para evitar pantallazos
-      // Esto lo podemos manejar con un timeout, pero por ahora conservamos la data
-      // hasta que se abra uno nuevo
     }
-  }, [idInscripcion, isOpen]);
+  }, [isOpen, loadDetalle]);
 
   const formatearMoneda = (valor: number, moneda: string) => {
     return new Intl.NumberFormat('es-AR', {
@@ -157,7 +165,7 @@ export default function DetalleInscripcionDrawer({ isOpen, onClose, idInscripcio
 
               <div className="space-y-6">
                 {detalle.participantes.map((part) => (
-                  <ParticipanteCard key={part.idInvitado} part={part} moneda={detalle.moneda} />
+                  <ParticipanteCard key={part.idInvitado} part={part} moneda={detalle.moneda} onRefresh={loadDetalle} />
                 ))}
               </div>
             </>
@@ -168,12 +176,133 @@ export default function DetalleInscripcionDrawer({ isOpen, onClose, idInscripcio
   );
 }
 
-function ParticipanteCard({ part, moneda }: { part: ParticipanteDetalle, moneda: string }) {
+function ParticipanteCard({ part, moneda, onRefresh }: { part: ParticipanteDetalle, moneda: string, onRefresh: () => void }) {
   const formatearMoneda = (valor: number) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: moneda || 'EUR',
     }).format(valor);
+  };
+
+  // --- Modals state ---
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addPhone, setAddPhone] = useState('');
+  const [addRelation, setAddRelation] = useState('Madre');
+  const [addObs, setAddObs] = useState('');
+  const [loadingAdd, setLoadingAdd] = useState(false);
+  const [errorAdd, setErrorAdd] = useState<string | null>(null);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editRelation, setEditRelation] = useState('Madre');
+  const [editObs, setEditObs] = useState('');
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [errorEdit, setErrorEdit] = useState<string | null>(null);
+
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [viewQrToken, setViewQrToken] = useState('');
+  const [viewQrName, setViewQrName] = useState('');
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addName.trim() || !addPhone.trim()) {
+      setErrorAdd('El nombre y el celular son requeridos.');
+      return;
+    }
+    setLoadingAdd(true);
+    setErrorAdd(null);
+    try {
+      await createAutorizacionOperador({
+        idInvitado: part.idInvitado,
+        nombreAutorizado: addName.trim(),
+        telefonoAutorizado: addPhone.trim(),
+        relacion: addRelation,
+        observaciones: addObs.trim() || undefined
+      });
+      setIsAddModalOpen(false);
+      setAddName('');
+      setAddPhone('');
+      setAddRelation('Madre');
+      setAddObs('');
+      onRefresh();
+    } catch (err: any) {
+      setErrorAdd(err.message || 'Error al agregar autorizado');
+    } finally {
+      setLoadingAdd(false);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editId || !editName.trim() || !editPhone.trim()) {
+      setErrorEdit('El nombre y el celular son requeridos.');
+      return;
+    }
+    setLoadingEdit(true);
+    setErrorEdit(null);
+    try {
+      await updateAutorizacion(editId, {
+        nombreAutorizado: editName.trim(),
+        telefonoAutorizado: editPhone.trim(),
+        relacion: editRelation,
+        observaciones: editObs.trim() || undefined
+      });
+      setIsEditModalOpen(false);
+      onRefresh();
+    } catch (err: any) {
+      setErrorEdit(err.message || 'Error al actualizar autorizado');
+    } finally {
+      setLoadingEdit(false);
+    }
+  };
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!confirm(`¿Estás seguro de que deseas revocar la autorización de retiro de ${name}? Su código QR se invalidará de inmediato.`)) {
+      return;
+    }
+    try {
+      await deleteAutorizacion(id);
+      onRefresh();
+    } catch (err: any) {
+      alert(err.message || 'Error al revocar la autorización');
+    }
+  };
+
+  const openEditModal = (auth: AutorizadoRetiro) => {
+    setEditId(auth.id_autorizacion);
+    setEditName(auth.nombre);
+    setEditPhone(auth.telefono_autorizado || '');
+    setEditRelation(auth.relacion || 'Madre');
+    setEditObs(auth.observaciones || '');
+    setErrorEdit(null);
+    setIsEditModalOpen(true);
+  };
+
+  const openQrModal = (token: string, name: string) => {
+    setViewQrToken(token);
+    setViewQrName(name);
+    setIsQrModalOpen(true);
+  };
+
+  const handleDownloadQr = async (qrToken: string, name: string) => {
+    try {
+      const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrToken)}&format=png`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `qr_autorizado_${name.toLowerCase().replace(/\s+/g, '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      window.open(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrToken)}&format=png`, '_blank');
+    }
   };
 
   return (
@@ -270,24 +399,303 @@ function ParticipanteCard({ part, moneda }: { part: ParticipanteDetalle, moneda:
         )}
 
         {/* Autorizados a Retirar */}
-        <div>
-          <h5 className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-3">
-            <UserMinus className="w-4 h-4 text-emerald-400" /> Autorizados a Retirar
-          </h5>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between border-b border-card-border pb-2">
+            <h5 className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest">
+              <UserMinus className="w-4 h-4 text-emerald-400" /> Autorizados a Retirar
+            </h5>
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-1 py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider shadow-sm transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Agregar
+            </button>
+          </div>
           {part.autorizadosRetiro && part.autorizadosRetiro.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {part.autorizadosRetiro.map((a, i) => (
-                <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  {a.nombre}
-                </span>
+            <div className="divide-y divide-card-border/30 bg-background/30 rounded-xl border border-card-border/50 overflow-hidden">
+              {part.autorizadosRetiro.map((a) => (
+                <div key={a.id_autorizacion} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-background/50 transition-colors">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold text-foreground">{a.nombre}</span>
+                      {a.relacion && (
+                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/10">
+                          {a.relacion}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-0.5 text-xs text-muted">
+                      {a.telefono_autorizado && <span className="font-mono">Cel: {a.telefono_autorizado}</span>}
+                      {a.observaciones && <span className="italic">Obs: "{a.observaciones}"</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                    {a.qr_token && (
+                      <button
+                        type="button"
+                        onClick={() => openQrModal(a.qr_token!, a.nombre)}
+                        className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors border border-indigo-500/10 cursor-pointer"
+                        title="Ver código QR"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(a)}
+                      className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 transition-colors border border-amber-500/10 cursor-pointer"
+                      title="Editar datos"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(a.id_autorizacion, a.nombre)}
+                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors border border-red-500/10 cursor-pointer"
+                      title="Eliminar autorizado"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
-            <span className="text-sm text-muted">Sin autorizados registrados (solo responsable principal)</span>
+            <span className="text-sm text-muted block italic bg-background/25 p-3 rounded-xl border border-card-border/30">Sin autorizados registrados para este menor.</span>
           )}
         </div>
       </div>
+
+      {/* ── Modal de Agregar Autorizado (Backoffice) ── */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-md p-6 rounded-2xl border border-card-border bg-background shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-card-border">
+              <h3 className="text-lg font-bold text-foreground">Autorizar Adulto</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setErrorAdd(null);
+                }}
+                className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-muted/15 transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Nombre Completo</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Juan Pérez"
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none"
+                  disabled={loadingAdd}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Relación / Parentesco</label>
+                <select
+                  value={addRelation}
+                  onChange={(e) => setAddRelation(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none cursor-pointer"
+                  disabled={loadingAdd}
+                >
+                  <option value="Madre">Madre</option>
+                  <option value="Padre">Padre</option>
+                  <option value="Tío/a">Tío/a</option>
+                  <option value="Abuelo/a">Abuelo/a</option>
+                  <option value="Tutor Legal">Tutor Legal</option>
+                  <option value="Niñero/a">Niñero/a</option>
+                  <option value="Chofer">Chofer</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Celular / Teléfono</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="Ej: +5491123456789"
+                  value={addPhone}
+                  onChange={(e) => setAddPhone(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none font-mono"
+                  disabled={loadingAdd}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Observaciones</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Retira en puerta secundaria"
+                  value={addObs}
+                  onChange={(e) => setAddObs(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none"
+                  disabled={loadingAdd}
+                />
+              </div>
+
+              {errorAdd && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl font-semibold">
+                  {errorAdd}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                disabled={loadingAdd}
+              >
+                {loadingAdd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                Autorizar Retiro
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de Editar Autorizado (Backoffice) ── */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-md p-6 rounded-2xl border border-card-border bg-background shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-card-border">
+              <h3 className="text-lg font-bold text-foreground">Editar Autorización</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setErrorEdit(null);
+                }}
+                className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-muted/15 transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Nombre Completo</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Juan Pérez"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none"
+                  disabled={loadingEdit}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Relación / Parentesco</label>
+                <select
+                  value={editRelation}
+                  onChange={(e) => setEditRelation(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none cursor-pointer"
+                  disabled={loadingEdit}
+                >
+                  <option value="Madre">Madre</option>
+                  <option value="Padre">Padre</option>
+                  <option value="Tío/a">Tío/a</option>
+                  <option value="Abuelo/a">Abuelo/a</option>
+                  <option value="Tutor Legal">Tutor Legal</option>
+                  <option value="Niñero/a">Niñero/a</option>
+                  <option value="Chofer">Chofer</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Celular / Teléfono</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="Ej: +5491123456789"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none font-mono"
+                  disabled={loadingEdit}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Observaciones</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Retira en puerta secundaria"
+                  value={editObs}
+                  onChange={(e) => setEditObs(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-background border border-card-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm outline-none"
+                  disabled={loadingEdit}
+                />
+              </div>
+
+              {errorEdit && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl font-semibold">
+                  {errorEdit}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                disabled={loadingEdit}
+              >
+                {loadingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+                Guardar Cambios
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de Visualizar QR (Backoffice) ── */}
+      {isQrModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-sm p-6 rounded-2xl border border-card-border bg-background shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-card-border">
+              <h3 className="text-base font-bold text-foreground truncate pr-6">QR Autorizado: {viewQrName}</h3>
+              <button
+                type="button"
+                onClick={() => setIsQrModalOpen(false)}
+                className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-muted/15 transition-all cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center gap-4">
+              <div className="bg-white p-2 rounded-xl border border-card-border shadow-sm flex items-center justify-center shrink-0">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(viewQrToken)}`}
+                  alt={`Código QR de ${viewQrName}`}
+                  width={220}
+                  height={220}
+                  className="rounded-lg"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleDownloadQr(viewQrToken, viewQrName)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-foreground text-background font-bold text-sm shadow-md active:scale-95 transition-all cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                Descargar Código QR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
