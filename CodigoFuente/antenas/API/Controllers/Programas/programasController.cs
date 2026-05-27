@@ -353,20 +353,66 @@ namespace API.Controllers.Programas
             });
         }
 
+        //[Authorize]
+        //[HttpGet("mis-programas")]
+        //public async Task<IActionResult> MisProgramas()
+        //{
+        //    long idUsuario = User.GetUserId();
+
+        //    var result = await (
+        //        from eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
+        //        join ev in _context.Set<ef_eventos>().AsNoTracking()
+        //            on eu.id_evento equals ev.id_evento
+        //        join te in _context.Set<ef_tipos_evento>().AsNoTracking()
+        //            on ev.id_tipo_evento equals te.id_tipo_evento
+        //        where eu.id_usuario == idUsuario
+        //              && eu.activo == true
+        //              && ev.tipo_operacion == "PROGRAMA"
+        //        orderby ev.fecha_alta descending
+        //        select new
+        //        {
+        //            id_evento = ev.id_evento,
+        //            id_tipo_evento = ev.id_tipo_evento,
+        //            tipo_evento_codigo = te.codigo,
+        //            id_cuenta = ev.id_cuenta,
+        //            id_unidad = ev.id_unidad,
+        //            anfitriones_texto = ev.anfitriones_texto,
+        //            saludo = ev.saludo,
+        //            mensaje_bienvenida = ev.mensaje_bienvenida,
+        //            estado = ev.estado,
+        //            fecha_inicio = ev.fecha_inicio,
+        //            fecha_fin = ev.fecha_fin,
+        //            fecha_alta = ev.fecha_alta
+        //        }
+        //    ).ToListAsync();
+
+        //    return Ok(result);
+        //}
+
         [Authorize]
         [HttpGet("mis-programas")]
-        public async Task<IActionResult> MisProgramas()
+        public async Task<IActionResult> MisProgramas([FromQuery] long idCuenta)
         {
             long idUsuario = User.GetUserId();
 
+            if (idCuenta <= 0)
+                return BadRequest("Cuenta inválida.");
+
+            bool perteneceCuenta = await _context.Set<ef_cuenta_usuarios>()
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.id_cuenta == idCuenta &&
+                    x.id_usuario == idUsuario &&
+                    x.activo == true);
+
+            if (!perteneceCuenta)
+                return Forbid();
+
             var result = await (
-                from eu in _context.Set<ef_evento_usuarios>().AsNoTracking()
-                join ev in _context.Set<ef_eventos>().AsNoTracking()
-                    on eu.id_evento equals ev.id_evento
+                from ev in _context.Set<ef_eventos>().AsNoTracking()
                 join te in _context.Set<ef_tipos_evento>().AsNoTracking()
                     on ev.id_tipo_evento equals te.id_tipo_evento
-                where eu.id_usuario == idUsuario
-                      && eu.activo == true
+                where ev.id_cuenta == idCuenta
                       && ev.tipo_operacion == "PROGRAMA"
                 orderby ev.fecha_alta descending
                 select new
