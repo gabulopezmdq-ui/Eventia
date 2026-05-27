@@ -201,8 +201,9 @@ export async function getMiPlan(): Promise<CuentaPlan> {
     };
 }
 
-export async function getCuentaEventos(): Promise<any[]> {
-    const res = await fetch('/api/cuenta-eventos');
+export async function getCuentaEventos(idCuenta?: number | null): Promise<any[]> {
+    const url = idCuenta ? `/api/cuenta-eventos?idCuenta=${idCuenta}` : '/api/cuenta-eventos';
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Error al cargar eventos de la cuenta');
     const data = await res.json();
     // Reutilizamos estructura similar a Event normal pero desde la perspectiva B2B, preservando todas las propiedades del backend
