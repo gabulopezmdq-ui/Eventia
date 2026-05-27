@@ -1186,15 +1186,55 @@ namespace API.Services
                 .ToListAsync();
         }
 
-        public async Task<List<EventoResponse>> MisEventosCuentaAsync(long idUsuario, long? idUnidad = null, long? idCliente = null, string? estado = null)
+        //public async Task<List<EventoResponse>> MisEventosCuentaAsync(long idUsuario, long? idUnidad = null, long? idCliente = null, string? estado = null)
+        //{
+        //    var q =
+        //        from eu in _context.Set<ef_evento_usuarios>()
+        //        join evDto in QueryEventosConTipo() on eu.id_evento equals evDto.IdEvento
+        //        where eu.id_usuario == idUsuario
+        //              && eu.activo == true
+        //              && evDto.IdCuenta != null
+        //        select evDto;
+
+        //    if (idUnidad.HasValue)
+        //        q = q.Where(x => x.IdUnidad == idUnidad.Value);
+
+        //    if (idCliente.HasValue)
+        //        q = q.Where(x => x.IdCliente == idCliente.Value);
+
+        //    if (!string.IsNullOrWhiteSpace(estado))
+        //        q = q.Where(x => x.Estado == estado);
+
+        //    return await q
+        //        .AsNoTracking()
+        //        .OrderByDescending(x => x.FechaAlta)
+        //        .ToListAsync();
+        //}
+
+        public async Task<List<EventoResponse>> MisEventosCuentaAsync(
+    long idUsuario,
+    long idCuenta,
+    long? idUnidad = null,
+    long? idCliente = null,
+    string? estado = null)
         {
-            var q =
-                from eu in _context.Set<ef_evento_usuarios>()
-                join evDto in QueryEventosConTipo() on eu.id_evento equals evDto.IdEvento
-                where eu.id_usuario == idUsuario
-                      && eu.activo == true
-                      && evDto.IdCuenta != null
-                select evDto;
+            if (idCuenta <= 0)
+                throw new InvalidOperationException("Cuenta inválida.");
+
+            bool perteneceCuenta = await _context.Set<ef_cuenta_usuarios>()
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.id_cuenta == idCuenta &&
+                    x.id_usuario == idUsuario &&
+                    x.activo == true);
+
+            if (!perteneceCuenta)
+                throw new UnauthorizedAccessException("No tenés acceso a esta cuenta.");
+
+            var q = QueryEventosConTipo()
+                .Where(x =>
+                    x.IdCuenta == idCuenta &&
+                    x.TipoOperacion == "EVENTO");
 
             if (idUnidad.HasValue)
                 q = q.Where(x => x.IdUnidad == idUnidad.Value);

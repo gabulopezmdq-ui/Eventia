@@ -22,12 +22,20 @@ namespace API.Controllers
         [Authorize]
         [HttpGet("mis-eventos")]
         public async Task<ActionResult<List<EventoResponse>>> MisEventosCuenta(
+            [FromQuery] long idCuenta,
             [FromQuery] long? idUnidad,
             [FromQuery] long? idCliente,
             [FromQuery] string? estado)
         {
             long idUsuario = User.GetUserId();
-            var result = await _eventos.MisEventosCuentaAsync(idUsuario, idUnidad, idCliente, estado);
+
+            var result = await _eventos.MisEventosCuentaAsync(
+                idUsuario,
+                idCuenta,
+                idUnidad,
+                idCliente,
+                estado);
+
             return Ok(result);
         }
 
