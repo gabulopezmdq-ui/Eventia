@@ -5,18 +5,31 @@ import { getMisProgramas } from '@/src/features/programas/programas.service';
 import { CalendarDays, Loader2, MapPin, Plus, Clock, ExternalLink, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { Programa } from '@/src/features/programas/types';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function ProgramasCuentaPage() {
+    const { cuenta, loading: authLoading } = useAuth();
     const [programas, setProgramas] = useState<Programa[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getMisProgramas()
-            .then(setProgramas)
+        if (authLoading) return;
+
+        if (!cuenta?.id_cuenta) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        getMisProgramas(cuenta.id_cuenta)
+            .then((data) => {
+                setProgramas(data);
+                setError(null);
+            })
             .catch(() => setError('No se pudieron cargar los programas de la cuenta'))
             .finally(() => setLoading(false));
-    }, []);
+    }, [authLoading, cuenta?.id_cuenta]);
 
     const formatearFecha = (fecha: string) => {
         if (!fecha) return 'Sin fecha';

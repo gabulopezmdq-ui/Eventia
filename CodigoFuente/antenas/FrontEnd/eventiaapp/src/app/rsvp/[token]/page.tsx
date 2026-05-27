@@ -4,7 +4,8 @@ import { useEffect, useState, use } from 'react';
 import {
     CheckCircle2, AlertCircle, ChefHat, User, MessageSquare,
     ArrowRight, HeartPulse, Baby, Phone, Mail,
-    MapPin, Calendar, Users, PlusCircle, Trash2, Download, QrCode
+    MapPin, Calendar, Users, PlusCircle, Trash2, Download, QrCode,
+    Loader2, X
 } from 'lucide-react';
 import {
     confirmarRsvp, getInvitacionPersonal,
@@ -12,6 +13,13 @@ import {
     InvitacionPersonalResponse, PersonaInvitacion, PersonaConfirmarPayload,
     CatalogoRestriccion, getResumenRsvp, ResumenRsvpResponse
 } from '@/src/features/rsvp/rsvp.service';
+import {
+    getAutorizacionesRsvp,
+    createAutorizacionRsvp,
+    deleteAutorizacion
+} from '@/src/features/programas/autorizaciones-retiro.service';
+import { AutorizacionRetiro } from '@/src/features/programas/types';
+
 
 type Step = 'LOADING' | 'VERIFYING' | 'RSVP' | 'SUCCESS' | 'ERROR';
 
@@ -65,6 +73,66 @@ export default function RsvpPage({
     // --- Resumen RSVP (QRs y datos post-confirmación) ---
     const [resumenRsvp, setResumenRsvp] = useState<ResumenRsvpResponse | null>(null);
 
+    // --- Autorizados de Retiro state ---
+    const [autorizados, setAutorizados] = useState<AutorizacionRetiro[]>([]);
+    const [loadingAutorizados, setLoadingAutorizados] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [authNombre, setAuthNombre] = useState('');
+    const [authCelular, setAuthCelular] = useState('');
+    const [authRelacion, setAuthRelacion] = useState('Madre');
+    const [submittingAuth, setSubmittingAuth] = useState(false);
+    const [errorAuthMsg, setErrorAuthMsg] = useState<string | null>(null);
+
+    const cargarAutorizados = async () => {
+        setLoadingAutorizados(true);
+        try {
+            const data = await getAutorizacionesRsvp(token);
+            setAutorizados(data || []);
+        } catch (err) {
+            console.error('Error al cargar autorizados de retiro:', err);
+        } finally {
+            setLoadingAutorizados(false);
+        }
+    };
+
+    const handleAgregarAutorizado = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!authNombre.trim() || !authCelular.trim() || !authRelacion.trim()) {
+            setErrorAuthMsg('Todos los campos son obligatorios');
+            return;
+        }
+        setSubmittingAuth(true);
+        setErrorAuthMsg(null);
+        try {
+            await createAutorizacionRsvp(token, {
+                nombreCompleto: authNombre.trim(),
+                celular: authCelular.trim(),
+                relacion: authRelacion.trim()
+            });
+            setIsAuthModalOpen(false);
+            setAuthNombre('');
+            setAuthCelular('');
+            setAuthRelacion('Madre');
+            await cargarAutorizados();
+        } catch (err: any) {
+            setErrorAuthMsg(err.message || 'Error al guardar la autorización');
+        } finally {
+            setSubmittingAuth(false);
+        }
+    };
+
+    const handleEliminarAutorizado = async (id: number, nombre: string) => {
+        if (!confirm(`¿Estás seguro de que deseas eliminar la autorización de retiro para ${nombre}? Su código QR quedará invalidado inmediatamente.`)) {
+            return;
+        }
+        try {
+            await deleteAutorizacion(id);
+            await cargarAutorizados();
+        } catch (err: any) {
+            alert(err.message || 'Error al eliminar la autorización');
+        }
+    };
+
     useEffect(() => {
         verificarEstado();
     }, [token]);
@@ -72,31 +140,17 @@ export default function RsvpPage({
     const verificarEstado = async () => {
         setStep('VERIFYING');
         try {
-            // 1. Intentar cargar el resumen primero por si ya está confirmado
-            try {
-                const resumen = await getResumenRsvp(token);
-                if (resumen && resumen.rsvpEstadoGrupo === 'CONFIRMADO') {
-                    setResumenRsvp(resumen);
-                    setStep('SUCCESS');
-                    return;
-                }
-            } catch (errResumen) {
-                console.log('El grupo aún no tiene confirmación registrada o falló la consulta:', errResumen);
-            }
-
-            // 2. Si no está confirmado, continuar con el flujo normal de carga
-            // Try the unified endpoint first
+            // 0. Intentar cargar la invitación primero para tener los datos de la familia/evento
             let inviteData: InvitacionPersonalResponse | null = null;
             try {
                 inviteData = await getInvitacionPersonal(token);
                 console.log('=== INFO DEL TOKEN ===', inviteData);
                 setInvitacion(inviteData);
-            } catch {
-                // Fallback: try legacy endpoint for basic data
+            } catch (errInvite) {
+                console.log('Error al precargar invitación:', errInvite);
                 try {
                     const legacyData = await getDatosInvitacion(token);
-                    // Build a minimal invitacion object from legacy data
-                    setInvitacion({
+                    inviteData = {
                         idEvento: 0,
                         idGrupo: 0,
                         nombreGrupo: `${legacyData.nombre || ''} ${legacyData.apellido || ''}`.trim(),
@@ -107,10 +161,53 @@ export default function RsvpPage({
                         personas: [],
                         cuposAdultosRestantes: 0,
                         cuposMenoresRestantes: 0,
-                    });
-                    inviteData = null; // mark as no full data
+                    };
+                    setInvitacion(inviteData);
+                } catch {}
+            }
+
+            // 1. Intentar cargar el resumen primero por si ya está confirmado
+            try {
+                const resumen = await getResumenRsvp(token);
+                if (resumen && resumen.rsvpEstadoGrupo === 'CONFIRMADO') {
+                    setResumenRsvp(resumen);
+                    await cargarAutorizados();
+                    setStep('SUCCESS');
+                    return;
+                }
+            } catch (errResumen) {
+                console.log('El grupo aún no tiene confirmación registrada o falló la consulta:', errResumen);
+            }
+
+
+            // 2. Si no está confirmado, continuar con el flujo normal de carga
+            // Try the unified endpoint first (if not already loaded in step 0)
+            if (!inviteData) {
+                try {
+                    inviteData = await getInvitacionPersonal(token);
+                    console.log('=== INFO DEL TOKEN ===', inviteData);
+                    setInvitacion(inviteData);
                 } catch {
-                    // Both failed
+                    // Fallback: try legacy endpoint for basic data
+                    try {
+                        const legacyData = await getDatosInvitacion(token);
+                        // Build a minimal invitacion object from legacy data
+                        inviteData = {
+                            idEvento: 0,
+                            idGrupo: 0,
+                            nombreGrupo: `${legacyData.nombre || ''} ${legacyData.apellido || ''}`.trim(),
+                            saludo: '',
+                            anfitriones: legacyData.anfitriones || '',
+                            mensajeBienvenida: legacyData.mensajeBienvenida || '',
+                            agenda: [],
+                            personas: [],
+                            cuposAdultosRestantes: 0,
+                            cuposMenoresRestantes: 0,
+                        };
+                        setInvitacion(inviteData);
+                    } catch {
+                        // Both failed
+                    }
                 }
             }
 
@@ -300,6 +397,7 @@ export default function RsvpPage({
             try {
                 const resumen = await getResumenRsvp(token);
                 setResumenRsvp(resumen);
+                await cargarAutorizados();
             } catch (errResumen) {
                 console.error('Error al obtener el resumen del RSVP tras confirmación:', errResumen);
             }
@@ -445,6 +543,199 @@ export default function RsvpPage({
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    )}
+
+                    {/* ── Sección de Autorizaciones de Retiro ── */}
+                    {(() => {
+                        const tieneMenores = invitacion?.personas?.some(p => p.rolEvento === 'N') || personas?.some(p => p.rolEvento === 'N');
+                        if (!tieneMenores) return null;
+
+                        return (
+                            <div className="w-full mt-12 pt-10 border-t border-white/10 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                                <div className="text-center sm:text-left flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
+                                            <Users className="w-6 h-6 text-emerald-400" />
+                                            Autorizados para Retiro
+                                        </h2>
+                                        <p className="text-muted text-xs sm:text-sm mt-1.5 max-w-lg">
+                                            Registrá a los adultos autorizados para retirar a los menores del predio. Cada uno contará con un código QR inmutable para validar su identidad en portería.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAuthModalOpen(true)}
+                                        className="flex items-center gap-2 py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer shrink-0"
+                                    >
+                                        <PlusCircle className="w-4 h-4" />
+                                        Autorizar Adulto
+                                    </button>
+                                </div>
+
+                                {loadingAutorizados ? (
+                                    <div className="flex flex-col items-center justify-center py-10 text-emerald-400">
+                                        <Loader2 className="w-8 h-8 animate-spin mb-3" />
+                                        <p className="text-xs text-muted font-bold tracking-widest uppercase">Cargando autorizados...</p>
+                                    </div>
+                                ) : autorizados.length === 0 ? (
+                                    <div className="p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-center flex flex-col items-center justify-center">
+                                        <p className="text-sm font-semibold text-muted">Sin autorizados registrados aún</p>
+                                        <p className="text-xs text-muted/60 mt-1 max-w-xs">Solo los responsables familiares principales (padres/tutores) podrán realizar los retiros por defecto.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {autorizados.map((auth) => (
+                                            <div
+                                                key={auth.id_autorizacion}
+                                                className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md flex flex-col justify-between gap-5 transition-all duration-300 hover:border-white/15"
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                                                            <User className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-bold text-white text-base leading-tight">{auth.nombre_autorizado}</h4>
+                                                            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 mt-1 border border-emerald-500/20">
+                                                                {auth.relacion}
+                                                            </span>
+                                                            <p className="text-xs text-muted flex items-center gap-1 mt-2 font-mono">
+                                                                <Phone className="w-3.5 h-3.5 text-muted/70" /> {auth.telefono_autorizado}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleEliminarAutorizado(auth.id_autorizacion, auth.nombre_autorizado)}
+                                                        className="p-2 rounded-lg bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/10 cursor-pointer"
+                                                        title="Revocar autorización"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                <div className="flex flex-col items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 gap-3">
+                                                    <img
+                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(auth.qr_token)}`}
+                                                        alt={`QR para ${auth.nombre_autorizado}`}
+                                                        width={140}
+                                                        height={140}
+                                                        className="rounded-lg border border-white/5 bg-white p-1"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDownloadQr(auth.qr_token, auth.nombre_autorizado)}
+                                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-black hover:bg-white/90 font-bold text-xs shadow-md transition-all cursor-pointer"
+                                                    >
+                                                        <Download className="w-3.5 h-3.5" />
+                                                        Descargar QR Autorizado
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
+
+                    {/* ── Modal de Agregar Autorizado ── */}
+                    {isAuthModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                            <div className="w-full max-w-md p-6 rounded-2xl border border-white/10 bg-[#0d0d0d] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+                                {/* Ambient glow */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                                
+                                <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
+                                    <h3 className="text-lg font-black text-white flex items-center gap-2 tracking-tight">
+                                        <PlusCircle className="w-5 h-5 text-emerald-400" />
+                                        Autorizar Adulto
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsAuthModalOpen(false);
+                                            setErrorAuthMsg(null);
+                                        }}
+                                        className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleAgregarAutorizado} className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Nombre Completo</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Ej: Juan Pérez"
+                                            value={authNombre}
+                                            onChange={(e) => setAuthNombre(e.target.value)}
+                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none"
+                                            disabled={submittingAuth}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Relación / Parentesco</label>
+                                        <select
+                                            value={authRelacion}
+                                            onChange={(e) => setAuthRelacion(e.target.value)}
+                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none cursor-pointer"
+                                            disabled={submittingAuth}
+                                        >
+                                            <option value="Madre">Madre</option>
+                                            <option value="Padre">Padre</option>
+                                            <option value="Tío/a">Tío/a</option>
+                                            <option value="Abuelo/a">Abuelo/a</option>
+                                            <option value="Tutor Legal">Tutor Legal</option>
+                                            <option value="Niñero/a">Niñero/a</option>
+                                            <option value="Chofer">Chofer</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Teléfono Celular</label>
+                                        <input
+                                            type="tel"
+                                            required
+                                            placeholder="Ej: +54 9 11 2345 6789"
+                                            value={authCelular}
+                                            onChange={(e) => setAuthCelular(e.target.value)}
+                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none font-mono"
+                                            disabled={submittingAuth}
+                                        />
+                                        <span className="text-[10px] text-muted/60 mt-1 block">Preferentemente en formato internacional con código de país.</span>
+                                    </div>
+
+                                    {errorAuthMsg && (
+                                        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+                                            {errorAuthMsg}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        className="w-full flex items-center justify-center gap-2 py-3 px-5 mt-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={submittingAuth}
+                                    >
+                                        {submittingAuth ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Guardando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <PlusCircle className="w-4 h-4" />
+                                                Autorizar Adulto
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     )}
                 </div>

@@ -76,7 +76,12 @@ export interface SaludParticipante {
 }
 
 export interface AutorizadoRetiro {
+  id_autorizacion: number;
   nombre: string;
+  telefono_autorizado?: string;
+  relacion?: string;
+  qr_token?: string;
+  observaciones?: string;
 }
 
 export interface ParticipanteDetalle {

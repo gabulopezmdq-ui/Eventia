@@ -313,3 +313,35 @@ export interface StaffOperativoMiembro {
     fecha_alta: string;
 }
 
+// ── Autorizaciones de Retiro ───────────────────────────────────
+
+export interface AutorizacionRetiro {
+    id_autorizacion: number;
+    id_evento: number;
+    id_invitado_objetivo: number; // Niño asociado
+    tipo: 'R';
+    qr_token: string;
+    nombre_autorizado: string;
+    telefono_autorizado: string;
+    relacion: string;
+    activo: boolean;
+    fecha_alta: string;
+    fecha_baja: string | null;
+    observaciones?: string;
+}
+
+export interface CrearAutorizacionRsvpPayload {
+    nombreCompleto: string;
+    celular: string;
+    relacion: string;
+}
+
+export interface CrearAutorizacionOperadorPayload {
+    idInvitado: number;
+    nombreAutorizado: string;
+    telefonoAutorizado: string;
+    relacion: string;
+    observaciones?: string;
+}
+
+

@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { getCuentaEventos } from '@/src/features/cuenta/cuenta.service';
 import { CalendarHeart, Loader2, MapPin, LayoutList, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Plus, Pencil, Eye, X, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function EventosCuentaPage() {
+    const { cuenta, loading: authLoading } = useAuth();
     const [eventos, setEventos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -16,15 +18,24 @@ export default function EventosCuentaPage() {
     const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
 
     useEffect(() => {
-        getCuentaEventos()
+        if (authLoading) return;
+
+        if (!cuenta?.id_cuenta) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        getCuentaEventos(cuenta.id_cuenta)
             .then((data) => {
                 // Filtrar solo los eventos, ignorar los programas
                 const soloEventos = data.filter((ev: any) => ev.tipoOperacion !== 'PROGRAMA');
                 setEventos(soloEventos);
+                setError(null);
             })
             .catch(() => setError('No se pudieron cargar los eventos de la cuenta'))
             .finally(() => setLoading(false));
-    }, []);
+    }, [authLoading, cuenta?.id_cuenta]);
 
     const formatearFecha = (fechaHora: string) => {
         try {

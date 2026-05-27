@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useStaffAuth } from '@/src/context/StaffAuthContext';
+import { useStaffAuth, isEventActiveToday } from '@/src/context/StaffAuthContext';
 import {
     Loader2,
     QrCode,
@@ -23,36 +23,21 @@ import {
     X,
     Calendar,
     Flame,
-    ClipboardList
+    ClipboardList,
+    Plus,
+    HeartPulse,
+    Activity,
+    ShieldAlert,
+    FileText,
+    PhoneCall,
+    Music,
+    Wine,
+    Sliders
 } from 'lucide-react';
 
 // ==========================================
-// MOCK DATA PARA PRUEBAS Y FLUJOS COMPLETOS
+// PORTAL OPERATIVO DE STAFF - DATOS EN TIEMPO REAL
 // ==========================================
-const MOCK_PARTICIPANTES = [
-    { id: 1, nombre: 'Sofía', apellido: 'Gómez', email: 'sofia.gomez@gmail.com', ticket: 'EV-89012', ingresado: false, categoria: 'V.I.P', hora: '-' },
-    { id: 2, nombre: 'Mateo', apellido: 'Rodríguez', email: 'mateo.rod@yahoo.com', ticket: 'EV-23456', ingresado: true, categoria: 'General', hora: '10:30' },
-    { id: 3, nombre: 'Valentina', apellido: 'Fernández', email: 'valen.fer@outlook.com', ticket: 'EV-78901', ingresado: false, categoria: 'Expositor', hora: '-' },
-    { id: 4, nombre: 'Benjamín', apellido: 'López', email: 'benja.lopez@gmail.com', ticket: 'EV-34567', ingresado: true, categoria: 'General', hora: '11:15' },
-    { id: 5, nombre: 'Martina', apellido: 'Díaz', email: 'martina.diaz@live.com.ar', ticket: 'EV-56789', ingresado: false, categoria: 'V.I.P', hora: '-' },
-    { id: 6, nombre: 'Joaquín', apellido: 'Pérez', email: 'joaco.perez@hotmail.com', ticket: 'EV-90123', ingresado: false, categoria: 'General', hora: '-' },
-];
-
-const MOCK_ALERGIAS = [
-    { id: 1, nombre: 'Julieta', apellido: 'Sánchez', alergia: 'Celíaco - Sin TACC (Grave)', nivel: 'CRÍTICO', racion: 'Menú Especial TACC Free', verificado: false },
-    { id: 2, nombre: 'Lucas', apellido: 'García', alergia: 'Maní & Frutos Secos (Severo)', nivel: 'CRÍTICO', racion: 'Menú Estándar (Sin nueces)', verificado: true },
-    { id: 3, nombre: 'Camila', apellido: 'Martínez', alergia: 'Intolerancia a la Lactosa', nivel: 'MODERADO', racion: 'Menú Especial Deslactosado', verificado: false },
-    { id: 4, nombre: 'Ignacio', apellido: 'Romero', alergia: 'Mariscos & Pescado', nivel: 'MODERADO', racion: 'Menú Vegetariano', verificado: true },
-    { id: 5, nombre: 'Delfina', apellido: 'Álvarez', alergia: 'Huevo & Derivados', nivel: 'CRÍTICO', racion: 'Menú Vegano Especial', verificado: false },
-];
-
-const MOCK_BENEFICIOS = [
-    { codigo: 'BEN-KIT-01', titular: 'Facundo Rossi', item: 'Remera Oficial + Kit Bienvenida', estado: 'Disponible', fechaCanje: '-' },
-    { codigo: 'BEN-DRK-02', titular: 'Clara Peralta', item: 'Bebida de Bienvenida Especial', estado: 'Canjeado', fechaCanje: 'Hoy 12:15 hs' },
-    { codigo: 'BEN-VIP-03', titular: 'Renzo Mastronardi', item: 'Acceso a Lounge VIP & Catering', estado: 'Disponible', fechaCanje: '-' },
-    { codigo: 'BEN-GIFT-04', titular: 'Milagros Russo', item: 'Gorra oficial del Evento', estado: 'Disponible', fechaCanje: '-' },
-    { codigo: 'BEN-KIT-05', titular: 'Santiago Soler', item: 'Remera Oficial + Kit Bienvenida', estado: 'Canjeado', fechaCanje: 'Hoy 09:45 hs' },
-];
 
 export default function StaffHomePage() {
     const { token, user, isLoading, activeRol, selectRol } = useStaffAuth();
@@ -64,6 +49,22 @@ export default function StaffHomePage() {
             router.replace('/staff/login');
         }
     }, [isLoading, token, router]);
+
+    // Redirección si necesita seleccionar evento primero
+    useEffect(() => {
+        if (!isLoading && user) {
+            const allEvents = user.eventosDisponibles || [];
+            const activeEvents = allEvents.filter(e => isEventActiveToday(e));
+            
+            if (activeEvents.length === 0) {
+                // No hay eventos para hoy, redireccionamos para que vea los futuros
+                router.replace('/staff/seleccionar-evento');
+            } else if (activeEvents.length > 1 && !user.idEvento) {
+                // Hay múltiples eventos y ninguno seleccionado
+                router.replace('/staff/seleccionar-evento');
+            }
+        }
+    }, [isLoading, user, router]);
 
     // Redirección si tiene múltiples roles y no seleccionó ninguno
     useEffect(() => {
@@ -89,7 +90,7 @@ export default function StaffHomePage() {
     // ==========================================
     // ESTADOS ROL: PUERTA / RECEPTOR
     // ==========================================
-    const [participantes, setParticipantes] = useState<any[]>(MOCK_PARTICIPANTES);
+    const [participantes, setParticipantes] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [manualTicket, setManualTicket] = useState('');
     const [manualNombre, setManualNombre] = useState('');
@@ -98,17 +99,35 @@ export default function StaffHomePage() {
     // ==========================================
     // ESTADOS ROL: COCINA
     // ==========================================
-    const [alergias, setAlergias] = useState<any[]>(MOCK_ALERGIAS);
+    const [alergias, setAlergias] = useState<any[]>([]);
     const [searchAlergias, setSearchAlergias] = useState('');
-    const [racionesServidas, setRacionesServidas] = useState(142);
+    const [racionesServidas, setRacionesServidas] = useState(0);
     const [racionesTotales] = useState(250);
 
     // ==========================================
     // ESTADOS ROL: OPERADOR / BENEFICIOS
     // ==========================================
-    const [beneficios, setBeneficios] = useState<any[]>(MOCK_BENEFICIOS);
+    const [beneficios, setBeneficios] = useState<any[]>([]);
     const [searchBeneficios, setSearchBeneficios] = useState('');
     const [manualCouponCode, setManualCouponCode] = useState('');
+
+    // ==========================================
+    // ESTADOS ROL: SALUD / MEDICO
+    // ==========================================
+    const [saludPanel, setSaludPanel] = useState<any[]>([]);
+    const [saludFichas, setSaludFichas] = useState<any[]>([]);
+    const [saludAcciones, setSaludAcciones] = useState<any[]>([]);
+    const [searchSalud, setSearchSalud] = useState('');
+    const [saludTab, setSaludTab] = useState<'PANEL' | 'FICHAS' | 'ACCIONES'>('PANEL');
+    const [registroAccionOpen, setRegistroAccionOpen] = useState(false);
+    const [selectedInvitadoId, setSelectedInvitadoId] = useState<number | null>(null);
+    const [selectedInvitadoNombre, setSelectedInvitadoNombre] = useState('');
+    const [tipoAccionSelect, setTipoAccionSelect] = useState('1');
+    const [descripcionAccion, setDescripcionAccion] = useState('');
+    const [requirioContactoFamilia, setRequirioContactoFamilia] = useState(false);
+    const [contactoRealizado, setContactoRealizado] = useState(false);
+    const [requiereSeguimiento, setRequiereSeguimiento] = useState(false);
+    const [tiposAccion, setTiposAccion] = useState<any[]>([]);
 
     // ==========================================
     // CARGAR PARTICIPANTES REALES SI EXISTE idEvento
@@ -167,6 +186,132 @@ export default function StaffHomePage() {
             fetchRealParticipants();
         }
     }, [user]);
+
+    const currentRolCode = activeRol?.rol_codigo?.toUpperCase() || '';
+
+    // ==========================================
+    // CARGAR DATOS DE COCINA REALES (COCINA DIA)
+    // ==========================================
+    useEffect(() => {
+        if (user && user.idEvento && token && (currentRolCode.includes('COCINA') || currentRolCode.includes('COMEDOR'))) {
+            const fetchCocinaDia = async () => {
+                try {
+                    const res = await fetch(`/api/programas/${user.idEvento}/cocina/dia`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data)) {
+                            const list = data.map((item: any) => ({
+                                id: item.idInvitado || item.id || Math.random(),
+                                nombre: item.nombre || '',
+                                apellido: item.apellido || '',
+                                alergia: item.alergias || item.restricciones?.join(', ') || 'Restricción Alimentaria',
+                                nivel: item.nivel || (item.tieneRestricciones ? 'CRÍTICO' : 'MODERADO'),
+                                racion: item.racion || 'Menú Especial TACC Free',
+                                verificado: !!(item.entregado || item.checkinRealizado)
+                            }));
+                            setAlergias(list);
+                            
+                            // Raciones
+                            const servidas = list.filter(a => a.verificado).length;
+                            setRacionesServidas(servidas);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al cargar datos reales de cocina:', error);
+                }
+            };
+            fetchCocinaDia();
+        }
+    }, [user, token, currentRolCode]);
+
+    // ==========================================
+    // CARGAR BENEFICIOS REALES PENDIENTES
+    // ==========================================
+    useEffect(() => {
+        if (user && user.idEvento && token && (currentRolCode.includes('OPERADOR') || currentRolCode.includes('BENEFICIOS') || currentRolCode.includes('BARTENDER') || currentRolCode.includes('BAR'))) {
+            const fetchBeneficios = async () => {
+                try {
+                    const res = await fetch(`/api/audiencias-pendientes-manual?idEvento=${user.idEvento}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data)) {
+                            const list = data.map((b: any) => ({
+                                idBeneficioRegistro: b.idBeneficioRegistro || b.id_beneficio_registro,
+                                codigo: b.codigoBeneficio || b.codigo || `BEN-${b.idBeneficioRegistro}`,
+                                titular: b.nombreCompleto || b.titular || `${b.nombre} ${b.apellido}`,
+                                item: b.nombreBeneficio || b.item || 'Beneficio Especial',
+                                estado: b.canjeado ? 'Canjeado' : 'Disponible',
+                                fechaCanje: b.fechaCanje || b.fecha_canje || '-'
+                             }));
+                             setBeneficios(list);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al cargar beneficios reales:', error);
+                }
+            };
+            fetchBeneficios();
+        }
+    }, [user, token, currentRolCode]);
+
+    // ==========================================
+    // CARGAR DATOS REALES DE SALUD
+    // ==========================================
+    useEffect(() => {
+        if (user && user.idEvento && token && (currentRolCode.includes('SALUD') || currentRolCode.includes('MEDICO') || currentRolCode.includes('ENFERMERO'))) {
+            const fetchSaludData = async () => {
+                try {
+                    // 1. Fetch Panel de salud
+                    const resPanel = await fetch(`/api/programas/${user.idEvento}/salud/panel`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (resPanel.ok) {
+                        const data = await resPanel.json();
+                        setSaludPanel(Array.isArray(data) ? data : []);
+                    }
+
+                    // 2. Fetch Fichas médicas
+                    const resFichas = await fetch(`/api/programas/${user.idEvento}/salud/fichas`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (resFichas.ok) {
+                        const data = await resFichas.json();
+                        setSaludFichas(Array.isArray(data) ? data : []);
+                    }
+
+                    // 3. Fetch Timeline de acciones
+                    const resAcciones = await fetch(`/api/programas/${user.idEvento}/salud/acciones`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (resAcciones.ok) {
+                        const data = await resAcciones.json();
+                        setSaludAcciones(Array.isArray(data) ? data : []);
+                    }
+
+                    // 4. Fetch Tipos de Acción
+                    const resTipos = await fetch(`/api/programas/salud/tipos-accion`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (resTipos.ok) {
+                        const data = await resTipos.json();
+                        if (Array.isArray(data)) {
+                            setTiposAccion(data);
+                            if (data.length > 0) {
+                                setTipoAccionSelect(data[0].codigo);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al cargar datos reales de salud:', error);
+                }
+            };
+            fetchSaludData();
+        }
+    }, [user, token, currentRolCode]);
 
     // Ciclo de vida y control de cámara física usando html5-qrcode
     useEffect(() => {
@@ -283,8 +428,6 @@ export default function StaffHomePage() {
         );
     }
 
-    const currentRolCode = activeRol.rol_codigo.toUpperCase();
-
     // ==========================================
     // MANEJADORES: RECEPTOR / PUERTA
     // ==========================================
@@ -383,21 +526,102 @@ export default function StaffHomePage() {
     // ==========================================
     // MANEJADORES: BENEFICIOS / BAR
     // ==========================================
-    const handleCanjeCupon = (codigo: string) => {
+    const handleCanjeCupon = async (idBeneficioRegistro: number | string) => {
         setLoadingAction(true);
-        setTimeout(() => {
-            setBeneficios(prev => prev.map(b => {
-                if (b.codigo.toUpperCase() === codigo.toUpperCase()) {
-                    return {
-                        ...b,
-                        estado: 'Canjeado',
-                        fechaCanje: `Hoy ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`
-                    };
+        try {
+            const res = await fetch(`/api/audiencias-canjear?idBeneficioRegistro=${idBeneficioRegistro}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 }
-                return b;
-            }));
+            });
+            if (res.ok) {
+                setBeneficios(prev => prev.map(b => {
+                    if (b.idBeneficioRegistro === idBeneficioRegistro || b.codigo.toUpperCase() === String(idBeneficioRegistro).toUpperCase()) {
+                        return {
+                            ...b,
+                            estado: 'Canjeado',
+                            fechaCanje: `Hoy ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`
+                        };
+                    }
+                    return b;
+                }));
+            } else {
+                alert('No se pudo efectuar el canje del beneficio.');
+            }
+        } catch (error) {
+            console.error('Error al canjear beneficio:', error);
+        } finally {
             setLoadingAction(false);
-        }, 700);
+        }
+    };
+
+    // ==========================================
+    // MANEJADORES: SALUD / MEDICO
+    // ==========================================
+    const handleRegistrarAccionSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedInvitadoId || !user?.idEvento) {
+            alert('Por favor, selecciona un participante.');
+            return;
+        }
+
+        // Buscar la inscripción correspondiente para obtener id_inscripcion
+        const target = saludPanel.find(p => p.id_invitado === selectedInvitadoId) ||
+                       saludFichas.find(p => p.id_invitado === selectedInvitadoId);
+        const idInscripcion = target?.id_inscripcion || 0;
+
+        setLoadingAction(true);
+        try {
+            const res = await fetch(`/api/programas/${user.idEvento}/salud/acciones/registrar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    id_inscripcion: idInscripcion,
+                    id_participante: selectedInvitadoId,
+                    fecha_hora: new Date().toISOString(),
+                    tipo_accion: tipoAccionSelect,
+                    descripcion: descripcionAccion,
+                    requirio_contacto_familia: requirioContactoFamilia,
+                    contacto_realizado: requirioContactoFamilia ? contactoRealizado : false,
+                    requiere_seguimiento: requiereSeguimiento
+                })
+            });
+
+            if (res.ok) {
+                // Actualizar timeline de acciones localmente
+                const resAcciones = await fetch(`/api/programas/${user.idEvento}/salud/acciones`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (resAcciones.ok) {
+                    const data = await resAcciones.json();
+                    setSaludAcciones(Array.isArray(data) ? data : []);
+                }
+
+                // Limpiar formulario y cerrar modal
+                setRegistroAccionOpen(false);
+                setSelectedInvitadoId(null);
+                setSelectedInvitadoNombre('');
+                setDescripcionAccion('');
+                setRequirioContactoFamilia(false);
+                setContactoRealizado(false);
+                setRequiereSeguimiento(false);
+                if (tiposAccion.length > 0) {
+                    setTipoAccionSelect(tiposAccion[0].codigo);
+                }
+            } else {
+                alert('No se pudo registrar la acción de salud. Por favor reintente.');
+            }
+        } catch (error) {
+            console.error('Error al registrar acción de salud:', error);
+            alert('Ocurrió un error al registrar la acción.');
+        } finally {
+            setLoadingAction(false);
+        }
     };
 
     // ==========================================
@@ -491,37 +715,72 @@ export default function StaffHomePage() {
             }
         } else {
             // BENEFICIO
-            const targetBeneficio = beneficios.find(
-                b => b.codigo.toUpperCase() === code.toUpperCase() ||
-                    b.titular.toLowerCase().includes(code.toLowerCase())
-            );
-
-            if (targetBeneficio) {
-                if (targetBeneficio.estado === 'Disponible') {
-                    setScanResult({
-                        success: true,
-                        title: '¡Cupón de Beneficio Válido!',
-                        subtitle: `Item: ${targetBeneficio.item}`,
-                        name: `Titular: ${targetBeneficio.titular}`,
-                        details: `Código: ${targetBeneficio.codigo}`,
-                        action: () => handleCanjeCupon(targetBeneficio.codigo)
+            const resolveQrReal = async () => {
+                try {
+                    const res = await fetch(`/api/audiencias-qr-beneficio?idEvento=${user.idEvento}&qrToken=${code}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
-                } else {
-                    setScanResult({
-                        success: false,
-                        title: 'Cupón Ya Canjeado',
-                        subtitle: 'El beneficio ya fue canjeado previamente.',
-                        details: `Canjeado el: ${targetBeneficio.fechaCanje}`
-                    });
+                    if (res.ok) {
+                        const target = await res.json();
+                        const idReg = target.idBeneficioRegistro || target.id_beneficio_registro;
+                        
+                        if (!target.canjeado) {
+                            setScanResult({
+                                success: true,
+                                title: '¡Cupón de Beneficio Válido!',
+                                subtitle: `Item: ${target.nombreBeneficio || target.item || 'Beneficio'}`,
+                                name: `Titular: ${target.nombreCompleto || target.titular || 'Participante'}`,
+                                details: `Registro: ${idReg}`,
+                                action: () => handleCanjeCupon(idReg)
+                            });
+                        } else {
+                            setScanResult({
+                                success: false,
+                                title: 'Cupón Ya Canjeado',
+                                subtitle: 'El beneficio ya fue canjeado previamente.',
+                                details: `Canjeado el: ${target.fechaCanje || target.fecha_canje || '-'}`
+                            });
+                        }
+                    } else {
+                        const targetBeneficio = beneficios.find(
+                            b => b.codigo.toUpperCase() === code.toUpperCase() ||
+                                b.titular.toLowerCase().includes(code.toLowerCase())
+                        );
+                        if (targetBeneficio) {
+                            if (targetBeneficio.estado === 'Disponible') {
+                                setScanResult({
+                                    success: true,
+                                    title: '¡Cupón de Beneficio Válido!',
+                                    subtitle: `Item: ${targetBeneficio.item}`,
+                                    name: `Titular: ${targetBeneficio.titular}`,
+                                    details: `Código: ${targetBeneficio.codigo}`,
+                                    action: () => handleCanjeCupon(targetBeneficio.idBeneficioRegistro || targetBeneficio.codigo)
+                                });
+                            } else {
+                                setScanResult({
+                                    success: false,
+                                    title: 'Cupón Ya Canjeado',
+                                    subtitle: 'El beneficio ya fue canjeado previamente.',
+                                    details: `Canjeado el: ${targetBeneficio.fechaCanje}`
+                                });
+                            }
+                        } else {
+                            setScanResult({
+                                success: false,
+                                title: 'Cupón Inválido',
+                                subtitle: 'El código del cupón no coincide con ningún beneficio.',
+                                details: `Código escaneado: "${code}"`
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al resolver QR de beneficio:', error);
+                } finally {
+                    setLoadingAction(false);
                 }
-            } else {
-                setScanResult({
-                    success: false,
-                    title: 'Cupón Inválido',
-                    subtitle: 'El código del cupón no coincide con ningún beneficio.',
-                    details: `Código escaneado: "${code}"`
-                });
-            }
+            };
+            resolveQrReal();
+            return;
         }
         setLoadingAction(false);
     };
@@ -572,43 +831,66 @@ export default function StaffHomePage() {
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">
 
-            {/* Cabecera Adaptativa de la Home Operativa */}
-            <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+            {/* Cabecera Adaptativa e Inteligente de la Home Operativa (Mobile-Optimized) */}
+            <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden transition-all duration-300">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none" />
 
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-[11px] font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">
-                            Operativo En Línea
-                        </span>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 relative z-10">
+                    
+                    {/* Sección de Identificación y Rol */}
+                    <div className="flex items-center gap-3.5">
+                        {/* Avatar Premium con Inicial y Estado */}
+                        <div className="relative shrink-0">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center font-black text-lg shadow-md shadow-indigo-500/20 select-none">
+                                {user.nombre[0].toUpperCase()}
+                            </div>
+                            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-neutral-900 rounded-full animate-pulse" />
+                        </div>
+
+                        <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h1 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white tracking-tight">
+                                    Hola, {user.nombre}
+                                </h1>
+                                <span className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-indigo-500/10 uppercase tracking-wider">
+                                    {activeRol.rol_texto.replace('STAFF_', '')}
+                                </span>
+                            </div>
+                            <p className="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm font-semibold truncate max-w-[280px] sm:max-w-md">
+                                Gestioná tu jornada operativa en el evento
+                            </p>
+                        </div>
                     </div>
 
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white">
-                        Hola, {user.nombre}
-                    </h1>
+                    {/* Switcher de Roles y Eventos (Píldoras Compactas en Mobile, Botones en Desktop) */}
+                    <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
+                        {user.eventosDisponibles && user.eventosDisponibles.filter(e => isEventActiveToday(e)).length > 1 && (
+                            <button
+                                onClick={() => router.push('/staff/seleccionar-evento')}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 text-neutral-700 dark:text-neutral-200 font-bold text-xs rounded-xl sm:rounded-2xl transition-all shadow-sm active:scale-[0.98] border border-neutral-200/30 dark:border-neutral-700/30"
+                            >
+                                <Calendar className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                <span className="truncate">Cambiar Evento</span>
+                            </button>
+                        )}
+                        {user.rolesEvento && user.rolesEvento.length > 1 && (
+                            <button
+                                onClick={() => router.push('/staff/seleccionar-funcion')}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 text-neutral-700 dark:text-neutral-200 font-bold text-xs rounded-xl sm:rounded-2xl transition-all shadow-sm active:scale-[0.98] border border-neutral-200/30 dark:border-neutral-700/30"
+                            >
+                                <ArrowLeftRight className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                <span className="truncate">Cambiar Función</span>
+                            </button>
+                        )}
+                    </div>
 
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm max-w-lg">
-                        Estás asignado como <strong className="text-indigo-600 dark:text-indigo-400 font-semibold">{activeRol.rol_texto}</strong>. Gestioná tu jornada actual en el evento con las herramientas contextuales a continuación.
-                    </p>
                 </div>
-
-                {/* Switcher de Roles (solo visible si tiene múltiples rolesEvento) */}
-                {user.rolesEvento && user.rolesEvento.length > 1 && (
-                    <button
-                        onClick={() => router.push('/staff/seleccionar-funcion')}
-                        className="flex items-center justify-center gap-2.5 px-5 py-3.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 text-neutral-700 dark:text-neutral-200 font-bold rounded-2xl transition-all shadow-sm group active:scale-[0.98] shrink-0 border border-neutral-200/30 dark:border-neutral-700/30"
-                    >
-                        <ArrowLeftRight className="w-4 h-4 text-indigo-500 group-hover:rotate-180 transition-transform duration-500" />
-                        <span>Cambiar Función</span>
-                    </button>
-                )}
             </div>
 
             {/* ========================================================================= */}
             {/* CASO DE USO 1: PUERTA / RECEPTOR (STAFF_RECEPTOR)                        */}
             {/* ========================================================================= */}
-            {currentRolCode.includes('RECEPTOR') && (
+            {(currentRolCode.includes('RECEPTOR') || currentRolCode.includes('CHECKIN')) && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     {/* Botones de acción rápida en columna lateral */}
@@ -786,7 +1068,7 @@ export default function StaffHomePage() {
             {/* ========================================================================= */}
             {/* CASO DE USO 2: COCINA / COMEDOR (STAFF_COCINA)                           */}
             {/* ========================================================================= */}
-            {currentRolCode.includes('COCINA') && (
+            {(currentRolCode.includes('COCINA') || currentRolCode.includes('COMEDOR')) && (
                 <div className="space-y-6">
 
                     {/* Grilla superior de estadisticas de raciones */}
@@ -938,7 +1220,7 @@ export default function StaffHomePage() {
             {/* ========================================================================= */}
             {/* CASO DE USO 3: BENEFICIOS / BAR (STAFF_OPERADOR)                        */}
             {/* ========================================================================= */}
-            {currentRolCode.includes('OPERADOR') && (
+            {(currentRolCode.includes('OPERADOR') || currentRolCode.includes('BENEFICIOS') || currentRolCode.includes('BARTENDER') || currentRolCode.includes('BAR')) && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     {/* Botones de acción rápida en columna lateral */}
@@ -1083,6 +1365,382 @@ export default function StaffHomePage() {
                                     ))}
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* CASO DE USO 4: SALUD / PANEL MEDICO (STAFF_SALUD)                         */}
+            {/* ========================================================================= */}
+            {(currentRolCode.includes('SALUD') || currentRolCode.includes('MEDICO') || currentRolCode.includes('ENFERMERO')) && (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                    
+                    {/* Barra de Navegación de Pestañas (Tabs) */}
+                    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-3 shadow-md flex gap-2 flex-wrap">
+                        <button
+                            onClick={() => setSaludTab('PANEL')}
+                            className={`flex-1 min-w-[120px] py-3 px-4 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${saludTab === 'PANEL'
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
+                                : 'bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-950 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
+                            }`}
+                        >
+                            <ShieldAlert className="w-4 h-4" />
+                            <span>Panel de Alertas</span>
+                        </button>
+                        <button
+                            onClick={() => setSaludTab('FICHAS')}
+                            className={`flex-1 min-w-[120px] py-3 px-4 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${saludTab === 'FICHAS'
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
+                                : 'bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-950 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
+                            }`}
+                        >
+                            <FileText className="w-4 h-4" />
+                            <span>Fichas Médicas</span>
+                        </button>
+                        <button
+                            onClick={() => setSaludTab('ACCIONES')}
+                            className={`flex-1 min-w-[120px] py-3 px-4 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${saludTab === 'ACCIONES'
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
+                                : 'bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-950 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
+                            }`}
+                        >
+                            <Activity className="w-4 h-4" />
+                            <span>Acciones & Incidentes</span>
+                        </button>
+                    </div>
+
+                    {/* Filtro de Búsqueda y Botón Primario */}
+                    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="relative flex-1">
+                            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="text"
+                                value={searchSalud}
+                                onChange={e => setSearchSalud(e.target.value)}
+                                placeholder={saludTab === 'ACCIONES' ? "Buscar incidente o tipo..." : "Buscar por nombre del participante..."}
+                                className="w-full pl-10 pr-4 py-3 text-xs bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-semibold"
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                setSelectedInvitadoId(null);
+                                setSelectedInvitadoNombre('');
+                                setRegistroAccionOpen(true);
+                            }}
+                            className="flex items-center justify-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Registrar Atención Médica</span>
+                        </button>
+                    </div>
+
+                    {/* Contenido según Pestaña (Tab) Activa */}
+                    {saludTab === 'PANEL' && (
+                        <div className="space-y-4">
+                            {saludPanel.filter(p => p.participante.toLowerCase().includes(searchSalud.toLowerCase())).length === 0 ? (
+                                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-8 text-center text-neutral-500 text-xs font-semibold">
+                                    No se encontraron alertas o participantes médicos coincidentes.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {saludPanel
+                                        .filter(p => p.participante.toLowerCase().includes(searchSalud.toLowerCase()))
+                                        .map(p => (
+                                            <div
+                                                key={p.id_invitado}
+                                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4 hover:border-red-500/30 transition-all"
+                                            >
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <h3 className="font-extrabold text-sm text-neutral-900 dark:text-white">
+                                                        {p.participante}
+                                                    </h3>
+                                                    {p.alerta_visual && (
+                                                        <span className="bg-red-500/10 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1">
+                                                            <ShieldAlert className="w-3 h-3" /> Crítico
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400">
+                                                    {p.tiene_problema_medico && (
+                                                        <div className="bg-amber-500/5 border border-amber-500/10 p-2.5 rounded-xl">
+                                                            <span className="font-bold text-amber-600 dark:text-amber-400 block mb-0.5">Diagnóstico / Afección:</span>
+                                                            <p className="font-medium text-neutral-800 dark:text-neutral-300">{p.problema_medico_detail || p.problema_medico_detalle}</p>
+                                                        </div>
+                                                    )}
+
+                                                    {p.tiene_alergias_no_alimentarias && (
+                                                        <div className="bg-rose-500/5 border border-rose-500/10 p-2.5 rounded-xl">
+                                                            <span className="font-bold text-rose-600 dark:text-rose-400 block mb-0.5">Alergia (No Alimentaria):</span>
+                                                            <p className="font-medium text-neutral-800 dark:text-neutral-300">{p.alergias_no_alimentarias_detalle}</p>
+                                                        </div>
+                                                    )}
+
+                                                    {p.tiene_necesidad_especial && (
+                                                        <div className="bg-indigo-500/5 border border-indigo-500/10 p-2.5 rounded-xl">
+                                                            <span className="font-bold text-indigo-600 dark:text-indigo-400 block mb-0.5">Necesidad Especial:</span>
+                                                            <p className="font-medium text-neutral-800 dark:text-neutral-300">{p.necesidad_especial_detalle}</p>
+                                                        </div>
+                                                    )}
+
+                                                    {p.tiene_restricciones_alimentarias && p.restricciones_alimentarias?.length > 0 && (
+                                                        <div className="bg-orange-500/5 border border-orange-500/10 p-2.5 rounded-xl">
+                                                            <span className="font-bold text-orange-600 dark:text-orange-400 block mb-1">Restricciones Alimentarias:</span>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {p.restricciones_alimentarias.map((r: string, idx: number) => (
+                                                                    <span key={idx} className="bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded text-[10px] font-bold">
+                                                                        {r}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {p.tiene_medicacion && p.medicaciones?.length > 0 && (
+                                                        <div className="bg-blue-500/5 border border-blue-500/10 p-2.5 rounded-xl">
+                                                            <span className="font-bold text-blue-600 dark:text-blue-400 block mb-1">Medicamentos Suministrados:</span>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {p.medicaciones.map((m: string, idx: number) => (
+                                                                    <span key={idx} className="bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold">
+                                                                        {m}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {(p.contacto_emergencia || p.telefono_emergencia) && (
+                                                        <div className="flex items-center justify-between p-2.5 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/50 dark:border-neutral-800/50 rounded-xl">
+                                                            <div>
+                                                                <span className="text-[10px] uppercase font-bold text-neutral-400 block">Contacto de Emergencia</span>
+                                                                <span className="font-bold text-neutral-800 dark:text-neutral-200">{p.contacto_emergencia || 'Familiar'}</span>
+                                                            </div>
+                                                            <a href={`tel:${p.telefono_emergencia}`} className="p-2 bg-neutral-200 dark:bg-neutral-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 text-neutral-600 dark:text-neutral-300 rounded-xl transition-all flex items-center justify-center gap-1 font-bold text-[10px] active:scale-95 pr-3">
+                                                                <PhoneCall className="w-3.5 h-3.5" /> Llamar
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedInvitadoId(p.id_invitado);
+                                                        setSelectedInvitadoNombre(p.participante);
+                                                        setRegistroAccionOpen(true);
+                                                    }}
+                                                    className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 text-white text-xs font-bold rounded-xl transition-all active:scale-[0.98]"
+                                                >
+                                                    Registrar Nueva Atención
+                                                </button>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {saludTab === 'FICHAS' && (
+                        <div className="space-y-4">
+                            {saludFichas.filter(f => f.participante.toLowerCase().includes(searchSalud.toLowerCase())).length === 0 ? (
+                                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-8 text-center text-neutral-500 text-xs font-semibold">
+                                    No se encontraron fichas médicas para los participantes buscados.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {saludFichas
+                                        .filter(f => f.participante.toLowerCase().includes(searchSalud.toLowerCase()))
+                                        .map(f => (
+                                            <div
+                                                key={f.id_invitado}
+                                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4"
+                                            >
+                                                <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
+                                                    <div>
+                                                        <h3 className="font-extrabold text-sm text-neutral-900 dark:text-white">
+                                                            {f.participante}
+                                                        </h3>
+                                                        <p className="text-[10px] text-neutral-400 font-semibold">
+                                                            Responsable: {f.responsable || 'Familia'}
+                                                        </p>
+                                                    </div>
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black ${f.autoriza_emergencia_medica 
+                                                        ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' 
+                                                        : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+                                                    }`}>
+                                                        {f.autoriza_emergencia_medica ? 'AUTORIZADO URGENCIA' : 'NO AUTORIZADO URGENCIA'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="space-y-2 text-xs">
+                                                    <div className="flex justify-between items-center bg-neutral-50 dark:bg-neutral-950 p-2.5 rounded-xl border border-neutral-200/50 dark:border-neutral-800/50">
+                                                        <span className="font-bold text-neutral-400 uppercase text-[9px]">Obra Social / Cobertura:</span>
+                                                        <span className="font-bold text-neutral-800 dark:text-neutral-200">{f.cobertura_medica_nombre || 'Particular / Ninguna'}</span>
+                                                    </div>
+
+                                                    <div className="bg-neutral-50 dark:bg-neutral-950 p-3 rounded-xl border border-neutral-200/50 dark:border-neutral-800/50 space-y-1.5">
+                                                        <span className="font-bold text-neutral-400 uppercase text-[9px] block">Detalles Clínicos declarados:</span>
+                                                        <div className="flex flex-wrap gap-2 text-[10px] font-bold">
+                                                            <span className={`px-2 py-0.5 rounded-md ${f.tiene_problema_medico ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500'}`}>
+                                                                Tratamiento Médico
+                                                            </span>
+                                                            <span className={`px-2 py-0.5 rounded-md ${f.tiene_alergias_no_alimentarias ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500'}`}>
+                                                                Alergias Clínicas
+                                                            </span>
+                                                            <span className={`px-2 py-0.5 rounded-md ${f.tiene_necesidad_especial ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500'}`}>
+                                                                Necesidades Especiales
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedInvitadoId(f.id_invitado);
+                                                        setSelectedInvitadoNombre(f.participante);
+                                                        setRegistroAccionOpen(true);
+                                                    }}
+                                                    className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 text-xs font-bold rounded-xl transition-all active:scale-[0.98]"
+                                                >
+                                                    Registrar Novedad Clínica
+                                                </button>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {saludTab === 'ACCIONES' && (
+                        <div className="space-y-4">
+                            {saludAcciones.filter(a => {
+                                const term = searchSalud.toLowerCase();
+                                return a.descripcion.toLowerCase().includes(term) || a.tipo_accion.toLowerCase().includes(term);
+                            }).length === 0 ? (
+                                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-8 text-center text-neutral-500 text-xs font-semibold">
+                                    No se registran incidentes médicos ni acciones en el timeline actualmente.
+                                </div>
+                            ) : (
+                                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-md space-y-6">
+                                    <div className="relative pl-6 border-l border-neutral-200 dark:border-neutral-800 space-y-6">
+                                        {saludAcciones
+                                            .filter(a => {
+                                                const term = searchSalud.toLowerCase();
+                                                return a.descripcion.toLowerCase().includes(term) || a.tipo_accion.toLowerCase().includes(term);
+                                            })
+                                            .map((a, index) => {
+                                                // Intentar buscar el nombre del participante asociado a la acción
+                                                const guest = saludPanel.find(p => p.id_invitado === a.id_participante) || 
+                                                              saludFichas.find(f => f.id_invitado === a.id_participante);
+                                                const guestName = guest?.participante || `Participante #${a.id_participante}`;
+
+                                                return (
+                                                    <div key={index} className="relative group">
+                                                        {/* Dot timeline */}
+                                                        <span className="absolute -left-[31px] top-1.5 w-4 h-4 bg-red-600 border-4 border-white dark:border-neutral-900 rounded-full group-hover:scale-110 transition-transform shadow" />
+
+                                                        <div className="space-y-2">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <span className="font-bold text-neutral-900 dark:text-white text-sm">
+                                                                        {guestName}
+                                                                    </span>
+                                                                    <span className="bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                                                                        {a.tipo_accion}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="text-[10px] text-neutral-400 font-semibold flex items-center gap-1">
+                                                                    <Clock className="w-3.5 h-3.5" />
+                                                                    {new Date(a.fecha_hora).toLocaleString('es-AR', {
+                                                                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                                                                    })} hs
+                                                                </span>
+                                                            </div>
+
+                                                            <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-2xl bg-neutral-50 dark:bg-neutral-950 p-3 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+                                                                {a.descripcion}
+                                                            </p>
+
+                                                            <div className="flex items-center gap-2 flex-wrap text-[9px] font-bold">
+                                                                {a.requerio_contacto_familia && (
+                                                                    <span className={`px-2 py-0.5 rounded-full ${a.contacto_realizado 
+                                                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' 
+                                                                        : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
+                                                                    }`}>
+                                                                        {a.contacto_realizado ? 'FAMILIA NOTIFICADA' : 'FAMILIA POR CONTACTAR'}
+                                                                    </span>
+                                                                )}
+                                                                {a.requiere_seguimiento && (
+                                                                    <span className="bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 px-2 py-0.5 rounded-full uppercase">
+                                                                        Requiere Seguimiento Clínico
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* CASO DE USO 5: BANNERS DE CONSTRUCCIÓN PARA ROL MÚSICA / MESAS / OPERACIÓN */}
+            {/* ========================================================================= */}
+            {(currentRolCode.includes('MUSICA') || currentRolCode.includes('DJ') || currentRolCode.includes('PLAYLIST')) && (
+                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl p-10 shadow-xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-300 relative overflow-hidden min-h-[400px]">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/10 blur-[60px] rounded-full pointer-events-none" />
+                    <div className="w-20 h-20 bg-rose-500/10 dark:bg-rose-500/20 text-rose-500 rounded-3xl flex items-center justify-center shadow-lg relative animate-bounce animate-duration-1000 flex items-center justify-center">
+                        <Music className="w-10 h-10 text-rose-500" />
+                    </div>
+                    <div className="space-y-2 max-w-md">
+                        <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                            Pestaña Música en Desarrollo
+                        </span>
+                        <h2 className="text-2xl font-black text-neutral-900 dark:text-white">Sección Música y Playlist</h2>
+                        <p className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold leading-relaxed">
+                            Actualmente nos encontramos construyendo este módulo. Muy pronto podrás gestionar las sugerencias de la audiencia, la playlist en tiempo real del DJ y el control de pistas desde este panel de staff.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {(currentRolCode.includes('MESAS') || currentRolCode.includes('SERVICIO') || currentRolCode.includes('MOZO')) && (
+                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl p-10 shadow-xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-300 relative overflow-hidden min-h-[400px]">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
+                    <div className="w-20 h-20 bg-purple-500/10 dark:bg-purple-500/20 text-purple-500 rounded-3xl flex items-center justify-center shadow-lg relative animate-pulse flex items-center justify-center">
+                        <Wine className="w-10 h-10 text-purple-500" />
+                    </div>
+                    <div className="space-y-2 max-w-md">
+                        <span className="bg-purple-500/10 text-purple-600 dark:text-purple-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                            Pestaña Mesas en Desarrollo
+                        </span>
+                        <h2 className="text-2xl font-black text-neutral-900 dark:text-white">Módulo de Mesas y Servicio</h2>
+                        <p className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold leading-relaxed">
+                            Nos encontramos trabajando en esta sección. Muy pronto tendrás a disposición la grilla interactiva de mesas, la asignación de ubicaciones rsvp y el canal directo de solicitudes de servicio de comedor.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {(currentRolCode.includes('OPERACION_GENERAL') || currentRolCode.includes('OPERACION')) && (
+                <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl p-10 shadow-xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-300 relative overflow-hidden min-h-[400px]">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none" />
+                    <div className="w-20 h-20 bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-500 rounded-3xl flex items-center justify-center shadow-lg relative flex items-center justify-center">
+                        <Sliders className="w-10 h-10 text-cyan-500" />
+                    </div>
+                    <div className="space-y-2 max-w-md">
+                        <span className="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                            Operación General en Desarrollo
+                        </span>
+                        <h2 className="text-2xl font-black text-neutral-900 dark:text-white">Panel de Operación General</h2>
+                        <p className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold leading-relaxed">
+                            Esta pantalla se encuentra en etapa de diseño. El panel principal integrará accesos contextuales simplificados y tableros unificados para coordinadores de eventos generales próximamente.
+                        </p>
                     </div>
                 </div>
             )}

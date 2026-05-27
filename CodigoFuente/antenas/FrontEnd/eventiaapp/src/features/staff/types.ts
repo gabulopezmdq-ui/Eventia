@@ -89,6 +89,9 @@ export interface StaffJoinResponse {
         id_evento: number;
         tipo_operacion: string;
         nombre_evento: string;
+        fecha_inicio_operativa?: string | null;
+        fecha_fin_operativa?: string | null;
+        fecha_inicio?: string | null;
         roles_evento: {
             id_evento_staff: number;
             id_rol: number;
@@ -134,6 +137,7 @@ export interface StaffAuthUser {
     unidades: StaffUnidad[];
     token: string;
     expiresAt: string;
+    eventosDisponibles?: StaffJoinResponse['eventos_disponibles'];
     rolesEvento?: {
         id_rol: number;
         rol_codigo: string;
