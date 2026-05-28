@@ -18,7 +18,7 @@ export default function AsistenciaTab({ idEvento }: { idEvento: number }) {
                 const data = await getAsistencia(idEvento);
                 // Sort by date descending so latest check-ins appear first
                 const sortedData = data.sort(
-                    (a, b) => new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime()
+                    (a, b) => new Date(b.fecha || b.fecha_hora || '').getTime() - new Date(a.fecha || a.fecha_hora || '').getTime()
                 );
                 setAsistencias(sortedData);
                 setFilteredAsistencias(sortedData);
@@ -134,7 +134,7 @@ export default function AsistenciaTab({ idEvento }: { idEvento: number }) {
                                         className="hover:bg-white/[0.02] transition-colors"
                                     >
                                         <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-muted">
-                                            {formatFecha(item.fecha_hora)}
+                                            {formatFecha(item.fecha || item.fecha_hora || '')}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
                                             {item.nombre} {item.apellido}
