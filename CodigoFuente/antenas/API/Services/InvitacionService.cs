@@ -166,7 +166,7 @@ namespace API.Services
                 {
                     // Es una persona nueva (se está agregando ahora)
                     // Verificar cupo total disponible: integrantes actuales vs max_personas_total
-                    var ocupacionActual = grupo.integrantes.Count;
+                    var ocupacionActual = grupo.integrantes.Distinct().Count();
                     var maxTotal = grupo.max_personas_total;
                     if (ocupacionActual >= maxTotal)
                         throw new Exception($"No hay cupos disponibles en el grupo (máximo: {maxTotal})");
