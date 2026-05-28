@@ -1046,8 +1046,9 @@ namespace API.Services
 
                         var adultosExtra = item.CantidadAdultosInvitadosGrupo;
 
-                        if (item.EsTitularGrupo && adultosExtra > 0)
-                            adultosExtra = adultosExtra - 1;
+                        // Restar al titular (normalmente adulto) del conteo de "extras"
+                        if (adultosExtra > 0)
+                            adultosExtra--;
 
                         var partes = new List<string>();
 
