@@ -55,6 +55,8 @@ namespace API.Services
 
             var ahora = DateTimeOffset.UtcNow;
 
+            var matchedIds = new HashSet<long>();
+
             // 1. Procesar cada persona enviada en la confirmación
             foreach (var persona in datos.Personas)
             {
@@ -104,14 +106,29 @@ namespace API.Services
                         // Sin email: buscar por nombre+apellido en la colección en memoria
                         integranteExistente = grupo.integrantes
                             .FirstOrDefault(i => i.invitado != null &&
-                                string.Equals(i.invitado.nombre, persona.Nombre, StringComparison.OrdinalIgnoreCase) &&
-                                string.Equals(i.invitado.apellido, persona.Apellido, StringComparison.OrdinalIgnoreCase));
+                                !matchedIds.Contains(i.id_invitado) &&
+                                string.Equals(i.invitado.nombre?.Trim(), persona.Nombre?.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                                string.Equals(i.invitado.apellido?.Trim(), persona.Apellido?.Trim(), StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    // Si todavía no se encontró, intentar asignar a un placeholder pendiente disponible
+                    if (integranteExistente == null)
+                    {
+                        integranteExistente = grupo.integrantes
+                            .FirstOrDefault(i => 
+                                i.invitado != null && 
+                                !matchedIds.Contains(i.id_invitado) &&
+                                i.rol_evento == (persona.RolEvento ?? "A") &&
+                                i.asiste == "P" &&
+                                !datos.Personas.Any(dp => dp.IdInvitado == i.id_invitado));
                     }
                 }
 
 
                 if (integranteExistente != null)
                 {
+                    matchedIds.Add(integranteExistente.id_invitado);
+
                     // Actualizar persona conocida
                     integranteExistente.asiste = persona.Asiste ? "Y" : "N";
                     integranteExistente.fecha_respuesta = ahora;
@@ -1059,7 +1076,7 @@ namespace API.Services
                             partes.Add(item.CantidadMenoresInvitadosGrupo == 1 ? "+1 menor" : "+" + item.CantidadMenoresInvitadosGrupo + " menores");
 
                         item.GrupoResumenTexto = partes.Any()
-                            ? nombreBase + " (" + string.Join(" ", partes) + ")"
+                            ? nombreBase + " (titular " + string.Join(" ", partes) + ")"
                             : nombreBase;
                     }
                 }
@@ -1282,7 +1299,7 @@ namespace API.Services
 
                     var grupoResumenTexto =
                         partes.Any()
-                            ? nombreBase + " (" + string.Join(" ", partes) + ")"
+                            ? nombreBase + " (titular " + string.Join(" ", partes) + ")"
                             : nombreBase;
 
                     // --------------------------
