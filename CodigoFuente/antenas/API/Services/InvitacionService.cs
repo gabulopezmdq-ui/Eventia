@@ -221,6 +221,13 @@ namespace API.Services
                     
                     // IMPORTANTE: agregar a la colección para que el cálculo de estados lo tome en cuenta
                     grupo.integrantes.Add(nuevoIntegrante);
+
+                    // Decrementar el cupo "sin nombre" correspondiente para que el conteo
+                    // no se duplique (adultosReales + cant_sin_nombre contaría doble)
+                    if (persona.RolEvento == "A" && (grupo.cant_adultos_sin_nombre ?? 0) > 0)
+                        grupo.cant_adultos_sin_nombre--;
+                    else if (persona.RolEvento == "N" && (grupo.cant_menores_sin_nombre ?? 0) > 0)
+                        grupo.cant_menores_sin_nombre--;
                 }
             }
 
