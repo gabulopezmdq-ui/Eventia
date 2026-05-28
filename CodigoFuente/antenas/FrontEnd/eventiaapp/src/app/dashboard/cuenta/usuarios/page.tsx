@@ -26,7 +26,8 @@ import {
     invitarUsuario, 
     cambiarRolUsuario, 
     setActivoUsuario, 
-    CuentaUsuario 
+    CuentaUsuario,
+    getCuentaInvitacionesPendientes
 } from '@/src/features/cuenta/cuentaUsuarios.service';
 
 export default function CuentaUsuariosPage() {
@@ -37,6 +38,7 @@ export default function CuentaUsuariosPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING'>('ALL');
     
     // Modals states
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -67,8 +69,17 @@ export default function CuentaUsuariosPage() {
         setLoading(true);
         setError(null);
         try {
-            const data = await getCuentaUsuarios(cuenta.id_cuenta);
-            setUsuarios(data);
+            const isAdmin = cuenta?.rol_cuenta === 'ACCOUNT_ADMIN';
+            const [usersData, invitesData] = await Promise.all([
+                getCuentaUsuarios(cuenta.id_cuenta),
+                isAdmin
+                    ? getCuentaInvitacionesPendientes(cuenta.id_cuenta).catch(err => {
+                          console.error('Error fetching pending invitations:', err);
+                          return [];
+                      })
+                    : Promise.resolve([])
+            ]);
+            setUsuarios([...usersData, ...invitesData]);
         } catch (err: any) {
             console.error('Error fetching usuarios:', err);
             setError(err.message || 'No se pudieron cargar los usuarios de la cuenta.');
@@ -182,10 +193,22 @@ export default function CuentaUsuariosPage() {
 
     // Filtered users
     const filteredUsuarios = usuarios.filter(user => {
+        // 1. Text search filter
         const fullName = `${user.nombre || ''} ${user.apellido || ''}`.toLowerCase();
         const email = user.email.toLowerCase();
         const query = searchQuery.toLowerCase();
-        return fullName.includes(query) || email.includes(query);
+        const matchesSearch = fullName.includes(query) || email.includes(query);
+        if (!matchesSearch) return false;
+
+        // 2. Status filter
+        const isPending = !user.id_usuario;
+        if (statusFilter === 'ACTIVE') {
+            return !isPending && user.activo;
+        }
+        if (statusFilter === 'PENDING') {
+            return isPending;
+        }
+        return true; // 'ALL'
     });
 
     // Stats calculations
@@ -229,13 +252,15 @@ export default function CuentaUsuariosPage() {
                     </p>
                 </div>
                 
-                <button
-                    onClick={() => setShowInviteModal(true)}
-                    className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-600/10 text-white font-semibold text-sm transition-all shrink-0 active:scale-95 duration-150 cursor-pointer"
-                >
-                    <UserPlus className="w-4 h-4" />
-                    Invitar Usuario
-                </button>
+                {cuenta?.rol_cuenta === 'ACCOUNT_ADMIN' && (
+                    <button
+                        onClick={() => setShowInviteModal(true)}
+                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-600/10 text-white font-semibold text-sm transition-all shrink-0 active:scale-95 duration-150 cursor-pointer"
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Invitar Usuario
+                    </button>
+                )}
             </div>
 
             {/* Toast Notification */}
@@ -283,22 +308,45 @@ export default function CuentaUsuariosPage() {
             <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-md relative">
                 
                 {/* Search / Filters Bar */}
-                <div className="p-5 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="relative w-full sm:max-w-xs">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-500" />
-                        <input
-                            type="text"
-                            placeholder="Buscar por nombre o email..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2.5 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-                        />
+                <div className="p-5 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <div className="relative w-full sm:max-w-xs">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-500" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por nombre o email..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2.5 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                            />
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-start">
+                            {[
+                                { value: 'ALL', label: 'Todos' },
+                                { value: 'ACTIVE', label: 'Activos' },
+                                { value: 'PENDING', label: 'Pendientes' },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.value}
+                                    type="button"
+                                    onClick={() => setStatusFilter(tab.value as any)}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition duration-200 cursor-pointer ${
+                                        statusFilter === tab.value
+                                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
+                                            : 'bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-950 dark:hover:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <button 
                         onClick={fetchUsuarios}
                         disabled={loading}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition disabled:opacity-50 shrink-0 self-end sm:self-auto bg-neutral-50 dark:bg-neutral-950 px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition disabled:opacity-50 shrink-0 self-end md:self-auto bg-neutral-50 dark:bg-neutral-950 px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-900 cursor-pointer"
                     >
                         <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                         Sincronizar
@@ -392,14 +440,14 @@ export default function CuentaUsuariosPage() {
                                             {/* Rol */}
                                             <td className="py-4.5 px-6 whitespace-nowrap">
                                                 {user.rol_codigo === 'ACCOUNT_ADMIN' ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-semibold">
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-purple-650 dark:text-purple-400 text-xs font-semibold">
                                                         <Shield className="w-3.5 h-3.5" />
-                                                        Administrador
+                                                        {user.rol_codigo.replace('_', ' ')}
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-650 dark:text-indigo-400 text-xs font-semibold">
                                                         <User className="w-3.5 h-3.5" />
-                                                        Colaborador
+                                                        {user.rol_codigo.replace('_', ' ')}
                                                     </span>
                                                 )}
                                             </td>
@@ -442,6 +490,18 @@ export default function CuentaUsuariosPage() {
                                             {/* Acciones */}
                                             <td className="py-4.5 px-6 whitespace-nowrap text-right text-xs">
                                                 <div className="flex items-center justify-end gap-2.5">
+                                                    {user.url_invitacion && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setGeneratedLink(user.url_invitacion!);
+                                                                setShowSuccessModal(true);
+                                                                showToast('Enlace de invitación recuperado', 'success');
+                                                            }}
+                                                            className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-650 dark:text-indigo-400 font-semibold border border-indigo-200/50 dark:border-indigo-500/20 transition cursor-pointer"
+                                                        >
+                                                            Ver Link
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => {
                                                             setSelectedUser(user);

@@ -8,6 +8,10 @@ export interface CuentaUsuario {
     rol_codigo: 'ACCOUNT_ADMIN' | 'ACCOUNT_STAFF';
     activo: boolean;
     fecha_alta: string;
+    // Campos opcionales para invitaciones pendientes
+    is_invitacion?: boolean;
+    token?: string;
+    url_invitacion?: string;
 }
 
 export interface InvitarUsuarioInput {
@@ -37,12 +41,12 @@ export async function getCuentaUsuarios(idCuenta: number): Promise<CuentaUsuario
     const data = await res.json();
     return data.map((item: any) => ({
         id_cuenta_usuario: item.id_cuenta_usuario || item.idCuentaUsuario,
-        id_cuenta: item.id_cuenta || item.idCuenta,
+        id_cuenta: item.id_cuenta || item.idCuenta || idCuenta,
         id_usuario: item.id_usuario ?? item.idUsuario ?? null,
         email: item.email ?? '',
         nombre: item.nombre ?? null,
         apellido: item.apellido ?? null,
-        rol_codigo: item.rol_codigo ?? item.rolCodigo ?? 'ACCOUNT_STAFF',
+        rol_codigo: item.rol_cuenta ?? item.rol_codigo ?? item.rolCodigo ?? 'ACCOUNT_STAFF',
         activo: item.activo ?? item.es_activo ?? true,
         fecha_alta: item.fecha_alta ?? item.fechaAlta ?? '',
     }));
@@ -93,4 +97,31 @@ export async function setActivoUsuario(idCuenta: number, idCuentaUsuario: number
         throw new Error(err.message || 'Error al modificar el estado de activación');
     }
     return res.json();
+}
+
+/**
+ * Obtener listado de invitaciones pendientes de la cuenta activa.
+ */
+export async function getCuentaInvitacionesPendientes(idCuenta: number): Promise<CuentaUsuario[]> {
+    const res = await fetch(`/api/cuenta_usuarios/MisInvitacionesPendientes?idCuenta=${idCuenta}`);
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al obtener las invitaciones pendientes');
+    }
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : [];
+    return list.map((item: any) => ({
+        id_cuenta_usuario: item.id_cuenta_usuario_invitacion,
+        id_cuenta: idCuenta,
+        id_usuario: null,
+        email: item.email_invitado ?? '',
+        nombre: null,
+        apellido: null,
+        rol_codigo: item.rol_codigo ?? 'ACCOUNT_STAFF',
+        activo: false,
+        fecha_alta: item.fecha_alta ?? '',
+        is_invitacion: true,
+        token: item.token,
+        url_invitacion: item.url_invitacion,
+    }));
 }
