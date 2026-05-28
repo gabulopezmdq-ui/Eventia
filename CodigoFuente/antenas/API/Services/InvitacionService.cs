@@ -57,9 +57,12 @@ namespace API.Services
 
             var matchedIds = new HashSet<long>();
 
-            // 1. Procesar cada persona enviada en la confirmación
-            foreach (var persona in datos.Personas)
+            await using var tx = await _context.Database.BeginTransactionAsync();
+            try
             {
+                // 1. Procesar cada persona enviada en la confirmación
+                foreach (var persona in datos.Personas)
+                {
 
                 // Buscar si ya existe como integrante
                 // Si IdInvitado > 0, buscar por ID; si es 0 (persona nueva sin ID asignado),
@@ -132,6 +135,8 @@ namespace API.Services
                     // Actualizar persona conocida
                     integranteExistente.asiste = persona.Asiste ? "Y" : "N";
                     integranteExistente.fecha_respuesta = ahora;
+                    if (persona.RolEvento != null)
+                        integranteExistente.rol_evento = persona.RolEvento;
 
                     // Actualizar datos del invitado (email, celular, mensaje personal)
                     var invitado = integranteExistente.invitado;
@@ -262,6 +267,13 @@ namespace API.Services
             grupo.fecha_modif = ahora;
 
             await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
 
         private async Task GuardarRestriccionesDetalladasAsync(long idIntegrante, List<RestriccionSeleccionadaDTO> restricciones)
