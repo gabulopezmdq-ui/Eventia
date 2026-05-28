@@ -58,6 +58,7 @@ function RegisterForm() {
         rol_codigo: string;
     } | null>(null);
     const [inviteError, setInviteError] = useState<string | null>(null);
+    const [inviteToken, setInviteToken] = useState<string | null>(null);
 
     const [form, setForm] = useState({
         email: '',
@@ -71,6 +72,8 @@ function RegisterForm() {
         const storedToken = sessionStorage.getItem('eventia_invite_token');
         const token = queryToken || storedToken;
         if (!token) return;
+
+        setInviteToken(token);
 
         const validate = async () => {
             setInviteLoading(true);
@@ -396,7 +399,7 @@ function RegisterForm() {
             <p className="text-center text-neutral-500 text-sm mt-6">
                 ¿Ya tenés cuenta?{' '}
                 <Link
-                    href="/login"
+                    href={inviteToken ? `/login?invite=account&token=${inviteToken}` : '/login'}
                     className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
                 >
                     Iniciá sesión

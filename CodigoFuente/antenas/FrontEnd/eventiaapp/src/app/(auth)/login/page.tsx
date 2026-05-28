@@ -197,7 +197,11 @@ function LoginForm() {
 
             await proceedRedirection();
         } catch (err) {
-            setError('Email o contraseña incorrectos');
+            if (inviteData) {
+                setError('Email o contraseña incorrectos. Si todavía no creaste tu cuenta, por favor registrate primero usando el botón de arriba.');
+            } else {
+                setError('Email o contraseña incorrectos');
+            }
             setLoading(false);
         }
     };
@@ -225,10 +229,22 @@ function LoginForm() {
             {inviteData && !inviteLoading && (
                 <div className="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs leading-relaxed flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                     <Sparkles className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                    <div>
+                    <div className="w-full">
                         <p className="font-bold text-white mb-1">¡Tenés una invitación activa!</p>
                         <p>Te invitaron a sumarte a la cuenta <strong className="text-indigo-300 font-semibold">{inviteData.nombre_cuenta}</strong>.</p>
                         <p className="mt-1 text-[11px] text-neutral-400">Ingresá con el email <span className="underline decoration-indigo-400/50">{inviteData.email_invitado}</span> para aceptar.</p>
+                        
+                        <div className="mt-3 pt-2.5 border-t border-indigo-500/10 flex flex-col gap-1.5">
+                            <p className="font-bold text-indigo-300">¿Es tu primera vez en Eventia?</p>
+                            <p className="text-neutral-400 text-[11px]">Si aún no estás registrado o no tenés contraseña, primero debes crear tu cuenta.</p>
+                            <Link 
+                                href={`/register?invite=account&token=${inviteToken}`}
+                                className="inline-flex items-center gap-1.5 text-xs text-white bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg border border-indigo-500/30 transition w-fit mt-1 cursor-pointer font-bold"
+                            >
+                                Registrarme ahora
+                                <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             )}
@@ -356,7 +372,7 @@ function LoginForm() {
             <p className="text-center text-neutral-500 text-sm mt-6">
                 ¿No tenés cuenta?{' '}
                 <Link
-                    href="/register"
+                    href={inviteToken ? `/register?invite=account&token=${inviteToken}` : '/register'}
                     className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
                 >
                     Registrate gratis
