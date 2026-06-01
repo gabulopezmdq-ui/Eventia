@@ -105,8 +105,8 @@ export default function RsvpPage({
         setErrorAuthMsg(null);
         try {
             await createAutorizacionRsvp(token, {
-                nombreCompleto: authNombre.trim(),
-                celular: authCelular.trim(),
+                nombreAutorizado: authNombre.trim(),
+                telefonoAutorizado: authCelular.trim(),
                 relacion: authRelacion.trim()
             });
             setIsAuthModalOpen(false);
@@ -585,55 +585,63 @@ export default function RsvpPage({
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {autorizados.map((auth) => (
-                                            <div
-                                                key={auth.id_autorizacion}
-                                                className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md flex flex-col justify-between gap-5 transition-all duration-300 hover:border-white/15"
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                                                            <User className="w-4 h-4" />
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-bold text-white text-base leading-tight">{auth.nombre_autorizado}</h4>
-                                                            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 mt-1 border border-emerald-500/20">
-                                                                {auth.relacion}
-                                                            </span>
-                                                            <p className="text-xs text-muted flex items-center gap-1 mt-2 font-mono">
-                                                                <Phone className="w-3.5 h-3.5 text-muted/70" /> {auth.telefono_autorizado}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEliminarAutorizado(auth.id_autorizacion, auth.nombre_autorizado)}
-                                                        className="p-2 rounded-lg bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/10 cursor-pointer"
-                                                        title="Revocar autorización"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                        {autorizados.map((auth) => {
+                                            const idAutorizacion = auth.idAutorizacion ?? auth.id_autorizacion;
+                                            const nombreAutorizado = auth.nombreAutorizado ?? auth.nombre_autorizado;
+                                            const telefonoAutorizado = auth.telefonoAutorizado ?? auth.telefono_autorizado;
+                                            const relacion = auth.relacion;
+                                            const qrToken = auth.qrToken ?? auth.qr_token;
 
-                                                <div className="flex flex-col items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 gap-3">
-                                                    <img
-                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(auth.qr_token)}`}
-                                                        alt={`QR para ${auth.nombre_autorizado}`}
-                                                        width={140}
-                                                        height={140}
-                                                        className="rounded-lg border border-white/5 bg-white p-1"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDownloadQr(auth.qr_token, auth.nombre_autorizado)}
-                                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-black hover:bg-white/90 font-bold text-xs shadow-md transition-all cursor-pointer"
-                                                    >
-                                                        <Download className="w-3.5 h-3.5" />
-                                                        Descargar QR Autorizado
-                                                    </button>
+                                            return (
+                                                <div
+                                                    key={idAutorizacion}
+                                                    className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md flex flex-col justify-between gap-5 transition-all duration-300 hover:border-white/15"
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                                                                <User className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-white text-base leading-tight">{nombreAutorizado}</h4>
+                                                                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 mt-1 border border-emerald-500/20">
+                                                                    {relacion}
+                                                                </span>
+                                                                <p className="text-xs text-muted flex items-center gap-1 mt-2 font-mono">
+                                                                    <Phone className="w-3.5 h-3.5 text-muted/70" /> {telefonoAutorizado}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEliminarAutorizado(idAutorizacion, nombreAutorizado)}
+                                                            className="p-2 rounded-lg bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/10 cursor-pointer"
+                                                            title="Revocar autorización"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 gap-3">
+                                                        <img
+                                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrToken || '')}`}
+                                                            alt={`QR para ${nombreAutorizado}`}
+                                                            width={140}
+                                                            height={140}
+                                                            className="rounded-lg border border-white/5 bg-white p-1"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDownloadQr(qrToken || '', nombreAutorizado)}
+                                                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-black hover:bg-white/90 font-bold text-xs shadow-md transition-all cursor-pointer"
+                                                        >
+                                                            <Download className="w-3.5 h-3.5" />
+                                                            Descargar QR Autorizado
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -645,7 +653,7 @@ export default function RsvpPage({
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                             <div className="w-full max-w-md p-6 rounded-2xl border border-white/10 bg-[#0d0d0d] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
                                 {/* Ambient glow */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                                 
                                 <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
                                     <h3 className="text-lg font-black text-white flex items-center gap-2 tracking-tight">
@@ -686,14 +694,14 @@ export default function RsvpPage({
                                             className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none cursor-pointer"
                                             disabled={submittingAuth}
                                         >
-                                            <option value="Madre">Madre</option>
-                                            <option value="Padre">Padre</option>
-                                            <option value="Tío/a">Tío/a</option>
-                                            <option value="Abuelo/a">Abuelo/a</option>
-                                            <option value="Tutor Legal">Tutor Legal</option>
-                                            <option value="Niñero/a">Niñero/a</option>
-                                            <option value="Chofer">Chofer</option>
-                                            <option value="Otro">Otro</option>
+                                            <option value="Madre" className="bg-[#0d0d0d] text-white">Madre</option>
+                                            <option value="Padre" className="bg-[#0d0d0d] text-white">Padre</option>
+                                            <option value="Tío/a" className="bg-[#0d0d0d] text-white">Tío/a</option>
+                                            <option value="Abuelo/a" className="bg-[#0d0d0d] text-white">Abuelo/a</option>
+                                            <option value="Tutor Legal" className="bg-[#0d0d0d] text-white">Tutor Legal</option>
+                                            <option value="Niñero/a" className="bg-[#0d0d0d] text-white">Niñero/a</option>
+                                            <option value="Chofer" className="bg-[#0d0d0d] text-white">Chofer</option>
+                                            <option value="Otro" className="bg-[#0d0d0d] text-white">Otro</option>
                                         </select>
                                     </div>
 
