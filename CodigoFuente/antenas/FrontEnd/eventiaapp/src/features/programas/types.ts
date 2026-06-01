@@ -331,8 +331,8 @@ export interface AutorizacionRetiro {
 }
 
 export interface CrearAutorizacionRsvpPayload {
-    nombreCompleto: string;
-    celular: string;
+    nombreAutorizado: string;
+    telefonoAutorizado: string;
     relacion: string;
 }
 

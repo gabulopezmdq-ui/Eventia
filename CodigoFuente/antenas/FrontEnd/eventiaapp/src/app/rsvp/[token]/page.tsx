@@ -105,8 +105,8 @@ export default function RsvpPage({
         setErrorAuthMsg(null);
         try {
             await createAutorizacionRsvp(token, {
-                nombreCompleto: authNombre.trim(),
-                celular: authCelular.trim(),
+                nombreAutorizado: authNombre.trim(),
+                telefonoAutorizado: authCelular.trim(),
                 relacion: authRelacion.trim()
             });
             setIsAuthModalOpen(false);
