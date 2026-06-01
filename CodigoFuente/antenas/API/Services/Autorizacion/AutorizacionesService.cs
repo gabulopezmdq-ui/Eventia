@@ -37,7 +37,7 @@ namespace API.Services
                 tipo = dto.Tipo,
                 nombre_autorizado = dto.NombreAutorizado,
                 telefono_autorizado = dto.TelefonoAutorizado,
-                relacion = dto.Relacion,
+                id_relacion_persona = dto.IdRelacionPersona,
                 observaciones = dto.Observaciones,
                 activo = true,
                 fecha_alta = DateTimeOffset.UtcNow,
@@ -67,7 +67,7 @@ namespace API.Services
                     Tipo = x.tipo,
                     NombreAutorizado = x.nombre_autorizado,
                     TelefonoAutorizado = x.telefono_autorizado,
-                    Relacion = x.relacion,
+                    IdRelacionPersona = x.id_relacion_persona,
                     Observaciones = x.observaciones,
                     Activo = x.activo,
                     qr_token = x.qr_token
@@ -95,7 +95,7 @@ namespace API.Services
             Tipo = x.tipo,
             NombreAutorizado = x.nombre_autorizado,
             TelefonoAutorizado = x.telefono_autorizado,
-            Relacion = x.relacion,
+            IdRelacionPersona = x.id_relacion_persona,
             Observaciones = x.observaciones,
             Activo = x.activo,
             qr_token = x.qr_token
@@ -119,8 +119,8 @@ namespace API.Services
                 ent.telefono_autorizado = tel;
             }
 
-            if (dto.Relacion != null)
-                ent.relacion = dto.Relacion;
+            if (dto.IdRelacionPersona != null)
+                ent.id_relacion_persona = dto.IdRelacionPersona;
 
             if (dto.Observaciones != null)
                 ent.observaciones = dto.Observaciones;
@@ -138,7 +138,7 @@ namespace API.Services
                 Tipo = ent.tipo,
                 NombreAutorizado = ent.nombre_autorizado,
                 TelefonoAutorizado = ent.telefono_autorizado,
-                Relacion = ent.relacion,
+                IdRelacionPersona = ent.id_relacion_persona,
                 Observaciones = ent.observaciones,
                 Activo = ent.activo,
                 qr_token = ent.qr_token
@@ -197,7 +197,7 @@ namespace API.Services
                     tipo = "R",
                     nombre_autorizado = dto.NombreAutorizado,
                     telefono_autorizado = tel,
-                    relacion = dto.Relacion,
+                    id_relacion_persona = dto.IdRelacionPersona,
                     activo = true,
                     fecha_alta = DateTimeOffset.UtcNow,
                     qr_token = API.Utility.TokenUtility.Generate(64)
@@ -215,7 +215,7 @@ namespace API.Services
                 Tipo = ent.tipo,
                 NombreAutorizado = ent.nombre_autorizado,
                 TelefonoAutorizado = ent.telefono_autorizado,
-                Relacion = ent.relacion,
+                IdRelacionPersona = ent.id_relacion_persona,
                 Activo = ent.activo,
                 qr_token = ent.qr_token
             }).ToList();
@@ -253,7 +253,7 @@ namespace API.Services
                     Tipo = x.tipo,
                     NombreAutorizado = x.nombre_autorizado,
                     TelefonoAutorizado = x.telefono_autorizado,
-                    Relacion = x.relacion,
+                    IdRelacionPersona = x.id_relacion_persona,
                     Observaciones = x.observaciones,
                     Activo = x.activo,
                     qr_token = x.qr_token

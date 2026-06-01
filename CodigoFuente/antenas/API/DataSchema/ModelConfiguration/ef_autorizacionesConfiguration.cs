@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.DataSchema.ModelConfiguration
@@ -20,7 +20,9 @@ namespace API.DataSchema.ModelConfiguration
                 .IsRequired();
 
             builder.Property(x => x.telefono_autorizado).HasMaxLength(40);
-            builder.Property(x => x.relacion).HasMaxLength(40);
+            builder.HasOne(x => x.relacion_persona)
+                .WithMany()
+                .HasForeignKey(x => x.id_relacion_persona);
             builder.Property(x => x.observaciones).HasMaxLength(200);
 
             builder.Property(x => x.activo).IsRequired();

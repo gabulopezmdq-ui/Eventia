@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO.Programas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -852,7 +852,7 @@ namespace API.Controllers.Programas
                                 tipo = "R",
                                 nombre_autorizado = nombreAut,
                                 telefono_autorizado = string.IsNullOrWhiteSpace(a.TelefonoAutorizado) ? null : a.TelefonoAutorizado.Trim(),
-                                relacion = string.IsNullOrWhiteSpace(a.Relacion) ? null : a.Relacion.Trim(),
+                                id_relacion_persona = a.IdRelacionPersona,
                                 observaciones = string.IsNullOrWhiteSpace(a.Observaciones) ? null : a.Observaciones.Trim(),
                                 qr_token = qrTokensPorAutorizado[claveAutorizado],
                                 activo = true,
@@ -926,14 +926,14 @@ namespace API.Controllers.Programas
                 {
                     x.nombre_autorizado,
                     x.telefono_autorizado,
-                    x.relacion,
+                    x.id_relacion_persona,
                     x.qr_token
                 })
                 .Select(g => new ProgramaInscripcionQrRetiroDTO
                 {
                     NombreAutorizado = g.Key.nombre_autorizado,
                     TelefonoAutorizado = g.Key.telefono_autorizado,
-                    Relacion = g.Key.relacion,
+                    IdRelacionPersona = g.Key.id_relacion_persona,
                     QrToken = g.Key.qr_token!,
                     Participantes = g.Select(x => new ProgramaInscripcionQrParticipanteDTO
                     {

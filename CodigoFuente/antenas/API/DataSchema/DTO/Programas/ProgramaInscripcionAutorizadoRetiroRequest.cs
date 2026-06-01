@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
 namespace API.DataSchema.DTO.Programas
@@ -13,9 +13,9 @@ namespace API.DataSchema.DTO.Programas
         [JsonProperty("telefono_autorizado")]
         public string? TelefonoAutorizado { get; set; }
 
-        [JsonPropertyName("relacion")]
-        [JsonProperty("relacion")]
-        public string? Relacion { get; set; }
+        [JsonPropertyName("id_relacion_persona")]
+        [JsonProperty("id_relacion_persona")]
+        public long? IdRelacionPersona { get; set; }
 
         [JsonPropertyName("observaciones")]
         [JsonProperty("observaciones")]

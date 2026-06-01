@@ -13,7 +13,8 @@ namespace API.DataSchema
         public string tipo { get; set; } = "R"; // 'R','C','O'
         public string nombre_autorizado { get; set; } = null!;
         public string? telefono_autorizado { get; set; }
-        public string? relacion { get; set; }
+        public long? id_relacion_persona { get; set; }
+        public ef_param_relaciones_persona? relacion_persona { get; set; }
         public string? observaciones { get; set; }
 
         public bool activo { get; set; } = true;

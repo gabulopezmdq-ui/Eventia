@@ -550,7 +550,7 @@ namespace API.Controllers.Audiencia
                         {
                             NombreAutorizado = x.nombre_autorizado,
                             TelefonoAutorizado = x.telefono_autorizado,
-                            Relacion = x.relacion,
+                            IdRelacionPersona = x.id_relacion_persona,
                             Observaciones = x.observaciones
                         })
                         .ToListAsync();

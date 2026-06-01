@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace API.DataSchema.DTO.Programas
@@ -25,7 +25,7 @@ namespace API.DataSchema.DTO.Programas
 
         public string NombreAutorizado { get; set; } = "";
         public string? TelefonoAutorizado { get; set; }
-        public string? Relacion { get; set; }
+        public long? IdRelacionPersona { get; set; }
 
         public string QrToken { get; set; } = "";
 

@@ -384,7 +384,7 @@ namespace API.Controllers.Programas
                             IdAutorizacion = a.id_autorizacion,
                             NombreAutorizado = a.nombre_autorizado,
                             TelefonoAutorizado = a.telefono_autorizado,
-                            Relacion = a.relacion,
+                            IdRelacionPersona = a.id_relacion_persona,
                             Observaciones = a.observaciones,
                             QrToken = a.qr_token
                         })

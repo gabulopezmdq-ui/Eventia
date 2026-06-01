@@ -57,9 +57,7 @@ namespace API.DataSchema.DTO.Programas
         [JsonProperty("telefono_autorizado")]
         public string? TelefonoAutorizado { get; set; }
 
-        [JsonPropertyName("relacion")]
-        [JsonProperty("relacion")]
-        public string? Relacion { get; set; }
+        public long? IdRelacionPersona { get; set; }
 
         [JsonPropertyName("qr_token")]
         [JsonProperty("qr_token")]

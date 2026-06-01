@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace API.DataSchema.DTO
 {
@@ -8,7 +8,7 @@ namespace API.DataSchema.DTO
         public string Tipo { get; set; } = "R";          // R/C/O
         public string NombreAutorizado { get; set; } = null!;
         public string? TelefonoAutorizado { get; set; }
-        public string? Relacion { get; set; }
+        public long? IdRelacionPersona { get; set; }
         public string? Observaciones { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
@@ -272,7 +272,8 @@ namespace API.DataSchema.DTO.AudienciaCRM
     {
         public string NombreAutorizado { get; set; } = "";
         public string? TelefonoAutorizado { get; set; }
-        public string? Relacion { get; set; }
+        public long? IdRelacionPersona { get; set; }
         public string? Observaciones { get; set; }
     }
 }
+
