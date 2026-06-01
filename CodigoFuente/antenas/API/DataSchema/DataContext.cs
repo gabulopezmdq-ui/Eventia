@@ -131,6 +131,8 @@ namespace API.DataSchema
         public DbSet<PortalPersona> PortalPersonas { get; set; }
         public DbSet<PortalAcceso> PortalAccesos { get; set; }
         public DbSet<PortalVerificacion> PortalVerificaciones { get; set; }
+        public DbSet<ef_portal_recuperacion_tokens> ef_portal_recuperacion_tokens { get; set; }
+        public DbSet<ef_portal_validaciones> ef_portal_validaciones { get; set; }
 
         //audiencia
         public DbSet<ef_audiencias_personas> ef_audiencias_personas { get; set; }
@@ -348,6 +350,9 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration<PortalPersona>(portalConfig);
             modelBuilder.ApplyConfiguration<PortalAcceso>(portalConfig);
             modelBuilder.ApplyConfiguration<PortalVerificacion>(portalConfig);
+            
+            modelBuilder.ApplyConfiguration(new ef_portal_recuperacion_tokensConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_portal_validacionesConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_param_tipos_beneficio_registroConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_beneficios_registroConfiguration());
