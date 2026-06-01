@@ -30,7 +30,7 @@ namespace API.Services
             var normalizedTelefono = telefono?.Trim();
 
             var persona = await _ctx.PortalPersonas
-                .FirstOrDefaultAsync(p => p.Activo && 
+                .FirstOrDefaultAsync(p => 
                     ((!string.IsNullOrEmpty(normalizedEmail) && p.Email.ToLower() == normalizedEmail) || 
                      (!string.IsNullOrEmpty(normalizedTelefono) && p.Telefono == normalizedTelefono)));
 
@@ -46,6 +46,14 @@ namespace API.Services
                     FechaAlta = DateTime.UtcNow
                 };
                 _ctx.PortalPersonas.Add(persona);
+                await _ctx.SaveChangesAsync();
+            }
+            else if (!persona.Activo)
+            {
+                persona.Activo = true;
+                persona.Nombre = nombre?.Trim() ?? persona.Nombre;
+                if (!string.IsNullOrEmpty(email)) persona.Email = email.Trim();
+                if (!string.IsNullOrEmpty(telefono)) persona.Telefono = telefono.Trim();
                 await _ctx.SaveChangesAsync();
             }
 
