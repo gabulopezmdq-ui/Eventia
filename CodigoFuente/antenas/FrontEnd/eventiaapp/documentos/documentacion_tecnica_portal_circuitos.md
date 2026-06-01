@@ -1,25 +1,51 @@
-# Documentación Técnica: Circuito Cerrado del Portal (Mi Eventia y Portal Puntual)
+# Eventia – Gestión del Portal: Mi Eventia y Portal Puntual (B2C/B2B)
 
-El presente documento detalla el ciclo completo de la interacción del FrontEnd con los endpoints de los distintos controladores de Eventia. Incluye el flujo de "Mi Eventia" (acceso persistente), el "Portal Puntual" (por evento o programa) y los mecanismos de "Desbloqueo Sensible" y "Recuperación de Acceso".
-
----
-
-## 1. Conceptos y Tipos de Entradas
-
-* **Inscripción Pública:** `GET /programas/inscripcion/{token}`
-  * Endpoint público donde el usuario se anota. Al finalizar, el backend devuelve los tokens que dan inicio al circuito del portal.
-* **Portal Puntual:** `GET /api/portal/{tokenConsulta}`
-  * Endpoint de consulta rápida. El token puede ser un `token_consulta` (programa) o un `rsvp_token` (invitado).
-* **Mi Eventia:** `GET /mi-eventia/{tokenPortal}`
-  * Acceso unificado de familia / invitado. Agrupa todas las inscripciones o eventos relacionados con el correo/teléfono.
+## Objetivo
+Explicar el funcionamiento integral del circuito del portal en Eventia para el equipo de frontend. El objetivo es:
+- Entender la diferencia entre **Mi Eventia** y el **Portal Puntual**.
+- Entender el mecanismo de **Desbloqueo Sensible** (Seguridad OTP).
+- Entender el mecanismo de **Recuperación de Acceso**.
+- Saber qué endpoints llamar y en qué orden.
+- Saber cómo interpretar los datos para mostrar u ocultar elementos en pantalla.
 
 ---
 
-## 2. Flujo 1: Finalizar Inscripción
+## 1. Conceptos Básicos
+
+Para que el invitado o participante pueda interactuar con el sistema, existen dos capas de visualización:
+
+1. **Mi Eventia (Dashboard Persistente):** 
+   Es la "billetera" o espacio unificado del usuario. Se asocia a un correo electrónico o teléfono celular. Muestra todas las "cards" (accesos) a los distintos programas o eventos a los que esa persona está vinculada. 
+   - **Token:** Se identifica con un GUID largo llamado `token_portal`.
+
+2. **Portal Puntual (Detalle del Evento/Programa):** 
+   Es la vista específica de un solo evento o programa. Aquí se ven las secciones habilitadas (resumen, agenda, pagos, salud, fotos, etc.). 
+   - **Token:** Se identifica con un string alfanumérico llamado `token_consulta` (para programas) o `rsvp_token` (para eventos).
+
+3. **Desbloqueo Sensible:** 
+   Algunas secciones del portal puntual (Salud, QRs de Retiro, Fotos de menores, Autorizaciones) contienen información crítica. Por defecto, el portal puntual es público para quien tenga el link. Para ver información crítica, el usuario debe validar su identidad mediante un código enviado por Email o WhatsApp (OTP).
+
+---
+
+## 2. Tablas que intervienen en el Backend (Contexto)
+
+Para que el backend orqueste esto, utiliza las siguientes tablas (como referencia para entender de dónde sale la info):
+
+- **`ef_portal_personas`:** Guarda la identidad unificada (Nombre, Email, Teléfono, y el `token_portal`).
+- **`ef_portal_accesos`:** Relaciona a una persona con múltiples inscripciones o invitaciones. Guarda el `token_consulta` de cada una.
+- **`ef_portal_validaciones`:** Tabla temporal que guarda los códigos OTP (6 dígitos) generados para el "Desbloqueo Sensible". Expiran en 10 minutos.
+- **`ef_portal_recuperacion_tokens`:** Tabla temporal que guarda los links de recuperación cuando un usuario pierde el acceso a "Mi Eventia". Expiran en 15 minutos.
+
+---
+
+## 3. Flujo 1: Finalizar Inscripción
 
 Cuando el responsable confirma la inscripción en el evento (`POST /programas/inscripcion/{token}/confirmar`), el backend responderá con la siguiente estructura. Esto indica al front a dónde debe dirigir al usuario.
 
-**Response Esperado:**
+**Endpoint:**
+`POST /programas/inscripcion/{token}/confirmar`
+
+**Respuesta del Backend:**
 ```json
 {
   "ok": true,
@@ -31,18 +57,22 @@ Cuando el responsable confirma la inscripción en el evento (`POST /programas/in
 }
 ```
 
-* **Acción sugerida para Front:** Mostrar botones: "Ver mi portal" (Abre `url_mi_eventia`), "Guardar acceso en el celular" y "Copiar Link".
+### Qué debe hacer el Front:
+Pantalla final de "Inscripción confirmada".
+- **Botón “Ver mi portal”:** Redirige al usuario a la ruta `url_mi_eventia` (`/mi-eventia/TOKEN_MI_EVENTIA`).
+- **Botón “Copiar link”:** Copia en el portapapeles la ruta absoluta (ej. `https://eventiaapp.com/mi-eventia/TOKEN_MI_EVENTIA`).
+- **Botón “Guardar acceso en mi celular”:** Lanza el prompt para instalar la PWA (Add to Home Screen).
 
 ---
 
-## 3. Flujo 2: Acceder a Mi Eventia
+## 4. Flujo 2: Acceder a Mi Eventia
 
-El usuario ingresa mediante su enlace permanente.
+El usuario ingresa mediante su enlace permanente (desde el acceso guardado en su celular o desde un link).
 
-### `GET /mi-eventia/{tokenPortal}`
-Obtiene los datos del responsable y todas las "cards" (accesos) que tiene disponibles.
+**Endpoint:**
+`GET /mi-eventia/{tokenPortal}`
 
-**Response:**
+**Respuesta del Backend:**
 ```json
 {
   "persona": {
@@ -66,20 +96,22 @@ Obtiene los datos del responsable y todas las "cards" (accesos) que tiene dispon
 }
 ```
 
-* **Acción sugerida para Front:** Renderizar una card por cada elemento en `items`. Al hacer click, redirigir a la URL indicada en `url_portal`.
+### Qué debe hacer el Front:
+Renderizar la cabecera con el nombre de la persona (`persona.nombre`).
+Listar una "Card" por cada elemento del arreglo `items`.
+- Si toca la Card, debe navegar a la ruta local especificada en `url_portal` (que renderizará el Portal Puntual).
 
 ---
 
-## 4. Flujo 3: El Portal Puntual y los Datos Sensibles
+## 5. Flujo 3: El Portal Puntual y los Datos Sensibles
 
 Cuando el usuario ingresa al detalle de su evento o programa, se consulta el Portal Puntual.
 
-### `GET /api/portal/{tokenConsulta}`
-Este endpoint devuelve *todo* el árbol de la aplicación. 
+**Endpoint:**
+`GET /api/portal/{tokenConsulta}?idIdioma=1`
+*(Nota: `idIdioma` es opcional. 1=Español, 4=Portugués, 5=Checo, etc.)*
 
-**Query Params:** `?idIdioma=1` (Opcional, por defecto 1 - Español). Para portugués usar 4, checo 5, etc.
-
-**Response:**
+**Respuesta del Backend:**
 ```json
 {
   "tipoPortal": "PROGRAMA",
@@ -121,26 +153,44 @@ Este endpoint devuelve *todo* el árbol de la aplicación.
 }
 ```
 
-> **Nota:** Si `desbloqueado_sensible` es `false`, el backend bloqueará automáticamente la salida enviando `null` en `data.salud`, `data.qrsRetiro`, `data.fotos`, etc.
+### Cómo lo interpreta el Front (Lógica de Renderizado):
 
-* **Acción sugerida para Front:** Si `requiere_desbloqueo_sensible == true` y `desbloqueado_sensible == false`, dibujar un banner o botón invitando al usuario a validar su identidad para ver datos bloqueados.
+El backend devuelve en la propiedad `data` los datos agrupados por sección. Observar el estado combinado de `requiere_desbloqueo_sensible` y `desbloqueado_sensible`.
+
+#### Caso A — Portal General sin Seguridad Activa
+Si `requiere_desbloqueo_sensible = false`:
+El portal no tiene activada ninguna sección crítica (ej. es un portal solo de Pagos y Resumen).
+**Qué hace el Front:** Renderiza todas las pestañas de las `secciones` devueltas de manera normal. Los campos en `data` tendrán los JSON correspondientes y no habrá `null`.
+
+#### Caso B — Portal Bloqueado (Falta OTP)
+Si `requiere_desbloqueo_sensible = true` Y `desbloqueado_sensible = false`:
+Significa que hay secciones críticas pero el usuario no ha validado que es él.
+**Qué hace el Front:**
+1. Renderiza el Menú y las secciones "públicas" (donde `requiere_desbloqueo = false`). Para estas secciones, el backend envía la data real en `data.resumen` o `data.pagos`.
+2. Para las secciones "sensibles" (`requiere_desbloqueo = true`), el backend, por seguridad, envía un valor explícito `null` en `data.salud`, `data.qrsRetiro`, etc.
+3. El frontend debe mostrar un **Banner Global** o un "candado" en las pestañas sensibles con el texto: *"Para visualizar la información de Salud o Retiros, valida tu identidad"*. Al tocar, se dispara el **Flujo 4 (Desbloqueo)**.
+
+#### Caso C — Portal Desbloqueado (OTP Validad0)
+Si `requiere_desbloqueo_sensible = true` Y `desbloqueado_sensible = true`:
+El usuario validó correctamente el código hace menos de 12 horas.
+**Qué hace el Front:** Renderiza absolutamente todo normalmente. El backend enviará toda la info hidratada (no habrá `null` en `data.salud`).
 
 ---
 
-## 5. Flujo 4: Desbloqueo de Datos Sensibles (OTP)
+## 6. Flujo 4: Desbloqueo de Datos Sensibles (OTP)
 
-Si el usuario quiere ver los QR o datos de salud, se debe lanzar este circuito. Consta de dos pasos (Solicitar y Validar).
+Cuando el usuario en el **Caso B** hace clic en "Desbloquear", se ejecuta este circuito:
 
-### Paso 1: `POST /api/portal/{tokenConsulta}/solicitar-codigo`
-El backend ubica al responsable de la inscripción (o invitado) y envía un OTP por email/WhatsApp.
+### Paso 1: Solicitar Código
+**Endpoint:** `POST /api/portal/{tokenConsulta}/solicitar-codigo`
 
-**Request (Body):**
+**Body:**
 ```json
 {
   "canal": "EMAIL" 
 }
 ```
-*(Valores permitidos para canal: "EMAIL" o "WHATSAPP")*
+*(Canales soportados: "EMAIL" o "WHATSAPP")*
 
 **Response:**
 ```json
@@ -150,12 +200,14 @@ El backend ubica al responsable de la inscripción (o invitado) y envía un OTP 
   "codigo_dev": "123456"
 }
 ```
-*(Nota: `codigo_dev` se envía momentáneamente para pruebas. Durante desarrollo, siempre ingresa ese código).*
+*(Nota: `codigo_dev` se envía momentáneamente para facilitar pruebas en QA. Ignorarlo o quitarlo en producción).*
 
-### Paso 2: `POST /api/portal/{tokenConsulta}/validar-codigo`
-El front solicita el código al usuario y lo envía al backend.
+### Paso 2: Validar Código
+El front muestra un input de 6 dígitos al usuario.
 
-**Request (Body):**
+**Endpoint:** `POST /api/portal/{tokenConsulta}/validar-codigo`
+
+**Body:**
 ```json
 {
   "codigo": "123456"
@@ -171,18 +223,20 @@ El front solicita el código al usuario y lo envía al backend.
 }
 ```
 
-* **Acción sugerida para Front:** Una vez recibida esta respuesta (`ok: true`), el front debe **volver a invocar automáticamente** `GET /api/portal/{tokenConsulta}`. Esta vez, el backend sabrá que la sesión fue validada y responderá con `desbloqueado_sensible: true`, poblando `data.salud`, `data.qrsRetiro`, etc., con arreglos vacíos o información hidratada.
+### Paso 3: Refrescar Portal
+Una vez recibida la respuesta exitosa (`ok: true`), el front **debe volver a invocar automáticamente** `GET /api/portal/{tokenConsulta}`. 
+Esta vez, el backend sabrá que la sesión (por IP/Token en la base de datos) está validada y responderá con `desbloqueado_sensible: true`, entregando toda la info de Salud y Retiros en el nodo `data`.
 
 ---
 
-## 6. Flujo 5: Recuperación de Acceso a Mi Eventia
+## 7. Flujo 5: Recuperación de Acceso a Mi Eventia
 
-Para el caso en el que el responsable pierde su URL `/mi-eventia/TOKEN`.
+Ocurre cuando el padre/madre/invitado perdió el link de "Mi Eventia" y quiere volver a ingresar desde `eventiaapp.com/ingresar`.
 
-### Paso 1: `POST /mi-eventia/recuperar`
-Solicita un enlace de recuperación ingresando el email o teléfono con el que se inscribió.
+### Paso 1: Pedir Link
+**Endpoint:** `POST /mi-eventia/recuperar`
 
-**Request (Body):**
+**Body:**
 ```json
 {
   "email": "laura.garcia@test.com",
@@ -200,10 +254,12 @@ Solicita un enlace de recuperación ingresando el email o teléfono con el que s
 }
 ```
 
-### Paso 2: `POST /mi-eventia/validar-recuperacion`
-Generalmente el usuario llega a través de un link que contenía ese token y un código (opcional) enviado al email.
+### Paso 2: Validar Recuperación
+Generalmente el usuario llega a través de un link que contenía el `token_recuperacion` (ej: `/recuperar?token=abc12345...`) y un código en el mail.
 
-**Request (Body):**
+**Endpoint:** `POST /mi-eventia/validar-recuperacion`
+
+**Body:**
 ```json
 {
   "token_recuperacion": "abc12345...",
@@ -220,4 +276,5 @@ Generalmente el usuario llega a través de un link que contenía ese token y un 
 }
 ```
 
-* **Acción sugerida para Front:** Guardar el nuevo token recuperado y redirigir al usuario al dashboard de `url_mi_eventia`.
+### Qué debe hacer el Front:
+Si la validación es correcta, redirigir automáticamente al usuario al dashboard de `url_mi_eventia` para que pueda ver todas sus inscripciones (Flujo 2).
