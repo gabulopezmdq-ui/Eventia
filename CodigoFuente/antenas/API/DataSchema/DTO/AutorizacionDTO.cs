@@ -13,6 +13,7 @@ namespace API.DataSchema.DTO
         public string? Relacion { get; set; }
         public string? Observaciones { get; set; }
         public bool Activo { get; set; }
+        public string? qr_token { get; set; }
     }
 
     public class AutorizacionUpdateDTO
