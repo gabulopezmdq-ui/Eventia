@@ -192,10 +192,29 @@ export interface QrRetiro {
     participantes: { id_invitado: number; nombre_completo: string }[];
 }
 
+/**
+ * Respuesta completa del backend al confirmar una inscripción.
+ * Incluye los tokens necesarios para el Portal Persistente (Mi-Eventia)
+ * y el Portal Puntual del evento.
+ */
 export interface ConfirmacionResponse {
+    ok: boolean;
+    id_inscripcion: number;
+    id_rsvp_grupo: number;
+    /** Token para acceder al portal puntual del evento: /portal/{token_consulta} */
+    token_consulta: string;
+    /** URL relativa del portal puntual: /portal/{token_consulta} */
+    url_portal: string;
+    /** GUID persistente del usuario — se guarda en localStorage */
+    token_portal: string;
+    /** URL relativa del dashboard unificado Mi-Eventia */
+    url_mi_eventia: string;
+    /** Importe total de la inscripción */
+    total_general: number;
     mensaje: string;
     qrs_retiro: QrRetiro[];
 }
+
 
 // ── Estado global del Context ─────────────────────────────────────
 
