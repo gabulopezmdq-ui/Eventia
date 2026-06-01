@@ -10,7 +10,7 @@ namespace API.DataSchema.DTO
         public string Tipo { get; set; } = null!;
         public string NombreAutorizado { get; set; } = null!;
         public string? TelefonoAutorizado { get; set; }
-        public string? Relacion { get; set; }
+        public long? IdRelacionPersona { get; set; }
         public string? Observaciones { get; set; }
         public bool Activo { get; set; }
         public string? qr_token { get; set; }
@@ -20,7 +20,7 @@ namespace API.DataSchema.DTO
     {
         public string? NombreAutorizado { get; set; }
         public string? TelefonoAutorizado { get; set; }
-        public string? Relacion { get; set; }
+        public long? IdRelacionPersona { get; set; }
         public string? Observaciones { get; set; }
         public bool? Activo { get; set; }
     }
@@ -29,7 +29,7 @@ namespace API.DataSchema.DTO
     {
         public string NombreAutorizado { get; set; } 
         public string TelefonoAutorizado { get; set; }
-        public string? Relacion { get; set; }
+        public long? IdRelacionPersona { get; set; }
     }
 
 }

@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -85,7 +85,7 @@ namespace API.Services
                             Tipo = x.tipo,
                             NombreAutorizado = x.nombre_autorizado,
                             TelefonoAutorizado = x.telefono_autorizado,
-                            Relacion = x.relacion,
+                            IdRelacionPersona = x.id_relacion_persona,
                             Observaciones = x.observaciones,
                             Activo = x.activo
                         })

@@ -49,7 +49,7 @@ namespace API.Controllers.Programas
                     a.id_evento,
                     a.nombre_autorizado,
                     a.telefono_autorizado,
-                    a.relacion,
+                    a.id_relacion_persona,
                     a.qr_token,
                     inv.id_invitado,
                     participante = inv.nombre + " " + inv.apellido
@@ -86,7 +86,7 @@ namespace API.Controllers.Programas
                 IdEvento = idEvento,
                 NombreAutorizado = first.nombre_autorizado,
                 TelefonoAutorizado = first.telefono_autorizado,
-                Relacion = first.relacion,
+                IdRelacionPersona = first.id_relacion_persona,
                 QrToken = qrToken,
                 ParticipantesAutorizados = autorizaciones.Select(a =>
                 {

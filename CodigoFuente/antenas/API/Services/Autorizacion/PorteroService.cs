@@ -97,7 +97,7 @@ namespace API.Services
                         Tipo = a.tipo,
                         NombreAutorizado = a.nombre_autorizado,
                         TelefonoAutorizado = a.telefono_autorizado,
-                        Relacion = a.relacion,
+                        IdRelacionPersona = a.id_relacion_persona,
                         Observaciones = a.observaciones,
                         Activo = a.activo
                     })
@@ -128,7 +128,7 @@ namespace API.Services
                             Tipo = a.tipo,
                             NombreAutorizado = a.nombre_autorizado,
                             TelefonoAutorizado = a.telefono_autorizado,
-                            Relacion = a.relacion,
+                            IdRelacionPersona = a.id_relacion_persona,
                             Observaciones = a.observaciones,
                             Activo = a.activo
                         })
