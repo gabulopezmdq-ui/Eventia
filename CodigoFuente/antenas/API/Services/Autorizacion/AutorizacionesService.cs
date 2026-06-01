@@ -184,7 +184,7 @@ namespace API.Services
             if (!menores.Any())
                 throw new InvalidOperationException("No hay menores en el grupo.");
 
-            var tel = PhoneUtilHelper.NormalizeE164(dto.TelefonoAutorizado, "AR");
+            var tel = PhoneUtilHelper.NormalizeE164(dto.TelefonoAutorizado, "AR") ?? dto.TelefonoAutorizado;
 
             var autorizaciones = new List<ef_autorizaciones>();
 
