@@ -1,15 +1,10 @@
 using API.DataSchema;
 using API.DataSchema.DTO.Portal;
+using API.Services.Portal;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace API.Controllers.Portal
@@ -19,173 +14,91 @@ namespace API.Controllers.Portal
     public class portalController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly IConfiguration _config;
+        private readonly PortalSeguridadService _portalSeguridadService;
 
-        public portalController(DataContext context, IConfiguration config)
+        public portalController(DataContext context, PortalSeguridadService portalSeguridadService)
         {
             _context = context;
-            _config = config;
+            _portalSeguridadService = portalSeguridadService;
         }
 
         [HttpGet("{token}")]
         [AllowAnonymous]
-        public async Task<ActionResult<PortalLandingDTO>> GetPortal(string token)
+        public async Task<IActionResult> GetPortal(string token, [FromQuery] int idIdioma = 1)
         {
             var inscripcion = await _context.ef_programa_inscripciones
                 .Include(i => i.evento)
                 .FirstOrDefaultAsync(i => i.token_consulta == token && i.activo);
 
-            if (inscripcion == null || inscripcion.evento == null)
+            var invitado = inscripcion == null ? await _context.ef_invitados
+                .Include(i => i.evento)
+                .FirstOrDefaultAsync(i => i.rsvp_token == token && i.activo) : null;
+
+            if (inscripcion == null && invitado == null)
             {
                 return NotFound("Token inválido o expirado.");
             }
 
-            var dto = new PortalLandingDTO
+            var esPrograma = inscripcion != null;
+            var evento = esPrograma ? inscripcion.evento : invitado.evento;
+            var idEvento = esPrograma ? inscripcion.id_evento : invitado.id_evento;
+            
+            var usuarioNombre = esPrograma 
+                ? $"{inscripcion.responsable_nombre} {inscripcion.responsable_apellido}".Trim()
+                : $"{invitado.nombre} {invitado.apellido}".Trim();
+                
+            var usuarioEmail = esPrograma ? inscripcion.responsable_email : invitado.email;
+
+            var desbloqueado = await _portalSeguridadService.EstaDesbloqueadoAsync(token);
+
+            var acceso = await _context.PortalAccesos
+                .FirstOrDefaultAsync(a => a.TokenConsulta == token && a.Activo);
+
+            string urlMiEventia = null;
+            if (acceso != null)
             {
-                Evento = new PortalEventoDTO
+                var persona = await _context.PortalPersonas.FirstOrDefaultAsync(p => p.IdPortalPersona == acceso.IdPortalPersona);
+                if (persona != null)
                 {
-                    Nombre = inscripcion.evento.anfitriones_texto,
-                    FechaInicio = inscripcion.evento.fecha_inicio?.ToString("yyyy-MM-dd") ?? "",
-                    FechaFin = inscripcion.evento.fecha_fin?.ToString("yyyy-MM-dd") ?? "",
-                    LogoUrl = null,
-                    Estado = inscripcion.evento.estado
+                    urlMiEventia = $"/mi-eventia/{persona.TokenPortal}";
+                }
+            }
+
+            var secciones = await _portalSeguridadService.GetSeccionesPortalAsync(idEvento, esPrograma ? "PROGRAMA" : "EVENTO", idIdioma);
+
+            bool requiereDesbloqueoSensible = secciones.Any(s => s.requiere_desbloqueo);
+
+            var resp = new
+            {
+                tipoPortal = esPrograma ? "PROGRAMA" : "EVENTO",
+                idEvento = idEvento,
+                evento = new
+                {
+                    titulo = evento?.anfitriones_texto ?? "",
+                    fechaInicio = evento?.fecha_inicio?.ToString("yyyy-MM-dd") ?? "",
+                    fechaFin = evento?.fecha_fin?.ToString("yyyy-MM-dd") ?? ""
+                },
+                usuario = new
+                {
+                    nombre = usuarioNombre,
+                    email = usuarioEmail
+                },
+                requiere_desbloqueo_sensible = requiereDesbloqueoSensible,
+                desbloqueado_sensible = desbloqueado,
+                url_mi_eventia = urlMiEventia,
+                secciones = secciones,
+                data = new
+                {
+                    resumen = new { },
+                    pagos = esPrograma ? new { } : null,
+                    salud = (secciones.Any(s => s.codigo == "SALUD") && !desbloqueado) ? null : new object[] { },
+                    qrsRetiro = (secciones.Any(s => s.codigo == "QRS_RETIRO") && !desbloqueado) ? null : new object[] { },
+                    fotos = (secciones.Any(s => s.codigo == "FOTOS") && !desbloqueado) ? null : new object[] { },
+                    autorizaciones = (secciones.Any(s => s.codigo == "AUTORIZACIONES") && !desbloqueado) ? null : new object[] { }
                 }
             };
 
-            return Ok(dto);
-        }
-
-        [HttpGet("dashboard")]
-        [Authorize]
-        public async Task<ActionResult<PortalDashboardDTO>> GetDashboard()
-        {
-            var tokenStr = User.Claims.FirstOrDefault(c => c.Type == "TokenConsulta")?.Value;
-            if (string.IsNullOrEmpty(tokenStr)) return Unauthorized();
-
-            var inscripcion = await _context.ef_programa_inscripciones
-                .Include(i => i.evento)
-                .FirstOrDefaultAsync(i => i.token_consulta == tokenStr && i.activo);
-
-            if (inscripcion == null || inscripcion.evento == null) return NotFound("Inscripción no encontrada.");
-
-            var configs = await _context.ef_evento_portal_config
-                .Include(c => c.portal_seccion)
-                .Where(c => c.id_evento == inscripcion.id_evento && c.visible && c.activo)
-                .OrderBy(c => c.orden)
-                .ToListAsync();
-
-            var dto = new PortalDashboardDTO
-            {
-                Evento = new PortalEventoDTO
-                {
-                    Nombre = inscripcion.evento.anfitriones_texto,
-                    FechaInicio = inscripcion.evento.fecha_inicio?.ToString("yyyy-MM-dd") ?? "",
-                    FechaFin = inscripcion.evento.fecha_fin?.ToString("yyyy-MM-dd") ?? "",
-                    LogoUrl = null,
-                    Estado = inscripcion.evento.estado
-                },
-                Participante = new PortalParticipanteDTO
-                {
-                    NombreResponsable = inscripcion.responsable_nombre,
-                    ApellidoResponsable = inscripcion.responsable_apellido
-                },
-                SeccionesHabilitadas = configs.Select(c => new PortalSeccionDTO
-                {
-                    Codigo = c.portal_seccion?.codigo ?? "",
-                    Orden = c.orden,
-                    Titulo = !string.IsNullOrEmpty(c.titulo_override) ? c.titulo_override : (c.portal_seccion?.descripcion ?? "")
-                }).ToList()
-            };
-
-            return Ok(dto);
-        }
-
-        [HttpPost("{token}/verificar")]
-        [AllowAnonymous]
-        public async Task<ActionResult<PortalVerificarResponse>> Verificar(string token, [FromBody] PortalVerificarRequest req)
-        {
-            var inscripcion = await _context.ef_programa_inscripciones
-                .FirstOrDefaultAsync(i => i.token_consulta == token && i.activo);
-
-            if (inscripcion == null)
-            {
-                await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
-                {
-                    TokenConsulta = token,
-                    EmailUsado = req?.Email ?? string.Empty,
-                    FechaHora = DateTime.UtcNow,
-                    ResultadoOk = false
-                });
-                await _context.SaveChangesAsync();
-                return NotFound("Token inválido.");
-            }
-
-            if (string.IsNullOrWhiteSpace(inscripcion.responsable_email))
-            {
-                await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
-                {
-                    TokenConsulta = token,
-                    EmailUsado = req?.Email ?? string.Empty,
-                    FechaHora = DateTime.UtcNow,
-                    ResultadoOk = false
-                });
-                await _context.SaveChangesAsync();
-                return BadRequest("No hay un email registrado para esta inscripción.");
-            }
-
-            if (req == null || string.IsNullOrWhiteSpace(req.Email) || !string.Equals(inscripcion.responsable_email.Trim(), req.Email.Trim(), StringComparison.OrdinalIgnoreCase))
-            {
-                await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
-                {
-                    TokenConsulta = token,
-                    EmailUsado = req?.Email ?? string.Empty,
-                    FechaHora = DateTime.UtcNow,
-                    ResultadoOk = false
-                });
-                await _context.SaveChangesAsync();
-                return Unauthorized("Email incorrecto.");
-            }
-
-            // Success
-            await _context.PortalVerificaciones.AddAsync(new PortalVerificacion
-            {
-                TokenConsulta = token,
-                EmailUsado = req.Email,
-                FechaHora = DateTime.UtcNow,
-                ResultadoOk = true
-            });
-            await _context.SaveChangesAsync();
-
-            var jwtToken = GenerarJwtToken(inscripcion);
-
-            return Ok(new PortalVerificarResponse { Token = jwtToken });
-        }
-
-        private string GenerarJwtToken(ef_programa_inscripciones inscripcion)
-        {
-            // Default key as fallback if not present
-            var keyStr = _config.GetValue<string>("Jwt:Key") ?? "EventiaSuperSecretKey1234567890!";
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var issuer = _config.GetValue<string>("Jwt:Issuer") ?? "eventia";
-
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, inscripcion.id_inscripcion.ToString()),
-                new Claim("TokenConsulta", inscripcion.token_consulta ?? ""),
-                new Claim("IdEvento", inscripcion.id_evento.ToString()),
-                new Claim("Role", "PortalPadres")
-            };
-
-            var tokenDescriptor = new JwtSecurityToken(
-                issuer,
-                issuer,
-                claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: credentials);
-
-            return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+            return Ok(resp);
         }
     }
 }

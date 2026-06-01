@@ -64,14 +64,22 @@ namespace API.DataSchema.DTO.Portal
     {
         [JsonPropertyName("codigo")]
         [JsonProperty("codigo")]
-        public string Codigo { get; set; } = string.Empty;
+        public string codigo { get; set; } = string.Empty;
 
         [JsonPropertyName("orden")]
         [JsonProperty("orden")]
-        public int Orden { get; set; }
+        public int orden { get; set; }
 
         [JsonPropertyName("titulo")]
         [JsonProperty("titulo")]
-        public string Titulo { get; set; } = string.Empty;
+        public string titulo { get; set; } = string.Empty;
+
+        [JsonPropertyName("visible")]
+        [JsonProperty("visible")]
+        public bool visible { get; set; }
+
+        [JsonPropertyName("requiere_desbloqueo")]
+        [JsonProperty("requiere_desbloqueo")]
+        public bool requiere_desbloqueo { get; set; }
     }
 }

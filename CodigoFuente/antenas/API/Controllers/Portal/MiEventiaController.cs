@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using API.DataSchema;
 using API.DataSchema.DTO.Portal;
+using API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,12 @@ namespace API.Controllers.Portal
     public class MiEventiaController : ControllerBase
     {
         private readonly DataContext _ctx;
-        public MiEventiaController(DataContext ctx) => _ctx = ctx;
+        private readonly MiEventiaService _service;
+        public MiEventiaController(DataContext ctx, MiEventiaService service)
+        {
+            _ctx = ctx;
+            _service = service;
+        }
 
         [HttpGet("{tokenPortal:guid}")]
         [ApiExplorerSettings(GroupName = "Mi-Eventia")]
@@ -47,19 +53,43 @@ namespace API.Controllers.Portal
                 })
                 .ToListAsync();
 
-            var resp = new MiEventiaResponseDto
+            var resp = new
             {
-                Persona = new PersonaDto
+                persona = new
                 {
-                    IdPortalPersona = persona.IdPortalPersona,
-                    Nombre = persona.Nombre,
-                    Email = persona.Email,
-                    Telefono = persona.Telefono
+                    id_portal_persona = persona.IdPortalPersona,
+                    nombre = persona.Nombre,
+                    email = persona.Email,
+                    telefono = persona.Telefono
                 },
-                Items = accesos
+                items = accesos.Select(a => new
+                {
+                    tipo = a.Tipo,
+                    id_evento = a.IdEvento,
+                    id_inscripcion = a.IdInscripcion,
+                    id_invitado = a.IdInvitado,
+                    token_consulta = a.TokenConsulta,
+                    titulo = a.Titulo,
+                    estado = a.Estado,
+                    url_portal = a.UrlPortal
+                })
             };
 
             return Ok(resp);
+        }
+
+        [HttpPost("recuperar")]
+        public async Task<IActionResult> Recuperar([FromBody] RecuperarMiEventiaRequestDTO req)
+        {
+            var result = await _service.RecuperarAccesoAsync(req);
+            return Ok(result);
+        }
+
+        [HttpPost("validar-recuperacion")]
+        public async Task<IActionResult> ValidarRecuperacion([FromBody] ValidarRecuperacionRequestDTO req)
+        {
+            var result = await _service.ValidarRecuperacionAsync(req);
+            return Ok(result);
         }
     }
 }

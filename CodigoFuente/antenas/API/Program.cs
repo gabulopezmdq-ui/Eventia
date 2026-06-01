@@ -11,6 +11,7 @@ using API.Services.Regalos;
 using API.Services.Roles;
 using API.Services.Staff;
 using API.Services.Transporte;
+using API.Services.Portal;
 using API.Utility;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FluentAssertions.Common;
@@ -184,6 +185,7 @@ builder.Services.AddScoped<IEventoCaptacionLinksService, EventoCaptacionLinksSer
 builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IProgramasService, ProgramasService>();
 builder.Services.AddScoped<MiEventiaService>();
+builder.Services.AddScoped<PortalSeguridadService>();
 
 
 //planes-precios
