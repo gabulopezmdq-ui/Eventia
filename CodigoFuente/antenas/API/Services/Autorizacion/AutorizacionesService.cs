@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using API.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -165,8 +165,8 @@ namespace API.Services
             // Log 3: Ver qué rol_evento tiene el titular
             Console.WriteLine($"Rol_evento del titular: {rol}");
 
-            if (rol != "R")
-                throw new InvalidOperationException("Solo el responsable puede agregar autorizados.");
+            if (rol != "R" && rol != "A")
+                throw new InvalidOperationException("Solo el responsable o un adulto titular puede agregar autorizados.");
 
             // Log 4: Ver menores del grupo
             var menores = await _context.Set<ef_rsvp_grupo_integrantes>()
