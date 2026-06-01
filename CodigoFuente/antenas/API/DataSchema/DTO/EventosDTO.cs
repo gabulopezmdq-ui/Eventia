@@ -37,7 +37,6 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("modalidad")]
         public string? Modalidad { get; set; }
 
-
         [JsonProperty("anfitriones_texto")]
         [JsonPropertyName("anfitriones_texto")]
         public string? AnfitrionesTexto { get; set; }

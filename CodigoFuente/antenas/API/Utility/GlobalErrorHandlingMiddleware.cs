@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using rsFoodtrucks.Exceptions;
@@ -42,7 +42,7 @@ namespace API.Utility
             string message;
 
             var exceptionType = exception.GetType();
-            if (exceptionType == typeof(BadRequestException))
+            if (exceptionType == typeof(BadRequestException) || exceptionType == typeof(InvalidOperationException) || exceptionType == typeof(ArgumentException))
             {
                 message = exception.Message;
                 status = HttpStatusCode.BadRequest;
