@@ -102,5 +102,19 @@ namespace API.Controllers
                 return Conflict(ex.Message);
             }
         }
+
+        [HttpGet("p/{rsvpToken}/autorizaciones")]
+        public async Task<IActionResult> ListFromPersonal(string rsvpToken)
+        {
+            try
+            {
+                var result = await _svc.ListFromPersonalLinkAsync(rsvpToken);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

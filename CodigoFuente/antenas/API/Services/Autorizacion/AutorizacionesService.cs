@@ -40,7 +40,8 @@ namespace API.Services
                 relacion = dto.Relacion,
                 observaciones = dto.Observaciones,
                 activo = true,
-                fecha_alta = DateTimeOffset.UtcNow
+                fecha_alta = DateTimeOffset.UtcNow,
+                qr_token = API.Utility.TokenUtility.Generate(64)
             };
 
             _context.Add(ent);
@@ -68,7 +69,8 @@ namespace API.Services
                     TelefonoAutorizado = x.telefono_autorizado,
                     Relacion = x.relacion,
                     Observaciones = x.observaciones,
-                    Activo = x.activo
+                    Activo = x.activo,
+                    qr_token = x.qr_token
                 })
                 .ToListAsync();
         }
@@ -95,7 +97,8 @@ namespace API.Services
             TelefonoAutorizado = x.telefono_autorizado,
             Relacion = x.relacion,
             Observaciones = x.observaciones,
-            Activo = x.activo
+            Activo = x.activo,
+            qr_token = x.qr_token
         };
 
         public async Task<AutorizacionDTO> UpdateAsync(long idEvento, long idAutorizacion, AutorizacionUpdateDTO dto)
@@ -137,7 +140,8 @@ namespace API.Services
                 TelefonoAutorizado = ent.telefono_autorizado,
                 Relacion = ent.relacion,
                 Observaciones = ent.observaciones,
-                Activo = ent.activo
+                Activo = ent.activo,
+                qr_token = ent.qr_token
             };
         }
 
@@ -195,7 +199,8 @@ namespace API.Services
                     telefono_autorizado = tel,
                     relacion = dto.Relacion,
                     activo = true,
-                    fecha_alta = DateTimeOffset.UtcNow
+                    fecha_alta = DateTimeOffset.UtcNow,
+                    qr_token = API.Utility.TokenUtility.Generate(64)
                 });
             }
 
@@ -211,8 +216,49 @@ namespace API.Services
                 NombreAutorizado = ent.nombre_autorizado,
                 TelefonoAutorizado = ent.telefono_autorizado,
                 Relacion = ent.relacion,
-                Activo = ent.activo
+                Activo = ent.activo,
+                qr_token = ent.qr_token
             }).ToList();
+        }
+
+        public async Task<List<AutorizacionDTO>> ListFromPersonalLinkAsync(string rsvpToken)
+        {
+            var titular = await _context.Set<ef_invitados>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.rsvp_token == rsvpToken);
+
+            if (titular == null)
+                throw new ArgumentException("Link inválido.");
+
+            // Buscar todos los menores del grupo
+            var menoresIds = await _context.Set<ef_rsvp_grupo_integrantes>()
+                .Where(x => x.id_rsvp_grupo == titular.id_rsvp_grupo && x.rol_evento == "N")
+                .Select(x => x.id_invitado)
+                .ToListAsync();
+
+            if (!menoresIds.Any())
+                return new List<AutorizacionDTO>();
+
+            return await _context.Set<ef_autorizaciones>()
+                .AsNoTracking()
+                .Where(x => x.id_evento == titular.id_evento
+                            && menoresIds.Contains(x.id_invitado_objetivo)
+                            && x.activo)
+                .OrderByDescending(x => x.fecha_alta)
+                .Select(x => new AutorizacionDTO
+                {
+                    IdAutorizacion = x.id_autorizacion,
+                    IdEvento = x.id_evento,
+                    IdInvitadoObjetivo = x.id_invitado_objetivo,
+                    Tipo = x.tipo,
+                    NombreAutorizado = x.nombre_autorizado,
+                    TelefonoAutorizado = x.telefono_autorizado,
+                    Relacion = x.relacion,
+                    Observaciones = x.observaciones,
+                    Activo = x.activo,
+                    qr_token = x.qr_token
+                })
+                .ToListAsync();
         }
     }
 }

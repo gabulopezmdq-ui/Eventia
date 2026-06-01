@@ -1,4 +1,4 @@
-﻿using API.DataSchema.DTO;
+using API.DataSchema.DTO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,6 +13,7 @@ namespace API.Services
         Task<List<AutorizacionDTO>> CreateFromPersonalLinkAsync(
                  string rsvpToken,
                  AutorizacionFromPersonalLinkDTO dto);
+        Task<List<AutorizacionDTO>> ListFromPersonalLinkAsync(string rsvpToken);
 
     }
 
