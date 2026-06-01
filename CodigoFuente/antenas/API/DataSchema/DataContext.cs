@@ -4,6 +4,7 @@ using API.DataSchema.ModelConfiguration.Regalos;
 using API.DataSchema.QueryModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Collections.Generic;
 
 namespace API.DataSchema
 {
@@ -56,6 +57,7 @@ namespace API.DataSchema
         public DbSet<ef_evento_musica_bloqueos> ef_evento_musica_bloqueos { get; set; }
         public DbSet<ef_evento_links> ef_evento_links { get; set; }
         public DbSet<ef_param_entidades> ef_param_entidades { get; set; }
+        public DbSet<ef_param_relaciones_persona> ef_param_relaciones_persona { get; set; }
 
         public DbSet<ef_rsvp_grupos> ef_rsvp_grupos { get; set; }
 
@@ -284,7 +286,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_evento_linksConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_musica_sugerencias_estadoConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_entidadesConfiguration());
-
+            modelBuilder.ApplyConfiguration(new ef_param_relaciones_personaConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_autorizacionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_rsvp_gruposConfiguration());
@@ -397,6 +399,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_param_programa_tipos_ajusteConfiguration());
             modelBuilder.ApplyConfiguration(new ef_programa_inscripcion_autorizacionesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_limitesConfiguration());
+
 
             modelBuilder.ApplyConfiguration(new ef_monedasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_mercadosConfiguration());

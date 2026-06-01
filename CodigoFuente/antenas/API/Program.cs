@@ -156,6 +156,7 @@ builder.Services.AddScoped<IMesasService, MesasService>();
 
 
 builder.Services.AddScoped<IMonedasService, MonedasService>();
+builder.Services.AddScoped<IRelacionesPersonaService, RelacionesPersonaService>();
 
 builder.Services.AddScoped<IEventoHospedajesService, EventoHospedajesService>();
 builder.Services.AddScoped<IHospedajeTagsService, HospedajeTagsService>();
