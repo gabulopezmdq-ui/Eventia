@@ -11,6 +11,24 @@ namespace API.DataSchema.DTO.Invitados
         public string Titular { get; set; }
         public string RsvpEstadoGrupo { get; set; }
         public string? RsvpMensaje { get; set; }
+
+        //campos nuevos para poder volver a cargar o confirmar invitados
+        public bool PuedeEditarGrupo { get; set; }
+
+        public bool GrupoCerrado { get; set; }
+
+        public int CuposInvitados { get; set; }
+        public int PersonasCargadas { get; set; }
+        public int CuposSinDefinir { get; set; }
+
+        public int AdultosInvitados { get; set; }
+        public int MenoresInvitados { get; set; }
+
+        public int AdultosCargados { get; set; }
+        public int MenoresCargados { get; set; }
+
+        public int AdultosDisponibles { get; set; }
+        public int MenoresDisponibles { get; set; }
         public List<ResumenRsvpIntegranteDTO> Integrantes { get; set; } = new();
     }
 
@@ -23,6 +41,8 @@ namespace API.DataSchema.DTO.Invitados
         public string? QrToken { get; set; }
         public string? RsvpMensaje { get; set; }
         public DateTimeOffset? FechaRsvp { get; set; }
+
+        public string? RolEvento { get; set; }
 
         public long? IdMesa { get; set; }
         public string? MesaNombre { get; set; }

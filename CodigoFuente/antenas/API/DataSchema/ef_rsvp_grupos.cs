@@ -36,6 +36,10 @@ namespace API.DataSchema
         public int? cant_adultos_sin_nombre { get; set; }
         public int? cant_menores_sin_nombre { get; set; }
 
+        public bool grupo_cerrado { get; set; }
+        public DateTimeOffset? fecha_cierre { get; set; }
+        public string? observaciones_cierre { get; set; }
+
         // Navigation
         public ef_eventos evento { get; set; } = null!;
         public ef_evento_accesos acceso { get; set; } = null!;

@@ -64,6 +64,18 @@ namespace API.DataSchema.ModelConfiguration
                 .HasColumnName("activo")
                 .HasDefaultValue(true)
                 .IsRequired();
+            
+            builder.Property(e => e.grupo_cerrado)
+                .HasColumnName("grupo_cerrado")
+                .HasDefaultValue(false)
+                .IsRequired();
+
+            builder.Property(e => e.fecha_cierre)
+                .HasColumnName("fecha_cierre");
+
+            builder.Property(e => e.observaciones_cierre)
+                .HasColumnName("observaciones_cierre")
+                .HasMaxLength(300);
 
             // Índices
             builder.HasIndex(x => x.id_evento)
