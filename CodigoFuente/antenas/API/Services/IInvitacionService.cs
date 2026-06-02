@@ -20,5 +20,6 @@ namespace API.Services
         Task<InvitadosPersonasResponseDTO> ObtenerPersonasInvitadasAsync(long idEvento);
         Task<InvitadosGruposResponseDTO> ObtenerGruposInvitadosAsync(long idEvento);
         Task<ResumenRsvpDTO> ObtenerResumenRsvpAsync(string token);
+        Task<ResumenRsvpDTO> CerrarGrupoRsvpAsync(string token, CerrarGrupoRsvpRequest request);
     }
 }
