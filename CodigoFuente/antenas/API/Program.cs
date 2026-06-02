@@ -205,6 +205,9 @@ builder.Services.AddScoped<IRegalosTransferenciasConfigService, RegalosTransfere
 builder.Services.AddScoped<ITransporteEventoService, TransporteEventoService>();
 builder.Services.AddScoped<ITransporteProConfigService, TransporteProConfigService>();
 
+//novedades eventos
+builder.Services.AddScoped<IEventoNovedadesService, EventoNovedadesService>();
+
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 

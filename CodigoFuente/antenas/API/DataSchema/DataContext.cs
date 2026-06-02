@@ -2,6 +2,7 @@ using API.DataSchema.Configurations;
 using API.DataSchema.ModelConfiguration;
 using API.DataSchema.ModelConfiguration.Regalos;
 using API.DataSchema.QueryModels;
+using API.ModelConfiguration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
@@ -196,6 +197,10 @@ namespace API.DataSchema
         //transporte
         public DbSet<ef_evento_transporte> ef_evento_transporte { get; set; }
         public DbSet<ef_evento_transporte_pro_config> ef_evento_transporte_pro_config { get; set; }
+
+        //novedades eventos
+        public DbSet<ef_evento_novedades> ef_evento_novedades { get; set; }
+        public DbSet<ef_param_tipos_novedad_evento> ef_param_tipos_novedad_evento { get; set; }
 
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
@@ -421,6 +426,10 @@ namespace API.DataSchema
             //transporte
             modelBuilder.ApplyConfiguration(new ef_evento_transporteConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_transporte_pro_configConfiguration());
+
+            //novedades eventos
+            modelBuilder.ApplyConfiguration(new ef_evento_novedadesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_tipos_novedad_eventoConfiguration());
 
 
             // Likes: Clave primaria compuesta
