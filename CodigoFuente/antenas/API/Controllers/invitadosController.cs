@@ -107,6 +107,15 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("CerrarGrupoRsvp")]
+        public async Task<ActionResult<ResumenRsvpDTO>> CerrarGrupoRsvp(
+            [FromQuery] string token,
+            [FromBody] CerrarGrupoRsvpRequest request)
+        {
+            var result = await _invitacionService.CerrarGrupoRsvpAsync(token, request);
+            return Ok(result);
+        }
+
     }
 }
 
