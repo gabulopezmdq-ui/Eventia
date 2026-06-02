@@ -1433,7 +1433,8 @@ namespace API.Services
             var titular = await _context.ef_invitados
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x =>
-                    x.rsvp_token != null && x.rsvp_token.ToLower() == token.ToLower()
+                    x.rsvp_token != null
+                    && x.rsvp_token.ToLower() == token.ToLower()
                     && x.activo == true);
 
             if (titular == null)
@@ -1442,44 +1443,126 @@ namespace API.Services
             if (titular.id_rsvp_grupo == null)
                 throw new Exception("La invitación no pertenece a un grupo RSVP.");
 
+            var grupo = await _context.ef_rsvp_grupos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.id_rsvp_grupo == titular.id_rsvp_grupo.Value);
+
+            if (grupo == null)
+                throw new Exception("Grupo RSVP inexistente.");
+
             var evento = await _context.ef_eventos
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.id_evento == titular.id_evento);
+                .FirstOrDefaultAsync(x =>
+                    x.id_evento == titular.id_evento);
 
-            var integrantes = await _context.ef_invitados
-                .AsNoTracking()
-                .Where(x =>
-                    x.id_evento == titular.id_evento
-                    && x.id_rsvp_grupo == titular.id_rsvp_grupo
-                    && x.activo == true
-                    && x.es_staff == false)
-                .Select(x => new ResumenRsvpIntegranteDTO
+            // ------------------------------------------
+            // Integrantes ya cargados
+            // ------------------------------------------
+
+            var integrantes = await (
+                from inv in _context.ef_invitados.AsNoTracking()
+                join gi in _context.ef_rsvp_grupo_integrantes.AsNoTracking()
+                    on inv.id_invitado equals gi.id_invitado into gj
+                from gi in gj.DefaultIfEmpty()
+                where inv.id_evento == titular.id_evento
+                      && inv.id_rsvp_grupo == titular.id_rsvp_grupo
+                      && inv.activo == true
+                      && inv.es_staff == false
+                select new ResumenRsvpIntegranteDTO
                 {
-                    IdInvitado = x.id_invitado,
-                    NombreCompleto = (x.nombre + " " + x.apellido).Trim(),
-                    EsTitularGrupo = x.es_titular_grupo,
-                    RsvpEstado = x.rsvp_estado,
-                    QrToken = x.qr_token,
-                    RsvpMensaje = x.rsvp_mensaje,
-                    FechaRsvp = x.fecha_rsvp
+                    IdInvitado = inv.id_invitado,
+                    NombreCompleto =
+                        (inv.nombre + " " + inv.apellido).Trim(),
+
+                    EsTitularGrupo = inv.es_titular_grupo,
+
+                    RolEvento = gi != null
+                        ? gi.rol_evento
+                        : null,
+
+                    RsvpEstado = inv.rsvp_estado,
+                    QrToken = inv.qr_token,
+                    RsvpMensaje = inv.rsvp_mensaje,
+                    FechaRsvp = inv.fecha_rsvp
                 })
                 .OrderByDescending(x => x.EsTitularGrupo)
                 .ThenBy(x => x.NombreCompleto)
                 .ToListAsync();
 
-            var idsInvitados = integrantes.Select(x => x.IdInvitado).ToList();
+            var idsInvitados =
+                integrantes.Select(x => x.IdInvitado).ToList();
 
-            var confirmados = integrantes.Count(x => x.RsvpEstado == "Y");
-            var rechazados = integrantes.Count(x => x.RsvpEstado == "N");
+            // ------------------------------------------
+            // Conteos grupo
+            // ------------------------------------------
 
-            var estadoGrupo = "PENDIENTE";
+            var adultosCargados =
+                integrantes.Count(x => x.RolEvento == "A");
 
-            if (confirmados == integrantes.Count)
-                estadoGrupo = "CONFIRMADO";
-            else if (rechazados == integrantes.Count)
+            var menoresCargados =
+                integrantes.Count(x => x.RolEvento == "N");
+
+            var adultosInvitados =
+                1 + (grupo.cant_adultos_sin_nombre ?? 0);
+
+            var menoresInvitados =
+                grupo.cant_menores_sin_nombre ?? 0;
+
+            var cuposInvitados =
+                adultosInvitados + menoresInvitados;
+
+            var personasCargadas =
+                integrantes.Count;
+
+            var cuposSinDefinir =
+                Math.Max(0, cuposInvitados - personasCargadas);
+
+            var adultosDisponibles =
+                Math.Max(0, adultosInvitados - adultosCargados);
+
+            var menoresDisponibles =
+                Math.Max(0, menoresInvitados - menoresCargados);
+
+            var confirmados =
+                integrantes.Count(x => x.RsvpEstado == "Y");
+
+            var pendientes =
+                integrantes.Count(x => x.RsvpEstado == "P");
+
+            var rechazados =
+                integrantes.Count(x => x.RsvpEstado == "N");
+
+            // ------------------------------------------
+            // Estado grupo
+            // ------------------------------------------
+
+            string estadoGrupo = "PENDIENTE";
+
+            if (rechazados > 0
+                && rechazados == integrantes.Count
+                && grupo.grupo_cerrado)
+            {
                 estadoGrupo = "RECHAZADO";
+            }
+            else if (cuposSinDefinir > 0
+                     && confirmados > 0)
+            {
+                estadoGrupo = "INCOMPLETO";
+            }
+            else if (confirmados == integrantes.Count
+                     && grupo.grupo_cerrado)
+            {
+                estadoGrupo = "CONFIRMADO";
+            }
             else if (confirmados > 0)
+            {
                 estadoGrupo = "PARCIAL";
+            }
+
+            // ------------------------------------------
+            // Mesas
+            // ------------------------------------------
 
             var mesas = await (
                 from mi in _context.ef_evento_mesa_invitados.AsNoTracking()
@@ -1498,12 +1581,18 @@ namespace API.Services
                 .GroupBy(x => x.id_invitado)
                 .ToDictionary(x => x.Key, x => x.First());
 
+            // ------------------------------------------
+            // Restricciones
+            // ------------------------------------------
+
             var restricciones = await (
                 from gi in _context.ef_rsvp_grupo_integrantes.AsNoTracking()
                 join r in _context.ef_rsvp_integrante_restricciones.AsNoTracking()
-                    on gi.id_rsvp_grupo_integrante equals r.id_rsvp_grupo_integrante
+                    on gi.id_rsvp_grupo_integrante
+                    equals r.id_rsvp_grupo_integrante
                 join pr in _context.ef_param_restricciones_alimentarias.AsNoTracking()
-                    on r.id_restriccion_alim equals pr.id_restriccion_alim
+                    on r.id_restriccion_alim
+                    equals pr.id_restriccion_alim
                 where idsInvitados.Contains(gi.id_invitado)
                 select new
                 {
@@ -1524,14 +1613,24 @@ namespace API.Services
                     ).Distinct().ToList()
                 );
 
-            var sugerencias = await _context.ef_invitado_musica_sugerencias
+            // ------------------------------------------
+            // Música
+            // ------------------------------------------
+
+            var sugerencias = await _context
+                .ef_invitado_musica_sugerencias
                 .AsNoTracking()
-                .Where(x => idsInvitados.Contains(x.id_invitado) && x.activo == true)
+                .Where(x =>
+                    idsInvitados.Contains(x.id_invitado)
+                    && x.activo == true)
                 .Select(x => new
                 {
                     x.id_invitado,
-                    Texto = ((x.titulo ?? "") +
-                            (string.IsNullOrWhiteSpace(x.artista) ? "" : " - " + x.artista)).Trim()
+                    Texto =
+                        ((x.titulo ?? "") +
+                         (string.IsNullOrWhiteSpace(x.artista)
+                            ? ""
+                            : " - " + x.artista)).Trim()
                 })
                 .ToListAsync();
 
@@ -1542,36 +1641,86 @@ namespace API.Services
                     g => g.Select(x => x.Texto).ToList()
                 );
 
-
             foreach (var item in integrantes)
             {
                 if (mesasMap.ContainsKey(item.IdInvitado))
                 {
-                    item.IdMesa = mesasMap[item.IdInvitado].id_mesa;
-                    item.MesaNombre = mesasMap[item.IdInvitado].MesaNombre;
+                    item.IdMesa =
+                        mesasMap[item.IdInvitado].id_mesa;
+
+                    item.MesaNombre =
+                        mesasMap[item.IdInvitado].MesaNombre;
                 }
 
                 if (restriccionesMap.ContainsKey(item.IdInvitado))
                 {
-                    item.Restricciones = restriccionesMap[item.IdInvitado];
-                    item.TieneRestricciones = item.Restricciones.Any();
+                    item.Restricciones =
+                        restriccionesMap[item.IdInvitado];
+
+                    item.TieneRestricciones =
+                        item.Restricciones.Any();
                 }
 
                 if (sugerenciasMap.ContainsKey(item.IdInvitado))
                 {
-                    item.SugerenciasMusica = sugerenciasMap[item.IdInvitado];
-                    item.CantidadSugerenciasMusica = item.SugerenciasMusica.Count;
+                    item.SugerenciasMusica =
+                        sugerenciasMap[item.IdInvitado];
+
+                    item.CantidadSugerenciasMusica =
+                        item.SugerenciasMusica.Count;
                 }
             }
 
             return new ResumenRsvpDTO
             {
                 IdEvento = titular.id_evento,
-                Evento = evento != null ? evento.saludo : null,
-                IdRsvpGrupo = titular.id_rsvp_grupo.Value,
-                Titular = (titular.nombre + " " + titular.apellido).Trim(),
+
+                Evento = evento?.saludo,
+
+                IdRsvpGrupo =
+                    titular.id_rsvp_grupo.Value,
+
+                Titular =
+                    (titular.nombre + " " + titular.apellido).Trim(),
+
                 RsvpEstadoGrupo = estadoGrupo,
-                RsvpMensaje = titular.rsvp_mensaje,
+
+                RsvpMensaje = grupo.rsvp_mensaje,
+
+                GrupoCerrado =
+                    grupo.grupo_cerrado,
+
+                PuedeEditarGrupo =
+                    !grupo.grupo_cerrado
+                    && cuposSinDefinir > 0,
+
+                CuposInvitados =
+                    cuposInvitados,
+
+                PersonasCargadas =
+                    personasCargadas,
+
+                CuposSinDefinir =
+                    cuposSinDefinir,
+
+                AdultosInvitados =
+                    adultosInvitados,
+
+                MenoresInvitados =
+                    menoresInvitados,
+
+                AdultosCargados =
+                    adultosCargados,
+
+                MenoresCargados =
+                    menoresCargados,
+
+                AdultosDisponibles =
+                    adultosDisponibles,
+
+                MenoresDisponibles =
+                    menoresDisponibles,
+
                 Integrantes = integrantes
             };
         }
