@@ -13,14 +13,24 @@ import {
     ArrowRight,
     ExternalLink,
     Sparkles,
+    Copy,
+    Download,
+    Share,
+    X,
 } from 'lucide-react';
 import { guardarTokenPortal } from '@/src/features/portal/portal.service';
+import { useToast } from '@/src/context/ToastContext';
 
 export function SuccessScreen() {
     const { state, limpiarDraft } = useInscripcion();
     const resultado = state.resultadoConfirmacion;
     const router = useRouter();
+    const { addToast } = useToast();
     const [tokenGuardado, setTokenGuardado] = useState(false);
+    const [pwaSupported, setPwaSupported] = useState(false);
+    const [isIOS, setIsIOS] = useState(false);
+    const [isStandalone, setIsStandalone] = useState(false);
+    const [showIosGuide, setShowIosGuide] = useState(false);
 
     // Al montar: limpiar draft e intentar guardar el token del portal persistente
     useEffect(() => {
@@ -29,6 +39,25 @@ export function SuccessScreen() {
         if (resultado?.token_portal) {
             guardarTokenPortal(resultado.token_portal);
             setTokenGuardado(true);
+        }
+
+        if (typeof window !== 'undefined') {
+            const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+            setIsStandalone(!!standalone);
+
+            const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(navigator as any).standalone;
+            setIsIOS(ios);
+
+            const hasPrompt = !!(window as any).deferredPrompt;
+            setPwaSupported(hasPrompt || ios);
+
+            const handleInstallAvailable = () => {
+                setPwaSupported(true);
+            };
+            window.addEventListener('pwa-install-available', handleInstallAvailable);
+            return () => {
+                window.removeEventListener('pwa-install-available', handleInstallAvailable);
+            };
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -42,6 +71,44 @@ export function SuccessScreen() {
     const handleIrAlPortal = () => {
         if (resultado?.url_portal) {
             router.push(resultado.url_portal);
+        }
+    };
+
+    const handleCopiarEnlace = () => {
+        if (resultado?.url_mi_eventia) {
+            const urlAbsoluta = `${window.location.origin}${resultado.url_mi_eventia}`;
+            navigator.clipboard.writeText(urlAbsoluta)
+                .then(() => {
+                    addToast('¡Enlace de acceso copiado al portapapeles!', 'success');
+                })
+                .catch(() => {
+                    addToast('No se pudo copiar el enlace. Por favor, cópialo manualmente.', 'error');
+                });
+        }
+    };
+
+    const handleGuardarAcceso = async () => {
+        if (isStandalone) {
+            addToast('Eventia ya está instalada en tu dispositivo.', 'info');
+            return;
+        }
+
+        if (isIOS) {
+            setShowIosGuide(true);
+            return;
+        }
+
+        const promptEvent = (window as any).deferredPrompt;
+        if (promptEvent) {
+            promptEvent.prompt();
+            const { outcome } = await promptEvent.userChoice;
+            if (outcome === 'accepted') {
+                addToast('¡Instalación iniciada con éxito! Disfrutá de Eventia.', 'success');
+                (window as any).deferredPrompt = null;
+                setPwaSupported(false);
+            }
+        } else {
+            addToast('Para guardar, usa la opción "Agregar a la pantalla de inicio" de tu navegador.', 'info');
         }
     };
 
@@ -120,29 +187,55 @@ export function SuccessScreen() {
                             )}
 
                             {/* Botones de acción */}
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                {/* CTA principal */}
-                                <button
-                                    id="btn-ir-mi-eventia"
-                                    onClick={handleIrAMiEventia}
-                                    className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-purple-700 font-bold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all shadow-lg hover:shadow-xl"
-                                >
-                                    <LayoutDashboard className="w-4 h-4" />
-                                    Ir a Mi-Eventia
-                                    <ArrowRight className="w-4 h-4" />
-                                </button>
-
-                                {/* Link secundario al portal puntual del evento */}
-                                {resultado?.url_portal && (
+                            <div className="flex flex-col gap-3">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    {/* CTA principal */}
                                     <button
-                                        id="btn-ver-portal-evento"
-                                        onClick={handleIrAlPortal}
-                                        className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/15 hover:bg-white/25 text-white font-semibold rounded-xl backdrop-blur-sm active:scale-[0.98] transition-all border border-white/20"
+                                        id="btn-ir-mi-eventia"
+                                        onClick={handleIrAMiEventia}
+                                        className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-purple-700 font-bold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all shadow-lg hover:shadow-xl text-sm"
                                     >
-                                        <ExternalLink className="w-4 h-4" />
-                                        Ver portal del evento
+                                        <LayoutDashboard className="w-4 h-4" />
+                                        Ir a Mi-Eventia
+                                        <ArrowRight className="w-4 h-4" />
                                     </button>
-                                )}
+
+                                    {/* Link secundario al portal puntual del evento */}
+                                    {resultado?.url_portal && (
+                                        <button
+                                            id="btn-ver-portal-evento"
+                                            onClick={handleIrAlPortal}
+                                            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/15 hover:bg-white/25 text-white font-semibold rounded-xl backdrop-blur-sm active:scale-[0.98] transition-all border border-white/20 text-sm"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                            Ver portal del evento
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    {/* Copiar enlace */}
+                                    <button
+                                        id="btn-copiar-enlace"
+                                        onClick={handleCopiarEnlace}
+                                        className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl active:scale-[0.98] transition-all border border-white/15 text-sm"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                        Copiar enlace de acceso
+                                    </button>
+
+                                    {/* Guardar acceso (PWA) */}
+                                    {pwaSupported && !isStandalone && (
+                                        <button
+                                            id="btn-guardar-celular"
+                                            onClick={handleGuardarAcceso}
+                                            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl active:scale-[0.98] transition-all shadow-md text-sm"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Guardar acceso en mi celular
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -235,6 +328,61 @@ export function SuccessScreen() {
                 </div>
 
             </div>
+
+            {/* ── Modal Guía iOS ── */}
+            {showIosGuide && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-md bg-white dark:bg-card-bg rounded-3xl shadow-2xl border border-gray-200 dark:border-card-border p-6 animate-in zoom-in-95 duration-200 relative">
+                        <button
+                            onClick={() => setShowIosGuide(false)}
+                            className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-xl text-muted hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+                            <Download className="w-6 h-6" />
+                        </div>
+
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                            Guardar Eventia en tu iPhone
+                        </h3>
+                        <p className="text-sm text-muted mb-4">
+                            Agregá la aplicación a tu pantalla de inicio desde Safari para acceder al instante:
+                        </p>
+
+                        <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-card-border">
+                            <div className="flex items-center gap-3">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-500 font-bold text-xs shrink-0">
+                                    1
+                                </span>
+                                <span>
+                                    Tocá el botón de <strong>Compartir</strong> en la barra de navegación de Safari.
+                                </span>
+                                <Share className="w-4 h-4 text-blue-500 ml-auto shrink-0" />
+                            </div>
+                            <div className="flex items-center gap-3 border-t border-gray-200 dark:border-card-border pt-3">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-500 font-bold text-xs shrink-0">
+                                    2
+                                </span>
+                                <span>
+                                    Desplazate hacia abajo y seleccioná <strong>"Agregar a inicio"</strong>.
+                                </span>
+                                <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-700 flex items-center justify-center font-bold text-[12px] ml-auto shrink-0 text-gray-500">
+                                    +
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowIosGuide(false)}
+                            className="w-full mt-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all text-sm"
+                        >
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // TIPOS — Portal Puntual y Portal Persistente (Mi-Eventia)
-// Basado en la documentación: documentacion_portal_persistente.md
+// Basado en la documentación: documentacion_tecnica_portal_circuitos.md
 // ═══════════════════════════════════════════════════════════════════
 
 // ── Tipos comunes ─────────────────────────────────────────────────
@@ -16,43 +16,34 @@ export interface PortalEvento {
 
 // ── Tipos del Portal Puntual (GET /api/portal/{token}) ────────────
 
-/** Respuesta de la landing pública — no requiere JWT */
-export interface PortalPublicoResponse {
-    evento: PortalEvento;
-}
-
-// ── Tipos de Doble Verificación (POST /api/portal/{token}/verificar) ──
-
-/** Payload de verificación de email */
-export interface VerificarEmailPayload {
-    email: string;
-}
-
-/** Respuesta exitosa de la verificación — contiene el JWT de 24h */
-export interface VerificacionResponse {
-    token: string;
-}
-
-// ── Tipos del Dashboard Protegido (GET /api/portal/dashboard) ─────
-
 /** Sección habilitada para el portal del evento */
 export interface SeccionHabilitada {
     codigo: string;
     orden: number;
     titulo: string;
+    visible: boolean;
+    requiere_desbloqueo: boolean;
 }
 
-/** Datos del participante/responsable en el dashboard */
-export interface PortalParticipante {
-    nombre_responsable: string;
-    apellido_responsable: string;
-}
-
-/** Respuesta del dashboard protegido — requiere JWT en Authorization header */
-export interface PortalDashboardResponse {
+/** Respuesta completa e integrada del Portal Puntual */
+export interface PortalPuntualResponse {
+    tipoPortal: 'PROGRAMA' | 'EVENTO' | string;
+    idEvento: number;
     evento: PortalEvento;
-    participante: PortalParticipante;
-    secciones_habilitadas: SeccionHabilitada[];
+    usuario: {
+        nombre: string;
+        email: string;
+    };
+    requiere_desbloqueo_sensible: boolean;
+    desbloqueado_sensible: boolean;
+    url_mi_eventia: string;
+    secciones: SeccionHabilitada[];
+    data: {
+        resumen: any;
+        pagos: any;
+        salud: any | null;
+        qrsRetiro: any | null;
+    };
 }
 
 // ── Tipos del Portal Persistente Mi-Eventia ───────────────────────
@@ -91,7 +82,6 @@ export interface MiEventiaResponse {
 // ═══════════════════════════════════════════════════════════════════
 
 const STORAGE_KEY_PORTAL = 'mi_eventia_token';
-const SESSION_KEY_JWT_PREFIX = 'jwt_portal_';
 
 /**
  * Persiste el token del portal persistente (GUID de largo plazo) en localStorage.
@@ -112,37 +102,6 @@ export function obtenerTokenPortal(): string | null {
         return localStorage.getItem(STORAGE_KEY_PORTAL);
     }
     return null;
-}
-
-/**
- * Persiste el JWT de Soft Verification (24h) en sessionStorage para un token de consulta.
- * Al cerrar el navegador, el JWT se elimina automáticamente.
- */
-export function guardarJwtPortalPuntual(tokenConsulta: string, jwt: string): void {
-    if (typeof window !== 'undefined') {
-        sessionStorage.setItem(`${SESSION_KEY_JWT_PREFIX}${tokenConsulta}`, jwt);
-    }
-}
-
-/**
- * Recupera el JWT de Soft Verification para un token de consulta específico.
- * Retorna null si el JWT expiró (se eliminó) o nunca se verificó.
- */
-export function obtenerJwtPortalPuntual(tokenConsulta: string): string | null {
-    if (typeof window !== 'undefined') {
-        return sessionStorage.getItem(`${SESSION_KEY_JWT_PREFIX}${tokenConsulta}`);
-    }
-    return null;
-}
-
-/**
- * Elimina el JWT de Soft Verification del sessionStorage.
- * Se llama cuando el backend responde con 401 Unauthorized (JWT expirado/inválido).
- */
-export function eliminarJwtPortalPuntual(tokenConsulta: string): void {
-    if (typeof window !== 'undefined') {
-        sessionStorage.removeItem(`${SESSION_KEY_JWT_PREFIX}${tokenConsulta}`);
-    }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -166,12 +125,14 @@ export async function getMiEventia(tokenPortal: string): Promise<MiEventiaRespon
 }
 
 /**
- * GET — Portal Puntual (Landing Pública)
- * Obtiene la información básica del evento para la landing inicial.
- * No requiere JWT — acceso completamente público.
+ * GET — Portal Puntual (Landing Pública y Secciones Protegidas)
+ * Obtiene la información del evento, secciones y datos habilitados.
  */
-export async function getPortalPublico(tokenConsulta: string): Promise<PortalPublicoResponse> {
-    const res = await fetch(`/api/portal/${tokenConsulta}`);
+export async function getPortalPuntual(
+    tokenConsulta: string,
+    idIdioma: number = 1
+): Promise<PortalPuntualResponse> {
+    const res = await fetch(`/api/portal/${tokenConsulta}?idIdioma=${idIdioma}`);
 
     if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -182,71 +143,87 @@ export async function getPortalPublico(tokenConsulta: string): Promise<PortalPub
 }
 
 /**
- * POST — Doble Verificación / Soft Verification
- * Contrasta el email ingresado con el del responsable registrado.
- * Si coincide, el backend emite un JWT firmado válido por 24 horas.
- *
- * @throws Error con mensaje descriptivo si el email es incorrecto (401)
+ * POST — Solicitar Código de Verificación OTP
+ * Envía un código de 6 dígitos mediante el canal seleccionado (EMAIL o WHATSAPP).
  */
-export async function verificarEmailPortal(
+export async function solicitarCodigoOtp(
     tokenConsulta: string,
-    email: string
-): Promise<VerificacionResponse> {
-    const payload: VerificarEmailPayload = { email };
-
-    const res = await fetch(`/api/portal/${tokenConsulta}/verificar`, {
+    canal: 'EMAIL' | 'WHATSAPP'
+): Promise<{ ok: boolean; mensaje: string; codigo_dev?: string }> {
+    const res = await fetch(`/api/portal/${tokenConsulta}/solicitar-codigo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ canal }),
     });
-
-    if (res.status === 401) {
-        throw new Error('El email ingresado no coincide con el responsable registrado.');
-    }
 
     if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.message || 'Error al verificar el email');
+        throw new Error(errData?.message || 'No se pudo enviar el código de verificación.');
     }
 
     return res.json();
 }
 
 /**
- * GET — Dashboard Protegido del Portal Puntual
- * Requiere el JWT de Soft Verification guardado en sessionStorage.
- * Si el backend responde con 401, el JWT expiró y debe eliminarse del storage.
- *
- * @throws Error con código 'SESSION_EXPIRED' si el JWT expiró (frontend debe mostrar modal)
+ * POST — Validar Código de Verificación OTP
+ * Valida el código de 6 dígitos ingresado por el usuario.
  */
-export async function getPortalDashboard(tokenConsulta: string): Promise<PortalDashboardResponse> {
-    const jwt = obtenerJwtPortalPuntual(tokenConsulta);
-
-    if (!jwt) {
-        const err = new Error('Sin JWT de verificación. Se requiere verificar el email.');
-        (err as any).code = 'SESSION_EXPIRED';
-        throw err;
-    }
-
-    const res = await fetch('/api/portal/dashboard', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwt}`,
-        },
+export async function validarCodigoOtp(
+    tokenConsulta: string,
+    codigo: string
+): Promise<{ ok: boolean; desbloqueado: boolean; mensaje: string }> {
+    const res = await fetch(`/api/portal/${tokenConsulta}/validar-codigo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo }),
     });
-
-    if (res.status === 401) {
-        // JWT expirado — limpiar storage y forzar nueva verificación
-        eliminarJwtPortalPuntual(tokenConsulta);
-        const err = new Error('Sesión expirada. Por favor, verificá tu email nuevamente.');
-        (err as any).code = 'SESSION_EXPIRED';
-        throw err;
-    }
 
     if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.message || 'Error al obtener el dashboard del portal');
+        throw new Error(errData?.message || 'El código ingresado es incorrecto.');
+    }
+
+    return res.json();
+}
+
+/**
+ * POST — Solicitar Recuperación de Acceso a Mi Eventia
+ * Envía las instrucciones de acceso si existe una identidad asociada al email.
+ */
+export async function solicitarRecuperacionMiEventia(
+    email: string
+): Promise<{ ok: boolean; mensaje: string; token_recuperacion: string }> {
+    const res = await fetch('/api/mi-eventia/recuperar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, telefono: null, canal: 'EMAIL' }),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.message || 'No se pudo enviar la solicitud de recuperación.');
+    }
+
+    return res.json();
+}
+
+/**
+ * POST — Validar Recuperación de Acceso a Mi Eventia
+ * Valida el código de recuperación para obtener el token de portal y la URL de redirección.
+ */
+export async function validarRecuperacionMiEventia(
+    tokenRecuperacion: string,
+    codigo: string
+): Promise<{ ok: boolean; token_portal: string; url_mi_eventia: string }> {
+    const res = await fetch('/api/mi-eventia/validar-recuperacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token_recuperacion: tokenRecuperacion, codigo }),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.message || 'El código de recuperación es incorrecto.');
     }
 
     return res.json();
