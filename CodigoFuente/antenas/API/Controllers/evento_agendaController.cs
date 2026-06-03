@@ -1,4 +1,5 @@
 ﻿using API.DataSchema.DTO;
+using API.DataSchema.DTO.Eventos.Agenda;
 using API.Services.Eventos.Agenda;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -94,6 +95,20 @@ namespace API.Controllers
             {
                 await _service.EliminarAsync(idEvento, idAgenda);
                 return Ok(new { ok = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("{idEvento}/importar-tramos")]
+        public async Task<ActionResult<EventoAgendaImportarTramosResponseDTO>> ImportarTramos(long idEvento)
+        {
+            try
+            {
+                var result = await _service.ImportarTramosAsync(idEvento);
+                return Ok(result);
             }
             catch (Exception ex)
             {

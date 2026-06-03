@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace API.DataSchema.DTO
+namespace API.DataSchema.DTO.Eventos.Agenda
 {
     public class EventoAgendaDTO
     {

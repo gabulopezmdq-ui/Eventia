@@ -1,4 +1,4 @@
-﻿using API.DataSchema.DTO;
+﻿using API.DataSchema.DTO.Eventos.Agenda;
 using API.Services.Eventos.Agenda;
 using Microsoft.AspNetCore.Mvc;
 using System;
