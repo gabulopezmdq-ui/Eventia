@@ -174,7 +174,12 @@ export default function MiEventiaPage({
     }, [tokenPortal]);
 
     const handleNavegar = (urlPortal: string) => {
-        router.push(urlPortal);
+        if (!urlPortal) return;
+        if (urlPortal.startsWith('http://') || urlPortal.startsWith('https://') || urlPortal.startsWith('//')) {
+            window.location.href = urlPortal;
+        } else {
+            router.push(urlPortal);
+        }
     };
 
     // ── Estado: cargando ──────────────────────────────────────────

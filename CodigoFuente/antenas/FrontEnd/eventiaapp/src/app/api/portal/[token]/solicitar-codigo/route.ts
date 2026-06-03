@@ -16,7 +16,7 @@ export async function POST(
         const { token } = await params;
         const body = await req.json();
 
-        const res = await fetch(`${API_URL}/api/portal/${token}/solicitar-codigo`, {
+        const res = await fetch(`${API_URL}/portal/${token}/solicitar-codigo`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),

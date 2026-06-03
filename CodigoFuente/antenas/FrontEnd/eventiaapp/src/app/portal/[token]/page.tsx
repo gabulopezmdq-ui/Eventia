@@ -400,19 +400,26 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
     const codigoUpper = seccion.codigo.toUpperCase();
 
     if (codigoUpper === 'RESUMEN') {
+        const entries = Object.entries(data || {});
         return (
             <div className="space-y-4">
                 <h4 className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">
                     Información General
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {Object.entries(data).map(([key, val]: [string, any]) => (
-                        <div key={key} className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-100 dark:border-card-border">
-                            <span className="text-xs text-muted uppercase font-semibold">{key.replace(/_/g, ' ')}</span>
-                            <p className="font-bold text-gray-900 dark:text-white text-sm mt-1">{String(val)}</p>
-                        </div>
-                    ))}
-                </div>
+                {entries.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {entries.map(([key, val]: [string, any]) => (
+                            <div key={key} className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-100 dark:border-card-border">
+                                <span className="text-xs text-muted uppercase font-semibold">{key.replace(/_/g, ' ')}</span>
+                                <p className="font-bold text-gray-900 dark:text-white text-sm mt-1">{String(val)}</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-white dark:bg-card-bg rounded-2xl border border-dashed border-gray-200 dark:border-card-border p-8 text-center">
+                        <p className="text-sm text-muted">No hay detalles de información general adicionales cargados para este evento.</p>
+                    </div>
+                )}
             </div>
         );
     }
