@@ -64,13 +64,21 @@ export function SuccessScreen() {
 
     const handleIrAMiEventia = () => {
         if (resultado?.url_mi_eventia) {
-            router.push(resultado.url_mi_eventia);
+            if (resultado.url_mi_eventia.startsWith('http://') || resultado.url_mi_eventia.startsWith('https://') || resultado.url_mi_eventia.startsWith('//')) {
+                window.location.href = resultado.url_mi_eventia;
+            } else {
+                router.push(resultado.url_mi_eventia);
+            }
         }
     };
 
     const handleIrAlPortal = () => {
         if (resultado?.url_portal) {
-            router.push(resultado.url_portal);
+            if (resultado.url_portal.startsWith('http://') || resultado.url_portal.startsWith('https://') || resultado.url_portal.startsWith('//')) {
+                window.location.href = resultado.url_portal;
+            } else {
+                router.push(resultado.url_portal);
+            }
         }
     };
 
