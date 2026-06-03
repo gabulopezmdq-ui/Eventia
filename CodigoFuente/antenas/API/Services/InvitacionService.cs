@@ -20,12 +20,14 @@ namespace API.Services
         private readonly DataContext _context;
         private readonly IConfiguration _config;
         private readonly IRestriccionesService _restriccionesService;
+        private readonly MiEventiaService _miEventiaService;
 
-        public InvitacionService(DataContext context, IConfiguration config, IRestriccionesService restriccionesService)
+        public InvitacionService(DataContext context, IConfiguration config, IRestriccionesService restriccionesService, MiEventiaService miEventiaService)
         {
             _context = context;
             _config = config;
             _restriccionesService = restriccionesService;
+            _miEventiaService = miEventiaService;
         }
 
         public async Task ConfirmarAsync(string token, RsvpConfirmacionDTO datos)
@@ -310,6 +312,27 @@ namespace API.Services
                 grupo.fecha_modif = ahora;
 
                 await _context.SaveChangesAsync();
+
+                // Vincular acceso a Mi-Eventia (Portal Persistente) para el titular del grupo
+                if (!string.IsNullOrWhiteSpace(titular.email) || !string.IsNullOrWhiteSpace(titular.celular))
+                {
+                    var evento = await _context.ef_eventos.AsNoTracking()
+                        .FirstOrDefaultAsync(e => e.id_evento == titular.id_evento);
+
+                    await _miEventiaService.VincularAccesoAsync(
+                        nombre: $"{titular.nombre} {titular.apellido}".Trim(),
+                        email: titular.email,
+                        telefono: titular.celular,
+                        tipo: "EVENTO",
+                        idEvento: titular.id_evento,
+                        idInscripcion: 0,
+                        idInvitado: titular.id_invitado,
+                        tokenConsulta: titular.rsvp_token,
+                        titulo: evento?.anfitriones_texto ?? "Evento",
+                        estado: "ACTIVO"
+                    );
+                }
+
                 await tx.CommitAsync();
             }
             catch
@@ -853,6 +876,23 @@ namespace API.Services
             // Opcional: desactivar el link si es de un solo uso
             link.activo = false;
             await _context.SaveChangesAsync();
+
+            // Vincular acceso a Mi-Eventia (Portal Persistente) para el titular
+            if (!string.IsNullOrWhiteSpace(request.Titular.Email) || !string.IsNullOrWhiteSpace(request.Titular.Celular))
+            {
+                await _miEventiaService.VincularAccesoAsync(
+                    nombre: $"{request.Titular.Nombre} {request.Titular.Apellido}".Trim(),
+                    email: request.Titular.Email,
+                    telefono: request.Titular.Celular,
+                    tipo: "EVENTO",
+                    idEvento: acceso.id_evento,
+                    idInscripcion: 0,
+                    idInvitado: titularInvitado.id_invitado,
+                    tokenConsulta: titularInvitado.rsvp_token,
+                    titulo: evento?.anfitriones_texto ?? "Evento",
+                    estado: "ACTIVO"
+                );
+            }
 
             return titularInvitado.rsvp_token;
         }
