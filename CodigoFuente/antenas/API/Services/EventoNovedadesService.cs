@@ -24,54 +24,19 @@ namespace API.Services
                 join t in _context.ef_param_tipos_novedad_evento
                     on n.id_tipo_novedad_evento equals t.id_tipo_novedad_evento
                 where n.id_evento == idEvento
-                select new
-                {
-                    n,
-                    t
-                };
+                select new { n, t };
 
             if (soloActivas)
                 query = query.Where(x => x.n.activo == true);
 
             var data = await query
-                .OrderByDescending(x => x.n.importante)
+                .OrderByDescending(x => x.n.destacada)
+                .ThenByDescending(x => x.n.importante)
+                .ThenBy(x => x.n.orden)
                 .ThenByDescending(x => x.n.fecha_alta)
                 .ToListAsync();
 
-            var idsTipos = data
-                .Select(x => x.t.id_tipo_novedad_evento)
-                .Distinct()
-                .ToList();
-
-            var traducciones = await _context.ef_param_traducciones
-                .Where(x =>
-                    x.entidad == "TIPO_NOVEDAD_EVENTO" &&
-                    x.id_idioma == idIdioma &&
-                    idsTipos.Contains(x.id_item))
-                .ToListAsync();
-
-            return data.Select(x =>
-            {
-                var trad = traducciones.FirstOrDefault(tr =>
-                    tr.id_item == x.t.id_tipo_novedad_evento);
-
-                return new EventoNovedadDTO
-                {
-                    id_novedad = x.n.id_novedad,
-                    id_evento = x.n.id_evento,
-                    id_tipo_novedad_evento = x.n.id_tipo_novedad_evento,
-                    tipo_codigo = x.t.codigo,
-                    tipo_texto = trad != null ? trad.texto : x.t.codigo,
-                    titulo = x.n.titulo,
-                    descripcion = x.n.descripcion,
-                    importante = x.n.importante,
-                    visible_desde = x.n.visible_desde,
-                    visible_hasta = x.n.visible_hasta,
-                    publicado = x.n.publicado,
-                    activo = x.n.activo,
-                    fecha_alta = x.n.fecha_alta
-                };
-            }).ToList();
+            return await MapearNovedadesAsync(data, idIdioma);
         }
 
         public async Task<EventoNovedadDTO> GetByIdAsync(long idEvento, long idNovedad, int idIdioma)
@@ -93,11 +58,7 @@ namespace API.Services
             if (!existeEvento)
                 throw new Exception("No existe el evento.");
 
-            var existeTipo = await _context.ef_param_tipos_novedad_evento
-                .AnyAsync(x => x.id_tipo_novedad_evento == dto.id_tipo_novedad_evento && x.activo);
-
-            if (!existeTipo)
-                throw new Exception("El tipo de novedad no existe o no está activo.");
+            await ValidarTipoAsync(dto.id_tipo_novedad_evento);
 
             var entity = new ef_evento_novedades
             {
@@ -110,6 +71,10 @@ namespace API.Services
                 visible_hasta = dto.visible_hasta,
                 publicado = dto.publicado,
                 activo = dto.activo,
+                url_adjunto = string.IsNullOrWhiteSpace(dto.url_adjunto) ? null : dto.url_adjunto.Trim(),
+                tipo_adjunto = string.IsNullOrWhiteSpace(dto.tipo_adjunto) ? null : dto.tipo_adjunto.Trim().ToUpper(),
+                destacada = dto.destacada,
+                orden = dto.orden <= 0 ? (short)1 : dto.orden,
                 id_usuario_alta = idUsuario,
                 fecha_alta = DateTime.UtcNow
             };
@@ -130,11 +95,7 @@ namespace API.Services
             if (entity == null)
                 throw new Exception("No se encontró la novedad.");
 
-            var existeTipo = await _context.ef_param_tipos_novedad_evento
-                .AnyAsync(x => x.id_tipo_novedad_evento == dto.id_tipo_novedad_evento && x.activo);
-
-            if (!existeTipo)
-                throw new Exception("El tipo de novedad no existe o no está activo.");
+            await ValidarTipoAsync(dto.id_tipo_novedad_evento);
 
             entity.id_tipo_novedad_evento = dto.id_tipo_novedad_evento;
             entity.titulo = dto.titulo.Trim();
@@ -144,6 +105,10 @@ namespace API.Services
             entity.visible_hasta = dto.visible_hasta;
             entity.publicado = dto.publicado;
             entity.activo = dto.activo;
+            entity.url_adjunto = string.IsNullOrWhiteSpace(dto.url_adjunto) ? null : dto.url_adjunto.Trim();
+            entity.tipo_adjunto = string.IsNullOrWhiteSpace(dto.tipo_adjunto) ? null : dto.tipo_adjunto.Trim().ToUpper();
+            entity.destacada = dto.destacada;
+            entity.orden = dto.orden <= 0 ? (short)1 : dto.orden;
             entity.fecha_modif = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -164,28 +129,6 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        private void Validar(EventoNovedadRequestDTO dto)
-        {
-            if (dto == null)
-                throw new Exception("Debe informar los datos de la novedad.");
-
-            if (string.IsNullOrWhiteSpace(dto.titulo))
-                throw new Exception("Debe informar el título.");
-
-            if (dto.titulo.Trim().Length > 150)
-                throw new Exception("El título no puede superar los 150 caracteres.");
-
-            if (string.IsNullOrWhiteSpace(dto.descripcion))
-                throw new Exception("Debe informar la descripción.");
-
-            if (dto.id_tipo_novedad_evento <= 0)
-                throw new Exception("Debe informar el tipo de novedad.");
-
-            if (dto.visible_desde.HasValue && dto.visible_hasta.HasValue &&
-                dto.visible_hasta.Value < dto.visible_desde.Value)
-                throw new Exception("La fecha visible hasta no puede ser menor que visible desde.");
         }
 
         public async Task<List<EventoNovedadDTO>> GetPublicByTokenAsync(string token, int idIdioma)
@@ -212,19 +155,24 @@ namespace API.Services
                    && n.publicado == true
                    && (n.visible_desde == null || n.visible_desde <= ahora)
                    && (n.visible_hasta == null || n.visible_hasta >= ahora)
-                select new
-                {
-                    n,
-                    t
-                };
+                select new { n, t };
 
             var data = await query
-                .OrderByDescending(x => x.n.importante)
+                .OrderByDescending(x => x.n.destacada)
+                .ThenByDescending(x => x.n.importante)
+                .ThenBy(x => x.n.orden)
                 .ThenByDescending(x => x.n.fecha_alta)
                 .ToListAsync();
 
-            var idsTipos = data
-                .Select(x => x.t.id_tipo_novedad_evento)
+            return await MapearNovedadesAsync(data, idIdioma);
+        }
+
+        private async Task<List<EventoNovedadDTO>> MapearNovedadesAsync(dynamic data, int idIdioma)
+        {
+            var lista = ((IEnumerable<dynamic>)data).ToList();
+
+            var idsTipos = lista
+                .Select(x => (long)x.t.id_tipo_novedad_evento)
                 .Distinct()
                 .ToList();
 
@@ -232,13 +180,13 @@ namespace API.Services
                 .Where(x =>
                     x.entidad == "TIPO_NOVEDAD_EVENTO" &&
                     x.id_idioma == idIdioma &&
-                    idsTipos.Contains(x.id_item))
+                    idsTipos.Contains((long)x.id_item))
                 .ToListAsync();
 
-            return data.Select(x =>
+            return lista.Select(x =>
             {
                 var trad = traducciones.FirstOrDefault(tr =>
-                    tr.id_item == x.t.id_tipo_novedad_evento);
+                    (long)tr.id_item == (long)x.t.id_tipo_novedad_evento);
 
                 return new EventoNovedadDTO
                 {
@@ -254,12 +202,61 @@ namespace API.Services
                     visible_hasta = x.n.visible_hasta,
                     publicado = x.n.publicado,
                     activo = x.n.activo,
+                    url_adjunto = x.n.url_adjunto,
+                    tipo_adjunto = x.n.tipo_adjunto,
+                    destacada = x.n.destacada,
+                    orden = x.n.orden,
                     fecha_alta = x.n.fecha_alta
                 };
             }).ToList();
         }
 
+        private async Task ValidarTipoAsync(long idTipoNovedadEvento)
+        {
+            var existeTipo = await _context.ef_param_tipos_novedad_evento
+                .AnyAsync(x => x.id_tipo_novedad_evento == idTipoNovedadEvento && x.activo);
 
+            if (!existeTipo)
+                throw new Exception("El tipo de novedad no existe o no está activo.");
+        }
 
+        private void Validar(EventoNovedadRequestDTO dto)
+        {
+            if (dto == null)
+                throw new Exception("Debe informar los datos de la novedad.");
+
+            if (string.IsNullOrWhiteSpace(dto.titulo))
+                throw new Exception("Debe informar el título.");
+
+            if (dto.titulo.Trim().Length > 150)
+                throw new Exception("El título no puede superar los 150 caracteres.");
+
+            if (string.IsNullOrWhiteSpace(dto.descripcion))
+                throw new Exception("Debe informar la descripción.");
+
+            if (dto.id_tipo_novedad_evento <= 0)
+                throw new Exception("Debe informar el tipo de novedad.");
+
+            if (dto.visible_desde.HasValue && dto.visible_hasta.HasValue &&
+                dto.visible_hasta.Value < dto.visible_desde.Value)
+                throw new Exception("La fecha visible hasta no puede ser menor que visible desde.");
+
+            if (!string.IsNullOrWhiteSpace(dto.tipo_adjunto))
+            {
+                var tipoAdjunto = dto.tipo_adjunto.Trim().ToUpper();
+
+                if (tipoAdjunto != "LINK" && tipoAdjunto != "PDF" && tipoAdjunto != "IMAGEN")
+                    throw new Exception("El tipo de adjunto debe ser LINK, PDF o IMAGEN.");
+
+                if (string.IsNullOrWhiteSpace(dto.url_adjunto))
+                    throw new Exception("Debe informar la URL del adjunto.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.url_adjunto) && dto.url_adjunto.Trim().Length > 500)
+                throw new Exception("La URL del adjunto no puede superar los 500 caracteres.");
+
+            if (!string.IsNullOrWhiteSpace(dto.url_adjunto) && string.IsNullOrWhiteSpace(dto.tipo_adjunto))
+                throw new Exception("Debe informar el tipo de adjunto.");
+        }
     }
 }

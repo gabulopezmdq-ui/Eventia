@@ -60,6 +60,22 @@ namespace API.ModelConfiguration
             builder.Property(x => x.fecha_modif)
                 .HasColumnName("fecha_modif");
 
+            builder.Property(x => x.url_adjunto)
+                .HasColumnName("url_adjunto")
+                .HasMaxLength(500);
+
+            builder.Property(x => x.tipo_adjunto)
+                .HasColumnName("tipo_adjunto")
+                .HasMaxLength(20);
+
+            builder.Property(x => x.destacada)
+                .HasColumnName("destacada")
+                .IsRequired();
+
+            builder.Property(x => x.orden)
+                .HasColumnName("orden")
+                .IsRequired();
+
             builder.HasIndex(x => new { x.id_evento, x.activo, x.publicado })
                 .HasDatabaseName("ix_ef_evento_novedades_evento");
 
@@ -68,6 +84,9 @@ namespace API.ModelConfiguration
 
             builder.HasIndex(x => new { x.id_evento, x.visible_desde, x.visible_hasta })
                 .HasDatabaseName("ix_ef_evento_novedades_visibilidad");
+
+            builder.HasIndex(x => new { x.id_evento, x.destacada, x.importante, x.orden, x.fecha_alta })
+                .HasDatabaseName("ix_ef_evento_novedades_orden");
         }
     }
 }
