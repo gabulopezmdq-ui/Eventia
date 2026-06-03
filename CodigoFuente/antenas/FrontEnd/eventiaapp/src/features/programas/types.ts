@@ -317,12 +317,18 @@ export interface StaffOperativoMiembro {
 
 export interface AutorizacionRetiro {
     id_autorizacion: number;
+    idAutorizacion?: number;
     id_evento: number;
+    idEvento?: number;
     id_invitado_objetivo: number; // Niño asociado
+    idInvitadoObjetivo?: number;
     tipo: 'R';
     qr_token: string;
+    qrToken?: string;
     nombre_autorizado: string;
+    nombreAutorizado?: string;
     telefono_autorizado: string;
+    telefonoAutorizado?: string;
     relacion: string;
     activo: boolean;
     fecha_alta: string;

@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/src/context/ThemeContext";
 import { ToastProvider } from "@/src/context/ToastContext";
 import { PlanLimitProvider } from "@/src/context/PlanLimitContext";
+import PWARegister from "@/src/components/PWARegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Eventia - Gestión de Eventos",
   description: "Plataforma de gestión de eventos",
+  appleWebApp: {
+    capable: true,
+    title: "Eventia",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({
@@ -50,6 +56,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <ToastProvider>
+            <PWARegister />
             <PlanLimitProvider>
               {children}
             </PlanLimitProvider>

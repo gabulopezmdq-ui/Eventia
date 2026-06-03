@@ -115,8 +115,14 @@ export interface ResumenRsvpResponse {
     evento: string;
     idRsvpGrupo: number;
     titular: string;
-    rsvpEstadoGrupo: string; // e.g. "CONFIRMADO"
+    rsvpEstadoGrupo: string; // e.g. "CONFIRMADO", "INCOMPLETO", "PENDIENTE"
     rsvpMensaje: string | null;
+    personasCargadas?: number;
+    cuposSinDefinir?: number;
+    adultosDisponibles?: number;
+    menoresDisponibles?: number;
+    puedeEditarGrupo?: boolean;
+    grupoCerrado?: boolean;
     integrantes: IntegranteResumen[];
 }
 
@@ -270,4 +276,25 @@ export async function getResumenRsvp(token: string): Promise<ResumenRsvpResponse
     }
 
     return res.json();
+}
+
+/**
+ * Cerrar el grupo RSVP (el titular indica que no agregará más acompañantes).
+ * POST /api/invitados/cerrar-grupo?token={token}
+ */
+export async function cerrarGrupoRsvp(token: string, observaciones: string = 'El titular indicó que no agregará más acompañantes.'): Promise<any> {
+    const res = await fetch(`/api/invitados/cerrar-grupo?token=${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ observaciones }),
+    });
+
+    if (!res.ok) {
+        const errText = await res.text();
+        let errData;
+        try { errData = JSON.parse(errText); } catch { errData = { message: errText }; }
+        throw new Error(errData?.message || 'Error al cerrar el grupo');
+    }
+
+    return res.json().catch(() => ({}));
 }
