@@ -11,16 +11,23 @@ const API_URL = '/api/autorizacion';
  * GET /api/autorizacion/p/{rsvpToken}/autorizaciones
  */
 export async function getAutorizacionesRsvp(rsvpToken: string): Promise<AutorizacionRetiro[]> {
-    const res = await fetch(`${API_URL}/p/${rsvpToken}/autorizaciones`, {
-        method: 'GET',
-        cache: 'no-store'
-    });
+    try {
+        const res = await fetch(`${API_URL}/p/${rsvpToken}/autorizaciones`, {
+            method: 'GET',
+            cache: 'no-store'
+        });
 
-    if (!res.ok) {
-        throw new Error('Error al obtener los autorizados de retiro');
+        if (!res.ok) {
+            // Temporal: Retornamos un arreglo vacío si el backend aún no ha implementado el endpoint GET
+            console.warn('GET autorizaciones no implementado o fallido en backend, retornando [] temporalmente.');
+            return [];
+        }
+
+        return res.json();
+    } catch (err) {
+        console.warn('Error al obtener los autorizados de retiro, retornando [] temporalmente:', err);
+        return [];
     }
-
-    return res.json();
 }
 
 /**

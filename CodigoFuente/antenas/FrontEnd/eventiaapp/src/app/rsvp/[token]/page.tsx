@@ -11,7 +11,7 @@ import {
     confirmarRsvp, getInvitacionPersonal,
     getCatalogoRestricciones, getCatalogoParametrico, getDatosInvitacion,
     InvitacionPersonalResponse, PersonaInvitacion, PersonaConfirmarPayload,
-    CatalogoRestriccion, getResumenRsvp, ResumenRsvpResponse
+    CatalogoRestriccion, getResumenRsvp, ResumenRsvpResponse, cerrarGrupoRsvp
 } from '@/src/features/rsvp/rsvp.service';
 import {
     getAutorizacionesRsvp,
@@ -72,6 +72,151 @@ export default function RsvpPage({
 
     // --- Resumen RSVP (QRs y datos post-confirmación) ---
     const [resumenRsvp, setResumenRsvp] = useState<ResumenRsvpResponse | null>(null);
+
+    // --- Nuevos Acompañantes en SUCCESS (Grupo Incompleto) ---
+    const [nuevosAcompanantes, setNuevosAcompanantes] = useState<PersonaFormState[]>([]);
+    const [submittingNuevos, setSubmittingNuevos] = useState(false);
+    const [errorNuevosMsg, setErrorNuevosMsg] = useState<string | null>(null);
+    const [submittingCerrarGrupo, setSubmittingCerrarGrupo] = useState(false);
+
+    const addNuevoAcompananteAdulto = () => {
+        if (!resumenRsvp) return;
+        const limit = resumenRsvp.adultosDisponibles ?? 0;
+        const current = nuevosAcompanantes.filter(p => p.rolEvento === 'A').length;
+        if (current >= limit) return;
+
+        setNuevosAcompanantes(prev => [...prev, {
+            nombre: '', apellido: '', email: '', celular: '',
+            rolEvento: 'A', asiste: true, mensaje: '', isNew: true,
+            alimentacionDetalle: '',
+            restriccionesSeleccionadas: {},
+        }]);
+    };
+
+    const addNuevoAcompananteMenor = () => {
+        if (!resumenRsvp) return;
+        const limit = resumenRsvp.menoresDisponibles ?? 0;
+        const current = nuevosAcompanantes.filter(p => p.rolEvento === 'N').length;
+        if (current >= limit) return;
+
+        setNuevosAcompanantes(prev => [...prev, {
+            nombre: '', apellido: '', email: '', celular: '',
+            rolEvento: 'N', asiste: true, mensaje: '', isNew: true,
+            alimentacionDetalle: '',
+            restriccionesSeleccionadas: {},
+        }]);
+    };
+
+    const removeNuevoAcompanante = (index: number) => {
+        setNuevosAcompanantes(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const updateNuevoAcompanante = (index: number, field: keyof PersonaFormState, value: any) => {
+        setNuevosAcompanantes(prev => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], [field]: value };
+            return updated;
+        });
+    };
+
+    const toggleRestriccionNuevoAcompanante = (personaIdx: number, idRestriccion: number) => {
+        setNuevosAcompanantes(prev => {
+            const updated = [...prev];
+            const persona = { ...updated[personaIdx] };
+            const sel = { ...persona.restriccionesSeleccionadas };
+            if (sel[idRestriccion]) {
+                delete sel[idRestriccion];
+            } else {
+                sel[idRestriccion] = { idRestriccion, severidad: 'M', observaciones: '' };
+            }
+            persona.restriccionesSeleccionadas = sel;
+            updated[personaIdx] = persona;
+            return updated;
+        });
+    };
+
+    const updateRestriccionNuevoAcompanante = (personaIdx: number, idRestriccion: number, field: 'severidad' | 'observaciones', value: string) => {
+        setNuevosAcompanantes(prev => {
+            const updated = [...prev];
+            const persona = { ...updated[personaIdx] };
+            const sel = { ...persona.restriccionesSeleccionadas };
+            if (sel[idRestriccion]) {
+                sel[idRestriccion] = { ...sel[idRestriccion], [field]: value };
+            }
+            persona.restriccionesSeleccionadas = sel;
+            updated[personaIdx] = persona;
+            return updated;
+        });
+    };
+
+    const handleConfirmarNuevosAcompanantes = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (nuevosAcompanantes.length === 0) return;
+
+        // Validaciones: Nombre y Apellido para todos; Email y Celular para Adultos
+        for (const p of nuevosAcompanantes) {
+            if (!p.nombre.trim() || !p.apellido.trim()) {
+                alert('El nombre y apellido son obligatorios para todos los acompañantes.');
+                return;
+            }
+            if (p.rolEvento === 'A') {
+                if (!p.email.trim() || !p.celular.trim()) {
+                    alert(`El email y celular son obligatorios para el adulto ${p.nombre} ${p.apellido}.`);
+                    return;
+                }
+            }
+        }
+
+        setSubmittingNuevos(true);
+        setErrorNuevosMsg(null);
+        try {
+            const personasPayload: PersonaConfirmarPayload[] = nuevosAcompanantes.map(p => {
+                const restriccionesArr = Object.values(p.restriccionesSeleccionadas).map(r => ({
+                    idRestriccion: r.idRestriccion,
+                    observaciones: r.observaciones || null,
+                }));
+
+                return {
+                    nombre: p.nombre.trim(),
+                    apellido: p.apellido.trim(),
+                    email: p.email.trim() || undefined,
+                    celular: p.celular.trim() || undefined,
+                    rolEvento: p.rolEvento,
+                    asiste: true,
+                    alimentacionDetalle: p.alimentacionDetalle.trim() || undefined,
+                    restricciones: restriccionesArr.length > 0 ? restriccionesArr : undefined,
+                };
+            });
+
+            await confirmarRsvp(token, { personas: personasPayload });
+
+            // Refrescar resumen para mostrar nuevos QR y actualizar cupos
+            const resumen = await getResumenRsvp(token);
+            setResumenRsvp(resumen);
+            setNuevosAcompanantes([]);
+            await cargarAutorizados();
+        } catch (err: any) {
+            setErrorNuevosMsg(err.message || 'Error al guardar acompañantes.');
+        } finally {
+            setSubmittingNuevos(false);
+        }
+    };
+
+    const handleCerrarGrupo = async () => {
+        if (!confirm('¿Estás seguro de que no deseas agregar más acompañantes? Esta acción cerrará tu grupo de forma definitiva.')) {
+            return;
+        }
+
+        setSubmittingCerrarGrupo(true);
+        try {
+            const response = await cerrarGrupoRsvp(token);
+            setResumenRsvp(response);
+        } catch (err: any) {
+            alert(err.message || 'Error al cerrar el grupo.');
+        } finally {
+            setSubmittingCerrarGrupo(false);
+        }
+    };
 
     // --- Autorizados de Retiro state ---
     const [autorizados, setAutorizados] = useState<AutorizacionRetiro[]>([]);
@@ -166,17 +311,21 @@ export default function RsvpPage({
                 } catch {}
             }
 
-            // 1. Intentar cargar el resumen primero por si ya está confirmado
+            // 1. Cargar el resumen de RSVP
+            let resumen: ResumenRsvpResponse | null = null;
             try {
-                const resumen = await getResumenRsvp(token);
-                if (resumen && resumen.rsvpEstadoGrupo === 'CONFIRMADO') {
-                    setResumenRsvp(resumen);
-                    await cargarAutorizados();
-                    setStep('SUCCESS');
-                    return;
-                }
+                resumen = await getResumenRsvp(token);
+                setResumenRsvp(resumen);
             } catch (errResumen) {
-                console.log('El grupo aún no tiene confirmación registrada o falló la consulta:', errResumen);
+                console.log('Error al obtener el resumen del RSVP:', errResumen);
+            }
+
+            if (resumen && (resumen.rsvpEstadoGrupo === 'CONFIRMADO' || resumen.rsvpEstadoGrupo === 'INCOMPLETO')) {
+                await cargarAutorizados();
+                // Precargar el catálogo para cuando decidan agregar acompañantes
+                await cargarCatalogo(inviteData?.idEvento);
+                setStep('SUCCESS');
+                return;
             }
 
 
@@ -546,6 +695,255 @@ export default function RsvpPage({
                         </div>
                     )}
 
+                    {/* ── Sección Acompañantes Pendientes (Grupo Incompleto) ── */}
+                    {resumenRsvp?.rsvpEstadoGrupo === 'INCOMPLETO' && resumenRsvp?.puedeEditarGrupo === true && (() => {
+                        const adultosRestantes = (resumenRsvp.adultosDisponibles ?? 0) - nuevosAcompanantes.filter(p => p.rolEvento === 'A').length;
+                        const menoresRestantes = (resumenRsvp.menoresDisponibles ?? 0) - nuevosAcompanantes.filter(p => p.rolEvento === 'N').length;
+
+                        return (
+                            <div className="w-full mt-12 pt-10 border-t border-white/10 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                                <div>
+                                    <h2 className="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
+                                        <Users className="w-6 h-6 text-indigo-400" />
+                                        Compañeros de Grupo Pendientes
+                                    </h2>
+                                    <p className="text-muted text-xs sm:text-sm mt-1.5 max-w-lg">
+                                        Tu grupo cuenta con cupos pendientes por definir. Podés agregarlos ahora o cerrar el grupo si no van a asistir más personas.
+                                    </p>
+                                </div>
+
+                                {/* Resumen de Cupos */}
+                                <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-muted uppercase tracking-widest">Te quedan por definir:</p>
+                                        <div className="flex gap-4 flex-wrap">
+                                            {resumenRsvp.adultosDisponibles !== undefined && resumenRsvp.adultosDisponibles > 0 && (
+                                                <span className="text-sm font-semibold text-white">
+                                                    +{adultosRestantes} Adulto{adultosRestantes !== 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                            {resumenRsvp.menoresDisponibles !== undefined && resumenRsvp.menoresDisponibles > 0 && (
+                                                <span className="text-sm font-semibold text-pink-400">
+                                                    +{menoresRestantes} Menor{menoresRestantes !== 1 ? 'es' : ''}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Botones de acción */}
+                                    <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+                                        {adultosRestantes > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={addNuevoAcompananteAdulto}
+                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-bold border border-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+                                            >
+                                                <PlusCircle className="w-4 h-4" />
+                                                Agregar Adulto
+                                            </button>
+                                        )}
+                                        {menoresRestantes > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={addNuevoAcompananteMenor}
+                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-pink-500/10 text-pink-400 hover:bg-pink-500/20 text-xs font-bold border border-pink-500/20 active:scale-95 transition-all cursor-pointer"
+                                            >
+                                                <PlusCircle className="w-4 h-4" />
+                                                Agregar Menor
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={handleCerrarGrupo}
+                                            disabled={submittingCerrarGrupo}
+                                            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/5 text-muted hover:text-white border border-white/10 text-xs font-bold active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {submittingCerrarGrupo ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                'No agregar más'
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Formulario para los Nuevos Acompañantes */}
+                                {nuevosAcompanantes.length > 0 && (
+                                    <form onSubmit={handleConfirmarNuevosAcompanantes} className="space-y-6 animate-in fade-in duration-500">
+                                        {nuevosAcompanantes.map((persona, idx) => (
+                                            <div key={idx} className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4 relative">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${persona.rolEvento === 'A'
+                                                            ? 'bg-indigo-500/20 text-indigo-400'
+                                                            : 'bg-pink-500/20 text-pink-400'
+                                                            }`}>
+                                                            {persona.rolEvento === 'A' ? <User className="w-3.5 h-3.5" /> : <Baby className="w-3.5 h-3.5" />}
+                                                        </div>
+                                                        <span className="text-xs font-bold text-muted uppercase tracking-widest">
+                                                            {persona.rolEvento === 'A' ? 'Nuevo Adulto' : 'Nuevo Menor'}
+                                                        </span>
+                                                    </div>
+
+                                                    <button type="button" onClick={() => removeNuevoAcompanante(idx)}
+                                                        className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Nombre</label>
+                                                        <input required value={persona.nombre} onChange={e => updateNuevoAcompanante(idx, 'nombre', e.target.value)}
+                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Apellido</label>
+                                                        <input required value={persona.apellido} onChange={e => updateNuevoAcompanante(idx, 'apellido', e.target.value)}
+                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                                    </div>
+                                                </div>
+
+                                                {persona.rolEvento === 'A' && (
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
+                                                                <Mail className="w-3 h-3 inline mr-1" />
+                                                                Email<span className="text-red-400 ml-0.5">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="email"
+                                                                required
+                                                                value={persona.email}
+                                                                onChange={e => updateNuevoAcompanante(idx, 'email', e.target.value)}
+                                                                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
+                                                                <Phone className="w-3 h-3 inline mr-1" />
+                                                                Celular<span className="text-red-400 ml-0.5">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="tel"
+                                                                required
+                                                                value={persona.celular}
+                                                                onChange={e => updateNuevoAcompanante(idx, 'celular', e.target.value)}
+                                                                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Alimentación / Restricciones */}
+                                                <div className="space-y-3 pt-2 border-t border-white/5">
+                                                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
+                                                        <ChefHat className="w-3.5 h-3.5 text-indigo-400" /> Preferencias alimentarias
+                                                    </p>
+
+                                                    {catalogo.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {catalogo.map(cat => {
+                                                                const isSelected = !!persona.restriccionesSeleccionadas[cat.idRestriccion];
+                                                                return (
+                                                                    <button
+                                                                        key={cat.idRestriccion}
+                                                                        type="button"
+                                                                        onClick={() => toggleRestriccionNuevoAcompanante(idx, cat.idRestriccion)}
+                                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer
+                                                                            ${isSelected
+                                                                                ? 'bg-indigo-500/15 border-indigo-500/60 text-indigo-300'
+                                                                                : 'bg-white/5 border-white/10 text-muted hover:border-white/30 hover:text-white'}`}
+                                                                    >
+                                                                        {cat.nombre}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {Object.values(persona.restriccionesSeleccionadas).map(r => {
+                                                        const cat = catalogo.find(c => c.idRestriccion === r.idRestriccion);
+                                                        if (cat?.categoria === 'ALERGIA' || cat?.codigo === 'CELIACO') {
+                                                            return (
+                                                                <div key={r.idRestriccion} className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/20 space-y-3 animate-in fade-in">
+                                                                    <p className="flex items-center gap-1.5 text-xs font-bold text-orange-400">
+                                                                        <HeartPulse className="w-3.5 h-3.5" /> {cat.nombre}
+                                                                    </p>
+                                                                    <div className="grid grid-cols-2 gap-3">
+                                                                        <div>
+                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Severidad</label>
+                                                                            <select
+                                                                                value={r.severidad}
+                                                                                onChange={e => updateRestriccionNuevoAcompanante(idx, r.idRestriccion, 'severidad', e.target.value as any)}
+                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500 cursor-pointer"
+                                                                            >
+                                                                                <option value="L">Leve</option>
+                                                                                <option value="M">Media</option>
+                                                                                <option value="G">Grave (contaminación cruzada)</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Aclaración</label>
+                                                                            <input
+                                                                                placeholder="Ej. Sin nueces"
+                                                                                value={r.observaciones}
+                                                                                onChange={e => updateRestriccionNuevoAcompanante(idx, r.idRestriccion, 'observaciones', e.target.value)}
+                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })}
+
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
+                                                            Otras aclaraciones (opcional)
+                                                        </label>
+                                                        <textarea
+                                                            rows={2}
+                                                            placeholder="Ej: No tolero el picante, prefiero vegetariano..."
+                                                            value={persona.alimentacionDetalle}
+                                                            onChange={e => updateNuevoAcompanante(idx, 'alimentacionDetalle', e.target.value)}
+                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none resize-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {errorNuevosMsg && (
+                                            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+                                                {errorNuevosMsg}
+                                            </div>
+                                        )}
+
+                                        <button
+                                            type="submit"
+                                            disabled={submittingNuevos}
+                                            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black text-lg hover:bg-white/90 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {submittingNuevos ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    Guardando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Confirmar y Registrar Acompañante{nuevosAcompanantes.length !== 1 ? 's' : ''}
+                                                    <ArrowRight className="w-5 h-5" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        );
+                    })()}
+
                     {/* ── Sección de Autorizaciones de Retiro ── */}
                     {(() => {
                         const tieneMenores = invitacion?.personas?.some(p => p.rolEvento === 'N') || personas?.some(p => p.rolEvento === 'N');
@@ -585,55 +983,63 @@ export default function RsvpPage({
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {autorizados.map((auth) => (
-                                            <div
-                                                key={auth.id_autorizacion}
-                                                className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md flex flex-col justify-between gap-5 transition-all duration-300 hover:border-white/15"
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                                                            <User className="w-4 h-4" />
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-bold text-white text-base leading-tight">{auth.nombre_autorizado}</h4>
-                                                            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 mt-1 border border-emerald-500/20">
-                                                                {auth.relacion}
-                                                            </span>
-                                                            <p className="text-xs text-muted flex items-center gap-1 mt-2 font-mono">
-                                                                <Phone className="w-3.5 h-3.5 text-muted/70" /> {auth.telefono_autorizado}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEliminarAutorizado(auth.id_autorizacion, auth.nombre_autorizado)}
-                                                        className="p-2 rounded-lg bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/10 cursor-pointer"
-                                                        title="Revocar autorización"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                        {autorizados.map((auth) => {
+                                            const idAutorizacion = auth.idAutorizacion ?? auth.id_autorizacion;
+                                            const nombreAutorizado = auth.nombreAutorizado ?? auth.nombre_autorizado;
+                                            const telefonoAutorizado = auth.telefonoAutorizado ?? auth.telefono_autorizado;
+                                            const relacion = auth.relacion;
+                                            const qrToken = auth.qrToken ?? auth.qr_token;
 
-                                                <div className="flex flex-col items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 gap-3">
-                                                    <img
-                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(auth.qr_token)}`}
-                                                        alt={`QR para ${auth.nombre_autorizado}`}
-                                                        width={140}
-                                                        height={140}
-                                                        className="rounded-lg border border-white/5 bg-white p-1"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDownloadQr(auth.qr_token, auth.nombre_autorizado)}
-                                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-black hover:bg-white/90 font-bold text-xs shadow-md transition-all cursor-pointer"
-                                                    >
-                                                        <Download className="w-3.5 h-3.5" />
-                                                        Descargar QR Autorizado
-                                                    </button>
+                                            return (
+                                                <div
+                                                    key={idAutorizacion}
+                                                    className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md flex flex-col justify-between gap-5 transition-all duration-300 hover:border-white/15"
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                                                                <User className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-white text-base leading-tight">{nombreAutorizado}</h4>
+                                                                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 mt-1 border border-emerald-500/20">
+                                                                    {relacion}
+                                                                </span>
+                                                                <p className="text-xs text-muted flex items-center gap-1 mt-2 font-mono">
+                                                                    <Phone className="w-3.5 h-3.5 text-muted/70" /> {telefonoAutorizado}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEliminarAutorizado(idAutorizacion, nombreAutorizado)}
+                                                            className="p-2 rounded-lg bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/10 cursor-pointer"
+                                                            title="Revocar autorización"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 gap-3">
+                                                        <img
+                                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrToken || '')}`}
+                                                            alt={`QR para ${nombreAutorizado}`}
+                                                            width={140}
+                                                            height={140}
+                                                            className="rounded-lg border border-white/5 bg-white p-1"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDownloadQr(qrToken || '', nombreAutorizado)}
+                                                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-black hover:bg-white/90 font-bold text-xs shadow-md transition-all cursor-pointer"
+                                                        >
+                                                            <Download className="w-3.5 h-3.5" />
+                                                            Descargar QR Autorizado
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -645,7 +1051,7 @@ export default function RsvpPage({
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                             <div className="w-full max-w-md p-6 rounded-2xl border border-white/10 bg-[#0d0d0d] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
                                 {/* Ambient glow */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                                 
                                 <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
                                     <h3 className="text-lg font-black text-white flex items-center gap-2 tracking-tight">
@@ -686,14 +1092,14 @@ export default function RsvpPage({
                                             className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none cursor-pointer"
                                             disabled={submittingAuth}
                                         >
-                                            <option value="Madre">Madre</option>
-                                            <option value="Padre">Padre</option>
-                                            <option value="Tío/a">Tío/a</option>
-                                            <option value="Abuelo/a">Abuelo/a</option>
-                                            <option value="Tutor Legal">Tutor Legal</option>
-                                            <option value="Niñero/a">Niñero/a</option>
-                                            <option value="Chofer">Chofer</option>
-                                            <option value="Otro">Otro</option>
+                                            <option value="Madre" className="bg-[#0d0d0d] text-white">Madre</option>
+                                            <option value="Padre" className="bg-[#0d0d0d] text-white">Padre</option>
+                                            <option value="Tío/a" className="bg-[#0d0d0d] text-white">Tío/a</option>
+                                            <option value="Abuelo/a" className="bg-[#0d0d0d] text-white">Abuelo/a</option>
+                                            <option value="Tutor Legal" className="bg-[#0d0d0d] text-white">Tutor Legal</option>
+                                            <option value="Niñero/a" className="bg-[#0d0d0d] text-white">Niñero/a</option>
+                                            <option value="Chofer" className="bg-[#0d0d0d] text-white">Chofer</option>
+                                            <option value="Otro" className="bg-[#0d0d0d] text-white">Otro</option>
                                         </select>
                                     </div>
 
