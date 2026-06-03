@@ -4,6 +4,7 @@ using API.Repositories;
 using API.Services;
 using API.Services.Cuentas;
 using API.Services.Eventos;
+using API.Services.Eventos.Agenda;
 using API.Services.Eventos.Novedades;
 using API.Services.Monedas;
 using API.Services.Planes;
@@ -210,6 +211,10 @@ builder.Services.AddScoped<ITransporteProConfigService, TransporteProConfigServi
 //novedades eventos
 builder.Services.AddScoped<IEventoNovedadesService, EventoNovedadesService>();
 builder.Services.AddScoped<ITiposNovedadEventoService, TiposNovedadEventoService>();
+
+//agenda
+builder.Services.AddScoped<IEventoAgendaService, EventoAgendaService>();
+builder.Services.AddScoped<ITiposAgendaEventoService, TiposAgendaEventoService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
