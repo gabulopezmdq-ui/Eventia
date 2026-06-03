@@ -8,8 +8,9 @@ namespace API.Services
     {
         Task<List<EventoNovedadDTO>> GetByEventoAsync(long idEvento, int idIdioma, bool soloActivas);
         Task<EventoNovedadDTO> GetByIdAsync(long idEvento, long idNovedad, int idIdioma);
-        Task<EventoNovedadDTO> CrearAsync(long idEvento, EventoNovedadDTO dto, long idUsuario);
-        Task<EventoNovedadDTO> ModificarAsync(long idEvento, long idNovedad, EventoNovedadDTO dto);
+        Task<EventoNovedadDTO> CrearAsync(long idEvento, EventoNovedadRequestDTO dto, long idUsuario);
+        Task<EventoNovedadDTO> ModificarAsync(long idEvento, long idNovedad, EventoNovedadRequestDTO dto);
         Task<bool> EliminarAsync(long idEvento, long idNovedad);
+        Task<List<EventoNovedadDTO>> GetPublicByTokenAsync(string token, int idIdioma);
     }
 }

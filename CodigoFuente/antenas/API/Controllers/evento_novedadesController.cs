@@ -56,7 +56,7 @@ namespace API.Controllers
         }
 
         [HttpPost("{idEvento}")]
-        public async Task<ActionResult<EventoNovedadDTO>> Crear(long idEvento, [FromBody] EventoNovedadDTO dto)
+        public async Task<ActionResult<EventoNovedadDTO>> Crear(long idEvento, [FromBody] EventoNovedadRequestDTO dto)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace API.Controllers
         public async Task<ActionResult<EventoNovedadDTO>> Modificar(
             long idEvento,
             long idNovedad,
-            [FromBody] EventoNovedadDTO dto)
+            [FromBody] EventoNovedadRequestDTO dto)
         {
             try
             {
