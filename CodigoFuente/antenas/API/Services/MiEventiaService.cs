@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using API.DataSchema;
@@ -11,6 +13,42 @@ namespace API.Services
     {
         private readonly DataContext _ctx;
         public MiEventiaService(DataContext ctx) => _ctx = ctx;
+
+        public async Task<MiEventiaResponseDto?> GetMiEventiaAsync(Guid tokenPortal)
+        {
+            var persona = await _ctx.PortalPersonas
+                .FirstOrDefaultAsync(p => p.TokenPortal == tokenPortal && p.Activo);
+
+            if (persona == null) return null;
+
+            var accesos = await _ctx.PortalAccesos
+                .Where(a => a.IdPortalPersona == persona.IdPortalPersona && a.Activo)
+                .OrderBy(a => a.FechaAlta)
+                .Select(a => new AccesoItemDto
+                {
+                    Tipo = a.Tipo.ToString(),
+                    IdEvento = a.IdEvento,
+                    IdInscripcion = a.IdInscripcion,
+                    IdInvitado = a.IdInvitado,
+                    TokenConsulta = a.TokenConsulta,
+                    Titulo = a.TituloOverride,
+                    Estado = a.Activo ? "ACTIVO" : "INACTIVO",
+                    UrlPortal = $"/portal/{a.TokenConsulta}"
+                })
+                .ToListAsync();
+
+            return new MiEventiaResponseDto
+            {
+                Persona = new PersonaDto
+                {
+                    IdPortalPersona = persona.IdPortalPersona,
+                    Nombre = persona.Nombre,
+                    Email = persona.Email,
+                    Telefono = persona.Telefono
+                },
+                Items = accesos
+            };
+        }
 
         public async Task<Guid> VincularAccesoAsync(
             string nombre,

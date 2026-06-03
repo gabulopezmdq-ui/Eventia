@@ -188,6 +188,7 @@ builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IProgramasService, ProgramasService>();
 builder.Services.AddScoped<MiEventiaService>();
 builder.Services.AddScoped<PortalSeguridadService>();
+builder.Services.AddScoped<PortalService>();
 
 
 //planes-precios
