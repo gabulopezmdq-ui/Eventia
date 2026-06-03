@@ -4,14 +4,15 @@ using API.Repositories;
 using API.Services;
 using API.Services.Cuentas;
 using API.Services.Eventos;
+using API.Services.Eventos.Novedades;
 using API.Services.Monedas;
 using API.Services.Planes;
+using API.Services.Portal;
 using API.Services.Precios;
 using API.Services.Regalos;
 using API.Services.Roles;
 using API.Services.Staff;
 using API.Services.Transporte;
-using API.Services.Portal;
 using API.Utility;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FluentAssertions.Common;
@@ -207,6 +208,7 @@ builder.Services.AddScoped<ITransporteProConfigService, TransporteProConfigServi
 
 //novedades eventos
 builder.Services.AddScoped<IEventoNovedadesService, EventoNovedadesService>();
+builder.Services.AddScoped<ITiposNovedadEventoService, TiposNovedadEventoService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

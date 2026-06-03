@@ -85,7 +85,7 @@ namespace API.Services
             return novedad;
         }
 
-        public async Task<EventoNovedadDTO> CrearAsync(long idEvento, EventoNovedadDTO dto, long idUsuario)
+        public async Task<EventoNovedadDTO> CrearAsync(long idEvento, EventoNovedadRequestDTO dto, long idUsuario)
         {
             Validar(dto);
 
@@ -120,7 +120,7 @@ namespace API.Services
             return await GetByIdAsync(idEvento, entity.id_novedad, 1);
         }
 
-        public async Task<EventoNovedadDTO> ModificarAsync(long idEvento, long idNovedad, EventoNovedadDTO dto)
+        public async Task<EventoNovedadDTO> ModificarAsync(long idEvento, long idNovedad, EventoNovedadRequestDTO dto)
         {
             Validar(dto);
 
@@ -166,7 +166,7 @@ namespace API.Services
             return true;
         }
 
-        private void Validar(EventoNovedadDTO dto)
+        private void Validar(EventoNovedadRequestDTO dto)
         {
             if (dto == null)
                 throw new Exception("Debe informar los datos de la novedad.");
@@ -187,5 +187,79 @@ namespace API.Services
                 dto.visible_hasta.Value < dto.visible_desde.Value)
                 throw new Exception("La fecha visible hasta no puede ser menor que visible desde.");
         }
+
+        public async Task<List<EventoNovedadDTO>> GetPublicByTokenAsync(string token, int idIdioma)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                throw new Exception("Debe informar el token.");
+
+            var ahora = DateTime.UtcNow;
+
+            var idEvento = await _context.ef_invitados
+                .Where(x => x.rsvp_token == token)
+                .Select(x => x.id_evento)
+                .FirstOrDefaultAsync();
+
+            if (idEvento <= 0)
+                throw new Exception("Token inválido.");
+
+            var query =
+                from n in _context.ef_evento_novedades
+                join t in _context.ef_param_tipos_novedad_evento
+                    on n.id_tipo_novedad_evento equals t.id_tipo_novedad_evento
+                where n.id_evento == idEvento
+                   && n.activo == true
+                   && n.publicado == true
+                   && (n.visible_desde == null || n.visible_desde <= ahora)
+                   && (n.visible_hasta == null || n.visible_hasta >= ahora)
+                select new
+                {
+                    n,
+                    t
+                };
+
+            var data = await query
+                .OrderByDescending(x => x.n.importante)
+                .ThenByDescending(x => x.n.fecha_alta)
+                .ToListAsync();
+
+            var idsTipos = data
+                .Select(x => x.t.id_tipo_novedad_evento)
+                .Distinct()
+                .ToList();
+
+            var traducciones = await _context.ef_param_traducciones
+                .Where(x =>
+                    x.entidad == "TIPO_NOVEDAD_EVENTO" &&
+                    x.id_idioma == idIdioma &&
+                    idsTipos.Contains(x.id_item))
+                .ToListAsync();
+
+            return data.Select(x =>
+            {
+                var trad = traducciones.FirstOrDefault(tr =>
+                    tr.id_item == x.t.id_tipo_novedad_evento);
+
+                return new EventoNovedadDTO
+                {
+                    id_novedad = x.n.id_novedad,
+                    id_evento = x.n.id_evento,
+                    id_tipo_novedad_evento = x.n.id_tipo_novedad_evento,
+                    tipo_codigo = x.t.codigo,
+                    tipo_texto = trad != null ? trad.texto : x.t.codigo,
+                    titulo = x.n.titulo,
+                    descripcion = x.n.descripcion,
+                    importante = x.n.importante,
+                    visible_desde = x.n.visible_desde,
+                    visible_hasta = x.n.visible_hasta,
+                    publicado = x.n.publicado,
+                    activo = x.n.activo,
+                    fecha_alta = x.n.fecha_alta
+                };
+            }).ToList();
+        }
+
+
+
     }
 }
