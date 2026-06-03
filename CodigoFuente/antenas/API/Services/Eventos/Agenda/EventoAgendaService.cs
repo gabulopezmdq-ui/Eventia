@@ -1,5 +1,6 @@
 ﻿using API.DataSchema;
 using API.DataSchema.DTO;
+using API.DataSchema.DTO.Eventos.Agenda;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -249,6 +250,104 @@ namespace API.Services.Eventos.Agenda
             if (dto.hora_inicio.HasValue && dto.hora_fin.HasValue &&
                 dto.hora_fin.Value < dto.hora_inicio.Value)
                 throw new Exception("La hora fin no puede ser menor que la hora inicio.");
+        }
+
+        public async Task<EventoAgendaImportarTramosResponseDTO> ImportarTramosAsync(long idEvento)
+        {
+            var existeEvento = await _context.ef_eventos
+                .AnyAsync(x => x.id_evento == idEvento);
+
+            if (!existeEvento)
+                throw new Exception("No existe el evento.");
+
+            var tipoCronograma = await _context.ef_param_tipos_agenda_evento
+                .FirstOrDefaultAsync(x => x.codigo == "CRONOGRAMA_EVENTO" && x.activo == true);
+
+            if (tipoCronograma == null)
+                throw new Exception("No existe el tipo de agenda CRONOGRAMA_EVENTO.");
+
+            var tramos = await _context.ef_evento_tramos
+                .Where(x => x.id_evento == idEvento && x.activo == true)
+                .OrderBy(x => x.orden)
+                .ToListAsync();
+
+            if (tramos.Count == 0)
+            {
+                return new EventoAgendaImportarTramosResponseDTO
+                {
+                    ok = true,
+                    id_evento = idEvento,
+                    tramos_encontrados = 0,
+                    creados = 0,
+                    omitidos = 0
+                };
+            }
+
+            var idsTramos = tramos.Select(x => x.id_tramo).ToList();
+
+            var agendaExistentePorTramo = await _context.ef_evento_agenda
+                .Where(x =>
+                    x.id_evento == idEvento &&
+                    x.id_tramo != null &&
+                    idsTramos.Contains(x.id_tramo.Value))
+                .Select(x => x.id_tramo.Value)
+                .ToListAsync();
+
+            int creados = 0;
+            int omitidos = 0;
+
+            foreach (var tramo in tramos)
+            {
+                if (agendaExistentePorTramo.Contains(tramo.id_tramo))
+                {
+                    omitidos++;
+                    continue;
+                }
+
+                var item = new ef_evento_agenda
+                {
+                    id_evento = idEvento,
+                    id_tramo = tramo.id_tramo,
+                    id_tipo_agenda_evento = tipoCronograma.id_tipo_agenda_evento,
+                    titulo = !string.IsNullOrWhiteSpace(tramo.nombre)
+                        ? tramo.nombre.Trim()
+                        : "Tramo del evento",
+                    descripcion = !string.IsNullOrWhiteSpace(tramo.leyenda_visible)
+                        ? tramo.leyenda_visible.Trim()
+                        : null,
+                    dia_semana = null,
+                    fecha = null,
+                    //hora_inicio = tramo.fecha_hora_inicio.HasValue
+                    //    ? tramo.fecha_hora_inicio.Value.TimeOfDay
+                    //    : null,
+                    //hora_fin = tramo.fecha_hora_fin.HasValue
+                    //    ? tramo.fecha_hora_fin.Value.TimeOfDay
+                    //    : null,
+                    hora_inicio = tramo.fecha_hora_inicio.TimeOfDay,
+
+                    hora_fin = tramo.fecha_hora_fin.HasValue
+                        ? tramo.fecha_hora_fin.Value.TimeOfDay
+                        : null,
+                    orden = tramo.orden > 0 ? tramo.orden : (short)1,
+                    visible_publico = true,
+                    activo = true,
+                    fecha_alta = DateTime.UtcNow
+                };
+
+                _context.ef_evento_agenda.Add(item);
+                creados++;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new EventoAgendaImportarTramosResponseDTO
+            {
+                ok = true,
+                id_evento = idEvento,
+                tramos_encontrados = tramos.Count,
+                creados = creados,
+                omitidos = omitidos
+            };
         }
     }
 }
