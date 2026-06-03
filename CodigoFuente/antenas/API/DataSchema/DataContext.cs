@@ -202,6 +202,10 @@ namespace API.DataSchema
         public DbSet<ef_evento_novedades> ef_evento_novedades { get; set; }
         public DbSet<ef_param_tipos_novedad_evento> ef_param_tipos_novedad_evento { get; set; }
 
+        //agenda
+        public DbSet<ef_evento_agenda> ef_evento_agenda { get; set; }
+        public DbSet<ef_param_tipos_agenda_evento> ef_param_tipos_agenda_evento { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -430,6 +434,9 @@ namespace API.DataSchema
             //novedades eventos
             modelBuilder.ApplyConfiguration(new ef_evento_novedadesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_tipos_novedad_eventoConfiguration());
+            //agenda
+            modelBuilder.ApplyConfiguration(new ef_evento_agendaConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_param_tipos_agenda_eventoConfiguration());
 
 
             // Likes: Clave primaria compuesta
