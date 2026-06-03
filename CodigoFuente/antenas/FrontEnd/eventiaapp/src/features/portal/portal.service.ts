@@ -43,6 +43,7 @@ export interface PortalPuntualResponse {
         pagos: any;
         salud: any | null;
         qrsRetiro: any | null;
+        [key: string]: any;
     };
 }
 
@@ -121,7 +122,40 @@ export async function getMiEventia(tokenPortal: string): Promise<MiEventiaRespon
         throw new Error(errData?.message || 'No se pudo cargar tu panel Mi-Eventia');
     }
 
-    return res.json();
+    const data = await res.json();
+
+    return {
+        persona: {
+            idPortalPersona: data.persona?.id_portal_persona ?? data.persona?.idPortalPersona,
+            nombre: data.persona?.nombre,
+            email: data.persona?.email,
+            telefono: data.persona?.telefono,
+        },
+        items: (data.items || []).map((item: {
+            tipo: string;
+            id_evento?: number;
+            idEvento?: number;
+            id_inscripcion?: number | null;
+            idInscripcion?: number | null;
+            id_invitado?: number | null;
+            idInvitado?: number | null;
+            token_consulta?: string;
+            tokenConsulta?: string;
+            titulo: string;
+            estado: string;
+            url_portal?: string;
+            urlPortal?: string;
+        }) => ({
+            tipo: item.tipo,
+            idEvento: item.id_evento ?? item.idEvento ?? 0,
+            idInscripcion: item.id_inscripcion ?? item.idInscripcion ?? null,
+            idInvitado: item.id_invitado ?? item.idInvitado ?? null,
+            tokenConsulta: item.token_consulta ?? item.tokenConsulta ?? '',
+            titulo: item.titulo,
+            estado: item.estado,
+            urlPortal: item.url_portal ?? item.urlPortal ?? '',
+        })),
+    };
 }
 
 /**
@@ -139,7 +173,47 @@ export async function getPortalPuntual(
         throw new Error(errData?.message || 'Portal no encontrado o token inválido');
     }
 
-    return res.json();
+    const data = await res.json();
+
+    return {
+        tipoPortal: data.tipoPortal ?? data.tipo_portal ?? 'EVENTO',
+        idEvento: data.idEvento ?? data.id_evento ?? 0,
+        evento: {
+            nombre: data.evento?.nombre ?? data.evento?.titulo ?? '',
+            fecha_inicio: data.evento?.fecha_inicio ?? data.evento?.fechaInicio ?? '',
+            fecha_fin: data.evento?.fecha_fin ?? data.evento?.fechaFin ?? '',
+            logo_url: data.evento?.logo_url ?? data.evento?.logoUrl ?? null,
+            estado: data.evento?.estado ?? 'ACTIVO',
+        },
+        usuario: {
+            nombre: data.usuario?.nombre ?? '',
+            email: data.usuario?.email ?? '',
+        },
+        requiere_desbloqueo_sensible: data.requiere_desbloqueo_sensible ?? data.requiereDesbloqueoSensible ?? false,
+        desbloqueado_sensible: data.desbloqueado_sensible ?? data.desbloqueadoSensible ?? false,
+        url_mi_eventia: data.url_mi_eventia ?? data.urlMiEventia ?? '',
+        secciones: (data.secciones || []).map((sec: {
+            codigo: string;
+            orden: number;
+            titulo: string;
+            visible?: boolean;
+            requiere_desbloqueo?: boolean;
+            requiereDesbloqueo?: boolean;
+        }) => ({
+            codigo: sec.codigo,
+            orden: sec.orden,
+            titulo: sec.titulo,
+            visible: sec.visible ?? true,
+            requiere_desbloqueo: sec.requiere_desbloqueo ?? sec.requiereDesbloqueo ?? false,
+        })),
+        data: {
+            resumen: data.data?.resumen ?? {},
+            pagos: data.data?.pagos ?? null,
+            salud: data.data?.salud ?? [],
+            qrsRetiro: data.data?.qrsRetiro ?? data.data?.qrs_retiro ?? [],
+            ...(data.data || {}),
+        },
+    };
 }
 
 /**

@@ -101,7 +101,11 @@ function FormularioRecuperacion() {
                 guardarTokenPortal(res.token_portal);
                 
                 // Redirigir al dashboard persistente
-                router.push(res.url_mi_eventia);
+                if (res.url_mi_eventia.startsWith('http://') || res.url_mi_eventia.startsWith('https://') || res.url_mi_eventia.startsWith('//')) {
+                    window.location.href = res.url_mi_eventia;
+                } else {
+                    router.push(res.url_mi_eventia);
+                }
             }
         } catch (err: any) {
             setError(err instanceof Error ? err.message : 'El código de recuperación es incorrecto o venció.');
