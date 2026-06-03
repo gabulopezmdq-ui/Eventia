@@ -12,8 +12,8 @@ namespace API.DataSchema.DTO
         public DateTime? visible_hasta { get; set; }
         public bool publicado { get; set; } = true;
         public bool activo { get; set; } = true;
-        public string url_adjunto { get; set; }
-        public string tipo_adjunto { get; set; }
+        public string? url_adjunto { get; set; }
+        public string? tipo_adjunto { get; set; }
         public bool destacada { get; set; }
         public short orden { get; set; } = 1;
     }

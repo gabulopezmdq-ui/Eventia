@@ -22,8 +22,8 @@ namespace API.DataSchema.DTO
         public bool activo { get; set; }
 
         public DateTime fecha_alta { get; set; }
-        public string url_adjunto { get; set; }
-        public string tipo_adjunto { get; set; }
+        public string? url_adjunto { get; set; }
+        public string? tipo_adjunto { get; set; }
         public bool destacada { get; set; }
         public short orden { get; set; }
     }
