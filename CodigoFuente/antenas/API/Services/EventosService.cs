@@ -972,8 +972,11 @@ namespace API.Services
             {
                 idPlanEvento = planB2C.id_plan;
 
+                //estadoInicial = planB2C.codigo == "B2C_FREE"
+                //    ? EventoEstado.Activo
+                //    : EventoEstado.PendientePago;
                 estadoInicial = planB2C.codigo == "B2C_FREE"
-                    ? EventoEstado.Activo
+                    ? EventoEstado.Borrador
                     : EventoEstado.PendientePago;
 
                 // Trial días parametrizable por plan
@@ -1320,6 +1323,7 @@ namespace API.Services
 
             ev.estado = EventoEstado.Activo;
             ev.fecha_modif = now;
+            await SetLinksEventoActivosAsync(idEvento, true);
 
             _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
             {
@@ -1339,7 +1343,10 @@ namespace API.Services
         public async Task<EventoResponse> UpdateGeneralAsync(long idUsuario, long idEvento, EventoUpdateGeneralRequest req)
         {
             bool pertenece = await _context.Set<ef_evento_usuarios>()
-                .AnyAsync(eu => eu.id_usuario == idUsuario && eu.id_evento == idEvento && eu.activo == true);
+                .AnyAsync(eu =>
+                    eu.id_usuario == idUsuario &&
+                    eu.id_evento == idEvento &&
+                    eu.activo == true);
 
             if (!pertenece)
                 throw new UnauthorizedAccessException("No tienes acceso a este evento.");
@@ -1349,6 +1356,26 @@ namespace API.Services
 
             if (ev == null)
                 throw new KeyNotFoundException("Evento inexistente.");
+
+            if (ev.estado == EventoEstado.Anulado)
+                throw new InvalidOperationException("No se puede editar un evento anulado.");
+
+            if (ev.estado == EventoEstado.Cerrado)
+                throw new InvalidOperationException("No se puede editar un evento cerrado.");
+
+            if (req.IdIdioma.HasValue)
+            {
+                if (req.IdIdioma.Value <= 0)
+                    throw new InvalidOperationException("Idioma inválido.");
+
+                bool existeIdioma = await _context.Set<ef_idiomas>()
+                    .AnyAsync(i => i.id_idioma == req.IdIdioma.Value && i.activo == true);
+
+                if (!existeIdioma)
+                    throw new InvalidOperationException("El idioma no existe o está inactivo.");
+
+                ev.id_idioma = req.IdIdioma.Value;
+            }
 
             if (req.AnfitrionesTexto != null)
             {
@@ -1361,9 +1388,6 @@ namespace API.Services
                 ev.anfitriones_texto = req.AnfitrionesTexto.Trim();
             }
 
-            // if (req.IdDressCode is null && !string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
-            //    throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
-
             if (req.IdDressCode.HasValue)
             {
                 bool existeDress = await _context.Set<ef_dress_code>()
@@ -1373,9 +1397,18 @@ namespace API.Services
                     throw new InvalidOperationException("El dress code no existe o está inactivo.");
 
                 ev.id_dress_code = req.IdDressCode.Value;
-                ev.dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion) ? null : req.DressCodeDescripcion.Trim();
+                ev.dress_code_descripcion = string.IsNullOrWhiteSpace(req.DressCodeDescripcion)
+                    ? null
+                    : req.DressCodeDescripcion.Trim();
             }
             else if (req.IdDressCode == null && req.DressCodeDescripcion != null)
+            {
+                throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+            }
+
+            // Para limpiar dress code desde el front, mandar:
+            // IdDressCode = null y DressCodeDescripcion = ""
+            if (req.IdDressCode == null && req.DressCodeDescripcion == "")
             {
                 ev.id_dress_code = null;
                 ev.dress_code_descripcion = null;
@@ -1390,24 +1423,16 @@ namespace API.Services
             if (req.Notas != null)
                 ev.notas = string.IsNullOrWhiteSpace(req.Notas) ? null : req.Notas.Trim();
 
-            if (req.IdIdioma.HasValue)
-            {
-                bool existeIdioma = await _context.Set<ef_idiomas>()
-                    .AnyAsync(i => i.id_idioma == req.IdIdioma.Value && i.activo == true);
-
-                if (!existeIdioma)
-                    throw new InvalidOperationException("El idioma no existe o está inactivo.");
-
-                ev.id_idioma = req.IdIdioma.Value;
-            }
+            if (req.InfoPublica != null)
+                ev.info_publica = string.IsNullOrWhiteSpace(req.InfoPublica) ? null : req.InfoPublica.Trim();
 
             ev.fecha_modif = DateTimeOffset.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            // devolver enriquecido
             return await GetEventoMioAsync(idUsuario, idEvento);
         }
+        
 
         public async Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req)
         {
@@ -1868,10 +1893,10 @@ namespace API.Services
         }
 
         private async Task<(short id_pais, string codigo_mercado, string codigo_moneda)> ResolverPaisMercadoMonedaEventoAsync(
-    long idUsuario,
-    bool esB2B,
-    ef_cuentas? cuenta,
-    short? idPaisRequest)
+            long idUsuario,
+            bool esB2B,
+            ef_cuentas? cuenta,
+            short? idPaisRequest)
         {
             short? idPais = null;
             string? monedaDefault = null;
@@ -1913,6 +1938,179 @@ namespace API.Services
 
             return (idPais.Value, mercado.codigo_mercado, codigoMoneda);
         }
+
+
+        private async Task SetLinksEventoActivosAsync(long idEvento, bool activo)
+        {
+            var links = await _context.Set<ef_evento_acceso_links>()
+                .Where(x => x.id_evento == idEvento)
+                .ToListAsync();
+
+            foreach (var link in links)
+            {
+                link.activo = activo;
+                link.fecha_modif = DateTimeOffset.UtcNow;
+            }
+        }
+
+        private async Task ValidarUsuarioPerteneceEventoAsync(long idUsuario, long idEvento)
+        {
+            bool pertenece = await _context.Set<ef_evento_usuarios>()
+                .AnyAsync(eu =>
+                    eu.id_usuario == idUsuario &&
+                    eu.id_evento == idEvento &&
+                    eu.activo == true);
+
+            if (!pertenece)
+                throw new UnauthorizedAccessException("No tienes acceso a este evento.");
+        }
+
+        public async Task<EventoResponse> ActivarEventoAsync(long idUsuario, long idEvento)
+        {
+            await ValidarUsuarioPerteneceEventoAsync(idUsuario, idEvento);
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            if (ev.estado != EventoEstado.Borrador)
+                throw new InvalidOperationException("Solo se puede activar un evento en borrador.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            ev.estado = EventoEstado.Activo;
+            ev.fecha_modif = now;
+
+            await SetLinksEventoActivosAsync(idEvento, true);
+
+            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
+            {
+                id_evento = idEvento,
+                id_usuario = idUsuario,
+                fecha = now,
+                estado = EventoEstado.Activo,
+                observaciones = "Activación manual del evento"
+            });
+
+            await _context.SaveChangesAsync();
+
+            return await GetEventoMioAsync(idUsuario, idEvento);
+        }
+
+        public async Task<EventoResponse> CerrarEventoAsync(long idUsuario, long idEvento, EventoCambioEstadoRequest req)
+        {
+            await ValidarUsuarioPerteneceEventoAsync(idUsuario, idEvento);
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            if (ev.estado != EventoEstado.Activo)
+                throw new InvalidOperationException("Solo se puede cerrar un evento activo.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            ev.estado = EventoEstado.Cerrado;
+            ev.fecha_modif = now;
+
+            await SetLinksEventoActivosAsync(idEvento, false);
+
+            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
+            {
+                id_evento = idEvento,
+                id_usuario = idUsuario,
+                fecha = now,
+                estado = EventoEstado.Cerrado,
+                observaciones = string.IsNullOrWhiteSpace(req?.Observaciones)
+                    ? "Cierre manual del evento"
+                    : req.Observaciones.Trim()
+            });
+
+            await _context.SaveChangesAsync();
+
+            return await GetEventoMioAsync(idUsuario, idEvento);
+        }
+
+        public async Task<EventoResponse> AnularEventoAsync(long idUsuario, long idEvento, EventoCambioEstadoRequest req)
+        {
+            await ValidarUsuarioPerteneceEventoAsync(idUsuario, idEvento);
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            if (ev.estado == EventoEstado.Anulado)
+                throw new InvalidOperationException("El evento ya está anulado.");
+
+            if (ev.estado == EventoEstado.Cerrado)
+                throw new InvalidOperationException("No se puede anular un evento cerrado.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            ev.estado = EventoEstado.Anulado;
+            ev.fecha_modif = now;
+
+            await SetLinksEventoActivosAsync(idEvento, false);
+
+            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
+            {
+                id_evento = idEvento,
+                id_usuario = idUsuario,
+                fecha = now,
+                estado = EventoEstado.Anulado,
+                observaciones = string.IsNullOrWhiteSpace(req?.Observaciones)
+                    ? "Anulación manual del evento"
+                    : req.Observaciones.Trim()
+            });
+
+            await _context.SaveChangesAsync();
+
+            return await GetEventoMioAsync(idUsuario, idEvento);
+        }
+
+        public async Task<EventoResponse> ReabrirEventoAsync(long idUsuario, long idEvento, EventoCambioEstadoRequest req)
+        {
+            await ValidarUsuarioPerteneceEventoAsync(idUsuario, idEvento);
+
+            var ev = await _context.Set<ef_eventos>()
+                .SingleOrDefaultAsync(e => e.id_evento == idEvento);
+
+            if (ev == null)
+                throw new KeyNotFoundException("Evento inexistente.");
+
+            if (ev.estado != EventoEstado.Cerrado)
+                throw new InvalidOperationException("Solo se puede reabrir un evento cerrado.");
+
+            var now = DateTimeOffset.UtcNow;
+
+            ev.estado = EventoEstado.Activo;
+            ev.fecha_modif = now;
+
+            await SetLinksEventoActivosAsync(idEvento, true);
+
+            _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
+            {
+                id_evento = idEvento,
+                id_usuario = idUsuario,
+                fecha = now,
+                estado = EventoEstado.Activo,
+                observaciones = string.IsNullOrWhiteSpace(req?.Observaciones)
+                    ? "Reapertura manual del evento"
+                    : req.Observaciones.Trim()
+            });
+
+            await _context.SaveChangesAsync();
+
+            return await GetEventoMioAsync(idUsuario, idEvento);
+        }
+
+
 
 
     }

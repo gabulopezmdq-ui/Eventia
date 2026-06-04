@@ -212,6 +212,16 @@ namespace API.Controllers
             ev.estado = EventoEstado.Activo;
             ev.fecha_modif = now;
 
+            var links = await _context.Set<ef_evento_acceso_links>()
+                    .Where(x => x.id_evento == ev.id_evento)
+                    .ToListAsync();
+
+            foreach (var link in links)
+            {
+                link.activo = true;
+                link.fecha_modif = now;
+            }
+
             _context.Set<ef_evento_estados_hist>().Add(new ef_evento_estados_hist
             {
                 id_evento = ev.id_evento,
