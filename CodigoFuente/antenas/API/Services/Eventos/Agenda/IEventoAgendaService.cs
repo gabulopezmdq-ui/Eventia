@@ -10,9 +10,9 @@ namespace API.Services.Eventos.Agenda
         Task<List<EventoAgendaDTO>> GetByEventoAsync(long idEvento, int idIdioma, bool soloActivas);
         Task<List<EventoAgendaDTO>> GetPublicByTokenAsync(string token, int idIdioma);
         Task<EventoAgendaDTO> GetByIdAsync(long idEvento, long idAgenda, int idIdioma);
-        Task<EventoAgendaDTO> CrearAsync(long idEvento, EventoAgendaRequestDTO dto);
-        Task<EventoAgendaDTO> ModificarAsync(long idEvento, long idAgenda, EventoAgendaRequestDTO dto);
-        Task<bool> EliminarAsync(long idEvento, long idAgenda);
-        Task<EventoAgendaImportarTramosResponseDTO> ImportarTramosAsync(long idEvento);
+        Task<EventoAgendaDTO> CrearAsync(long idEvento, EventoAgendaRequestDTO dto, long idUsuario);
+        Task<EventoAgendaDTO> ModificarAsync(long idEvento, long idAgenda, EventoAgendaRequestDTO dto, long idUsuario);
+        Task<bool> EliminarAsync(long idEvento, long idAgenda, long idUsuario);
+        Task<EventoAgendaImportarTramosResponseDTO> ImportarTramosAsync(long idEvento, long idUsuario);
     }
 }
