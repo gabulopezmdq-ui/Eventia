@@ -131,6 +131,42 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpPut("{idEvento:long}/activar")]
+        public async Task<ActionResult<EventoResponse>> Activar(long idEvento)
+        {
+            long idUsuario = User.GetUserId();
+            var result = await _eventos.ActivarEventoAsync(idUsuario, idEvento);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("{idEvento:long}/cerrar")]
+        public async Task<ActionResult<EventoResponse>> Cerrar(long idEvento, [FromBody] EventoCambioEstadoRequest req)
+        {
+            long idUsuario = User.GetUserId();
+            var result = await _eventos.CerrarEventoAsync(idUsuario, idEvento, req);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("{idEvento:long}/anular")]
+        public async Task<ActionResult<EventoResponse>> Anular(long idEvento, [FromBody] EventoCambioEstadoRequest req)
+        {
+            long idUsuario = User.GetUserId();
+            var result = await _eventos.AnularEventoAsync(idUsuario, idEvento, req);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("{idEvento:long}/reabrir")]
+        public async Task<ActionResult<EventoResponse>> Reabrir(long idEvento, [FromBody] EventoCambioEstadoRequest req)
+        {
+            long idUsuario = User.GetUserId();
+            var result = await _eventos.ReabrirEventoAsync(idUsuario, idEvento, req);
+            return Ok(result);
+        }
+
         // ─────────────────────────────────────────────
         // STAFF / COLABORADORES
         // ─────────────────────────────────────────────

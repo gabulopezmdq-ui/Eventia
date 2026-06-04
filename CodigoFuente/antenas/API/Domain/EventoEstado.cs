@@ -4,10 +4,11 @@ namespace API.Domain
 {
     public static class EventoEstado
     {
-        public const string Borrador = "B";        // Armando evento
-        public const string PendientePago = "P";   // Plan pago elegido, falta pago
-        public const string Activo = "A";          // Pago aprobado / evento operativo
-        public const string Cancelado = "C";       // (opcional)
+        public const string Borrador = "B";        // Armando / configuración
+        public const string PendientePago = "P";   // Pago pendiente
+        public const string Activo = "A";          // Operativo / publicado
+        public const string Cerrado = "C";         // Finalizado / Cerrado
+        public const string Anulado = "X";         // Cancelado / creado por error
     }
 
 }
