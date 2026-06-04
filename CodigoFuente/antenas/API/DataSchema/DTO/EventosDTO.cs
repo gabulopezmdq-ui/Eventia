@@ -126,6 +126,17 @@ namespace API.DataSchema.DTO
         [JsonPropertyName("estado")]
         public string Estado { get; set; } = null!;
 
+        //nuevos
+        [JsonPropertyName("estado_descripcion")]
+        public string? EstadoDescripcion { get; set; }
+
+        [JsonPropertyName("estado_observacion_actual")]
+        public string? EstadoObservacionActual { get; set; }
+
+        [JsonPropertyName("estado_fecha_actual")]
+        public DateTimeOffset? EstadoFechaActual { get; set; }
+        //fin nuevos
+
         [JsonPropertyName("fecha_alta")]
         public DateTimeOffset FechaAlta { get; set; }
         [JsonPropertyName("id_dress_code")]
