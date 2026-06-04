@@ -52,8 +52,15 @@ namespace API.Controllers.Portal
         [HttpPost("validar-recuperacion")]
         public async Task<IActionResult> ValidarRecuperacion([FromBody] ValidarRecuperacionRequestDTO req)
         {
-            var result = await _service.ValidarRecuperacionAsync(req);
-            return Ok(result);
+            try
+            {
+                var result = await _service.ValidarRecuperacionAsync(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
         }
     }
 }
