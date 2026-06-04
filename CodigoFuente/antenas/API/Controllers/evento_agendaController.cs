@@ -1,5 +1,6 @@
 ﻿using API.DataSchema.DTO;
 using API.DataSchema.DTO.Eventos.Agenda;
+using API.Security;
 using API.Services.Eventos.Agenda;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +63,8 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _service.CrearAsync(idEvento, dto);
+                long idUsuario = User.GetUserId();
+                var result = await _service.CrearAsync(idEvento, dto, idUsuario);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -79,7 +81,8 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _service.ModificarAsync(idEvento, idAgenda, dto);
+                long idUsuario = User.GetUserId();
+                var result = await _service.ModificarAsync(idEvento, idAgenda, dto, idUsuario);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -93,7 +96,8 @@ namespace API.Controllers
         {
             try
             {
-                await _service.EliminarAsync(idEvento, idAgenda);
+                long idUsuario = User.GetUserId();
+                await _service.EliminarAsync(idEvento, idAgenda, idUsuario);
                 return Ok(new { ok = true });
             }
             catch (Exception ex)
@@ -107,7 +111,8 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _service.ImportarTramosAsync(idEvento);
+                long idUsuario = User.GetUserId();
+                var result = await _service.ImportarTramosAsync(idEvento, idUsuario);
                 return Ok(result);
             }
             catch (Exception ex)

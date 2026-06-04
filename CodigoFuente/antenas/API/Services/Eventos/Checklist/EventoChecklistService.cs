@@ -5,16 +5,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.Services.Eventos.Historial;
 
 namespace API.Services.Eventos.Checklist
 {
     public class EventoChecklistService : IEventoChecklistService
     {
         private readonly DataContext _context;
+        private readonly IEventoHistorialService _historial;
 
-        public EventoChecklistService(DataContext context)
+        public EventoChecklistService(DataContext context, IEventoHistorialService historial)
         {
             _context = context;
+            _historial = historial;
         }
 
         public async Task<List<EventoChecklistDTO>> GetByEventoAsync(long idEvento, int idIdioma, bool soloActivos, bool? completado)
@@ -84,6 +87,16 @@ namespace API.Services.Eventos.Checklist
             _context.ef_evento_checklist.Add(entity);
             await _context.SaveChangesAsync();
 
+            await _historial.RegistrarAsync(
+                idEvento,
+                "CHECKLIST",
+                "CREAR",
+                "ef_evento_checklist",
+                entity.id_checklist,
+                $"Se creó tarea '{entity.titulo}'",
+                idUsuario
+            );
+
             return await GetByIdAsync(idEvento, entity.id_checklist, 1);
         }
 
@@ -117,6 +130,16 @@ namespace API.Services.Eventos.Checklist
 
             await _context.SaveChangesAsync();
 
+            await _historial.RegistrarAsync(
+                idEvento,
+                "CHECKLIST",
+                "EDITAR",
+                "ef_evento_checklist",
+                entity.id_checklist,
+                $"Se modificó tarea '{entity.titulo}'",
+                idUsuario
+            );
+
             return await GetByIdAsync(idEvento, idChecklist, 1);
         }
 
@@ -135,6 +158,18 @@ namespace API.Services.Eventos.Checklist
 
             await _context.SaveChangesAsync();
 
+            await _historial.RegistrarAsync(
+                idEvento,
+                "CHECKLIST",
+                completado ? "COMPLETAR" : "REABRIR",
+                "ef_evento_checklist",
+                entity.id_checklist,
+                completado
+                    ? $"Se completó tarea '{entity.titulo}'"
+                    : $"Se reabrió tarea '{entity.titulo}'",
+                idUsuario
+            );
+
             return await GetByIdAsync(idEvento, idChecklist, 1);
         }
 
@@ -150,6 +185,17 @@ namespace API.Services.Eventos.Checklist
             entity.fecha_modif = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            await _historial.RegistrarAsync(
+                idEvento,
+                "CHECKLIST",
+                "ELIMINAR",
+                "ef_evento_checklist",
+                entity.id_checklist,
+                $"Se eliminó tarea '{entity.titulo}'",
+                null
+            );
+
             return true;
         }
 

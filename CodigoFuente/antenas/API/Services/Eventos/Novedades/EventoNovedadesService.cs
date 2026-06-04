@@ -1,20 +1,23 @@
 ﻿using API.DataSchema;
-using API.DataSchema.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.Services.Eventos.Historial;
+using API.DataSchema.DTO.Eventos.Novedades;
 
-namespace API.Services
+namespace API.Services.Eventos.Novedades
 {
     public class EventoNovedadesService : IEventoNovedadesService
     {
         private readonly DataContext _context;
+        private readonly IEventoHistorialService _historial;
 
-        public EventoNovedadesService(DataContext context)
+        public EventoNovedadesService(DataContext context, IEventoHistorialService historial)
         {
             _context = context;
+            _historial = historial;
         }
 
         public async Task<List<EventoNovedadDTO>> GetByEventoAsync(long idEvento, int idIdioma, bool soloActivas)
@@ -82,10 +85,22 @@ namespace API.Services
             _context.ef_evento_novedades.Add(entity);
             await _context.SaveChangesAsync();
 
+            await _historial.RegistrarAsync(
+                idEvento,
+                "NOVEDADES",
+                dto.publicado ? "PUBLICAR" : "CREAR",
+                "ef_evento_novedades",
+                entity.id_novedad,
+                dto.publicado
+                    ? $"Se publicó novedad '{entity.titulo}'"
+                    : $"Se creó novedad '{entity.titulo}'",
+                idUsuario
+            );
+
             return await GetByIdAsync(idEvento, entity.id_novedad, 1);
         }
 
-        public async Task<EventoNovedadDTO> ModificarAsync(long idEvento, long idNovedad, EventoNovedadRequestDTO dto)
+        public async Task<EventoNovedadDTO> ModificarAsync(long idEvento, long idNovedad, EventoNovedadRequestDTO dto, long idUsuario)
         {
             Validar(dto);
 
@@ -94,6 +109,8 @@ namespace API.Services
 
             if (entity == null)
                 throw new Exception("No se encontró la novedad.");
+
+            bool publicadoAntes = entity.publicado;
 
             await ValidarTipoAsync(dto.id_tipo_novedad_evento);
 
@@ -113,10 +130,34 @@ namespace API.Services
 
             await _context.SaveChangesAsync();
 
+            string accion = "EDITAR";
+            string descripcion = $"Se modificó novedad '{entity.titulo}'";
+
+            if (!publicadoAntes && entity.publicado)
+            {
+                accion = "PUBLICAR";
+                descripcion = $"Se publicó novedad '{entity.titulo}'";
+            }
+            else if (publicadoAntes && !entity.publicado)
+            {
+                accion = "DESPUBLICAR";
+                descripcion = $"Se despublicó novedad '{entity.titulo}'";
+            }
+
+            await _historial.RegistrarAsync(
+                idEvento,
+                "NOVEDADES",
+                accion,
+                "ef_evento_novedades",
+                entity.id_novedad,
+                descripcion,
+                idUsuario
+            );
+
             return await GetByIdAsync(idEvento, idNovedad, 1);
         }
 
-        public async Task<bool> EliminarAsync(long idEvento, long idNovedad)
+        public async Task<bool> EliminarAsync(long idEvento, long idNovedad, long idUsuario)
         {
             var entity = await _context.ef_evento_novedades
                 .FirstOrDefaultAsync(x => x.id_evento == idEvento && x.id_novedad == idNovedad);
@@ -128,6 +169,17 @@ namespace API.Services
             entity.fecha_modif = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            await _historial.RegistrarAsync(
+                idEvento,
+                "NOVEDADES",
+                "ELIMINAR",
+                "ef_evento_novedades",
+                entity.id_novedad,
+                $"Se eliminó novedad '{entity.titulo}'",
+                idUsuario
+            );
+
             return true;
         }
 
@@ -180,13 +232,13 @@ namespace API.Services
                 .Where(x =>
                     x.entidad == "TIPO_NOVEDAD_EVENTO" &&
                     x.id_idioma == idIdioma &&
-                    idsTipos.Contains((long)x.id_item))
+                    idsTipos.Contains(x.id_item))
                 .ToListAsync();
 
             return lista.Select(x =>
             {
                 var trad = traducciones.FirstOrDefault(tr =>
-                    (long)tr.id_item == (long)x.t.id_tipo_novedad_evento);
+                    tr.id_item == (long)x.t.id_tipo_novedad_evento);
 
                 return new EventoNovedadDTO
                 {
