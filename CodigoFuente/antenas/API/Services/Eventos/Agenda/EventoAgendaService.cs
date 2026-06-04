@@ -6,16 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.Services.Eventos.Historial;
 
 namespace API.Services.Eventos.Agenda
 {
     public class EventoAgendaService : IEventoAgendaService
     {
         private readonly DataContext _context;
+        private readonly IEventoHistorialService _historial;
 
-        public EventoAgendaService(DataContext context)
+        public EventoAgendaService(DataContext context, IEventoHistorialService historial)
         {
             _context = context;
+            _historial = historial;
         }
 
         public async Task<List<EventoAgendaDTO>> GetByEventoAsync(long idEvento, int idIdioma, bool soloActivas)
@@ -52,7 +55,7 @@ namespace API.Services.Eventos.Agenda
             return item;
         }
 
-        public async Task<EventoAgendaDTO> CrearAsync(long idEvento, EventoAgendaRequestDTO dto)
+        public async Task<EventoAgendaDTO> CrearAsync(long idEvento, EventoAgendaRequestDTO dto, long idUsuario)
         {
             Validar(dto);
 
@@ -85,10 +88,20 @@ namespace API.Services.Eventos.Agenda
             _context.ef_evento_agenda.Add(entity);
             await _context.SaveChangesAsync();
 
+            await _historial.RegistrarAsync(
+                idEvento,
+                "AGENDA",
+                "CREAR",
+                "ef_evento_agenda",
+                entity.id_agenda,
+                $"Se creó agenda '{entity.titulo}'",
+                idUsuario
+            );
+
             return await GetByIdAsync(idEvento, entity.id_agenda, 1);
         }
 
-        public async Task<EventoAgendaDTO> ModificarAsync(long idEvento, long idAgenda, EventoAgendaRequestDTO dto)
+        public async Task<EventoAgendaDTO> ModificarAsync(long idEvento, long idAgenda, EventoAgendaRequestDTO dto, long idUsuario)
         {
             Validar(dto);
 
@@ -118,10 +131,20 @@ namespace API.Services.Eventos.Agenda
 
             await _context.SaveChangesAsync();
 
+            await _historial.RegistrarAsync(
+                idEvento,
+                "AGENDA",
+                "EDITAR",
+                "ef_evento_agenda",
+                entity.id_agenda,
+                $"Se modificó agenda '{entity.titulo}'",
+                idUsuario
+            );
+
             return await GetByIdAsync(idEvento, idAgenda, 1);
         }
 
-        public async Task<bool> EliminarAsync(long idEvento, long idAgenda)
+        public async Task<bool> EliminarAsync(long idEvento, long idAgenda, long idUsuario)
         {
             var entity = await _context.ef_evento_agenda
                 .FirstOrDefaultAsync(x => x.id_evento == idEvento && x.id_agenda == idAgenda);
@@ -133,6 +156,17 @@ namespace API.Services.Eventos.Agenda
             entity.fecha_modif = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            await _historial.RegistrarAsync(
+                idEvento,
+                "AGENDA",
+                "ELIMINAR",
+                "ef_evento_agenda",
+                entity.id_agenda,
+                $"Se eliminó agenda '{entity.titulo}'",
+                idUsuario
+            );
+
             return true;
         }
 
@@ -252,7 +286,7 @@ namespace API.Services.Eventos.Agenda
                 throw new Exception("La hora fin no puede ser menor que la hora inicio.");
         }
 
-        public async Task<EventoAgendaImportarTramosResponseDTO> ImportarTramosAsync(long idEvento)
+        public async Task<EventoAgendaImportarTramosResponseDTO> ImportarTramosAsync(long idEvento, long idUsuario)
         {
             var existeEvento = await _context.ef_eventos
                 .AnyAsync(x => x.id_evento == idEvento);
@@ -339,6 +373,16 @@ namespace API.Services.Eventos.Agenda
             }
 
             await _context.SaveChangesAsync();
+
+            await _historial.RegistrarAsync(
+                idEvento,
+                "AGENDA",
+                "IMPORTAR_TRAMOS",
+                "ef_evento_agenda",
+                null,
+                $"Se importaron {creados} tramos al cronograma. Omitidos: {omitidos}.",
+                idUsuario
+            );
 
             return new EventoAgendaImportarTramosResponseDTO
             {

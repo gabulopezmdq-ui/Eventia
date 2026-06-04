@@ -6,6 +6,7 @@ using API.Services.Cuentas;
 using API.Services.Eventos;
 using API.Services.Eventos.Agenda;
 using API.Services.Eventos.Checklist;
+using API.Services.Eventos.Historial;
 using API.Services.Eventos.Novedades;
 using API.Services.Monedas;
 using API.Services.Planes;
@@ -220,6 +221,9 @@ builder.Services.AddScoped<ITiposAgendaEventoService, TiposAgendaEventoService>(
 //checklist
 builder.Services.AddScoped<IChecklistPrioridadesService, ChecklistPrioridadesService>();
 builder.Services.AddScoped<IEventoChecklistService, EventoChecklistService>();
+
+//historial
+builder.Services.AddScoped<IEventoHistorialService, EventoHistorialService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

@@ -1,6 +1,6 @@
-﻿using API.DataSchema.DTO;
+﻿using API.DataSchema.DTO.Eventos.Novedades;
 using API.Security;
-using API.Services;
+using API.Services.Eventos.Novedades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -56,7 +56,9 @@ namespace API.Controllers
         }
 
         [HttpPost("{idEvento}")]
-        public async Task<ActionResult<EventoNovedadDTO>> Crear(long idEvento, [FromBody] EventoNovedadRequestDTO dto)
+        public async Task<ActionResult<EventoNovedadDTO>> Crear(
+            long idEvento,
+            [FromBody] EventoNovedadRequestDTO dto)
         {
             try
             {
@@ -78,7 +80,8 @@ namespace API.Controllers
         {
             try
             {
-                var result = await _service.ModificarAsync(idEvento, idNovedad, dto);
+                long idUsuario = User.GetUserId();
+                var result = await _service.ModificarAsync(idEvento, idNovedad, dto, idUsuario);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -92,7 +95,8 @@ namespace API.Controllers
         {
             try
             {
-                await _service.EliminarAsync(idEvento, idNovedad);
+                long idUsuario = User.GetUserId();
+                await _service.EliminarAsync(idEvento, idNovedad, idUsuario);
                 return Ok(new { ok = true });
             }
             catch (Exception ex)
