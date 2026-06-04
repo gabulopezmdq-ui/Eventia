@@ -757,7 +757,6 @@ function LoginForm() {
                                     )}
                                 </button>
                             </div>
-                            </div>
                         </form>
                     )}
                 </>
