@@ -373,12 +373,19 @@ function LoginForm() {
     };
 
     const handleRegenerarCodigo = async () => {
+        const emailTrimmed = guestEmail.trim().toLowerCase();
+        if (!emailTrimmed) {
+            setGuestError('Por favor, ingresá tu correo electrónico primero.');
+            setGuestStep('INPUT_EMAIL');
+            return;
+        }
+
         setGuestSubmitting(true);
         setGuestError(null);
         try {
-            const res = await regenerarCodigoMiEventia(guestEmail.trim().toLowerCase());
+            const res = await regenerarCodigoMiEventia(emailTrimmed);
             if (res.ok) {
-                addToast('Te enviamos un nuevo código a tu correo.', 'success');
+                addToast(res.mensaje || 'Te enviamos un nuevo código a tu correo.', 'success');
                 if (res.token_recuperacion) {
                     setGuestTokenRecuperacion(res.token_recuperacion);
                 }
@@ -757,7 +764,19 @@ function LoginForm() {
                                     )}
                                 </button>
                             </div>
-                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleRegenerarCodigo}
+                                disabled={guestSubmitting}
+                                className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 active:scale-[0.98] text-white font-bold rounded-xl shadow-md transition disabled:opacity-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                {guestSubmitting ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
+                                ) : (
+                                    'Recuperar código'
+                                )}
+                            </button>
                         </form>
                     )}
                 </>
