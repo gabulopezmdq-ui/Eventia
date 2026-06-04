@@ -146,6 +146,16 @@ namespace API.Services
 
                     AnfitrionesTexto = ev.anfitriones_texto,
                     Estado = ev.estado,
+                    //
+                    EstadoDescripcion =
+                        ev.estado == EventoEstado.Borrador ? "Borrador" :
+                        ev.estado == EventoEstado.PendientePago ? "Pendiente de pago" :
+                        ev.estado == EventoEstado.Activo ? "Activo" :
+                        ev.estado == EventoEstado.Cerrado ? "Cerrado" :
+                        ev.estado == EventoEstado.Anulado ? "Anulado" :
+                        ev.estado,
+
+
                     FechaAlta = ev.fecha_alta,
 
                     TipoOperacion = ev.tipo_operacion,
@@ -1272,6 +1282,17 @@ namespace API.Services
             if (dto == null)
                 throw new KeyNotFoundException("Evento inexistente.");
 
+            var ultimoEstado = await _context.Set<ef_evento_estados_hist>()
+                .AsNoTracking()
+                .Where(h =>
+                    h.id_evento == idEvento &&
+                    h.estado == dto.Estado)
+                .OrderByDescending(h => h.fecha)
+                .FirstOrDefaultAsync();
+
+            dto.EstadoObservacionActual = ultimoEstado?.observaciones;
+            dto.EstadoFechaActual = ultimoEstado?.fecha;
+
             return dto;
         }
 
@@ -2114,7 +2135,35 @@ namespace API.Services
             return await GetEventoMioAsync(idUsuario, idEvento);
         }
 
+        public async Task<List<EventoEstadoHistDTO>> GetHistorialEstadosAsync(long idUsuario, long idEvento)
+        {
+            await ValidarUsuarioPerteneceEventoAsync(idUsuario, idEvento);
 
+            var data = await (
+                from h in _context.Set<ef_evento_estados_hist>()
+                join u in _context.Set<ef_usuarios>()
+                    on h.id_usuario equals u.id_usuario into uj
+                from u in uj.DefaultIfEmpty()
+                where h.id_evento == idEvento
+                orderby h.fecha descending
+                select new EventoEstadoHistDTO
+                {
+                    Fecha = h.fecha,
+                    Estado = h.estado,
+                    EstadoDescripcion =
+                        h.estado == EventoEstado.Borrador ? "Borrador" :
+                        h.estado == EventoEstado.PendientePago ? "Pendiente de pago" :
+                        h.estado == EventoEstado.Activo ? "Activo" :
+                        h.estado == EventoEstado.Cerrado ? "Cerrado" :
+                        h.estado == EventoEstado.Anulado ? "Anulado" :
+                        h.estado,
+                    Usuario = u != null ? (u.nombre + " " + u.apellido) : "Sistema",
+                    Observaciones = h.observaciones
+                }
+            ).ToListAsync();
+
+            return data;
+        }
 
 
     }

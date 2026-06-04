@@ -17,6 +17,9 @@ namespace API.Services
         Task<EventoResponse> UpdateConfiguracionAsync(long idUsuario, long idEvento, EventoUpdateConfiguracionRequest req);
         Task<List<MesaRestriccionesDTO>> GetReporteRestriccionesMesasAsync(long idEvento);
 
+        //historial
+        Task<List<EventoEstadoHistDTO>> GetHistorialEstadosAsync(long idUsuario, long idEvento);
+
         //estados
         Task<EventoResponse> ActivarEventoAsync(long idUsuario, long idEvento);
         Task<EventoResponse> CerrarEventoAsync(long idUsuario, long idEvento, EventoCambioEstadoRequest req);

@@ -167,6 +167,17 @@ namespace API.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpGet("{idEvento:long}/historial-estados")]
+        public async Task<ActionResult<List<EventoEstadoHistDTO>>> HistorialEstados(long idEvento)
+        {
+            long idUsuario = User.GetUserId();
+
+            var result = await _eventos.GetHistorialEstadosAsync(idUsuario, idEvento);
+
+            return Ok(result);
+        }
+
         // ─────────────────────────────────────────────
         // STAFF / COLABORADORES
         // ─────────────────────────────────────────────
