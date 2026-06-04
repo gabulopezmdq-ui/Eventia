@@ -1,5 +1,5 @@
-﻿using API.DataSchema.DTO;
-using API.Services;
+﻿using API.DataSchema.DTO.Eventos.Novedades;
+using API.Services.Eventos.Novedades;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;

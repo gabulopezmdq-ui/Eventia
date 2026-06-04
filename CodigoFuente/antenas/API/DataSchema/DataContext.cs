@@ -210,6 +210,9 @@ namespace API.DataSchema
         public DbSet<ef_param_checklist_prioridades> ef_param_checklist_prioridades { get; set; }
         public DbSet<ef_evento_checklist> ef_evento_checklist { get; set; }
 
+        //historial
+        public DbSet<ef_evento_historial> ef_evento_historial { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -444,6 +447,8 @@ namespace API.DataSchema
             //checklist
             modelBuilder.ApplyConfiguration(new ef_param_checklist_prioridadesConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_checklistConfiguration());
+            //historial
+            modelBuilder.ApplyConfiguration(new ef_evento_historialConfiguration());
 
 
             // Likes: Clave primaria compuesta
