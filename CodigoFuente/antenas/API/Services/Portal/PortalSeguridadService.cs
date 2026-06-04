@@ -51,18 +51,33 @@ namespace API.Services.Portal
             if (string.IsNullOrWhiteSpace(destino))
                 throw new Exception("No se encontró un contacto para enviar el código.");
 
-            var codigo = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var existente = await _context.ef_portal_validaciones
+                .Where(x => x.token_consulta == tokenConsulta)
+                .OrderByDescending(x => x.fecha_alta)
+                .FirstOrDefaultAsync();
 
-            _context.ef_portal_validaciones.Add(new ef_portal_validaciones
+            string codigo;
+            if (existente != null)
             {
-                token_consulta = tokenConsulta,
-                codigo = codigo,
-                canal = req.canal,
-                destino = destino,
-                validado = false,
-                fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(10),
-                fecha_alta = DateTimeOffset.UtcNow
-            });
+                codigo = existente.codigo;
+                existente.validado = false;
+                existente.fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(10);
+                existente.fecha_validacion = null;
+            }
+            else
+            {
+                codigo = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+                _context.ef_portal_validaciones.Add(new ef_portal_validaciones
+                {
+                    token_consulta = tokenConsulta,
+                    codigo = codigo,
+                    canal = req.canal,
+                    destino = destino,
+                    validado = false,
+                    fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(10),
+                    fecha_alta = DateTimeOffset.UtcNow
+                });
+            }
 
             await _context.SaveChangesAsync();
 

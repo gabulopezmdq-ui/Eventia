@@ -42,6 +42,13 @@ namespace API.Controllers.Portal
             return Ok(result);
         }
 
+        [HttpPost("regenerar-codigo")]
+        public async Task<IActionResult> RegenerarCodigo([FromBody] RecuperarMiEventiaRequestDTO req)
+        {
+            var result = await _service.RegenerarCodigoAccesoAsync(req);
+            return Ok(result);
+        }
+
         [HttpPost("validar-recuperacion")]
         public async Task<IActionResult> ValidarRecuperacion([FromBody] ValidarRecuperacionRequestDTO req)
         {

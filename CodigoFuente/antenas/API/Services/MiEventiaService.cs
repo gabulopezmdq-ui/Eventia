@@ -149,18 +149,149 @@ namespace API.Services
                 };
             }
 
-            var token = Guid.NewGuid().ToString("N");
-            var codigo = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var accesos = await _ctx.PortalAccesos
+                .Where(a => a.IdPortalPersona == persona.IdPortalPersona && a.Activo)
+                .Select(a => a.TokenConsulta)
+                .ToListAsync();
+
+            string codigo = null;
+            ef_portal_validaciones validacionExistente = null;
+
+            if (accesos.Any())
+            {
+                validacionExistente = await _ctx.ef_portal_validaciones
+                    .Where(v => accesos.Contains(v.token_consulta))
+                    .OrderByDescending(v => v.fecha_alta)
+                    .FirstOrDefaultAsync();
+
+                if (validacionExistente != null)
+                {
+                    codigo = validacionExistente.codigo;
+                    validacionExistente.validado = false;
+                    validacionExistente.fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(15);
+                    validacionExistente.fecha_validacion = null;
+                }
+            }
 
             var destino = !string.IsNullOrEmpty(emailNorm)
                 ? emailNorm
                 : telNorm!;
+
+            if (codigo == null)
+            {
+                codigo = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+                var tokenConsulta = accesos.FirstOrDefault();
+                if (tokenConsulta != null)
+                {
+                    _ctx.ef_portal_validaciones.Add(new ef_portal_validaciones
+                    {
+                        token_consulta = tokenConsulta,
+                        codigo = codigo,
+                        canal = req.canal,
+                        destino = destino,
+                        validado = false,
+                        fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(15),
+                        fecha_alta = DateTimeOffset.UtcNow
+                    });
+                }
+            }
+
+            var token = Guid.NewGuid().ToString("N");
 
             _ctx.ef_portal_recuperacion_tokens.Add(new ef_portal_recuperacion_tokens
             {
                 id_portal_persona = persona.IdPortalPersona,
                 token_recuperacion = token,
                 codigo = codigo,
+                canal = req.canal,
+                destino = destino,
+                usado = false,
+                fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(15),
+                fecha_alta = DateTimeOffset.UtcNow
+            });
+
+            await _ctx.SaveChangesAsync();
+
+            return new RecuperarMiEventiaResponseDTO
+            {
+                ok = true,
+                mensaje = "Si encontramos un acceso asociado, enviaremos las instrucciones.",
+                token_recuperacion = token
+            };
+        }
+
+        public async Task<RecuperarMiEventiaResponseDTO> RegenerarCodigoAccesoAsync(RecuperarMiEventiaRequestDTO req)
+        {
+            if (req == null)
+                throw new Exception("Body inválido.");
+
+            if (string.IsNullOrWhiteSpace(req.email) && string.IsNullOrWhiteSpace(req.telefono))
+                throw new Exception("Debe informar email o teléfono.");
+
+            var emailNorm = req.email?.Trim().ToLower();
+            var telNorm = req.telefono?.Trim();
+
+            var persona = await _ctx.PortalPersonas
+                .FirstOrDefaultAsync(x =>
+                    x.Activo &&
+                    (
+                        (!string.IsNullOrEmpty(emailNorm) && x.Email != null && x.Email.ToLower() == emailNorm) ||
+                        (!string.IsNullOrEmpty(telNorm) && x.Telefono == telNorm)
+                    ));
+
+            if (persona == null)
+            {
+                return new RecuperarMiEventiaResponseDTO
+                {
+                    ok = true,
+                    mensaje = "Si encontramos un acceso asociado, enviaremos las instrucciones."
+                };
+            }
+
+            var destino = !string.IsNullOrEmpty(emailNorm)
+                ? emailNorm
+                : telNorm!;
+
+            var codigoNuevo = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+
+            var accesos = await _ctx.PortalAccesos
+                .Where(a => a.IdPortalPersona == persona.IdPortalPersona && a.Activo)
+                .Select(a => a.TokenConsulta)
+                .ToListAsync();
+
+            var validaciones = await _ctx.ef_portal_validaciones
+                .Where(v => accesos.Contains(v.token_consulta))
+                .ToListAsync();
+
+            foreach (var v in validaciones)
+            {
+                v.codigo = codigoNuevo;
+                v.validado = false;
+                v.fecha_validacion = null;
+                v.fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(15);
+            }
+
+            if (!validaciones.Any() && accesos.Any())
+            {
+                _ctx.ef_portal_validaciones.Add(new ef_portal_validaciones
+                {
+                    token_consulta = accesos.First(),
+                    codigo = codigoNuevo,
+                    canal = req.canal,
+                    destino = destino,
+                    validado = false,
+                    fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(15),
+                    fecha_alta = DateTimeOffset.UtcNow
+                });
+            }
+
+            var token = Guid.NewGuid().ToString("N");
+
+            _ctx.ef_portal_recuperacion_tokens.Add(new ef_portal_recuperacion_tokens
+            {
+                id_portal_persona = persona.IdPortalPersona,
+                token_recuperacion = token,
+                codigo = codigoNuevo,
                 canal = req.canal,
                 destino = destino,
                 usado = false,
