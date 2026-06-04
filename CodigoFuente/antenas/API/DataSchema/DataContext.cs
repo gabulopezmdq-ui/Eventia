@@ -206,6 +206,10 @@ namespace API.DataSchema
         public DbSet<ef_evento_agenda> ef_evento_agenda { get; set; }
         public DbSet<ef_param_tipos_agenda_evento> ef_param_tipos_agenda_evento { get; set; }
 
+        //checklist
+        public DbSet<ef_param_checklist_prioridades> ef_param_checklist_prioridades { get; set; }
+        public DbSet<ef_evento_checklist> ef_evento_checklist { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -437,6 +441,9 @@ namespace API.DataSchema
             //agenda
             modelBuilder.ApplyConfiguration(new ef_evento_agendaConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_tipos_agenda_eventoConfiguration());
+            //checklist
+            modelBuilder.ApplyConfiguration(new ef_param_checklist_prioridadesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_checklistConfiguration());
 
 
             // Likes: Clave primaria compuesta
