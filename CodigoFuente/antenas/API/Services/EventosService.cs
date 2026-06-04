@@ -1401,9 +1401,13 @@ namespace API.Services
                     ? null
                     : req.DressCodeDescripcion.Trim();
             }
-            else if (req.IdDressCode == null && req.DressCodeDescripcion != null)
+            else
             {
-                throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+                if (!string.IsNullOrWhiteSpace(req.DressCodeDescripcion))
+                    throw new InvalidOperationException("No se puede indicar detalle de dress code sin seleccionar dress code.");
+
+                ev.id_dress_code = null;
+                ev.dress_code_descripcion = null;
             }
 
             // Para limpiar dress code desde el front, mandar:
