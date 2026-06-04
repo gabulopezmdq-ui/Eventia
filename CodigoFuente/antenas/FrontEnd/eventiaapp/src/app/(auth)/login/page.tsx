@@ -11,6 +11,7 @@ import { useStaffAuth, isEventActiveToday, StaffAuthProvider } from '@/src/conte
 import {
     solicitarRecuperacionMiEventia,
     validarRecuperacionMiEventia,
+    regenerarCodigoMiEventia,
     guardarTokenPortal,
 } from '@/src/features/portal/portal.service';
 import { useToast } from '@/src/context/ToastContext';
@@ -366,6 +367,24 @@ function LoginForm() {
             }
         } catch (err: any) {
             setGuestError(err instanceof Error ? err.message : 'El código de recuperación es incorrecto o venció.');
+        } finally {
+            setGuestSubmitting(false);
+        }
+    };
+
+    const handleRegenerarCodigo = async () => {
+        setGuestSubmitting(true);
+        setGuestError(null);
+        try {
+            const res = await regenerarCodigoMiEventia(guestEmail.trim().toLowerCase());
+            if (res.ok) {
+                addToast('Te enviamos un nuevo código a tu correo.', 'success');
+                if (res.token_recuperacion) {
+                    setGuestTokenRecuperacion(res.token_recuperacion);
+                }
+            }
+        } catch (err: any) {
+            setGuestError(err instanceof Error ? err.message : 'Error al regenerar código.');
         } finally {
             setGuestSubmitting(false);
         }
@@ -737,6 +756,7 @@ function LoginForm() {
                                         'Ingresar'
                                     )}
                                 </button>
+                            </div>
                             </div>
                         </form>
                     )}

@@ -282,6 +282,27 @@ export async function solicitarRecuperacionMiEventia(
 }
 
 /**
+ * POST — Regenerar Código de Acceso a Mi Eventia
+ * Regenera el código OTP para una identidad y envía el nuevo código.
+ */
+export async function regenerarCodigoMiEventia(
+    email: string
+): Promise<{ ok: boolean; mensaje: string; token_recuperacion: string }> {
+    const res = await fetch('/api/mi-eventia/regenerar-codigo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, telefono: null, canal: 'EMAIL' }),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.message || 'No se pudo regenerar el código de recuperación.');
+    }
+
+    return res.json();
+}
+
+/**
  * POST — Validar Recuperación de Acceso a Mi Eventia
  * Valida el código de recuperación para obtener el token de portal y la URL de redirección.
  */
