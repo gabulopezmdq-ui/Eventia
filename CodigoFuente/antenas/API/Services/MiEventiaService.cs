@@ -332,8 +332,26 @@ namespace API.Services
 
             if (!string.IsNullOrWhiteSpace(rec.codigo))
             {
-                if (string.IsNullOrWhiteSpace(req.codigo) || rec.codigo != req.codigo)
-                    throw new Exception("Código inválido.");
+                if (string.IsNullOrWhiteSpace(req.codigo) || rec.codigo.Trim() != req.codigo.Trim())
+                {
+                    // Fallback: Si el frontend mandó un token viejo porque no se actualizó,
+                    // verificamos si existe un token más reciente para la misma persona que sí coincida con el código ingresado.
+                    var recNuevo = await _ctx.ef_portal_recuperacion_tokens
+                        .FirstOrDefaultAsync(x => 
+                            x.id_portal_persona == rec.id_portal_persona && 
+                            x.codigo == req.codigo.Trim() && 
+                            !x.usado && 
+                            x.fecha_expiracion >= DateTimeOffset.UtcNow);
+
+                    if (recNuevo != null)
+                    {
+                        rec = recNuevo; // Usamos el token más reciente que sí coincide
+                    }
+                    else
+                    {
+                        throw new Exception("Código inválido.");
+                    }
+                }
             }
 
             var persona = await _ctx.PortalPersonas
