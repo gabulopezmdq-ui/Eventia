@@ -198,12 +198,14 @@ namespace API.Services
 
             var token = Guid.NewGuid().ToString("N");
 
+            var canalUsado = (validacionExistente != null) ? "NONE" : req.canal;
+
             _ctx.ef_portal_recuperacion_tokens.Add(new ef_portal_recuperacion_tokens
             {
                 id_portal_persona = persona.IdPortalPersona,
                 token_recuperacion = token,
                 codigo = codigo,
-                canal = req.canal,
+                canal = canalUsado,
                 destino = destino,
                 usado = false,
                 fecha_expiracion = DateTimeOffset.UtcNow.AddMinutes(15),
@@ -215,7 +217,9 @@ namespace API.Services
             return new RecuperarMiEventiaResponseDTO
             {
                 ok = true,
-                mensaje = "Si encontramos un acceso asociado, enviaremos las instrucciones.",
+                mensaje = (validacionExistente != null) 
+                    ? "Ingresa tu código de acceso." 
+                    : "Si encontramos un acceso asociado, enviaremos las instrucciones.",
                 token_recuperacion = token
             };
         }
