@@ -8,16 +8,24 @@ import {
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
     Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck, Stethoscope,
-    TrendingUp, X, AlertTriangle, Loader2
+    TrendingUp, X, AlertTriangle, Loader2, Lock
 } from 'lucide-react';
 
 import {
     getEventById,
     getAdminEventById,
     activateEvent,
-    getEstructuraEvento
+    getEstructuraEvento,
+    getIdiomasActivos,
+    getDressCodes,
+    updateEventGeneral,
+    activateEventManual,
+    closeEvent,
+    cancelEvent,
+    reopenEvent,
+    getEventStateHistory
 } from '@/src/features/events/event.service';
-import type { Event, EstructuraEvento } from '@/src/features/events/types';
+import type { Event, EstructuraEvento, EstadoHistorial } from '@/src/features/events/types';
 import FeaturesEventoManager from './components/FeaturesEventoManager';
 
 function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
@@ -52,6 +60,29 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const [enviandoSolicitud, setEnviandoSolicitud] = useState(false);
     const [solicitudEnviada, setSolicitudEnviada] = useState(false);
 
+    // ── Acciones de Estado & Edición General ───────────────
+    const [stateActionLoading, setStateActionLoading] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showStateModal, setShowStateModal] = useState(false);
+    const [targetState, setTargetState] = useState<'C' | 'X' | 'A' | ''>('');
+    const [stateObservaciones, setStateObservaciones] = useState('');
+    const [idiomasList, setIdiomasList] = useState<any[]>([]);
+    const [dressCodesList, setDressCodesList] = useState<any[]>([]);
+    const [loadingLanguages, setLoadingLanguages] = useState(false);
+    const [loadingDressCodes, setLoadingDressCodes] = useState(false);
+    const [historyList, setHistoryList] = useState<EstadoHistorial[]>([]);
+
+    const [editFormData, setEditFormData] = useState({
+        idIdioma: 1,
+        anfitrionesTexto: '',
+        idDressCode: '' as string | number,
+        dressCodeDescripcion: '',
+        saludo: '',
+        mensajeBienvenida: '',
+        notas: '',
+        infoPublica: '',
+    });
+
     const isAdmin = scope === 'admin';
     const idEventoLong = Number(id);
 
@@ -63,15 +94,21 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 const eventData = await request;
                 setEvent(eventData);
                 console.log('EVENT DATA', eventData);
+
                 // Intentar cargar la estructura para mostrar estadísticas
                 try {
                     const structData = await getEstructuraEvento(idEventoLong);
-                    console.log('STRUCT DATA', structData);
-                    console.log('TRAMOS', structData?.tramos);
-                    console.log('ACCESOS', structData?.accesos);
                     setEstructura(structData);
                 } catch (e) {
                     console.warn('No se pudo cargar la estructura para el resumen', e);
+                }
+
+                // Cargar historial de estados
+                try {
+                    const historyData = await getEventStateHistory(idEventoLong);
+                    setHistoryList(historyData);
+                } catch (e) {
+                    console.warn('No se pudo cargar el historial de estados', e);
                 }
             } catch (err) {
                 setError('No se pudo cargar el detalle del evento');
@@ -81,6 +118,53 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
         }
         loadData();
     }, [id, scope, isAdmin, idEventoLong]);
+
+    // Cargar idiomas cuando abre el modal de edición
+    useEffect(() => {
+        if (showEditModal && event) {
+            setEditFormData({
+                idIdioma: event.id_idioma,
+                anfitrionesTexto: event.anfitriones_texto || '',
+                idDressCode: event.id_dress_code ? String(event.id_dress_code) : '',
+                dressCodeDescripcion: event.dress_code_descripcion || '',
+                saludo: event.saludo || '',
+                mensajeBienvenida: event.mensajeBienvenida || '',
+                notas: event.notas || '',
+                infoPublica: event.infoPublica || '',
+            });
+
+            async function fetchIdiomas() {
+                setLoadingLanguages(true);
+                try {
+                    const data = await getIdiomasActivos();
+                    setIdiomasList(data);
+                } catch (e) {
+                    console.error('Error al cargar idiomas', e);
+                } finally {
+                    setLoadingLanguages(false);
+                }
+            }
+            fetchIdiomas();
+        }
+    }, [showEditModal, event]);
+
+    // Recargar dress codes cuando cambia el idioma en el formulario
+    useEffect(() => {
+        if (showEditModal && editFormData.idIdioma) {
+            async function fetchDressCodes() {
+                setLoadingDressCodes(true);
+                try {
+                    const data = await getDressCodes(Number(editFormData.idIdioma));
+                    setDressCodesList(data);
+                } catch (e) {
+                    console.error('Error al cargar dress codes', e);
+                } finally {
+                    setLoadingDressCodes(false);
+                }
+            }
+            fetchDressCodes();
+        }
+    }, [showEditModal, editFormData.idIdioma]);
 
     const handleActivate = async () => {
         if (!confirm('¿Estás seguro de que deseas activar este evento?')) return;
@@ -96,6 +180,85 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             setActivating(false);
         }
     };
+
+    // ── Acciones de Cambio de Estado Manual y Guardado de Datos ──
+    const handleManualActivate = async () => {
+        const text = isPrograma ? 'programa' : 'evento';
+        if (!confirm(`¿Estás seguro de que deseas activar este ${text}?`)) return;
+
+        setStateActionLoading(true);
+        try {
+            await activateEventManual(idEventoLong);
+            alert(`${isPrograma ? 'Programa' : 'Evento'} activado correctamente`);
+            window.location.reload();
+        } catch (err: any) {
+            alert(err.message || `Error al activar el ${text}`);
+        } finally {
+            setStateActionLoading(false);
+        }
+    };
+
+    const handleOpenStateModal = (state: 'C' | 'X' | 'A') => {
+        setTargetState(state);
+        setStateObservaciones('');
+        setShowStateModal(true);
+    };
+
+    const handleStateActionSubmit = async () => {
+        const text = isPrograma ? 'programa' : 'evento';
+        
+        if (targetState === 'X') {
+            if (!confirm(`El ${text} quedará anulado. No se eliminarán datos, pero no podrá operarse. ¿Confirmar anulación?`)) {
+                return;
+            }
+        }
+
+        setStateActionLoading(true);
+        try {
+            if (targetState === 'C') {
+                await closeEvent(idEventoLong, stateObservaciones);
+                alert(`${isPrograma ? 'Programa' : 'Evento'} cerrado correctamente`);
+            } else if (targetState === 'X') {
+                await cancelEvent(idEventoLong, stateObservaciones);
+                alert(`${isPrograma ? 'Programa' : 'Evento'} anulado correctamente`);
+            } else if (targetState === 'A') {
+                await reopenEvent(idEventoLong, stateObservaciones);
+                alert(`${isPrograma ? 'Programa' : 'Evento'} reabierto correctamente`);
+            }
+            setShowStateModal(false);
+            window.location.reload();
+        } catch (err: any) {
+            alert(err.message || `Error al procesar el cambio de estado`);
+        } finally {
+            setStateActionLoading(false);
+        }
+    };
+
+    const handleSaveGeneral = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setStateActionLoading(true);
+        try {
+            const payload = {
+                idIdioma: Number(editFormData.idIdioma),
+                anfitrionesTexto: editFormData.anfitrionesTexto,
+                idDressCode: editFormData.idDressCode ? Number(editFormData.idDressCode) : null,
+                dressCodeDescripcion: editFormData.dressCodeDescripcion,
+                saludo: editFormData.saludo,
+                mensajeBienvenida: editFormData.mensajeBienvenida,
+                notas: editFormData.notas,
+                infoPublica: editFormData.infoPublica,
+            };
+            await updateEventGeneral(idEventoLong, payload);
+            alert('Datos actualizados correctamente');
+            setShowEditModal(false);
+            window.location.reload();
+        } catch (err: any) {
+            alert(err.message || 'Error al actualizar datos generales');
+        } finally {
+            setStateActionLoading(false);
+        }
+    };
+
 
     // ── Handler: abrir flujo de cambio de plan ────────────────
     const handleCambiarPlan = async () => {
@@ -193,18 +356,29 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const isEvento = event.tipoOperacion === 'EVENTO';
     const isPrograma = event.tipoOperacion === 'PROGRAMA';
     const isPublicEvent = event.esPublico === true || (estructura?.accesos && estructura.accesos.length > 0 && estructura.accesos.some(a => a.es_publico));
+    const labelGeneral = isPrograma ? 'programa' : 'evento';
+    const labelGeneralCap = isPrograma ? 'Programa' : 'Evento';
+
     const estadoConfig = {
         'B': {
             label: 'Borrador',
             classes: 'bg-amber-500/10 border-amber-500/20 text-amber-500'
         },
         'P': {
-            label: 'Pendiente',
-            classes: 'bg-blue-500/10 border-blue-500/20 text-blue-500'
+            label: 'Pendiente de Pago',
+            classes: 'bg-orange-500/10 border-orange-500/20 text-orange-500'
         },
         'A': {
             label: 'Activo',
             classes: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+        },
+        'C': {
+            label: 'Cerrado',
+            classes: 'bg-neutral-500/10 border-neutral-500/20 text-neutral-500'
+        },
+        'X': {
+            label: 'Anulado',
+            classes: 'bg-red-500/10 border-red-500/20 text-red-500'
         },
     } as const;
 
@@ -233,22 +407,29 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             {estadoActual.label}
                         </span>
                     </div>
+                    {(event.estado === 'C' || event.estado === 'X') && event.estadoObservacionActual && (
+                        <p className="text-xs text-muted/80 mt-1 bg-card-bg border border-card-border px-3 py-1.5 rounded-xl w-fit">
+                            <span className="font-bold text-foreground">Motivo:</span> {event.estadoObservacionActual}
+                        </p>
+                    )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                    {isAdmin && isBorrador && (
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Bloque: Datos Generales */}
+                    {(event.estado === 'B' || event.estado === 'P' || event.estado === 'A') && (
                         <button
-                            onClick={handleActivate}
-                            disabled={activating}
-                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50"
+                            onClick={() => setShowEditModal(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-card-border bg-card-bg hover:bg-card-border/30 hover:text-indigo-400 text-foreground font-bold text-xs transition-all shadow-md"
                         >
-                            {activating ? 'Activando...' : <><CheckCircle2 className="w-4 h-4" /> Activar Evento</>}
+                            <Settings2 className="w-4 h-4" />
+                            Editar datos generales
                         </button>
                     )}
+
                     {isEvento && (
                         <button
                             onClick={() => router.push(`/dashboard/events/${event.id_evento}/estructura`)}
-                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all"
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all"
                         >
                             <Settings2 className="w-4 h-4" />
                             Gestionar Estructura
@@ -574,6 +755,54 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
                     {/* Features / Modulos Toggles */}
                     <FeaturesEventoManager idEvento={idEventoLong} />
+
+                    {/* Timeline de Historial de Estados */}
+                    <section className="p-6 rounded-2xl bg-card-bg border border-card-border space-y-6">
+                        <h3 className="text-xs font-black text-muted uppercase tracking-widest flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5" /> Historial de Estados del {labelGeneralCap}
+                        </h3>
+                        {historyList.length === 0 ? (
+                            <p className="text-sm text-muted italic">No hay registros de cambios de estado para este {labelGeneral}.</p>
+                        ) : (
+                            <div className="relative pl-6 border-l border-indigo-500/20 space-y-6">
+                                {historyList.map((hist, index) => {
+                                    const histStateConfig = estadoConfig[hist.estado as keyof typeof estadoConfig] ?? {
+                                        label: hist.estadoDescripcion || hist.estado,
+                                        classes: 'bg-neutral-500/10 border-neutral-500/20 text-neutral-500'
+                                    };
+                                    return (
+                                        <div key={index} className="relative">
+                                            {/* Dot centered on border line */}
+                                            <div className="absolute -left-[30.5px] top-1.5 w-3 h-3 rounded-full border-2 border-card-bg bg-indigo-500" />
+                                            
+                                            <div className="space-y-1">
+                                                <div className="flex flex-wrap items-center gap-2.5">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${histStateConfig.classes}`}>
+                                                        {histStateConfig.label}
+                                                    </span>
+                                                    <span className="text-xs font-medium text-foreground">{hist.usuario}</span>
+                                                    <span className="text-[10px] text-muted ml-auto">
+                                                        {new Date(hist.fecha).toLocaleString('es-AR', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </span>
+                                                </div>
+                                                {hist.observaciones && (
+                                                    <p className="text-sm text-muted leading-relaxed mt-1 italic pl-1">
+                                                        "{hist.observaciones}"
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </section>
                 </div>
 
                 {/* ── Sidebar ── */}
@@ -672,8 +901,72 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
                     {/* Secondary Actions */}
                     <div className="space-y-2">
+                        {event.estado === 'B' && (
+                            <>
+                                <button
+                                    onClick={handleManualActivate}
+                                    disabled={stateActionLoading}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50"
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Activar {labelGeneral}
+                                </button>
+                                <button
+                                    onClick={() => handleOpenStateModal('X')}
+                                    disabled={stateActionLoading}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 font-bold text-xs transition-all disabled:opacity-50"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Anular {labelGeneral}
+                                </button>
+                            </>
+                        )}
+
+                        {event.estado === 'P' && (
+                            <button
+                                onClick={() => handleOpenStateModal('X')}
+                                disabled={stateActionLoading}
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 font-bold text-xs transition-all disabled:opacity-50"
+                            >
+                                <X className="w-4 h-4" />
+                                Anular {labelGeneral}
+                            </button>
+                        )}
+
+                        {event.estado === 'A' && (
+                            <>
+                                <button
+                                    onClick={() => handleOpenStateModal('C')}
+                                    disabled={stateActionLoading}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-neutral-600 hover:bg-neutral-500 text-white font-bold text-xs shadow-lg transition-all disabled:opacity-50"
+                                >
+                                    <Lock className="w-4 h-4 text-white" />
+                                    Cerrar {labelGeneral}
+                                </button>
+                                <button
+                                    onClick={() => handleOpenStateModal('X')}
+                                    disabled={stateActionLoading}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 font-bold text-xs transition-all disabled:opacity-50"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Anular {labelGeneral}
+                                </button>
+                            </>
+                        )}
+
+                        {event.estado === 'C' && (
+                            <button
+                                onClick={() => handleOpenStateModal('A')}
+                                disabled={stateActionLoading}
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
+                            >
+                                <Calendar className="w-4 h-4" />
+                                Reabrir {labelGeneral}
+                            </button>
+                        )}
+
                         <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-card-border text-muted hover:text-foreground hover:bg-card-bg transition-all text-xs font-bold uppercase tracking-widest">
-                            Duplicar Evento
+                            Duplicar {labelGeneral}
                         </button>
                     </div>
                 </aside>
@@ -842,6 +1135,272 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* ════ MODAL: Editar Datos Generales ════ */}
+            {showEditModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto" onClick={() => { if (!stateActionLoading) setShowEditModal(false); }}>
+                    <div className="my-8 w-full max-w-lg rounded-2xl bg-card-bg border border-indigo-500/30 shadow-2xl shadow-indigo-500/10 p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                                    <Settings2 className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-foreground">Editar Datos Generales</h3>
+                                    <p className="text-xs text-muted">Modificá los datos generales del {labelGeneral}</p>
+                                </div>
+                            </div>
+                            {!stateActionLoading && (
+                                <button onClick={() => setShowEditModal(false)} className="text-muted hover:text-foreground transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={handleSaveGeneral} className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                            {/* Idioma */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Idioma</label>
+                                {loadingLanguages ? (
+                                    <p className="text-xs text-muted italic">Cargando idiomas...</p>
+                                ) : (
+                                    <div className="relative">
+                                        <select
+                                            value={editFormData.idIdioma}
+                                            onChange={e => setEditFormData(prev => ({ ...prev, idIdioma: Number(e.target.value) }))}
+                                            className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10 text-sm font-medium"
+                                        >
+                                            {idiomasList.map(idioma => (
+                                                <option key={idioma.id_idioma} value={idioma.id_idioma}>
+                                                    {idioma.nombre_largo} ({idioma.locale})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Anfitriones / Nombre visible */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Anfitriones / Nombre Visible</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editFormData.anfitrionesTexto}
+                                    onChange={e => setEditFormData(prev => ({ ...prev, anfitrionesTexto: e.target.value }))}
+                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm"
+                                    placeholder="Ej. Club de mar / Boda de Ana y Juan"
+                                />
+                            </div>
+
+                            {/* Dress Code */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Dress Code</label>
+                                {loadingDressCodes ? (
+                                    <p className="text-xs text-muted italic">Cargando códigos de vestimenta...</p>
+                                ) : (
+                                    <div className="relative">
+                                        <select
+                                            value={editFormData.idDressCode}
+                                            onChange={e => setEditFormData(prev => ({ ...prev, idDressCode: e.target.value }))}
+                                            className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none appearance-none cursor-pointer pr-10 text-sm font-medium"
+                                        >
+                                            <option value="">Seleccionar Dress Code...</option>
+                                            {dressCodesList.map(dc => (
+                                                <option key={dc.id} value={dc.id}>{dc.texto}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Detalle Dress Code */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Detalle de Dress Code</label>
+                                <input
+                                    type="text"
+                                    value={editFormData.dressCodeDescripcion}
+                                    onChange={e => setEditFormData(prev => ({ ...prev, dressCodeDescripcion: e.target.value }))}
+                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm"
+                                    placeholder="Ej. Ropa cómoda, tonos pasteles"
+                                />
+                            </div>
+
+                            {/* Saludo */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Saludo</label>
+                                <textarea
+                                    value={editFormData.saludo}
+                                    onChange={e => setEditFormData(prev => ({ ...prev, saludo: e.target.value }))}
+                                    rows={2}
+                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm resize-none"
+                                    placeholder="Saludo inicial del evento"
+                                />
+                            </div>
+
+                            {/* Mensaje Bienvenida */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Mensaje Bienvenida</label>
+                                <textarea
+                                    value={editFormData.mensajeBienvenida}
+                                    onChange={e => setEditFormData(prev => ({ ...prev, mensajeBienvenida: e.target.value }))}
+                                    rows={2}
+                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm resize-none"
+                                    placeholder="Mensaje de bienvenida"
+                                />
+                            </div>
+
+                            {/* Notas Internas */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Notas Internas</label>
+                                <textarea
+                                    value={editFormData.notas}
+                                    onChange={e => setEditFormData(prev => ({ ...prev, notas: e.target.value }))}
+                                    rows={2}
+                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm resize-none"
+                                    placeholder="Notas privadas exclusivas del staff"
+                                />
+                            </div>
+
+                            {/* Información Pública */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Información Pública</label>
+                                <textarea
+                                    value={editFormData.infoPublica}
+                                    onChange={e => setEditFormData(prev => ({ ...prev, infoPublica: e.target.value }))}
+                                    rows={2}
+                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none text-sm resize-none"
+                                    placeholder="Detalles públicos del evento"
+                                />
+                            </div>
+
+                            {/* Acciones del formulario */}
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    disabled={stateActionLoading}
+                                    className="flex-1 py-3 rounded-xl border border-card-border text-muted hover:text-foreground font-bold text-sm transition-colors disabled:opacity-50"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={stateActionLoading}
+                                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-60"
+                                >
+                                    {stateActionLoading ? (
+                                        <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                                    ) : (
+                                        'Guardar'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ════ MODAL: Cambio de Estado (Cerrar / Anular / Reabrir) ════ */}
+            {showStateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => { if (!stateActionLoading) setShowStateModal(false); }}>
+                    <div className="w-full max-w-md rounded-2xl bg-card-bg border border-card-border shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                    targetState === 'C' ? 'bg-neutral-500/10 text-neutral-400' :
+                                    targetState === 'X' ? 'bg-red-500/10 text-red-400' :
+                                    'bg-indigo-500/10 text-indigo-400'
+                                }`}>
+                                    {targetState === 'C' && <Lock className="w-5 h-5" />}
+                                    {targetState === 'X' && <AlertTriangle className="w-5 h-5" />}
+                                    {targetState === 'A' && <Calendar className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-foreground">
+                                        {targetState === 'C' && `Cerrar ${labelGeneralCap}`}
+                                        {targetState === 'X' && `Anular ${labelGeneralCap}`}
+                                        {targetState === 'A' && `Reabrir ${labelGeneralCap}`}
+                                    </h3>
+                                    <p className="text-xs text-muted">Confirmá la acción para este {labelGeneral}</p>
+                                </div>
+                            </div>
+                            {!stateActionLoading && (
+                                <button onClick={() => setShowStateModal(false)} className="text-muted hover:text-foreground transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Warning if cancellation */}
+                        {targetState === 'X' && (
+                            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2.5">
+                                <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-red-400 font-medium leading-relaxed">
+                                    El {labelGeneral} quedará anulado. No se eliminarán datos, pero no podrá operarse.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Form Body */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-muted mb-2">
+                                    Motivo / Observaciones
+                                </label>
+                                <textarea
+                                    value={stateObservaciones}
+                                    onChange={e => setStateObservaciones(e.target.value)}
+                                    placeholder={`Indica el motivo por el cual deseas ${
+                                        targetState === 'C' ? 'cerrar' :
+                                        targetState === 'X' ? 'anular' :
+                                        'reabrir'
+                                    } el ${labelGeneral}...`}
+                                    rows={3}
+                                    className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none placeholder:text-muted resize-none text-sm"
+                                />
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="flex gap-3 pt-1">
+                                <button
+                                    onClick={() => setShowStateModal(false)}
+                                    disabled={stateActionLoading}
+                                    className="flex-1 py-3 rounded-xl border border-card-border text-muted hover:text-foreground font-bold text-sm transition-colors disabled:opacity-50"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleStateActionSubmit}
+                                    disabled={stateActionLoading}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-60 ${
+                                        targetState === 'X' ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/20' :
+                                        targetState === 'C' ? 'bg-neutral-600 hover:bg-neutral-500 text-white' :
+                                        'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                                    }`}
+                                >
+                                    {stateActionLoading ? (
+                                        <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
+                                    ) : (
+                                        targetState === 'C' ? 'Cerrar' :
+                                        targetState === 'X' ? 'Anular' :
+                                        'Reabrir'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
