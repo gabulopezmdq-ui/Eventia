@@ -35,6 +35,8 @@ namespace API.Controllers
             if (evento == null)
                 return NotFound("Evento no encontrado.");
 
+            bool esPrograma = string.Equals(evento.tipo_operacion, "PROGRAMA", StringComparison.OrdinalIgnoreCase);
+
             long? idCuenta = evento.id_cuenta;
             long? idPlan = evento.id_plan;
             string scopeComercial = "EVENTO";
@@ -127,17 +129,14 @@ namespace API.Controllers
             var addonOverridesByFeature = new Dictionary<long, string?>();
 
             if (addonsEvento.Count > 0)
-            {
                 await CargarAddonFeaturesAsync(addonsEvento, addonEventoFeatureIds, addonOverridesByFeature);
-            }
 
             if (addonsCuenta.Count > 0)
-            {
                 await CargarAddonFeaturesAsync(addonsCuenta, addonCuentaFeatureIds, addonOverridesByFeature);
-            }
 
             var eventoOverridesByFeature = new Dictionary<long, string?>();
             var eventoActivosByFeature = new Dictionary<long, bool>();
+            var eventoVisibilidadByFeature = new Dictionary<long, ef_evento_feature_visibilidad>();
 
             var eventoFeatures = await _context.ef_evento_features
                 .AsNoTracking()
@@ -156,6 +155,16 @@ namespace API.Controllers
                 eventoActivosByFeature[ef.id_feature] = ef.activo;
             }
 
+            var eventoVisibilidad = await _context.ef_evento_feature_visibilidad
+                .AsNoTracking()
+                .Where(v => v.id_evento == idEvento)
+                .ToListAsync();
+
+            foreach (var v in eventoVisibilidad)
+            {
+                eventoVisibilidadByFeature[v.id_feature] = v;
+            }
+
             var seedIds = new HashSet<long>();
 
             foreach (var id in planFeatureIds) seedIds.Add(id);
@@ -164,6 +173,19 @@ namespace API.Controllers
             foreach (var id in eventoActivosByFeature.Keys) seedIds.Add(id);
 
             var allIds = await ExpandirDependenciasAsync(seedIds);
+
+            var featureDefaults = await _context.ef_param_features
+                .AsNoTracking()
+                .Where(f => allIds.Contains(f.id_feature))
+                .Select(f => new
+                {
+                    f.id_feature,
+                    f.visible_acceso_evento_default,
+                    f.visible_centro_evento_default,
+                    f.visible_acceso_programa_default,
+                    f.visible_centro_programa_default
+                })
+                .ToDictionaryAsync(x => x.id_feature);
 
             var featuresFinales = await _context.ef_param_features
                 .AsNoTracking()
@@ -194,7 +216,12 @@ namespace API.Controllers
 
                     origen = null,
                     motivo_inactivo = null,
-                    mensaje_ui = null
+                    mensaje_ui = null,
+
+                    visible_acceso = false,
+                    visible_centro = false,
+                    permite_acceso = false,
+                    permite_centro = false
                 })
                 .ToListAsync();
 
@@ -224,6 +251,28 @@ namespace API.Controllers
 
                 fe.activo_evento = activoEvento;
 
+                eventoVisibilidadByFeature.TryGetValue(fe.id_feature, out var vis);
+                featureDefaults.TryGetValue(fe.id_feature, out var defaults);
+
+                bool defaultAcceso = esPrograma
+                    ? defaults?.visible_acceso_programa_default ?? false
+                    : defaults?.visible_acceso_evento_default ?? false;
+
+                bool defaultCentro = esPrograma
+                    ? defaults?.visible_centro_programa_default ?? false
+                    : defaults?.visible_centro_evento_default ?? false;
+
+                fe.permite_acceso = defaultAcceso;
+                fe.permite_centro = defaultCentro;
+
+                fe.visible_acceso = esPrograma
+                    ? (vis?.visible_acceso_programa ?? defaultAcceso)
+                    : (vis?.visible_acceso_evento ?? defaultAcceso);
+
+                fe.visible_centro = esPrograma
+                    ? (vis?.visible_centro_programa ?? defaultCentro)
+                    : (vis?.visible_centro_evento ?? defaultCentro);
+
                 if (!permitidaComercialmente)
                 {
                     fe.disponible = false;
@@ -232,6 +281,10 @@ namespace API.Controllers
                     fe.origen = "NO_INCLUIDA";
                     fe.motivo_inactivo = "NO_INCLUIDA";
                     fe.mensaje_ui = "Disponible contratando un addon o cambiando de plan.";
+
+                    fe.visible_acceso = false;
+                    fe.visible_centro = false;
+
                     continue;
                 }
 
@@ -257,12 +310,13 @@ namespace API.Controllers
                     {
                         fe.motivo_inactivo = "DESACTIVADA_EN_EVENTO";
                         fe.mensaje_ui = "Desactivada para este evento.";
+
+                        fe.visible_acceso = false;
+                        fe.visible_centro = false;
                     }
                 }
                 else
                 {
-                    // Si viene por plan/addon y nunca fue tocada en ef_evento_features,
-                    // se considera activa por defecto.
                     fe.activo_resuelto = true;
                     fe.motivo_inactivo = null;
                     fe.mensaje_ui = null;
