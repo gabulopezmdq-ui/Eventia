@@ -48,17 +48,20 @@ namespace API.DataSchema
         public DbSet<ef_plantilla_acceso_tramos> ef_plantilla_acceso_tramos { get; set; }
         public DbSet<ef_solicitudes_plantilla> ef_solicitudes_plantilla { get; set; }
 
-        public DbSet<ef_evento_features> ef_evento_features { get; set; }
         public DbSet<ef_evento_musica_momentos> ef_evento_musica_momentos { get; set; }
         public DbSet<ef_evento_musica_playlist> ef_evento_musica_playlist { get; set; }
         public DbSet<ef_invitado_musica_sugerencias> ef_invitado_musica_sugerencias { get; set; }
         public DbSet<ef_invitado_musica_votos> ef_invitado_musica_votos { get; set; }
-        public DbSet<ef_param_features> ef_param_features { get; set; }
-        public DbSet<ef_param_feature_dependencias> ef_param_feature_dependencias { get; set; }
         public DbSet<ef_evento_musica_bloqueos> ef_evento_musica_bloqueos { get; set; }
         public DbSet<ef_evento_links> ef_evento_links { get; set; }
         public DbSet<ef_param_entidades> ef_param_entidades { get; set; }
         public DbSet<ef_param_relaciones_persona> ef_param_relaciones_persona { get; set; }
+        
+        //features - relacion con invitaciones y portal
+        public DbSet<ef_param_features> ef_param_features { get; set; }
+        public DbSet<ef_param_feature_dependencias> ef_param_feature_dependencias { get; set; }
+        public DbSet<ef_evento_feature_visibilidad> ef_evento_feature_visibilidad { get; set; }
+        public DbSet<ef_evento_features> ef_evento_features { get; set; }
 
         public DbSet<ef_rsvp_grupos> ef_rsvp_grupos { get; set; }
 
@@ -290,9 +293,11 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_plantilla_acceso_tramosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_solicitudes_plantillaConfiguration());
 
+            //features - relacion con invitaciones y portal
             modelBuilder.ApplyConfiguration(new ef_param_featuresConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_feature_dependenciasConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_featuresConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_feature_visibilidadConfiguration());
 
             modelBuilder.ApplyConfiguration(new ef_evento_musica_momentosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_musica_playlistConfiguration());

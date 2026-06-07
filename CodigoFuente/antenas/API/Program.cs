@@ -4,6 +4,7 @@ using API.Repositories;
 using API.Services;
 using API.Services.Cuentas;
 using API.Services.Eventos;
+using API.Services.Eventos.Features;
 using API.Services.Eventos.Agenda;
 using API.Services.Eventos.Checklist;
 using API.Services.Eventos.Historial;
@@ -158,6 +159,7 @@ builder.Services.AddScoped<IAdminCuentasService, AdminCuentasService>();
 builder.Services.AddScoped<ICuentaContextService, CuentaContextService>();
 builder.Services.AddScoped<IMesasService, MesasService>();
 
+builder.Services.AddScoped<IEventoFeaturePostProcesoService, EventoFeaturePostProcesoService>();
 
 builder.Services.AddScoped<IMonedasService, MonedasService>();
 builder.Services.AddScoped<IRelacionesPersonaService, RelacionesPersonaService>();

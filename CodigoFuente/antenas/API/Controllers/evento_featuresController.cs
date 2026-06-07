@@ -1,5 +1,6 @@
 using API.DataSchema;
 using API.Security;
+using API.Services.Eventos.Features;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,23 +12,24 @@ using System.Threading.Tasks;
 namespace API.Controllers
 {
     [ApiController]
-    [Authorize] // ✅ importante: no lo dejes AllowAnonymous
+    [Authorize]
     [Route("[controller]")]
     public class evento_featuresController : ControllerBase
     {
         private readonly DataContext _context;
         private readonly ILogger<evento_featuresController> _logger;
+        private readonly IEventoFeaturePostProcesoService _postProcesoFeatures;
 
-        public evento_featuresController(DataContext context, ILogger<evento_featuresController> logger)
+        public evento_featuresController(
+            DataContext context,
+            ILogger<evento_featuresController> logger,
+            IEventoFeaturePostProcesoService postProcesoFeatures)
         {
             _context = context;
             _logger = logger;
+            _postProcesoFeatures = postProcesoFeatures;
         }
 
-        // ==========================================================
-        // GET /evento_features/GetByEvento?idEvento=16
-        // Devuelve overrides guardados en ef_evento_features
-        // ==========================================================
         [HttpGet("GetByEvento")]
         public async Task<ActionResult<IEnumerable<ef_evento_features>>> GetByEvento([FromQuery] long idEvento)
         {
@@ -48,30 +50,26 @@ namespace API.Controllers
             return Ok(list);
         }
 
-        // ==========================================================
-        // PUT /evento_features/SetActivo?idEvento=16&idFeature=18&activo=false
-        // Upsert por (id_evento,id_feature). Guarda en ef_evento_features.
-        // ==========================================================
         [HttpPut("SetActivo")]
-        public async Task<IActionResult> SetActivo([FromQuery] long idEvento, [FromQuery] long idFeature, [FromQuery] bool activo)
+        public async Task<IActionResult> SetActivo(
+            [FromQuery] long idEvento,
+            [FromQuery] long idFeature,
+            [FromQuery] bool activo)
         {
             long idUsuario = User.GetUserId();
 
-            // Seguridad: debe pertenecer al evento
             bool pertenece = await _context.Set<ef_evento_usuarios>()
                 .AnyAsync(x => x.id_evento == idEvento && x.id_usuario == idUsuario && x.activo == true);
 
             if (!pertenece)
                 return Forbid();
 
-            // Validar feature existe y activa
             bool featureExiste = await _context.Set<ef_param_features>()
                 .AnyAsync(f => f.id_feature == idFeature && f.activo == true);
 
             if (!featureExiste)
                 return BadRequest("Feature inexistente o inactiva.");
 
-            // Validación de dependencias SOLO si se activa
             if (activo)
             {
                 var valid = await ValidarDependencias(idEvento, idFeature);
@@ -79,7 +77,6 @@ namespace API.Controllers
                     return BadRequest(new { error = "Dependencias incompletas.", dependencias_faltantes = valid.faltantes });
             }
 
-            // Upsert por unique (id_evento,id_feature)
             var row = await _context.Set<ef_evento_features>()
                 .SingleOrDefaultAsync(x => x.id_evento == idEvento && x.id_feature == idFeature);
 
@@ -92,6 +89,7 @@ namespace API.Controllers
                     activo = activo,
                     config_json = null
                 };
+
                 _context.Set<ef_evento_features>().Add(row);
             }
             else
@@ -99,7 +97,11 @@ namespace API.Controllers
                 row.activo = activo;
             }
 
+            await SincronizarRegalosPadreAsync(idEvento);
+
             await _context.SaveChangesAsync();
+
+            await _postProcesoFeatures.SincronizarAsync(idEvento);
 
             return Ok(new
             {
@@ -122,7 +124,9 @@ namespace API.Controllers
         }
 
         [HttpPut("SetActivosBulk")]
-        public async Task<IActionResult> SetActivosBulk([FromQuery] long idEvento, [FromBody] SetActivosBulkRequest req)
+        public async Task<IActionResult> SetActivosBulk(
+            [FromQuery] long idEvento,
+            [FromBody] SetActivosBulkRequest req)
         {
             long idUsuario = User.GetUserId();
 
@@ -135,16 +139,15 @@ namespace API.Controllers
             if (req == null || req.items == null || req.items.Count == 0)
                 return BadRequest("items vacío.");
 
-            // Traer existentes del evento para upsert rápido
             var ids = req.items.Select(i => i.id_feature).Distinct().ToList();
 
-            // Validar que las features existan
             var existentes = await _context.Set<ef_param_features>()
                 .Where(f => ids.Contains(f.id_feature) && f.activo == true)
                 .Select(f => f.id_feature)
                 .ToListAsync();
 
             var faltan = ids.Except(existentes).ToList();
+
             if (faltan.Count > 0)
                 return BadRequest(new { error = "Hay features inexistentes/inactivas.", ids = faltan });
 
@@ -154,14 +157,20 @@ namespace API.Controllers
 
             var byFeature = rows.ToDictionary(x => x.id_feature, x => x);
 
-            // Validar dependencias solo para las que se activan
             foreach (var it in req.items)
             {
                 if (it.activo)
                 {
                     var valid = await ValidarDependencias(idEvento, it.id_feature);
                     if (!valid.ok)
-                        return BadRequest(new { error = "Dependencias incompletas.", id_feature = it.id_feature, dependencias_faltantes = valid.faltantes });
+                    {
+                        return BadRequest(new
+                        {
+                            error = "Dependencias incompletas.",
+                            id_feature = it.id_feature,
+                            dependencias_faltantes = valid.faltantes
+                        });
+                    }
                 }
             }
 
@@ -183,23 +192,25 @@ namespace API.Controllers
                 }
             }
 
+            await SincronizarRegalosPadreAsync(idEvento);
+
             await _context.SaveChangesAsync();
+
+            await _postProcesoFeatures.SincronizarAsync(idEvento);
 
             return Ok(new { ok = true, id_evento = idEvento, updated = req.items.Count });
         }
 
-        // ==========================================================
-        // PUT /evento_features/SetConfig?idEvento=16&idFeature=18
-        // Body: { "config_json": "{...}" }
-        // Solo si querés setear config por evento (opcional).
-        // ==========================================================
         public class SetConfigRequest
         {
             public string? config_json { get; set; }
         }
 
         [HttpPut("SetConfig")]
-        public async Task<IActionResult> SetConfig([FromQuery] long idEvento, [FromQuery] long idFeature, [FromBody] SetConfigRequest req)
+        public async Task<IActionResult> SetConfig(
+            [FromQuery] long idEvento,
+            [FromQuery] long idFeature,
+            [FromBody] SetConfigRequest req)
         {
             long idUsuario = User.GetUserId();
 
@@ -214,7 +225,6 @@ namespace API.Controllers
 
             if (row == null)
             {
-                // Si no existía override, lo creamos activo=true por default (podés cambiarlo)
                 row = new ef_evento_features
                 {
                     id_evento = idEvento,
@@ -222,6 +232,7 @@ namespace API.Controllers
                     activo = true,
                     config_json = req.config_json
                 };
+
                 _context.Set<ef_evento_features>().Add(row);
             }
             else
@@ -229,14 +240,76 @@ namespace API.Controllers
                 row.config_json = req.config_json;
             }
 
+            await SincronizarRegalosPadreAsync(idEvento);
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { ok = true, id_evento = idEvento, id_feature = idFeature, config_json = row.config_json });
+            await _postProcesoFeatures.SincronizarAsync(idEvento);
+
+            return Ok(new
+            {
+                ok = true,
+                id_evento = idEvento,
+                id_feature = idFeature,
+                config_json = row.config_json
+            });
         }
 
-        // ==========================================================
-        // VALIDACIÓN DE DEPENDENCIAS
-        // ==========================================================
+        private async Task SincronizarRegalosPadreAsync(long idEvento)
+        {
+            var featuresRegalos = await _context.Set<ef_param_features>()
+                .Where(f => f.codigo == "REGALOS"
+                         || f.codigo == "REGALOS_TRANSFERENCIAS"
+                         || f.codigo == "REGALOS_LISTA"
+                         || f.codigo == "REGALOS_FONDO_METAS")
+                .Select(f => new { f.id_feature, f.codigo })
+                .ToListAsync();
+
+            var featurePadre = featuresRegalos.FirstOrDefault(f => f.codigo == "REGALOS");
+
+            if (featurePadre == null)
+                return;
+
+            var idsSubfeatures = featuresRegalos
+                .Where(f => f.codigo != "REGALOS")
+                .Select(f => f.id_feature)
+                .ToList();
+
+            bool haySubfeatureActiva = await _context.Set<ef_evento_features>()
+                .AnyAsync(x =>
+                    x.id_evento == idEvento &&
+                    idsSubfeatures.Contains(x.id_feature) &&
+                    x.activo == true);
+
+            var rowPadre = await _context.Set<ef_evento_features>()
+                .SingleOrDefaultAsync(x =>
+                    x.id_evento == idEvento &&
+                    x.id_feature == featurePadre.id_feature);
+
+            if (haySubfeatureActiva)
+            {
+                if (rowPadre == null)
+                {
+                    _context.Set<ef_evento_features>().Add(new ef_evento_features
+                    {
+                        id_evento = idEvento,
+                        id_feature = featurePadre.id_feature,
+                        activo = true,
+                        config_json = null
+                    });
+                }
+                else
+                {
+                    rowPadre.activo = true;
+                }
+            }
+            else
+            {
+                if (rowPadre != null)
+                    rowPadre.activo = false;
+            }
+        }
+
         private async Task<(bool ok, List<object> faltantes)> ValidarDependencias(long id_evento, long id_feature)
         {
             var requeridas = await _context.Set<ef_param_feature_dependencias>()

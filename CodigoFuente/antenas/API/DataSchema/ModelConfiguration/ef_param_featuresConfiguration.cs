@@ -24,6 +24,22 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.monetizable).HasDefaultValue(false).IsRequired();
             builder.Property(x => x.activo).HasDefaultValue(true).IsRequired();
 
+            builder.Property(x => x.visible_acceso_evento_default)
+                .HasColumnName("visible_acceso_evento_default")
+                .IsRequired();
+
+            builder.Property(x => x.visible_centro_evento_default)
+                .HasColumnName("visible_centro_evento_default")
+                .IsRequired();
+
+            builder.Property(x => x.visible_acceso_programa_default)
+                .HasColumnName("visible_acceso_programa_default")
+                .IsRequired();
+
+            builder.Property(x => x.visible_centro_programa_default)
+                .HasColumnName("visible_centro_programa_default")
+                .IsRequired();
+
             builder.Property(x => x.config_json).HasColumnType("jsonb");
 
             builder.HasIndex(x => x.codigo)

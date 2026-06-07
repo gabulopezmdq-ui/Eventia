@@ -16,6 +16,10 @@ namespace API.DataSchema
 
         public bool monetizable { get; set; } = false;
         public bool activo { get; set; } = true;
+        public bool visible_acceso_evento_default { get; set; }
+        public bool visible_centro_evento_default { get; set; }
+        public bool visible_acceso_programa_default { get; set; }
+        public bool visible_centro_programa_default { get; set; }
 
         public string? config_json { get; set; } // jsonb
 
