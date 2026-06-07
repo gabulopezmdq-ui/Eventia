@@ -26,4 +26,10 @@
     public string? origen { get; set; }
     public string? motivo_inactivo { get; set; }
     public string? mensaje_ui { get; set; }
+
+    public bool visible_acceso { get; set; }
+    public bool visible_centro { get; set; }
+
+    public bool permite_acceso { get; set; }
+    public bool permite_centro { get; set; }
 }
