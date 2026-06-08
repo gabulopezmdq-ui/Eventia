@@ -167,7 +167,14 @@ builder.Services.AddScoped<PortalSectionDataResolver>();
 builder.Services.AddScoped<IPortalSectionProvider, ResumenPortalSectionProvider>();
 builder.Services.AddScoped<IPortalSectionProvider, AgendaPortalSectionProvider>();
 builder.Services.AddScoped<IPortalSectionProvider, NovedadesPortalSectionProvider>();
-//builder.Services.AddScoped<IPortalSectionProvider, RegalosPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, RegalosPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, ParticipantesPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, PagosPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, SaludPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, AutorizacionesPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, RetirosPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, QrsRetiroPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, SaludAccionesPortalSectionProvider>();
 
 builder.Services.AddScoped<IMonedasService, MonedasService>();
 builder.Services.AddScoped<IRelacionesPersonaService, RelacionesPersonaService>();
