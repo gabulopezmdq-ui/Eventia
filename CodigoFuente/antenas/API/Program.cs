@@ -9,6 +9,8 @@ using API.Services.Eventos.Agenda;
 using API.Services.Eventos.Checklist;
 using API.Services.Eventos.Historial;
 using API.Services.Eventos.Novedades;
+using API.Services.Features;
+using API.Services.Features.Sections;
 using API.Services.Monedas;
 using API.Services.Planes;
 using API.Services.Portal;
@@ -160,6 +162,12 @@ builder.Services.AddScoped<ICuentaContextService, CuentaContextService>();
 builder.Services.AddScoped<IMesasService, MesasService>();
 
 builder.Services.AddScoped<IEventoFeaturePostProcesoService, EventoFeaturePostProcesoService>();
+builder.Services.AddScoped<PortalContextResolver>();
+builder.Services.AddScoped<PortalSectionDataResolver>();
+builder.Services.AddScoped<IPortalSectionProvider, ResumenPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, AgendaPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, NovedadesPortalSectionProvider>();
+//builder.Services.AddScoped<IPortalSectionProvider, RegalosPortalSectionProvider>();
 
 builder.Services.AddScoped<IMonedasService, MonedasService>();
 builder.Services.AddScoped<IRelacionesPersonaService, RelacionesPersonaService>();
