@@ -152,6 +152,7 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                                     <SidebarItem href="/dashboard/audiencia" icon={Sparkles} label="Audiencias (CRM)" />
                                     <SidebarItem href="/dashboard/cuenta/eventos" icon={CalendarRange} label="Eventos de Cuenta" />
                                     <SidebarItem href="/dashboard/cuenta/programas" icon={CalendarDays} label="Programas y Casales" />
+                                    <SidebarItem href="/dashboard/cuenta/addons" icon={Sparkles} label="Add-ons de Cuenta" />
                                     <SidebarItem href="/dashboard/cuenta/plan" icon={CreditCard} label="Plan y Facturación" />
                                     <SidebarItem href="/dashboard/cuenta/perfil" icon={FileText} label="Perfil de Cuenta" />
                                 </>
@@ -215,6 +216,8 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
                             <SidebarItem href="/dashboard/admin/cuentas-b2b" icon={UserCog} label="Cuentas B2B" />
                             <SidebarItem href="/dashboard/admin/eventos-planes" icon={ArrowRightLeft} label="Cambios de Plan (B2C)" />
                             <SidebarItem href="/dashboard/admin/pagos-eventos" icon={BadgeDollarSign} label="Pagos Eventos (B2C)" />
+                            <SidebarItem href="/dashboard/admin/addons-evento" icon={BadgeDollarSign} label="Add-ons EVENTO" />
+                            <SidebarItem href="/dashboard/admin/addons-cuenta" icon={Briefcase} label="Add-ons CUENTA" />
                             <SidebarItem href="/dashboard/admin/oportunidades" icon={HeartHandshake} label="Oportunidades Free/Trial" />
                             <SidebarItem href="/dashboard/admin/cobranzas-cuentas" icon={Briefcase} label="Cobranzas Cuentas (B2B)" />
                         </>

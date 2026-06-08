@@ -4,17 +4,39 @@ import { useEffect, useState, use, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-    ChevronLeft, Calendar, MapPin, Info, Clock,
+    ChevronLeft, Calendar, Info, Clock,
     Sparkles, Settings2, Users, LayoutGrid,
     ArrowRight, MessageSquare, Tag, Globe, CheckCircle2,
     Link as LinkIcon, DollarSign, CalendarRange, ChefHat, LogOut, Bus, ShieldCheck, Stethoscope,
-    TrendingUp, X, AlertTriangle, Loader2, Lock
+    TrendingUp, X, AlertTriangle, Loader2, Lock, Music, Gift, Home
 } from 'lucide-react';
+
+interface FeatureEfectiva {
+    id_feature: number;
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    categoria: string;
+    incluida_en_plan: boolean;
+    incluida_por_addon: boolean;
+    activo_evento: boolean | null;
+    activo_resuelto: boolean;
+}
+
+interface IdiomaItem {
+    id_idioma: number;
+    nombre_largo: string;
+    locale: string;
+}
+
+interface DressCodeItem {
+    id: number;
+    texto: string;
+}
 
 import {
     getEventById,
     getAdminEventById,
-    activateEvent,
     getEstructuraEvento,
     getIdiomasActivos,
     getDressCodes,
@@ -38,7 +60,6 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const [estructura, setEstructura] = useState<EstructuraEvento | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activating, setActivating] = useState(false);
 
     // ── Plan Change State ────────────────────────────────
     type SolicitudPendiente = {
@@ -66,11 +87,12 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const [showStateModal, setShowStateModal] = useState(false);
     const [targetState, setTargetState] = useState<'C' | 'X' | 'A' | ''>('');
     const [stateObservaciones, setStateObservaciones] = useState('');
-    const [idiomasList, setIdiomasList] = useState<any[]>([]);
-    const [dressCodesList, setDressCodesList] = useState<any[]>([]);
+    const [idiomasList, setIdiomasList] = useState<IdiomaItem[]>([]);
+    const [dressCodesList, setDressCodesList] = useState<DressCodeItem[]>([]);
     const [loadingLanguages, setLoadingLanguages] = useState(false);
     const [loadingDressCodes, setLoadingDressCodes] = useState(false);
     const [historyList, setHistoryList] = useState<EstadoHistorial[]>([]);
+    const [featuresEfectivas, setFeaturesEfectivas] = useState<FeatureEfectiva[]>([]);
 
     const [editFormData, setEditFormData] = useState({
         idIdioma: 1,
@@ -110,7 +132,18 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 } catch (e) {
                     console.warn('No se pudo cargar el historial de estados', e);
                 }
-            } catch (err) {
+
+                // Cargar features efectivas
+                try {
+                    const resFeats = await fetch(`/api/features-efectivas?idEvento=${idEventoLong}`);
+                    if (resFeats.ok) {
+                        const dataFeats = await resFeats.json();
+                        setFeaturesEfectivas(dataFeats.features || []);
+                    }
+                } catch (e) {
+                    console.warn('No se pudieron cargar las features efectivas', e);
+                }
+            } catch {
                 setError('No se pudo cargar el detalle del evento');
             } finally {
                 setLoading(false);
@@ -118,6 +151,12 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
         }
         loadData();
     }, [id, scope, isAdmin, idEventoLong]);
+
+    const isFeatureActiva = (codigo: string) => {
+        if (loading || featuresEfectivas.length === 0) return true;
+        const feat = featuresEfectivas.find(f => f.codigo === codigo);
+        return feat ? feat.activo_resuelto : false;
+    };
 
     // Cargar idiomas cuando abre el modal de edición
     useEffect(() => {
@@ -166,20 +205,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
         }
     }, [showEditModal, editFormData.idIdioma]);
 
-    const handleActivate = async () => {
-        if (!confirm('¿Estás seguro de que deseas activar este evento?')) return;
 
-        setActivating(true);
-        try {
-            await activateEvent(id);
-            alert('Evento activado correctamente');
-            window.location.reload();
-        } catch (err) {
-            alert('Error al activar el evento');
-        } finally {
-            setActivating(false);
-        }
-    };
 
     // ── Acciones de Cambio de Estado Manual y Guardado de Datos ──
     const handleManualActivate = async () => {
@@ -191,8 +217,9 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             await activateEventManual(idEventoLong);
             alert(`${isPrograma ? 'Programa' : 'Evento'} activado correctamente`);
             window.location.reload();
-        } catch (err: any) {
-            alert(err.message || `Error al activar el ${text}`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : `Error al activar el ${text}`;
+            alert(message);
         } finally {
             setStateActionLoading(false);
         }
@@ -227,8 +254,9 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             }
             setShowStateModal(false);
             window.location.reload();
-        } catch (err: any) {
-            alert(err.message || `Error al procesar el cambio de estado`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : `Error al procesar el cambio de estado`;
+            alert(message);
         } finally {
             setStateActionLoading(false);
         }
@@ -252,8 +280,9 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             alert('Datos actualizados correctamente');
             setShowEditModal(false);
             window.location.reload();
-        } catch (err: any) {
-            alert(err.message || 'Error al actualizar datos generales');
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Error al actualizar datos generales';
+            alert(message);
         } finally {
             setStateActionLoading(false);
         }
@@ -349,7 +378,6 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
         );
     }
 
-    const eventDate = new Date(event.fecha_hora);
     const isBorrador = event.estado === 'B';
     const isPendiente = event.estado === 'P';
     const isInactivo = isBorrador || isPendiente;
@@ -632,96 +660,183 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                     </button>
                                 </div>
 
-                                {/* Salud */}
-                                <div className="p-5 rounded-2xl bg-red-600/10 border border-red-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
-                                    <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center mb-4">
-                                        <Stethoscope className="w-5 h-5" />
+                                 {/* Salud */}
+                                {isFeatureActiva('RESTRICCIONES_ALIMENTARIAS') && (
+                                    <div className="p-5 rounded-2xl bg-red-600/10 border border-red-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center mb-4">
+                                            <Stethoscope className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-foreground text-sm mb-1">Salud y Medicaciones</h4>
+                                        <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                            Fichas médicas, seguimiento de medicaciones y registro de incidentes diarios.
+                                        </p>
+                                        <button
+                                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/salud`)}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all"
+                                        >
+                                            <Stethoscope className="w-3.5 h-3.5" />
+                                            Ver Panel de Salud
+                                        </button>
                                     </div>
-                                    <h4 className="font-bold text-foreground text-sm mb-1">Salud y Medicaciones</h4>
-                                    <p className="text-muted text-[11px] leading-relaxed flex-grow">
-                                        Fichas médicas, seguimiento de medicaciones y registro de incidentes diarios.
-                                    </p>
-                                    <button
-                                        onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/salud`)}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all"
-                                    >
-                                        <Stethoscope className="w-3.5 h-3.5" />
-                                        Ver Panel de Salud
-                                    </button>
-                                </div>
+                                )}
 
                                 {/* Cocina */}
-                                <div className="p-5 rounded-2xl bg-teal-600/10 border border-teal-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
-                                    <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center mb-4">
-                                        <ChefHat className="w-5 h-5" />
+                                {isFeatureActiva('RESTRICCIONES_ALIMENTARIAS') && (
+                                    <div className="p-5 rounded-2xl bg-teal-600/10 border border-teal-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center mb-4">
+                                            <ChefHat className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-foreground text-sm mb-1">Comedor y Cocina</h4>
+                                        <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                            Organización del menú diario, restricciones alimentarias y alertas de salud.
+                                        </p>
+                                        <button
+                                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/cocina`)}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-teal-500 text-white font-bold text-xs shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all"
+                                        >
+                                            <ChefHat className="w-3.5 h-3.5" />
+                                            Ver Cocina
+                                        </button>
                                     </div>
-                                    <h4 className="font-bold text-foreground text-sm mb-1">Comedor y Cocina</h4>
-                                    <p className="text-muted text-[11px] leading-relaxed flex-grow">
-                                        Organización del menú diario, restricciones alimentarias y alertas de salud.
-                                    </p>
-                                    <button
-                                        onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/cocina`)}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-teal-500 text-white font-bold text-xs shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all"
-                                    >
-                                        <ChefHat className="w-3.5 h-3.5" />
-                                        Ver Cocina
-                                    </button>
-                                </div>
+                                )}
 
                                 {/* Retiros */}
-                                <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
-                                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
-                                        <LogOut className="w-5 h-5" />
+                                {(isFeatureActiva('RETIRO_INFANTIL_AUTORIZACIONES') || isFeatureActiva('RETIRO_INFANTIL_REGISTRO')) && (
+                                    <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
+                                            <LogOut className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-foreground text-sm mb-1">Retiros QR</h4>
+                                        <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                            Control de retiros de participantes autorizados mediante escaneo de código QR.
+                                        </p>
+                                        <button
+                                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/retiros`)}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                                        >
+                                            <LogOut className="w-3.5 h-3.5" />
+                                            Ver Retiros
+                                        </button>
                                     </div>
-                                    <h4 className="font-bold text-foreground text-sm mb-1">Retiros QR</h4>
-                                    <p className="text-muted text-[11px] leading-relaxed flex-grow">
-                                        Control de retiros de participantes autorizados mediante escaneo de código QR.
-                                    </p>
-                                    <button
-                                        onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/retiros`)}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
-                                    >
-                                        <LogOut className="w-3.5 h-3.5" />
-                                        Ver Retiros
-                                    </button>
-                                </div>
+                                )}
 
                                 {/* Transporte */}
-                                <div className="p-5 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4">
-                                        <Bus className="w-5 h-5" />
+                                {isFeatureActiva('TRANSPORTE') && (
+                                    <div className="p-5 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4">
+                                            <Bus className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-foreground text-sm mb-1">Transporte</h4>
+                                        <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                            Listado operativo diario de participantes con servicio de transporte.
+                                        </p>
+                                        <button
+                                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/transporte`)}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:bg-blue-400 transition-all"
+                                        >
+                                            <Bus className="w-3.5 h-3.5" />
+                                            Ver Transporte
+                                        </button>
                                     </div>
-                                    <h4 className="font-bold text-foreground text-sm mb-1">Transporte</h4>
-                                    <p className="text-muted text-[11px] leading-relaxed flex-grow">
-                                        Listado operativo diario de participantes con servicio de transporte.
-                                    </p>
-                                    <button
-                                        onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/transporte`)}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:bg-blue-400 transition-all"
-                                    >
-                                        <Bus className="w-3.5 h-3.5" />
-                                        Ver Transporte
-                                    </button>
-                                </div>
+                                )}
 
                                 {/* Autorizaciones */}
-                                <div className="p-5 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
-                                    <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center mb-4">
-                                        <ShieldCheck className="w-5 h-5" />
+                                {isFeatureActiva('RETIRO_INFANTIL_AUTORIZACIONES') && (
+                                    <div className="p-5 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                        <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center mb-4">
+                                            <ShieldCheck className="w-5 h-5" />
+                                        </div>
+                                        <h4 className="font-bold text-foreground text-sm mb-1">Autorizaciones Legales</h4>
+                                        <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                            Control de firmas y aceptaciones de autorizaciones de todos los participantes.
+                                        </p>
+                                        <button
+                                            onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/autorizaciones`)}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-violet-500 text-white font-bold text-xs shadow-lg shadow-violet-500/20 hover:bg-violet-400 transition-all"
+                                        >
+                                            <ShieldCheck className="w-3.5 h-3.5" />
+                                            Ver Autorizaciones
+                                        </button>
                                     </div>
-                                    <h4 className="font-bold text-foreground text-sm mb-1">Autorizaciones Legales</h4>
-                                    <p className="text-muted text-[11px] leading-relaxed flex-grow">
-                                        Control de firmas y aceptaciones de autorizaciones de todos los participantes.
-                                    </p>
-                                    <button
-                                        onClick={() => router.push(`/dashboard/events/${event.id_evento}/inscripciones/autorizaciones`)}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-violet-500 text-white font-bold text-xs shadow-lg shadow-violet-500/20 hover:bg-violet-400 transition-all"
-                                    >
-                                        <ShieldCheck className="w-3.5 h-3.5" />
-                                        Ver Autorizaciones
-                                    </button>
-                                </div>
+                                )}
                             </>
+                        )}
+
+                        {/* B2C Dynamic Feature Cards */}
+                        {isEvento && (isFeatureActiva('MUSICA_PLAYLIST_ORGANIZADOR') || isFeatureActiva('MUSICA_SUGERENCIAS') || isFeatureActiva('MUSICA_BLOQUEOS') || isFeatureActiva('MUSICA_VOTACION')) && (
+                            <div className="p-5 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center mb-4">
+                                    <Music className="w-5 h-5" />
+                                </div>
+                                <h4 className="font-bold text-foreground text-sm mb-1">Música y Playlist</h4>
+                                <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                    Sugerencias de la audiencia, playlist del DJ y control de pistas en vivo.
+                                </p>
+                                <button
+                                    onClick={() => alert('Módulo de Música en construcción. ¡Estará disponible muy pronto!')}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-violet-500 text-white font-bold text-xs shadow-lg shadow-violet-500/20 hover:bg-violet-400 transition-all"
+                                >
+                                    <Music className="w-3.5 h-3.5" />
+                                    Gestionar Música
+                                </button>
+                            </div>
+                        )}
+
+                        {isEvento && isFeatureActiva('HOSPEDAJES') && (
+                            <div className="p-5 rounded-2xl bg-amber-600/10 border border-amber-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center mb-4">
+                                    <Home className="w-5 h-5" />
+                                </div>
+                                <h4 className="font-bold text-foreground text-sm mb-1">Hospedajes Sugeridos</h4>
+                                <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                    Cargá y administrá las opciones de alojamiento recomendadas para tus invitados.
+                                </p>
+                                <button
+                                    onClick={() => alert('Módulo de Hospedaje en construcción. ¡Estará disponible muy pronto!')}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-amber-500 text-white font-bold text-xs shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition-all"
+                                >
+                                    <Home className="w-3.5 h-3.5" />
+                                    Ver Hospedajes
+                                </button>
+                            </div>
+                        )}
+
+                        {isEvento && isFeatureActiva('REGALOS') && (
+                            <div className="p-5 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4">
+                                    <Gift className="w-5 h-5" />
+                                </div>
+                                <h4 className="font-bold text-foreground text-sm mb-1">Regalos y Cuentas</h4>
+                                <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                    Configurá tu lista de regalos, datos de transferencia y mensajes de agradecimiento.
+                                </p>
+                                <button
+                                    onClick={() => alert('Módulo de Regalos en construcción. ¡Estará disponible muy pronto!')}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                                >
+                                    <Gift className="w-3.5 h-3.5" />
+                                    Configurar Regalos
+                                </button>
+                            </div>
+                        )}
+
+                        {isEvento && isFeatureActiva('TRANSPORTE') && (
+                            <div className="p-5 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
+                                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4">
+                                    <Bus className="w-5 h-5" />
+                                </div>
+                                <h4 className="font-bold text-foreground text-sm mb-1">Traslados y Transporte</h4>
+                                <p className="text-muted text-[11px] leading-relaxed flex-grow">
+                                    Definí puntos de encuentro y gestioná las reservas de traslados de tus invitados.
+                                </p>
+                                <button
+                                    onClick={() => alert('Módulo de Transporte en construcción. ¡Estará disponible muy pronto!')}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:bg-blue-400 transition-all"
+                                >
+                                    <Bus className="w-3.5 h-3.5" />
+                                    Gestionar Traslados
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -793,7 +908,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                                 </div>
                                                 {hist.observaciones && (
                                                     <p className="text-sm text-muted leading-relaxed mt-1 italic pl-1">
-                                                        "{hist.observaciones}"
+                                                        &quot;{hist.observaciones}&quot;
                                                     </p>
                                                 )}
                                             </div>
