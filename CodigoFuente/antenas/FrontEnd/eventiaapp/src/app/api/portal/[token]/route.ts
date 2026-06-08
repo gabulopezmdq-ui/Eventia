@@ -15,7 +15,7 @@ export async function GET(
     try {
         const { token } = await params;
 
-        const res = await fetch(`${API_URL}/api/portal/${token}`, {
+        const res = await fetch(`${API_URL}/evento_portal_config/full/${token}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });

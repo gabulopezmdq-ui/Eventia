@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useCallback } from 'react';
 import {
     CheckCircle2, AlertCircle, ChefHat, User, MessageSquare,
     ArrowRight, HeartPulse, Baby, Phone, Mail,
-    MapPin, Calendar, Users, PlusCircle, Trash2, Download, QrCode,
-    Loader2, X
+    MapPin, Calendar, Users, PlusCircle, Trash2, Download,
+    Loader2, X, Music
 } from 'lucide-react';
 import {
     confirmarRsvp, getInvitacionPersonal,
@@ -43,7 +43,11 @@ interface PersonaFormState {
     isNew: boolean; // true = persona agregada por el invitado
     alimentacionDetalle: string;   // Texto libre: alergias, aclaraciones no categorizadas
     restriccionesSeleccionadas: Record<number, RestriccionLocal>; // key = idRestriccion
+    sugerenciaTema: string;
+    sugerenciaArtista: string;
+    sugerenciaLink: string;
 }
+
 
 export default function RsvpPage({
     params,
@@ -70,14 +74,45 @@ export default function RsvpPage({
     // --- Restrictions catalogue (loaded at start, keyed by idRestriccion) ---
     const [catalogo, setCatalogo] = useState<CatalogoRestriccion[]>([]);
 
+interface FeatureEfectiva {
+    id_feature: number;
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    categoria: string;
+    incluida_en_plan: boolean;
+    incluida_por_addon: boolean;
+    activo_evento: boolean | null;
+    activo_resuelto: boolean;
+}
+
     // --- Resumen RSVP (QRs y datos post-confirmación) ---
     const [resumenRsvp, setResumenRsvp] = useState<ResumenRsvpResponse | null>(null);
+    const [featuresEfectivas, setFeaturesEfectivas] = useState<FeatureEfectiva[]>([]);
 
     // --- Nuevos Acompañantes en SUCCESS (Grupo Incompleto) ---
     const [nuevosAcompanantes, setNuevosAcompanantes] = useState<PersonaFormState[]>([]);
     const [submittingNuevos, setSubmittingNuevos] = useState(false);
     const [errorNuevosMsg, setErrorNuevosMsg] = useState<string | null>(null);
     const [submittingCerrarGrupo, setSubmittingCerrarGrupo] = useState(false);
+
+    const isFeatureActiva = (codigo: string) => {
+        if (featuresEfectivas.length === 0) return true;
+        const feat = featuresEfectivas.find(f => f.codigo === codigo);
+        return feat ? feat.activo_resuelto : false;
+    };
+
+    const buildSugerenciaMusica = (p: PersonaFormState) => {
+        if (!p.sugerenciaTema?.trim() && !p.sugerenciaArtista?.trim()) return undefined;
+        const parts = [];
+        if (p.sugerenciaTema?.trim()) parts.push(p.sugerenciaTema.trim());
+        if (p.sugerenciaArtista?.trim()) parts.push(p.sugerenciaArtista.trim());
+        let str = parts.join(' - ');
+        if (p.sugerenciaLink?.trim()) {
+            str += ` (${p.sugerenciaLink.trim()})`;
+        }
+        return str;
+    };
 
     const addNuevoAcompananteAdulto = () => {
         if (!resumenRsvp) return;
@@ -90,6 +125,9 @@ export default function RsvpPage({
             rolEvento: 'A', asiste: true, mensaje: '', isNew: true,
             alimentacionDetalle: '',
             restriccionesSeleccionadas: {},
+            sugerenciaTema: '',
+            sugerenciaArtista: '',
+            sugerenciaLink: '',
         }]);
     };
 
@@ -104,6 +142,9 @@ export default function RsvpPage({
             rolEvento: 'N', asiste: true, mensaje: '', isNew: true,
             alimentacionDetalle: '',
             restriccionesSeleccionadas: {},
+            sugerenciaTema: '',
+            sugerenciaArtista: '',
+            sugerenciaLink: '',
         }]);
     };
 
@@ -111,7 +152,7 @@ export default function RsvpPage({
         setNuevosAcompanantes(prev => prev.filter((_, i) => i !== index));
     };
 
-    const updateNuevoAcompanante = (index: number, field: keyof PersonaFormState, value: any) => {
+    const updateNuevoAcompanante = <K extends keyof PersonaFormState>(index: number, field: K, value: PersonaFormState[K]) => {
         setNuevosAcompanantes(prev => {
             const updated = [...prev];
             updated[index] = { ...updated[index], [field]: value };
@@ -185,6 +226,7 @@ export default function RsvpPage({
                     asiste: true,
                     alimentacionDetalle: p.alimentacionDetalle.trim() || undefined,
                     restricciones: restriccionesArr.length > 0 ? restriccionesArr : undefined,
+                    sugerenciaMusica: buildSugerenciaMusica(p),
                 };
             });
 
@@ -195,8 +237,8 @@ export default function RsvpPage({
             setResumenRsvp(resumen);
             setNuevosAcompanantes([]);
             await cargarAutorizados();
-        } catch (err: any) {
-            setErrorNuevosMsg(err.message || 'Error al guardar acompañantes.');
+        } catch (err) {
+            setErrorNuevosMsg(err instanceof Error ? err.message : 'Error al guardar acompañantes.');
         } finally {
             setSubmittingNuevos(false);
         }
@@ -211,8 +253,8 @@ export default function RsvpPage({
         try {
             const response = await cerrarGrupoRsvp(token);
             setResumenRsvp(response);
-        } catch (err: any) {
-            alert(err.message || 'Error al cerrar el grupo.');
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Error al cerrar el grupo.');
         } finally {
             setSubmittingCerrarGrupo(false);
         }
@@ -228,7 +270,7 @@ export default function RsvpPage({
     const [submittingAuth, setSubmittingAuth] = useState(false);
     const [errorAuthMsg, setErrorAuthMsg] = useState<string | null>(null);
 
-    const cargarAutorizados = async () => {
+    const cargarAutorizados = useCallback(async () => {
         setLoadingAutorizados(true);
         try {
             const data = await getAutorizacionesRsvp(token);
@@ -238,7 +280,7 @@ export default function RsvpPage({
         } finally {
             setLoadingAutorizados(false);
         }
-    };
+    }, [token]);
 
     const handleAgregarAutorizado = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -259,8 +301,8 @@ export default function RsvpPage({
             setAuthCelular('');
             setAuthRelacion('Madre');
             await cargarAutorizados();
-        } catch (err: any) {
-            setErrorAuthMsg(err.message || 'Error al guardar la autorización');
+        } catch (err) {
+            setErrorAuthMsg(err instanceof Error ? err.message : 'Error al guardar la autorización');
         } finally {
             setSubmittingAuth(false);
         }
@@ -273,16 +315,35 @@ export default function RsvpPage({
         try {
             await deleteAutorizacion(id);
             await cargarAutorizados();
-        } catch (err: any) {
-            alert(err.message || 'Error al eliminar la autorización');
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Error al eliminar la autorización');
         }
     };
 
-    useEffect(() => {
-        verificarEstado();
-    }, [token]);
+    const cargarCatalogo = useCallback(async (idEvento?: number) => {
+        console.log('=== [CATALOGO] cargarCatalogo() llamado con idEvento:', idEvento);
+        try {
+            let data: CatalogoRestriccion[];
+            if (idEvento && idEvento > 0) {
+                // Preferred: event-specific catalogue (respects event language)
+                console.log('[CATALOGO] Usando endpoint paramétrico con idEvento:', idEvento);
+                data = await getCatalogoParametrico(idEvento);
+            } else {
+                // Fallback: generic catalogue by locale
+                console.log('[CATALOGO] Usando fallback por locale (es-AR)');
+                data = await getCatalogoRestricciones();
+            }
+            console.log('[CATALOGO] Respuesta cruda:', data);
+            // Guard: si el backend devuelve { data: [...] } en lugar de [...]
+            const lista = Array.isArray(data) ? data : (data as unknown as { data?: CatalogoRestriccion[] })?.data ?? [];
+            console.log('[CATALOGO] Items parseados:', lista.length, lista);
+            setCatalogo(lista.sort((a: CatalogoRestriccion, b: CatalogoRestriccion) => a.orden - b.orden));
+        } catch (e) {
+            console.error('=== [CATALOGO] ERROR al cargar el catálogo de restricciones:', e);
+        }
+    }, []);
 
-    const verificarEstado = async () => {
+    const verificarEstado = useCallback(async () => {
         setStep('VERIFYING');
         try {
             // 0. Intentar cargar la invitación primero para tener los datos de la familia/evento
@@ -318,6 +379,20 @@ export default function RsvpPage({
                 setResumenRsvp(resumen);
             } catch (errResumen) {
                 console.log('Error al obtener el resumen del RSVP:', errResumen);
+            }
+
+            // Cargar features efectivas del evento (versión pública para el RSVP)
+            const idEventoResolved = inviteData?.idEvento ?? resumen?.idEvento;
+            if (idEventoResolved) {
+                try {
+                    const resFeats = await fetch(`/api/features-efectivas/public?idEvento=${idEventoResolved}`);
+                    if (resFeats.ok) {
+                        const dataFeats = await resFeats.json();
+                        setFeaturesEfectivas(dataFeats.features || []);
+                    }
+                } catch (e) {
+                    console.warn('No se pudieron cargar las features efectivas en el RSVP', e);
+                }
             }
 
             if (resumen && (resumen.rsvpEstadoGrupo === 'CONFIRMADO' || resumen.rsvpEstadoGrupo === 'INCOMPLETO')) {
@@ -376,6 +451,9 @@ export default function RsvpPage({
                         isNew: false,
                         alimentacionDetalle: '',
                         restriccionesSeleccionadas: {},
+                        sugerenciaTema: '',
+                        sugerenciaArtista: '',
+                        sugerenciaLink: '',
                     };
                 }));
             }
@@ -387,33 +465,14 @@ export default function RsvpPage({
         } catch {
             setStep('RSVP');
         }
-    };
+    }, [token, cargarAutorizados, cargarCatalogo]);
 
-    const cargarCatalogo = async (idEvento?: number) => {
-        console.log('=== [CATALOGO] cargarCatalogo() llamado con idEvento:', idEvento);
-        try {
-            let data: CatalogoRestriccion[];
-            if (idEvento && idEvento > 0) {
-                // Preferred: event-specific catalogue (respects event language)
-                console.log('[CATALOGO] Usando endpoint paramétrico con idEvento:', idEvento);
-                data = await getCatalogoParametrico(idEvento);
-            } else {
-                // Fallback: generic catalogue by locale
-                console.log('[CATALOGO] Usando fallback por locale (es-AR)');
-                data = await getCatalogoRestricciones();
-            }
-            console.log('[CATALOGO] Respuesta cruda:', data);
-            // Guard: si el backend devuelve { data: [...] } en lugar de [...]
-            const lista = Array.isArray(data) ? data : (data as any)?.data ?? [];
-            console.log('[CATALOGO] Items parseados:', lista.length, lista);
-            setCatalogo(lista.sort((a: CatalogoRestriccion, b: CatalogoRestriccion) => a.orden - b.orden));
-        } catch (e) {
-            console.error('=== [CATALOGO] ERROR al cargar el catálogo de restricciones:', e);
-        }
-    };
+    useEffect(() => {
+        verificarEstado();
+    }, [verificarEstado]);
 
     // --- Persona management ---
-    const updatePersona = (index: number, field: keyof PersonaFormState, value: any) => {
+    const updatePersona = <K extends keyof PersonaFormState>(index: number, field: K, value: PersonaFormState[K]) => {
         setPersonas(prev => {
             const updated = [...prev];
             updated[index] = { ...updated[index], [field]: value };
@@ -431,6 +490,9 @@ export default function RsvpPage({
             rolEvento: 'A', asiste: true, mensaje: '', isNew: true,
             alimentacionDetalle: '',
             restriccionesSeleccionadas: {},
+            sugerenciaTema: '',
+            sugerenciaArtista: '',
+            sugerenciaLink: '',
         }]);
     };
 
@@ -444,6 +506,9 @@ export default function RsvpPage({
             rolEvento: 'N', asiste: true, mensaje: '', isNew: true,
             alimentacionDetalle: '',
             restriccionesSeleccionadas: {},
+            sugerenciaTema: '',
+            sugerenciaArtista: '',
+            sugerenciaLink: '',
         }]);
     };
 
@@ -530,6 +595,7 @@ export default function RsvpPage({
                     mensaje: p.mensaje || undefined,
                     alimentacionDetalle: p.alimentacionDetalle || undefined,
                     restricciones: restriccionesArr.length > 0 ? restriccionesArr : undefined,
+                    sugerenciaMusica: buildSugerenciaMusica(p),
                 };
             });
 
@@ -552,8 +618,8 @@ export default function RsvpPage({
             }
 
             setStep('SUCCESS');
-        } catch (err: any) {
-            setErrorMsg(err.message || 'Error al confirmar asistencia');
+        } catch (err) {
+            setErrorMsg(err instanceof Error ? err.message : 'Error al confirmar asistencia');
             setStep('ERROR');
         }
     };
@@ -696,7 +762,7 @@ export default function RsvpPage({
                     )}
 
                     {/* ── Sección Acompañantes Pendientes (Grupo Incompleto) ── */}
-                    {resumenRsvp?.rsvpEstadoGrupo === 'INCOMPLETO' && resumenRsvp?.puedeEditarGrupo === true && (() => {
+                    {resumenRsvp?.rsvpEstadoGrupo === 'INCOMPLETO' && resumenRsvp?.puedeEditarGrupo === true && isFeatureActiva('RSVP_ACOMPANIANTES') && (() => {
                         const adultosRestantes = (resumenRsvp.adultosDisponibles ?? 0) - nuevosAcompanantes.filter(p => p.rolEvento === 'A').length;
                         const menoresRestantes = (resumenRsvp.menoresDisponibles ?? 0) - nuevosAcompanantes.filter(p => p.rolEvento === 'N').length;
 
@@ -732,7 +798,7 @@ export default function RsvpPage({
 
                                     {/* Botones de acción */}
                                     <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
-                                        {adultosRestantes > 0 && (
+                                        {adultosRestantes > 0 && isFeatureActiva('RSVP_ACOMPANIANTES') && (
                                             <button
                                                 type="button"
                                                 onClick={addNuevoAcompananteAdulto}
@@ -742,7 +808,7 @@ export default function RsvpPage({
                                                 Agregar Adulto
                                             </button>
                                         )}
-                                        {menoresRestantes > 0 && (
+                                        {menoresRestantes > 0 && isFeatureActiva('RSVP_ACOMPANIANTES') && (
                                             <button
                                                 type="button"
                                                 onClick={addNuevoAcompananteMenor}
@@ -834,14 +900,14 @@ export default function RsvpPage({
                                                         </div>
                                                     </div>
                                                 )}
-
                                                 {/* Alimentación / Restricciones */}
-                                                <div className="space-y-3 pt-2 border-t border-white/5">
-                                                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
-                                                        <ChefHat className="w-3.5 h-3.5 text-indigo-400" /> Preferencias alimentarias
-                                                    </p>
+                                                {isFeatureActiva('RESTRICCIONES_ALIMENTARIAS') && (
+                                                    <div className="space-y-3 pt-2 border-t border-white/5">
+                                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
+                                                            <ChefHat className="w-3.5 h-3.5 text-indigo-400" /> Preferencias alimentarias
+                                                        </p>
 
-                                                    {catalogo.length > 0 && (
+                                                        {catalogo.length > 0 && (
                                                         <div className="flex flex-wrap gap-2">
                                                             {catalogo.map(cat => {
                                                                 const isSelected = !!persona.restriccionesSeleccionadas[cat.idRestriccion];
@@ -875,7 +941,7 @@ export default function RsvpPage({
                                                                             <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Severidad</label>
                                                                             <select
                                                                                 value={r.severidad}
-                                                                                onChange={e => updateRestriccionNuevoAcompanante(idx, r.idRestriccion, 'severidad', e.target.value as any)}
+                                                                                onChange={e => updateRestriccionNuevoAcompanante(idx, r.idRestriccion, 'severidad', e.target.value as 'L' | 'M' | 'G')}
                                                                                 className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500 cursor-pointer"
                                                                             >
                                                                                 <option value="L">Leve</option>
@@ -886,7 +952,7 @@ export default function RsvpPage({
                                                                         <div>
                                                                             <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Aclaración</label>
                                                                             <input
-                                                                                placeholder="Ej. Sin nueces"
+                                                                                placeholder="Ej: Sin nueces"
                                                                                 value={r.observaciones}
                                                                                 onChange={e => updateRestriccionNuevoAcompanante(idx, r.idRestriccion, 'observaciones', e.target.value)}
                                                                                 className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
@@ -912,6 +978,48 @@ export default function RsvpPage({
                                                         />
                                                     </div>
                                                 </div>
+                                                )}
+
+                                                {/* ── Sección Música / Sugerencias (solo si feature activa) ── */}
+                                                {isFeatureActiva('MUSICA_SUGERENCIAS') && (
+                                                    <div className="space-y-4 pt-4 border-t border-white/5">
+                                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
+                                                            <Music className="w-3.5 h-3.5 text-violet-400" /> ¿Qué tema no debería faltar en la fiesta?
+                                                        </p>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-muted/80 uppercase block mb-1">Título de la Canción</label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ej: Billie Jean"
+                                                                    value={persona.sugerenciaTema || ''}
+                                                                    onChange={e => updateNuevoAcompanante(idx, 'sugerenciaTema', e.target.value)}
+                                                                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-muted/80 uppercase block mb-1">Artista / Banda</label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ej: Michael Jackson"
+                                                                    value={persona.sugerenciaArtista || ''}
+                                                                    onChange={e => updateNuevoAcompanante(idx, 'sugerenciaArtista', e.target.value)}
+                                                                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-muted/80 uppercase block mb-1">Link de Spotify / YouTube (opcional)</label>
+                                                            <input
+                                                                type="url"
+                                                                placeholder="Ej: https://open.spotify.com/..."
+                                                                value={persona.sugerenciaLink || ''}
+                                                                onChange={e => updateNuevoAcompanante(idx, 'sugerenciaLink', e.target.value)}
+                                                                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
 
@@ -1176,7 +1284,7 @@ export default function RsvpPage({
                         </p>
                     )}
                     {invitacion?.mensajeBienvenida && (
-                        <p className="text-muted/70 mt-2 text-sm italic">"{invitacion.mensajeBienvenida}"</p>
+                        <p className="text-muted/70 mt-2 text-sm italic">&quot;{invitacion.mensajeBienvenida}&quot;</p>
                     )}
                 </div>
 
@@ -1380,7 +1488,7 @@ export default function RsvpPage({
                                                                             <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Severidad</label>
                                                                             <select
                                                                                 value={r.severidad}
-                                                                                onChange={e => updateRestriccionPersona(idx, r.idRestriccion, 'severidad', e.target.value as any)}
+                                                                                onChange={e => updateRestriccionPersona(idx, r.idRestriccion, 'severidad', e.target.value as 'L' | 'M' | 'G')}
                                                                                 className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
                                                                             >
                                                                                 <option value="L">Leve</option>
@@ -1423,7 +1531,7 @@ export default function RsvpPage({
                                     ))}
 
                                     {/* Buttons to add people if there are cupos */}
-                                    {globalAsiste === true && (canAddAdulto || canAddMenor) && (
+                                    {globalAsiste === true && (canAddAdulto || canAddMenor) && isFeatureActiva('RSVP_ACOMPANIANTES') && (
                                         <div className="flex items-center gap-3 flex-wrap">
                                             {canAddAdulto && (
                                                 <button type="button" onClick={addPersonaAdulto}

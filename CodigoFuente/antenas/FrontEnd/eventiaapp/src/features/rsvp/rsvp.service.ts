@@ -85,6 +85,7 @@ export interface PersonaConfirmarPayload {
     alimentacionDetalle?: string;          // Texto libre opcional (alergias, aclaraciones)
     restricciones?: RestriccionConfirmarItem[]; // Forma detallada con observaciones por restricción
     idsRestricciones?: number[];           // Forma simple: solo array de IDs (fallback)
+    sugerenciaMusica?: string;             // Sugerencia musical del invitado
 }
 
 export interface ConfirmarRsvpPayload {

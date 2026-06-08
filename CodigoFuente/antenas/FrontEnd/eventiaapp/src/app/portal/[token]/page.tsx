@@ -24,6 +24,13 @@ import {
     QrCode,
     CreditCard,
     Info,
+    Megaphone,
+    Gift,
+    CalendarDays,
+    Copy,
+    Check,
+    MapPin,
+    ExternalLink,
 } from 'lucide-react';
 import {
     getPortalPuntual,
@@ -43,6 +50,12 @@ function getSeccionIcono(codigo: string) {
     switch (codigo?.toUpperCase()) {
         case 'RESUMEN':
             return <FileText className="w-5 h-5" />;
+        case 'AGENDA':
+            return <CalendarDays className="w-5 h-5" />;
+        case 'NOVEDADES':
+            return <Megaphone className="w-5 h-5" />;
+        case 'REGALOS':
+            return <Gift className="w-5 h-5" />;
         case 'PAGOS':
             return <CreditCard className="w-5 h-5" />;
         case 'INTEGRANTES':
@@ -62,7 +75,8 @@ function getSeccionIcono(codigo: string) {
 
 function formatFecha(iso: string): string {
     if (!iso) return '';
-    const d = new Date(iso + 'T00:00:00');
+    const d = iso.includes('T') ? new Date(iso) : new Date(iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return '';
     return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
@@ -170,7 +184,7 @@ function ModalOtp({ onVerificado, onCerrar, tokenConsulta, emailUsuario, seccion
             onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}
         >
             <div className="w-full max-w-md bg-white dark:bg-card-bg rounded-3xl shadow-2xl border border-gray-200 dark:border-card-border animate-in zoom-in-95 fade-in duration-200">
-                
+
                 {/* Cabecera */}
                 <div className="relative p-6 pb-0">
                     <button
@@ -204,11 +218,10 @@ function ModalOtp({ onVerificado, onCerrar, tokenConsulta, emailUsuario, seccion
                             {/* Opción Email */}
                             <button
                                 onClick={() => setCanal('EMAIL')}
-                                className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all ${
-                                    canal === 'EMAIL'
-                                        ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/10'
-                                        : 'border-gray-200 dark:border-card-border hover:bg-gray-50 dark:hover:bg-black/10'
-                                }`}
+                                className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all ${canal === 'EMAIL'
+                                    ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/10'
+                                    : 'border-gray-200 dark:border-card-border hover:bg-gray-50 dark:hover:bg-black/10'
+                                    }`}
                             >
                                 <Mail className={`w-5 h-5 mt-0.5 ${canal === 'EMAIL' ? 'text-indigo-600' : 'text-muted'}`} />
                                 <div className="min-w-0">
@@ -224,11 +237,10 @@ function ModalOtp({ onVerificado, onCerrar, tokenConsulta, emailUsuario, seccion
                             {/* Opción WhatsApp */}
                             <button
                                 onClick={() => setCanal('WHATSAPP')}
-                                className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all ${
-                                    canal === 'WHATSAPP'
-                                        ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/10'
-                                        : 'border-gray-200 dark:border-card-border hover:bg-gray-50 dark:hover:bg-black/10'
-                                }`}
+                                className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all ${canal === 'WHATSAPP'
+                                    ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/10'
+                                    : 'border-gray-200 dark:border-card-border hover:bg-gray-50 dark:hover:bg-black/10'
+                                    }`}
                             >
                                 <Phone className={`w-5 h-5 mt-0.5 ${canal === 'WHATSAPP' ? 'text-indigo-600' : 'text-muted'}`} />
                                 <div className="min-w-0">
@@ -341,7 +353,717 @@ function ModalOtp({ onVerificado, onCerrar, tokenConsulta, emailUsuario, seccion
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Subcomponente: Visualizadores de datos por sección
+// Subcomponentes Especializados por Sección
+// ─────────────────────────────────────────────────────────────────
+
+function CountdownTimer({ fechaEvento }: { fechaEvento: string }) {
+    const [timeLeft, setTimeLeft] = useState<{
+        days: number;
+        hours: number;
+        minutes: number;
+        seconds: number;
+        isFinished: boolean;
+    }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isFinished: false });
+
+    useEffect(() => {
+        const target = new Date(fechaEvento).getTime();
+        if (isNaN(target)) return;
+
+        const calculateTime = () => {
+            const now = new Date().getTime();
+            const diff = target - now;
+            if (diff <= 0) {
+                return { days: 0, hours: 0, minutes: 0, seconds: 0, isFinished: true };
+            }
+            return {
+                days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((diff / 1000 / 60) % 60),
+                seconds: Math.floor((diff / 1000) % 60),
+                isFinished: false,
+            };
+        };
+
+        setTimeLeft(calculateTime());
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTime());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [fechaEvento]);
+
+    if (timeLeft.isFinished) {
+        return (
+            <div className="flex justify-center items-center py-3 px-6 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl animate-fade-in shadow-sm">
+                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-emerald-500 animate-pulse" />
+                    ¡El evento ha comenzado!
+                </p>
+            </div>
+        );
+    }
+
+    const units = [
+        { label: 'Días', value: timeLeft.days },
+        { label: 'Horas', value: timeLeft.hours },
+        { label: 'Min', value: timeLeft.minutes },
+        { label: 'Seg', value: timeLeft.seconds },
+    ];
+
+    return (
+        <div className="flex flex-col items-center gap-3 bg-white dark:bg-card-bg/30 p-5 rounded-2xl border border-gray-150 dark:border-card-border/60 shadow-sm max-w-sm mx-auto">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wider">
+                Faltan para el gran día:
+            </p>
+            <div className="flex gap-2.5 sm:gap-3.5">
+                {units.map((u, i) => (
+                    <div
+                        key={i}
+                        className="bg-indigo-50/50 dark:bg-indigo-950/20 backdrop-blur-sm p-3 w-16 sm:w-20 text-center border border-indigo-100/50 dark:border-indigo-950/30 rounded-2xl shadow-inner animate-in zoom-in-95 duration-200"
+                    >
+                        <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400">
+                            {String(u.value).padStart(2, '0')}
+                        </p>
+                        <p className="text-[10px] sm:text-xs font-bold text-muted uppercase tracking-wider mt-0.5">
+                            {u.label}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function ResumenSeccion({ data }: { data: any }) {
+    if (!data) return null;
+
+    const {
+        titulo,
+        saludo,
+        mensaje_bienvenida,
+        fecha_evento,
+        dress_code_codigo,
+        usuario,
+    } = data;
+
+    const getDressCodeDesc = (code: string) => {
+        const normalized = code?.toUpperCase();
+        switch (normalized) {
+            case 'GALA':
+                return 'Gala / Formal: Vestido largo de gala y smoking o traje oscuro formal.';
+            case 'ELEGANTE':
+                return 'Elegante: Traje y corbata para ellos, vestido de cóctel o largo para ellas.';
+            case 'SPORT_ELEGANTE':
+                return 'Sport Elegante: Saco y camisa sin corbata para ellos, vestido corto o de día para ellas.';
+            case 'CASUAL':
+                return 'Casual: Ropa informal y cómoda para disfrutar relajados.';
+            default:
+                return 'Vestimenta formal sugerida.';
+        }
+    };
+
+    const formattedDate = fecha_evento ? new Date(fecha_evento).toLocaleDateString('es-AR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }) : '';
+
+    return (
+        <div className="space-y-6">
+            {/* Banner de Bienvenida */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-8 sm:p-10 text-center shadow-lg shadow-indigo-500/20">
+                {/* Círculos decorativos flotantes de fondo */}
+                <div className="absolute top-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-x-12 -translate-y-12" />
+                <div className="absolute bottom-0 right-0 w-40 h-40 bg-pink-400/10 rounded-full blur-3xl translate-x-12 translate-y-12" />
+
+                <div className="relative space-y-4">
+                    {saludo && (
+                        <div className="inline-flex justify-center">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs sm:text-sm font-bold tracking-widest uppercase text-pink-200">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                {saludo}
+                            </span>
+                        </div>
+                    )}
+                    {titulo && (
+                        <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                            {titulo}
+                        </h2>
+                    )}
+                    {mensaje_bienvenida && (
+                        <p className="text-sm sm:text-base text-indigo-100 max-w-md mx-auto leading-relaxed font-medium">
+                            {mensaje_bienvenida}
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {/* Cuenta Regresiva */}
+            {fecha_evento && (
+                <div className="py-2">
+                    <CountdownTimer fechaEvento={fecha_evento} />
+                </div>
+            )}
+
+            {/* Detalles en Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Fecha y Hora */}
+                {fecha_evento && (
+                    <div className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex gap-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                        <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                            <Calendar className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-1 min-w-0">
+                            <span className="text-xs text-muted uppercase font-semibold tracking-wider">Fecha y Hora</span>
+                            <p className="font-extrabold text-gray-950 dark:text-white text-sm sm:text-base capitalize leading-snug">
+                                {formattedDate}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Dress Code */}
+                {dress_code_codigo && (
+                    <div className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex gap-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                        <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-1 min-w-0">
+                            <span className="text-xs text-muted uppercase font-semibold tracking-wider">Código de Vestimenta</span>
+                            <p className="font-extrabold text-gray-950 dark:text-white text-sm sm:text-base leading-none mb-1">
+                                {dress_code_codigo}
+                            </p>
+                            <p className="text-xs text-muted leading-relaxed font-medium">
+                                {getDressCodeDesc(dress_code_codigo)}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Organizador */}
+                {usuario && (
+                    <div className="sm:col-span-2 bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex gap-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                        <div className="w-12 h-12 rounded-xl bg-pink-50 dark:bg-pink-950/30 text-pink-600 dark:text-pink-400 flex items-center justify-center shrink-0">
+                            <Users className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-1 min-w-0">
+                            <span className="text-xs text-muted uppercase font-semibold tracking-wider">Contacto Organizador</span>
+                            <p className="font-extrabold text-gray-950 dark:text-white text-sm sm:text-base">
+                                {usuario.nombre}
+                            </p>
+                            {usuario.email && (
+                                <a
+                                    href={`mailto:${usuario.email}`}
+                                    className="text-xs font-bold text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1 hover:underline"
+                                >
+                                    <Mail className="w-3.5 h-3.5" />
+                                    {usuario.email}
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function AgendaSeccion({ data }: { data: any[] }) {
+    if (!data || data.length === 0) {
+        return (
+            <div className="p-8 text-center text-sm text-muted bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-card-border">
+                No hay actividades cargadas en la agenda del evento.
+            </div>
+        );
+    }
+
+    const itemsOrdenados = [...data].sort((a, b) => a.orden - b.orden);
+
+    const formatTime = (iso: string) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' hs';
+    };
+
+    return (
+        <div className="space-y-6">
+            <h4 className="font-bold text-gray-950 dark:text-white text-sm uppercase tracking-wider mb-2">
+                Cronograma del Evento
+            </h4>
+
+            <div className="relative border-l-2 border-indigo-150 dark:border-indigo-950/50 ml-4 sm:ml-6 space-y-6 py-2">
+                {itemsOrdenados.map((item, idx) => {
+                    const timeStart = formatTime(item.fecha_hora_inicio);
+                    const timeEnd = item.fecha_hora_fin ? formatTime(item.fecha_hora_fin) : null;
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                        item.lugar + (item.direccion ? ', ' + item.direccion : '')
+                    )}`;
+
+                    return (
+                        <div key={idx} className="relative pl-7 sm:pl-10 group">
+                            {/* Dot */}
+                            <div className="absolute -left-[9px] top-2 w-4 h-4 rounded-full border-4 border-white dark:border-gray-950 bg-indigo-600 group-hover:scale-125 group-hover:bg-pink-500 transition-all duration-300 shadow-md shadow-indigo-600/20" />
+
+                            <div className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border shadow-sm space-y-2 transition-all duration-300 group-hover:shadow-md group-hover:border-indigo-200 dark:group-hover:border-indigo-950/50 group-hover:scale-[1.01]">
+                                {/* Hora */}
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase">
+                                    <Clock className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                                    <span>
+                                        {timeStart} {timeEnd ? ` - ${timeEnd}` : ''}
+                                    </span>
+                                </div>
+
+                                {/* Nombre */}
+                                <h5 className="text-base sm:text-lg font-black text-gray-950 dark:text-white leading-tight">
+                                    {item.nombre}
+                                </h5>
+
+                                {/* Leyenda / Descripción */}
+                                {item.leyenda_visible && (
+                                    <p className="text-sm text-muted leading-relaxed font-medium">
+                                        {item.leyenda_visible}
+                                    </p>
+                                )}
+
+                                {/* Lugar */}
+                                {item.lugar && (
+                                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1.5 border-t border-gray-50 dark:border-card-border/30">
+                                        <span className="flex items-center gap-1.5 text-xs text-muted font-bold min-w-0">
+                                            <MapPin className="w-3.5 h-3.5 text-muted/80 shrink-0" />
+                                            <span className="truncate">{item.lugar}</span>
+                                        </span>
+                                        <a
+                                            href={mapsUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                        >
+                                            Ver ubicación
+                                            <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function NovedadesSeccion({ data }: { data: any[] }) {
+    if (!data || data.length === 0) {
+        return (
+            <div className="p-8 text-center text-sm text-muted bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-card-border">
+                No hay comunicados o novedades para mostrar.
+            </div>
+        );
+    }
+
+    const novedadesOrdenadas = [...data].sort((a, b) => a.orden - b.orden);
+
+    const getTipoBadge = (codigo: string) => {
+        const cod = codigo?.toUpperCase();
+        switch (cod) {
+            case 'RECORDATORIO':
+                return (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+                        Recordatorio
+                    </span>
+                );
+            case 'UBICACION':
+                return (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">
+                        Ubicación
+                    </span>
+                );
+            case 'GENERAL':
+            default:
+                return (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+                        Comunicado
+                    </span>
+                );
+        }
+    };
+
+    const formatDate = (iso: string) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+    };
+
+    return (
+        <div className="space-y-4">
+            <h4 className="font-bold text-gray-950 dark:text-white text-sm uppercase tracking-wider mb-2">
+                Novedades y Comunicados
+            </h4>
+
+            <div className="space-y-4">
+                {novedadesOrdenadas.map((novedad, idx) => {
+                    const isDestacada = novedad.destacada || novedad.importante;
+                    return (
+                        <div
+                            key={idx}
+                            className={`p-5 rounded-2xl border transition-all duration-300 hover:scale-[1.01] hover:shadow-md ${isDestacada
+                                ? 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border-2 border-amber-200 dark:border-amber-900/40 shadow-sm shadow-amber-500/5'
+                                : 'bg-white dark:bg-card-bg border-gray-200 dark:border-card-border'
+                                }`}
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between gap-3 mb-2.5">
+                                <div className="flex items-center gap-2">
+                                    {getTipoBadge(novedad.tipo_codigo)}
+                                    {isDestacada && (
+                                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 uppercase tracking-wide">
+                                            Importante
+                                        </span>
+                                    )}
+                                </div>
+                                {novedad.fecha_alta && (
+                                    <span className="text-[10px] font-semibold text-muted">
+                                        {formatDate(novedad.fecha_alta)}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Titulo */}
+                            <h5 className="text-base font-extrabold text-gray-950 dark:text-white mb-1.5 flex items-center gap-2">
+                                {isDestacada && <Megaphone className="w-4 h-4 text-amber-500 shrink-0 animate-bounce" />}
+                                {novedad.titulo}
+                            </h5>
+
+                            {/* Descripcion */}
+                            <p className="text-sm text-muted leading-relaxed font-medium">
+                                {novedad.descripcion}
+                            </p>
+
+                            {/* Adjunto */}
+                            {novedad.url_adjunto && (
+                                <div className="pt-2">
+                                    <a
+                                        href={novedad.url_adjunto}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                    >
+                                        Ver archivo adjunto
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function RegalosSeccion({ data }: { data: any }) {
+    const { addToast } = useToast();
+
+    if (!data) return null;
+
+    const {
+        transferencias_habilitado,
+        lista_habilitado,
+        fondo_metas_habilitado,
+        transferencias = [],
+        lista = [],
+        fondo = {},
+        metas = [],
+    } = data;
+
+    // Determinar la sub-tab inicial basada en habilitadas
+    const tabsHabilitadas: ('transferencias' | 'lista' | 'fondo')[] = [];
+    if (transferencias_habilitado) tabsHabilitadas.push('transferencias');
+    if (lista_habilitado) tabsHabilitadas.push('lista');
+    if (fondo_metas_habilitado) tabsHabilitadas.push('fondo');
+
+    const [subTab, setSubTab] = useState<'transferencias' | 'lista' | 'fondo'>(
+        tabsHabilitadas[0] || 'transferencias'
+    );
+    const [copiedIndex, setCopiedIndex] = useState<{ [key: string]: boolean }>({});
+
+    if (tabsHabilitadas.length === 0) {
+        return (
+            <div className="p-8 text-center text-sm text-muted bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-card-border">
+                No hay opciones de regalos habilitadas para este evento.
+            </div>
+        );
+    }
+
+    const handleCopy = async (text: string, key: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedIndex((prev) => ({ ...prev, [key]: true }));
+            addToast('Copiado al portapapeles', 'success');
+            setTimeout(() => {
+                setCopiedIndex((prev) => ({ ...prev, [key]: false }));
+            }, 2000);
+        } catch (err) {
+            addToast('Error al copiar', 'error');
+        }
+    };
+
+    const formatCurrency = (amount: number, currency: string) => {
+        return new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: currency || 'ARS',
+            maximumFractionDigits: 0,
+        }).format(amount);
+    };
+
+    // Helper para parsear datos de transferencia
+    const parseTransferText = (text: string) => {
+        if (!text) return [];
+        return text.split('\n').map((line) => {
+            const parts = line.split(':');
+            const label = parts[0]?.trim() || '';
+            const value = parts.slice(1).join(':')?.trim() || '';
+            return { label, value };
+        }).filter(item => item.label && item.value);
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Tabs de Regalos */}
+            <div className="flex p-1 bg-gray-100 dark:bg-black/35 rounded-2xl">
+                {transferencias_habilitado && (
+                    <button
+                        type="button"
+                        onClick={() => setSubTab('transferencias')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all ${subTab === 'transferencias'
+                            ? 'bg-white dark:bg-card-bg text-indigo-600 dark:text-white shadow-sm'
+                            : 'text-muted hover:text-gray-950 dark:hover:text-white'
+                            }`}
+                    >
+                        <CreditCard className="w-4 h-4 shrink-0" />
+                        Transferencias
+                    </button>
+                )}
+                {lista_habilitado && (
+                    <button
+                        type="button"
+                        onClick={() => setSubTab('lista')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all ${subTab === 'lista'
+                            ? 'bg-white dark:bg-card-bg text-indigo-600 dark:text-white shadow-sm'
+                            : 'text-muted hover:text-gray-950 dark:hover:text-white'
+                            }`}
+                    >
+                        <Gift className="w-4 h-4 shrink-0" />
+                        Lista de Regalos
+                    </button>
+                )}
+                {fondo_metas_habilitado && (
+                    <button
+                        type="button"
+                        onClick={() => setSubTab('fondo')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all ${subTab === 'fondo'
+                            ? 'bg-white dark:bg-card-bg text-indigo-600 dark:text-white shadow-sm'
+                            : 'text-muted hover:text-gray-950 dark:hover:text-white'
+                            }`}
+                    >
+                        <Sparkles className="w-4 h-4 shrink-0" />
+                        Luna de Miel
+                    </button>
+                )}
+            </div>
+
+            {/* Contenido de la Tab Activa */}
+            <div className="space-y-4 animate-in fade-in duration-200">
+                {/* 1. Transferencias */}
+                {subTab === 'transferencias' && (
+                    <div className="space-y-4">
+                        {transferencias.map((tf: any, idx: number) => {
+                            const parsedRows = parseTransferText(tf.datos_transferencia_texto);
+                            return (
+                                <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border space-y-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-card-border pb-2.5">
+                                        <h5 className="font-extrabold text-gray-955 dark:text-white text-base flex items-center gap-2">
+                                            <CreditCard className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                            {tf.titulo}
+                                        </h5>
+                                        <span className="text-[10px] font-black bg-indigo-50 dark:bg-indigo-950/45 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg">
+                                            {tf.codigo_moneda}
+                                        </span>
+                                    </div>
+
+                                    {/* Campos copiables */}
+                                    <div className="space-y-3">
+                                        {parsedRows.length > 0 ? (
+                                            parsedRows.map((row, rowIdx) => {
+                                                const uniqueKey = `${idx}-${rowIdx}`;
+                                                const isCopied = copiedIndex[uniqueKey];
+                                                return (
+                                                    <div key={rowIdx} className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 dark:bg-black/20 px-4 py-2.5 rounded-xl border border-gray-100/50 dark:border-card-border/40 gap-2">
+                                                        <div className="min-w-0">
+                                                            <span className="text-[10px] text-muted uppercase font-bold tracking-wider">{row.label}</span>
+                                                            <p className="font-bold text-gray-950 dark:text-white text-sm break-all font-mono">
+                                                                {row.value}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleCopy(row.value, uniqueKey)}
+                                                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all shrink-0 border ${isCopied
+                                                                ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-950/50'
+                                                                : 'bg-white dark:bg-card-bg text-gray-700 dark:text-gray-300 border-gray-200 dark:border-card-border hover:bg-gray-50 dark:hover:bg-black/10'
+                                                                }`}
+                                                        >
+                                                            {isCopied ? (
+                                                                <>
+                                                                    <Check className="w-3.5 h-3.5" />
+                                                                    Copiado
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Copy className="w-3.5 h-3.5" />
+                                                                    Copiar
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <p className="text-xs text-muted whitespace-pre-wrap">{tf.datos_transferencia_texto}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Instrucciones */}
+                                    {tf.instrucciones && (
+                                        <div className="flex gap-2 p-3 bg-indigo-50/40 dark:bg-indigo-950/10 rounded-xl border border-indigo-100/30 dark:border-indigo-950/20">
+                                            <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                            <p className="text-xs text-muted leading-relaxed font-semibold">
+                                                {tf.instrucciones}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* 2. Lista de Regalos */}
+                {subTab === 'lista' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {lista.map((item: any, idx: number) => {
+                            const isDisponible = item.cantidad_disponible > 0;
+                            return (
+                                <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex flex-col justify-between gap-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                                    <div className="space-y-2">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <h5 className="font-extrabold text-gray-955 dark:text-white text-base leading-tight">
+                                                {item.titulo}
+                                            </h5>
+                                            {isDisponible ? (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 shrink-0">
+                                                    Disponible
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-950/30 dark:text-gray-400 shrink-0">
+                                                    Reservado
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {item.descripcion && (
+                                            <p className="text-xs text-muted leading-relaxed font-medium">
+                                                {item.descripcion}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {item.url_referencia && (
+                                        <a
+                                            href={item.url_referencia}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
+                                        >
+                                            Ver referencia / link
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* 3. Luna de Miel (Fondo) */}
+                {subTab === 'fondo' && (
+                    <div className="space-y-6">
+                        {/* Intro Fondo */}
+                        <div className="bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-100 dark:border-indigo-950/50 p-6 rounded-2xl space-y-2">
+                            <h5 className="font-black text-gray-950 dark:text-white text-lg flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
+                                {fondo.titulo || 'Fondo para el evento'}
+                            </h5>
+                            {fondo.descripcion_publica && (
+                                <p className="text-sm text-muted leading-relaxed font-medium">
+                                    {fondo.descripcion_publica}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Metas */}
+                        <div className="space-y-4">
+                            <h6 className="text-xs font-semibold text-muted uppercase tracking-wider">Nuestras metas:</h6>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {metas.map((meta: any, idx: number) => {
+                                    const progress = Math.min(meta.porcentaje || 0, 100);
+                                    return (
+                                        <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border space-y-3 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                                            <div className="space-y-1">
+                                                <h6 className="font-extrabold text-gray-955 dark:text-white text-base leading-tight">
+                                                    {meta.titulo}
+                                                </h6>
+                                                {meta.descripcion && (
+                                                    <p className="text-xs text-muted leading-relaxed font-medium">
+                                                        {meta.descripcion}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Progreso */}
+                                            <div className="space-y-1.5 pt-1">
+                                                <div className="w-full h-2.5 bg-gray-100 dark:bg-black/35 rounded-full overflow-hidden">
+                                                    <div
+                                                        style={{ width: `${progress}%` }}
+                                                        className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-700 ease-out"
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                                                        {progress.toFixed(1)}% completado
+                                                    </span>
+                                                    <span className="font-bold text-gray-950 dark:text-white">
+                                                        {formatCurrency(meta.total_confirmado, fondo.moneda_base)} / {formatCurrency(meta.objetivo_monto, fondo.moneda_base)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Subcomponente Principal: Visualizadores de datos por sección
 // ─────────────────────────────────────────────────────────────────
 
 interface ContenidoSeccionProps {
@@ -400,28 +1122,19 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
     const codigoUpper = seccion.codigo.toUpperCase();
 
     if (codigoUpper === 'RESUMEN') {
-        const entries = Object.entries(data || {});
-        return (
-            <div className="space-y-4">
-                <h4 className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">
-                    Información General
-                </h4>
-                {entries.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {entries.map(([key, val]: [string, any]) => (
-                            <div key={key} className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-100 dark:border-card-border">
-                                <span className="text-xs text-muted uppercase font-semibold">{key.replace(/_/g, ' ')}</span>
-                                <p className="font-bold text-gray-900 dark:text-white text-sm mt-1">{String(val)}</p>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="bg-white dark:bg-card-bg rounded-2xl border border-dashed border-gray-200 dark:border-card-border p-8 text-center">
-                        <p className="text-sm text-muted">No hay detalles de información general adicionales cargados para este evento.</p>
-                    </div>
-                )}
-            </div>
-        );
+        return <ResumenSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'AGENDA') {
+        return <AgendaSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'NOVEDADES') {
+        return <NovedadesSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'REGALOS') {
+        return <RegalosSeccion data={data} />;
     }
 
     if (codigoUpper === 'PAGOS') {
@@ -454,9 +1167,8 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
                                         <p className="text-sm font-black text-gray-900 dark:text-white">
                                             {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(t.monto)}
                                         </p>
-                                        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ${
-                                            t.estado === 'APROBADO' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/30'
-                                        }`}>
+                                        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ${t.estado === 'APROBADO' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/30'
+                                            }`}>
                                             {t.estado}
                                         </span>
                                     </div>
@@ -479,7 +1191,7 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
                 <h4 className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">
                     Ficha Médica de Participantes
                 </h4>
-                
+
                 {Array.isArray(data) ? (
                     <div className="space-y-4">
                         {data.map((ficha: any, idx: number) => (
@@ -533,7 +1245,7 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
                 <h4 className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">
                     Personas Autorizadas para Retiro
                 </h4>
-                
+
                 {qrs.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {qrs.map((qr: any, idx: number) => (
@@ -545,7 +1257,7 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
                                         {qr.telefono_autorizado} {qr.relacion && `· ${qr.relacion}`}
                                     </p>
                                 </div>
-                                
+
                                 {qr.qr_token && (
                                     <div className="flex flex-col items-center gap-3 bg-white dark:bg-black/40 p-4 rounded-xl border border-gray-100 dark:border-card-border/60">
                                         <img
@@ -615,7 +1327,7 @@ export default function PortalPage({
         try {
             const data = await getPortalPuntual(token);
             setPortalData(data);
-            
+
             // Elegir tab por defecto al cargar si no hay una seleccionada
             if (data.secciones && data.secciones.length > 0) {
                 const ordenadas = [...data.secciones].sort((a, b) => a.orden - b.orden);
@@ -751,17 +1463,26 @@ export default function PortalPage({
                                 {/* Fechas */}
                                 {(evento.fecha_inicio || evento.fecha_fin) && (
                                     <div className="flex flex-wrap gap-4 text-sm text-muted">
-                                        {evento.fecha_inicio && (
+                                        {evento.fecha_inicio && evento.fecha_fin && formatFecha(evento.fecha_inicio) === formatFecha(evento.fecha_fin) ? (
                                             <span className="flex items-center gap-1.5">
-                                                <Calendar className="w-4 h-4 shrink-0" />
-                                                Inicio: {formatFecha(evento.fecha_inicio)}
+                                                <Calendar className="w-4 h-4 shrink-0 text-indigo-500" />
+                                                {formatFecha(evento.fecha_inicio)}
                                             </span>
-                                        )}
-                                        {evento.fecha_fin && (
-                                            <span className="flex items-center gap-1.5">
-                                                <Clock className="w-4 h-4 shrink-0" />
-                                                Fin: {formatFecha(evento.fecha_fin)}
-                                            </span>
+                                        ) : (
+                                            <>
+                                                {evento.fecha_inicio && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Calendar className="w-4 h-4 shrink-0" />
+                                                        Inicio: {formatFecha(evento.fecha_inicio)}
+                                                    </span>
+                                                )}
+                                                {evento.fecha_fin && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Clock className="w-4 h-4 shrink-0" />
+                                                        Fin: {formatFecha(evento.fecha_fin)}
+                                                    </span>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 )}
@@ -807,11 +1528,10 @@ export default function PortalPage({
                                     <button
                                         key={sec.codigo}
                                         onClick={() => setSeccionActiva(sec)}
-                                        className={`flex items-center gap-2 px-5 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 shrink-0 ${
-                                            seccionActiva?.codigo === sec.codigo
-                                                ? 'border-indigo-600 text-indigo-600 dark:text-white'
-                                                : 'border-transparent text-muted hover:text-gray-900 dark:hover:text-white hover:bg-gray-50/50 dark:hover:bg-black/10'
-                                        }`}
+                                        className={`flex items-center gap-2 px-5 py-4 text-sm font-bold whitespace-nowrap transition-colors border-b-2 shrink-0 ${seccionActiva?.codigo === sec.codigo
+                                            ? 'border-indigo-600 text-indigo-600 dark:text-white'
+                                            : 'border-transparent text-muted hover:text-gray-900 dark:hover:text-white hover:bg-gray-50/50 dark:hover:bg-black/10'
+                                            }`}
                                     >
                                         {getSeccionIcono(sec.codigo)}
                                         <span>{sec.titulo}</span>
