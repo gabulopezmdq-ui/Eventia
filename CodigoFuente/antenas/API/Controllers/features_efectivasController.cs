@@ -95,12 +95,10 @@ namespace API.Controllers
             }
 
             var addonsEvento = await GetAddonsActivosAsync("EVENTO", idEvento, null);
-
             var addonsCuenta = new List<AddonActivoDTO>();
+
             if (idCuenta.HasValue)
-            {
                 addonsCuenta = await GetAddonsActivosAsync("CUENTA", null, idCuenta.Value);
-            }
 
             var planFeatureIds = new HashSet<long>();
             var planOverridesByFeature = new Dictionary<long, string?>();
@@ -161,9 +159,7 @@ namespace API.Controllers
                 .ToListAsync();
 
             foreach (var v in eventoVisibilidad)
-            {
                 eventoVisibilidadByFeature[v.id_feature] = v;
-            }
 
             var seedIds = new HashSet<long>();
 
@@ -195,6 +191,7 @@ namespace API.Controllers
                     id_feature = f.id_feature,
                     codigo = f.codigo,
                     nombre = f.nombre,
+                    descripcion = f.descripcion,
                     categoria = f.categoria,
                     monetizable = f.monetizable,
 
@@ -220,8 +217,19 @@ namespace API.Controllers
 
                     visible_acceso = false,
                     visible_centro = false,
+
+                    visible_acceso_evento = false,
+                    visible_centro_evento = false,
+                    visible_acceso_programa = false,
+                    visible_centro_programa = false,
+
                     permite_acceso = false,
-                    permite_centro = false
+                    permite_centro = false,
+
+                    permite_acceso_evento = f.visible_acceso_evento_default,
+                    permite_centro_evento = f.visible_centro_evento_default,
+                    permite_acceso_programa = f.visible_acceso_programa_default,
+                    permite_centro_programa = f.visible_centro_programa_default
                 })
                 .ToListAsync();
 
@@ -254,24 +262,26 @@ namespace API.Controllers
                 eventoVisibilidadByFeature.TryGetValue(fe.id_feature, out var vis);
                 featureDefaults.TryGetValue(fe.id_feature, out var defaults);
 
-                bool defaultAcceso = esPrograma
-                    ? defaults?.visible_acceso_programa_default ?? false
-                    : defaults?.visible_acceso_evento_default ?? false;
+                bool defaultAccesoEvento = defaults?.visible_acceso_evento_default ?? false;
+                bool defaultCentroEvento = defaults?.visible_centro_evento_default ?? false;
+                bool defaultAccesoPrograma = defaults?.visible_acceso_programa_default ?? false;
+                bool defaultCentroPrograma = defaults?.visible_centro_programa_default ?? false;
 
-                bool defaultCentro = esPrograma
-                    ? defaults?.visible_centro_programa_default ?? false
-                    : defaults?.visible_centro_evento_default ?? false;
+                fe.visible_acceso_evento = vis?.visible_acceso_evento ?? defaultAccesoEvento;
+                fe.visible_centro_evento = vis?.visible_centro_evento ?? defaultCentroEvento;
+                fe.visible_acceso_programa = vis?.visible_acceso_programa ?? defaultAccesoPrograma;
+                fe.visible_centro_programa = vis?.visible_centro_programa ?? defaultCentroPrograma;
 
-                fe.permite_acceso = defaultAcceso;
-                fe.permite_centro = defaultCentro;
+                fe.permite_acceso_evento = defaultAccesoEvento;
+                fe.permite_centro_evento = defaultCentroEvento;
+                fe.permite_acceso_programa = defaultAccesoPrograma;
+                fe.permite_centro_programa = defaultCentroPrograma;
 
-                fe.visible_acceso = esPrograma
-                    ? (vis?.visible_acceso_programa ?? defaultAcceso)
-                    : (vis?.visible_acceso_evento ?? defaultAcceso);
+                fe.permite_acceso = esPrograma ? defaultAccesoPrograma : defaultAccesoEvento;
+                fe.permite_centro = esPrograma ? defaultCentroPrograma : defaultCentroEvento;
 
-                fe.visible_centro = esPrograma
-                    ? (vis?.visible_centro_programa ?? defaultCentro)
-                    : (vis?.visible_centro_evento ?? defaultCentro);
+                fe.visible_acceso = esPrograma ? fe.visible_acceso_programa : fe.visible_acceso_evento;
+                fe.visible_centro = esPrograma ? fe.visible_centro_programa : fe.visible_centro_evento;
 
                 if (!permitidaComercialmente)
                 {
@@ -284,6 +294,11 @@ namespace API.Controllers
 
                     fe.visible_acceso = false;
                     fe.visible_centro = false;
+
+                    fe.visible_acceso_evento = false;
+                    fe.visible_centro_evento = false;
+                    fe.visible_acceso_programa = false;
+                    fe.visible_centro_programa = false;
 
                     continue;
                 }
@@ -313,6 +328,11 @@ namespace API.Controllers
 
                         fe.visible_acceso = false;
                         fe.visible_centro = false;
+
+                        fe.visible_acceso_evento = false;
+                        fe.visible_centro_evento = false;
+                        fe.visible_acceso_programa = false;
+                        fe.visible_centro_programa = false;
                     }
                 }
                 else
@@ -360,22 +380,21 @@ namespace API.Controllers
                 select new { sa, ad };
 
             if (scope == "EVENTO" && idEvento.HasValue)
-            {
                 query = query.Where(x => x.sa.id_evento == idEvento.Value);
-            }
 
             if (scope == "CUENTA" && idCuenta.HasValue)
-            {
                 query = query.Where(x => x.sa.id_cuenta == idCuenta.Value);
-            }
 
-            return await query
+            var addons = await query
                 .Select(x => new AddonActivoDTO
                 {
                     id_scope_addon = x.sa.id_scope_addon,
                     id_addon = x.ad.id_addon,
                     codigo = x.ad.codigo,
                     nombre = x.ad.nombre,
+                    descripcion = x.ad.descripcion,
+                    scope = x.ad.scope,
+                    origen = scope == "EVENTO" ? "ADDON_EVENTO" : "ADDON_CUENTA",
                     estado = x.sa.estado,
                     activo = x.sa.activo,
                     fecha_desde = x.sa.fecha_desde,
@@ -383,6 +402,52 @@ namespace API.Controllers
                     config_override = x.sa.config_json_override
                 })
                 .ToListAsync();
+
+            var addonIds = addons.Select(x => x.id_addon).Distinct().ToList();
+
+            if (addonIds.Count == 0)
+                return addons;
+
+            var featuresByAddon = await (
+                from af in _context.ef_addon_features.AsNoTracking()
+                join f in _context.ef_param_features.AsNoTracking()
+                    on af.id_feature equals f.id_feature
+                where addonIds.Contains(af.id_addon)
+                   && af.activo == true
+                   && f.activo == true
+                orderby f.categoria, f.codigo
+                select new
+                {
+                    af.id_addon,
+                    feature = new AddonFeatureDTO
+                    {
+                        id_feature = f.id_feature,
+                        codigo = f.codigo,
+                        nombre = f.nombre,
+                        descripcion = f.descripcion,
+                        categoria = f.categoria,
+                        monetizable = f.monetizable
+                    }
+                }
+            ).ToListAsync();
+
+            foreach (var addon in addons)
+            {
+                addon.features = featuresByAddon
+                    .Where(x => x.id_addon == addon.id_addon)
+                    .Select(x => x.feature)
+                    .ToList();
+
+                addon.categoria = addon.features
+                    .Select(x => x.categoria)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct()
+                    .Count() == 1
+                        ? addon.features.FirstOrDefault()?.categoria
+                        : "MULTIPLE";
+            }
+
+            return addons;
         }
 
         private async Task CargarAddonFeaturesAsync(

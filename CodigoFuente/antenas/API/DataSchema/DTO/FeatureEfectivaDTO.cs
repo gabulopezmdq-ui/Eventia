@@ -32,4 +32,15 @@
 
     public bool permite_acceso { get; set; }
     public bool permite_centro { get; set; }
+    public string? descripcion { get; set; }
+
+    public bool visible_acceso_evento { get; set; }
+    public bool visible_centro_evento { get; set; }
+    public bool visible_acceso_programa { get; set; }
+    public bool visible_centro_programa { get; set; }
+
+    public bool permite_acceso_evento { get; set; }
+    public bool permite_centro_evento { get; set; }
+    public bool permite_acceso_programa { get; set; }
+    public bool permite_centro_programa { get; set; }
 }

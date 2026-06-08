@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace API.DataSchema.DTO
 {
@@ -16,6 +17,11 @@ namespace API.DataSchema.DTO
         public DateTimeOffset? fecha_hasta { get; set; }
 
         public string? config_override { get; set; }
+        public string? descripcion { get; set; }
+        public string? scope { get; set; }
+        public string? origen { get; set; }
+        public string? categoria { get; set; }
+        public List<AddonFeatureDTO> features { get; set; } = new List<AddonFeatureDTO>();
     }
 }
 
