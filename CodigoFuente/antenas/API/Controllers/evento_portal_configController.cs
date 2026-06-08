@@ -229,6 +229,7 @@ namespace API.Controllers
                 case "FOTOS": return "fotos";
                 case "HOSPEDAJES": return "hospedajes";
                 case "TRANSPORTE": return "transporte";
+                case "SERVICIOS": return "servicios";
                 default: return codigo.ToLower();
             }
         }

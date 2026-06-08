@@ -175,6 +175,7 @@ builder.Services.AddScoped<IPortalSectionProvider, AutorizacionesPortalSectionPr
 builder.Services.AddScoped<IPortalSectionProvider, RetirosPortalSectionProvider>();
 builder.Services.AddScoped<IPortalSectionProvider, QrsRetiroPortalSectionProvider>();
 builder.Services.AddScoped<IPortalSectionProvider, SaludAccionesPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, ServiciosPortalSectionProvider>();
 
 builder.Services.AddScoped<IMonedasService, MonedasService>();
 builder.Services.AddScoped<IRelacionesPersonaService, RelacionesPersonaService>();
