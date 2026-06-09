@@ -6,7 +6,7 @@ import {
     Loader2, Save, Crown, Sparkles, CheckCircle2,
     MessageSquare, Camera, Music, Bus, ChefHat, Users,
     Home, Gift, Bell, Baby, Calendar, Layers, ArrowUpRight,
-    ChevronDown
+    ChevronDown, AlertTriangle, X
 } from 'lucide-react';
 
 interface FeatureEfectiva {
@@ -111,6 +111,11 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [dependencyError, setDependencyError] = useState<{
+        featureName: string;
+        missingFeatures: { id: number; name: string }[];
+    } | null>(null);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -161,6 +166,8 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
             [idFeature]: !prev[idFeature]
         }));
         setSaveSuccess(false);
+        setDependencyError(null);
+        setSaveError(null);
     };
 
     const handleToggleVisibilidad = (type: 'acceso' | 'centro', idFeature: number) => {
@@ -176,6 +183,8 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
             }));
         }
         setSaveSuccess(false);
+        setDependencyError(null);
+        setSaveError(null);
     };
 
     const toggleCategory = (category: string) => {
@@ -188,6 +197,8 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
     const handleSave = async () => {
         setSaving(true);
         setSaveSuccess(false);
+        setDependencyError(null);
+        setSaveError(null);
         try {
             // Bulk update payload requires mapping to items with visibilities
             const items = features
@@ -216,28 +227,36 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                     try {
                         const parsedDetail = JSON.parse(errData.detail);
                         if (parsedDetail.error === 'Dependencias incompletas.' && parsedDetail.dependencias_faltantes) {
-                            const missingNames = parsedDetail.dependencias_faltantes.map((d: { nombre: string }) => d.nombre).join(', ');
+                            const missingFeatures = parsedDetail.dependencias_faltantes.map((d: { id_feature: number, nombre: string }) => ({
+                                id: d.id_feature,
+                                name: d.nombre
+                            }));
                             const featObj = features.find(f => f.id_feature === parsedDetail.id_feature);
-                            const featName = featObj ? `"${featObj.nombre}"` : 'esta característica';
-                            throw new Error(`Inconsistencia en dependencias: Para activar ${featName}, tenés que habilitar también: ${missingNames}.`);
+                            const featName = featObj ? featObj.nombre : 'esta característica';
+                            
+                            setDependencyError({
+                                featureName: featName,
+                                missingFeatures
+                            });
+                            return;
                         }
                     } catch (e) {
-                        if (e instanceof Error) throw e;
+                        // ignore and fallback
                     }
                 }
                 throw new Error(errData.message || 'Error al guardar las características');
             }
-            
+
             setSaveSuccess(true);
             // Refresh effective features from backend to resolve values
             await fetchData();
-            
+
             setTimeout(() => {
                 setSaveSuccess(false);
             }, 3000);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'No se pudieron guardar los cambios. Intentá de nuevo.';
-            alert(message);
+            setSaveError(message);
         } finally {
             setSaving(false);
         }
@@ -283,7 +302,7 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                         Activá o desactivá las funcionalidades que querés usar en este {tipoOperacion === 'EVENTO' ? 'evento' : 'programa'}.
                     </p>
                 </div>
-                
+
                 <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                     {saveSuccess && (
                         <div className="text-xs font-bold text-emerald-500 flex items-center gap-1 animate-in fade-in duration-200">
@@ -300,6 +319,60 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                     </button>
                 </div>
             </div>
+
+            {/* Banner de errores de dependencias */}
+            {dependencyError && (
+                <div className="mx-6 mt-6 p-4 bg-rose-500/10 dark:bg-rose-950/20 border border-rose-500/30 rounded-xl text-rose-800 dark:text-rose-300 flex items-start gap-3 relative animate-in fade-in slide-in-from-top-2 duration-350">
+                    <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                    <div className="flex-1 space-y-1">
+                        <h4 className="font-extrabold text-xs text-rose-900 dark:text-rose-200">
+                            Inconsistencia en dependencias
+                        </h4>
+                        <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+                            La sección <strong>"{dependencyError.featureName}"</strong> está marcada como activa, pero requiere que habilites también:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                            {dependencyError.missingFeatures.map((feat) => (
+                                <span key={feat.id} className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/20 dark:bg-rose-500/30 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider text-rose-850 dark:text-rose-200">
+                                    {feat.name}
+                                </span>
+                            ))}
+                        </div>
+                        <p className="text-[11px] text-rose-600 dark:text-rose-450 mt-2.5 leading-normal">
+                            💡 <strong>Para poder guardar los cambios</strong>, tenés que <strong>activar</strong> {dependencyError.missingFeatures.length > 1 ? 'estas características' : 'esta característica'} o <strong>desactivar</strong> "{dependencyError.featureName}".
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setDependencyError(null)}
+                        className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-colors p-1 rounded-lg hover:bg-rose-500/10 cursor-pointer"
+                        aria-label="Cerrar advertencia"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
+            {/* Banner de error general de guardado */}
+            {saveError && (
+                <div className="mx-6 mt-6 p-4 bg-rose-500/10 dark:bg-rose-950/20 border border-rose-500/30 rounded-xl text-rose-800 dark:text-rose-300 flex items-start gap-3 relative animate-in fade-in slide-in-from-top-2 duration-350">
+                    <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <h4 className="font-extrabold text-xs text-rose-900 dark:text-rose-200">
+                            Error al guardar
+                        </h4>
+                        <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed mt-1">
+                            {saveError}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setSaveError(null)}
+                        className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-colors p-1 rounded-lg hover:bg-rose-500/10 cursor-pointer"
+                        aria-label="Cerrar error"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
 
             {/* Lista agrupada colapsable */}
             <div className="p-6 space-y-4">
@@ -322,19 +395,17 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                                             {category.replace(/_/g, ' ')}
                                         </span>
                                     </div>
-                                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded-md border transition-colors ${
-                                        activeCount > 0 
-                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
+                                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded-md border transition-colors ${activeCount > 0
+                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                                             : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 border-neutral-200/50 dark:border-neutral-700/50'
-                                    }`}>
+                                        }`}>
                                         {activeCount} de {totalCount} activas
                                     </span>
                                 </div>
-                                <ChevronDown className={`w-4 h-4 text-muted group-hover:text-foreground transition-transform duration-200 ${
-                                    isCollapsed ? '-rotate-90' : ''
-                                }`} />
+                                <ChevronDown className={`w-4 h-4 text-muted group-hover:text-foreground transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''
+                                    }`} />
                             </button>
-                            
+
                             {/* Grilla de Tarjetas (Solo visible si no está colapsado) */}
                             {!isCollapsed && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-200 pl-1">
@@ -343,18 +414,18 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                                         const disponible = feat.incluida_en_plan || feat.incluida_por_addon;
 
                                         // Determinar permisos de visibilidad
-                                        const permiteAcceso = tipoOperacion === 'EVENTO' 
-                                            ? (feat.permite_acceso_evento !== false) 
+                                        const permiteAcceso = tipoOperacion === 'EVENTO'
+                                            ? (feat.permite_acceso_evento !== false)
                                             : (feat.permite_acceso_programa !== false);
 
-                                        const permiteCentro = tipoOperacion === 'EVENTO' 
-                                            ? (feat.permite_centro_evento !== false) 
+                                        const permiteCentro = tipoOperacion === 'EVENTO'
+                                            ? (feat.permite_centro_evento !== false)
                                             : (feat.permite_centro_programa !== false);
 
                                         // Determinar origen de la feature
                                         let originLabel = 'No incluido';
                                         let originClass = 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800/40 dark:text-neutral-500 border-neutral-200/50';
-                                        
+
                                         if (feat.incluida_en_plan && feat.incluida_por_addon) {
                                             originLabel = 'Plan & Addon';
                                             originClass = 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20';
@@ -372,19 +443,17 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                                         return (
                                             <div
                                                 key={feat.id_feature}
-                                                className={`p-4 rounded-xl border transition-all duration-300 flex flex-col justify-between h-full min-h-[160px] ${
-                                                    isActiva && disponible
+                                                className={`p-4 rounded-xl border transition-all duration-300 flex flex-col justify-between h-full min-h-[160px] ${isActiva && disponible
                                                         ? 'border-accent/30 bg-accent/[0.015] dark:border-accent/20 dark:bg-accent/[0.005] shadow-[0_0_15px_rgba(129,140,248,0.01)]'
                                                         : 'border-card-border bg-neutral-50/30 dark:bg-neutral-900/10 hover:border-card-border/80 dark:hover:border-neutral-800'
-                                                } ${!disponible ? 'border-dashed border-amber-500/25 dark:border-amber-500/15 bg-amber-500/[0.01] dark:bg-amber-950/[0.005]' : ''}`}
+                                                    } ${!disponible ? 'border-dashed border-amber-500/25 dark:border-amber-500/15 bg-amber-500/[0.01] dark:bg-amber-950/[0.005]' : ''}`}
                                             >
                                                 <div className="flex justify-between items-start gap-4">
                                                     <div className="flex gap-3 items-start">
-                                                        <div className={`p-2.5 rounded-xl border shrink-0 transition-colors duration-200 ${
-                                                            isActiva && disponible
+                                                        <div className={`p-2.5 rounded-xl border shrink-0 transition-colors duration-200 ${isActiva && disponible
                                                                 ? 'bg-accent/15 border-accent/25 text-accent'
                                                                 : 'bg-neutral-100 dark:bg-neutral-800/60 border-card-border/50 text-muted'
-                                                        }`}>
+                                                            }`}>
                                                             {getFeatureIcon(feat.codigo)}
                                                         </div>
                                                         <div className="space-y-1">
@@ -406,15 +475,13 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                                                     {disponible ? (
                                                         <button
                                                             onClick={() => handleToggle(feat.id_feature, disponible)}
-                                                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                                isActiva ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-850'
-                                                            }`}
+                                                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isActiva ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-850'
+                                                                }`}
                                                             aria-label={`Toggle ${feat.nombre}`}
                                                         >
                                                             <span
-                                                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
-                                                                    isActiva ? 'translate-x-4' : 'translate-x-0'
-                                                                }`}
+                                                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${isActiva ? 'translate-x-4' : 'translate-x-0'
+                                                                    }`}
                                                             />
                                                         </button>
                                                     ) : (
@@ -437,14 +504,12 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                                                                     type="button"
                                                                     onClick={() => handleToggleVisibilidad('acceso', feat.id_feature)}
                                                                     disabled={!isActiva}
-                                                                    className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                                        localVisibilidadAcceso[feat.id_feature] ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-800'
-                                                                    }`}
+                                                                    className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${localVisibilidadAcceso[feat.id_feature] ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-800'
+                                                                        }`}
                                                                 >
                                                                     <span
-                                                                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
-                                                                            localVisibilidadAcceso[feat.id_feature] ? 'translate-x-3.5' : 'translate-x-0'
-                                                                        }`}
+                                                                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${localVisibilidadAcceso[feat.id_feature] ? 'translate-x-3.5' : 'translate-x-0'
+                                                                            }`}
                                                                     />
                                                                 </button>
                                                             </div>
@@ -460,14 +525,12 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
                                                                     type="button"
                                                                     onClick={() => handleToggleVisibilidad('centro', feat.id_feature)}
                                                                     disabled={!isActiva}
-                                                                    className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                                        localVisibilidadCentro[feat.id_feature] ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-850'
-                                                                    }`}
+                                                                    className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${localVisibilidadCentro[feat.id_feature] ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-850'
+                                                                        }`}
                                                                 >
                                                                     <span
-                                                                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
-                                                                            localVisibilidadCentro[feat.id_feature] ? 'translate-x-3.5' : 'translate-x-0'
-                                                                        }`}
+                                                                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${localVisibilidadCentro[feat.id_feature] ? 'translate-x-3.5' : 'translate-x-0'
+                                                                            }`}
                                                                     />
                                                                 </button>
                                                             </div>
