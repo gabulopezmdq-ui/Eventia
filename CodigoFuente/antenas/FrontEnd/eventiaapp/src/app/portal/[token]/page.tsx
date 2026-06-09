@@ -31,6 +31,9 @@ import {
     Check,
     MapPin,
     ExternalLink,
+    ChefHat,
+    Bus,
+    Camera,
 } from 'lucide-react';
 import {
     getPortalPuntual,
@@ -788,6 +791,18 @@ function RegalosSeccion({ data }: { data: any }) {
     const [subTab, setSubTab] = useState<'transferencias' | 'lista' | 'fondo'>(
         tabsHabilitadas[0] || 'transferencias'
     );
+
+    useEffect(() => {
+        const enabled: ('transferencias' | 'lista' | 'fondo')[] = [];
+        if (transferencias_habilitado) enabled.push('transferencias');
+        if (lista_habilitado) enabled.push('lista');
+        if (fondo_metas_habilitado) enabled.push('fondo');
+        
+        if (enabled.length > 0 && !enabled.includes(subTab)) {
+            setSubTab(enabled[0]);
+        }
+    }, [transferencias_habilitado, lista_habilitado, fondo_metas_habilitado, subTab]);
+
     const [copiedIndex, setCopiedIndex] = useState<{ [key: string]: boolean }>({});
 
     if (tabsHabilitadas.length === 0) {
@@ -1063,6 +1078,274 @@ function RegalosSeccion({ data }: { data: any }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Nuevos Subcomponentes Especializados por Sección (Programas y Eventos)
+// ─────────────────────────────────────────────────────────────────
+
+function ServiciosSeccion({ data }: { data: any }) {
+    if (!data) return null;
+
+    const { inscripcion = {}, participantes = [] } = data;
+
+    const formatPrice = (amount: number, currency: string) => {
+        return new Intl.NumberFormat(currency === 'EUR' ? 'es-ES' : 'es-AR', {
+            style: 'currency',
+            currency: currency || 'EUR',
+            maximumFractionDigits: 2,
+        }).format(amount);
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Resumen General de Inscripción */}
+            {inscripcion.id_inscripcion && (
+                <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+                    <div className="space-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                            Resumen de Contratación
+                        </span>
+                        <h5 className="font-extrabold text-gray-900 dark:text-white text-base">
+                            Responsable: {inscripcion.responsable}
+                        </h5>
+                        <p className="text-xs text-muted">
+                            {inscripcion.responsable_email} {inscripcion.responsable_telefono ? `· ${inscripcion.responsable_telefono}` : ''}
+                        </p>
+                    </div>
+                    <div className="bg-white dark:bg-card-bg/60 border border-emerald-500/25 px-5 py-3 rounded-2xl text-center shrink-0">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-muted block">Total General</span>
+                        <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                            {formatPrice(inscripcion.total_general, inscripcion.moneda)}
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            {/* Listado de Participantes */}
+            <div className="space-y-6">
+                {participantes.map((part: any, idx: number) => (
+                    <div key={idx} className="bg-white dark:bg-card-bg p-6 rounded-3xl border border-gray-200 dark:border-card-border space-y-5 shadow-sm transition-all duration-300 hover:shadow-md">
+                        {/* Nombre Participante */}
+                        <div className="border-b border-gray-150 dark:border-card-border/50 pb-3 flex items-center justify-between gap-3">
+                            <h5 className="font-black text-gray-900 dark:text-white text-lg">
+                                {part.participante}
+                            </h5>
+                            <span className="px-2.5 py-0.5 text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/45 text-indigo-600 dark:text-indigo-400 rounded-full uppercase tracking-wider">
+                                Participante #{part.id_invitado}
+                            </span>
+                        </div>
+
+                        {/* Períodos / Semanas */}
+                        {part.periodos && part.periodos.length > 0 && (
+                            <div className="space-y-2">
+                                <h6 className="text-[10px] font-black text-muted uppercase tracking-widest flex items-center gap-1.5">
+                                    <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
+                                    Períodos / Semanas
+                                </h6>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {part.periodos.map((per: any, perIdx: number) => (
+                                        <div key={perIdx} className="bg-neutral-50 dark:bg-black/15 p-3 rounded-xl border border-gray-100 dark:border-card-border/40 flex justify-between items-center gap-3 text-xs">
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-gray-955 dark:text-white truncate">{per.nombre}</p>
+                                                <p className="text-[10px] text-muted mt-0.5">
+                                                    {formatFecha(per.fecha_desde)} al {formatFecha(per.fecha_hasta)}
+                                                </p>
+                                            </div>
+                                            <span className="font-bold text-gray-900 dark:text-white shrink-0">
+                                                {formatPrice(per.precio_base, per.moneda)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Servicios Adicionales */}
+                        {part.servicios && part.servicios.length > 0 && (
+                            <div className="space-y-2.5">
+                                <h6 className="text-[10px] font-black text-muted uppercase tracking-widest flex items-center gap-1.5">
+                                    <Gift className="w-3.5 h-3.5 text-indigo-500" />
+                                    Servicios Adicionales
+                                </h6>
+                                <div className="divide-y divide-gray-100 dark:divide-card-border/40 bg-neutral-50 dark:bg-black/15 rounded-2xl border border-gray-100 dark:border-card-border/40 overflow-hidden">
+                                    {part.servicios.map((srv: any, srvIdx: number) => (
+                                        <div key={srvIdx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-neutral-100/40 dark:hover:bg-black/5 transition-colors">
+                                            <div className="space-y-1">
+                                                <p className="font-bold text-gray-955 dark:text-white">
+                                                    {srv.nombre}
+                                                    {srv.tipo_calculo === 'POR_DIA' && (
+                                                        <span className="ml-2 px-1.5 py-0.5 text-[8px] font-bold rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wide">
+                                                            Por Día ({srv.cantidad_calculada})
+                                                        </span>
+                                                    )}
+                                                </p>
+                                                {srv.fechas && srv.fechas.length > 0 && (
+                                                    <p className="text-[10px] text-muted flex flex-wrap gap-1">
+                                                        Fechas: {srv.fechas.map((f: string) => formatFecha(f)).join(', ')}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-extrabold text-gray-955 dark:text-white">
+                                                    {formatPrice(srv.subtotal, srv.moneda)}
+                                                </p>
+                                                <p className="text-[10px] text-muted">
+                                                    {formatPrice(srv.precio, srv.moneda)} c/u
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Restricciones Alimentarias */}
+                        {part.restricciones_alimentarias && part.restricciones_alimentarias.length > 0 && (
+                            <div className="space-y-2">
+                                <h6 className="text-[10px] font-black text-muted uppercase tracking-widest flex items-center gap-1.5">
+                                    <ChefHat className="w-3.5 h-3.5 text-rose-500" />
+                                    Restricciones Alimentarias / Alergias
+                                </h6>
+                                <div className="space-y-2">
+                                    {part.restricciones_alimentarias.map((rest: any, restIdx: number) => (
+                                        <div key={restIdx} className={`p-3.5 rounded-xl border flex gap-3 text-xs ${
+                                            rest.requiere_alerta_visual
+                                                ? 'bg-rose-500/5 border-rose-500/20 text-rose-600 dark:text-rose-400'
+                                                : 'bg-neutral-50 dark:bg-black/15 border-gray-150 dark:border-card-border/40 text-muted'
+                                        }`}>
+                                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="font-extrabold text-gray-900 dark:text-white">
+                                                    {rest.texto}
+                                                    <span className="ml-2 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-background border">
+                                                        {rest.categoria}
+                                                    </span>
+                                                </p>
+                                                {rest.observaciones && (
+                                                    <p className="text-[10px] mt-1 leading-relaxed italic opacity-90">
+                                                        Observaciones: {rest.observaciones}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+
+                {participantes.length === 0 && (
+                    <div className="p-8 text-center text-sm text-muted bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-card-border">
+                        No hay participantes inscritos asociados a esta cuenta.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function ParticipantesSeccion({ data }: { data: any[] }) {
+    if (!data || data.length === 0) {
+        return (
+            <div className="p-8 text-center text-sm text-muted bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-card-border">
+                No hay integrantes o participantes para mostrar.
+            </div>
+        );
+    }
+    return (
+        <div className="space-y-4">
+            <h4 className="font-bold text-gray-955 dark:text-white text-sm uppercase tracking-wider">
+                Integrantes del Grupo
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {data.map((part, idx) => (
+                    <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex gap-4 items-center">
+                        <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 font-extrabold text-sm">
+                            {part.nombre ? part.nombre[0].toUpperCase() : 'P'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="font-bold text-gray-950 dark:text-white truncate">{part.nombre} {part.apellido || ''}</p>
+                            <p className="text-xs text-muted truncate">{part.tipo_acceso || 'Participante'}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function TransporteSeccion({ data }: { data: any }) {
+    if (!data) return null;
+    return (
+        <div className="bg-white dark:bg-card-bg p-6 rounded-3xl border border-gray-200 dark:border-card-border space-y-4 shadow-sm">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                    <Bus className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="font-extrabold text-gray-950 dark:text-white text-base">Traslados y Transporte</h4>
+                    <p className="text-xs text-muted">Información sobre coordinaciones y rutas de traslado.</p>
+                </div>
+            </div>
+            <div className="bg-neutral-50 dark:bg-black/15 p-4 rounded-2xl text-xs space-y-3 leading-relaxed text-muted">
+                {data.colectivo_ruta && <p><strong>Ruta / Colectivo:</strong> {data.colectivo_ruta}</p>}
+                {data.horario_salida && <p><strong>Horario Salida:</strong> {data.horario_salida} hs</p>}
+                {data.punto_encuentro && <p><strong>Punto de Encuentro:</strong> {data.punto_encuentro}</p>}
+                {data.observaciones && <p className="italic">Nota: {data.observaciones}</p>}
+                {!data.colectivo_ruta && <p className="italic text-center py-4">No se ha asignado una ruta de transporte para tu grupo.</p>}
+            </div>
+        </div>
+    );
+}
+
+function FotosSeccion({ data }: { data: any }) {
+    return (
+        <div className="bg-white dark:bg-card-bg p-6 rounded-3xl border border-gray-200 dark:border-card-border space-y-4 shadow-sm">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center shrink-0">
+                    <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="font-extrabold text-gray-955 dark:text-white text-base">Álbum de Fotos</h4>
+                    <p className="text-xs text-muted">Reviví los mejores momentos y compartí tus capturas.</p>
+                </div>
+            </div>
+            <div className="p-8 text-center text-sm text-muted bg-neutral-50 dark:bg-black/15 rounded-2xl border border-gray-100 dark:border-card-border/40">
+                <p>Las fotos del evento estarán disponibles una vez finalizado o durante la jornada.</p>
+            </div>
+        </div>
+    );
+}
+
+function SaludAccionesSeccion({ data }: { data: any[] }) {
+    if (!data || data.length === 0) {
+        return (
+            <div className="p-8 text-center text-sm text-muted bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-card-border">
+                No hay novedades o registros de enfermería para el día de hoy.
+            </div>
+        );
+    }
+    return (
+        <div className="space-y-4">
+            <h4 className="font-bold text-gray-955 dark:text-white text-sm uppercase tracking-wider">
+                Bitácora de Enfermería y Alertas
+            </h4>
+            <div className="space-y-3">
+                {data.map((log, idx) => (
+                    <div key={idx} className="bg-white dark:bg-card-bg p-4 rounded-xl border border-rose-500/10 flex gap-3 text-xs">
+                        <HeartPulse className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold text-gray-900 dark:text-white">{log.tipo_registro || 'Control Médico'}</p>
+                            <p className="text-muted mt-0.5 leading-relaxed">{log.descripcion || log.observacion}</p>
+                            <span className="text-[10px] text-muted block mt-1">Registrado el {new Date(log.fecha).toLocaleString()}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Subcomponente Principal: Visualizadores de datos por sección
 // ─────────────────────────────────────────────────────────────────
 
@@ -1135,6 +1418,26 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
 
     if (codigoUpper === 'REGALOS') {
         return <RegalosSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'SERVICIOS') {
+        return <ServiciosSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'PARTICIPANTES' || codigoUpper === 'INTEGRANTES') {
+        return <ParticipantesSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'TRANSPORTE') {
+        return <TransporteSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'FOTOS') {
+        return <FotosSeccion data={data} />;
+    }
+
+    if (codigoUpper === 'SALUD_ACCIONES') {
+        return <SaludAccionesSeccion data={data} />;
     }
 
     if (codigoUpper === 'PAGOS') {
@@ -1411,11 +1714,14 @@ export default function PortalPage({
     const getActiveData = () => {
         if (!seccionActiva) return null;
         const cod = seccionActiva.codigo.toLowerCase();
-        if (cod === 'autorizaciones' || cod === 'retiros' || cod === 'qrsretiro') {
+        if (cod === 'autorizaciones' || cod === 'retiros' || cod === 'qrsretiro' || cod === 'qrs_retiro') {
             return data.qrsRetiro;
         }
         if (cod === 'fichas_medicas' || cod === 'salud') {
             return data.salud;
+        }
+        if (cod === 'salud_acciones' || cod === 'saludacciones') {
+            return data.saludAcciones ?? data.salud_acciones;
         }
         return data[cod as keyof typeof data];
     };
