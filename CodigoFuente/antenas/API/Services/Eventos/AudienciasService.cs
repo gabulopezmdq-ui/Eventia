@@ -1,4 +1,4 @@
-﻿using API.DataSchema;
+using API.DataSchema;
 using API.DataSchema.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,10 +12,12 @@ namespace API.Services
     public class AudienciasService : IAudienciasService
     {
         private readonly DataContext _context;
+        private readonly MiEventiaService _miEventiaService;
 
-        public AudienciasService(DataContext context)
+        public AudienciasService(DataContext context, MiEventiaService miEventiaService)
         {
             _context = context;
+            _miEventiaService = miEventiaService;
         }
 
         public async Task<EventoCaptacionRegistroResponse> RegistrarDesdeLinkAsync(string token, EventoCaptacionRegistroRequest req)
@@ -139,6 +141,23 @@ namespace API.Services
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Vincular acceso a Mi-Eventia para el invitado existente
+                if (!string.IsNullOrWhiteSpace(invitadoExistente.email) || !string.IsNullOrWhiteSpace(invitadoExistente.celular))
+                {
+                    await _miEventiaService.VincularAccesoAsync(
+                        nombre: $"{invitadoExistente.nombre} {invitadoExistente.apellido}".Trim(),
+                        email: invitadoExistente.email,
+                        telefono: invitadoExistente.celular,
+                        tipo: "EVENTO",
+                        idEvento: invitadoExistente.id_evento,
+                        idInscripcion: 0,
+                        idInvitado: invitadoExistente.id_invitado,
+                        tokenConsulta: invitadoExistente.rsvp_token,
+                        titulo: evento?.anfitriones_texto ?? "Evento",
+                        estado: "ACTIVO"
+                    );
+                }
 
                 var beneficioExistente = await _context.Set<ef_evento_beneficios_registro>()
                     .AsNoTracking()
@@ -339,6 +358,23 @@ namespace API.Services
                 });
 
                 await _context.SaveChangesAsync();
+
+                // Vincular acceso a Mi-Eventia para el nuevo invitado
+                if (!string.IsNullOrWhiteSpace(invitado.email) || !string.IsNullOrWhiteSpace(invitado.celular))
+                {
+                    await _miEventiaService.VincularAccesoAsync(
+                        nombre: $"{invitado.nombre} {invitado.apellido}".Trim(),
+                        email: invitado.email,
+                        telefono: invitado.celular,
+                        tipo: "EVENTO",
+                        idEvento: invitado.id_evento,
+                        idInscripcion: 0,
+                        idInvitado: invitado.id_invitado,
+                        tokenConsulta: invitado.rsvp_token,
+                        titulo: evento?.anfitriones_texto ?? "Evento",
+                        estado: "ACTIVO"
+                    );
+                }
             }
 
             await tx.CommitAsync();
