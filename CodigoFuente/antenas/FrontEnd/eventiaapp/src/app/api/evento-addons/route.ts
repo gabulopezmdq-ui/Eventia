@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// GET /evento-features?idEvento={id}
-// PUT /evento-features?idEvento={id} (body: string[]) -> Mapea a SetActivosBulk
+// GET /api/evento-addons?idEvento={id}
 export async function GET(request: NextRequest) {
     try {
         const cookieStore = await cookies();
@@ -15,20 +14,23 @@ export async function GET(request: NextRequest) {
         const idEvento = request.nextUrl.searchParams.get('idEvento');
         if (!idEvento) return NextResponse.json({ message: 'idEvento es requerido' }, { status: 400 });
 
-        const res = await fetch(`${API_URL}/evento_features/GetByEvento?idEvento=${idEvento}`, {
+        const res = await fetch(`${API_URL}/evento_addons/GetByEvento?idEvento=${idEvento}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!res.ok) return NextResponse.json({ message: 'Error' }, { status: res.status });
+        if (!res.ok) {
+            return NextResponse.json({ message: 'Error al obtener addons del evento' }, { status: res.status });
+        }
 
         return NextResponse.json(await res.json());
     } catch (error) {
-        return NextResponse.json({ message: 'Error interno' }, { status: 500 });
+        return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
     }
 }
 
-export async function PUT(request: NextRequest) {
+// POST /api/evento-addons?idEvento={id}
+export async function POST(request: NextRequest) {
     try {
         const cookieStore = await cookies();
         const token = cookieStore.get('access_token')?.value;
@@ -38,26 +40,24 @@ export async function PUT(request: NextRequest) {
         const idEvento = request.nextUrl.searchParams.get('idEvento');
         if (!idEvento) return NextResponse.json({ message: 'idEvento es requerido' }, { status: 400 });
 
-        const body = await request.json(); // array de códigos de feature [ 'REGALOS', 'MUSICA' ]
+        const body = await request.json(); // { id_addon, mercado, moneda }
 
-        const res = await fetch(`${API_URL}/evento_features/SetActivosBulk?idEvento=${idEvento}`, {
-            method: 'PUT',
-            headers: { 
+        const res = await fetch(`${API_URL}/evento_addons/Solicitar?idEvento=${idEvento}`, {
+            method: 'POST',
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(body)
         });
 
         if (!res.ok) {
-            const errText = await res.text();
-            console.error("BACKEND PUT FEATURES ERROR:", res.status, errText);
-            return NextResponse.json({ message: 'Error al guardar features', detail: errText }, { status: res.status });
+            const errorText = await res.text();
+            return NextResponse.json({ message: errorText || 'Error al solicitar el addon' }, { status: res.status });
         }
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json(await res.json());
     } catch (error) {
-        console.error("PROXY PUT FEATURES EXCEPTION:", error);
-        return NextResponse.json({ message: 'Error interno' }, { status: 500 });
+        return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
     }
 }

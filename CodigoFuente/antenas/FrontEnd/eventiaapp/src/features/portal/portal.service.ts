@@ -179,11 +179,11 @@ export async function getPortalPuntual(
         tipoPortal: data.tipoPortal ?? data.tipo_portal ?? 'EVENTO',
         idEvento: data.idEvento ?? data.id_evento ?? 0,
         evento: {
-            nombre: data.evento?.nombre ?? data.evento?.titulo ?? '',
-            fecha_inicio: data.evento?.fecha_inicio ?? data.evento?.fechaInicio ?? '',
-            fecha_fin: data.evento?.fecha_fin ?? data.evento?.fechaFin ?? '',
-            logo_url: data.evento?.logo_url ?? data.evento?.logoUrl ?? null,
-            estado: data.evento?.estado ?? 'ACTIVO',
+            nombre: data.evento?.nombre ?? data.evento?.titulo ?? data.data?.resumen?.titulo ?? data.data?.resumen?.nombre ?? '',
+            fecha_inicio: data.evento?.fecha_inicio ?? data.evento?.fechaInicio ?? data.data?.resumen?.fecha_inicio ?? data.data?.resumen?.fecha_evento ?? '',
+            fecha_fin: data.evento?.fecha_fin ?? data.evento?.fechaFin ?? data.data?.resumen?.fecha_fin ?? data.data?.resumen?.fecha_evento ?? '',
+            logo_url: data.evento?.logo_url ?? data.evento?.logoUrl ?? data.data?.resumen?.logo_url ?? null,
+            estado: data.evento?.estado ?? data.data?.resumen?.estado ?? 'ACTIVO',
         },
         usuario: {
             nombre: data.usuario?.nombre ?? '',

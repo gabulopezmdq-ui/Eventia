@@ -43,6 +43,17 @@ export interface Event {
     esPublico?: boolean;
     /** Versión snake_case de esPublico */
     es_publico?: boolean;
+    infoPublica?: string | null;
+    info_publica?: string | null;
+    estadoObservacionActual?: string | null;
+}
+
+export interface EstadoHistorial {
+    fecha: string;
+    estado: string;
+    estadoDescripcion: string;
+    usuario: string;
+    observaciones: string;
 }
 
 /**

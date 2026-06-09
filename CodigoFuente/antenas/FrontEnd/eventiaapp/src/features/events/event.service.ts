@@ -3,7 +3,7 @@ import {
     PlantillaEvento, PlantillaTramo, DressCode,
     PlantillaDetalle, AplicarPlantillaPayload,
     EstructuraEvento, TramoEvento, AccesoEvento,
-    TramoTipo, CrearEstructuraManualPayload // Agregados para manual flow
+    TramoTipo, CrearEstructuraManualPayload, EstadoHistorial // Agregados para manual flow
 } from './types';
 
 const API_URL = '/api'; // Apuntamos a nuestro Proxy de Next.js
@@ -68,6 +68,9 @@ export async function getMyEvents(): Promise<Event[]> {
         id_dress_code: item.idDressCode,
         dress_code_descripcion: item.dressCodeDescripcion,
         tipoOperacion: item.tipoOperacion,
+        infoPublica: item.infoPublica ?? item.info_publica,
+        info_publica: item.info_publica ?? item.infoPublica,
+        estadoObservacionActual: item.estadoObservacionActual,
     })) as Event[];
 }
 
@@ -111,6 +114,9 @@ export async function getEventById(id: string): Promise<Event> {
         idPais: item.idPais,
         esPublico: item.esPublico,
         es_publico: item.esPublico,
+        infoPublica: item.infoPublica ?? item.info_publica,
+        info_publica: item.info_publica ?? item.infoPublica,
+        estadoObservacionActual: item.estadoObservacionActual,
     } as Event;
 }
 
@@ -239,6 +245,9 @@ export async function getAdminEventById(id: string): Promise<Event> {
         idPais: item.idPais,
         esPublico: item.esPublico,
         es_publico: item.esPublico,
+        infoPublica: item.infoPublica ?? item.info_publica,
+        info_publica: item.info_publica ?? item.infoPublica,
+        estadoObservacionActual: item.estadoObservacionActual,
     } as Event;
 }
 
@@ -482,4 +491,88 @@ export async function crearEstructuraManual(
 
     return res.json();
 }
+
+export async function updateEventGeneral(id: number, data: any): Promise<void> {
+    const res = await fetch(`${API_URL}/events/${id}/general`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al actualizar datos generales');
+    }
+}
+
+export async function activateEventManual(id: number): Promise<void> {
+    const res = await fetch(`${API_URL}/events/${id}/activar`, {
+        method: 'PUT',
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al activar el evento');
+    }
+}
+
+export async function closeEvent(id: number, observaciones: string): Promise<void> {
+    const res = await fetch(`${API_URL}/events/${id}/cerrar`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ observaciones }),
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al cerrar el evento');
+    }
+}
+
+export async function cancelEvent(id: number, observaciones: string): Promise<void> {
+    const res = await fetch(`${API_URL}/events/${id}/anular`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ observaciones }),
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al anular el evento');
+    }
+}
+
+export async function reopenEvent(id: number, observaciones: string): Promise<void> {
+    const res = await fetch(`${API_URL}/events/${id}/reabrir`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ observaciones }),
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Error al reabrir el evento');
+    }
+}
+
+export async function getEventStateHistory(id: number): Promise<EstadoHistorial[]> {
+    const res = await fetch(`${API_URL}/events/${id}/historial-estados`, {
+        method: 'GET',
+    });
+
+    if (!res.ok) {
+        throw new Error('Error al obtener el historial de estados');
+    }
+
+    return res.json();
+}
+
 
