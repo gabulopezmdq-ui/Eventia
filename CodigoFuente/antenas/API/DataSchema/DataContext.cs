@@ -216,6 +216,13 @@ namespace API.DataSchema
         //historial
         public DbSet<ef_evento_historial> ef_evento_historial { get; set; }
 
+        //eventia-live
+        public DbSet<ef_evento_live_dinamicas> ef_evento_live_dinamicas { get; set; }
+        public DbSet<ef_evento_live_dinamica_opciones> ef_evento_live_dinamica_opciones { get; set; }
+        public DbSet<ef_evento_live_respuestas> ef_evento_live_respuestas { get; set; }
+        public DbSet<ef_evento_live_premios> ef_evento_live_premios { get; set; }
+        public DbSet<ef_evento_live_ganadores> ef_evento_live_ganadores { get; set; }
+
 
         /*public DbSet<MEC_CarRevista> MEC_CarRevista { get; set; }
         public DbSet<MEC_Conceptos> MEC_Conceptos { get; set; }
@@ -455,6 +462,12 @@ namespace API.DataSchema
             //historial
             modelBuilder.ApplyConfiguration(new ef_evento_historialConfiguration());
 
+            //eventia-live
+            modelBuilder.ApplyConfiguration(new ef_evento_live_dinamicasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_live_dinamica_opcionesConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_live_respuestasConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_live_premiosConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_evento_live_ganadoresConfiguration());
 
             // Likes: Clave primaria compuesta
             modelBuilder.Entity<ef_evento_album_likes>()

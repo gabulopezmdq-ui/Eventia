@@ -43,4 +43,6 @@
     public bool permite_centro_evento { get; set; }
     public bool permite_acceso_programa { get; set; }
     public bool permite_centro_programa { get; set; }
+    public bool aplica_evento { get; set; }
+    public bool aplica_programa { get; set; }
 }
