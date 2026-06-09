@@ -869,7 +869,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     </div>
 
                     {/* Features / Modulos Toggles */}
-                    <FeaturesEventoManager idEvento={idEventoLong} />
+                    <FeaturesEventoManager idEvento={idEventoLong} tipoOperacion={event.tipoOperacion as 'EVENTO' | 'PROGRAMA'} />
 
                     {/* Timeline de Historial de Estados */}
                     <section className="p-6 rounded-2xl bg-card-bg border border-card-border space-y-6">

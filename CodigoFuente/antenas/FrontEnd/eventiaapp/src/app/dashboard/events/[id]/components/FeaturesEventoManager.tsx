@@ -19,6 +19,16 @@ interface FeatureEfectiva {
     incluida_por_addon: boolean;
     activo_evento: boolean | null;
     activo_resuelto: boolean;
+    // Visibilidad
+    visible_acceso_evento?: boolean;
+    visible_centro_evento?: boolean;
+    visible_acceso_programa?: boolean;
+    visible_centro_programa?: boolean;
+    // Permisos
+    permite_acceso_evento?: boolean;
+    permite_centro_evento?: boolean;
+    permite_acceso_programa?: boolean;
+    permite_centro_programa?: boolean;
 }
 
 interface FeaturesEfectivasResponse {
@@ -31,6 +41,7 @@ interface FeaturesEfectivasResponse {
 
 interface FeaturesEventoProps {
     idEvento: number;
+    tipoOperacion?: 'EVENTO' | 'PROGRAMA';
 }
 
 function getCategoryIcon(category: string) {
@@ -88,10 +99,12 @@ function getFeatureIcon(codigo: string) {
     return <Layers className="w-4 h-4 text-muted" />;
 }
 
-export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps) {
+export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENTO' }: FeaturesEventoProps) {
     const [planNombre, setPlanNombre] = useState<string>('');
     const [features, setFeatures] = useState<FeatureEfectiva[]>([]);
     const [localActivas, setLocalActivas] = useState<Record<number, boolean>>({});
+    const [localVisibilidadAcceso, setLocalVisibilidadAcceso] = useState<Record<number, boolean>>({});
+    const [localVisibilidadCentro, setLocalVisibilidadCentro] = useState<Record<number, boolean>>({});
     const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
     const [loading, setLoading] = useState(true);
@@ -111,19 +124,30 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
             const feats = data.features || [];
             setFeatures(feats);
 
-            // Initialize local toggle state using active_resuelto
+            // Initialize local toggle state using active_resuelto and visibilities
             const initialMap: Record<number, boolean> = {};
+            const initialAccesoMap: Record<number, boolean> = {};
+            const initialCentroMap: Record<number, boolean> = {};
             feats.forEach((f) => {
                 initialMap[f.id_feature] = f.activo_resuelto;
+                if (tipoOperacion === 'EVENTO') {
+                    initialAccesoMap[f.id_feature] = f.visible_acceso_evento ?? false;
+                    initialCentroMap[f.id_feature] = f.visible_centro_evento ?? false;
+                } else {
+                    initialAccesoMap[f.id_feature] = f.visible_acceso_programa ?? false;
+                    initialCentroMap[f.id_feature] = f.visible_centro_programa ?? false;
+                }
             });
             setLocalActivas(initialMap);
+            setLocalVisibilidadAcceso(initialAccesoMap);
+            setLocalVisibilidadCentro(initialCentroMap);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Error al conectar con la API';
             setError(message);
         } finally {
             setLoading(false);
         }
-    }, [idEvento]);
+    }, [idEvento, tipoOperacion]);
 
     useEffect(() => {
         if (idEvento) fetchData();
@@ -139,6 +163,21 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
         setSaveSuccess(false);
     };
 
+    const handleToggleVisibilidad = (type: 'acceso' | 'centro', idFeature: number) => {
+        if (type === 'acceso') {
+            setLocalVisibilidadAcceso(prev => ({
+                ...prev,
+                [idFeature]: !prev[idFeature]
+            }));
+        } else {
+            setLocalVisibilidadCentro(prev => ({
+                ...prev,
+                [idFeature]: !prev[idFeature]
+            }));
+        }
+        setSaveSuccess(false);
+    };
+
     const toggleCategory = (category: string) => {
         setCollapsedCategories(prev => ({
             ...prev,
@@ -150,13 +189,20 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
         setSaving(true);
         setSaveSuccess(false);
         try {
-            // Bulk update payload requires mapping to items [{ id_feature, activo }]
+            // Bulk update payload requires mapping to items with visibilities
             const items = features
                 .filter(f => f.incluida_en_plan || f.incluida_por_addon)
-                .map(f => ({
-                    id_feature: f.id_feature,
-                    activo: !!localActivas[f.id_feature]
-                }));
+                .map(f => {
+                    const isActivo = !!localActivas[f.id_feature];
+                    return {
+                        id_feature: f.id_feature,
+                        activo: isActivo,
+                        visible_acceso_evento: tipoOperacion === 'EVENTO' ? (isActivo && !!localVisibilidadAcceso[f.id_feature]) : false,
+                        visible_centro_evento: tipoOperacion === 'EVENTO' ? (isActivo && !!localVisibilidadCentro[f.id_feature]) : false,
+                        visible_acceso_programa: tipoOperacion === 'PROGRAMA' ? (isActivo && !!localVisibilidadAcceso[f.id_feature]) : false,
+                        visible_centro_programa: tipoOperacion === 'PROGRAMA' ? (isActivo && !!localVisibilidadCentro[f.id_feature]) : false,
+                    };
+                });
 
             const res = await fetch(`/api/evento-features?idEvento=${idEvento}`, {
                 method: 'PUT',
@@ -228,13 +274,13 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
             <div className="p-6 border-b border-card-border/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-accent/[0.04] via-transparent to-transparent">
                 <div>
                     <h3 className="text-base font-extrabold text-foreground flex items-center gap-2.5">
-                        Características del Evento
+                        Características del {tipoOperacion === 'EVENTO' ? 'Evento' : 'Programa'}
                         <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full bg-accent/10 text-accent border border-accent/20">
                             Plan: {planNombre}
                         </span>
                     </h3>
                     <p className="text-xs text-muted mt-1.5">
-                        Activá o desactivá las funcionalidades que querés usar en este evento.
+                        Activá o desactivá las funcionalidades que querés usar en este {tipoOperacion === 'EVENTO' ? 'evento' : 'programa'}.
                     </p>
                 </div>
                 
@@ -296,6 +342,15 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
                                         const isActiva = !!localActivas[feat.id_feature];
                                         const disponible = feat.incluida_en_plan || feat.incluida_por_addon;
 
+                                        // Determinar permisos de visibilidad
+                                        const permiteAcceso = tipoOperacion === 'EVENTO' 
+                                            ? (feat.permite_acceso_evento !== false) 
+                                            : (feat.permite_acceso_programa !== false);
+
+                                        const permiteCentro = tipoOperacion === 'EVENTO' 
+                                            ? (feat.permite_centro_evento !== false) 
+                                            : (feat.permite_centro_programa !== false);
+
                                         // Determinar origen de la feature
                                         let originLabel = 'No incluido';
                                         let originClass = 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800/40 dark:text-neutral-500 border-neutral-200/50';
@@ -317,7 +372,7 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
                                         return (
                                             <div
                                                 key={feat.id_feature}
-                                                className={`p-4 rounded-xl border transition-all duration-300 flex flex-col justify-between h-full min-h-[140px] ${
+                                                className={`p-4 rounded-xl border transition-all duration-300 flex flex-col justify-between h-full min-h-[160px] ${
                                                     isActiva && disponible
                                                         ? 'border-accent/30 bg-accent/[0.015] dark:border-accent/20 dark:bg-accent/[0.005] shadow-[0_0_15px_rgba(129,140,248,0.01)]'
                                                         : 'border-card-border bg-neutral-50/30 dark:bg-neutral-900/10 hover:border-card-border/80 dark:hover:border-neutral-800'
@@ -369,8 +424,59 @@ export default function FeaturesEventoManager({ idEvento }: FeaturesEventoProps)
                                                     )}
                                                 </div>
 
+                                                {/* Visibilidad Toggles */}
+                                                {disponible && (
+                                                    <div className={`mt-4 pt-3 border-t border-card-border/30 flex flex-col gap-2.5 text-xs transition-opacity duration-200 ${isActiva ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                                                        {/* Acceso Toggle */}
+                                                        {permiteAcceso && (
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <span className="font-semibold text-muted text-[11px]">
+                                                                    {tipoOperacion === 'EVENTO' ? 'Mostrar en invitación / RSVP' : 'Mostrar en inscripción pública'}
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleToggleVisibilidad('acceso', feat.id_feature)}
+                                                                    disabled={!isActiva}
+                                                                    className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                                        localVisibilidadAcceso[feat.id_feature] ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-800'
+                                                                    }`}
+                                                                >
+                                                                    <span
+                                                                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                                                                            localVisibilidadAcceso[feat.id_feature] ? 'translate-x-3.5' : 'translate-x-0'
+                                                                        }`}
+                                                                    />
+                                                                </button>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Centro Toggle */}
+                                                        {permiteCentro && (
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <span className="font-semibold text-muted text-[11px]">
+                                                                    {tipoOperacion === 'EVENTO' ? 'Mostrar en portal del invitado' : 'Mostrar en portal de responsable'}
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleToggleVisibilidad('centro', feat.id_feature)}
+                                                                    disabled={!isActiva}
+                                                                    className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                                        localVisibilidadCentro[feat.id_feature] ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-850'
+                                                                    }`}
+                                                                >
+                                                                    <span
+                                                                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                                                                            localVisibilidadCentro[feat.id_feature] ? 'translate-x-3.5' : 'translate-x-0'
+                                                                        }`}
+                                                                    />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 {!disponible && (
-                                                    <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-amber-600 dark:text-amber-450 mt-3 bg-amber-500/5 p-2 rounded-xl border border-amber-500/10">
+                                                    <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-amber-600 dark:text-amber-450 mt-3 bg-amber-50/5 p-2 rounded-xl border border-amber-500/10">
                                                         <div className="flex items-center gap-1.5">
                                                             <Sparkles className="w-3 h-3 shrink-0 animate-pulse" />
                                                             <span>Adquirible como Add-on.</span>
