@@ -39,6 +39,14 @@ namespace API.DataSchema.ModelConfiguration
             builder.Property(x => x.visible_centro_programa_default)
                 .HasColumnName("visible_centro_programa_default")
                 .IsRequired();
+            
+            builder.Property(x => x.aplica_evento)
+                .HasColumnName("aplica_evento")
+                .IsRequired();
+
+            builder.Property(x => x.aplica_programa)
+                .HasColumnName("aplica_programa")
+                .IsRequired();
 
             builder.Property(x => x.config_json).HasColumnType("jsonb");
 

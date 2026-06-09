@@ -3,10 +3,11 @@ using API.DataSchema;
 using API.Repositories;
 using API.Services;
 using API.Services.Cuentas;
+using API.Services.EventiaLive;
 using API.Services.Eventos;
-using API.Services.Eventos.Features;
 using API.Services.Eventos.Agenda;
 using API.Services.Eventos.Checklist;
+using API.Services.Eventos.Features;
 using API.Services.Eventos.Historial;
 using API.Services.Eventos.Novedades;
 using API.Services.Features;
@@ -242,6 +243,9 @@ builder.Services.AddScoped<IEventoChecklistService, EventoChecklistService>();
 
 //historial
 builder.Services.AddScoped<IEventoHistorialService, EventoHistorialService>();
+
+//Eventia-Live
+builder.Services.AddScoped<IEventoLiveService, EventoLiveService>();
 
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));

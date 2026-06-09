@@ -94,26 +94,31 @@ namespace API.Controllers
                 trialDto.current_period_end = null;
             }
 
-            var addonsEvento = await GetAddonsActivosAsync("EVENTO", idEvento, null);
+            var addonsEvento = await GetAddonsActivosAsync("EVENTO", idEvento, null, esPrograma);
             var addonsCuenta = new List<AddonActivoDTO>();
 
             if (idCuenta.HasValue)
-                addonsCuenta = await GetAddonsActivosAsync("CUENTA", null, idCuenta.Value);
+                addonsCuenta = await GetAddonsActivosAsync("CUENTA", null, idCuenta.Value, esPrograma);
 
             var planFeatureIds = new HashSet<long>();
             var planOverridesByFeature = new Dictionary<long, string?>();
 
             if (idPlan.HasValue)
             {
-                var planFeatures = await _context.ef_plan_features
-                    .AsNoTracking()
-                    .Where(pf => pf.id_plan == idPlan.Value && pf.activo == true)
-                    .Select(pf => new
+                var planFeatures = await (
+                    from pf in _context.ef_plan_features.AsNoTracking()
+                    join f in _context.ef_param_features.AsNoTracking()
+                        on pf.id_feature equals f.id_feature
+                    where pf.id_plan == idPlan.Value
+                       && pf.activo == true
+                       && f.activo == true
+                       && (esPrograma ? f.aplica_programa == true : f.aplica_evento == true)
+                    select new
                     {
                         pf.id_feature,
                         pf.config_json_override
-                    })
-                    .ToListAsync();
+                    }
+                ).ToListAsync();
 
                 foreach (var pf in planFeatures)
                 {
@@ -127,25 +132,29 @@ namespace API.Controllers
             var addonOverridesByFeature = new Dictionary<long, string?>();
 
             if (addonsEvento.Count > 0)
-                await CargarAddonFeaturesAsync(addonsEvento, addonEventoFeatureIds, addonOverridesByFeature);
+                await CargarAddonFeaturesAsync(addonsEvento, addonEventoFeatureIds, addonOverridesByFeature, esPrograma);
 
             if (addonsCuenta.Count > 0)
-                await CargarAddonFeaturesAsync(addonsCuenta, addonCuentaFeatureIds, addonOverridesByFeature);
+                await CargarAddonFeaturesAsync(addonsCuenta, addonCuentaFeatureIds, addonOverridesByFeature, esPrograma);
 
             var eventoOverridesByFeature = new Dictionary<long, string?>();
             var eventoActivosByFeature = new Dictionary<long, bool>();
             var eventoVisibilidadByFeature = new Dictionary<long, ef_evento_feature_visibilidad>();
 
-            var eventoFeatures = await _context.ef_evento_features
-                .AsNoTracking()
-                .Where(ef => ef.id_evento == idEvento)
-                .Select(ef => new
+            var eventoFeatures = await (
+                from ef in _context.ef_evento_features.AsNoTracking()
+                join f in _context.ef_param_features.AsNoTracking()
+                    on ef.id_feature equals f.id_feature
+                where ef.id_evento == idEvento
+                   && f.activo == true
+                   && (esPrograma ? f.aplica_programa == true : f.aplica_evento == true)
+                select new
                 {
                     ef.id_feature,
                     ef.activo,
                     ef.config_json
-                })
-                .ToListAsync();
+                }
+            ).ToListAsync();
 
             foreach (var ef in eventoFeatures)
             {
@@ -168,7 +177,24 @@ namespace API.Controllers
             foreach (var id in addonCuentaFeatureIds) seedIds.Add(id);
             foreach (var id in eventoActivosByFeature.Keys) seedIds.Add(id);
 
-            var allIds = await ExpandirDependenciasAsync(seedIds);
+            var catalogoAplicableIds = await _context.ef_param_features
+                .AsNoTracking()
+                .Where(f =>
+                    f.activo == true &&
+                    (esPrograma ? f.aplica_programa == true : f.aplica_evento == true))
+                .Select(f => f.id_feature)
+                .ToListAsync();
+
+            foreach (var id in catalogoAplicableIds)
+                seedIds.Add(id);
+
+            var allIds = await ExpandirDependenciasAsync(seedIds, esPrograma);
+
+            var catalogoAplicableSet = catalogoAplicableIds.ToHashSet();
+
+            allIds = allIds
+                .Where(id => catalogoAplicableSet.Contains(id))
+                .ToHashSet();
 
             var featureDefaults = await _context.ef_param_features
                 .AsNoTracking()
@@ -185,7 +211,10 @@ namespace API.Controllers
 
             var featuresFinales = await _context.ef_param_features
                 .AsNoTracking()
-                .Where(f => allIds.Contains(f.id_feature) && f.activo == true)
+                .Where(f =>
+                    allIds.Contains(f.id_feature) &&
+                    f.activo == true &&
+                    (esPrograma ? f.aplica_programa == true : f.aplica_evento == true))
                 .Select(f => new FeatureEfectivaDTO
                 {
                     id_feature = f.id_feature,
@@ -194,6 +223,9 @@ namespace API.Controllers
                     descripcion = f.descripcion,
                     categoria = f.categoria,
                     monetizable = f.monetizable,
+
+                    aplica_evento = f.aplica_evento,
+                    aplica_programa = f.aplica_programa,
 
                     config_default = f.config_json,
                     config_plan_override = null,
@@ -365,7 +397,7 @@ namespace API.Controllers
             return Ok(resp);
         }
 
-        private async Task<List<AddonActivoDTO>> GetAddonsActivosAsync(string scope, long? idEvento, long? idCuenta)
+        private async Task<List<AddonActivoDTO>> GetAddonsActivosAsync(string scope, long? idEvento, long? idCuenta, bool esPrograma)
         {
             var now = DateTimeOffset.UtcNow;
 
@@ -376,6 +408,7 @@ namespace API.Controllers
                 where sa.scope == scope
                       && sa.activo == true
                       && sa.estado == "ACTIVO"
+                      && ad.activo == true
                       && (sa.fecha_hasta == null || sa.fecha_hasta > now)
                 select new { sa, ad };
 
@@ -415,6 +448,7 @@ namespace API.Controllers
                 where addonIds.Contains(af.id_addon)
                    && af.activo == true
                    && f.activo == true
+                   && (esPrograma ? f.aplica_programa == true : f.aplica_evento == true)
                 orderby f.categoria, f.codigo
                 select new
                 {
@@ -447,26 +481,37 @@ namespace API.Controllers
                         : "MULTIPLE";
             }
 
-            return addons;
+            return addons
+                .Where(a => a.features != null && a.features.Count > 0)
+                .ToList();
         }
 
         private async Task CargarAddonFeaturesAsync(
             List<AddonActivoDTO> addons,
             HashSet<long> targetFeatureIds,
-            Dictionary<long, string?> addonOverridesByFeature)
+            Dictionary<long, string?> addonOverridesByFeature,
+            bool esPrograma)
         {
             var addonIds = addons.Select(a => a.id_addon).Distinct().ToList();
 
-            var addonFeatures = await _context.ef_addon_features
-                .AsNoTracking()
-                .Where(af => addonIds.Contains(af.id_addon) && af.activo == true)
-                .Select(af => new
+            if (addonIds.Count == 0)
+                return;
+
+            var addonFeatures = await (
+                from af in _context.ef_addon_features.AsNoTracking()
+                join f in _context.ef_param_features.AsNoTracking()
+                    on af.id_feature equals f.id_feature
+                where addonIds.Contains(af.id_addon)
+                   && af.activo == true
+                   && f.activo == true
+                   && (esPrograma ? f.aplica_programa == true : f.aplica_evento == true)
+                select new
                 {
                     af.id_addon,
                     af.id_feature,
                     af.config_json_override
-                })
-                .ToListAsync();
+                }
+            ).ToListAsync();
 
             foreach (var af in addonFeatures)
             {
@@ -475,7 +520,7 @@ namespace API.Controllers
             }
         }
 
-        private async Task<HashSet<long>> ExpandirDependenciasAsync(HashSet<long> seed)
+        private async Task<HashSet<long>> ExpandirDependenciasAsync(HashSet<long> seed, bool esPrograma)
         {
             var result = new HashSet<long>(seed);
             var queue = new Queue<long>(seed);
@@ -484,11 +529,15 @@ namespace API.Controllers
             {
                 var current = queue.Dequeue();
 
-                var deps = await _context.ef_param_feature_dependencias
-                    .AsNoTracking()
-                    .Where(d => d.id_feature == current)
-                    .Select(d => d.id_feature_requiere)
-                    .ToListAsync();
+                var deps = await (
+                    from d in _context.ef_param_feature_dependencias.AsNoTracking()
+                    join f in _context.ef_param_features.AsNoTracking()
+                        on d.id_feature_requiere equals f.id_feature
+                    where d.id_feature == current
+                       && f.activo == true
+                       && (esPrograma ? f.aplica_programa == true : f.aplica_evento == true)
+                    select d.id_feature_requiere
+                ).ToListAsync();
 
                 foreach (var dep in deps)
                 {

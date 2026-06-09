@@ -20,6 +20,8 @@ namespace API.DataSchema
         public bool visible_centro_evento_default { get; set; }
         public bool visible_acceso_programa_default { get; set; }
         public bool visible_centro_programa_default { get; set; }
+        public bool aplica_evento { get; set; }
+        public bool aplica_programa { get; set; }
 
         public string? config_json { get; set; } // jsonb
 
