@@ -217,6 +217,8 @@ builder.Services.AddScoped<PortalService>();
 builder.Services.AddScoped<IPreciosService, PreciosService>();
 builder.Services.AddScoped<IEventoPlanCambiosService, EventoPlanCambiosService>();
 builder.Services.AddScoped<IAdminEventoPlanCambiosService, AdminEventoPlanCambiosService>();
+builder.Services.AddScoped<ICuentaPlanCambiosService, CuentaPlanCambiosService>();
+builder.Services.AddScoped<IAdminCuentaPlanCambiosService, AdminCuentaPlanCambiosService>();
 
 //regalos
 builder.Services.AddScoped<IRegalosListaService, RegalosListaService>();
