@@ -35,6 +35,11 @@ namespace API.Services.Planes
             if (evento == null)
                 throw new Exception("Evento inexistente.");
 
+            // Este service es SOLO para eventos B2C.
+            // Si el evento pertenece a una cuenta, el cambio de plan debe gestionarse desde cuenta.
+            if (evento.id_cuenta.HasValue)
+                throw new Exception("El cambio de plan de eventos B2B debe gestionarse desde la cuenta.");
+
             bool esOwner = await (
                 from eu in _context.ef_evento_usuarios
                 join r in _context.ef_roles on eu.id_rol equals r.id_rol
@@ -64,12 +69,18 @@ namespace API.Services.Planes
             if (planActual == null)
                 throw new Exception("No se encontró el plan actual del evento.");
 
+            if (planActual.tipo != "B2C")
+                throw new Exception("El plan actual del evento no es B2C.");
+
             var planSolicitado = await _context.ef_planes
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.codigo == req.codigo_plan_solicitado);
 
             if (planSolicitado == null)
                 throw new Exception("No se encontró el plan solicitado.");
+
+            if (planSolicitado.tipo != "B2C")
+                throw new Exception("Este endpoint solo permite solicitar cambios a planes B2C.");
 
             if (planSolicitado.id_plan == planActual.id_plan)
                 throw new Exception("El evento ya tiene ese plan.");
@@ -93,6 +104,8 @@ namespace API.Services.Planes
             if (diferenciaBase < 0)
                 diferenciaBase = 0;
 
+            var now = DateTimeOffset.UtcNow;
+
             var cambio = new ef_evento_plan_cambios
             {
                 id_evento = id_evento,
@@ -114,8 +127,8 @@ namespace API.Services.Planes
                 motivo_solicitud = req.motivo_solicitud,
                 id_usuario_solicita = id_usuario,
 
-                fecha_solicitud = DateTimeOffset.UtcNow,
-                fecha_alta = DateTimeOffset.UtcNow
+                fecha_solicitud = now,
+                fecha_alta = now
             };
 
             _context.ef_evento_plan_cambios.Add(cambio);
@@ -194,25 +207,7 @@ namespace API.Services.Planes
 
         private async Task<(string codigo_mercado, string codigo_moneda)> ResolverMercadoMonedaEventoAsync(ef_eventos evento)
         {
-            short? idPais = null;
-            string? monedaDefault = null;
-
-            if (evento.id_cuenta.HasValue)
-            {
-                var cuenta = await _context.ef_cuentas
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.id_cuenta == evento.id_cuenta.Value);
-
-                if (cuenta == null)
-                    throw new Exception("La cuenta asociada al evento no existe.");
-
-                idPais = cuenta.id_pais;
-                monedaDefault = cuenta.moneda_default;
-            }
-            else
-            {
-                idPais = evento.id_pais;
-            }
+            short? idPais = evento.id_pais;
 
             if (!idPais.HasValue)
                 throw new Exception("No se pudo determinar el país comercial del evento.");
@@ -231,12 +226,7 @@ namespace API.Services.Planes
             if (mercado == null)
                 throw new Exception("El mercado comercial no existe o no está activo.");
 
-            string codigoMoneda =
-                !string.IsNullOrWhiteSpace(monedaDefault)
-                ? monedaDefault.Trim().ToUpperInvariant()
-                : mercado.codigo_moneda_default;
-
-            return (mercado.codigo_mercado, codigoMoneda);
+            return (mercado.codigo_mercado, mercado.codigo_moneda_default);
         }
     }
 }

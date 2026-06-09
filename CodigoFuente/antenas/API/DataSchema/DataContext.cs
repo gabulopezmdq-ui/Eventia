@@ -181,12 +181,15 @@ namespace API.DataSchema
         public DbSet<ef_programa_inscripcion_pagos> ef_programa_inscripcion_pagos { get; set; }
         public DbSet<ef_param_programa_tipos_ajuste> ef_param_programa_tipos_ajuste { get; set; }
         public DbSet<ef_programa_inscripcion_autorizaciones> ef_programa_inscripcion_autorizaciones { get; set; }
+        
+        //planes - pagos
         public DbSet<ef_param_limites> ef_param_limites { get; set; }
         public DbSet<ef_monedas> ef_monedas { get; set; }
         public DbSet<ef_mercados> ef_mercados { get; set; }
         public DbSet<ef_mercado_paises> ef_mercado_paises { get; set; }
         public DbSet<ef_evento_plan_cambios> ef_evento_plan_cambios { get; set; }
         public DbSet<ef_param_medios_pago> ef_param_medios_pago { get; set; }
+        public DbSet<ef_cuenta_plan_cambios> ef_cuenta_plan_cambios { get; set; }
 
         //regalos
         public DbSet<ef_evento_regalos_lista_items> ef_evento_regalos_lista_items { get; set; } = null!;
