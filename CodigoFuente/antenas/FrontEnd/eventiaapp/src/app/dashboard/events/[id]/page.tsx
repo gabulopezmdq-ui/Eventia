@@ -306,7 +306,8 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             } else {
                 // Cargar planes disponibles para el mercado del evento
                 const mercado = event.codigoMercado || 'AR';
-                const resPlanes = await fetch(`/api/planesPublic/PublicCatalog?tipo=B2C&mercado=${mercado}`);
+                const moneda = event.codigoMoneda || (mercado === 'AR' ? 'ARS' : (mercado === 'ES' ? 'EUR' : 'USD'));
+                const resPlanes = await fetch(`/api/planesPublic/PublicCatalog?tipo=B2C&mercado=${mercado}&moneda=${moneda}`);
                 if (resPlanes.ok) {
                     const allPlanes = await resPlanes.json();
                     // Excluir el plan actual
