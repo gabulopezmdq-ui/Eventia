@@ -33,6 +33,7 @@ namespace API.Services.Features.Sections
                         x.id_inscripcion,
                         x.id_evento,
                         x.id_rsvp_grupo,
+                        x.id_invitado_responsable,
                         responsable = new
                         {
                             nombre = x.responsable_nombre,
@@ -57,7 +58,9 @@ namespace API.Services.Features.Sections
                     from p in gjPerfil.DefaultIfEmpty()
                     where gi.id_rsvp_grupo == inscripcion.id_rsvp_grupo
                        && i.activo == true
-                    orderby gi.rol == "T" ? 0 : 1, gi.orden, i.apellido, i.nombre
+                       && gi.requiere_asistencia == true
+                       && i.id_invitado != inscripcion.id_invitado_responsable
+                    orderby gi.orden, i.apellido, i.nombre
                     select new
                     {
                         gi.id_rsvp_grupo_integrante,

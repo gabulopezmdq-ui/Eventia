@@ -249,6 +249,22 @@ builder.Services.AddScoped<IEventoHistorialService, EventoHistorialService>();
 //Eventia-Live
 builder.Services.AddScoped<IEventoLiveService, EventoLiveService>();
 
+builder.Services.AddScoped<IPortalSectionProvider, ResumenPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, AgendaPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, NovedadesPortalSectionProvider>();
+
+builder.Services.AddScoped<IPortalSectionProvider, ParticipantesPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, PagosPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, ServiciosPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, SaludPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, SaludAccionesPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, AutorizacionesPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, QrsRetiroPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, RetirosPortalSectionProvider>();
+
+builder.Services.AddScoped<IPortalSectionProvider, RegalosPortalSectionProvider>();
+builder.Services.AddScoped<IPortalSectionProvider, LivePortalSectionProvider>();
+
 // Registro de repositorios
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 

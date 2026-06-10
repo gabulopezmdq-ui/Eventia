@@ -230,6 +230,7 @@ namespace API.Controllers
                 case "HOSPEDAJES": return "hospedajes";
                 case "TRANSPORTE": return "transporte";
                 case "SERVICIOS": return "servicios";
+                case "LIVE": return "live";
                 default: return codigo.ToLower();
             }
         }

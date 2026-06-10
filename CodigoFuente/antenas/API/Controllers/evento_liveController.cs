@@ -45,6 +45,20 @@ namespace API.Controllers
             }
         }
 
+        [HttpPut("Editar/{idDinamica}")]
+        public async Task<IActionResult> Editar(long idDinamica, [FromBody] LiveEditarRequestDTO req)
+        {
+            try
+            {
+                await _service.EditarAsync(idDinamica, req);
+                return Ok(new { ok = true, id_dinamica = idDinamica });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
+        }
+
         [HttpPut("CambiarEstado/{idDinamica}")]
         public async Task<IActionResult> CambiarEstado(long idDinamica, [FromBody] LiveCambiarEstadoRequestDTO req)
         {
@@ -86,5 +100,63 @@ namespace API.Controllers
                 return BadRequest(new { ok = false, message = ex.Message });
             }
         }
+
+        [HttpGet("Ganadores")]
+        public async Task<IActionResult> Ganadores([FromQuery] long idDinamica)
+        {
+            try
+            {
+                var result = await _service.GetGanadoresAsync(idDinamica);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut("GanadorEstado/{idGanador}")]
+        public async Task<IActionResult> GanadorEstado(long idGanador, [FromBody] LiveGanadorEstadoRequestDTO req)
+        {
+            try
+            {
+                await _service.CambiarEstadoGanadorAsync(idGanador, req);
+                return Ok(new { ok = true, id_ganador = idGanador });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("Premios")]
+        public async Task<IActionResult> Premios([FromQuery] long idDinamica)
+        {
+            try
+            {
+                var result = await _service.GetPremiosAsync(idDinamica);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("Premio")]
+        public async Task<IActionResult> Premio([FromBody] LivePremioUpsertRequestDTO req)
+        {
+            try
+            {
+                var id = await _service.UpsertPremioAsync(req);
+                return Ok(new { ok = true, id_premio = id });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
+        }
+
+
     }
 }
