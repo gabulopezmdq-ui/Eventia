@@ -438,6 +438,7 @@ namespace API.DataSchema
             modelBuilder.ApplyConfiguration(new ef_preciosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_evento_plan_cambiosConfiguration());
             modelBuilder.ApplyConfiguration(new ef_param_medios_pagoConfiguration());
+            modelBuilder.ApplyConfiguration(new ef_cuenta_plan_cambiosConfiguration());
 
 
             //regalos
