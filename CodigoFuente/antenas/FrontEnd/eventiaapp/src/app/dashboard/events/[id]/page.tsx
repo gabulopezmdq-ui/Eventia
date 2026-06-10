@@ -57,6 +57,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const scope = searchParams.get('scope');
 
     const [event, setEvent] = useState<Event | null>(null);
+    const hasCuenta = !!(event?.idCuenta || event?.id_cuenta || searchParams.get('idCuenta'));
     const [estructura, setEstructura] = useState<EstructuraEvento | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -479,7 +480,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 : 'Tu plan actual no permite generar nuevas invitaciones...'}
                         </p>
                     </div>
-                    {event.limites?.permitirGenerarLinks === false && !isBorrador && (
+                    {event.limites?.permitirGenerarLinks === false && !isBorrador && !hasCuenta && (
                         <button
                             onClick={() => router.push(`/dashboard/events/${event.id_evento}/plan`)}
                             className="ml-auto px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-400 transition-colors shrink-0"
@@ -1001,7 +1002,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </div>
 
                         {/* Botón Cambiar Plan */}
-                        {!isAdmin && (
+                        {!isAdmin && !hasCuenta && (
                             <button
                                 onClick={handleCambiarPlan}
                                 disabled={checkingPlan}

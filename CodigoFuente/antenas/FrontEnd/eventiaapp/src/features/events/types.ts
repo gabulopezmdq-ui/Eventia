@@ -46,6 +46,8 @@ export interface Event {
     infoPublica?: string | null;
     info_publica?: string | null;
     estadoObservacionActual?: string | null;
+    idCuenta?: number | null;
+    id_cuenta?: number | null;
 }
 
 export interface EstadoHistorial {
