@@ -111,7 +111,7 @@ namespace API.Services.Planes
                 impuestos = 0,
                 total = importePagado,
 
-                concepto = $"Cambio de plan cuenta {cambio.id_cuenta} a {planSolicitado.codigo}",
+                concepto = $"Cambio de plan cuenta a {planSolicitado.codigo}",
                 idempotency_key = $"CAMBIO_PLAN_CTA_{cambio.id_cuenta_plan_cambio}",
 
                 objeto_tipo = "CAMBIO_PLAN_CUENTA",
