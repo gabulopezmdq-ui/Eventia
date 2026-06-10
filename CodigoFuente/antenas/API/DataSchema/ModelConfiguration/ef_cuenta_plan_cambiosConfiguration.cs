@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using API.DataSchema;
 
 namespace API.DataSchema.ModelConfiguration
 {
