@@ -43,8 +43,9 @@ namespace API.Services.Features.Sections
                     tipo_operacion = e.tipo_operacion,
                     dress_code_codigo = dc != null ? dc.codigo : null,
                     dress_code_descripcion = e.dress_code_descripcion,
-                    usuario = new
+                    persona_acceso = new
                     {
+                        tipo = context.EsPrograma ? "RESPONSABLE" : "INVITADO",
                         nombre = context.UsuarioNombre,
                         email = context.UsuarioEmail
                     }

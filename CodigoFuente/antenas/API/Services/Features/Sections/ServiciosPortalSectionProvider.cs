@@ -36,6 +36,7 @@ namespace API.Services.Features.Sections
                     x.id_inscripcion,
                     x.id_evento,
                     x.id_rsvp_grupo,
+                    x.id_invitado_responsable,
                     responsable = (x.responsable_nombre + " " + x.responsable_apellido).Trim(),
                     x.responsable_email,
                     x.responsable_telefono,
@@ -53,6 +54,8 @@ namespace API.Services.Features.Sections
                     on gi.id_invitado equals i.id_invitado
                 where gi.id_rsvp_grupo == inscripcion.id_rsvp_grupo
                    && i.activo == true
+                   && gi.requiere_asistencia == true
+                   && i.id_invitado != inscripcion.id_invitado_responsable
                 orderby gi.orden, i.apellido, i.nombre
                 select new
                 {
