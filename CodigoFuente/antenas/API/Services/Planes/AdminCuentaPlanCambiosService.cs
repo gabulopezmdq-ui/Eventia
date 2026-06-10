@@ -102,7 +102,7 @@ namespace API.Services.Planes
                 id_cuenta = cambio.id_cuenta,
                 id_suscripcion = null,
 
-                tipo = "MENSUAL",
+                tipo = "RECURRENTE",
                 estado = "APROBADO",
 
                 moneda = cambio.codigo_moneda,
