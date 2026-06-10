@@ -5,7 +5,7 @@ import {
     CheckCircle2, AlertCircle, ChefHat, User, MessageSquare,
     ArrowRight, HeartPulse, Baby, Phone, Mail,
     MapPin, Calendar, Users, PlusCircle, Trash2, Download,
-    Loader2, X, Music
+    Loader2, X, Music, Clock, Heart, Sparkles, MailOpen, Ticket, ShieldCheck, Landmark
 } from 'lucide-react';
 import {
     confirmarRsvp, getInvitacionPersonal,
@@ -54,14 +54,16 @@ export default function RsvpPage({
     searchParams,
 }: {
     params: Promise<{ token: string }>;
-    searchParams: Promise<{ idAcceso?: string }>;
+    searchParams: Promise<{ idAcceso?: string; previewStep?: string }>;
 }) {
     const { token } = use(params);
-    const { idAcceso } = use(searchParams);
+    const { idAcceso, previewStep } = use(searchParams);
     const idAccesoNum = idAcceso ? parseInt(idAcceso, 10) : null;
 
     const [step, setStep] = useState<Step>('VERIFYING');
     const [errorMsg, setErrorMsg] = useState('');
+    const [hasInitialized, setHasInitialized] = useState(false);
+    const [overrideRestricciones, setOverrideRestricciones] = useState<Record<string, boolean>>({});
 
     // --- Invitation data ---
     const [invitacion, setInvitacion] = useState<InvitacionPersonalResponse | null>(null);
@@ -100,6 +102,46 @@ interface FeatureEfectiva {
         if (featuresEfectivas.length === 0) return true;
         const feat = featuresEfectivas.find(f => f.codigo === codigo);
         return feat ? feat.activo_resuelto : false;
+    };
+
+    const renderPreviewBar = () => {
+        if (token !== 'preview') return null;
+        return (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-md border border-neutral-200/80 px-4 py-2.5 rounded-full z-50 flex items-center gap-3 shadow-xl">
+                <span className="text-xs font-bold text-neutral-500 mr-1">Preview Step:</span>
+                <button 
+                    type="button"
+                    onClick={() => setStep('VERIFYING')}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${(step as string) === 'VERIFYING' ? 'bg-indigo-600 text-white shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                >
+                    Loading
+                </button>
+                <button 
+                    type="button"
+                    onClick={() => {
+                        setErrorMsg("No pudimos verificar tu invitación en este momento.");
+                        setStep('ERROR');
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${(step as string) === 'ERROR' ? 'bg-indigo-600 text-white shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                >
+                    Error
+                </button>
+                <button 
+                    type="button"
+                    onClick={() => setStep('RSVP')}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${(step as string) === 'RSVP' ? 'bg-indigo-600 text-white shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                >
+                    RSVP Form
+                </button>
+                <button 
+                    type="button"
+                    onClick={() => setStep('SUCCESS')}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${(step as string) === 'SUCCESS' ? 'bg-indigo-600 text-white shadow-sm' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                >
+                    Success Ticket
+                </button>
+            </div>
+        );
     };
 
     const buildSugerenciaMusica = (p: PersonaFormState) => {
@@ -344,6 +386,207 @@ interface FeatureEfectiva {
     }, []);
 
     const verificarEstado = useCallback(async () => {
+        if (token === 'preview') {
+            setStep((previewStep as Step) || 'RSVP');
+            
+            const mockInvitacion: InvitacionPersonalResponse = {
+                idEvento: 1,
+                idGrupo: 100,
+                nombreGrupo: "Familia González",
+                saludo: "Querida Familia González,",
+                anfitriones: "Juan & María",
+                mensajeBienvenida: "Nos complace invitarlos a celebrar nuestra unión matrimonial. Esperamos contar con su hermosa presencia en este día tan especial.",
+                agenda: [
+                    {
+                        nombreAcceso: "Invitación General",
+                        tramos: [
+                            {
+                                nombre: "Ceremonia Religiosa",
+                                lugar: "Catedral Primada",
+                                descripcion: "Intercambio de votos, alianzas y bendición de anillos.",
+                                direccion: "Av. de Mayo 500, CABA",
+                                orden: 1
+                            },
+                            {
+                                nombre: "Banquete & Cena",
+                                lugar: "Salón del Bosque",
+                                descripcion: "Una deliciosa cena de tres pasos especialmente curada.",
+                                direccion: "Ruta 8, Km 45, Pilar",
+                                orden: 2
+                            },
+                            {
+                                nombre: "Gran Fiesta & Baile",
+                                lugar: "Salón Principal (DJ Set)",
+                                descripcion: "Música, barra de tragos y baile hasta el amanecer.",
+                                direccion: "Ruta 8, Km 45, Pilar",
+                                orden: 3
+                            }
+                        ]
+                    }
+                ],
+                personas: [
+                    {
+                        idInvitado: 101,
+                        nombreCompleto: "Carlos González",
+                        rolEvento: "A"
+                    },
+                    {
+                        idInvitado: 102,
+                        nombreCompleto: "Ana María Rodríguez",
+                        rolEvento: "A"
+                    },
+                    {
+                        idInvitado: 103,
+                        nombreCompleto: "Mateo González",
+                        rolEvento: "N"
+                    }
+                ],
+                cuposAdultosRestantes: 2,
+                cuposMenoresRestantes: 1
+            };
+            setInvitacion(mockInvitacion);
+            
+            setPersonas([
+                {
+                    idInvitado: 101,
+                    nombre: "Carlos",
+                    apellido: "González",
+                    email: "carlos.gonzalez@example.com",
+                    celular: "1122334455",
+                    rolEvento: "A",
+                    asiste: true,
+                    isNew: false,
+                    alimentacionDetalle: "",
+                    restriccionesSeleccionadas: {},
+                    sugerenciaTema: "Danza Kuduro",
+                    sugerenciaArtista: "Don Omar",
+                    sugerenciaLink: "",
+                    mensaje: ""
+                },
+                {
+                    idInvitado: 102,
+                    nombre: "Ana María",
+                    apellido: "Rodríguez",
+                    email: "ana.rodriguez@example.com",
+                    celular: "1166778899",
+                    rolEvento: "A",
+                    asiste: true,
+                    isNew: false,
+                    alimentacionDetalle: "Alergia severa al maní.",
+                    restriccionesSeleccionadas: {
+                        1: { idRestriccion: 1, severidad: "G", observaciones: "Contaminación cruzada" }
+                    },
+                    sugerenciaTema: "As It Was",
+                    sugerenciaArtista: "Harry Styles",
+                    sugerenciaLink: "",
+                    mensaje: ""
+                },
+                {
+                    idInvitado: 103,
+                    nombre: "Mateo",
+                    apellido: "González",
+                    email: "",
+                    celular: "",
+                    rolEvento: "N",
+                    asiste: true,
+                    isNew: false,
+                    alimentacionDetalle: "",
+                    restriccionesSeleccionadas: {},
+                    sugerenciaTema: "",
+                    sugerenciaArtista: "",
+                    sugerenciaLink: "",
+                    mensaje: ""
+                }
+            ]);
+
+            const mockResumen: ResumenRsvpResponse = {
+                idEvento: 1,
+                evento: "Boda de Juan & María",
+                idRsvpGrupo: 100,
+                titular: "Carlos González",
+                rsvpEstadoGrupo: "CONFIRMADO",
+                rsvpMensaje: "¡Allí estaremos para celebrar con ustedes!",
+                personasCargadas: 3,
+                cuposSinDefinir: 0,
+                adultosDisponibles: 2,
+                menoresDisponibles: 1,
+                puedeEditarGrupo: true,
+                grupoCerrado: false,
+                integrantes: [
+                    {
+                        idInvitado: 101,
+                        nombreCompleto: "Carlos González",
+                        esTitularGrupo: true,
+                        rsvpEstado: "Y",
+                        qrToken: "mock-qr-carlos",
+                        rsvpMensaje: "¡Allí estaremos!",
+                        fechaRsvp: "2026-06-10",
+                        idMesa: 5,
+                        mesaNombre: "Mesa VIP 5",
+                        tieneRestricciones: false,
+                        restricciones: [],
+                        cantidadSugerenciasMusica: 1,
+                        sugerenciasMusica: ["Danza Kuduro - Don Omar"]
+                    },
+                    {
+                        idInvitado: 102,
+                        nombreCompleto: "Ana María Rodríguez",
+                        esTitularGrupo: false,
+                        rsvpEstado: "Y",
+                        qrToken: "mock-qr-ana",
+                        rsvpMensaje: "¡Con muchas ganas!",
+                        fechaRsvp: "2026-06-10",
+                        idMesa: 5,
+                        mesaNombre: "Mesa VIP 5",
+                        tieneRestricciones: true,
+                        restricciones: ["Celíaco"],
+                        cantidadSugerenciasMusica: 1,
+                        sugerenciasMusica: ["As It Was - Harry Styles"]
+                    },
+                    {
+                        idInvitado: 103,
+                        nombreCompleto: "Mateo González",
+                        esTitularGrupo: false,
+                        rsvpEstado: "Y",
+                        qrToken: "mock-qr-mateo",
+                        rsvpMensaje: null,
+                        fechaRsvp: "2026-06-10",
+                        idMesa: 5,
+                        mesaNombre: "Mesa VIP 5",
+                        tieneRestricciones: false,
+                        restricciones: [],
+                        cantidadSugerenciasMusica: 0,
+                        sugerenciasMusica: []
+                    }
+                ]
+            };
+            setResumenRsvp(mockResumen);
+
+            setCatalogo([
+                { idRestriccion: 1, codigo: "CELIACO", nombre: "Celíaco / TACC", orden: 1, categoria: "ALIMENTACION", descripcion: "" },
+                { idRestriccion: 2, codigo: "VEGETARIANO", nombre: "Vegetariano", orden: 2, categoria: "ALIMENTACION", descripcion: "" },
+                { idRestriccion: 3, codigo: "VEGANO", nombre: "Vegano", orden: 3, categoria: "ALIMENTACION", descripcion: "" },
+                { idRestriccion: 4, codigo: "LACTOSA", nombre: "Intolerante a la Lactosa", orden: 4, categoria: "ALIMENTACION", descripcion: "" },
+                { idRestriccion: 5, codigo: "DIABETICO", nombre: "Diabético", orden: 5, categoria: "ALIMENTACION", descripcion: "" }
+            ]);
+
+            setFeaturesEfectivas([
+                {
+                    id_feature: 1,
+                    codigo: "MUSICA_SUGERENCIAS",
+                    nombre: "Sugerencias de Música",
+                    descripcion: "",
+                    categoria: "",
+                    incluida_en_plan: true,
+                    incluida_por_addon: false,
+                    activo_evento: true,
+                    activo_resuelto: true
+                }
+            ]);
+
+            return;
+        }
+
         setStep('VERIFYING');
         try {
             // 0. Intentar cargar la invitación primero para tener los datos de la familia/evento
@@ -468,8 +711,11 @@ interface FeatureEfectiva {
     }, [token, cargarAutorizados, cargarCatalogo]);
 
     useEffect(() => {
-        verificarEstado();
-    }, [verificarEstado]);
+        if (!hasInitialized) {
+            verificarEstado();
+            setHasInitialized(true);
+        }
+    }, [verificarEstado, hasInitialized]);
 
     // --- Persona management ---
     const updatePersona = <K extends keyof PersonaFormState>(index: number, field: K, value: PersonaFormState[K]) => {
@@ -644,29 +890,261 @@ interface FeatureEfectiva {
         }
     };
 
+    const renderSeccionAlimentacion = (persona: PersonaFormState, idx: number, type: 'main' | 'nuevo') => {
+        const key = `${type}-${idx}`;
+        const tieneRestriccionesSeleccionadas = Object.keys(persona.restriccionesSeleccionadas || {}).length > 0;
+        const tieneDetalleLibre = !!persona.alimentacionDetalle?.trim();
+        const tieneRestricciones = tieneRestriccionesSeleccionadas || tieneDetalleLibre;
+        const estaExpandido = overrideRestricciones[key] !== undefined 
+            ? overrideRestricciones[key] 
+            : tieneRestricciones;
+
+        const isAlergia = (cat: CatalogoRestriccion) => {
+            return cat.categoria === 'ALERGIA' || 
+                   cat.nombre.toLowerCase().includes('alergia') || 
+                   cat.nombre.toLowerCase().includes('intol') || 
+                   cat.codigo.toLowerCase().includes('celiaco') ||
+                   cat.codigo.toLowerCase().includes('tacc');
+        };
+
+        const dietas = catalogo.filter(cat => !isAlergia(cat));
+        const alergias = catalogo.filter(cat => isAlergia(cat));
+
+        const handleToggleSelect = (option: boolean) => {
+            setOverrideRestricciones(prev => ({ ...prev, [key]: option }));
+            if (!option) {
+                if (type === 'main') {
+                    updatePersona(idx, 'restriccionesSeleccionadas', {});
+                    updatePersona(idx, 'alimentacionDetalle', '');
+                } else {
+                    updateNuevoAcompanante(idx, 'restriccionesSeleccionadas', {});
+                    updateNuevoAcompanante(idx, 'alimentacionDetalle', '');
+                }
+            }
+        };
+
+        const onToggleRestriccion = (idRestriccion: number) => {
+            if (type === 'main') {
+                toggleRestriccionPersona(idx, idRestriccion);
+            } else {
+                toggleRestriccionNuevoAcompanante(idx, idRestriccion);
+            }
+        };
+
+        const onUpdateRestriccion = (idRestriccion: number, field: 'severidad' | 'observaciones', val: string) => {
+            if (type === 'main') {
+                updateRestriccionPersona(idx, idRestriccion, field, val);
+            } else {
+                updateRestriccionNuevoAcompanante(idx, idRestriccion, field, val);
+            }
+        };
+
+        const onUpdateAlimentacionDetalle = (val: string) => {
+            if (type === 'main') {
+                updatePersona(idx, 'alimentacionDetalle', val);
+            } else {
+                updateNuevoAcompanante(idx, 'alimentacionDetalle', val);
+            }
+        };
+
+        return (
+            <div className="space-y-6 pt-4 border-t border-neutral-100">
+                <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1.5 px-1">
+                        <ChefHat className="w-4 h-4 text-indigo-550 text-indigo-500" /> Preferencias Alimentarias & Restricciones
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => handleToggleSelect(false)}
+                            className={`flex items-center justify-center gap-2.5 py-3.5 px-5 rounded-2xl border text-xs font-bold transition-all duration-300 cursor-pointer ${
+                                !estaExpandido
+                                    ? 'bg-neutral-900 border-neutral-900 text-white shadow-md'
+                                    : 'bg-neutral-50 border-neutral-200 text-neutral-500 hover:border-neutral-350 hover:bg-neutral-100/50'
+                            }`}
+                        >
+                            <CheckCircle2 className={`w-4 h-4 ${!estaExpandido ? 'text-white' : 'text-neutral-400'}`} />
+                            No presento restricciones alimentarias
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleToggleSelect(true)}
+                            className={`flex items-center justify-center gap-2.5 py-3.5 px-5 rounded-2xl border text-xs font-bold transition-all duration-300 cursor-pointer ${
+                                estaExpandido
+                                    ? 'bg-indigo-50 border-indigo-250 text-indigo-850 shadow-sm shadow-indigo-100/50'
+                                    : 'bg-neutral-50 border-neutral-200 text-neutral-500 hover:border-neutral-350 hover:bg-neutral-100/50'
+                            }`}
+                        >
+                            <ChefHat className={`w-4 h-4 ${estaExpandido ? 'text-indigo-600' : 'text-neutral-400'}`} />
+                            Sí, poseo requerimientos especiales
+                        </button>
+                    </div>
+                </div>
+
+                {estaExpandido && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-top-3 duration-300">
+                        {catalogo.length > 0 ? (
+                            <div className="space-y-5">
+                                {dietas.length > 0 && (
+                                    <div className="space-y-2.5">
+                                        <h4 className="text-[10px] font-bold text-neutral-450 uppercase tracking-wider block ml-1">
+                                            Dietas y Preferencias Generales
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {dietas.map(cat => {
+                                                const isSelected = !!persona.restriccionesSeleccionadas[cat.idRestriccion];
+                                                return (
+                                                    <button
+                                                        key={cat.idRestriccion}
+                                                        type="button"
+                                                        onClick={() => onToggleRestriccion(cat.idRestriccion)}
+                                                        className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none
+                                                            ${isSelected
+                                                                ? 'bg-indigo-50 border-indigo-250 text-indigo-700 shadow-sm shadow-indigo-100'
+                                                                : 'bg-neutral-50 border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:text-neutral-750'}`}
+                                                    >
+                                                        {cat.nombre}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {alergias.length > 0 && (
+                                    <div className="space-y-2.5 pt-1">
+                                        <h4 className="text-[10px] font-bold text-neutral-450 uppercase tracking-wider block ml-1">
+                                            Alergias e Intolerancias Médicas
+                                        </h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {alergias.map(cat => {
+                                                const isSelected = !!persona.restriccionesSeleccionadas[cat.idRestriccion];
+                                                return (
+                                                    <button
+                                                        key={cat.idRestriccion}
+                                                        type="button"
+                                                        onClick={() => onToggleRestriccion(cat.idRestriccion)}
+                                                        className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none
+                                                            ${isSelected
+                                                                ? 'bg-indigo-50 border-indigo-250 text-indigo-700 shadow-sm shadow-indigo-100'
+                                                                : 'bg-neutral-50 border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:text-neutral-750'}`}
+                                                    >
+                                                        {cat.nombre}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-neutral-400 italic">No se pudo cargar el catálogo de restricciones.</p>
+                        )}
+
+                        {Object.values(persona.restriccionesSeleccionadas).map(r => {
+                            const cat = catalogo.find(c => c.idRestriccion === r.idRestriccion);
+                            if (cat?.categoria === 'ALERGIA' || cat?.codigo === 'CELIACO') {
+                                return (
+                                    <div 
+                                        key={r.idRestriccion} 
+                                        className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 space-y-4 animate-in slide-in-from-top-2 duration-300"
+                                    >
+                                        <p className="flex items-center gap-1.5 text-xs font-bold text-amber-700 uppercase tracking-wider">
+                                            <HeartPulse className="w-4 h-4" /> Detalle de Gravedad: {cat.nombre}
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Nivel de Severidad</label>
+                                                <select
+                                                    value={r.severidad}
+                                                    onChange={e => onUpdateRestriccion(r.idRestriccion, 'severidad', e.target.value)}
+                                                    className="w-full p-3 rounded-xl bg-white border border-amber-200 text-amber-800 text-xs outline-none focus:border-amber-500 cursor-pointer"
+                                                >
+                                                    <option value="L">Leve (Tolerancia a trazas / Preferencia)</option>
+                                                    <option value="M">Media (No debe contener el ingrediente)</option>
+                                                    <option value="G">Grave (Peligro de shock / Contaminación cruzada)</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Detalle o Ingrediente</label>
+                                                <input
+                                                    placeholder="Ej. Nueces, maní, mariscos..."
+                                                    value={r.observaciones}
+                                                    onChange={e => onUpdateRestriccion(r.idRestriccion, 'observaciones', e.target.value)}
+                                                    className="w-full p-3 rounded-xl bg-white border border-amber-200 text-amber-800 text-xs outline-none focus:border-amber-500 placeholder:text-amber-350"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })}
+
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">
+                                Otras aclaraciones alimentarias (opcional)
+                            </label>
+                            <textarea
+                                rows={2}
+                                placeholder="Ej: No consumo picante, prefiero menú sin lactosa, etc."
+                                value={persona.alimentacionDetalle}
+                                onChange={e => onUpdateAlimentacionDetalle(e.target.value)}
+                                className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-neutral-800 text-sm outline-none resize-none placeholder:text-neutral-400"
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     // --- Renders ---
     if (step === 'VERIFYING' || step === 'LOADING') {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-                <p className="text-muted tracking-widest uppercase text-xs font-bold">
-                    {step === 'VERIFYING' ? 'Validando tu invitación...' : 'Procesando...'}
-                </p>
+            <div className="min-h-screen bg-[#faf9f5] text-neutral-850 flex flex-col items-center justify-center space-y-6 relative overflow-hidden">
+                {/* Ambient lights */}
+                <div className="absolute w-72 h-72 rounded-full bg-indigo-100/40 blur-3xl animate-pulse" />
+                
+                <div className="relative z-10 flex flex-col items-center">
+                    {/* Animated loading circle */}
+                    <div className="relative w-24 h-24 flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full border-2 border-indigo-100" />
+                        <div className="absolute inset-0 rounded-full border-2 border-t-indigo-400 border-r-indigo-400/40 animate-spin" />
+                        <div className="w-12 h-12 rounded-full bg-indigo-50/70 flex items-center justify-center border border-indigo-100 backdrop-blur-md">
+                            <Calendar className="w-6 h-6 text-indigo-500 animate-pulse" />
+                        </div>
+                    </div>
+                    
+                    <h2 className="mt-8 text-xl font-bold tracking-tight text-neutral-800">Eventia</h2>
+                    <p className="mt-2 text-sm text-neutral-500 font-medium tracking-wide animate-pulse">
+                        {step === 'VERIFYING' ? 'Validando tu invitación exclusiva...' : 'Procesando tus respuestas...'}
+                    </p>
+                </div>
+                {renderPreviewBar()}
             </div>
         );
     }
 
     if (step === 'ERROR') {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
-                    <AlertCircle className="w-10 h-10 text-red-500" />
+            <div className="min-h-screen bg-[#faf9f5] text-neutral-850 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                <div className="absolute w-72 h-72 rounded-full bg-red-100/30 blur-3xl" />
+                
+                <div className="relative z-10 max-w-md w-full p-8 rounded-3xl border border-neutral-200/60 bg-white shadow-sm backdrop-blur-xl flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-6 border border-red-100">
+                        <AlertCircle className="w-8 h-8 text-red-500" />
+                    </div>
+                    <h1 className="text-2xl font-black text-neutral-850 mb-2 tracking-tight">Ocurrió un inconveniente</h1>
+                    <p className="text-neutral-500 text-sm mb-8 leading-relaxed">{errorMsg || 'No pudimos verificar tu invitación en este momento.'}</p>
+                    <button 
+                        onClick={() => verificarEstado()} 
+                        className="w-full py-4 rounded-xl bg-neutral-900 text-white font-bold hover:bg-neutral-800 active:scale-[0.98] transition-all cursor-pointer shadow-md"
+                    >
+                        Reintentar verificación
+                    </button>
                 </div>
-                <h1 className="text-3xl font-bold mb-4">Algo salió mal</h1>
-                <p className="text-muted mb-8 max-w-md">{errorMsg}</p>
-                <button onClick={() => verificarEstado()} className="px-8 py-3 rounded-full bg-white text-black font-bold hover:bg-white/90 transition-colors">
-                    Reintentar
-                </button>
+                {renderPreviewBar()}
             </div>
         );
     }
@@ -677,83 +1155,97 @@ interface FeatureEfectiva {
         ) || [];
 
         return (
-            <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center p-6 md:py-20 relative overflow-x-hidden">
+            <div className="min-h-screen bg-[#faf9f5] text-neutral-800 flex flex-col items-center p-6 md:py-20 relative overflow-x-hidden font-sans">
                 {/* Ambient background */}
-                <div className="fixed inset-0 pointer-events-none">
-                    <div className="absolute top-0 right-0 w-[50vw] h-[50vh] bg-indigo-500/5 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3" />
-                    <div className="absolute bottom-0 left-0 w-[50vw] h-[50vh] bg-purple-500/5 blur-[100px] rounded-full -translate-x-1/3 translate-y-1/3" />
+                <div className="fixed inset-0 pointer-events-none z-0">
+                    <div className="absolute top-0 right-0 w-[50vw] h-[50vh] bg-indigo-100/30 blur-[120px] rounded-full translate-x-1/3 -translate-y-1/3" />
+                    <div className="absolute bottom-0 left-0 w-[50vw] h-[50vh] bg-purple-100/30 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3" />
                 </div>
 
                 <div className="max-w-2xl w-full mx-auto relative z-10 flex flex-col items-center">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center mb-6 shadow-2xl shadow-emerald-500/20 animate-in zoom-in duration-500">
-                        <CheckCircle2 className="w-10 h-10 text-black" />
+                    <div className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-6 shadow-md shadow-emerald-100 animate-in zoom-in duration-500">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-600" />
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-3">
-                        Confirmación registrada
+                    <h1 className="text-3xl md:text-4xl font-serif font-black tracking-tight text-center mb-3 text-neutral-800">
+                        Confirmación Registrada
                     </h1>
 
-                    <p className="text-muted text-center max-w-md mb-8 text-sm md:text-base">
+                    <p className="text-neutral-500 text-center max-w-md mb-10 text-sm md:text-base leading-relaxed">
                         {integrantesConfirmados.length > 0
-                            ? 'Guardá tus QR para el ingreso al evento. Estos son tus QR de ingreso:'
-                            : 'Gracias por tu respuesta. Ya registramos tus respuestas y preferencias correctamente.'}
+                            ? '¡Ya tienes tus accesos listos! Guarda o descarga tus pases QR para el ingreso al evento:'
+                            : 'Gracias por tu respuesta. Ya registramos tus preferencias y respuestas correctamente.'}
                     </p>
 
                     {integrantesConfirmados.length > 0 && (
                         <div className="w-full space-y-6 animate-in fade-in duration-500">
                             {integrantesConfirmados.map((integrante) => (
-                                <div key={integrante.idInvitado} className="w-full p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md flex flex-col sm:flex-row items-center sm:items-stretch justify-between gap-6 transition-all duration-300 hover:border-white/20">
-                                    {/* Left section: Text Info */}
-                                    <div className="flex flex-col justify-between text-center sm:text-left space-y-4">
-                                        <div className="space-y-2">
-                                            <h2 className="text-xl font-bold text-white tracking-tight">
+                                <div 
+                                    key={integrante.idInvitado} 
+                                    className="w-full relative rounded-3xl border border-neutral-200/60 bg-white/95 backdrop-blur-md flex flex-col sm:flex-row items-stretch justify-between overflow-hidden shadow-sm transition-all duration-300 hover:border-neutral-300"
+                                >
+                                    {/* Ticket left/main info section */}
+                                    <div className="p-6 flex-1 flex flex-col justify-between text-center sm:text-left space-y-6 relative">
+                                        <div className="space-y-3">
+                                            <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                                integrante.esTitularGrupo
+                                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                                                    : 'bg-neutral-50 text-neutral-500 border border-neutral-200/60'
+                                            }`}>
+                                                {integrante.esTitularGrupo ? 'Invitado Principal' : 'Acompañante'}
+                                            </span>
+                                            
+                                            <h2 className="text-2xl font-bold text-neutral-800 tracking-tight leading-tight">
                                                 {integrante.nombreCompleto}
                                             </h2>
-                                            <div>
-                                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wider ${
-                                                    integrante.esTitularGrupo
-                                                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                                        : 'bg-white/5 text-muted border border-white/10'
-                                                }`}>
-                                                    {integrante.esTitularGrupo ? 'Titular' : 'Acompañante'}
-                                                </span>
-                                            </div>
+                                            
+                                            {integrante.mesaNombre && (
+                                                <div className="inline-flex items-center gap-1.5 text-xs text-neutral-600 bg-neutral-50 border border-neutral-200/60 px-3 py-1 rounded-xl">
+                                                    <Landmark className="w-3.5 h-3.5 text-indigo-500" />
+                                                    Mesa Asignada: <strong className="text-neutral-850">{integrante.mesaNombre}</strong>
+                                                </div>
+                                            )}
                                         </div>
-
-                                        {integrante.mesaNombre && (
-                                            <div className="text-xs text-muted/80">
-                                                Mesa: <strong className="text-white">{integrante.mesaNombre}</strong>
-                                            </div>
-                                        )}
 
                                         <button
                                             onClick={() => handleDownloadQr(integrante.qrToken!, integrante.nombreCompleto)}
-                                            className="hidden sm:flex items-center gap-2 py-2.5 px-5 rounded-xl bg-white text-black font-bold text-xs hover:bg-white/90 active:scale-95 transition-all shadow-md mt-auto cursor-pointer"
+                                            className="hidden sm:flex w-fit items-center gap-2 py-3 px-5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 font-bold text-xs active:scale-[0.98] transition-all shadow-sm mt-auto cursor-pointer"
                                         >
                                             <Download className="w-4 h-4" />
-                                            Descargar QR
+                                            Descargar Pase QR
                                         </button>
                                     </div>
 
-                                    {/* Right section: QR Visual */}
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="bg-white/5 rounded-2xl p-3 border border-white/10 flex items-center justify-center shrink-0">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    {/* Ticket divider dashed line (VIP Ticket stub effect) */}
+                                    <div className="relative flex sm:flex-col items-center justify-center py-2 sm:py-0 shrink-0">
+                                        {/* Left/Top cut circle */}
+                                        <div className="absolute top-0 sm:top-[-10px] left-1/2 sm:left-auto sm:right-[-10px] w-5 h-5 bg-[#faf9f5] rounded-full border border-neutral-200/60 z-20 translate-x-[-50%] sm:translate-x-0" />
+                                        
+                                        {/* Dash line */}
+                                        <div className="w-full sm:w-[1px] h-[1px] sm:h-full border-t sm:border-l border-dashed border-neutral-200" />
+                                        
+                                        {/* Right/Bottom cut circle */}
+                                        <div className="absolute bottom-0 sm:bottom-[-10px] left-1/2 sm:left-auto sm:left-[-10px] w-5 h-5 bg-[#faf9f5] rounded-full border border-neutral-200/60 z-20 translate-x-[-50%] sm:translate-x-0" />
+                                    </div>
+
+                                    {/* Ticket right QR stub section */}
+                                    <div className="p-6 bg-neutral-50/50 flex flex-col items-center justify-center gap-4 shrink-0 sm:w-[220px]">
+                                        <div className="bg-white rounded-2xl p-2.5 shadow-sm flex items-center justify-center shrink-0 border border-neutral-200/50">
                                             <img
                                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(integrante.qrToken!)}`}
                                                 alt={`QR de ingreso para ${integrante.nombreCompleto}`}
-                                                width={180}
-                                                height={180}
-                                                className="rounded-xl border border-white/5"
+                                                width={140}
+                                                height={140}
+                                                className="rounded-xl"
                                             />
                                         </div>
 
                                         <button
                                             onClick={() => handleDownloadQr(integrante.qrToken!, integrante.nombreCompleto)}
-                                            className="flex sm:hidden w-full items-center justify-center gap-2 py-3 px-6 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 active:scale-95 transition-all shadow-md cursor-pointer"
+                                            className="flex sm:hidden w-full items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 font-bold text-sm active:scale-[0.98] transition-all shadow-sm cursor-pointer"
                                         >
                                             <Download className="w-4 h-4" />
-                                            Descargar QR
+                                            Descargar Pase QR
                                         </button>
                                     </div>
                                 </div>
@@ -767,42 +1259,42 @@ interface FeatureEfectiva {
                         const menoresRestantes = (resumenRsvp.menoresDisponibles ?? 0) - nuevosAcompanantes.filter(p => p.rolEvento === 'N').length;
 
                         return (
-                            <div className="w-full mt-12 pt-10 border-t border-white/10 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                                <div>
-                                    <h2 className="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
-                                        <Users className="w-6 h-6 text-indigo-400" />
+                            <div className="w-full mt-16 pt-12 border-t border-neutral-200/60 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                                <div className="text-center sm:text-left">
+                                    <h2 className="text-2xl font-black text-neutral-800 flex items-center justify-center sm:justify-start gap-2 tracking-tight">
+                                        <Users className="w-6 h-6 text-indigo-500" />
                                         Compañeros de Grupo Pendientes
                                     </h2>
-                                    <p className="text-muted text-xs sm:text-sm mt-1.5 max-w-lg">
+                                    <p className="text-neutral-500 text-xs sm:text-sm mt-1.5 max-w-lg mx-auto sm:mx-0">
                                         Tu grupo cuenta con cupos pendientes por definir. Podés agregarlos ahora o cerrar el grupo si no van a asistir más personas.
                                     </p>
                                 </div>
 
                                 {/* Resumen de Cupos */}
-                                <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div className="p-5 rounded-3xl border border-neutral-200/60 bg-white flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 shadow-sm">
                                     <div className="space-y-1">
-                                        <p className="text-xs font-bold text-muted uppercase tracking-widest">Te quedan por definir:</p>
+                                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Te quedan por definir:</p>
                                         <div className="flex gap-4 flex-wrap">
                                             {resumenRsvp.adultosDisponibles !== undefined && resumenRsvp.adultosDisponibles > 0 && (
-                                                <span className="text-sm font-semibold text-white">
-                                                    +{adultosRestantes} Adulto{adultosRestantes !== 1 ? 's' : ''}
+                                                <span className="text-sm font-bold text-neutral-800 flex items-center gap-1.5">
+                                                    <span className="w-2 h-2 rounded-full bg-indigo-400" /> +{adultosRestantes} Adulto{adultosRestantes !== 1 ? 's' : ''}
                                                 </span>
                                             )}
                                             {resumenRsvp.menoresDisponibles !== undefined && resumenRsvp.menoresDisponibles > 0 && (
-                                                <span className="text-sm font-semibold text-pink-400">
-                                                    +{menoresRestantes} Menor{menoresRestantes !== 1 ? 'es' : ''}
+                                                <span className="text-sm font-bold text-pink-600 flex items-center gap-1.5">
+                                                    <span className="w-2 h-2 rounded-full bg-pink-400" /> +{menoresRestantes} Menor{menoresRestantes !== 1 ? 'es' : ''}
                                                 </span>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Botones de acción */}
-                                    <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+                                    <div className="flex items-center gap-2.5 flex-wrap sm:shrink-0">
                                         {adultosRestantes > 0 && isFeatureActiva('RSVP_ACOMPANIANTES') && (
                                             <button
                                                 type="button"
                                                 onClick={addNuevoAcompananteAdulto}
-                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-bold border border-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-100/50 text-xs font-bold active:scale-[0.98] transition-all cursor-pointer"
                                             >
                                                 <PlusCircle className="w-4 h-4" />
                                                 Agregar Adulto
@@ -812,7 +1304,7 @@ interface FeatureEfectiva {
                                             <button
                                                 type="button"
                                                 onClick={addNuevoAcompananteMenor}
-                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-pink-500/10 text-pink-400 hover:bg-pink-500/20 text-xs font-bold border border-pink-500/20 active:scale-95 transition-all cursor-pointer"
+                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-100/50 text-xs font-bold active:scale-[0.98] transition-all cursor-pointer"
                                             >
                                                 <PlusCircle className="w-4 h-4" />
                                                 Agregar Menor
@@ -822,7 +1314,7 @@ interface FeatureEfectiva {
                                             type="button"
                                             onClick={handleCerrarGrupo}
                                             disabled={submittingCerrarGrupo}
-                                            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/5 text-muted hover:text-white border border-white/10 text-xs font-bold active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-neutral-100 text-neutral-600 hover:bg-neutral-200 border border-neutral-200/50 text-xs font-bold active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {submittingCerrarGrupo ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -837,44 +1329,56 @@ interface FeatureEfectiva {
                                 {nuevosAcompanantes.length > 0 && (
                                     <form onSubmit={handleConfirmarNuevosAcompanantes} className="space-y-6 animate-in fade-in duration-500">
                                         {nuevosAcompanantes.map((persona, idx) => (
-                                            <div key={idx} className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4 relative">
+                                            <div key={idx} className="relative rounded-3xl border border-neutral-200/60 bg-white p-6 space-y-6 shadow-sm">
                                                 <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${persona.rolEvento === 'A'
-                                                            ? 'bg-indigo-500/20 text-indigo-400'
-                                                            : 'bg-pink-500/20 text-pink-400'
-                                                            }`}>
-                                                            {persona.rolEvento === 'A' ? <User className="w-3.5 h-3.5" /> : <Baby className="w-3.5 h-3.5" />}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shadow-sm ${
+                                                            persona.rolEvento === 'A'
+                                                                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                                : 'bg-pink-50 text-pink-600 border border-pink-100'
+                                                        }`}>
+                                                            {persona.rolEvento === 'A' ? <User className="w-4 h-4" /> : <Baby className="w-4 h-4" />}
                                                         </div>
-                                                        <span className="text-xs font-bold text-muted uppercase tracking-widest">
+                                                        <span className="text-xs font-bold text-neutral-800 tracking-wide block">
                                                             {persona.rolEvento === 'A' ? 'Nuevo Adulto' : 'Nuevo Menor'}
                                                         </span>
                                                     </div>
 
-                                                    <button type="button" onClick={() => removeNuevoAcompanante(idx)}
-                                                        className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">
-                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeNuevoAcompanante(idx)}
+                                                        className="p-2 rounded-xl text-neutral-450 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all cursor-pointer"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Nombre</label>
-                                                        <input required value={persona.nombre} onChange={e => updateNuevoAcompanante(idx, 'nombre', e.target.value)}
-                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Nombre</label>
+                                                        <input 
+                                                            required 
+                                                            value={persona.nombre} 
+                                                            onChange={e => updateNuevoAcompanante(idx, 'nombre', e.target.value)}
+                                                            className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400" 
+                                                        />
                                                     </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Apellido</label>
-                                                        <input required value={persona.apellido} onChange={e => updateNuevoAcompanante(idx, 'apellido', e.target.value)}
-                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Apellido</label>
+                                                        <input 
+                                                            required 
+                                                            value={persona.apellido} 
+                                                            onChange={e => updateNuevoAcompanante(idx, 'apellido', e.target.value)}
+                                                            className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400" 
+                                                        />
                                                     </div>
                                                 </div>
 
                                                 {persona.rolEvento === 'A' && (
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                                <Mail className="w-3 h-3 inline mr-1" />
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">
+                                                                <Mail className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
                                                                 Email<span className="text-red-400 ml-0.5">*</span>
                                                             </label>
                                                             <input
@@ -882,12 +1386,12 @@ interface FeatureEfectiva {
                                                                 required
                                                                 value={persona.email}
                                                                 onChange={e => updateNuevoAcompanante(idx, 'email', e.target.value)}
-                                                                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                                className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none"
                                                             />
                                                         </div>
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                                <Phone className="w-3 h-3 inline mr-1" />
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">
+                                                                <Phone className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
                                                                 Celular<span className="text-red-400 ml-0.5">*</span>
                                                             </label>
                                                             <input
@@ -895,127 +1399,53 @@ interface FeatureEfectiva {
                                                                 required
                                                                 value={persona.celular}
                                                                 onChange={e => updateNuevoAcompanante(idx, 'celular', e.target.value)}
-                                                                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                                className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none"
                                                             />
                                                         </div>
                                                     </div>
                                                 )}
+
                                                 {/* Alimentación / Restricciones */}
                                                 {isFeatureActiva('RESTRICCIONES_ALIMENTARIAS') && (
-                                                    <div className="space-y-3 pt-2 border-t border-white/5">
-                                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
-                                                            <ChefHat className="w-3.5 h-3.5 text-indigo-400" /> Preferencias alimentarias
-                                                        </p>
-
-                                                        {catalogo.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {catalogo.map(cat => {
-                                                                const isSelected = !!persona.restriccionesSeleccionadas[cat.idRestriccion];
-                                                                return (
-                                                                    <button
-                                                                        key={cat.idRestriccion}
-                                                                        type="button"
-                                                                        onClick={() => toggleRestriccionNuevoAcompanante(idx, cat.idRestriccion)}
-                                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer
-                                                                            ${isSelected
-                                                                                ? 'bg-indigo-500/15 border-indigo-500/60 text-indigo-300'
-                                                                                : 'bg-white/5 border-white/10 text-muted hover:border-white/30 hover:text-white'}`}
-                                                                    >
-                                                                        {cat.nombre}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-
-                                                    {Object.values(persona.restriccionesSeleccionadas).map(r => {
-                                                        const cat = catalogo.find(c => c.idRestriccion === r.idRestriccion);
-                                                        if (cat?.categoria === 'ALERGIA' || cat?.codigo === 'CELIACO') {
-                                                            return (
-                                                                <div key={r.idRestriccion} className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/20 space-y-3 animate-in fade-in">
-                                                                    <p className="flex items-center gap-1.5 text-xs font-bold text-orange-400">
-                                                                        <HeartPulse className="w-3.5 h-3.5" /> {cat.nombre}
-                                                                    </p>
-                                                                    <div className="grid grid-cols-2 gap-3">
-                                                                        <div>
-                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Severidad</label>
-                                                                            <select
-                                                                                value={r.severidad}
-                                                                                onChange={e => updateRestriccionNuevoAcompanante(idx, r.idRestriccion, 'severidad', e.target.value as 'L' | 'M' | 'G')}
-                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500 cursor-pointer"
-                                                                            >
-                                                                                <option value="L">Leve</option>
-                                                                                <option value="M">Media</option>
-                                                                                <option value="G">Grave (contaminación cruzada)</option>
-                                                                            </select>
-                                                                        </div>
-                                                                        <div>
-                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Aclaración</label>
-                                                                            <input
-                                                                                placeholder="Ej: Sin nueces"
-                                                                                value={r.observaciones}
-                                                                                onChange={e => updateRestriccionNuevoAcompanante(idx, r.idRestriccion, 'observaciones', e.target.value)}
-                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        }
-                                                        return null;
-                                                    })}
-
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                            Otras aclaraciones (opcional)
-                                                        </label>
-                                                        <textarea
-                                                            rows={2}
-                                                            placeholder="Ej: No tolero el picante, prefiero vegetariano..."
-                                                            value={persona.alimentacionDetalle}
-                                                            onChange={e => updateNuevoAcompanante(idx, 'alimentacionDetalle', e.target.value)}
-                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none resize-none"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                    renderSeccionAlimentacion(persona, idx, 'nuevo')
                                                 )}
 
-                                                {/* ── Sección Música / Sugerencias (solo si feature activa) ── */}
+                                                {/* Sugerencias de música para acompañantes adicionales */}
                                                 {isFeatureActiva('MUSICA_SUGERENCIAS') && (
-                                                    <div className="space-y-4 pt-4 border-t border-white/5">
-                                                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
-                                                            <Music className="w-3.5 h-3.5 text-violet-400" /> ¿Qué tema no debería faltar en la fiesta?
+                                                    <div className="space-y-4 pt-4 border-t border-neutral-100">
+                                                        <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1.5">
+                                                            <Music className="w-4 h-4 text-violet-500" /> ¿Qué tema no debería faltar en la fiesta?
                                                         </p>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-muted/80 uppercase block mb-1">Título de la Canción</label>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-1.5 ml-1">Título de la Canción</label>
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Ej: Billie Jean"
                                                                     value={persona.sugerenciaTema || ''}
                                                                     onChange={e => updateNuevoAcompanante(idx, 'sugerenciaTema', e.target.value)}
-                                                                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                                    className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400"
                                                                 />
                                                             </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-muted/80 uppercase block mb-1">Artista / Banda</label>
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-1.5 ml-1">Artista / Banda</label>
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Ej: Michael Jackson"
                                                                     value={persona.sugerenciaArtista || ''}
                                                                     onChange={e => updateNuevoAcompanante(idx, 'sugerenciaArtista', e.target.value)}
-                                                                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                                    className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400"
                                                                 />
                                                             </div>
                                                         </div>
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-muted/80 uppercase block mb-1">Link de Spotify / YouTube (opcional)</label>
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-1.5 ml-1">Link de Spotify / YouTube (opcional)</label>
                                                             <input
                                                                 type="url"
                                                                 placeholder="Ej: https://open.spotify.com/..."
                                                                 value={persona.sugerenciaLink || ''}
                                                                 onChange={e => updateNuevoAcompanante(idx, 'sugerenciaLink', e.target.value)}
-                                                                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none"
+                                                                className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400"
                                                             />
                                                         </div>
                                                     </div>
@@ -1024,7 +1454,7 @@ interface FeatureEfectiva {
                                         ))}
 
                                         {errorNuevosMsg && (
-                                            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+                                            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-500 text-xs font-semibold animate-in fade-in">
                                                 {errorNuevosMsg}
                                             </div>
                                         )}
@@ -1032,7 +1462,7 @@ interface FeatureEfectiva {
                                         <button
                                             type="submit"
                                             disabled={submittingNuevos}
-                                            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black text-lg hover:bg-white/90 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-neutral-900 text-white font-black text-lg hover:bg-neutral-800 active:scale-[0.98] transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {submittingNuevos ? (
                                                 <>
@@ -1041,7 +1471,7 @@ interface FeatureEfectiva {
                                                 </>
                                             ) : (
                                                 <>
-                                                    Confirmar y Registrar Acompañante{nuevosAcompanantes.length !== 1 ? 's' : ''}
+                                                    Confirmar Acompañante{nuevosAcompanantes.length !== 1 ? 's' : ''}
                                                     <ArrowRight className="w-5 h-5" />
                                                 </>
                                             )}
@@ -1058,21 +1488,21 @@ interface FeatureEfectiva {
                         if (!tieneMenores) return null;
 
                         return (
-                            <div className="w-full mt-12 pt-10 border-t border-white/10 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                            <div className="w-full mt-16 pt-12 border-t border-neutral-200/60 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
                                 <div className="text-center sm:text-left flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
                                     <div>
-                                        <h2 className="text-2xl font-black text-white flex items-center gap-2 tracking-tight">
-                                            <Users className="w-6 h-6 text-emerald-400" />
-                                            Autorizados para Retiro
+                                        <h2 className="text-2xl font-black text-neutral-800 flex items-center justify-center sm:justify-start gap-2 tracking-tight">
+                                            <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                                            Autorizados para Retiro de Menores
                                         </h2>
-                                        <p className="text-muted text-xs sm:text-sm mt-1.5 max-w-lg">
-                                            Registrá a los adultos autorizados para retirar a los menores del predio. Cada uno contará con un código QR inmutable para validar su identidad en portería.
+                                        <p className="text-neutral-500 text-xs sm:text-sm mt-1.5 max-w-lg mx-auto sm:mx-0">
+                                            Registra a los adultos autorizados para retirar a los menores del predio. Cada uno contará con un código QR inmutable para validar su identidad en portería.
                                         </p>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setIsAuthModalOpen(true)}
-                                        className="flex items-center gap-2 py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer shrink-0"
+                                        className="w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 font-bold text-xs shadow-sm active:scale-[0.98] transition-all cursor-pointer shrink-0"
                                     >
                                         <PlusCircle className="w-4 h-4" />
                                         Autorizar Adulto
@@ -1080,14 +1510,14 @@ interface FeatureEfectiva {
                                 </div>
 
                                 {loadingAutorizados ? (
-                                    <div className="flex flex-col items-center justify-center py-10 text-emerald-400">
+                                    <div className="flex flex-col items-center justify-center py-12 text-emerald-600">
                                         <Loader2 className="w-8 h-8 animate-spin mb-3" />
-                                        <p className="text-xs text-muted font-bold tracking-widest uppercase">Cargando autorizados...</p>
+                                        <p className="text-xs text-neutral-500 font-bold tracking-widest uppercase">Cargando autorizaciones...</p>
                                     </div>
                                 ) : autorizados.length === 0 ? (
-                                    <div className="p-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-center flex flex-col items-center justify-center">
-                                        <p className="text-sm font-semibold text-muted">Sin autorizados registrados aún</p>
-                                        <p className="text-xs text-muted/60 mt-1 max-w-xs">Solo los responsables familiares principales (padres/tutores) podrán realizar los retiros por defecto.</p>
+                                    <div className="p-8 rounded-3xl border border-dashed border-neutral-200 bg-neutral-50/30 text-center flex flex-col items-center justify-center">
+                                        <p className="text-sm font-semibold text-neutral-600">Sin autorizados registrados aún</p>
+                                        <p className="text-xs text-neutral-500 mt-1 max-w-xs leading-relaxed">Solo los responsables familiares principales (padres/tutores) podrán realizar los retiros por defecto.</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1101,45 +1531,47 @@ interface FeatureEfectiva {
                                             return (
                                                 <div
                                                     key={idAutorizacion}
-                                                    className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] backdrop-blur-md flex flex-col justify-between gap-5 transition-all duration-300 hover:border-white/15"
+                                                    className="rounded-3xl border border-neutral-200/60 bg-white flex flex-col justify-between overflow-hidden shadow-sm"
                                                 >
-                                                    <div className="flex items-start justify-between gap-3">
+                                                    <div className="p-5 flex items-start justify-between gap-3 border-b border-neutral-100">
                                                         <div className="flex items-start gap-3">
-                                                            <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                                                                <User className="w-4 h-4" />
+                                                            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                                                                <ShieldCheck className="w-4 h-4" />
                                                             </div>
                                                             <div>
-                                                                <h4 className="font-bold text-white text-base leading-tight">{nombreAutorizado}</h4>
-                                                                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 mt-1 border border-emerald-500/20">
+                                                                <h4 className="font-bold text-neutral-800 text-base leading-tight">{nombreAutorizado}</h4>
+                                                                <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 mt-1 border border-emerald-100">
                                                                     {relacion}
                                                                 </span>
-                                                                <p className="text-xs text-muted flex items-center gap-1 mt-2 font-mono">
-                                                                    <Phone className="w-3.5 h-3.5 text-muted/70" /> {telefonoAutorizado}
+                                                                <p className="text-xs text-neutral-500 flex items-center gap-1.5 mt-2 font-mono">
+                                                                    <Phone className="w-3.5 h-3.5 text-neutral-400" /> {telefonoAutorizado}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                         <button
                                                             type="button"
                                                             onClick={() => handleEliminarAutorizado(idAutorizacion, nombreAutorizado)}
-                                                            className="p-2 rounded-lg bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors border border-red-500/10 cursor-pointer"
+                                                            className="p-2 rounded-xl text-neutral-400 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all cursor-pointer shrink-0"
                                                             title="Revocar autorización"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     </div>
 
-                                                    <div className="flex flex-col items-center bg-white/[0.02] border border-white/5 rounded-xl p-3 gap-3">
-                                                        <img
-                                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrToken || '')}`}
-                                                            alt={`QR para ${nombreAutorizado}`}
-                                                            width={140}
-                                                            height={140}
-                                                            className="rounded-lg border border-white/5 bg-white p-1"
-                                                        />
+                                                    <div className="p-5 bg-neutral-50/50 flex flex-col items-center gap-4">
+                                                        <div className="bg-white rounded-2xl p-2 border border-neutral-200/60 flex items-center justify-center shadow-sm">
+                                                            <img
+                                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrToken || '')}`}
+                                                                alt={`QR para ${nombreAutorizado}`}
+                                                                width={120}
+                                                                height={120}
+                                                                className="rounded-lg bg-white p-1 border border-neutral-100"
+                                                            />
+                                                        </div>
                                                         <button
                                                             type="button"
                                                             onClick={() => handleDownloadQr(qrToken || '', nombreAutorizado)}
-                                                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-black hover:bg-white/90 font-bold text-xs shadow-md transition-all cursor-pointer"
+                                                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-200/40 font-bold text-xs shadow-sm transition-all cursor-pointer"
                                                         >
                                                             <Download className="w-3.5 h-3.5" />
                                                             Descargar QR Autorizado
@@ -1156,14 +1588,14 @@ interface FeatureEfectiva {
 
                     {/* ── Modal de Agregar Autorizado ── */}
                     {isAuthModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                            <div className="w-full max-w-md p-6 rounded-2xl border border-white/10 bg-[#0d0d0d] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                            <div className="w-full max-w-md p-6 rounded-3xl border border-neutral-200 bg-white shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-300">
                                 {/* Ambient glow */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/30 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                                 
-                                <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
-                                    <h3 className="text-lg font-black text-white flex items-center gap-2 tracking-tight">
-                                        <PlusCircle className="w-5 h-5 text-emerald-400" />
+                                <div className="flex items-center justify-between mb-6 pb-3 border-b border-neutral-100">
+                                    <h3 className="text-lg font-black text-neutral-850 flex items-center gap-2 tracking-tight">
+                                        <PlusCircle className="w-5 h-5 text-emerald-600" />
                                         Autorizar Adulto
                                     </h3>
                                     <button
@@ -1172,68 +1604,68 @@ interface FeatureEfectiva {
                                             setIsAuthModalOpen(false);
                                             setErrorAuthMsg(null);
                                         }}
-                                        className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                                        className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-750 hover:bg-neutral-50 transition-all cursor-pointer"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
                                 </div>
 
                                 <form onSubmit={handleAgregarAutorizado} className="space-y-4">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Nombre Completo</label>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block mb-1.5 ml-1">Nombre Completo</label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Ej: Juan Pérez"
                                             value={authNombre}
                                             onChange={(e) => setAuthNombre(e.target.value)}
-                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none"
+                                            className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400 focus:bg-white"
                                             disabled={submittingAuth}
                                         />
                                     </div>
 
-                                    <div>
-                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Relación / Parentesco</label>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block mb-1.5 ml-1">Relación / Parentesco</label>
                                         <select
                                             value={authRelacion}
                                             onChange={(e) => setAuthRelacion(e.target.value)}
-                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none cursor-pointer"
+                                            className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-all text-neutral-850 text-sm outline-none cursor-pointer focus:bg-white"
                                             disabled={submittingAuth}
                                         >
-                                            <option value="Madre" className="bg-[#0d0d0d] text-white">Madre</option>
-                                            <option value="Padre" className="bg-[#0d0d0d] text-white">Padre</option>
-                                            <option value="Tío/a" className="bg-[#0d0d0d] text-white">Tío/a</option>
-                                            <option value="Abuelo/a" className="bg-[#0d0d0d] text-white">Abuelo/a</option>
-                                            <option value="Tutor Legal" className="bg-[#0d0d0d] text-white">Tutor Legal</option>
-                                            <option value="Niñero/a" className="bg-[#0d0d0d] text-white">Niñero/a</option>
-                                            <option value="Chofer" className="bg-[#0d0d0d] text-white">Chofer</option>
-                                            <option value="Otro" className="bg-[#0d0d0d] text-white">Otro</option>
+                                            <option value="Madre">Madre</option>
+                                            <option value="Padre">Padre</option>
+                                            <option value="Tío/a">Tío/a</option>
+                                            <option value="Abuelo/a">Abuelo/a</option>
+                                            <option value="Tutor Legal">Tutor Legal</option>
+                                            <option value="Niñero/a">Niñero/a</option>
+                                            <option value="Chofer">Chofer</option>
+                                            <option value="Otro">Otro</option>
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Teléfono Celular</label>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block mb-1.5 ml-1">Teléfono Celular</label>
                                         <input
                                             type="tel"
                                             required
                                             placeholder="Ej: +54 9 11 2345 6789"
                                             value={authCelular}
                                             onChange={(e) => setAuthCelular(e.target.value)}
-                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white text-sm outline-none font-mono"
+                                            className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-all text-neutral-800 text-sm outline-none font-mono placeholder:text-neutral-400 focus:bg-white"
                                             disabled={submittingAuth}
                                         />
-                                        <span className="text-[10px] text-muted/60 mt-1 block">Preferentemente en formato internacional con código de país.</span>
+                                        <span className="text-[10px] text-neutral-450 mt-1 block">Preferentemente con código de país.</span>
                                     </div>
 
                                     {errorAuthMsg && (
-                                        <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+                                        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-500 text-xs font-semibold animate-in fade-in">
                                             {errorAuthMsg}
                                         </div>
                                     )}
 
                                     <button
                                         type="submit"
-                                        className="w-full flex items-center justify-center gap-2 py-3 px-5 mt-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-full flex items-center justify-center gap-2 py-3.5 px-5 mt-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={submittingAuth}
                                     >
                                         {submittingAuth ? (
@@ -1253,78 +1685,109 @@ interface FeatureEfectiva {
                         </div>
                     )}
                 </div>
+                {renderPreviewBar()}
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white selection:bg-indigo-500/30 relative">
+        <div className="min-h-screen bg-[#faf9f5] text-neutral-800 selection:bg-indigo-100 relative overflow-x-hidden font-sans">
             {/* Ambient background */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-[50vw] h-[50vh] bg-indigo-500/5 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3" />
-                <div className="absolute bottom-0 left-0 w-[50vw] h-[50vh] bg-purple-500/5 blur-[100px] rounded-full -translate-x-1/3 translate-y-1/3" />
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute top-0 right-0 w-[50vw] h-[50vh] bg-indigo-100/30 blur-[120px] rounded-full translate-x-1/3 -translate-y-1/3" />
+                <div className="absolute bottom-0 left-0 w-[50vw] h-[50vh] bg-purple-100/30 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3" />
             </div>
 
-            <div className="max-w-2xl mx-auto px-6 py-12 md:py-20 relative z-10">
-                {/* Header */}
-                <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <span className="px-3 py-1 rounded-full border border-white/10 text-xs font-bold uppercase tracking-widest text-muted/80 bg-white/5 backdrop-blur-md mb-6 inline-block">
+            <div className="max-w-2xl mx-auto px-4 py-12 md:py-20 relative z-10">
+                {/* Header / Envelope card */}
+                <div className="relative w-full rounded-3xl border border-neutral-200 bg-white p-8 text-center mb-8 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="absolute inset-2 rounded-[22px] border border-dashed border-neutral-200 pointer-events-none" />
+                    
+                    <span className="relative z-10 px-3 py-1 rounded-full border border-indigo-100 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50/60 backdrop-blur-md mb-6 inline-block">
                         Confirma tu Asistencia
                     </span>
 
                     {invitacion?.saludo && (
-                        <p className="text-indigo-300 text-sm font-medium mb-3">{invitacion.saludo}</p>
+                        <p className="text-indigo-650 text-indigo-600 text-sm font-semibold tracking-wide mb-2 uppercase">{invitacion.saludo}</p>
                     )}
-                    <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+                    <h1 className="text-3xl md:text-4.5xl font-serif font-black tracking-tight text-neutral-800 mb-3 leading-tight">
                         {step === 'RSVP' ? "¡Estás invitado!" : "¡Hola de nuevo!"}
                     </h1>
                     {invitacion?.anfitriones && (
-                        <p className="text-muted mt-3 text-sm">
-                            De parte de <span className="text-white font-semibold">{invitacion.anfitriones}</span>
+                        <p className="text-neutral-500 mt-2 text-sm">
+                            De parte de <span className="text-neutral-800 font-semibold tracking-wide">{invitacion.anfitriones}</span>
                         </p>
                     )}
                     {invitacion?.mensajeBienvenida && (
-                        <p className="text-muted/70 mt-2 text-sm italic">&quot;{invitacion.mensajeBienvenida}&quot;</p>
+                        <div className="mt-6 pt-6 border-t border-neutral-100 max-w-md mx-auto">
+                            <p className="text-neutral-600 text-sm italic font-serif leading-relaxed">
+                                &ldquo;{invitacion.mensajeBienvenida}&rdquo;
+                            </p>
+                        </div>
                     )}
                 </div>
 
                 {/* --- Agenda del Evento --- */}
                 {step === 'RSVP' && invitacion?.agenda && invitacion.agenda.length > 0 && (() => {
-                    // Filtrar por idAcceso de la URL; si no hay match mostramos toda la agenda
                     const agendaFiltrada = idAccesoNum
                         ? invitacion.agenda.filter(a => a.idAcceso === idAccesoNum)
                         : invitacion.agenda;
                     const agendaMostrar = agendaFiltrada.length > 0 ? agendaFiltrada : invitacion.agenda;
 
                     return (
-                        <div className="mb-10 space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                            <h2 className="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-indigo-400" /> Tu Acceso al Evento
+                        <div className="mb-10 space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                            <h2 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                                <Calendar className="w-4 h-4 text-indigo-550 text-indigo-500" /> Agenda & Detalles de Acceso
                             </h2>
                             {agendaMostrar.map((acceso, aIdx) => (
-                                <div key={aIdx} className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
-                                    <div className="px-5 py-3 border-b border-white/5 bg-white/[0.03]">
-                                        <h3 className="font-bold text-sm text-white">{acceso.nombreAcceso}</h3>
+                                <div key={aIdx} className="rounded-3xl border border-neutral-200/60 bg-white overflow-hidden shadow-sm">
+                                    <div className="px-6 py-4 border-b border-neutral-100 bg-neutral-50/40 flex items-center justify-between">
+                                        <h3 className="font-bold text-sm text-neutral-800 tracking-wide">{acceso.nombreAcceso}</h3>
+                                        <span className="text-[10px] bg-neutral-100 border border-neutral-200/60 px-2.5 py-0.5 rounded-full text-neutral-500 font-medium">Programa</span>
                                     </div>
-                                    <div className="divide-y divide-white/5">
-                                        {acceso.tramos.map((tramo, tIdx) => (
-                                            <div key={tIdx} className="px-5 py-4 flex items-start gap-4">
-                                                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xs font-bold shrink-0 mt-0.5">
-                                                    {tramo.orden}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-semibold text-sm text-white">{tramo.nombre}</p>
-                                                    {tramo.descripcion && (
-                                                        <p className="text-xs text-muted mt-0.5">{tramo.descripcion}</p>
-                                                    )}
-                                                    {tramo.lugar && (
-                                                        <p className="text-xs text-muted/60 mt-1 flex items-center gap-1">
-                                                            <MapPin className="w-3 h-3" /> {tramo.lugar}{tramo.direccion ? ` — ${tramo.direccion}` : ''}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="p-6 relative">
+                                        {/* Timeline vertical bar */}
+                                        <div className="absolute left-10 top-8 bottom-8 w-[2px] bg-gradient-to-b from-indigo-200/50 via-purple-200/50 to-transparent" />
+                                        
+                                        <div className="space-y-8">
+                                            {acceso.tramos.map((tramo, tIdx) => {
+                                                const isCeremony = tramo.nombre.toLowerCase().includes('ceremonia') || tramo.nombre.toLowerCase().includes('boda') || tramo.nombre.toLowerCase().includes('civil');
+                                                const isParty = tramo.nombre.toLowerCase().includes('fiesta') || tramo.nombre.toLowerCase().includes('baile') || tramo.nombre.toLowerCase().includes('show');
+                                                const isDinner = tramo.nombre.toLowerCase().includes('cena') || tramo.nombre.toLowerCase().includes('comida') || tramo.nombre.toLowerCase().includes('recepcion') || tramo.nombre.toLowerCase().includes('recepción');
+                                                
+                                                let TramoIcon = Clock;
+                                                if (isCeremony) TramoIcon = Heart;
+                                                if (isParty) TramoIcon = Music;
+                                                if (isDinner) TramoIcon = ChefHat;
+
+                                                return (
+                                                    <div key={tIdx} className="relative flex items-start gap-6 group">
+                                                        <div className="relative z-10 w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm shadow-indigo-200 group-hover:scale-105 transition-transform duration-300">
+                                                            <TramoIcon className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 pt-1">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                                                <p className="font-bold text-sm text-neutral-850 group-hover:text-indigo-600 transition-colors">{tramo.nombre}</p>
+                                                            </div>
+                                                            {tramo.descripcion && (
+                                                                <p className="text-xs text-neutral-500 mt-1 leading-relaxed">{tramo.descripcion}</p>
+                                                            )}
+                                                            {tramo.lugar && (
+                                                                <a 
+                                                                    href={tramo.direccion ? `https://maps.google.com/?q=${encodeURIComponent(tramo.lugar + ' ' + tramo.direccion)}` : '#'} 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-[11px] text-neutral-400 hover:text-indigo-600 mt-2 flex items-center gap-1.5 w-fit transition-colors group/map"
+                                                                >
+                                                                    <MapPin className="w-3.5 h-3.5 text-neutral-400 group-hover/map:text-indigo-500 transition-colors" /> 
+                                                                    <span className="underline decoration-neutral-300 hover:decoration-indigo-550 hover:decoration-indigo-500">{tramo.lugar}{tramo.direccion ? ` (${tramo.direccion})` : ''}</span>
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -1335,42 +1798,99 @@ interface FeatureEfectiva {
                 {/* --- PASO 1: Formulario RSVP --- */}
                 {step === 'RSVP' && (
                     <form onSubmit={handleRsvpSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                        {/* Asistencia Toggle */}
-                        <div className="p-1 rounded-2xl bg-white/5 border border-white/10 flex">
-                            <button type="button" onClick={() => setGlobalAsiste(true)}
-                                className={`flex-1 py-4 text-sm font-bold rounded-xl transition-all ${globalAsiste === true ? 'bg-white text-black shadow-lg' : 'text-muted hover:text-white'}`}>
-                                ¡Sí, voy a ir!
-                            </button>
-                            <button type="button" onClick={() => setGlobalAsiste(false)}
-                                className={`flex-1 py-4 text-sm font-bold rounded-xl transition-all ${globalAsiste === false ? 'bg-red-500 text-white shadow-lg' : 'text-muted hover:text-white'}`}>
-                                No podré asistir
-                            </button>
+                        {/* Asistencia Toggle - Large interactive cards */}
+                        <div className="space-y-4">
+                            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest block px-1">
+                                ¿Nos acompañas en este día especial?
+                            </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setGlobalAsiste(true)}
+                                    className={`relative overflow-hidden p-6 rounded-3xl border text-left transition-all duration-300 cursor-pointer flex items-center gap-4 group ${
+                                        globalAsiste === true 
+                                            ? 'bg-emerald-50/70 border-emerald-250 text-emerald-850 shadow-md shadow-emerald-100' 
+                                            : 'bg-white border-neutral-200/60 hover:border-neutral-300 hover:bg-neutral-50/50 text-neutral-800'
+                                    }`}
+                                >
+                                    {globalAsiste === true && (
+                                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-100/50 rounded-full blur-2xl pointer-events-none" />
+                                    )}
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                                        globalAsiste === true 
+                                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200 scale-110' 
+                                            : 'bg-neutral-100 text-neutral-450 group-hover:text-neutral-600'
+                                    }`}>
+                                        <Sparkles className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className={`font-bold text-base tracking-wide ${globalAsiste === true ? 'text-emerald-800' : 'text-neutral-700'}`}>¡Sí, confirmo asistencia!</p>
+                                        <p className={`text-xs mt-0.5 leading-relaxed ${globalAsiste === true ? 'text-emerald-650' : 'text-neutral-400'}`}>Allí estaré para celebrar juntos.</p>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    type="button" 
+                                    onClick={() => setGlobalAsiste(false)}
+                                    className={`relative overflow-hidden p-6 rounded-3xl border text-left transition-all duration-300 cursor-pointer flex items-center gap-4 group ${
+                                        globalAsiste === false 
+                                            ? 'bg-rose-50/70 border-rose-250 text-rose-850 shadow-md shadow-rose-100' 
+                                            : 'bg-white border-neutral-200/60 hover:border-neutral-300 hover:bg-neutral-50/50 text-neutral-800'
+                                    }`}
+                                >
+                                    {globalAsiste === false && (
+                                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-rose-100/50 rounded-full blur-2xl pointer-events-none" />
+                                    )}
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                                        globalAsiste === false 
+                                            ? 'bg-rose-500 text-white shadow-md shadow-rose-200 scale-110' 
+                                            : 'bg-neutral-100 text-neutral-450 group-hover:text-neutral-600'
+                                    }`}>
+                                        <MailOpen className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className={`font-bold text-base tracking-wide ${globalAsiste === false ? 'text-rose-800' : 'text-neutral-700'}`}>No podré asistir</p>
+                                        <p className={`text-xs mt-0.5 leading-relaxed ${globalAsiste === false ? 'text-rose-650' : 'text-neutral-400'}`}>Lo lamento, esta vez no podré ir.</p>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
 
                         {globalAsiste !== null && (
                             <div className="space-y-6 animate-in fade-in duration-500">
-
                                 {/* --- Personas del Grupo --- */}
                                 <div className="space-y-4">
-                                    <h2 className="text-sm font-bold text-muted uppercase tracking-widest flex items-center gap-2">
-                                        <Users className="w-4 h-4 text-indigo-400" />
+                                    <h2 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                                        <Users className="w-4 h-4 text-indigo-550 text-indigo-500" />
                                         {invitacion?.nombreGrupo ? `Grupo: ${invitacion.nombreGrupo}` : 'Datos de los Invitados'}
                                     </h2>
 
                                     {personas.map((persona, idx) => (
-                                        <div key={idx} className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] space-y-4">
+                                        <div 
+                                            key={idx} 
+                                            className={`relative rounded-3xl border p-6 space-y-6 backdrop-blur-md transition-all duration-300 ${
+                                                persona.asiste || idx === 0
+                                                    ? 'bg-white border-neutral-200/60 shadow-sm' 
+                                                    : 'bg-neutral-50/50 border-neutral-200/30 opacity-60'
+                                            }`}
+                                        >
                                             <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${persona.rolEvento === 'A'
-                                                        ? 'bg-indigo-500/20 text-indigo-400'
-                                                        : 'bg-pink-500/20 text-pink-400'
-                                                        }`}>
-                                                        {persona.rolEvento === 'A' ? <User className="w-3.5 h-3.5" /> : <Baby className="w-3.5 h-3.5" />}
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shadow-sm ${
+                                                        persona.rolEvento === 'A'
+                                                            ? 'bg-indigo-50 text-indigo-650 text-indigo-600 border border-indigo-100'
+                                                            : 'bg-pink-50 text-pink-650 text-pink-600 border border-pink-100'
+                                                    }`}>
+                                                        {persona.rolEvento === 'A' ? <User className="w-4 h-4" /> : <Baby className="w-4 h-4" />}
                                                     </div>
-                                                    <span className="text-xs font-bold text-muted uppercase tracking-widest">
-                                                        {idx === 0 ? 'Titular' : persona.rolEvento === 'A' ? 'Adulto' : 'Menor'}
-                                                        {persona.isNew && ' (nuevo)'}
-                                                    </span>
+                                                    <div>
+                                                        <span className="text-xs font-bold text-neutral-800 tracking-wide block">
+                                                            {idx === 0 ? 'Titular del Grupo' : persona.rolEvento === 'A' ? 'Adulto Acompañante' : 'Menor Acompañante'}
+                                                        </span>
+                                                        {persona.isNew && (
+                                                            <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 mt-0.5 block">Nuevo Agregado</span>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 <div className="flex items-center gap-2">
@@ -1379,42 +1899,56 @@ interface FeatureEfectiva {
                                                         <button
                                                             type="button"
                                                             onClick={() => updatePersona(idx, 'asiste', !persona.asiste)}
-                                                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border ${persona.asiste
-                                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                                                : 'bg-red-500/10 border-red-500/20 text-red-400'
-                                                                }`}
+                                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                                                                persona.asiste
+                                                                    ? 'bg-emerald-50 border-emerald-250 text-emerald-700 hover:bg-emerald-100'
+                                                                    : 'bg-red-50 border-red-250 text-red-700 hover:bg-red-100'
+                                                            }`}
                                                         >
-                                                            {persona.asiste ? 'Asiste' : 'No asiste'}
+                                                            {persona.asiste ? 'Asistirá' : 'No asistirá'}
                                                         </button>
                                                     )}
                                                     {persona.isNew && (
-                                                        <button type="button" onClick={() => removePersona(idx)}
-                                                            className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
-                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => removePersona(idx)}
+                                                            className="p-2 rounded-xl text-neutral-450 hover:text-red-400 hover:bg-red-50 transition-all cursor-pointer border border-transparent hover:border-red-100"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Nombre</label>
-                                                    <input required value={persona.nombre} onChange={e => updatePersona(idx, 'nombre', e.target.value)}
-                                                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Nombre</label>
+                                                    <input 
+                                                        required 
+                                                        value={persona.nombre} 
+                                                        onChange={e => updatePersona(idx, 'nombre', e.target.value)}
+                                                        placeholder="Ej. Juan"
+                                                        className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400" 
+                                                    />
                                                 </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">Apellido</label>
-                                                    <input required value={persona.apellido} onChange={e => updatePersona(idx, 'apellido', e.target.value)}
-                                                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none" />
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Apellido</label>
+                                                    <input 
+                                                        required 
+                                                        value={persona.apellido} 
+                                                        onChange={e => updatePersona(idx, 'apellido', e.target.value)}
+                                                        placeholder="Ej. Pérez"
+                                                        className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:bg-white transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400" 
+                                                    />
                                                 </div>
                                             </div>
 
                                             {/* Email & Celular — adultos; required solo para el titular */}
                                             {persona.rolEvento === 'A' && (
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                            <Mail className="w-3 h-3 inline mr-1" />
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">
+                                                            <Mail className="w-3 h-3 inline mr-1 text-indigo-550 text-indigo-500" />
                                                             Email{idx === 0 && <span className="text-red-400 ml-0.5">*</span>}
                                                         </label>
                                                         <input
@@ -1422,14 +1956,15 @@ interface FeatureEfectiva {
                                                             required={idx === 0 && globalAsiste === true}
                                                             value={persona.email}
                                                             onChange={e => updatePersona(idx, 'email', e.target.value)}
-                                                            className={`w-full p-3 rounded-xl bg-white/5 border transition-all text-white text-sm outline-none
-                                                                focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500
-                                                                ${idx === 0 && globalAsiste === true && !persona.email.trim() ? 'border-red-500/50' : 'border-white/10'}`}
+                                                            placeholder="juanperez@ejemplo.com"
+                                                            className={`w-full p-3.5 rounded-2xl bg-neutral-50 border transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400 focus:bg-white
+                                                                focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400
+                                                                ${idx === 0 && globalAsiste === true && !persona.email.trim() ? 'border-red-400 bg-red-50/10' : 'border-neutral-200'}`}
                                                         />
                                                     </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                            <Phone className="w-3 h-3 inline mr-1" />
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">
+                                                            <Phone className="w-3 h-3 inline mr-1 text-indigo-550 text-indigo-500" />
                                                             Celular{idx === 0 && <span className="text-red-400 ml-0.5">*</span>}
                                                         </label>
                                                         <input
@@ -1437,131 +1972,123 @@ interface FeatureEfectiva {
                                                             required={idx === 0 && globalAsiste === true}
                                                             value={persona.celular}
                                                             onChange={e => updatePersona(idx, 'celular', e.target.value)}
-                                                            className={`w-full p-3 rounded-xl bg-white/5 border transition-all text-white text-sm outline-none
-                                                                focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500
-                                                                ${idx === 0 && globalAsiste === true && !persona.celular.trim() ? 'border-red-500/50' : 'border-white/10'}`}
+                                                            placeholder="+54 9 11 2345 6789"
+                                                            className={`w-full p-3.5 rounded-2xl bg-neutral-50 border transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400 focus:bg-white
+                                                                focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400
+                                                                ${idx === 0 && globalAsiste === true && !persona.celular.trim() ? 'border-red-400 bg-red-50/10' : 'border-neutral-200'}`}
                                                         />
                                                     </div>
                                                 </div>
                                             )}
 
                                             {/* ── Sección Alimentación (solo si asiste) ── */}
-                                            {(globalAsiste === true && (idx === 0 || persona.asiste)) && (
-                                                <div className="space-y-3 pt-2 border-t border-white/5">
-                                                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest flex items-center gap-1.5">
-                                                        <ChefHat className="w-3.5 h-3.5 text-indigo-400" /> Preferencias alimentarias
-                                                    </p>
-
-                                                    {/* Checkboxes del catálogo */}
-                                                    {catalogo.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {catalogo.map(cat => {
-                                                                const isSelected = !!persona.restriccionesSeleccionadas[cat.idRestriccion];
-                                                                return (
-                                                                    <button
-                                                                        key={cat.idRestriccion}
-                                                                        type="button"
-                                                                        onClick={() => toggleRestriccionPersona(idx, cat.idRestriccion)}
-                                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all
-                                                                            ${isSelected
-                                                                                ? 'bg-indigo-500/15 border-indigo-500/60 text-indigo-300'
-                                                                                : 'bg-white/5 border-white/10 text-muted hover:border-white/30 hover:text-white'}`}
-                                                                    >
-                                                                        {cat.nombre}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Detalle extra para restricciones de tipo ALERGIA */}
-                                                    {Object.values(persona.restriccionesSeleccionadas).map(r => {
-                                                        const cat = catalogo.find(c => c.idRestriccion === r.idRestriccion);
-                                                        if (cat?.categoria === 'ALERGIA' || cat?.codigo === 'CELIACO') {
-                                                            return (
-                                                                <div key={r.idRestriccion} className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/20 space-y-3 animate-in fade-in">
-                                                                    <p className="flex items-center gap-1.5 text-xs font-bold text-orange-400">
-                                                                        <HeartPulse className="w-3.5 h-3.5" /> {cat.nombre}
-                                                                    </p>
-                                                                    <div className="grid grid-cols-2 gap-3">
-                                                                        <div>
-                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Severidad</label>
-                                                                            <select
-                                                                                value={r.severidad}
-                                                                                onChange={e => updateRestriccionPersona(idx, r.idRestriccion, 'severidad', e.target.value as 'L' | 'M' | 'G')}
-                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
-                                                                            >
-                                                                                <option value="L">Leve</option>
-                                                                                <option value="M">Media</option>
-                                                                                <option value="G">Grave (contaminación cruzada)</option>
-                                                                            </select>
-                                                                        </div>
-                                                                        <div>
-                                                                            <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Aclaración</label>
-                                                                            <input
-                                                                                placeholder="Ej. Sin nueces"
-                                                                                value={r.observaciones}
-                                                                                onChange={e => updateRestriccionPersona(idx, r.idRestriccion, 'observaciones', e.target.value)}
-                                                                                className="w-full p-2.5 rounded-lg bg-black border border-white/10 text-white text-xs outline-none focus:border-orange-500"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        }
-                                                        return null;
-                                                    })}
-
-                                                    {/* Texto libre adicional */}
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1.5">
-                                                            Otras aclaraciones (opcional)
-                                                        </label>
-                                                        <textarea
-                                                            rows={2}
-                                                            placeholder="Ej: No tolero el picante, prefiero vegetariano..."
-                                                            value={persona.alimentacionDetalle}
-                                                            onChange={e => updatePersona(idx, 'alimentacionDetalle', e.target.value)}
-                                                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white text-sm outline-none resize-none"
-                                                        />
-                                                    </div>
-                                                </div>
+                                            {(globalAsiste === true && (idx === 0 || persona.asiste)) && isFeatureActiva('RESTRICCIONES_ALIMENTARIAS') && (
+                                                renderSeccionAlimentacion(persona, idx, 'main')
                                             )}
                                         </div>
                                     ))}
 
                                     {/* Buttons to add people if there are cupos */}
                                     {globalAsiste === true && (canAddAdulto || canAddMenor) && isFeatureActiva('RSVP_ACOMPANIANTES') && (
-                                        <div className="flex items-center gap-3 flex-wrap">
+                                        <div className="flex flex-col sm:flex-row items-center gap-3">
                                             {canAddAdulto && (
-                                                <button type="button" onClick={addPersonaAdulto}
-                                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 text-xs font-bold hover:bg-indigo-500/20 transition-all border border-indigo-500/20">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={addPersonaAdulto}
+                                                    className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-650 text-indigo-650 text-indigo-600 text-xs font-bold active:scale-[0.98] transition-all border border-indigo-100/50 cursor-pointer"
+                                                >
                                                     <PlusCircle className="w-4 h-4" /> Agregar Adulto
-                                                    <span className="text-muted/50">({invitacion!.cuposAdultosRestantes - personas.filter(p => p.isNew && p.rolEvento === 'A').length} disponible{invitacion!.cuposAdultosRestantes - personas.filter(p => p.isNew && p.rolEvento === 'A').length !== 1 ? 's' : ''})</span>
+                                                    <span className="text-[10px] text-neutral-550 text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-md font-mono border border-neutral-200/40">
+                                                        ({invitacion!.cuposAdultosRestantes - personas.filter(p => p.isNew && p.rolEvento === 'A').length} disp.)
+                                                    </span>
                                                 </button>
                                             )}
                                             {canAddMenor && (
-                                                <button type="button" onClick={addPersonaMenor}
-                                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pink-500/10 text-pink-400 text-xs font-bold hover:bg-pink-500/20 transition-all border border-pink-500/20">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={addPersonaMenor}
+                                                    className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-pink-50 hover:bg-pink-100 text-pink-650 text-pink-660 text-pink-600 text-xs font-bold active:scale-[0.98] transition-all border border-pink-100/50 cursor-pointer"
+                                                >
                                                     <PlusCircle className="w-4 h-4" /> Agregar Menor
-                                                    <span className="text-muted/50">({invitacion!.cuposMenoresRestantes - personas.filter(p => p.isNew && p.rolEvento === 'N').length} disponible{invitacion!.cuposMenoresRestantes - personas.filter(p => p.isNew && p.rolEvento === 'N').length !== 1 ? 's' : ''})</span>
+                                                    <span className="text-[10px] text-neutral-550 text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-md font-mono border border-neutral-200/40">
+                                                        ({invitacion!.cuposMenoresRestantes - personas.filter(p => p.isNew && p.rolEvento === 'N').length} disp.)
+                                                    </span>
                                                 </button>
                                             )}
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Mensaje al Organizador */}
-                                <div>
-                                    <label className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-2">
-                                        <MessageSquare className="w-3 h-3 inline mr-1" /> Mensaje al Organizador
-                                    </label>
-                                    <textarea rows={3} value={mensajeGrupo} onChange={e => setMensajeGrupo(e.target.value)}
-                                        placeholder="Un mensaje para los anfitriones..."
-                                        className="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-white outline-none resize-none" />
+                                {/* Mensaje al Organizador y Sugerencia de música */}
+                                <div className="space-y-6">
+                                    {globalAsiste === true && isFeatureActiva('MUSICA_SUGERENCIAS') && (
+                                        <div className="rounded-3xl border border-neutral-200/60 bg-white p-6 space-y-6 shadow-sm relative overflow-hidden">
+                                            {/* Ambient record shadow */}
+                                            <div className="absolute -right-12 -bottom-12 w-36 h-36 bg-violet-100/30 rounded-full blur-2xl pointer-events-none" />
+                                            
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600">
+                                                    <Music className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-neutral-800 tracking-wide">¿Qué tema no debería faltar en la pista?</h3>
+                                                    <p className="text-xs text-neutral-500">Sugiérenos tus canciones favoritas para bailar toda la noche.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Título de la Canción</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Ej: Billie Jean, La Bilirrubina..."
+                                                        value={personas[0]?.sugerenciaTema || ''}
+                                                        onChange={e => updatePersona(0, 'sugerenciaTema', e.target.value)}
+                                                        className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400 focus:bg-white"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Artista / Banda</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Ej: Michael Jackson, Juan Luis Guerra..."
+                                                        value={personas[0]?.sugerenciaArtista || ''}
+                                                        onChange={e => updatePersona(0, 'sugerenciaArtista', e.target.value)}
+                                                        className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400 focus:bg-white"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">Link de Spotify o YouTube (opcional)</label>
+                                                <input
+                                                    type="url"
+                                                    placeholder="https://open.spotify.com/track/..."
+                                                    value={personas[0]?.sugerenciaLink || ''}
+                                                    onChange={e => updatePersona(0, 'sugerenciaLink', e.target.value)}
+                                                    className="w-full p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-neutral-800 text-sm outline-none placeholder:text-neutral-400 focus:bg-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block ml-1">
+                                            <MessageSquare className="w-3.5 h-3.5 inline mr-1 text-indigo-550 text-indigo-500" /> Mensaje para los Anfitriones
+                                        </label>
+                                        <textarea 
+                                            rows={3} 
+                                            value={mensajeGrupo} 
+                                            onChange={e => setMensajeGrupo(e.target.value)}
+                                            placeholder="Escribe un mensaje o dedicatoria..."
+                                            className="w-full p-4 rounded-2xl bg-neutral-50 border border-neutral-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-neutral-855 text-neutral-800 outline-none resize-none placeholder:text-neutral-400 focus:bg-white" 
+                                        />
+                                    </div>
                                 </div>
 
-                                <button type="submit" className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black text-lg hover:bg-white/90 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]">
+                                <button 
+                                    type="submit" 
+                                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-neutral-900 text-white font-black text-lg hover:bg-neutral-800 active:scale-[0.98] transition-all shadow-md cursor-pointer animate-in fade-in"
+                                >
                                     Confirmar {globalAsiste ? 'Asistencia' : 'Inasistencia'} <ArrowRight className="w-5 h-5" />
                                 </button>
                             </div>
@@ -1569,6 +2096,7 @@ interface FeatureEfectiva {
                     </form>
                 )}
             </div>
+            {renderPreviewBar()}
         </div>
     );
 }

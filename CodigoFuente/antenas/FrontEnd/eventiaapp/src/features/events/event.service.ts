@@ -117,6 +117,8 @@ export async function getEventById(id: string): Promise<Event> {
         infoPublica: item.infoPublica ?? item.info_publica,
         info_publica: item.info_publica ?? item.infoPublica,
         estadoObservacionActual: item.estadoObservacionActual,
+        idCuenta: item.idCuenta ?? item.id_cuenta ?? item.IdCuenta ?? null,
+        id_cuenta: item.idCuenta ?? item.id_cuenta ?? item.IdCuenta ?? null,
     } as Event;
 }
 
@@ -248,6 +250,8 @@ export async function getAdminEventById(id: string): Promise<Event> {
         infoPublica: item.infoPublica ?? item.info_publica,
         info_publica: item.info_publica ?? item.infoPublica,
         estadoObservacionActual: item.estadoObservacionActual,
+        idCuenta: item.idCuenta ?? item.id_cuenta ?? item.IdCuenta ?? null,
+        id_cuenta: item.idCuenta ?? item.id_cuenta ?? item.IdCuenta ?? null,
     } as Event;
 }
 
