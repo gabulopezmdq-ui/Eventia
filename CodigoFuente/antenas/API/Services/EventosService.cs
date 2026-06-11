@@ -30,11 +30,11 @@ namespace API.Services
         // =========================================================
         private IQueryable<EventoResponse> QueryEventosConTipo()
         {
-            // OJO: tu ef_tipos_evento tiene: id_tipo_evento, activo, codigo
-            // y ef_param_traducciones: entidad, id_item (bigint), id_idioma, texto, activo
             var q =
                 from ev in _context.Set<ef_eventos>()
-                join te in _context.Set<ef_tipos_evento>() on ev.id_tipo_evento equals te.id_tipo_evento
+
+                join te in _context.Set<ef_tipos_evento>()
+                    on ev.id_tipo_evento equals te.id_tipo_evento
 
                 join tr in _context.Set<ef_param_traducciones>()
                     on new
@@ -54,12 +54,10 @@ namespace API.Services
                     into trj
                 from tr in trj.DefaultIfEmpty()
 
-                    // DRESS CODE (LEFT)
                 join dc in _context.Set<ef_dress_code>()
                     on ev.id_dress_code equals dc.id_dress_code into dcJ
                 from dc in dcJ.DefaultIfEmpty()
 
-                    // TRADUCCIÓN DRESS CODE (LEFT, depende de dc)
                 join trDc in _context.Set<ef_param_traducciones>()
                     on new
                     {
@@ -78,7 +76,7 @@ namespace API.Services
                     into trDcJ
                 from trDc in trDcJ.DefaultIfEmpty()
 
-                    // PLAN DEL EVENTO
+                    // PLAN GUARDADO EN EVENTO
                 join pl in _context.Set<ef_planes>()
                     on ev.id_plan equals pl.id_plan into plJ
                 from pl in plJ.DefaultIfEmpty()
@@ -87,6 +85,11 @@ namespace API.Services
                 join cta in _context.Set<ef_cuentas>()
                     on ev.id_cuenta equals cta.id_cuenta into ctaJ
                 from cta in ctaJ.DefaultIfEmpty()
+
+                    // PLAN ACTUAL DE CUENTA
+                join plCta in _context.Set<ef_planes>()
+                    on cta.id_plan equals plCta.id_plan into plCtaJ
+                from plCta in plCtaJ.DefaultIfEmpty()
 
                     // UNIDAD
                 join un in _context.Set<ef_cuenta_unidades>()
@@ -98,26 +101,10 @@ namespace API.Services
                     on ev.id_cliente equals cli.id_cliente into cliJ
                 from cli in cliJ.DefaultIfEmpty()
 
-                    // PLAN DE CUENTA
-                join plCta in _context.Set<ef_planes>()
-                    on cta.id_plan equals plCta.id_plan into plCtaJ
-                from plCta in plCtaJ.DefaultIfEmpty()
-
                     // PAIS
                 join pais in _context.Set<ef_paises>()
                     on ev.id_pais equals pais.id_pais into paisJ
                 from pais in paisJ.DefaultIfEmpty()
-
-                    // MERCADO PAIS
-                join mp in _context.Set<ef_mercado_paises>()
-                    on ev.id_pais equals mp.id_pais into mpJ
-                from mp in mpJ.DefaultIfEmpty()
-
-                    // MERCADO
-                join mer in _context.Set<ef_mercados>()
-                    on mp.codigo_mercado equals mer.codigo_mercado into merJ
-                from mer in merJ.DefaultIfEmpty()
-
 
                 select new EventoResponse
                 {
@@ -127,26 +114,50 @@ namespace API.Services
                     TipoEventoDescripcion = (tr != null && !string.IsNullOrWhiteSpace(tr.texto)) ? tr.texto : te.codigo,
 
                     IdIdioma = ev.id_idioma,
+
                     IdPais = ev.id_pais,
                     PaisCodigoIso2 = pais != null ? pais.codigo_iso2 : null,
-                    CodigoMercado = mer != null ? mer.codigo_mercado : null,
-                    CodigoMoneda = mer != null ? mer.codigo_moneda_default : null,
+
+                    // IMPORTANTE:
+                    // No hacemos join directo con ef_mercado_paises porque puede duplicar eventos.
+                    CodigoMercado =
+                        (
+                            from mp in _context.Set<ef_mercado_paises>()
+                            where mp.id_pais == ev.id_pais
+                                  && mp.activo == true
+                            orderby mp.codigo_mercado
+                            select mp.codigo_mercado
+                        ).FirstOrDefault(),
+
+                    CodigoMoneda =
+                        ev.id_cuenta != null && cta != null && !string.IsNullOrWhiteSpace(cta.moneda_default)
+                            ? cta.moneda_default
+                            : (
+                                from mp in _context.Set<ef_mercado_paises>()
+                                join mer in _context.Set<ef_mercados>()
+                                    on mp.codigo_mercado equals mer.codigo_mercado
+                                where mp.id_pais == ev.id_pais
+                                      && mp.activo == true
+                                      && mer.activo == true
+                                orderby mp.codigo_mercado
+                                select mer.codigo_moneda_default
+                            ).FirstOrDefault(),
 
                     IdCuenta = ev.id_cuenta,
                     IdUnidad = ev.id_unidad,
                     UnidadNombre = un != null ? un.nombre : null,
+
                     IdCliente = ev.id_cliente,
                     ClienteNombre = cli != null ? cli.nombre_cliente : null,
 
                     Modalidad =
-                    ev.id_cuenta == null
-                    ? null
-                    : (ev.id_cliente == null ? "PROPIO" : "CLIENTE"),
-
+                        ev.id_cuenta == null
+                            ? null
+                            : (ev.id_cliente == null ? "PROPIO" : "CLIENTE"),
 
                     AnfitrionesTexto = ev.anfitriones_texto,
+
                     Estado = ev.estado,
-                    //
                     EstadoDescripcion =
                         ev.estado == EventoEstado.Borrador ? "Borrador" :
                         ev.estado == EventoEstado.PendientePago ? "Pendiente de pago" :
@@ -155,11 +166,9 @@ namespace API.Services
                         ev.estado == EventoEstado.Anulado ? "Anulado" :
                         ev.estado,
 
-
                     FechaAlta = ev.fecha_alta,
 
                     TipoOperacion = ev.tipo_operacion,
-
                     EsPublico = ev.es_publico,
 
                     ModoUi =
@@ -169,13 +178,13 @@ namespace API.Services
                                 ? "EVENTO_PUBLICO"
                                 : "EVENTO_PRIVADO",
 
-                                        MostrarGestionInvitados =
+                    MostrarGestionInvitados =
                         ev.tipo_operacion == "EVENTO",
 
-                                        MostrarAudiencias =
+                    MostrarAudiencias =
                         ev.tipo_operacion == "EVENTO" && ev.es_publico,
 
-                                        ModoGestionInvitados =
+                    ModoGestionInvitados =
                         ev.tipo_operacion == "PROGRAMA"
                             ? "NO_APLICA"
                             : ev.es_publico
@@ -196,11 +205,23 @@ namespace API.Services
                     MensajeBienvenida = ev.mensaje_bienvenida,
                     Notas = ev.notas,
 
-                    //plan
-                    IdPlan = ev.id_plan,
-                    PlanCodigo = pl != null ? pl.codigo : null,
-                    PlanNombre = pl != null ? pl.nombre : null,
+                    // IMPORTANTE:
+                    // Para B2B mostramos como plan principal el plan ACTUAL de la cuenta.
+                    // Para B2C mostramos el plan del evento.
+                    IdPlan =
+                        ev.id_cuenta != null
+                            ? (cta != null ? cta.id_plan : ev.id_plan)
+                            : ev.id_plan,
 
+                    PlanCodigo =
+                        ev.id_cuenta != null
+                            ? (plCta != null ? plCta.codigo : null)
+                            : (pl != null ? pl.codigo : null),
+
+                    PlanNombre =
+                        ev.id_cuenta != null
+                            ? (plCta != null ? plCta.nombre : null)
+                            : (pl != null ? pl.nombre : null),
 
                     CuentaPlanCodigo = plCta != null ? plCta.codigo : null,
                     CuentaPlanNombre = plCta != null ? plCta.nombre : null
