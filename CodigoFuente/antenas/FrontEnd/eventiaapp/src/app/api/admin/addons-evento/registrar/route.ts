@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json(); // { id_scope_addon, moneda, importe, concepto }
 
-        // Mapea al GET del backend con body JSON según la especificación técnica
+        // Mapea al POST del backend con body JSON según la especificación técnica
         const res = await fetch(`${API_URL}/admin/addons_evento/registrar`, {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(await res.json());
     } catch (error) {
+        console.error('[Error registrar route]:', error);
         return NextResponse.json({ message: 'Error interno del proxy' }, { status: 500 });
     }
 }
