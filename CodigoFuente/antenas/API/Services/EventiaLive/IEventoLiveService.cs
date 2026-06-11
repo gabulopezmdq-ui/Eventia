@@ -16,5 +16,7 @@ namespace API.Services.EventiaLive
         Task CambiarEstadoGanadorAsync(long idGanador, LiveGanadorEstadoRequestDTO req);
         Task<List<LivePremioDTO>> GetPremiosAsync(long idDinamica);
         Task<long> UpsertPremioAsync(LivePremioUpsertRequestDTO req);
+        Task<LiveCanjearPremioResponseDTO> CanjearPremioAsync(LiveCanjearPremioRequestDTO req);
+        Task<LivePremioPorQrResponseDTO> GetPremioPorQrAsync(string qrToken);
     }
 }

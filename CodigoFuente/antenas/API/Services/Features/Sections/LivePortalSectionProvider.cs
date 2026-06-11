@@ -66,6 +66,23 @@ namespace API.Services.Features.Sections
                     x.modo_premio,
                     x.cantidad_ganadores,
 
+                    premios = _context.ef_evento_live_premios
+                        .Where(p =>
+                            p.id_dinamica == x.id_dinamica &&
+                            p.activo == true)
+                        .OrderBy(p => p.id_premio)
+                        .Select(p => new
+                        {
+                            p.id_premio,
+                            p.titulo,
+                            p.descripcion,
+                            p.modo_premio,
+                            p.cantidad_ganadores,
+                            p.instrucciones_entrega,
+                            p.sponsor_nombre
+                        })
+                        .ToList(),
+
                     opciones = _context.ef_evento_live_dinamica_opciones
                         .Where(o =>
                             o.id_dinamica == x.id_dinamica &&
@@ -129,8 +146,11 @@ namespace API.Services.Features.Sections
                         .Select(g => new
                         {
                             g.id_ganador,
+                            g.id_premio,
                             g.orden_ganador,
                             g.estado,
+                            g.qr_token_premio,
+                            g.fecha_generacion_qr,
                             g.fecha_ganador,
                             g.fecha_entrega
                         })

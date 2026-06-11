@@ -126,12 +126,17 @@ namespace API.DataSchema.DTO.EventiaLive
         public string? invitado_email { get; set; }
         public string? opcion_texto { get; set; }
         public DateTimeOffset? fecha_respuesta { get; set; }
+
+        public string? qr_token_premio { get; set; }
+        public DateTimeOffset? fecha_generacion_qr { get; set; }
+        public long? entregado_por_usuario { get; set; }
     }
 
     public class LiveGanadorEstadoRequestDTO
     {
         public string estado { get; set; } = string.Empty;
         public string? observaciones { get; set; }
+        public long? entregado_por_usuario { get; set; }
     }
 
     public class LivePremioDTO
@@ -158,6 +163,49 @@ namespace API.DataSchema.DTO.EventiaLive
         public string? instrucciones_entrega { get; set; }
         public string? sponsor_nombre { get; set; }
         public bool activo { get; set; } = true;
+    }
+
+    public class LiveCanjearPremioRequestDTO
+    {
+        public string qr_token_premio { get; set; } = string.Empty;
+        public long? entregado_por_usuario { get; set; }
+        public string? observaciones { get; set; }
+    }
+
+    public class LiveCanjearPremioResponseDTO
+    {
+        public bool ok { get; set; }
+        public string estado { get; set; } = string.Empty;
+        public string mensaje { get; set; } = string.Empty;
+        public long? id_ganador { get; set; }
+        public long? id_evento { get; set; }
+        public long? id_dinamica { get; set; }
+        public long? id_invitado { get; set; }
+        public string? premio { get; set; }
+        public string? invitado_nombre { get; set; }
+        public DateTimeOffset? fecha_entrega { get; set; }
+    }
+
+    public class LivePremioPorQrResponseDTO
+    {
+        public bool ok { get; set; }
+        public string estado { get; set; } = string.Empty;
+        public string mensaje { get; set; } = string.Empty;
+
+        public long? id_ganador { get; set; }
+        public long? id_evento { get; set; }
+        public long? id_dinamica { get; set; }
+        public long? id_invitado { get; set; }
+
+        public string? premio { get; set; }
+        public string? premio_descripcion { get; set; }
+        public string? sponsor_nombre { get; set; }
+
+        public string? invitado_nombre { get; set; }
+        public string? invitado_email { get; set; }
+
+        public DateTimeOffset? fecha_ganador { get; set; }
+        public DateTimeOffset? fecha_entrega { get; set; }
     }
 
 }
