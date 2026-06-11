@@ -189,15 +189,15 @@ export async function getMiPlan(): Promise<CuentaPlan> {
     const data = await res.json();
     return {
         id_cuenta: data.id_cuenta || data.idCuenta,
-        plan_nombre: data.planNombre || data.plan_nombre || 'Desconocido',
-        plan_codigo: data.planCodigo || data.plan_codigo || 'N/A',
-        precio: data.precio || 0,
-        moneda: data.moneda || 'ARS',
-        periodo: data.periodo || 'Mensual',
+        plan_nombre: data.plan?.nombre || data.planNombre || data.plan_nombre || 'Desconocido',
+        plan_codigo: data.plan?.codigo || data.planCodigo || data.plan_codigo || 'N/A',
+        precio: data.facturacion?.ultimo_pago_total || data.precio || 0,
+        moneda: data.facturacion?.moneda || data.moneda || 'ARS',
+        periodo: data.suscripcion?.periodo || data.periodo || 'Mensual',
         limite_eventos: data.limiteEventos || data.limite_eventos,
         limite_usuarios: data.limiteUsuarios || data.limite_usuarios,
-        estado: data.estado || 'Activo',
-        renovacion: data.renovacion,
+        estado: data.suscripcion?.estado || data.estado || 'Activo',
+        renovacion: data.suscripcion?.current_period_end || data.facturacion?.proximo_vencimiento || data.renovacion,
     };
 }
 
