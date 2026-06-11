@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace API.Services.EventiaLive
 {
@@ -449,6 +450,8 @@ namespace API.Services.EventiaLive
                         token_consulta = r.token_consulta,
                         orden_ganador = orden,
                         estado = "PENDIENTE",
+                        qr_token_premio = GenerarQrTokenPremio(),
+                        fecha_generacion_qr = DateTimeOffset.UtcNow,
                         fecha_ganador = DateTimeOffset.UtcNow
                     });
 
@@ -491,6 +494,9 @@ namespace API.Services.EventiaLive
                     id_evento = g.id_evento,
                     id_invitado = g.id_invitado,
                     token_consulta = g.token_consulta,
+                    qr_token_premio = g.qr_token_premio,
+                    fecha_generacion_qr = g.fecha_generacion_qr,
+                    entregado_por_usuario = g.entregado_por_usuario,
                     orden_ganador = g.orden_ganador,
                     estado = g.estado,
                     observaciones = g.observaciones,
@@ -525,7 +531,10 @@ namespace API.Services.EventiaLive
             ganador.fecha_modif = DateTimeOffset.UtcNow;
 
             if (estado == "ENTREGADO")
+            {
                 ganador.fecha_entrega = DateTimeOffset.UtcNow;
+                ganador.entregado_por_usuario = req.entregado_por_usuario;
+            }
 
             await _context.SaveChangesAsync();
         }
@@ -715,6 +724,213 @@ namespace API.Services.EventiaLive
             return premio.id_premio;
         }
 
+
+        public async Task<LiveCanjearPremioResponseDTO> CanjearPremioAsync(LiveCanjearPremioRequestDTO req)
+        {
+            if (req == null || string.IsNullOrWhiteSpace(req.qr_token_premio))
+                throw new Exception("Debe informar qr_token_premio.");
+
+            string token = req.qr_token_premio.Trim();
+
+            var ganador = await _context.ef_evento_live_ganadores
+                .FirstOrDefaultAsync(x => x.qr_token_premio == token);
+
+            if (ganador == null)
+            {
+                return new LiveCanjearPremioResponseDTO
+                {
+                    ok = false,
+                    estado = "NO_ENCONTRADO",
+                    mensaje = "QR de premio inválido."
+                };
+            }
+
+            var premio = await _context.ef_evento_live_premios
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.id_premio == ganador.id_premio);
+
+            string? invitadoNombre = null;
+
+            if (ganador.id_invitado.HasValue)
+            {
+                var invitado = await _context.ef_invitados
+                    .AsNoTracking()
+                    .Where(x => x.id_invitado == ganador.id_invitado.Value)
+                    .Select(x => new
+                    {
+                        x.nombre,
+                        x.apellido
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (invitado != null)
+                    invitadoNombre = $"{invitado.nombre} {invitado.apellido}".Trim();
+            }
+
+            if (ganador.estado == "ENTREGADO")
+            {
+                return new LiveCanjearPremioResponseDTO
+                {
+                    ok = false,
+                    estado = "YA_ENTREGADO",
+                    mensaje = "Este premio ya fue entregado.",
+                    id_ganador = ganador.id_ganador,
+                    id_evento = ganador.id_evento,
+                    id_dinamica = ganador.id_dinamica,
+                    id_invitado = ganador.id_invitado,
+                    premio = premio?.titulo,
+                    invitado_nombre = invitadoNombre,
+                    fecha_entrega = ganador.fecha_entrega
+                };
+            }
+
+            if (ganador.estado == "ANULADO" || ganador.estado == "CANCELADO")
+            {
+                return new LiveCanjearPremioResponseDTO
+                {
+                    ok = false,
+                    estado = ganador.estado,
+                    mensaje = "Este premio no está disponible para entrega.",
+                    id_ganador = ganador.id_ganador,
+                    id_evento = ganador.id_evento,
+                    id_dinamica = ganador.id_dinamica,
+                    id_invitado = ganador.id_invitado,
+                    premio = premio?.titulo,
+                    invitado_nombre = invitadoNombre
+                };
+            }
+
+            ganador.estado = "ENTREGADO";
+            ganador.fecha_entrega = DateTimeOffset.UtcNow;
+            ganador.entregado_por_usuario = req.entregado_por_usuario;
+            ganador.observaciones = req.observaciones;
+            ganador.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new LiveCanjearPremioResponseDTO
+            {
+                ok = true,
+                estado = "ENTREGADO",
+                mensaje = "Premio entregado correctamente.",
+                id_ganador = ganador.id_ganador,
+                id_evento = ganador.id_evento,
+                id_dinamica = ganador.id_dinamica,
+                id_invitado = ganador.id_invitado,
+                premio = premio?.titulo,
+                invitado_nombre = invitadoNombre,
+                fecha_entrega = ganador.fecha_entrega
+            };
+        }
+
+        private string GenerarQrTokenPremio()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(32);
+            return Convert.ToHexString(bytes).ToLower();
+        }
+
+        public async Task<LivePremioPorQrResponseDTO> GetPremioPorQrAsync(string qrToken)
+        {
+            if (string.IsNullOrWhiteSpace(qrToken))
+                throw new Exception("Debe informar qrToken.");
+
+            string token = qrToken.Trim();
+
+            var data = await (
+                from g in _context.ef_evento_live_ganadores.AsNoTracking()
+                join p in _context.ef_evento_live_premios.AsNoTracking()
+                    on g.id_premio equals p.id_premio
+                join i0 in _context.ef_invitados.AsNoTracking()
+                    on g.id_invitado equals i0.id_invitado into gi
+                from i in gi.DefaultIfEmpty()
+                where g.qr_token_premio == token
+                select new
+                {
+                    g.id_ganador,
+                    g.id_evento,
+                    g.id_dinamica,
+                    g.id_invitado,
+                    g.estado,
+                    g.fecha_ganador,
+                    g.fecha_entrega,
+                    premio = p.titulo,
+                    premio_descripcion = p.descripcion,
+                    p.sponsor_nombre,
+                    invitado_nombre = i == null ? null : ((i.nombre ?? "") + " " + (i.apellido ?? "")).Trim(),
+                    invitado_email = i == null ? null : i.email
+                }
+            ).FirstOrDefaultAsync();
+
+            if (data == null)
+            {
+                return new LivePremioPorQrResponseDTO
+                {
+                    ok = false,
+                    estado = "NO_ENCONTRADO",
+                    mensaje = "QR de premio inválido."
+                };
+            }
+
+            if (data.estado == "ENTREGADO")
+            {
+                return new LivePremioPorQrResponseDTO
+                {
+                    ok = false,
+                    estado = "YA_ENTREGADO",
+                    mensaje = "Este premio ya fue entregado.",
+                    id_ganador = data.id_ganador,
+                    id_evento = data.id_evento,
+                    id_dinamica = data.id_dinamica,
+                    id_invitado = data.id_invitado,
+                    premio = data.premio,
+                    premio_descripcion = data.premio_descripcion,
+                    sponsor_nombre = data.sponsor_nombre,
+                    invitado_nombre = data.invitado_nombre,
+                    invitado_email = data.invitado_email,
+                    fecha_ganador = data.fecha_ganador,
+                    fecha_entrega = data.fecha_entrega
+                };
+            }
+
+            if (data.estado == "ANULADO" || data.estado == "CANCELADO")
+            {
+                return new LivePremioPorQrResponseDTO
+                {
+                    ok = false,
+                    estado = data.estado,
+                    mensaje = "Este premio no está disponible para entrega.",
+                    id_ganador = data.id_ganador,
+                    id_evento = data.id_evento,
+                    id_dinamica = data.id_dinamica,
+                    id_invitado = data.id_invitado,
+                    premio = data.premio,
+                    premio_descripcion = data.premio_descripcion,
+                    sponsor_nombre = data.sponsor_nombre,
+                    invitado_nombre = data.invitado_nombre,
+                    invitado_email = data.invitado_email,
+                    fecha_ganador = data.fecha_ganador,
+                    fecha_entrega = data.fecha_entrega
+                };
+            }
+
+            return new LivePremioPorQrResponseDTO
+            {
+                ok = true,
+                estado = data.estado,
+                mensaje = "Premio válido para entrega.",
+                id_ganador = data.id_ganador,
+                id_evento = data.id_evento,
+                id_dinamica = data.id_dinamica,
+                id_invitado = data.id_invitado,
+                premio = data.premio,
+                premio_descripcion = data.premio_descripcion,
+                sponsor_nombre = data.sponsor_nombre,
+                invitado_nombre = data.invitado_nombre,
+                invitado_email = data.invitado_email,
+                fecha_ganador = data.fecha_ganador,
+                fecha_entrega = data.fecha_entrega
+            };
+        }
 
 
     }

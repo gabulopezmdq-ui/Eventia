@@ -17,5 +17,8 @@ namespace API.DataSchema
         public DateTimeOffset fecha_ganador { get; set; }
         public DateTimeOffset? fecha_entrega { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
+        public string? qr_token_premio { get; set; }
+        public DateTimeOffset? fecha_generacion_qr { get; set; }
+        public long? entregado_por_usuario { get; set; }
     }
 }

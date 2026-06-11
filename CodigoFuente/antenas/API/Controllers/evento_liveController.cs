@@ -157,6 +157,34 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("CanjearPremio")]
+        public async Task<IActionResult> CanjearPremio([FromBody] LiveCanjearPremioRequestDTO req)
+        {
+            try
+            {
+                var result = await _service.CanjearPremioAsync(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("PremioPorQr/{qrToken}")]
+        public async Task<IActionResult> PremioPorQr(string qrToken)
+        {
+            try
+            {
+                var result = await _service.GetPremioPorQrAsync(qrToken);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ok = false, message = ex.Message });
+            }
+        }
+
 
     }
 }
