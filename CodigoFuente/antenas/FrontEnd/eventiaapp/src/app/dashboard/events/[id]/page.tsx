@@ -813,7 +813,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                     Configurá tu lista de regalos, datos de transferencia y mensajes de agradecimiento.
                                 </p>
                                 <button
-                                    onClick={() => alert('Módulo de Regalos en construcción. ¡Estará disponible muy pronto!')}
+                                    onClick={() => router.push(`/dashboard/events/${event.id_evento}/regalos`)}
                                     className="w-full flex items-center justify-center gap-2 py-2.5 mt-4 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
                                 >
                                     <Gift className="w-3.5 h-3.5" />

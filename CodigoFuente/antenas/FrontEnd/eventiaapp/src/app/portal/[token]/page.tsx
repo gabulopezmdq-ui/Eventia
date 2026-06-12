@@ -42,6 +42,11 @@ import {
     type PortalPuntualResponse,
     type SeccionHabilitada,
 } from '@/src/features/portal/portal.service';
+import {
+    getMonedasCombo,
+    reservarRegalo,
+    aportarAlFondo,
+} from '@/src/features/regalos/regalos.service';
 import { useToast } from '@/src/context/ToastContext';
 
 // ─────────────────────────────────────────────────────────────────
@@ -767,8 +772,31 @@ function NovedadesSeccion({ data }: { data: any[] }) {
     );
 }
 
-function RegalosSeccion({ data }: { data: any }) {
+function RegalosSeccion({ data, onRefresh }: { data: any; onRefresh: () => void }) {
     const { addToast } = useToast();
+
+    const [isReservaModalOpen, setIsReservaModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [reservaForm, setReservaForm] = useState({
+        nombre_mostrado: '',
+        es_anonimo: false,
+        cantidad: 1,
+        mensaje: ''
+    });
+    const [reservaSaving, setReservaSaving] = useState(false);
+
+    const [isAporteModalOpen, setIsAporteModalOpen] = useState(false);
+    const [selectedMeta, setSelectedMeta] = useState<any>(null);
+    const [aporteForm, setAporteForm] = useState({
+        monto_aporte: '',
+        moneda_aporte: '',
+        nombre_mostrado: '',
+        es_anonimo: false,
+        mensaje: '',
+        mostrar_en_muro: true
+    });
+    const [monedas, setMonedas] = useState<any[]>([]);
+    const [aporteSaving, setAporteSaving] = useState(false);
 
     if (!data) return null;
 
@@ -802,6 +830,14 @@ function RegalosSeccion({ data }: { data: any }) {
             setSubTab(enabled[0]);
         }
     }, [transferencias_habilitado, lista_habilitado, fondo_metas_habilitado, subTab]);
+
+    useEffect(() => {
+        if (subTab === 'fondo') {
+            getMonedasCombo()
+                .then(setMonedas)
+                .catch(err => console.error('Error al cargar monedas combo:', err));
+        }
+    }, [subTab]);
 
     const [copiedIndex, setCopiedIndex] = useState<{ [key: string]: boolean }>({});
 
@@ -837,13 +873,96 @@ function RegalosSeccion({ data }: { data: any }) {
     // Helper para parsear datos de transferencia
     const parseTransferText = (text: string) => {
         if (!text) return [];
-        return text.split('\n').map((line) => {
+        return text.split('\\n').map((line) => {
             const parts = line.split(':');
             const label = parts[0]?.trim() || '';
             const value = parts.slice(1).join(':')?.trim() || '';
             return { label, value };
         }).filter(item => item.label && item.value);
     };
+
+    const handleOpenReservaModal = (item: any) => {
+        setSelectedItem(item);
+        setReservaForm({
+            nombre_mostrado: '',
+            es_anonimo: false,
+            cantidad: 1,
+            mensaje: ''
+        });
+        setIsReservaModalOpen(true);
+    };
+
+    const handleConfirmReserva = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedItem) return;
+        setReservaSaving(true);
+        try {
+            await reservarRegalo({
+                id_evento: data.id_evento || data.idEvento,
+                id_regalo_item: selectedItem.id_regalo_item,
+                rsvp_token: data.rsvp_token || data.rsvpToken,
+                nombre_mostrado: reservaForm.nombre_mostrado.trim() || 'Invitado',
+                es_anonimo: reservaForm.es_anonimo,
+                cantidad: reservaForm.cantidad,
+                mensaje: reservaForm.mensaje.trim() || null
+            });
+            addToast('Reserva realizada con éxito', 'success');
+            setIsReservaModalOpen(false);
+            onRefresh();
+        } catch (err: any) {
+            addToast(err.message || 'Error al realizar reserva', 'error');
+        } finally {
+            setReservaSaving(false);
+        }
+    };
+
+    const handleOpenAporteModal = (meta: any) => {
+        setSelectedMeta(meta);
+        setAporteForm({
+            monto_aporte: '',
+            moneda_aporte: fondo.moneda_base || 'ARS',
+            nombre_mostrado: '',
+            es_anonimo: false,
+            mensaje: '',
+            mostrar_en_muro: true
+        });
+        setIsAporteModalOpen(true);
+    };
+
+    const handleConfirmAporte = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedMeta) return;
+        const monto = parseFloat(aporteForm.monto_aporte);
+        if (isNaN(monto) || monto <= 0) {
+            addToast('El monto debe ser mayor a 0', 'error');
+            return;
+        }
+        setAporteSaving(true);
+        try {
+            await aportarAlFondo({
+                id_evento: data.id_evento || data.idEvento,
+                id_fondo: fondo.id_fondo,
+                id_meta: selectedMeta.id_meta,
+                rsvp_token: data.rsvp_token || data.rsvpToken,
+                nombre_mostrado: aporteForm.nombre_mostrado.trim() || 'Invitado',
+                es_anonimo: aporteForm.es_anonimo,
+                monto_aporte: monto,
+                moneda_aporte: aporteForm.moneda_aporte,
+                mensaje: aporteForm.mensaje.trim() || null,
+                mostrar_en_muro: aporteForm.mostrar_en_muro
+            });
+            addToast('Aporte enviado. Recordá realizar la transferencia bancaria.', 'success');
+            setIsAporteModalOpen(false);
+            onRefresh();
+        } catch (err: any) {
+            addToast(err.message || 'Error al enviar el aporte', 'error');
+        } finally {
+            setAporteSaving(false);
+        }
+    };
+
+    // Asegurar compatibilidad si 'lista' viene como objeto de backend
+    const listaArray = Array.isArray(lista) ? lista : (lista?.items || []);
 
     return (
         <div className="space-y-6">
@@ -855,7 +974,7 @@ function RegalosSeccion({ data }: { data: any }) {
                         onClick={() => setSubTab('transferencias')}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all ${subTab === 'transferencias'
                             ? 'bg-white dark:bg-card-bg text-indigo-600 dark:text-white shadow-sm'
-                            : 'text-muted hover:text-gray-950 dark:hover:text-white'
+                            : 'text-muted hover:text-gray-955 dark:hover:text-white'
                             }`}
                     >
                         <CreditCard className="w-4 h-4 shrink-0" />
@@ -868,7 +987,7 @@ function RegalosSeccion({ data }: { data: any }) {
                         onClick={() => setSubTab('lista')}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all ${subTab === 'lista'
                             ? 'bg-white dark:bg-card-bg text-indigo-600 dark:text-white shadow-sm'
-                            : 'text-muted hover:text-gray-950 dark:hover:text-white'
+                            : 'text-muted hover:text-gray-955 dark:hover:text-white'
                             }`}
                     >
                         <Gift className="w-4 h-4 shrink-0" />
@@ -881,7 +1000,7 @@ function RegalosSeccion({ data }: { data: any }) {
                         onClick={() => setSubTab('fondo')}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all ${subTab === 'fondo'
                             ? 'bg-white dark:bg-card-bg text-indigo-600 dark:text-white shadow-sm'
-                            : 'text-muted hover:text-gray-950 dark:hover:text-white'
+                            : 'text-muted hover:text-gray-955 dark:hover:text-white'
                             }`}
                     >
                         <Sparkles className="w-4 h-4 shrink-0" />
@@ -895,121 +1014,160 @@ function RegalosSeccion({ data }: { data: any }) {
                 {/* 1. Transferencias */}
                 {subTab === 'transferencias' && (
                     <div className="space-y-4">
-                        {transferencias.map((tf: any, idx: number) => {
-                            const parsedRows = parseTransferText(tf.datos_transferencia_texto);
-                            return (
-                                <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border space-y-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
-                                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-card-border pb-2.5">
-                                        <h5 className="font-extrabold text-gray-955 dark:text-white text-base flex items-center gap-2">
-                                            <CreditCard className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                                            {tf.titulo}
-                                        </h5>
-                                        <span className="text-[10px] font-black bg-indigo-50 dark:bg-indigo-950/45 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg">
-                                            {tf.codigo_moneda}
-                                        </span>
-                                    </div>
+                        {transferencias.length === 0 ? (
+                            <div className="p-8 text-center text-sm text-muted bg-white dark:bg-card-bg rounded-2xl border border-gray-200 dark:border-card-border">
+                                Aún no se cargaron datos de transferencia.
+                            </div>
+                        ) : (
+                            transferencias.map((tf: any, idx: number) => {
+                                const parsedRows = parseTransferText(tf.datos_transferencia_texto);
+                                return (
+                                    <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border space-y-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-card-border pb-2.5">
+                                            <h5 className="font-extrabold text-gray-955 dark:text-white text-base flex items-center gap-2">
+                                                <CreditCard className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                                {tf.titulo}
+                                            </h5>
+                                            <span className="text-[10px] font-black bg-indigo-50 dark:bg-indigo-950/45 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg">
+                                                {tf.codigo_moneda}
+                                            </span>
+                                        </div>
 
-                                    {/* Campos copiables */}
-                                    <div className="space-y-3">
-                                        {parsedRows.length > 0 ? (
-                                            parsedRows.map((row, rowIdx) => {
-                                                const uniqueKey = `${idx}-${rowIdx}`;
-                                                const isCopied = copiedIndex[uniqueKey];
-                                                return (
-                                                    <div key={rowIdx} className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 dark:bg-black/20 px-4 py-2.5 rounded-xl border border-gray-100/50 dark:border-card-border/40 gap-2">
-                                                        <div className="min-w-0">
-                                                            <span className="text-[10px] text-muted uppercase font-bold tracking-wider">{row.label}</span>
-                                                            <p className="font-bold text-gray-950 dark:text-white text-sm break-all font-mono">
-                                                                {row.value}
-                                                            </p>
+                                        {/* Campos copiables */}
+                                        <div className="space-y-3">
+                                            {parsedRows.length > 0 ? (
+                                                parsedRows.map((row, rowIdx) => {
+                                                    const uniqueKey = `${idx}-${rowIdx}`;
+                                                    const isCopied = copiedIndex[uniqueKey];
+                                                    return (
+                                                        <div key={rowIdx} className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 dark:bg-black/20 px-4 py-2.5 rounded-xl border border-gray-100/50 dark:border-card-border/40 gap-2">
+                                                            <div className="min-w-0">
+                                                                <span className="text-[10px] text-muted uppercase font-bold tracking-wider">{row.label}</span>
+                                                                <p className="font-bold text-gray-955 dark:text-white text-sm break-all font-mono">
+                                                                    {row.value}
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleCopy(row.value, uniqueKey)}
+                                                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all shrink-0 border ${isCopied
+                                                                    ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-950/50'
+                                                                    : 'bg-white dark:bg-card-bg text-gray-700 dark:text-gray-300 border-gray-200 dark:border-card-border hover:bg-gray-50 dark:hover:bg-black/10'
+                                                                    }`}
+                                                            >
+                                                                {isCopied ? (
+                                                                    <>
+                                                                        <Check className="w-3.5 h-3.5" />
+                                                                        Copiado
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Copy className="w-3.5 h-3.5" />
+                                                                        Copiar
+                                                                    </>
+                                                                )}
+                                                            </button>
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleCopy(row.value, uniqueKey)}
-                                                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all shrink-0 border ${isCopied
-                                                                ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-950/50'
-                                                                : 'bg-white dark:bg-card-bg text-gray-700 dark:text-gray-300 border-gray-200 dark:border-card-border hover:bg-gray-50 dark:hover:bg-black/10'
-                                                                }`}
-                                                        >
-                                                            {isCopied ? (
-                                                                <>
-                                                                    <Check className="w-3.5 h-3.5" />
-                                                                    Copiado
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Copy className="w-3.5 h-3.5" />
-                                                                    Copiar
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                );
-                                            })
-                                        ) : (
-                                            <p className="text-xs text-muted whitespace-pre-wrap">{tf.datos_transferencia_texto}</p>
+                                                    );
+                                                })
+                                            ) : (
+                                                <p className="text-xs text-muted whitespace-pre-wrap">{tf.datos_transferencia_texto}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Instrucciones */}
+                                        {tf.instrucciones && (
+                                            <div className="flex gap-2 p-3 bg-indigo-50/40 dark:bg-indigo-950/10 rounded-xl border border-indigo-100/30 dark:border-indigo-950/20">
+                                                <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                                <p className="text-xs text-muted leading-relaxed font-semibold">
+                                                    {tf.instrucciones}
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
-
-                                    {/* Instrucciones */}
-                                    {tf.instrucciones && (
-                                        <div className="flex gap-2 p-3 bg-indigo-50/40 dark:bg-indigo-950/10 rounded-xl border border-indigo-100/30 dark:border-indigo-950/20">
-                                            <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-                                            <p className="text-xs text-muted leading-relaxed font-semibold">
-                                                {tf.instrucciones}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                );
+                            })
+                        )}
                     </div>
                 )}
 
                 {/* 2. Lista de Regalos */}
                 {subTab === 'lista' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {lista.map((item: any, idx: number) => {
-                            const isDisponible = item.cantidad_disponible > 0;
-                            return (
-                                <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex flex-col justify-between gap-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
-                                    <div className="space-y-2">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <h5 className="font-extrabold text-gray-955 dark:text-white text-base leading-tight">
-                                                {item.titulo}
-                                            </h5>
-                                            {isDisponible ? (
-                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 shrink-0">
-                                                    Disponible
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-950/30 dark:text-gray-400 shrink-0">
-                                                    Reservado
-                                                </span>
+                        {listaArray.length === 0 ? (
+                            <div className="sm:col-span-2 p-8 text-center text-sm text-muted bg-white dark:bg-card-bg rounded-2xl border border-gray-200 dark:border-card-border">
+                                No hay regalos cargados en la lista.
+                            </div>
+                        ) : (
+                            listaArray.map((item: any, idx: number) => {
+                                const isDisponible = item.cantidad_disponible > 0;
+                                return (
+                                    <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex flex-col justify-between gap-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                                        <div className="space-y-2">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <h5 className="font-extrabold text-gray-955 dark:text-white text-base leading-tight">
+                                                    {item.titulo}
+                                                </h5>
+                                                {isDisponible ? (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 shrink-0">
+                                                        Disponible
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-950/30 dark:text-gray-400 shrink-0">
+                                                        Reservado
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {item.descripcion && (
+                                                <p className="text-xs text-muted leading-relaxed font-medium">
+                                                    {item.descripcion}
+                                                </p>
                                             )}
+
+                                            <div className="flex items-center gap-4 text-xs font-semibold text-neutral-455 pt-1">
+                                                <span>Disponible: <strong className="text-foreground">{item.cantidad_disponible}</strong></span>
+                                                <span>Total: <strong className="text-foreground/70">{item.cantidad_total}</strong></span>
+                                            </div>
                                         </div>
 
-                                        {item.descripcion && (
-                                            <p className="text-xs text-muted leading-relaxed font-medium">
-                                                {item.descripcion}
-                                            </p>
-                                        )}
-                                    </div>
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+                                            {item.url_referencia ? (
+                                                <a
+                                                    href={item.url_referencia}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                                >
+                                                    Ver referencia / link
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                </a>
+                                            ) : (
+                                                <div />
+                                            )}
 
-                                    {item.url_referencia && (
-                                        <a
-                                            href={item.url_referencia}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
-                                        >
-                                            Ver referencia / link
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                        </a>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                            {isDisponible ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenReservaModal(item)}
+                                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all text-center"
+                                                >
+                                                    Reservar regalo
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    className="px-4 py-2 bg-neutral-600/30 text-neutral-500 font-bold text-xs rounded-xl cursor-not-allowed text-center"
+                                                >
+                                                    Completo
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 )}
 
@@ -1018,7 +1176,7 @@ function RegalosSeccion({ data }: { data: any }) {
                     <div className="space-y-6">
                         {/* Intro Fondo */}
                         <div className="bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-100 dark:border-indigo-950/50 p-6 rounded-2xl space-y-2">
-                            <h5 className="font-black text-gray-950 dark:text-white text-lg flex items-center gap-2">
+                            <h5 className="font-black text-gray-955 dark:text-white text-lg flex items-center gap-2">
                                 <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
                                 {fondo.titulo || 'Fondo para el evento'}
                             </h5>
@@ -1033,46 +1191,269 @@ function RegalosSeccion({ data }: { data: any }) {
                         <div className="space-y-4">
                             <h6 className="text-xs font-semibold text-muted uppercase tracking-wider">Nuestras metas:</h6>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {metas.map((meta: any, idx: number) => {
-                                    const progress = Math.min(meta.porcentaje || 0, 100);
-                                    return (
-                                        <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border space-y-3 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
-                                            <div className="space-y-1">
-                                                <h6 className="font-extrabold text-gray-955 dark:text-white text-base leading-tight">
-                                                    {meta.titulo}
-                                                </h6>
-                                                {meta.descripcion && (
-                                                    <p className="text-xs text-muted leading-relaxed font-medium">
-                                                        {meta.descripcion}
-                                                    </p>
-                                                )}
-                                            </div>
+                                {metas.length === 0 ? (
+                                    <div className="sm:col-span-2 p-8 text-center text-sm text-muted bg-white dark:bg-card-bg rounded-2xl border border-gray-200 dark:border-card-border">
+                                        No hay metas asociadas a este fondo todavía.
+                                    </div>
+                                ) : (
+                                    metas.map((meta: any, idx: number) => {
+                                        const progress = Math.min(meta.porcentaje || 0, 100);
+                                        const isCompletado = progress >= 100;
+                                        return (
+                                            <div key={idx} className="bg-white dark:bg-card-bg p-5 rounded-2xl border border-gray-200 dark:border-card-border flex flex-col justify-between gap-4 transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div>
+                                                            <h6 className="font-extrabold text-gray-955 dark:text-white text-base leading-tight">
+                                                                {meta.titulo}
+                                                            </h6>
+                                                            {meta.descripcion && (
+                                                                <p className="text-xs text-muted leading-relaxed font-medium mt-1">
+                                                                    {meta.descripcion}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        {isCompletado && (
+                                                            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase shrink-0">
+                                                                Completado
+                                                            </span>
+                                                        )}
+                                                    </div>
 
-                                            {/* Progreso */}
-                                            <div className="space-y-1.5 pt-1">
-                                                <div className="w-full h-2.5 bg-gray-100 dark:bg-black/35 rounded-full overflow-hidden">
-                                                    <div
-                                                        style={{ width: `${progress}%` }}
-                                                        className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-700 ease-out"
-                                                    />
+                                                    {/* Progreso */}
+                                                    <div className="space-y-1.5 pt-1">
+                                                        <div className="w-full h-2.5 bg-gray-100 dark:bg-black/35 rounded-full overflow-hidden">
+                                                            <div
+                                                                style={{ width: `${progress}%` }}
+                                                                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-700 ease-out"
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs">
+                                                            <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                                                                {progress.toFixed(0)}% completado
+                                                            </span>
+                                                            <span className="font-bold text-gray-955 dark:text-white">
+                                                                {formatCurrency(meta.total_confirmado, fondo.moneda_base)} / {formatCurrency(meta.objetivo_monto, fondo.moneda_base)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between items-center text-xs">
-                                                    <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                                                        {progress.toFixed(1)}% completado
-                                                    </span>
-                                                    <span className="font-bold text-gray-950 dark:text-white">
-                                                        {formatCurrency(meta.total_confirmado, fondo.moneda_base)} / {formatCurrency(meta.objetivo_monto, fondo.moneda_base)}
-                                                    </span>
+
+                                                <div className="flex justify-between items-center pt-2">
+                                                    {fondo.mostrar_pendientes && meta.total_pendiente > 0 ? (
+                                                        <span className="text-[10px] text-amber-500 font-bold">
+                                                            Declarado pendiente: {formatCurrency(meta.total_pendiente, fondo.moneda_base)}
+                                                        </span>
+                                                    ) : (
+                                                        <div />
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenAporteModal(meta)}
+                                                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0"
+                                                    >
+                                                        Aportar
+                                                    </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* ── MODAL: RESERVAR REGALO (Público) ── */}
+            {isReservaModalOpen && selectedItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md bg-white dark:bg-card-bg rounded-3xl shadow-2xl border border-gray-200 dark:border-card-border p-6 space-y-6 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between border-b border-gray-150 dark:border-card-border/50 pb-3">
+                            <h3 className="text-base font-black text-gray-900 dark:text-white">
+                                Reservar: {selectedItem.titulo}
+                            </h3>
+                            <button onClick={() => setIsReservaModalOpen(false)} className="text-muted hover:text-foreground text-xs font-bold bg-gray-105 dark:bg-card-bg border p-1.5 rounded-xl">Cerrar</button>
+                        </div>
+                        <form onSubmit={handleConfirmReserva} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-455 uppercase mb-1.5">Tu Nombre</label>
+                                <input
+                                    type="text"
+                                    value={reservaForm.nombre_mostrado}
+                                    onChange={e => setReservaForm({ ...reservaForm, nombre_mostrado: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-card-border bg-gray-50 dark:bg-background text-sm text-foreground focus:border-indigo-500 outline-none"
+                                    placeholder="Tu Nombre y Apellido"
+                                    required={!reservaForm.es_anonimo}
+                                    disabled={reservaForm.es_anonimo}
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-background border rounded-xl">
+                                <input
+                                    type="checkbox"
+                                    id="reservaAnonima"
+                                    checked={reservaForm.es_anonimo}
+                                    onChange={e => setReservaForm({ ...reservaForm, es_anonimo: e.target.checked })}
+                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                />
+                                <label htmlFor="reservaAnonima" className="text-xs font-bold text-neutral-455 uppercase select-none cursor-pointer">
+                                    Hacer reserva anónima
+                                </label>
+                            </div>
+
+                            {selectedItem.cantidad_total > 1 && (
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-455 uppercase mb-1.5">Cantidad a Reservar</label>
+                                    <input
+                                        type="number"
+                                        value={reservaForm.cantidad}
+                                        onChange={e => setReservaForm({ ...reservaForm, cantidad: Math.min(selectedItem.cantidad_disponible, Math.max(1, parseInt(e.target.value) || 1)) })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-card-border bg-gray-50 dark:bg-background text-sm text-foreground focus:border-indigo-500 outline-none"
+                                        min="1"
+                                        max={selectedItem.cantidad_disponible}
+                                        required
+                                    />
+                                    <span className="text-[10px] text-neutral-550 mt-1 block">Disponible: {selectedItem.cantidad_disponible} unidades.</span>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-455 uppercase mb-1.5">Dejá un mensaje para los anfitriones</label>
+                                <textarea
+                                    value={reservaForm.mensaje}
+                                    onChange={e => setReservaForm({ ...reservaForm, mensaje: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-card-border bg-gray-50 dark:bg-background text-sm text-foreground focus:border-indigo-500 outline-none h-24 resize-none"
+                                    placeholder="Mensaje de felicitación..."
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-150 dark:border-card-border/50">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsReservaModalOpen(false)}
+                                    className="px-5 py-2.5 rounded-xl bg-gray-50 dark:bg-background border hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-bold uppercase transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={reservaSaving}
+                                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 uppercase transition-all disabled:opacity-50"
+                                >
+                                    {reservaSaving ? 'Reservando...' : 'Confirmar Reserva'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── MODAL: APORTAR AL FONDO (Público) ── */}
+            {isAporteModalOpen && selectedMeta && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md bg-white dark:bg-card-bg rounded-3xl shadow-2xl border border-gray-200 dark:border-card-border p-6 space-y-6 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between border-b border-gray-150 dark:border-card-border/50 pb-3">
+                            <h3 className="text-base font-black text-gray-900 dark:text-white">
+                                Aportar a: {selectedMeta.titulo}
+                            </h3>
+                            <button onClick={() => setIsAporteModalOpen(false)} className="text-muted hover:text-foreground text-xs font-bold bg-gray-105 dark:bg-card-bg border p-1.5 rounded-xl">Cerrar</button>
+                        </div>
+                        <form onSubmit={handleConfirmAporte} className="space-y-4">
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-bold text-neutral-455 uppercase mb-1.5">Monto del Aporte *</label>
+                                    <input
+                                        type="number"
+                                        value={aporteForm.monto_aporte}
+                                        onChange={e => setAporteForm({ ...aporteForm, monto_aporte: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-card-border bg-gray-50 dark:bg-background text-sm text-foreground focus:border-indigo-500 outline-none font-mono"
+                                        placeholder="Ej: 50"
+                                        min="1"
+                                        step="any"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-455 uppercase mb-1.5">Moneda *</label>
+                                    <select
+                                        value={aporteForm.moneda_aporte}
+                                        onChange={e => setAporteForm({ ...aporteForm, moneda_aporte: e.target.value })}
+                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-card-border bg-gray-50 dark:bg-background text-sm text-foreground focus:border-indigo-500 outline-none"
+                                        required
+                                    >
+                                        {monedas.length > 0 ? (
+                                            monedas.map(m => {
+                                                const cod = m.codigo_moneda || m.codigo;
+                                                return (
+                                                    <option key={cod} value={cod}>{cod}</option>
+                                                );
+                                            })
+                                        ) : (
+                                            <option value={fondo.moneda_base}>{fondo.moneda_base}</option>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-455 uppercase mb-1.5">Tu Nombre</label>
+                                <input
+                                    type="text"
+                                    value={aporteForm.nombre_mostrado}
+                                    onChange={e => setAporteForm({ ...aporteForm, nombre_mostrado: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-card-border bg-gray-50 dark:bg-background text-sm text-foreground focus:border-indigo-500 outline-none"
+                                    placeholder="Tu Nombre y Apellido"
+                                    required={!aporteForm.es_anonimo}
+                                    disabled={aporteForm.es_anonimo}
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-background border rounded-xl">
+                                <input
+                                    type="checkbox"
+                                    id="aporteAnonimo"
+                                    checked={aporteForm.es_anonimo}
+                                    onChange={e => setAporteForm({ ...aporteForm, es_anonimo: e.target.checked })}
+                                    className="rounded border-gray-350 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                />
+                                <label htmlFor="aporteAnonimo" className="text-xs font-bold text-neutral-455 uppercase select-none cursor-pointer">
+                                    Aporte anónimo
+                                </label>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-455 uppercase mb-1.5">Dejá un mensaje para los anfitriones</label>
+                                <textarea
+                                    value={aporteForm.mensaje}
+                                    onChange={e => setAporteForm({ ...aporteForm, mensaje: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-card-border bg-gray-50 dark:bg-background text-sm text-foreground focus:border-indigo-500 outline-none h-20 resize-none"
+                                    placeholder="Mensaje de felicitación..."
+                                />
+                            </div>
+
+                            <div className="p-3 bg-indigo-50/80 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs flex gap-2 border">
+                                <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                                <p><strong>Nota:</strong> Transferí por fuera usando los datos de transferencia del evento. Luego confirmaremos tu aporte.</p>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-150 dark:border-card-border/50">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAporteModalOpen(false)}
+                                    className="px-5 py-2.5 rounded-xl bg-gray-50 dark:bg-background border hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-bold uppercase transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={aporteSaving}
+                                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 uppercase transition-all disabled:opacity-50"
+                                >
+                                    {aporteSaving ? 'Enviando...' : 'Enviar Aporte'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -1354,9 +1735,10 @@ interface ContenidoSeccionProps {
     desbloqueado: boolean;
     data: any;
     onDesbloquear: () => void;
+    onRefresh: () => void;
 }
 
-function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: ContenidoSeccionProps) {
+function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear, onRefresh }: ContenidoSeccionProps) {
     const isSensible = seccion.requiere_desbloqueo;
     const isBloqueada = isSensible && !desbloqueado;
 
@@ -1417,7 +1799,7 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear }: Conten
     }
 
     if (codigoUpper === 'REGALOS') {
-        return <RegalosSeccion data={data} />;
+        return <RegalosSeccion data={data} onRefresh={onRefresh} />;
     }
 
     if (codigoUpper === 'SERVICIOS') {
@@ -1857,6 +2239,7 @@ export default function PortalPage({
                                     desbloqueado={desbloqueado_sensible}
                                     data={getActiveData()}
                                     onDesbloquear={() => triggerDesbloqueo(seccionActiva)}
+                                    onRefresh={() => cargarPortal(true)}
                                 />
                             ) : (
                                 <p className="text-sm text-muted text-center py-12">
