@@ -261,7 +261,13 @@ namespace API.Controllers
                     permite_acceso_evento = f.visible_acceso_evento_default,
                     permite_centro_evento = f.visible_centro_evento_default,
                     permite_acceso_programa = f.visible_acceso_programa_default,
-                    permite_centro_programa = f.visible_centro_programa_default
+                    permite_centro_programa = f.visible_centro_programa_default,
+
+                    id_feature_padre = f.id_feature_padre,
+                    es_feature_padre = f.es_feature_padre,
+                    es_configurable_usuario = f.es_configurable_usuario,
+                    orden_categoria = f.orden_categoria,
+                    orden_feature = f.orden_feature
                 })
                 .ToListAsync();
 
@@ -375,9 +381,38 @@ namespace API.Controllers
                 }
             }
 
-            featuresFinales = featuresFinales
-                .OrderBy(x => x.categoria)
+            var padresById = featuresFinales
+                .Where(x => x.es_feature_padre || x.id_feature_padre == null)
+                .ToDictionary(x => x.id_feature);
+
+            foreach (var hija in featuresFinales.Where(x => x.id_feature_padre.HasValue))
+            {
+                if (padresById.TryGetValue(hija.id_feature_padre.Value, out var padre))
+                {
+                    hija.codigo_feature_padre = padre.codigo;
+                    hija.nombre_feature_padre = padre.nombre;
+                }
+            }
+
+            var featuresJerarquicas = featuresFinales
+                .Where(x => x.id_feature_padre == null)
+                .OrderBy(x => x.orden_categoria ?? 999)
+                .ThenBy(x => x.orden_feature ?? 999)
+                .ThenBy(x => x.categoria)
                 .ThenBy(x => x.codigo)
+                .ToList();
+
+            foreach (var padre in featuresJerarquicas)
+            {
+                padre.hijas = featuresFinales
+                    .Where(x => x.id_feature_padre == padre.id_feature)
+                    .OrderBy(x => x.orden_feature ?? 999)
+                    .ThenBy(x => x.codigo)
+                    .ToList();
+            }
+
+            featuresFinales = featuresJerarquicas
+                .Where(x => x.es_configurable_usuario == true)
                 .ToList();
 
             var resp = new EventoFeaturesEfectivasResponseDTO
