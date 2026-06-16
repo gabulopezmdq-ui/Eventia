@@ -1,4 +1,6 @@
-﻿public class FeatureEfectivaDTO
+﻿using System.Collections.Generic;
+
+public class FeatureEfectivaDTO
 {
     public long id_feature { get; set; }
     public string codigo { get; set; } = null!;
@@ -45,4 +47,15 @@
     public bool permite_centro_programa { get; set; }
     public bool aplica_evento { get; set; }
     public bool aplica_programa { get; set; }
+    public long? id_feature_padre { get; set; }
+    public string? codigo_feature_padre { get; set; }
+    public string? nombre_feature_padre { get; set; }
+
+    public bool es_feature_padre { get; set; }
+    public bool es_configurable_usuario { get; set; }
+
+    public int? orden_categoria { get; set; }
+    public int? orden_feature { get; set; }
+
+    public List<FeatureEfectivaDTO> hijas { get; set; } = new();
 }
