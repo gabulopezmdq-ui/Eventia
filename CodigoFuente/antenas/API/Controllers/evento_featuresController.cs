@@ -70,13 +70,6 @@ namespace API.Controllers
             if (!featureExiste)
                 return BadRequest("Feature inexistente o inactiva.");
 
-            if (activo)
-            {
-                var valid = await ValidarDependencias(idEvento, idFeature);
-                if (!valid.ok)
-                    return BadRequest(new { error = "Dependencias incompletas.", dependencias_faltantes = valid.faltantes });
-            }
-
             var row = await _context.Set<ef_evento_features>()
                 .SingleOrDefaultAsync(x => x.id_evento == idEvento && x.id_feature == idFeature);
 
@@ -97,7 +90,7 @@ namespace API.Controllers
                 row.activo = activo;
             }
 
-            await SincronizarRegalosPadreAsync(idEvento);
+            await SincronizarHijasFeatureAsync(idEvento, idFeature, activo);
 
             await _context.SaveChangesAsync();
 
@@ -159,23 +152,6 @@ namespace API.Controllers
 
             foreach (var it in req.items)
             {
-                if (it.activo)
-                {
-                    var valid = await ValidarDependencias(idEvento, it.id_feature);
-                    if (!valid.ok)
-                    {
-                        return BadRequest(new
-                        {
-                            error = "Dependencias incompletas.",
-                            id_feature = it.id_feature,
-                            dependencias_faltantes = valid.faltantes
-                        });
-                    }
-                }
-            }
-
-            foreach (var it in req.items)
-            {
                 if (byFeature.TryGetValue(it.id_feature, out var row))
                 {
                     row.activo = it.activo;
@@ -190,9 +166,9 @@ namespace API.Controllers
                         config_json = null
                     });
                 }
-            }
 
-            await SincronizarRegalosPadreAsync(idEvento);
+                await SincronizarHijasFeatureAsync(idEvento, it.id_feature, it.activo);
+            }
 
             await _context.SaveChangesAsync();
 
@@ -240,7 +216,7 @@ namespace API.Controllers
                 row.config_json = req.config_json;
             }
 
-            await SincronizarRegalosPadreAsync(idEvento);
+            await SincronizarHijasFeatureAsync(idEvento, idFeature, true);
 
             await _context.SaveChangesAsync();
 
@@ -255,88 +231,39 @@ namespace API.Controllers
             });
         }
 
-        private async Task SincronizarRegalosPadreAsync(long idEvento)
+        private async Task SincronizarHijasFeatureAsync(long idEvento, long idFeaturePadre, bool activo)
         {
-            var featuresRegalos = await _context.Set<ef_param_features>()
-                .Where(f => f.codigo == "REGALOS"
-                         || f.codigo == "REGALOS_TRANSFERENCIAS"
-                         || f.codigo == "REGALOS_LISTA"
-                         || f.codigo == "REGALOS_FONDO_METAS")
-                .Select(f => new { f.id_feature, f.codigo })
+            var hijasIds = await _context.Set<ef_param_features>()
+                .Where(f => f.id_feature_padre == idFeaturePadre && f.activo == true)
+                .Select(f => f.id_feature)
                 .ToListAsync();
 
-            var featurePadre = featuresRegalos.FirstOrDefault(f => f.codigo == "REGALOS");
-
-            if (featurePadre == null)
+            if (hijasIds.Count == 0)
                 return;
 
-            var idsSubfeatures = featuresRegalos
-                .Where(f => f.codigo != "REGALOS")
-                .Select(f => f.id_feature)
-                .ToList();
+            var existentes = await _context.Set<ef_evento_features>()
+                .Where(x => x.id_evento == idEvento && hijasIds.Contains(x.id_feature))
+                .ToListAsync();
 
-            bool haySubfeatureActiva = await _context.Set<ef_evento_features>()
-                .AnyAsync(x =>
-                    x.id_evento == idEvento &&
-                    idsSubfeatures.Contains(x.id_feature) &&
-                    x.activo == true);
+            var existentesByFeature = existentes.ToDictionary(x => x.id_feature, x => x);
 
-            var rowPadre = await _context.Set<ef_evento_features>()
-                .SingleOrDefaultAsync(x =>
-                    x.id_evento == idEvento &&
-                    x.id_feature == featurePadre.id_feature);
-
-            if (haySubfeatureActiva)
+            foreach (var idHija in hijasIds)
             {
-                if (rowPadre == null)
+                if (existentesByFeature.TryGetValue(idHija, out var row))
+                {
+                    row.activo = activo;
+                }
+                else
                 {
                     _context.Set<ef_evento_features>().Add(new ef_evento_features
                     {
                         id_evento = idEvento,
-                        id_feature = featurePadre.id_feature,
-                        activo = true,
+                        id_feature = idHija,
+                        activo = activo,
                         config_json = null
                     });
                 }
-                else
-                {
-                    rowPadre.activo = true;
-                }
             }
-            else
-            {
-                if (rowPadre != null)
-                    rowPadre.activo = false;
-            }
-        }
-
-        private async Task<(bool ok, List<object> faltantes)> ValidarDependencias(long id_evento, long id_feature)
-        {
-            var requeridas = await _context.Set<ef_param_feature_dependencias>()
-                .Where(d => d.id_feature == id_feature)
-                .Select(d => d.id_feature_requiere)
-                .ToListAsync();
-
-            if (requeridas == null || requeridas.Count == 0)
-                return (true, new List<object>());
-
-            var activas = await _context.Set<ef_evento_features>()
-                .Where(ef => ef.id_evento == id_evento && ef.activo == true)
-                .Select(ef => ef.id_feature)
-                .ToListAsync();
-
-            var faltanIds = requeridas.Except(activas).ToList();
-
-            if (faltanIds.Count == 0)
-                return (true, new List<object>());
-
-            var faltantes = await _context.Set<ef_param_features>()
-                .Where(f => faltanIds.Contains(f.id_feature))
-                .Select(f => new { id_feature = f.id_feature, codigo = f.codigo, nombre = f.nombre })
-                .Cast<object>()
-                .ToListAsync();
-
-            return (false, faltantes);
         }
     }
 }
