@@ -42,6 +42,7 @@ interface FeaturesEfectivasResponse {
 interface FeaturesEventoProps {
     idEvento: number;
     tipoOperacion?: 'EVENTO' | 'PROGRAMA';
+    onSaveSuccess?: () => void;
 }
 
 function getCategoryIcon(category: string) {
@@ -99,7 +100,7 @@ function getFeatureIcon(codigo: string) {
     return <Layers className="w-4 h-4 text-muted" />;
 }
 
-export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENTO' }: FeaturesEventoProps) {
+export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENTO', onSaveSuccess }: FeaturesEventoProps) {
     const [planNombre, setPlanNombre] = useState<string>('');
     const [features, setFeatures] = useState<FeatureEfectiva[]>([]);
     const [localActivas, setLocalActivas] = useState<Record<number, boolean>>({});
@@ -250,6 +251,9 @@ export default function FeaturesEventoManager({ idEvento, tipoOperacion = 'EVENT
             setSaveSuccess(true);
             // Refresh effective features from backend to resolve values
             await fetchData();
+            if (onSaveSuccess) {
+                onSaveSuccess();
+            }
 
             setTimeout(() => {
                 setSaveSuccess(false);

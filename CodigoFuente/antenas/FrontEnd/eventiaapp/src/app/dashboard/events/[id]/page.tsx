@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use, Suspense } from 'react';
+import { useEffect, useState, use, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -109,6 +109,18 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
     const isAdmin = scope === 'admin';
     const idEventoLong = Number(id);
 
+    const loadFeaturesEfectivas = useCallback(async () => {
+        try {
+            const resFeats = await fetch(`/api/features-efectivas?idEvento=${idEventoLong}`);
+            if (resFeats.ok) {
+                const dataFeats = await resFeats.json();
+                setFeaturesEfectivas(dataFeats.features || []);
+            }
+        } catch (e) {
+            console.warn('No se pudieron cargar las features efectivas', e);
+        }
+    }, [idEventoLong]);
+
     useEffect(() => {
         async function loadData() {
             setLoading(true);
@@ -135,15 +147,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 }
 
                 // Cargar features efectivas
-                try {
-                    const resFeats = await fetch(`/api/features-efectivas?idEvento=${idEventoLong}`);
-                    if (resFeats.ok) {
-                        const dataFeats = await resFeats.json();
-                        setFeaturesEfectivas(dataFeats.features || []);
-                    }
-                } catch (e) {
-                    console.warn('No se pudieron cargar las features efectivas', e);
-                }
+                await loadFeaturesEfectivas();
             } catch {
                 setError('No se pudo cargar el detalle del evento');
             } finally {
@@ -151,7 +155,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
             }
         }
         loadData();
-    }, [id, scope, isAdmin, idEventoLong]);
+    }, [id, scope, isAdmin, idEventoLong, loadFeaturesEfectivas]);
 
     const isFeatureActiva = (codigo: string) => {
         if (loading || featuresEfectivas.length === 0) return true;
@@ -234,7 +238,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
     const handleStateActionSubmit = async () => {
         const text = isPrograma ? 'programa' : 'evento';
-        
+
         if (targetState === 'X') {
             if (!confirm(`El ${text} quedará anulado. No se eliminarán datos, pero no podrá operarse. ¿Confirmar anulación?`)) {
                 return;
@@ -662,7 +666,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                     </button>
                                 </div>
 
-                                 {/* Salud */}
+                                {/* Salud */}
                                 {isFeatureActiva('RESTRICCIONES_ALIMENTARIAS') && (
                                     <div className="p-5 rounded-2xl bg-red-600/10 border border-red-500/20 flex flex-col h-full hover:-translate-y-1 transition-transform duration-300">
                                         <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center mb-4">
@@ -871,7 +875,11 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     </div>
 
                     {/* Features / Modulos Toggles */}
-                    <FeaturesEventoManager idEvento={idEventoLong} tipoOperacion={event.tipoOperacion as 'EVENTO' | 'PROGRAMA'} />
+                    <FeaturesEventoManager
+                        idEvento={idEventoLong}
+                        tipoOperacion={event.tipoOperacion as 'EVENTO' | 'PROGRAMA'}
+                        onSaveSuccess={loadFeaturesEfectivas}
+                    />
 
                     {/* Timeline de Historial de Estados */}
                     <section className="p-6 rounded-2xl bg-card-bg border border-card-border space-y-6">
@@ -891,7 +899,7 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                         <div key={index} className="relative">
                                             {/* Dot centered on border line */}
                                             <div className="absolute -left-[30.5px] top-1.5 w-3 h-3 rounded-full border-2 border-card-bg bg-indigo-500" />
-                                            
+
                                             <div className="space-y-1">
                                                 <div className="flex flex-wrap items-center gap-2.5">
                                                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${histStateConfig.classes}`}>
@@ -1081,10 +1089,6 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 Reabrir {labelGeneral}
                             </button>
                         )}
-
-                        <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-card-border text-muted hover:text-foreground hover:bg-card-bg transition-all text-xs font-bold uppercase tracking-widest">
-                            Duplicar {labelGeneral}
-                        </button>
                     </div>
                 </aside>
             </div>
@@ -1436,11 +1440,10 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         {/* Header */}
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                    targetState === 'C' ? 'bg-neutral-500/10 text-neutral-400' :
-                                    targetState === 'X' ? 'bg-red-500/10 text-red-400' :
-                                    'bg-indigo-500/10 text-indigo-400'
-                                }`}>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${targetState === 'C' ? 'bg-neutral-500/10 text-neutral-400' :
+                                        targetState === 'X' ? 'bg-red-500/10 text-red-400' :
+                                            'bg-indigo-500/10 text-indigo-400'
+                                    }`}>
                                     {targetState === 'C' && <Lock className="w-5 h-5" />}
                                     {targetState === 'X' && <AlertTriangle className="w-5 h-5" />}
                                     {targetState === 'A' && <Calendar className="w-5 h-5" />}
@@ -1480,11 +1483,10 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 <textarea
                                     value={stateObservaciones}
                                     onChange={e => setStateObservaciones(e.target.value)}
-                                    placeholder={`Indica el motivo por el cual deseas ${
-                                        targetState === 'C' ? 'cerrar' :
-                                        targetState === 'X' ? 'anular' :
-                                        'reabrir'
-                                    } el ${labelGeneral}...`}
+                                    placeholder={`Indica el motivo por el cual deseas ${targetState === 'C' ? 'cerrar' :
+                                            targetState === 'X' ? 'anular' :
+                                                'reabrir'
+                                        } el ${labelGeneral}...`}
                                     rows={3}
                                     className="w-full p-3 rounded-xl bg-background border border-card-border focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all text-foreground outline-none placeholder:text-muted resize-none text-sm"
                                 />
@@ -1502,18 +1504,17 @@ function EventDetailContent({ params }: { params: Promise<{ id: string }> }) {
                                 <button
                                     onClick={handleStateActionSubmit}
                                     disabled={stateActionLoading}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-60 ${
-                                        targetState === 'X' ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/20' :
-                                        targetState === 'C' ? 'bg-neutral-600 hover:bg-neutral-500 text-white' :
-                                        'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
-                                    }`}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-60 ${targetState === 'X' ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/20' :
+                                            targetState === 'C' ? 'bg-neutral-600 hover:bg-neutral-500 text-white' :
+                                                'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                                        }`}
                                 >
                                     {stateActionLoading ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
                                     ) : (
                                         targetState === 'C' ? 'Cerrar' :
-                                        targetState === 'X' ? 'Anular' :
-                                        'Reabrir'
+                                            targetState === 'X' ? 'Anular' :
+                                                'Reabrir'
                                     )}
                                 </button>
                             </div>
