@@ -381,6 +381,68 @@ namespace API.Controllers
                 }
             }
 
+            // ======================================================
+            // HERENCIA PADRE -> HIJAS
+            // Las hijas no se venden ni activan solas.
+            // Heredan estado comercial y activación del padre.
+            // ======================================================
+
+            var featuresById = featuresFinales.ToDictionary(x => x.id_feature, x => x);
+
+            foreach (var hija in featuresFinales.Where(x => x.id_feature_padre.HasValue))
+            {
+                if (!featuresById.TryGetValue(hija.id_feature_padre.Value, out var padre))
+                    continue;
+
+                // Hereda inclusión comercial
+                hija.incluida_en_plan = padre.incluida_en_plan;
+                hija.incluida_por_addon = padre.incluida_por_addon;
+                hija.incluida_por_addon_evento = padre.incluida_por_addon_evento;
+                hija.incluida_por_addon_cuenta = padre.incluida_por_addon_cuenta;
+
+                // Hereda configuración comercial
+                hija.config_plan_override = padre.config_plan_override;
+                hija.config_addon_override = padre.config_addon_override;
+
+                // Hereda disponibilidad
+                hija.disponible = padre.disponible;
+                hija.editable = false;
+                hija.origen = padre.origen;
+
+                // Hereda estado de activación
+                hija.activo_evento = padre.activo_evento;
+                hija.activo_resuelto = padre.activo_resuelto;
+
+                // Hereda mensajes UI
+                hija.motivo_inactivo = padre.motivo_inactivo;
+                hija.mensaje_ui = padre.mensaje_ui;
+
+                // Si el padre está activo, puede mostrarse según sus reglas
+                if (padre.activo_resuelto)
+                {
+                    hija.visible_acceso = hija.permite_acceso;
+                    hija.visible_centro = hija.permite_centro;
+
+                    hija.visible_acceso_evento = hija.permite_acceso_evento;
+                    hija.visible_centro_evento = hija.permite_centro_evento;
+
+                    hija.visible_acceso_programa = hija.permite_acceso_programa;
+                    hija.visible_centro_programa = hija.permite_centro_programa;
+                }
+                else
+                {
+                    // Si el padre está apagado, ocultar hija
+                    hija.visible_acceso = false;
+                    hija.visible_centro = false;
+
+                    hija.visible_acceso_evento = false;
+                    hija.visible_centro_evento = false;
+
+                    hija.visible_acceso_programa = false;
+                    hija.visible_centro_programa = false;
+                }
+            }
+
             var padresById = featuresFinales
                 .Where(x => x.es_feature_padre || x.id_feature_padre == null)
                 .ToDictionary(x => x.id_feature);
