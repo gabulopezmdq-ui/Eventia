@@ -772,7 +772,17 @@ function NovedadesSeccion({ data }: { data: any[] }) {
     );
 }
 
-function RegalosSeccion({ data, onRefresh }: { data: any; onRefresh: () => void }) {
+function RegalosSeccion({
+    data,
+    onRefresh,
+    idEvento,
+    rsvpToken
+}: {
+    data: any;
+    onRefresh: () => void;
+    idEvento?: number;
+    rsvpToken?: string;
+}) {
     const { addToast } = useToast();
 
     const [isReservaModalOpen, setIsReservaModalOpen] = useState(false);
@@ -898,9 +908,9 @@ function RegalosSeccion({ data, onRefresh }: { data: any; onRefresh: () => void 
         setReservaSaving(true);
         try {
             await reservarRegalo({
-                id_evento: data.id_evento || data.idEvento,
+                id_evento: idEvento || data.id_evento || data.idEvento,
                 id_regalo_item: selectedItem.id_regalo_item,
-                rsvp_token: data.rsvp_token || data.rsvpToken,
+                rsvp_token: rsvpToken || data.rsvp_token || data.rsvpToken,
                 nombre_mostrado: reservaForm.nombre_mostrado.trim() || 'Invitado',
                 es_anonimo: reservaForm.es_anonimo,
                 cantidad: reservaForm.cantidad,
@@ -940,10 +950,10 @@ function RegalosSeccion({ data, onRefresh }: { data: any; onRefresh: () => void 
         setAporteSaving(true);
         try {
             await aportarAlFondo({
-                id_evento: data.id_evento || data.idEvento,
+                id_evento: idEvento || data.id_evento || data.idEvento,
                 id_fondo: fondo.id_fondo,
                 id_meta: selectedMeta.id_meta,
-                rsvp_token: data.rsvp_token || data.rsvpToken,
+                rsvp_token: rsvpToken || data.rsvp_token || data.rsvpToken,
                 nombre_mostrado: aporteForm.nombre_mostrado.trim() || 'Invitado',
                 es_anonimo: aporteForm.es_anonimo,
                 monto_aporte: monto,
@@ -1736,9 +1746,19 @@ interface ContenidoSeccionProps {
     data: any;
     onDesbloquear: () => void;
     onRefresh: () => void;
+    idEvento?: number;
+    rsvpToken?: string;
 }
 
-function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear, onRefresh }: ContenidoSeccionProps) {
+function ContenidoSeccion({
+    seccion,
+    desbloqueado,
+    data,
+    onDesbloquear,
+    onRefresh,
+    idEvento,
+    rsvpToken
+}: ContenidoSeccionProps) {
     const isSensible = seccion.requiere_desbloqueo;
     const isBloqueada = isSensible && !desbloqueado;
 
@@ -1799,7 +1819,7 @@ function ContenidoSeccion({ seccion, desbloqueado, data, onDesbloquear, onRefres
     }
 
     if (codigoUpper === 'REGALOS') {
-        return <RegalosSeccion data={data} onRefresh={onRefresh} />;
+        return <RegalosSeccion data={data} onRefresh={onRefresh} idEvento={idEvento} rsvpToken={rsvpToken} />;
     }
 
     if (codigoUpper === 'SERVICIOS') {
@@ -2240,6 +2260,8 @@ export default function PortalPage({
                                     data={getActiveData()}
                                     onDesbloquear={() => triggerDesbloqueo(seccionActiva)}
                                     onRefresh={() => cargarPortal(true)}
+                                    idEvento={portalData.idEvento}
+                                    rsvpToken={token}
                                 />
                             ) : (
                                 <p className="text-sm text-muted text-center py-12">
