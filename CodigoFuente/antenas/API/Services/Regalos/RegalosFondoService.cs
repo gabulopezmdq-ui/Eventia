@@ -146,8 +146,7 @@ namespace API.Services.Regalos
                 decimal porcentaje = 0m;
                 if (m.objetivo_monto > 0m)
                 {
-                    porcentaje = confirmado / m.objetivo_monto;
-                    if (porcentaje > 1m) porcentaje = 1m;
+                    porcentaje = Math.Round((confirmado / m.objetivo_monto) * 100m, 2);
                 }
 
                 return new RegalosFondoMetaDTO
