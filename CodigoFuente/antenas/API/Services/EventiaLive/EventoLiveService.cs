@@ -38,9 +38,9 @@ namespace API.Services.EventiaLive
             _context = context;
         }
 
-        public async Task<List<LiveDinamicaDTO>> GetByEventoAsync(long idEvento)
+        public async Task<LiveByEventoResponseDTO> GetByEventoAsync(long idEvento)
         {
-            return await _context.ef_evento_live_dinamicas
+            var dinamicas = await _context.ef_evento_live_dinamicas
                 .AsNoTracking()
                 .Where(x => x.id_evento == idEvento && x.activo == true)
                 .OrderByDescending(x => x.fecha_alta)
@@ -62,6 +62,53 @@ namespace API.Services.EventiaLive
                     mostrar_resultados_publicos = x.mostrar_resultados_publicos,
                     modo_premio = x.modo_premio,
                     cantidad_ganadores = x.cantidad_ganadores,
+
+                    cantidad_votos = _context.ef_evento_live_respuestas
+                        .Count(r =>
+                            r.id_dinamica == x.id_dinamica &&
+                            r.activo == true),
+
+                    participantes_unicos = _context.ef_evento_live_respuestas
+                        .Where(r =>
+                            r.id_dinamica == x.id_dinamica &&
+                            r.activo == true)
+                        .Select(r => r.id_invitado.HasValue
+                            ? "I_" + r.id_invitado.Value.ToString()
+                            : "T_" + (r.token_consulta ?? ""))
+                        .Distinct()
+                        .Count(),
+
+                    tiene_premio = _context.ef_evento_live_premios
+                        .Any(p =>
+                            p.id_dinamica == x.id_dinamica &&
+                            p.activo == true),
+
+                    premio_titulo = _context.ef_evento_live_premios
+                        .Where(p =>
+                            p.id_dinamica == x.id_dinamica &&
+                            p.activo == true)
+                        .OrderBy(p => p.id_premio)
+                        .Select(p => p.titulo)
+                        .FirstOrDefault(),
+
+                    ganadores_generados = _context.ef_evento_live_ganadores
+                        .Count(g => g.id_dinamica == x.id_dinamica),
+
+                    premios_pendientes = _context.ef_evento_live_ganadores
+                        .Count(g =>
+                            g.id_dinamica == x.id_dinamica &&
+                            g.estado == "PENDIENTE"),
+
+                    premios_entregados = _context.ef_evento_live_ganadores
+                        .Count(g =>
+                            g.id_dinamica == x.id_dinamica &&
+                            g.estado == "ENTREGADO"),
+
+                    premios_cancelados = _context.ef_evento_live_ganadores
+                        .Count(g =>
+                            g.id_dinamica == x.id_dinamica &&
+                            (g.estado == "CANCELADO" || g.estado == "ANULADO")),
+
                     opciones = _context.ef_evento_live_dinamica_opciones
                         .Where(o => o.id_dinamica == x.id_dinamica && o.activo == true)
                         .OrderBy(o => o.orden)
@@ -77,6 +124,32 @@ namespace API.Services.EventiaLive
                         .ToList()
                 })
                 .ToListAsync();
+
+            var resumen = new LiveResumenDTO
+            {
+                total = dinamicas.Count,
+                borrador = dinamicas.Count(x => x.estado == "BORRADOR"),
+                abiertas = dinamicas.Count(x => x.estado == "ABIERTA"),
+                cerradas = dinamicas.Count(x => x.estado == "CERRADA"),
+                finalizadas = dinamicas.Count(x => x.estado == "FINALIZADA"),
+                anuladas = dinamicas.Count(x => x.estado == "ANULADA"),
+                canceladas = dinamicas.Count(x => x.estado == "CANCELADA"),
+
+                participaciones = dinamicas.Sum(x => x.cantidad_votos),
+                participantes_unicos = dinamicas.Sum(x => x.participantes_unicos),
+
+                ganadores = dinamicas.Sum(x => x.ganadores_generados),
+                premios_pendientes = dinamicas.Sum(x => x.premios_pendientes),
+                premios_entregados = dinamicas.Sum(x => x.premios_entregados),
+                premios_cancelados = dinamicas.Sum(x => x.premios_cancelados)
+            };
+
+            return new LiveByEventoResponseDTO
+            {
+                id_evento = idEvento,
+                resumen = resumen,
+                dinamicas = dinamicas
+            };
         }
 
         public async Task<long> CrearAsync(LiveCrearRequestDTO req)

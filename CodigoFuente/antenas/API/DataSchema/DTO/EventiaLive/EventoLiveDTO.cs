@@ -21,6 +21,14 @@ namespace API.DataSchema.DTO.EventiaLive
         public bool mostrar_resultados_publicos { get; set; }
         public string modo_premio { get; set; } = string.Empty;
         public int? cantidad_ganadores { get; set; }
+        public int cantidad_votos { get; set; }
+        public int participantes_unicos { get; set; }
+        public bool tiene_premio { get; set; }
+        public string? premio_titulo { get; set; }
+        public int ganadores_generados { get; set; }
+        public int premios_pendientes { get; set; }
+        public int premios_entregados { get; set; }
+        public int premios_cancelados { get; set; }
         public List<LiveOpcionDTO> opciones { get; set; } = new();
     }
 
@@ -206,6 +214,32 @@ namespace API.DataSchema.DTO.EventiaLive
 
         public DateTimeOffset? fecha_ganador { get; set; }
         public DateTimeOffset? fecha_entrega { get; set; }
+    }
+
+    public class LiveByEventoResponseDTO
+    {
+        public long id_evento { get; set; }
+        public LiveResumenDTO resumen { get; set; } = new();
+        public List<LiveDinamicaDTO> dinamicas { get; set; } = new();
+    }
+
+    public class LiveResumenDTO
+    {
+        public int total { get; set; }
+        public int borrador { get; set; }
+        public int abiertas { get; set; }
+        public int cerradas { get; set; }
+        public int finalizadas { get; set; }
+        public int anuladas { get; set; }
+        public int canceladas { get; set; }
+
+        public int participaciones { get; set; }
+        public int participantes_unicos { get; set; }
+
+        public int ganadores { get; set; }
+        public int premios_pendientes { get; set; }
+        public int premios_entregados { get; set; }
+        public int premios_cancelados { get; set; }
     }
 
 }

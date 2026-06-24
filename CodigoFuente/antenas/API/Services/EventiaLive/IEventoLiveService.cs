@@ -6,7 +6,7 @@ namespace API.Services.EventiaLive
 {
     public interface IEventoLiveService
     {
-        Task<List<LiveDinamicaDTO>> GetByEventoAsync(long idEvento);
+        Task<LiveByEventoResponseDTO> GetByEventoAsync(long idEvento);
         Task<long> CrearAsync(LiveCrearRequestDTO req);
         Task EditarAsync(long idDinamica, LiveEditarRequestDTO req);
         Task<string> CambiarEstadoAsync(long idDinamica, LiveCambiarEstadoRequestDTO req);
