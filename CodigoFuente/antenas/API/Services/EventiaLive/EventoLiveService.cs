@@ -1111,6 +1111,48 @@ namespace API.Services.EventiaLive
             return nueva.id_dinamica;
         }
 
+        public async Task<object> FinalizarSinCorrectaAsync(LiveFinalizarSinCorrectaRequestDTO req)
+        {
+            if (req == null || req.id_dinamica <= 0)
+                throw new Exception("Debe informar id_dinamica.");
+
+            var dinamica = await _context.ef_evento_live_dinamicas
+                .FirstOrDefaultAsync(x =>
+                    x.id_dinamica == req.id_dinamica &&
+                    x.activo == true);
+
+            if (dinamica == null)
+                throw new Exception("Dinámica no encontrada.");
+
+            if (dinamica.estado == "FINALIZADA")
+                throw new Exception("La dinámica ya está finalizada.");
+
+            if (dinamica.estado == "ANULADA" || dinamica.estado == "CANCELADA")
+                throw new Exception("No se puede finalizar una dinámica anulada o cancelada.");
+
+            dinamica.estado = "FINALIZADA";
+            dinamica.fecha_modif = DateTimeOffset.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            var totalRespuestas = await _context.ef_evento_live_respuestas
+                .AsNoTracking()
+                .CountAsync(x =>
+                    x.id_dinamica == dinamica.id_dinamica &&
+                    x.activo == true);
+
+            return new
+            {
+                ok = true,
+                mensaje = "Dinámica finalizada sin marcar respuesta correcta.",
+                id_dinamica = dinamica.id_dinamica,
+                estado = dinamica.estado,
+                participaciones = totalRespuestas,
+                ganadores = 0
+            };
+        }
+
+
 
     }
 }

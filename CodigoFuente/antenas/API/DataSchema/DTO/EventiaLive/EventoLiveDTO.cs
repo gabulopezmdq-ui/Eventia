@@ -249,4 +249,10 @@ namespace API.DataSchema.DTO.EventiaLive
         public long id_dinamica { get; set; }
     }
 
+    public class LiveFinalizarSinCorrectaRequestDTO
+    {
+        public long id_dinamica { get; set; }
+        public string? observaciones { get; set; }
+    }
+
 }

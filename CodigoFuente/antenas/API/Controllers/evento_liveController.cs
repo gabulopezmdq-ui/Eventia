@@ -208,6 +208,28 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("FinalizarSinCorrecta")]
+        public async Task<IActionResult> FinalizarSinCorrecta([FromBody] LiveFinalizarSinCorrectaRequestDTO req)
+        {
+            try
+            {
+                var result = await _service.FinalizarSinCorrectaAsync(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    ok = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+
+
+
+
 
     }
 }
