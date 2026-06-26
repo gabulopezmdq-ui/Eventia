@@ -63,6 +63,9 @@ namespace API.Services.EventiaLive
                     modo_premio = x.modo_premio,
                     cantidad_ganadores = x.cantidad_ganadores,
 
+                    es_copia = x.es_copia,
+                    id_dinamica_origen = x.id_dinamica_origen,
+
                     cantidad_votos = _context.ef_evento_live_respuestas
                         .Count(r =>
                             r.id_dinamica == x.id_dinamica &&
@@ -1003,6 +1006,109 @@ namespace API.Services.EventiaLive
                 fecha_ganador = data.fecha_ganador,
                 fecha_entrega = data.fecha_entrega
             };
+        }
+
+        public async Task<long> DuplicarAsync(LiveDuplicarRequestDTO req)
+        {
+            if (req == null || req.id_dinamica <= 0)
+                throw new Exception("Debe informar id_dinamica.");
+
+            var origen = await _context.ef_evento_live_dinamicas
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.id_dinamica == req.id_dinamica &&
+                    x.activo == true);
+
+            if (origen == null)
+                throw new Exception("Dinámica origen no encontrada.");
+
+            var opcionesOrigen = await _context.ef_evento_live_dinamica_opciones
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_dinamica == origen.id_dinamica &&
+                    x.activo == true)
+                .OrderBy(x => x.orden)
+                .ToListAsync();
+
+            var premiosOrigen = await _context.ef_evento_live_premios
+                .AsNoTracking()
+                .Where(x =>
+                    x.id_dinamica == origen.id_dinamica &&
+                    x.activo == true)
+                .OrderBy(x => x.id_premio)
+                .ToListAsync();
+
+            string codigoBase = origen.codigo + "_COPIA";
+            string codigoNuevo = codigoBase;
+            int contador = 1;
+
+            while (await _context.ef_evento_live_dinamicas
+                .AnyAsync(x => x.id_evento == origen.id_evento && x.codigo == codigoNuevo))
+            {
+                contador++;
+                codigoNuevo = $"{codigoBase}_{contador}";
+            }
+
+            var nueva = new ef_evento_live_dinamicas
+            {
+                id_evento = origen.id_evento,
+                codigo = codigoNuevo,
+                titulo = origen.titulo + " (copia)",
+                descripcion = origen.descripcion,
+                tipo_dinamica = origen.tipo_dinamica,
+                es_copia = true,
+                id_dinamica_origen = origen.id_dinamica,
+                estado = "BORRADOR",
+                fecha_desde = null,
+                fecha_hasta = null,
+                visible_portal = false,
+                requiere_checkin = origen.requiere_checkin,
+                max_respuestas_por_invitado = origen.max_respuestas_por_invitado,
+                permite_cambiar_respuesta = origen.permite_cambiar_respuesta,
+                mostrar_resultados_publicos = origen.mostrar_resultados_publicos,
+                modo_premio = origen.modo_premio,
+                cantidad_ganadores = origen.cantidad_ganadores,
+                activo = true,
+                fecha_alta = DateTimeOffset.UtcNow
+            };
+
+            _context.ef_evento_live_dinamicas.Add(nueva);
+            await _context.SaveChangesAsync();
+
+            foreach (var op in opcionesOrigen)
+            {
+                _context.ef_evento_live_dinamica_opciones.Add(new ef_evento_live_dinamica_opciones
+                {
+                    id_dinamica = nueva.id_dinamica,
+                    texto = op.texto,
+                    descripcion = op.descripcion,
+                    imagen_url = op.imagen_url,
+                    orden = op.orden,
+                    es_correcta = false,
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                });
+            }
+
+            foreach (var premio in premiosOrigen)
+            {
+                _context.ef_evento_live_premios.Add(new ef_evento_live_premios
+                {
+                    id_dinamica = nueva.id_dinamica,
+                    titulo = premio.titulo,
+                    descripcion = premio.descripcion,
+                    modo_premio = premio.modo_premio,
+                    cantidad_ganadores = premio.cantidad_ganadores,
+                    instrucciones_entrega = premio.instrucciones_entrega,
+                    sponsor_nombre = premio.sponsor_nombre,
+                    activo = true,
+                    fecha_alta = DateTimeOffset.UtcNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return nueva.id_dinamica;
         }
 
 

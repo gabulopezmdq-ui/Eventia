@@ -29,6 +29,8 @@ namespace API.DataSchema.DTO.EventiaLive
         public int premios_pendientes { get; set; }
         public int premios_entregados { get; set; }
         public int premios_cancelados { get; set; }
+        public bool es_copia { get; set; }
+        public long? id_dinamica_origen { get; set; }
         public List<LiveOpcionDTO> opciones { get; set; } = new();
     }
 
@@ -240,6 +242,11 @@ namespace API.DataSchema.DTO.EventiaLive
         public int premios_pendientes { get; set; }
         public int premios_entregados { get; set; }
         public int premios_cancelados { get; set; }
+    }
+
+    public class LiveDuplicarRequestDTO
+    {
+        public long id_dinamica { get; set; }
     }
 
 }

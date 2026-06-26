@@ -185,6 +185,29 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("Duplicar")]
+        public async Task<IActionResult> Duplicar([FromBody] LiveDuplicarRequestDTO req)
+        {
+            try
+            {
+                var idNueva = await _service.DuplicarAsync(req);
+
+                return Ok(new
+                {
+                    ok = true,
+                    id_dinamica = idNueva
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    ok = false,
+                    message = ex.Message
+                });
+            }
+        }
+
 
     }
 }

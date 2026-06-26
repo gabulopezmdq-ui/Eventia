@@ -15,6 +15,21 @@ namespace API.ModelConfiguration
             builder.Property(x => x.tipo_dinamica).HasMaxLength(40).IsRequired();
             builder.Property(x => x.estado).HasMaxLength(40).IsRequired();
             builder.Property(x => x.modo_premio).HasMaxLength(50).IsRequired();
+
+            builder.Property(x => x.es_copia)
+                .HasDefaultValue(false);
+
+            builder.Property(x => x.id_dinamica_origen);
+            
+            builder.Property(x => x.es_plantilla)
+                .HasDefaultValue(false);
+
+
+            builder.HasOne<ef_evento_live_dinamicas>()
+                .WithMany()
+                .HasForeignKey(x => x.id_dinamica_origen)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Property(x => x.config_json).HasColumnType("jsonb");
         }
     }
