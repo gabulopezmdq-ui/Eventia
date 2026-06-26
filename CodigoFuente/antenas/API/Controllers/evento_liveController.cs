@@ -226,7 +226,23 @@ namespace API.Controllers
             }
         }
 
-
+        [HttpPost("Resolver")]
+        public async Task<IActionResult> Resolver([FromBody] LiveResolverRequestDTO req)
+        {
+            try
+            {
+                var result = await _service.ResolverAsync(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    ok = false,
+                    message = ex.Message
+                });
+            }
+        }
 
 
 

@@ -255,4 +255,17 @@ namespace API.DataSchema.DTO.EventiaLive
         public string? observaciones { get; set; }
     }
 
+    public class LiveResolverRequestDTO
+    {
+        public long id_dinamica { get; set; }
+
+        // Para PRIMEROS_ACIERTOS, TODOS_LOS_ACIERTOS y SORTEO_ENTRE_ACIERTOS
+        public long? id_opcion_correcta { get; set; }
+
+        // Para SELECCION_MANUAL
+        public List<long>? id_respuestas_ganadoras { get; set; }
+
+        public string? observaciones { get; set; }
+    }
+
 }

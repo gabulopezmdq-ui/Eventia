@@ -20,5 +20,6 @@ namespace API.Services.EventiaLive
         Task<LivePremioPorQrResponseDTO> GetPremioPorQrAsync(string qrToken);
         Task<long> DuplicarAsync(LiveDuplicarRequestDTO req);
         Task<object> FinalizarSinCorrectaAsync(LiveFinalizarSinCorrectaRequestDTO req);
+        Task<object> ResolverAsync(LiveResolverRequestDTO req);
     }
 }

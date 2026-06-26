@@ -140,7 +140,8 @@ namespace API.Controllers
                     { 1, "PRIMEROS_ACIERTOS" },
                     { 2, "SORTEO_ENTRE_ACIERTOS" },
                     { 3, "TODOS_LOS_ACIERTOS" },
-                    { 4, "SELECCION_MANUAL" }
+                    { 4, "SELECCION_MANUAL" },
+                    { 5, "SIN_GANADORES" }
                 };
             }
 

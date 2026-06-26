@@ -198,7 +198,7 @@ namespace API.Services.EventiaLive
                 max_respuestas_por_invitado = req.max_respuestas_por_invitado <= 0 ? 1 : req.max_respuestas_por_invitado,
                 permite_cambiar_respuesta = req.permite_cambiar_respuesta,
                 mostrar_resultados_publicos = req.mostrar_resultados_publicos,
-                modo_premio = string.IsNullOrWhiteSpace(req.modo_premio) ? "SIN_PREMIO" : req.modo_premio.Trim().ToUpper(),
+                modo_premio = string.IsNullOrWhiteSpace(req.modo_premio) ? "SIN_GANADORES" : req.modo_premio.Trim().ToUpper(),
                 cantidad_ganadores = req.cantidad_ganadores,
                 activo = true,
                 fecha_alta = DateTimeOffset.UtcNow
@@ -423,88 +423,181 @@ namespace API.Services.EventiaLive
             if (req == null)
                 throw new Exception("Request inválido.");
 
+            return await ResolverAsync(new LiveResolverRequestDTO
+            {
+                id_dinamica = req.id_dinamica,
+                id_opcion_correcta = req.id_opcion_correcta
+            });
+        }
+
+        public async Task<object> ResolverAsync(LiveResolverRequestDTO req)
+        {
+            if (req == null || req.id_dinamica <= 0)
+                throw new Exception("Debe informar id_dinamica.");
+
             var dinamica = await _context.ef_evento_live_dinamicas
                 .FirstOrDefaultAsync(x => x.id_dinamica == req.id_dinamica && x.activo == true);
 
             if (dinamica == null)
                 throw new Exception("Dinámica no encontrada.");
 
-            var opcionCorrecta = await _context.ef_evento_live_dinamica_opciones
-                .FirstOrDefaultAsync(x =>
-                    x.id_dinamica == req.id_dinamica &&
-                    x.id_opcion == req.id_opcion_correcta &&
-                    x.activo == true);
+            if (dinamica.estado == "FINALIZADA")
+                throw new Exception("La dinámica ya está finalizada.");
 
-            if (opcionCorrecta == null)
-                throw new Exception("Opción correcta inválida.");
+            if (dinamica.estado == "ANULADA" || dinamica.estado == "CANCELADA")
+                throw new Exception("No se puede resolver una dinámica anulada o cancelada.");
 
-            var opciones = await _context.ef_evento_live_dinamica_opciones
+            var premios = await _context.ef_evento_live_premios
                 .Where(x => x.id_dinamica == req.id_dinamica && x.activo == true)
                 .ToListAsync();
 
-            foreach (var op in opciones)
-            {
-                op.es_correcta = op.id_opcion == req.id_opcion_correcta;
-                op.fecha_modif = DateTimeOffset.UtcNow;
-            }
+            string modoGeneral = string.IsNullOrWhiteSpace(dinamica.modo_premio)
+                ? "SIN_GANADORES"
+                : dinamica.modo_premio.Trim().ToUpper();
+
+            bool sinGanadores =
+                modoGeneral == "SIN_GANADORES" ||
+                premios.Count == 0 ||
+                premios.All(p => string.IsNullOrWhiteSpace(p.modo_premio) || p.modo_premio == "SIN_GANADORES");
 
             var respuestas = await _context.ef_evento_live_respuestas
                 .Where(x => x.id_dinamica == req.id_dinamica && x.activo == true)
                 .OrderBy(x => x.fecha_respuesta)
                 .ToListAsync();
 
-            int ordenAcierto = 1;
-
-            foreach (var r in respuestas)
+            if (sinGanadores)
             {
-                r.es_correcta = r.id_opcion == req.id_opcion_correcta;
+                dinamica.estado = "FINALIZADA";
+                dinamica.fecha_modif = DateTimeOffset.UtcNow;
 
-                if (r.es_correcta == true)
-                {
-                    r.orden_acierto = ordenAcierto;
-                    ordenAcierto++;
-                }
-                else
-                {
-                    r.orden_acierto = null;
-                }
+                await _context.SaveChangesAsync();
 
-                r.fecha_modif = DateTimeOffset.UtcNow;
-            }
-
-            dinamica.estado = "FINALIZADA";
-            dinamica.fecha_modif = DateTimeOffset.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            var premios = await _context.ef_evento_live_premios
-                .Where(x => x.id_dinamica == req.id_dinamica && x.activo == true)
-                .ToListAsync();
-
-            if (premios.Count == 0)
-            {
                 return new
                 {
                     ok = true,
-                    mensaje = "Se marcó la opción correcta. No hay premios configurados.",
+                    mensaje = "Dinámica finalizada sin ganadores.",
+                    id_dinamica = dinamica.id_dinamica,
+                    estado = dinamica.estado,
+                    participaciones = respuestas.Count,
                     ganadores = 0
                 };
+            }
+
+            bool requiereCorrecta = premios.Any(p =>
+            {
+                string modo = string.IsNullOrWhiteSpace(p.modo_premio)
+                    ? modoGeneral
+                    : p.modo_premio.Trim().ToUpper();
+
+                return modo == "PRIMEROS_ACIERTOS" ||
+                       modo == "TODOS_LOS_ACIERTOS" ||
+                       modo == "SORTEO_ENTRE_ACIERTOS";
+            });
+
+            if (requiereCorrecta && !req.id_opcion_correcta.HasValue)
+                throw new Exception("Debe informar id_opcion_correcta para este modo de resolución.");
+
+            if (requiereCorrecta)
+            {
+                var opcionCorrecta = await _context.ef_evento_live_dinamica_opciones
+                    .FirstOrDefaultAsync(x =>
+                        x.id_dinamica == req.id_dinamica &&
+                        x.id_opcion == req.id_opcion_correcta.Value &&
+                        x.activo == true);
+
+                if (opcionCorrecta == null)
+                    throw new Exception("Opción correcta inválida.");
+
+                var opciones = await _context.ef_evento_live_dinamica_opciones
+                    .Where(x => x.id_dinamica == req.id_dinamica && x.activo == true)
+                    .ToListAsync();
+
+                foreach (var op in opciones)
+                {
+                    op.es_correcta = op.id_opcion == req.id_opcion_correcta.Value;
+                    op.fecha_modif = DateTimeOffset.UtcNow;
+                }
+
+                int ordenAcierto = 1;
+
+                foreach (var r in respuestas)
+                {
+                    r.es_correcta = r.id_opcion == req.id_opcion_correcta.Value;
+
+                    if (r.es_correcta == true)
+                    {
+                        r.orden_acierto = ordenAcierto;
+                        ordenAcierto++;
+                    }
+                    else
+                    {
+                        r.orden_acierto = null;
+                    }
+
+                    r.fecha_modif = DateTimeOffset.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
             }
 
             int totalGanadores = 0;
 
             foreach (var premio in premios)
             {
-                int cantidad = premio.cantidad_ganadores ?? dinamica.cantidad_ganadores ?? 0;
+                string modoPremio = string.IsNullOrWhiteSpace(premio.modo_premio)
+                    ? modoGeneral
+                    : premio.modo_premio.Trim().ToUpper();
 
-                if (premio.modo_premio == "SIN_PREMIO")
+                if (modoPremio == "SIN_GANADORES")
                     continue;
 
-                var respuestasGanadoras = respuestas
-                    .Where(x => x.es_correcta == true)
-                    .OrderBy(x => x.fecha_respuesta)
-                    .Take(cantidad)
-                    .ToList();
+                int cantidad = premio.cantidad_ganadores ?? dinamica.cantidad_ganadores ?? 0;
+
+                List<ef_evento_live_respuestas> respuestasGanadoras = new();
+
+                if (modoPremio == "PRIMEROS_ACIERTOS")
+                {
+                    if (cantidad <= 0)
+                        throw new Exception("Debe configurar cantidad de ganadores.");
+
+                    respuestasGanadoras = respuestas
+                        .Where(x => x.es_correcta == true)
+                        .OrderBy(x => x.fecha_respuesta)
+                        .Take(cantidad)
+                        .ToList();
+                }
+                else if (modoPremio == "TODOS_LOS_ACIERTOS")
+                {
+                    respuestasGanadoras = respuestas
+                        .Where(x => x.es_correcta == true)
+                        .OrderBy(x => x.fecha_respuesta)
+                        .ToList();
+                }
+                else if (modoPremio == "SORTEO_ENTRE_ACIERTOS")
+                {
+                    if (cantidad <= 0)
+                        throw new Exception("Debe configurar cantidad de ganadores.");
+
+                    respuestasGanadoras = respuestas
+                        .Where(x => x.es_correcta == true)
+                        .OrderBy(x => Guid.NewGuid())
+                        .Take(cantidad)
+                        .ToList();
+                }
+                else if (modoPremio == "SELECCION_MANUAL")
+                {
+                    if (req.id_respuestas_ganadoras == null || req.id_respuestas_ganadoras.Count == 0)
+                        throw new Exception("Debe informar id_respuestas_ganadoras para selección manual.");
+
+                    respuestasGanadoras = respuestas
+                        .Where(x => req.id_respuestas_ganadoras.Contains(x.id_respuesta))
+                        .OrderBy(x => x.fecha_respuesta)
+                        .ToList();
+                }
+                else
+                {
+                    throw new Exception($"Modo de premio inválido: {modoPremio}");
+                }
 
                 int orden = 1;
 
@@ -536,12 +629,18 @@ namespace API.Services.EventiaLive
                 }
             }
 
+            dinamica.estado = "FINALIZADA";
+            dinamica.fecha_modif = DateTimeOffset.UtcNow;
+
             await _context.SaveChangesAsync();
 
             return new
             {
                 ok = true,
-                mensaje = "Ganadores calculados.",
+                mensaje = "Dinámica resuelta.",
+                id_dinamica = dinamica.id_dinamica,
+                estado = dinamica.estado,
+                participaciones = respuestas.Count,
                 ganadores = totalGanadores
             };
         }
