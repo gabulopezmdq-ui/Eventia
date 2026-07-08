@@ -6,7 +6,7 @@ namespace API.Services.EventiaLive
 {
     public interface IEventoLiveService
     {
-        Task<List<LiveDinamicaDTO>> GetByEventoAsync(long idEvento);
+        Task<LiveByEventoResponseDTO> GetByEventoAsync(long idEvento);
         Task<long> CrearAsync(LiveCrearRequestDTO req);
         Task EditarAsync(long idDinamica, LiveEditarRequestDTO req);
         Task<string> CambiarEstadoAsync(long idDinamica, LiveCambiarEstadoRequestDTO req);
@@ -18,5 +18,8 @@ namespace API.Services.EventiaLive
         Task<long> UpsertPremioAsync(LivePremioUpsertRequestDTO req);
         Task<LiveCanjearPremioResponseDTO> CanjearPremioAsync(LiveCanjearPremioRequestDTO req);
         Task<LivePremioPorQrResponseDTO> GetPremioPorQrAsync(string qrToken);
+        Task<long> DuplicarAsync(LiveDuplicarRequestDTO req);
+        Task<object> FinalizarSinCorrectaAsync(LiveFinalizarSinCorrectaRequestDTO req);
+        Task<object> ResolverAsync(LiveResolverRequestDTO req);
     }
 }

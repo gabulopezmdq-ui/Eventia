@@ -185,6 +185,67 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("Duplicar")]
+        public async Task<IActionResult> Duplicar([FromBody] LiveDuplicarRequestDTO req)
+        {
+            try
+            {
+                var idNueva = await _service.DuplicarAsync(req);
+
+                return Ok(new
+                {
+                    ok = true,
+                    id_dinamica = idNueva
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    ok = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("FinalizarSinCorrecta")]
+        public async Task<IActionResult> FinalizarSinCorrecta([FromBody] LiveFinalizarSinCorrectaRequestDTO req)
+        {
+            try
+            {
+                var result = await _service.FinalizarSinCorrectaAsync(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    ok = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("Resolver")]
+        public async Task<IActionResult> Resolver([FromBody] LiveResolverRequestDTO req)
+        {
+            try
+            {
+                var result = await _service.ResolverAsync(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    ok = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+
+
 
     }
 }

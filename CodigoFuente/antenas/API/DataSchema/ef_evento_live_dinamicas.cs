@@ -24,5 +24,8 @@ namespace API.DataSchema
         public bool activo { get; set; }
         public DateTimeOffset fecha_alta { get; set; }
         public DateTimeOffset? fecha_modif { get; set; }
+        public bool es_copia { get; set; }
+        public long? id_dinamica_origen { get; set; }
+        public bool es_plantilla { get; set; }
     }
 }
